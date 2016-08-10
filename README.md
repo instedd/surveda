@@ -11,6 +11,12 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).
 
+## Dockerized development
+
+To get started checkout the project, then execute `./dev-setup.sh`
+
+To run the app: `docker-compose up`
+
 ## Learn more
 
   * Official website: http://www.phoenixframework.org/
