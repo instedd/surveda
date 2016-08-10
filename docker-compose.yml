@@ -1,0 +1,33 @@
+version: '2'
+volumes:
+  db:
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - 'db:/var/lib/mysql'
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+
+  app:
+    command: mix phoenix.server
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    depends_on:
+      - db
+      - brunch
+    volumes:
+      - './:/app'
+    ports:
+      - 4000:4000
+
+  brunch:
+    image: node:6.3.1
+    command: node_modules/brunch/bin/brunch watch
+    working_dir: /app
+    volumes:
+      - './:/app'
+
