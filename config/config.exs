@@ -9,6 +9,9 @@ use Mix.Config
 config :ask,
   ecto_repos: [Ask.Repo]
 
+config :phoenix, :template_engines,
+  haml: PhoenixHaml.Engine
+
 # Configures the endpoint
 config :ask, Ask.Endpoint,
   url: [host: "localhost"],
