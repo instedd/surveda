@@ -15,5 +15,6 @@ defmodule Ask.User do
     struct
     |> cast(params, [:email, :encrypted_password])
     |> validate_required([:email, :encrypted_password])
+    |> validate_format(:email, ~r/@/)
   end
 end

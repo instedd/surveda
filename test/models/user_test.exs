@@ -3,7 +3,8 @@ defmodule Ask.UserTest do
 
   alias Ask.User
 
-  @valid_attrs %{email: "some content", encrypted_password: "some content"}
+  @valid_attrs %{email: "some@content", encrypted_password: "some content"}
+  @invalid_email %{email: "some content", encrypted_password: "some content"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
@@ -13,6 +14,11 @@ defmodule Ask.UserTest do
 
   test "changeset with invalid attributes" do
     changeset = User.changeset(%User{}, @invalid_attrs)
+    refute changeset.valid?
+  end
+
+  test "changeset with invalid email" do
+    changeset = User.changeset(%User{}, @invalid_email)
     refute changeset.valid?
   end
 end
