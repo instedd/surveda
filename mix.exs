@@ -37,7 +37,6 @@ defmodule Ask.Mixfile do
       {:mariaex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.6"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:phoenix_haml, "~> 0.2.1"},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:addict, "~> 0.3"},
