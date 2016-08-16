@@ -24,6 +24,10 @@ defmodule Ask.Router do
     addict :routes
   end
 
+  scope "/api" do
+    resources "/studies", StudyController, except: [:new, :edit]
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", Ask do
   #   pipe_through :api
