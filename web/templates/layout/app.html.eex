@@ -12,7 +12,7 @@
   </head>
 
   <body>
-    <main id="main_container" role="main"></main>
+    <main id="root" role="main"></main>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>
