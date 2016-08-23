@@ -12,7 +12,7 @@ class Studies extends Component {
 
   componentDidMount() {
     const { dispatch } = this.props
-    fetchStudies().then(studies => dispatch(actions.receiveStudies(studies)))
+    fetchStudies().then(studies => dispatch(actions.fetchStudiesSuccess(studies)))
   }
 
   componentDidUpdate() {
@@ -22,7 +22,7 @@ class Studies extends Component {
     e.preventDefault()
 
     const { dispatch } = this.props
-    createStudy().then(study => dispatch(actions.addStudy(study)))
+    createStudy().then(study => dispatch(actions.addStudy(study))).catch((e) => dispatch(actions.fetchStudiesError(e)))
   }
 
   render() {

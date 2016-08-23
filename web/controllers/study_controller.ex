@@ -9,7 +9,7 @@ defmodule Ask.StudyController do
   end
 
   def create(conn, %{"study" => study_params}) do
-    changeset = Study.changeset(%Study{}, study_params)
+    changeset = Study.changeset(%Study{user: Addict.Helper.current_user(conn)}, study_params)
 
     case Repo.insert(changeset) do
       {:ok, study} ->

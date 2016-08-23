@@ -21,8 +21,8 @@ const studies = (state = [], action) => {
     //   return state.map(t =>
     //     todo(t, action)
     //   )
-    case actions.RECEIVE_STUDIES:
-      return action.response
+    case actions.FETCH_STUDIES_SUCCESS:
+      return action.response || state
     default:
       return state
   }

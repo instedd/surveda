@@ -12,20 +12,19 @@ defmodule Ask.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
- 
+
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
   end
-
 
   scope "/" do
     addict :routes
   end
 
-  scope "/api" do
+  scope "/api" , Ask do
     pipe_through :api
 
-    scope "v1" do
+    scope "/v1" do
       resources "/studies", StudyController, except: [:new, :edit]
     end
   end
