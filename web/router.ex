@@ -12,24 +12,27 @@ defmodule Ask.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+ 
+    #plug Guardian.Plug.VerifyHeader
+    #plug Guardian.Plug.LoadResource
   end
 
-  scope "/", Ask do
-    pipe_through :browser # Use the default browser stack
-
-    get "/", PageController, :index
-  end
 
   scope "/" do
     addict :routes
   end
 
   scope "/api" do
-    resources "/studies", StudyController, except: [:new, :edit]
+    pipe_through :api
+
+    scope "v1" do
+      resources "/studies", StudyController, except: [:new, :edit]
+    end
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", Ask do
-  #   pipe_through :api
-  # end
+  scope "/", Ask do
+    pipe_through :browser
+
+    get "/*path", PageController, :index
+  end
 end

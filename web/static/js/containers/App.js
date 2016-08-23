@@ -1,13 +1,12 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { browserHistory } from 'react-router'
-//import Explore from '../components/Explore'
-//import { resetErrorMessage } from '../actions'
+import Study from './Study'
 
 const App = () => {
   return (
     <div>
-      Yey!
+      <p>We are App!</p>
+      <a href="/studies">studies</a>
     </div>
   );
 }
