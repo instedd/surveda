@@ -1,16 +1,24 @@
 import React, { Component, PropTypes } from 'react'
-//import { connect } from 'react-redux'
+import { connect } from 'react-redux'
 //import { v4 } from 'node-uuid'
+import { Link, withRouter } from 'react-router'
 
-export default class Study extends Component {
-  render() {
+class Study extends Component {
+  render(params) {
     const { study } = this.props
     return (
-      <tr>
-        <td>  
-          <a href="#">{ study.name }</a>
-        </td>
-      </tr>
+      <div>
+        <h1>{ study.name }</h1>
+        <Link to='/studies'>Back</Link>
+      </div>
     )
   }
 }
+
+const mapStateToProps = (state, ownProps) => {
+  return {
+    study: state.studies[ownProps.params.id-1]
+  }
+}
+
+export default withRouter(connect(mapStateToProps)(Study))

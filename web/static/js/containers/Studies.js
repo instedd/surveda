@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import Study from '../containers/Study'
+import { Link } from 'react-router'
 import * as actions from '../actions'
 import { fetchStudies, createStudy } from '../api'
 
@@ -28,7 +28,7 @@ class Studies extends Component {
   render() {
     return (
       <div>
-        <a onClick={this.addStudy}>Add!</a>
+        <p><a onClick={this.addStudy}>Add!</a></p>
         Studies array!
         <table>
           <thead>
@@ -38,7 +38,11 @@ class Studies extends Component {
           </thead>
           <tbody>
             { this.props.studies.map((study) =>
-              <Study study={study} key={study.id} />
+              <tr key={study.id}>
+                <td>
+                  <Link to={'/studies/' + study.id}>{ study.name }</Link>
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -53,6 +57,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-Studies = connect(mapStateToProps)(Studies);
-
-export default Studies;
+export default connect(mapStateToProps)(Studies)
