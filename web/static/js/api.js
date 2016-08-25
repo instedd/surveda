@@ -23,6 +23,16 @@ export const fetchStudies = () => {
   })
 }
 
+export const fetchStudy = (id) => {
+  return fetch(`/api/v1/studies/${id}`)
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), studySchema)
   })
 }
 

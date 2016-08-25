@@ -3,12 +3,12 @@ import { connect } from 'react-redux'
 //import { v4 } from 'node-uuid'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions'
-import { fetchStudies } from '../api'
+import { fetchStudies, fetchStudy } from '../api'
 
 class Study extends Component {
   componentDidMount() {
-    const { dispatch } = this.props
-    fetchStudies().then(studies => dispatch(actions.fetchStudiesSuccess(studies)))
+    const { dispatch, study_id } = this.props
+    fetchStudy(study_id).then(study => dispatch(actions.fetchStudiesSuccess(study)))
   }
 
   componentDidUpdate() {
@@ -31,6 +31,7 @@ class Study extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    study_id: ownProps.params.id,
     study: state.studies.studies[ownProps.params.id]
   }
 }
