@@ -12,7 +12,7 @@ const delay = (ms) =>
 // const studies = [{id:v4(), name: 'foo'}, {id: v4(), name: 'bar'}]
 
 export const fetchStudies = () => {
-  return fetch('http://localhost:4000/api/v1/studies')
+  return fetch('/api/v1/studies')
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -25,7 +25,7 @@ export const fetchStudies = () => {
 }
 
 export const createStudy = () => {
-  return fetch('http://localhost:4000/api/v1/studies', {
+  return fetch('/api/v1/studies', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
