@@ -7,7 +7,7 @@ import { fetchStudies, createStudy } from '../api'
 class Studies extends Component {
   constructor(props) {
     super(props)
-    this.addStudy = this.addStudy.bind(this)
+    this.createStudy = this.createStudy.bind(this)
   }
 
   componentDidMount() {
@@ -18,18 +18,18 @@ class Studies extends Component {
   componentDidUpdate() {
   }
 
-  addStudy(e) {
+  createStudy(e) {
     e.preventDefault()
 
     const { dispatch } = this.props
-    createStudy().then(study => dispatch(actions.addStudy(study))).catch((e) => dispatch(actions.fetchStudiesError(e)))
+    createStudy().then(study => dispatch(actions.createStudy(study))).catch((e) => dispatch(actions.fetchStudiesError(e)))
   }
 
   render() {
     const { studies, ids } = this.props.studies
     return (
       <div>
-        <p><a onClick={this.addStudy}>Add!</a></p>
+        <p><a onClick={this.createStudy}>Add!</a></p>
         Studies array!
         <table>
           <thead>

@@ -55,6 +55,6 @@ export const createStudy = () => {
     if (!response.ok) {
       return Promise.reject(json)
     }
-    return json.data
+    return normalize(camelizeKeys(json.data), studySchema)
   })
 }

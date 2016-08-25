@@ -5,23 +5,28 @@ import union from 'lodash/union'
 
 const studies = (state = {}, action) => {
   switch (action.type) {
-    case actions.ADD_STUDY:
+    case actions.CREATE_STUDY:
+      return {
+        ...state,
+        [action.id]: {
+          ...action.study
+        }
+      }
     case actions.FETCH_STUDIES_SUCCESS:
+    default:
       if (action.response && action.response.entities) {
         return merge({}, state, action.response.entities.studies)
-      } else {
-        return state
       }
-    default:
       return state
   }
 }
 
 const ids = (state = [], action) => {
     switch (action.type) {
-      case actions.ADD_STUDY:
+      case actions.CREATE_STUDY:
+        return [...state, action.id]
       case actions.FETCH_STUDIES_SUCCESS:
-        return union(state.ids, action.response.result)
+        return union(state, action.response.result)
       default:
         return state
     }
