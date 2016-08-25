@@ -31,7 +31,7 @@ class Study extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    study: state.studies[ownProps.params.id-1]
+    study: state.studies.studies[ownProps.params.id]
   }
 }
 

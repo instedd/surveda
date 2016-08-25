@@ -26,6 +26,7 @@ class Studies extends Component {
   }
 
   render() {
+    const { studies, ids } = this.props.studies
     return (
       <div>
         <p><a onClick={this.addStudy}>Add!</a></p>
@@ -37,10 +38,10 @@ class Studies extends Component {
             </tr>
           </thead>
           <tbody>
-            { this.props.studies.map((study) =>
-              <tr key={study.id}>
+            { ids.map((study_id) =>
+              <tr key={study_id}>
                 <td>
-                  <Link to={'/studies/' + study.id}>{ study.name }</Link>
+                  <Link to={'/studies/' + study_id}>{ studies[study_id].name }</Link>
                 </td>
               </tr>
             )}

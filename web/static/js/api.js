@@ -1,15 +1,14 @@
+import { normalize, Schema, arrayOf } from 'normalizr'
 import { v4 } from 'node-uuid'
 import { camelizeKeys } from 'humps'
 import 'isomorphic-fetch'
 
-/**
- * Mocking client-server processing
- */
+const studySchema = new Schema('studies');
+const userSchema = new Schema('users');
 
-const delay = (ms) =>
-  new Promise(resolve => setTimeout(resolve, ms))
-
-// const studies = [{id:v4(), name: 'foo'}, {id: v4(), name: 'bar'}]
+studySchema.define({
+  owner: userSchema
+});
 
 export const fetchStudies = () => {
   return fetch('/api/v1/studies')
@@ -20,7 +19,10 @@ export const fetchStudies = () => {
         return Promise.reject(json)
       }
 
-    return camelizeKeys(json.data)
+    return normalize(camelizeKeys(json.data), arrayOf(studySchema))
+  })
+}
+
   })
 }
 
