@@ -6,6 +6,7 @@ import union from 'lodash/union'
 const studies = (state = {}, action) => {
   switch (action.type) {
     case actions.CREATE_STUDY:
+    case actions.UPDATE_STUDY:
       return {
         ...state,
         [action.id]: {
@@ -27,6 +28,7 @@ const ids = (state = [], action) => {
         return [...state, action.id]
       case actions.FETCH_STUDIES_SUCCESS:
         return union(state, action.response.result)
+      case actions.UPDATE_STUDY:
       default:
         return state
     }
