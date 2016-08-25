@@ -33,7 +33,10 @@
     "redux-logger": "~2.6.1",
     "redux-form" : "~5.3.2",
     "redux-thunk": "~2.1.0",
-    "react-redux-loading-bar" : "2.3.0",
+    "redux-devtools": "~3.3.1",
+    "redux-devtools-dock-monitor": "~1.1.1",
+    "redux-devtools-log-monitor": "~1.0.11",
+    "react-redux-loading-bar" : "~2.3.0",
     "sass-brunch": "~2.6.3",
     "uglify-js-brunch": "~2.0.1"
   },
