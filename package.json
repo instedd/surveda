@@ -33,7 +33,6 @@
     "react-router-redux": "~4.0.5",
     "redux": "~3.1.2",
     "redux-logger": "~2.6.1",
-    "redux-form" : "~5.3.2",
     "redux-thunk": "~2.1.0",
     "redux-devtools": "~3.3.1",
     "redux-devtools-chart-monitor" : "~1.4.0",

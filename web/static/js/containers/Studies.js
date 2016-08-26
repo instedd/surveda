@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
-import * as actions from '../actions'
+import * as actions from '../actions/studies'
 import { fetchStudies, createStudy } from '../api'
 
 class Studies extends Component {

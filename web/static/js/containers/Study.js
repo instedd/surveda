@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 //import { v4 } from 'node-uuid'
 import { Link, withRouter } from 'react-router'
-import * as actions from '../actions'
+import * as actions from '../actions/studies'
 import { fetchStudies, fetchStudy } from '../api'
 
 class Study extends Component {

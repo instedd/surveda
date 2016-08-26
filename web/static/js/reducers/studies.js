@@ -1,5 +1,5 @@
 import { combineReducers }  from 'redux'
-import * as actions  from '../actions'
+import * as actions from '../actions/studies'
 import merge from 'lodash/merge'
 import union from 'lodash/union'
 
