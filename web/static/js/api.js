@@ -1,5 +1,4 @@
 import { normalize, Schema, arrayOf } from 'normalizr'
-import { v4 } from 'node-uuid'
 import { camelizeKeys } from 'humps'
 import 'isomorphic-fetch'
 
@@ -36,7 +35,7 @@ export const fetchStudy = (id) => {
   })
 }
 
-export const createStudy = () => {
+export const createStudy = (study) => {
   return fetch('/api/v1/studies', {
     method: 'POST',
     headers: {
@@ -44,9 +43,7 @@ export const createStudy = () => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      study: {
-        name: `nuevo!${v4().substring(0,4)}`,
-      }
+      study: study
     })
   })
   .then(response =>

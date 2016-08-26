@@ -1,14 +1,17 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-//import { v4 } from 'node-uuid'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/studies'
-import { fetchStudies, fetchStudy } from '../api'
+import { fetchStudy } from '../api'
 
 class Study extends Component {
   componentDidMount() {
     const { dispatch, study_id } = this.props
-    fetchStudy(study_id).then(study => dispatch(actions.fetchStudiesSuccess(study)))
+    if(study_id){
+      fetchStudy(study_id).then(study => dispatch(actions.fetchStudiesSuccess(study)))
+    } else {
+      dispatch(actions.fetchStudiesError(`Id is not defined`))
+    }
   }
 
   componentDidUpdate() {

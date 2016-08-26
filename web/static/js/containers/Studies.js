@@ -18,18 +18,13 @@ class Studies extends Component {
   componentDidUpdate() {
   }
 
-  createStudy(e) {
-    e.preventDefault()
-
-    const { dispatch } = this.props
-    createStudy().then(study => dispatch(actions.createStudy(study))).catch((e) => dispatch(actions.fetchStudiesError(e)))
-  }
-
   render() {
     const { studies, ids } = this.props.studies
     return (
       <div>
-        <p><a onClick={this.createStudy}>Add!</a></p>
+        <p>
+          <Link to='/studies/new'>Add study</Link>
+        </p>
         Studies array!
         <table>
           <thead>
