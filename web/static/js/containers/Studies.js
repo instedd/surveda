@@ -5,11 +5,6 @@ import * as actions from '../actions/studies'
 import { fetchStudies, createStudy } from '../api'
 
 class Studies extends Component {
-  constructor(props) {
-    super(props)
-    this.createStudy = this.createStudy.bind(this)
-  }
-
   componentDidMount() {
     const { dispatch } = this.props
     fetchStudies().then(studies => dispatch(actions.fetchStudiesSuccess(studies)))

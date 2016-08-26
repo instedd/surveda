@@ -8,11 +8,6 @@ import { fetchStudies, fetchStudy, createStudy } from '../api'
 import Study from './Study'
 
 class StudyForm extends Component {
-  constructor(props) {
-    super(props)
-    this.handleSubmit = this.handleSubmit.bind(this)
-  }
-
   componentDidMount() {
     const { dispatch, study_id } = this.props
     if(study_id) {
