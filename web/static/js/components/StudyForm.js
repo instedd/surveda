@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
 import merge from 'lodash/merge'
+import { Link } from 'react-router'
 
 const StudyForm = ({ onSubmit, study }) => {
   let input
@@ -18,6 +19,7 @@ const StudyForm = ({ onSubmit, study }) => {
         }>
           Submit
         </button>
+        <Link to='/studies'>Back</Link>
       </div>
     </div>
   )
