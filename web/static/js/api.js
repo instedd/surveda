@@ -55,3 +55,24 @@ export const createStudy = (study) => {
     return normalize(camelizeKeys(json.data), studySchema)
   })
 }
+
+export const updateStudy = (study) => {
+  return fetch(`/api/v1/studies/${study.id}`, {
+    method: 'PUT',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      study: study
+    })
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), studySchema)
+  })
+}

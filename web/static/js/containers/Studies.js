@@ -31,7 +31,8 @@ class Studies extends Component {
             { ids.map((study_id) =>
               <tr key={study_id}>
                 <td>
-                  <Link to={'/studies/' + study_id}>{ studies[study_id].name }</Link>
+                  <Link to={`/studies/${study_id}`}>{ studies[study_id].name }</Link>
+                  <Link to={`/studies/${study_id}/edit`}> ->Edit</Link>
                 </td>
               </tr>
             )}
