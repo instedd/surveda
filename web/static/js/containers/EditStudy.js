@@ -10,9 +10,9 @@ import StudyForm from '../components/StudyForm'
 
 class EditStudy extends Component {
   componentDidMount() {
-    const { dispatch, study_id } = this.props
-    if(study_id) {
-      fetchStudy(study_id).then(study => dispatch(actions.fetchStudiesSuccess(study)))
+    const { dispatch, studyId } = this.props
+    if(studyId) {
+      fetchStudy(studyId).then(study => dispatch(actions.fetchStudiesSuccess(study)))
     }
   }
 
@@ -34,7 +34,7 @@ class EditStudy extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    study_id: ownProps.params.id,
+    studyId: ownProps.params.id,
     study: state.studies.studies[ownProps.params.id] || {}
   }
 }

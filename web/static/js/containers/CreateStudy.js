@@ -9,19 +9,15 @@ import Study from './Study'
 import StudyForm from '../components/StudyForm'
 
 class CreateStudy extends Component {
-  componentDidMount() {
-    const { dispatch, study_id } = this.props
-    if(study_id) {
-      fetchStudy(study_id).then(study => dispatch(actions.fetchStudiesSuccess(study)))
-    }
-  }
-
   componentDidUpdate() {
   }
 
   handleSubmit(dispatch) {
     return (study) => {
-      createStudy(study).then(study => dispatch(actions.createStudy(study))).then(() => browserHistory.push('/studies')).catch((e) => dispatch(actions.fetchStudiesError(e)))
+      createStudy(study)
+        .then(study => dispatch(actions.createStudy(study)))
+        .then(() => browserHistory.push('/studies'))
+        .catch((e) => dispatch(actions.fetchStudiesError(e)))
     }
   }
 
@@ -36,7 +32,6 @@ class CreateStudy extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    study_id: ownProps.params.id,
     study: state.studies.studies[ownProps.params.id] || {}
   }
 }
