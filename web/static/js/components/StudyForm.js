@@ -13,13 +13,14 @@ const StudyForm = ({ onSubmit, study }) => {
           }/>
         </div>
       </div>
+      <br/>
       <div>
         <button type="button" onClick={() =>
           onSubmit(merge({}, study, {name: input.value}))
         }>
           Submit
         </button>
-        <Link to='/studies'>Back</Link>
+        <Link to='/studies'> Back</Link>
       </div>
     </div>
   )

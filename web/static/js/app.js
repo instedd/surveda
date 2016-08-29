@@ -15,7 +15,6 @@ render(
   <div>
     <div style={{width: '50%', margin: '0 auto'}}>
       <Header />
-      <h1>Welcome to Ask!</h1>
       <Root store={store} history={history} />
       <Footer />
     </div>

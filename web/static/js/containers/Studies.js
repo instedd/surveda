@@ -17,14 +17,14 @@ class Studies extends Component {
     const { studies, ids } = this.props.studies
     return (
       <div>
-        <p>
+        <p style={{fontSize: 'larger'}}>
           <Link to='/studies/new'>Add study</Link>
         </p>
-        Studies array!
-        <table>
+        <table style={{width: '300px'}}>
           <thead>
             <tr>
               <th>Name</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -32,7 +32,9 @@ class Studies extends Component {
               <tr key={study_id}>
                 <td>
                   <Link to={`/studies/${study_id}`}>{ studies[study_id].name }</Link>
-                  <Link to={`/studies/${study_id}/edit`}> ->Edit</Link>
+                </td>
+                <td>
+                  <Link to={`/studies/${study_id}/edit`}>Edit</Link>
                 </td>
               </tr>
             )}

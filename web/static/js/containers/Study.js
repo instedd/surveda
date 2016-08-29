@@ -22,8 +22,12 @@ class Study extends Component {
     if(study) {
       return (
         <div>
-          <h1>{ study.name }</h1>
-          <Link to='/studies'>Back</Link>
+          <h3>Study view</h3>
+          <h4>Name: { study.name }</h4> 
+          <br/>
+          <br/>
+          <Link to={`/studies/${study.id}/edit`}>Edit </Link>
+          <Link to='/studies'> Back</Link>
         </div>
       )
     } else {
