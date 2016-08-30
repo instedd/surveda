@@ -1,8 +1,13 @@
 import React from 'react'
+import { Link } from 'react-router'
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar'
 
 export default () => (
-  <div style={{ height: '120px', marginTop: '50px'}}>
-  	<h1>Welcome to Ask!</h1>
-  	This is the header
+  <div style={{ marginTop: '50px'}}>
+    <Toolbar>
+      <ToolbarGroup>
+        <Link to='/projects'>projects</Link>
+      </ToolbarGroup>
+    </Toolbar>
   </div>
 )

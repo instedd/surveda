@@ -10,10 +10,11 @@ import EditProject from './containers/EditProject'
 
 export default (
   <div>
-    <Route path ="/" component={App} />
-    <Route path ="/projects" component={Projects} />
-    <Route path ="/projects/new" component={CreateProject} />
-    <Route path ="/projects/:id/edit" component={EditProject} />
-    <Route path ="/projects/:id" component={Project} />
+    <Route path ="/" component={App}>
+      <Route path ="/projects" component={Projects} />
+      <Route path ="/projects/new" component={CreateProject} />
+      <Route path ="/projects/:id/edit" component={EditProject} />
+      <Route path ="/projects/:id" component={Project} />
+    </Route>
   </div>
 )
