@@ -1,24 +1,24 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
-import * as actions from '../actions/studies'
-import { fetchStudies, createStudy } from '../api'
+import * as actions from '../actions/projects'
+import { fetchProjects, createProject } from '../api'
 
-class Studies extends Component {
+class Projects extends Component {
   componentDidMount() {
     const { dispatch } = this.props
-    fetchStudies().then(studies => dispatch(actions.fetchStudiesSuccess(studies)))
+    fetchProjects().then(projects => dispatch(actions.fetchProjectsSuccess(projects)))
   }
 
   componentDidUpdate() {
   }
 
   render() {
-    const { studies, ids } = this.props.studies
+    const { projects, ids } = this.props.projects
     return (
       <div>
         <p style={{fontSize: 'larger'}}>
-          <Link to='/studies/new'>Add study</Link>
+          <Link to='/projects/new'>Add project</Link>
         </p>
         <table style={{width: '300px'}}>
           <thead>
@@ -28,13 +28,13 @@ class Studies extends Component {
             </tr>
           </thead>
           <tbody>
-            { ids.map((study_id) =>
-              <tr key={study_id}>
+            { ids.map((project_id) =>
+              <tr key={project_id}>
                 <td>
-                  <Link to={`/studies/${study_id}`}>{ studies[study_id].name }</Link>
+                  <Link to={`/projects/${project_id}`}>{ projects[project_id].name }</Link>
                 </td>
                 <td>
-                  <Link to={`/studies/${study_id}/edit`}>Edit</Link>
+                  <Link to={`/projects/${project_id}/edit`}>Edit</Link>
                 </td>
               </tr>
             )}
@@ -47,8 +47,8 @@ class Studies extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    studies: state.studies
+    projects: state.projects
   }
 }
 
-export default connect(mapStateToProps)(Studies)
+export default connect(mapStateToProps)(Projects)

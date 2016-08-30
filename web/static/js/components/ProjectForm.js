@@ -2,33 +2,33 @@ import React, { PropTypes } from 'react'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
 
-const StudyForm = ({ onSubmit, study }) => {
+const ProjectForm = ({ onSubmit, project }) => {
   let input
   return (
     <div>
       <div>
-        <label>Study Name</label>
+        <label>Project Name</label>
         <div>
-          <input type="text" placeholder="Study name" defaultValue={study.name} ref={ node => { input = node }
+          <input type="text" placeholder="Project name" defaultValue={project.name} ref={ node => { input = node }
           }/>
         </div>
       </div>
       <br/>
       <div>
         <button type="button" onClick={() =>
-          onSubmit(merge({}, study, {name: input.value}))
+          onSubmit(merge({}, project, {name: input.value}))
         }>
           Submit
         </button>
-        <Link to='/studies'> Back</Link>
+        <Link to='/projects'> Back</Link>
       </div>
     </div>
   )
 }
 
-StudyForm.propTypes = {
+ProjectForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  study: PropTypes.object.isRequired
+  project: PropTypes.object.isRequired
 }
 
-export default StudyForm
+export default ProjectForm

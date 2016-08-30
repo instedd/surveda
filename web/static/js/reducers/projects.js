@@ -1,22 +1,22 @@
 import { combineReducers }  from 'redux'
-import * as actions from '../actions/studies'
+import * as actions from '../actions/projects'
 import merge from 'lodash/merge'
 import union from 'lodash/union'
 
-const studies = (state = {}, action) => {
+const projects = (state = {}, action) => {
   switch (action.type) {
-    case actions.CREATE_STUDY:
-    case actions.UPDATE_STUDY:
+    case actions.CREATE_PROJECT:
+    case actions.UPDATE_PROJECT:
       return {
         ...state,
         [action.id]: {
-          ...action.study
+          ...action.project
         }
       }
-    case actions.FETCH_STUDIES_SUCCESS:
+    case actions.FETCH_PROJECTS_SUCCESS:
     default:
       if (action.response && action.response.entities) {
-        return merge({}, state, action.response.entities.studies)
+        return merge({}, state, action.response.entities.projects)
       }
       return state
   }
@@ -24,11 +24,11 @@ const studies = (state = {}, action) => {
 
 const ids = (state = [], action) => {
     switch (action.type) {
-      case actions.CREATE_STUDY:
+      case actions.CREATE_PROJECT:
         return [...state, action.id]
-      case actions.FETCH_STUDIES_SUCCESS:
+      case actions.FETCH_PROJECTS_SUCCESS:
         return union(state, action.response.result)
-      case actions.UPDATE_STUDY:
+      case actions.UPDATE_PROJECT:
       default:
         return state
     }
@@ -36,5 +36,5 @@ const ids = (state = [], action) => {
 
 export default combineReducers({
   ids,
-  studies
+  projects
 });

@@ -1,19 +1,19 @@
 import React from 'react'
 import { Route } from 'react-router'
 import App from './containers/App'
-import Studies from './containers/Studies'
-import Study from './containers/Study'
-import CreateStudy from './containers/CreateStudy'
-import EditStudy from './containers/EditStudy'
+import Projects from './containers/Projects'
+import Project from './containers/Project'
+import CreateProject from './containers/CreateProject'
+import EditProject from './containers/EditProject'
 //import UserPage from './containers/UserPage'
 //import RepoPage from './containers/RepoPage'
 
 export default (
   <div>
     <Route path ="/" component={App} />
-    <Route path ="/studies" component={Studies} />
-    <Route path ="/studies/new" component={CreateStudy} />
-    <Route path ="/studies/:id/edit" component={EditStudy} />
-    <Route path ="/studies/:id" component={Study} />
+    <Route path ="/projects" component={Projects} />
+    <Route path ="/projects/new" component={CreateProject} />
+    <Route path ="/projects/:id/edit" component={EditProject} />
+    <Route path ="/projects/:id" component={Project} />
   </div>
 )

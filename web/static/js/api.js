@@ -2,15 +2,15 @@ import { normalize, Schema, arrayOf } from 'normalizr'
 import { camelizeKeys } from 'humps'
 import 'isomorphic-fetch'
 
-const studySchema = new Schema('studies');
+const projectSchema = new Schema('projects');
 const userSchema = new Schema('users');
 
-studySchema.define({
+projectSchema.define({
   owner: userSchema
 });
 
-export const fetchStudies = () => {
-  return fetch('/api/v1/studies')
+export const fetchProjects = () => {
+  return fetch('/api/v1/projects')
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -18,12 +18,12 @@ export const fetchStudies = () => {
         return Promise.reject(json)
       }
 
-    return normalize(camelizeKeys(json.data), arrayOf(studySchema))
+    return normalize(camelizeKeys(json.data), arrayOf(projectSchema))
   })
 }
 
-export const fetchStudy = (id) => {
-  return fetch(`/api/v1/studies/${id}`)
+export const fetchProject = (id) => {
+  return fetch(`/api/v1/projects/${id}`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -31,19 +31,19 @@ export const fetchStudy = (id) => {
         return Promise.reject(json)
       }
 
-    return normalize(camelizeKeys(json.data), studySchema)
+    return normalize(camelizeKeys(json.data), projectSchema)
   })
 }
 
-export const createStudy = (study) => {
-  return fetch('/api/v1/studies', {
+export const createProject = (project) => {
+  return fetch('/api/v1/projects', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      study: study
+      project: project
     })
   })
   .then(response =>
@@ -52,19 +52,19 @@ export const createStudy = (study) => {
     if (!response.ok) {
       return Promise.reject(json)
     }
-    return normalize(camelizeKeys(json.data), studySchema)
+    return normalize(camelizeKeys(json.data), projectSchema)
   })
 }
 
-export const updateStudy = (study) => {
-  return fetch(`/api/v1/studies/${study.id}`, {
+export const updateProject = (project) => {
+  return fetch(`/api/v1/projects/${project.id}`, {
     method: 'PUT',
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      study: study
+      project: project
     })
   })
   .then(response =>
@@ -73,6 +73,6 @@ export const updateStudy = (study) => {
     if (!response.ok) {
       return Promise.reject(json)
     }
-    return normalize(camelizeKeys(json.data), studySchema)
+    return normalize(camelizeKeys(json.data), projectSchema)
   })
 }

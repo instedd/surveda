@@ -1,7 +1,7 @@
-defmodule Ask.Study do
+defmodule Ask.Project do
   use Ask.Web, :model
 
-  schema "studies" do
+  schema "projects" do
     field :name, :string
     belongs_to :user, Ask.User
 
