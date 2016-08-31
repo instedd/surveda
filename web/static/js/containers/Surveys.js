@@ -6,8 +6,8 @@ import { fetchSurveys } from '../api'
 
 class Surveys extends Component {
   componentDidMount() {
-    const { dispatch } = this.props
-    fetchSurveys().then(surveys => dispatch(actions.fetchSurveysSuccess(surveys)))
+    const { dispatch, projectId } = this.props
+    fetchSurveys(projectId).then(surveys => dispatch(actions.fetchSurveysSuccess(surveys)))
   }
 
   componentDidUpdate() {

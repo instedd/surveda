@@ -3,8 +3,8 @@ defmodule Ask.SurveyController do
 
   alias Ask.Survey
 
-  def index(conn, _params) do
-    surveys = Repo.all(Survey)
+  def index(conn, %{"project_id" => project_id}) do
+    surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id)
     render(conn, "index.json", surveys: surveys)
   end
 
@@ -15,7 +15,7 @@ defmodule Ask.SurveyController do
       {:ok, survey} ->
         conn
         |> put_status(:created)
-        |> put_resp_header("location", survey_path(conn, :show, survey))
+        |> put_resp_header("location", project_survey_path(conn, :show, survey))
         |> render("show.json", survey: survey)
       {:error, changeset} ->
         conn

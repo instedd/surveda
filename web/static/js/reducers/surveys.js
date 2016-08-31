@@ -14,10 +14,11 @@ export default (state = {}, action) => {
         }
       }
     case actions.FETCH_SURVEYS_SUCCESS:
-    default:
       if (action.response && action.response.entities) {
-        return merge({}, state, action.response.entities.surveys)
+        return action.response.entities.surveys
       }
+      return state
+    default:
       return state
   }
 }

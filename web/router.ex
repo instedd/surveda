@@ -25,8 +25,9 @@ defmodule Ask.Router do
     pipe_through :api
 
     scope "/v1" do
-      resources "/projects", ProjectController, except: [:new, :edit]
-      resources "/surveys", SurveyController, except: [:new, :edit]
+      resources "/projects", ProjectController, except: [:new, :edit] do
+        resources "/surveys", SurveyController, except: [:new, :edit]
+      end
     end
   end
 

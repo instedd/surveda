@@ -27,8 +27,8 @@ export const fetchProjects = () => {
   })
 }
 
-export const fetchSurveys = () => {
-  return fetch('/api/v1/surveys')
+export const fetchSurveys = (project_id) => {
+  return fetch(`/api/v1/projects/${project_id}/surveys`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
