@@ -26,8 +26,11 @@ class Project extends Component {
           <h4>Name: { project.name }</h4> 
           <br/>
           <br/>
-          <Link to={`/projects/${project.id}/edit`}>Edit </Link>
-          <Link to='/projects'> Back</Link>
+          <Link to={`/projects/${project.id}/edit`}>Edit</Link>
+          {' '}
+          <Link to='/projects'>Back</Link>
+          {' '}
+          <Link to={`/projects/${project.id}/surveys`}>Surveys</Link>
         </div>
       )
     } else {

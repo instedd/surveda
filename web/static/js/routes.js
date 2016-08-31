@@ -5,6 +5,7 @@ import Projects from './containers/Projects'
 import Project from './containers/Project'
 import CreateProject from './containers/CreateProject'
 import EditProject from './containers/EditProject'
+import Surveys from './containers/Surveys'
 //import UserPage from './containers/UserPage'
 //import RepoPage from './containers/RepoPage'
 
@@ -15,6 +16,7 @@ export default (
       <Route path ="/projects/new" component={CreateProject} />
       <Route path ="/projects/:id/edit" component={EditProject} />
       <Route path ="/projects/:id" component={Project} />
+      <Route path ="/projects/:projectId/surveys" component={Surveys} />
     </Route>
   </div>
 )

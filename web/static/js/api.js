@@ -3,10 +3,15 @@ import { camelizeKeys } from 'humps'
 import 'isomorphic-fetch'
 
 const projectSchema = new Schema('projects');
+const surveySchema = new Schema('surveys');
 const userSchema = new Schema('users');
 
 projectSchema.define({
   owner: userSchema
+});
+
+surveySchema.define({
+
 });
 
 export const fetchProjects = () => {
@@ -19,6 +24,19 @@ export const fetchProjects = () => {
       }
 
     return normalize(camelizeKeys(json.data), arrayOf(projectSchema))
+  })
+}
+
+export const fetchSurveys = () => {
+  return fetch('/api/v1/surveys')
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), arrayOf(surveySchema))
   })
 }
 
