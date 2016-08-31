@@ -74,6 +74,24 @@ export const createProject = (project) => {
   })
 }
 
+export const createSurvey = (project_id) => {
+  return fetch(`/api/v1/projects/${project_id}/surveys`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), surveySchema)
+  })
+}
+
 export const updateProject = (project) => {
   return fetch(`/api/v1/projects/${project.id}`, {
     method: 'PUT',

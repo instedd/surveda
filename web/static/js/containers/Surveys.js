@@ -1,8 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link, browserHistory } from 'react-router'
 import * as actions from '../actions/surveys'
-import { fetchSurveys } from '../api'
+import { fetchSurveys, createSurvey } from '../api'
 
 class Surveys extends Component {
   componentDidMount() {
@@ -13,12 +13,23 @@ class Surveys extends Component {
   componentDidUpdate() {
   }
 
+  newSurvey() {
+    const { dispatch, projectId } = this.props
+    createSurvey(projectId).then(response => {
+      dispatch(actions.createSurvey(response))
+      console.log(response)
+      browserHistory.push(`/projects/${projectId}/surveys/${response.result}`)
+    })
+  }
+
   render() {
-    const { surveys } = this.props
+    const { surveys, projectId } = this.props
     return (
       <div>
         <p style={{fontSize: 'larger'}}>
-          <Link to='/surveys/new'>Add survey</Link>
+          <a href="#" onClick={() => this.newSurvey() }>
+            Add survey
+          </a>
         </p>
         <table style={{width: '300px'}}>
           <thead>
@@ -31,10 +42,10 @@ class Surveys extends Component {
             { Object.keys(surveys).map((survey_id) =>
               <tr key={survey_id}>
                 <td>
-                  <Link to={`project/:projectId/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
+                  <Link to={`project/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
                 </td>
                 <td>
-                  <Link to={`project/:projectId/surveys/${survey_id}/edit`}>Edit</Link>
+                  <Link to={`project/${projectId}/surveys/${survey_id}/edit`}>Edit</Link>
                 </td>
               </tr>
             )}

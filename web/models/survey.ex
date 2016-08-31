@@ -13,7 +13,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name])
-    |> validate_required([:name])
+    |> cast(params, [:name, :project_id])
+    |> validate_required([:name, :project_id])
   end
 end

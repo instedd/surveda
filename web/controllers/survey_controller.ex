@@ -8,14 +8,14 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create(conn, %{"survey" => survey_params}) do
-    changeset = Survey.changeset(%Survey{}, survey_params)
+  def create(conn, %{"project_id" => project_id}) do
+    changeset = Survey.changeset(%Survey{}, %{project_id: project_id, name: "Untitled"})
 
     case Repo.insert(changeset) do
       {:ok, survey} ->
         conn
         |> put_status(:created)
-        |> put_resp_header("location", project_survey_path(conn, :show, survey))
+        |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
         |> render("show.json", survey: survey)
       {:error, changeset} ->
         conn

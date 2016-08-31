@@ -15,7 +15,7 @@ export default (state = {}, action) => {
       }
     case actions.FETCH_SURVEYS_SUCCESS:
       if (action.response && action.response.entities) {
-        return action.response.entities.surveys
+        return action.response.entities.surveys || {}
       }
       return state
     default:
