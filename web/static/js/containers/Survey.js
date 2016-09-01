@@ -23,7 +23,7 @@ class Survey extends Component {
       return (
         <div>
           <h3>Survey view</h3>
-          <h4>Name: { survey.name }</h4> 
+          <h4>Name: { survey.name }</h4>
           <br/>
           <br/>
           <Link to={`/surveys/${survey.id}/edit`}>Edit</Link>
@@ -41,8 +41,8 @@ class Survey extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    survey_id: ownProps.params.id,
-    survey: state.surveys[ownProps.params.id]
+    survey_id: ownProps.params.surveyId,
+    survey: state.surveys[ownProps.params.surveyId]
   }
 }
 

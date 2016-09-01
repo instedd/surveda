@@ -41,8 +41,8 @@ class Project extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    project_id: ownProps.params.id,
-    project: state.projects.projects[ownProps.params.id]
+    project_id: ownProps.params.projectId,
+    project: state.projects.projects[ownProps.params.projectId]
   }
 }
 
