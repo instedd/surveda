@@ -4,6 +4,10 @@ import { Link } from 'react-router'
 
 const ProjectForm = ({ onSubmit, project }) => {
   let input
+  if (!project) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div>
       <div>
@@ -28,7 +32,7 @@ const ProjectForm = ({ onSubmit, project }) => {
 
 ProjectForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  project: PropTypes.object.isRequired
+  project: PropTypes.object
 }
 
 export default ProjectForm
