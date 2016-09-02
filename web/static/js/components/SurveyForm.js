@@ -2,32 +2,37 @@ import React, { PropTypes } from 'react'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
 
-const SurveyForm = ({ onSubmit, survey }) => {
+const SurveyForm = ({ onSubmit, survey, children }) => {
   let input
   return (
     <div>
-      <div>
-        <label>Survey Name</label>
+      <div className="col-md-4" style={{border: `1px solid black`, height: `400px`}}>
+        <label>Progress bar</label>
         <div>
-          <input type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node }
-          }/>
+          Item 1
+        </div>
+        <div>
+          Item 2
+        </div>
+        <div>
+          Item 3
+        </div>
+        <div>
+          Item 4
+        </div>
+        <div>
+          Item 5
         </div>
       </div>
-      <br/>
-      <div>
-        <button type="button" onClick={() =>
-          onSubmit(merge({}, survey, {name: input.value}))
-        }>
-          Submit
-        </button>
-        <Link to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+      <div className="col-md-8">
+        {children}
       </div>
     </div>
   )
 }
 
 SurveyForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
+  // onSubmit: PropTypes.func.isRequired,
   survey: PropTypes.object.isRequired
 }
 

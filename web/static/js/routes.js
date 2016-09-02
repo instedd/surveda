@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route } from 'react-router'
+import { Route, IndexRedirect } from 'react-router'
 import App from './containers/App'
 import Projects from './containers/Projects'
 import Project from './containers/Project'
@@ -8,6 +8,7 @@ import EditProject from './containers/EditProject'
 import EditSurvey from './containers/EditSurvey'
 import Surveys from './containers/Surveys'
 import Survey from './containers/Survey'
+import SurveyQuestionnaireStep from './components/SurveyQuestionnaireStep'
 //import UserPage from './containers/UserPage'
 //import RepoPage from './containers/RepoPage'
 
@@ -20,7 +21,10 @@ export default (
       <Route path ="/projects/:id" component={Project} />
       <Route path ="/projects/:projectId/surveys" component={Surveys} />
       <Route path ="/projects/:projectId/surveys/:id" component={Survey} />
-      <Route path ="/projects/:projectId/surveys/:id/edit" component={EditSurvey} />
+      <Route path ="/projects/:projectId/surveys/:id/edit" component={EditSurvey} >
+        <IndexRedirect to="questionnaire"/>
+        <Route path ="questionnaire" component={SurveyQuestionnaireStep} />
+      </Route>
     </Route>
   </div>
 )

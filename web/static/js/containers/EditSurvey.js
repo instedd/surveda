@@ -19,17 +19,10 @@ class EditSurvey extends Component {
   componentDidUpdate() {
   }
 
-  handleSubmit(dispatch) {
-    const { projectId } = this.props
-    return (survey) => {
-      updateSurvey(projectId, survey).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${projectId}/surveys/`)).catch((e) => dispatch(actions.fetchSurveysError(e)))
-    }
-  }
-
   render(params) {
     let input
-    const { survey } = this.props
-    return (<SurveyForm onSubmit={this.handleSubmit(this.props.dispatch)} survey={survey} />)
+    const { children, survey } = this.props
+    return (<SurveyForm survey={survey} >{children}</SurveyForm>)
   }
 }
 
