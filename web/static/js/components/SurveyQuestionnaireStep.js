@@ -1,4 +1,5 @@
 import React, { PropTypes, Component } from 'react'
+import { browserHistory } from 'react-router'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
@@ -9,7 +10,7 @@ class SurveyQuestionnaireStep extends Component {
 
   handleSubmit(survey) {
     const { dispatch, projectId } = this.props
-    updateSurvey(projectId, survey).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${projectId}/surveys/`)).catch((e) => dispatch(actions.fetchSurveysError(e)))
+    updateSurvey(survey.projectId, survey).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${survey.projectId}/surveys/`)).catch((e) => dispatch(actions.fetchSurveysError(e)))
   }
 
   render() {
