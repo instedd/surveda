@@ -66,7 +66,7 @@ export const fetchProject = (id) => {
 }
 
 export const fetchSurvey = (project_id, id) => {
-  return fetch(`/api/v1/projects/${project_id}/surveys/${id}`)
+  return apiFetch(`/api/v1/projects/${project_id}/surveys/${id}`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -139,7 +139,7 @@ export const updateProject = (project) => {
 }
 
 export const updateSurvey = (project_id, survey) => {
-  return fetch(`/api/v1/projects/${project_id}/surveys/${survey.id}`, {
+  return apiFetch(`/api/v1/projects/${project_id}/surveys/${survey.id}`, {
     method: 'PUT',
     headers: {
       'Accept': 'application/json',
