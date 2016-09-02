@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { Link, browserHistory } from 'react-router'
 import * as actions from '../actions/surveys'
 import { fetchSurveys, createSurvey } from '../api'
+import { ProjectTabs } from '../components'
 
 class Surveys extends Component {
   componentDidMount() {
@@ -26,6 +27,7 @@ class Surveys extends Component {
     const { surveys, projectId } = this.props
     return (
       <div>
+        <ProjectTabs projectId={projectId}/>
         <p style={{fontSize: 'larger'}}>
           <a href="#" onClick={() => this.newSurvey() }>
             Add survey
