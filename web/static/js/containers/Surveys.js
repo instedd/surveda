@@ -19,7 +19,7 @@ class Surveys extends Component {
     createSurvey(projectId).then(response => {
       dispatch(actions.createSurvey(response))
       console.log(response)
-      browserHistory.push(`/projects/${projectId}/surveys/${response.result}`)
+      browserHistory.push(`/projects/${projectId}/surveys/${response.result}/edit`)
     })
   }
 
@@ -44,10 +44,10 @@ class Surveys extends Component {
             { Object.keys(surveys).map((survey_id) =>
               <tr key={survey_id}>
                 <td>
-                  <Link to={`project/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
+                  <Link to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
                 </td>
                 <td>
-                  <Link to={`project/${projectId}/surveys/${survey_id}/edit`}>Edit</Link>
+                  <Link to={`/projects/${projectId}/surveys/${survey_id}/edit`}>Edit</Link>
                 </td>
               </tr>
             )}

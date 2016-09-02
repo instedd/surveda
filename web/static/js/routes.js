@@ -5,6 +5,7 @@ import Projects from './containers/Projects'
 import Project from './containers/Project'
 import CreateProject from './containers/CreateProject'
 import EditProject from './containers/EditProject'
+import EditSurvey from './containers/EditSurvey'
 import Surveys from './containers/Surveys'
 import Survey from './containers/Survey'
 //import UserPage from './containers/UserPage'
@@ -19,6 +20,7 @@ export default (
       <Route path ="/projects/:id" component={Project} />
       <Route path ="/projects/:projectId/surveys" component={Surveys} />
       <Route path ="/projects/:projectId/surveys/:id" component={Survey} />
+      <Route path ="/projects/:projectId/surveys/:id/edit" component={EditSurvey} />
     </Route>
   </div>
 )

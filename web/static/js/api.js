@@ -65,6 +65,19 @@ export const fetchProject = (id) => {
   })
 }
 
+export const fetchSurvey = (project_id, id) => {
+  return fetch(`/api/v1/projects/${project_id}/surveys/${id}`)
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), surveySchema)
+  })
+}
+
 export const createProject = (project) => {
   return apiFetch('/api/v1/projects', {
     method: 'POST',
@@ -122,5 +135,26 @@ export const updateProject = (project) => {
       return Promise.reject(json)
     }
     return normalize(camelizeKeys(json.data), projectSchema)
+  })
+}
+
+export const updateSurvey = (project_id, survey) => {
+  return fetch(`/api/v1/projects/${project_id}/surveys/${survey.id}`, {
+    method: 'PUT',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      survey: survey
+    })
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), surveySchema)
   })
 }
