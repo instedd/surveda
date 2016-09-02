@@ -14,8 +14,20 @@ surveySchema.define({
 
 });
 
+const apiFetch = (url, options) => {
+  return fetch(url, {...options, credentials: 'same-origin'})
+    .then(response => {
+      if (!response.ok && response.status == 403) {
+        window.location = "/login"
+        return Promise.reject(response.statusText)
+      } else {
+        return response
+      }
+    })
+}
+
 export const fetchProjects = () => {
-  return fetch('/api/v1/projects')
+  return apiFetch('/api/v1/projects')
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -28,7 +40,7 @@ export const fetchProjects = () => {
 }
 
 export const fetchSurveys = (project_id) => {
-  return fetch(`/api/v1/projects/${project_id}/surveys`)
+  return apiFetch(`/api/v1/projects/${project_id}/surveys`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -41,7 +53,7 @@ export const fetchSurveys = (project_id) => {
 }
 
 export const fetchProject = (id) => {
-  return fetch(`/api/v1/projects/${id}`)
+  return apiFetch(`/api/v1/projects/${id}`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -54,7 +66,7 @@ export const fetchProject = (id) => {
 }
 
 export const createProject = (project) => {
-  return fetch('/api/v1/projects', {
+  return apiFetch('/api/v1/projects', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -75,7 +87,7 @@ export const createProject = (project) => {
 }
 
 export const createSurvey = (project_id) => {
-  return fetch(`/api/v1/projects/${project_id}/surveys`, {
+  return apiFetch(`/api/v1/projects/${project_id}/surveys`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -93,7 +105,7 @@ export const createSurvey = (project_id) => {
 }
 
 export const updateProject = (project) => {
-  return fetch(`/api/v1/projects/${project.id}`, {
+  return apiFetch(`/api/v1/projects/${project.id}`, {
     method: 'PUT',
     headers: {
       'Accept': 'application/json',

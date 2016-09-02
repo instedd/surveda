@@ -1,5 +1,5 @@
 defmodule Ask.ProjectController do
-  use Ask.Web, :controller
+  use Ask.Web, :api_controller
 
   alias Ask.Project
 

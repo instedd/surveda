@@ -39,6 +39,13 @@ defmodule Ask.Web do
     end
   end
 
+  def api_controller do
+    quote do
+      use Ask.Web, :controller
+      plug Ask.Plugs.ApiAuthenticated
+    end
+  end
+
   def view do
     quote do
       use Phoenix.View, root: "web/templates"
