@@ -15,5 +15,5 @@ config :ask, Ask.Repo,
   username: "root",
   password: "",
   database: "ask_test",
-  hostname: "localhost",
+  hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox

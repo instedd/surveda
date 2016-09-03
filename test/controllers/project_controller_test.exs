@@ -6,7 +6,11 @@ defmodule Ask.ProjectControllerTest do
   @invalid_attrs %{}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    user = %Ask.User{} |> Repo.insert!
+    conn = conn
+      |> put_private(:test_user, user)
+      |> put_req_header("accept", "application/json")
+    {:ok, conn: conn, user: user}
   end
 
   test "lists all entries on index", %{conn: conn} do

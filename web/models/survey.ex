@@ -15,5 +15,6 @@ defmodule Ask.Survey do
     struct
     |> cast(params, [:name, :project_id])
     |> validate_required([:name, :project_id])
+    |> foreign_key_constraint(:project_id)
   end
 end

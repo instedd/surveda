@@ -3,6 +3,6 @@ defmodule Ask.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"
-    assert html_response(conn, 200) =~ "Welcome to Phoenix!"
+    assert redirected_to(conn) =~ "/login"
   end
 end

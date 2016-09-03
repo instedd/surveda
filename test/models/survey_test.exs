@@ -7,7 +7,7 @@ defmodule Ask.SurveyTest do
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
-    changeset = Survey.changeset(%Survey{}, @valid_attrs)
+    changeset = Survey.changeset(%Survey{project_id: 0}, @valid_attrs)
     assert changeset.valid?
   end
 

@@ -21,6 +21,8 @@ services:
       - db
     volumes:
       - './:/app'
+    environment:
+      DATABASE_HOST: db
     ports:
       - 4000:4000
 
