@@ -26,8 +26,8 @@ config :ask, Ask.Endpoint,
     ]
   ]
 
-# Do not include metadata nor timestamps in development logs
-config :logger, :console, format: "[$level] $message\n"
+# Do not include metadata in development logs
+config :logger, :console, format: "$dateT$timeZ [$level] $message\n"
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
