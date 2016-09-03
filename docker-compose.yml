@@ -30,6 +30,7 @@ services:
     image: node:6.3.1
     command: node_modules/brunch/bin/brunch watch
     working_dir: /app
+    stop_signal: SIGKILL
     volumes:
       - './:/app'
       - 'node_modules:/app/node_modules'
