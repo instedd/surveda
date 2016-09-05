@@ -22,20 +22,3 @@ export default (state = {}, action) => {
       return state
   }
 }
-
-// const ids = (state = [], action) => {
-//     switch (action.type) {
-//       case actions.CREATE_SURVEY:
-//         return [...state, action.id]
-//       case actions.FETCH_SURVEYS_SUCCESS:
-//         return union(state, action.response.result)
-//       case actions.UPDATE_SURVEY:
-//       default:
-//         return state
-//     }
-//   }
-
-// export default combineReducers({
-//   // ids,
-//   surveys
-// });
