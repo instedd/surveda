@@ -24,7 +24,8 @@ defmodule Ask.SurveyControllerTest do
     conn = get conn, project_survey_path(conn, :show, -1, survey)
     assert json_response(conn, 200)["data"] == %{"id" => survey.id,
       "name" => survey.name,
-      "project_id" => survey.project_id}
+      "project_id" => survey.project_id,
+      "questionnaire_id" => nil}
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
