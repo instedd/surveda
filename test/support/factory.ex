@@ -28,4 +28,14 @@ defmodule Ask.Factory do
       description: "Description"
     }
   end
+
+  def channel_factory do
+    %Ask.Channel{
+      user: build(:user),
+      name: "My Channel",
+      type: "sms",
+      provider: "provider",
+      settings: %{}
+    }
+  end
 end
