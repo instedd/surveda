@@ -23,14 +23,12 @@ class Survey extends Component {
       return (
         <div>
           <h3>Survey view</h3>
-          <h4>Name: { survey.name }</h4> 
+          <h4>Name: { survey.name }</h4>
           <br/>
           <br/>
-          <Link to={`/surveys/${survey.id}/edit`}>Edit</Link>
+          <Link to={`/projects/${survey.projectId}/surveys/${survey.id}/edit`}>Edit</Link>
           {' '}
-          <Link to='/surveys'>Back</Link>
-          {' '}
-          <Link to={`/surveys/${survey.id}/surveys`}>Surveys</Link>
+          <Link to={`/projects/${survey.projectId}/surveys`}>Back</Link>
         </div>
       )
     } else {
