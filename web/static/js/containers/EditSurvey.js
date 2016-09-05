@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as projectActions from '../actions/projects'
-import { fetchSurveys, fetchSurvey, updateSurveym, fetchProject } from '../api'
+import { fetchSurvey, fetchProject } from '../api'
 import Survey from './Survey'
 import SurveyForm from '../components/SurveyForm'
 

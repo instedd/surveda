@@ -22,7 +22,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
         <div className="col-md-4" style={{border: `1px solid black`, height: `400px`}}>
           <label>Progress bar</label>
           <div>
-            Item 1
+            Select a questionnaire
           </div>
           <div>
             Item 2

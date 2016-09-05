@@ -3,10 +3,18 @@ import { browserHistory } from 'react-router'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
-import { updateSurvey } from '../api'
+import { updateSurvey, fetchQuestionnaires } from '../api'
 import * as actions from '../actions/surveys'
+import * as questionnairesActions from '../actions/questionnaires'
 
 class SurveyQuestionnaireStep extends Component {
+
+  componentDidMount() {
+    const { dispatch, projectId, questionnaires } = this.props
+    if(projectId) {
+      fetchQuestionnaires(projectId).then(questionnaires => dispatch(questionnairesActions.fetchQuestionnairesSuccess(questionnaires)))
+    }
+  }
 
   handleSubmit(survey) {
     const { dispatch, projectId } = this.props
@@ -15,8 +23,8 @@ class SurveyQuestionnaireStep extends Component {
 
   render() {
     let input
-    const { survey } = this.props
-    if (!survey) {
+    const { survey, questionnaires } = this.props
+    if (!survey || !questionnaires) {
       return <div>Loading...</div>
     }
     return (
@@ -29,6 +37,24 @@ class SurveyQuestionnaireStep extends Component {
         <div>
           <input type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node } }/>
         </div>
+        <h4>Questionnaires</h4>
+        <table style={{width: '300px'}}>
+          <thead>
+            <tr>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            { Object.keys(questionnaires).map((questionnaire_id) =>
+              <tr key={questionnaire_id}>
+                <td>
+                  { questionnaires[questionnaire_id].name }
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
         <br/>
         <button type="button" onClick={() =>
           this.handleSubmit(merge({}, survey, {name: input.value}))
@@ -44,6 +70,8 @@ class SurveyQuestionnaireStep extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return{
+    questionnaires: state.questionnaires,
+    projectId: ownProps.params.projectId,
     survey: state.surveys[ownProps.params.id]
   }
 }
