@@ -17,7 +17,7 @@ defmodule Ask.QuestionnaireControllerTest do
   test "denies access without login token" do
     conn = build_conn()
     conn = get conn, project_questionnaire_path(conn, :index, -1)
-    assert json_response(conn, :forbidden)["error"] == "Forbidden"
+    assert json_response(conn, :unauthorized)["error"] == "Unauthorized"
   end
 
   test "lists all entries on index", %{conn: conn} do
