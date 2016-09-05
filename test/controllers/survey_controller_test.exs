@@ -4,10 +4,10 @@ defmodule Ask.SurveyControllerTest do
   alias Ask.Project
   alias Ask.Survey
   @valid_attrs %{name: "some content"}
-  @invalid_attrs %{}
+  @invalid_attrs %{name: ""}
 
   setup %{conn: conn} do
-    user = %Ask.User{} |> Repo.insert!
+    user = insert(:user)
     conn = conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
@@ -20,7 +20,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   test "shows chosen resource", %{conn: conn} do
-    survey = Repo.insert! %Survey{}
+    survey = insert(:survey)
     conn = get conn, project_survey_path(conn, :show, -1, survey)
     assert json_response(conn, 200)["data"] == %{"id" => survey.id,
       "name" => survey.name,
@@ -35,7 +35,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
-    project = Repo.insert! %Project{}
+    project = insert(:project)
     conn = post conn, project_survey_path(conn, :create, project.id)
     assert json_response(conn, 201)["data"]["id"]
     assert Repo.get_by(Survey, %{project_id: project.id})
@@ -47,21 +47,21 @@ defmodule Ask.SurveyControllerTest do
   end
 
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
-    project = Repo.insert! %Project{}
-    survey = Repo.insert! %Survey{project: project}
+    project = insert(:project)
+    survey = insert(:survey, project: project)
     conn = put conn, project_survey_path(conn, :update, project, survey), survey: @valid_attrs
     assert json_response(conn, 200)["data"]["id"]
     assert Repo.get_by(Survey, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
-    survey = Repo.insert! %Survey{project: %Project{}}
+    survey = insert(:survey)
     conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "deletes chosen resource", %{conn: conn} do
-    survey = Repo.insert! %Survey{project: %Project{}}
+    survey = insert(:survey)
     conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
     assert response(conn, 204)
     refute Repo.get(Survey, survey.id)

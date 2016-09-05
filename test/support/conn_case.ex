@@ -26,6 +26,7 @@ defmodule Ask.ConnCase do
       import Ecto.Query
 
       import Ask.Router.Helpers
+      import Ask.Factory
 
       # The default endpoint for testing
       @endpoint Ask.Endpoint

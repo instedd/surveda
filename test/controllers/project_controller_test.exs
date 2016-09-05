@@ -3,10 +3,10 @@ defmodule Ask.ProjectControllerTest do
 
   alias Ask.Project
   @valid_attrs %{name: "some content"}
-  @invalid_attrs %{}
+  @invalid_attrs %{name: ""}
 
   setup %{conn: conn} do
-    user = %Ask.User{} |> Repo.insert!
+    user = insert(:user)
     conn = conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
@@ -19,7 +19,7 @@ defmodule Ask.ProjectControllerTest do
   end
 
   test "shows chosen resource", %{conn: conn} do
-    project = Repo.insert! %Project{}
+    project = insert(:project)
     conn = get conn, project_path(conn, :show, project)
     assert json_response(conn, 200)["data"] == %{"id" => project.id,
       "user_id" => project.user_id,
@@ -44,20 +44,20 @@ defmodule Ask.ProjectControllerTest do
   end
 
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
-    project = Repo.insert! %Project{}
+    project = insert(:project)
     conn = put conn, project_path(conn, :update, project), project: @valid_attrs
     assert json_response(conn, 200)["data"]["id"]
     assert Repo.get_by(Project, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
-    project = Repo.insert! %Project{}
+    project = insert(:project)
     conn = put conn, project_path(conn, :update, project), project: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "deletes chosen resource", %{conn: conn} do
-    project = Repo.insert! %Project{}
+    project = insert(:project)
     conn = delete conn, project_path(conn, :delete, project)
     assert response(conn, 204)
     refute Repo.get(Project, project.id)

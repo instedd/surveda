@@ -40,6 +40,7 @@ defmodule Ask.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:addict, "~> 0.3"},
+      {:ex_machina, "~> 1.0", only: :test},
    ]
   end
 

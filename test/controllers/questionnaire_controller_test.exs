@@ -1,13 +1,13 @@
 defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Project
-  alias Ask.Questionnaire
+  # alias Ask.Project
+  # alias Ask.Questionnaire
   @valid_attrs %{description: "some content", name: "some content"}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
-    user = %Ask.User{} |> Repo.insert!
+    user = insert(:user)
     conn = conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
@@ -26,7 +26,7 @@ defmodule Ask.QuestionnaireControllerTest do
   end
 
   test "shows chosen resource", %{conn: conn} do
-    questionnaire = Repo.insert! %Questionnaire{project: %Project{}}
+    questionnaire = insert(:questionnaire)
     conn = get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
     assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
       "name" => questionnaire.name,

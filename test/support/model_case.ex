@@ -22,6 +22,7 @@ defmodule Ask.ModelCase do
       import Ecto.Changeset
       import Ecto.Query
       import Ask.ModelCase
+      import Ask.Factory
     end
   end
 
