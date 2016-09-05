@@ -5,12 +5,17 @@ import 'isomorphic-fetch'
 const projectSchema = new Schema('projects');
 const surveySchema = new Schema('surveys');
 const userSchema = new Schema('users');
+const questionnaireSchema = new Schema('questionnaires');
 
 projectSchema.define({
   owner: userSchema
 });
 
 surveySchema.define({
+
+});
+
+questionnaireSchema.define({
 
 });
 
@@ -27,7 +32,7 @@ const apiFetch = (url, options) => {
 }
 
 export const fetchProjects = () => {
-  return apiFetch('/api/v1/projects')
+  return apiFetch(`/api/v1/projects`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -49,6 +54,19 @@ export const fetchSurveys = (project_id) => {
       }
 
     return normalize(camelizeKeys(json.data), arrayOf(surveySchema))
+  })
+}
+
+export const fetchQuestionnaires = (project_id) => {
+  return apiFetch(`/api/v1/projects/${project_id}/questionnaires`)
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), arrayOf(questionnaireSchema))
   })
 }
 

@@ -3,8 +3,8 @@ defmodule Ask.QuestionnaireController do
 
   alias Ask.Questionnaire
 
-  def index(conn, _params) do
-    questionnaires = Repo.all(Questionnaire)
+  def index(conn, %{"project_id" => project_id}) do
+    questionnaires = Repo.all(from q in Questionnaire, where: q.project_id == ^project_id)
     render(conn, "index.json", questionnaires: questionnaires)
   end
 
