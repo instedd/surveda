@@ -4,6 +4,7 @@ defmodule Ask.Survey do
   schema "surveys" do
     field :name, :string
     belongs_to :project, Ask.Project
+    belongs_to :questionnaire, Ask.Questionnaire
 
     timestamps()
   end
@@ -13,7 +14,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id])
+    |> cast(params, [:name, :project_id, :questionnaire_id])
     |> validate_required([:name, :project_id])
     |> foreign_key_constraint(:project_id)
   end

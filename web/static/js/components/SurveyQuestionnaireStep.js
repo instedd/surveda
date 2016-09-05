@@ -23,6 +23,7 @@ class SurveyQuestionnaireStep extends Component {
 
   render() {
     let input
+    let questionnaires_input = []
     const { survey, questionnaires } = this.props
     if (!survey || !questionnaires) {
       return <div>Loading...</div>
@@ -41,12 +42,16 @@ class SurveyQuestionnaireStep extends Component {
         <table style={{width: '300px'}}>
           <thead>
             <tr>
+              <th style={{width: '20px'}}/>
               <th>Name</th>
             </tr>
           </thead>
           <tbody>
             { Object.keys(questionnaires).map((questionnaire_id) =>
               <tr key={questionnaire_id}>
+                <td>
+                  <input type="radio" name="questionnaire" value={ questionnaire_id } ref={ node => {questionnaires_input.push({id: questionnaire_id, node:node}) } } defaultChecked={survey.questionnaireId == questionnaire_id } />
+                </td>
                 <td>
                   { questionnaires[questionnaire_id].name }
                 </td>
@@ -57,7 +62,7 @@ class SurveyQuestionnaireStep extends Component {
 
         <br/>
         <button type="button" onClick={() =>
-          this.handleSubmit(merge({}, survey, {name: input.value}))
+          this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: questionnaires_input.find(element => element.node.checked).id }))
         }>
           Submit
         </button>

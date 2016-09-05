@@ -12,6 +12,7 @@ defmodule Ask.SurveyView do
   def render("survey.json", %{survey: survey}) do
     %{id: survey.id,
       name: survey.name,
-      project_id: survey.project_id}
+      project_id: survey.project_id,
+      questionnaire_id: survey.questionnaire_id}
   end
 end

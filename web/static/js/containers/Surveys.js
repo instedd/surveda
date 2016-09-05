@@ -18,7 +18,6 @@ class Surveys extends Component {
     const { dispatch, projectId } = this.props
     createSurvey(projectId).then(response => {
       dispatch(actions.createSurvey(response))
-      console.log(response)
       browserHistory.push(`/projects/${projectId}/surveys/${response.result}/edit`)
     })
   }
