@@ -9,7 +9,7 @@ defmodule Ask.ProjectController do
   end
 
   def create(conn, %{"project" => project_params}) do
-    changeset = Project.changeset(%Project{user: Addict.Helper.current_user(conn)}, project_params)
+    changeset = Project.changeset(%Project{user_id: conn.assigns.current_user.id}, project_params)
 
     case Repo.insert(changeset) do
       {:ok, project} ->
