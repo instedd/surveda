@@ -60,6 +60,14 @@ config :logger, level: :info
 #
 #     config :ask, Ask.Endpoint, root: "."
 
-# Finally import the config/prod.secret.exs
-# which should be versioned separately.
-import_config "prod.secret.exs"
+config :ask, Ask.Endpoint,
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
+# Configure your database
+config :ask, Ask.Repo,
+  adapter: Ecto.Adapters.MySQL,
+  username: "root",
+  password: "",
+  database: "ask",
+  hostname: System.get_env("DATABASE_HOST") || "localhost",
+  pool_size: 20
