@@ -18,7 +18,9 @@ export default (
       <Route path ="/projects" component={Projects} />
       <Route path ="/projects/new" component={CreateProject} />
       <Route path ="/projects/:id/edit" component={EditProject} />
-      <Route path ="/projects/:id" component={Project} />
+      <Route path ="/projects/:id">
+        <IndexRedirect to="surveys"/>
+      </Route>
       <Route path ="/projects/:projectId/surveys" component={Surveys} />
       <Route path ="/projects/:projectId/surveys/:id" component={Survey} />
       <Route path ="/projects/:projectId/surveys/:id/edit" component={EditSurvey} >
