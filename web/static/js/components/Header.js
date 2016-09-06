@@ -5,6 +5,7 @@ export default () => (
   <nav className="navbar navbar-default">
     <ul className="nav navbar-nav">
       <li><Link to='/projects'>projects</Link></li>
+      <li><Link to='/channels'>channels</Link></li>
     </ul>
   </nav>
 )

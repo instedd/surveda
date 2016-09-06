@@ -6,6 +6,7 @@ const projectSchema = new Schema('projects');
 const surveySchema = new Schema('surveys');
 const userSchema = new Schema('users');
 const questionnaireSchema = new Schema('questionnaires');
+const channelSchema = new Schema('channels');
 
 projectSchema.define({
   owner: userSchema
@@ -18,6 +19,9 @@ surveySchema.define({
 questionnaireSchema.define({
 
 });
+
+channelSchema.define({
+})
 
 const apiFetch = (url, options) => {
   return fetch(url, {...options, credentials: 'same-origin'})
@@ -195,5 +199,18 @@ export const updateSurvey = (project_id, survey) => {
       return Promise.reject(json)
     }
     return normalize(camelizeKeys(json.data), surveySchema)
+  })
+}
+
+export const fetchChannels = () => {
+  return apiFetch(`/api/v1/channels`)
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), arrayOf(channelSchema))
   })
 }
