@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import * as actions from '../actions/projects'
-import { fetchProjects, createProject } from '../api'
+import { fetchProjects } from '../api'
 
 class Projects extends Component {
   componentDidMount() {

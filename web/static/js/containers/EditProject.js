@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 //import { v4 } from 'node-uuid'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/projects'
-import { fetchProjects, fetchProject, updateProject } from '../api'
+import { fetchProject, updateProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
 
 class EditProject extends Component {
