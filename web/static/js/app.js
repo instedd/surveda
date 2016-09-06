@@ -1,4 +1,5 @@
 import 'babel-polyfill'
+import 'jquery'
 import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory } from 'react-router'
