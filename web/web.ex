@@ -37,7 +37,7 @@ defmodule Ask.Web do
       import Ask.Router.Helpers
       import Ask.Gettext
 
-      import Addict.Helper
+      import User.Helper
     end
   end
 

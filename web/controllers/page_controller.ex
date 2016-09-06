@@ -4,7 +4,7 @@ defmodule Ask.PageController do
   plug Addict.Plugs.Authenticated when action in [:index]
 
   def index(conn, _params) do
-    user = Addict.Helper.current_user(conn)
+    user = User.Helper.current_user(conn)
     render conn, "index.html", user: user
   end
 end

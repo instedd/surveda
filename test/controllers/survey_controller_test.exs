@@ -1,7 +1,6 @@
 defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Project
   alias Ask.Survey
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{name: ""}

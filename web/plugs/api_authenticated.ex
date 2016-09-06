@@ -2,6 +2,9 @@ defmodule Ask.Plugs.ApiAuthenticated do
   import Plug.Conn
   import Phoenix.Controller
 
+  alias Ask.Repo
+  alias Ask.User
+
   def init(default), do: default
 
   def call(conn, _) do
@@ -15,7 +18,9 @@ defmodule Ask.Plugs.ApiAuthenticated do
 
     case get_session(conn, :current_user) do
       nil -> conn |> put_status(:unauthorized) |> json(%{error: "Unauthorized"}) |> halt
-      user -> assign(conn, :current_user, user)
+      user ->
+        user = Repo.get!(User, user.id)
+        assign(conn, :current_user, user)
     end
   end
 end
