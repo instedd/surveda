@@ -74,6 +74,19 @@ export const fetchQuestionnaires = (project_id) => {
   })
 }
 
+export const fetchQuestionnaire = (project_id, id) => {
+  return apiFetch(`/api/v1/projects/${project_id}/questionnaires/${id}`)
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), questionnaireSchema)
+  })
+}
+
 export const fetchProject = (id) => {
   return apiFetch(`/api/v1/projects/${id}`)
     .then(response =>
@@ -212,5 +225,26 @@ export const fetchChannels = () => {
       }
 
     return normalize(camelizeKeys(json.data), arrayOf(channelSchema))
+  })
+}
+
+export const updateQuestionnaire = (project_id, questionnaire) => {
+  return apiFetch(`/api/v1/projects/${project_id}/questionnaires/${questionnaire.id}`, {
+    method: 'PUT',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      questionnaire: questionnaire
+    })
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), questionnaireSchema)
   })
 }

@@ -26,6 +26,7 @@ class Questionnaires extends Component {
           <thead>
             <tr>
               <th>Name</th>
+              <th>Modes</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -33,7 +34,10 @@ class Questionnaires extends Component {
             { Object.keys(questionnaires).map((questionnaireId) =>
               <tr key={questionnaireId}>
                 <td>
-                  {questionnaires[questionnaireId].name }
+                  { questionnaires[questionnaireId].name }
+                </td>
+                <td>
+                  { (questionnaires[questionnaireId].modes || []).join(", ") }
                 </td>
                 <td>
                   <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>

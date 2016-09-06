@@ -3,7 +3,7 @@ defmodule Ask.QuestionnaireTest do
 
   alias Ask.Questionnaire
 
-  @valid_attrs %{project_id: 1, name: "some content"}
+  @valid_attrs %{project_id: 1, name: "some content", modes: ["SMS", "IVR"]}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

@@ -3,7 +3,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
   alias Ask.Project
   alias Ask.Questionnaire
-  @valid_attrs %{name: "some content"}
+  @valid_attrs %{name: "some content", modes: ["SMS", "IVR"]}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -30,7 +30,9 @@ defmodule Ask.QuestionnaireControllerTest do
     conn = get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
     assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
       "name" => questionnaire.name,
-      "project_id" => questionnaire.project_id}
+      "project_id" => questionnaire.project_id,
+      "modes" => ["SMS", "IVR"]
+    }
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
