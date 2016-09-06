@@ -1,2 +1,42 @@
-/* This file is for your main application css. */
+@charset "UTF-8";
 
+// Mixins
+// @import "components/prefixer";
+@import "mixins";
+@import "color";
+
+// Variables;
+@import "variables";
+
+// Reset
+@import "normalize";
+
+// components
+@import "global";
+@import "icons-material-design";
+@import "grid";
+@import "navbar";
+@import "typography";
+@import "cards";
+@import "toast";
+@import "tabs";
+@import "tooltip";
+@import "buttons";
+@import "dropdown";
+@import "waves";
+@import "modal";
+@import "collapsible";
+@import "chips";
+@import "materialbox";
+@import "forms/forms";
+@import "table_of_contents";
+@import "sideNav";
+@import "preloader";
+@import "slider";
+@import "carousel";
+@import "date_picker/default";
+@import "date_picker/default.date";
+@import "date_picker/default.time";
+
+// NCD
+@import "ncd";

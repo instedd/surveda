@@ -5,7 +5,7 @@ import Footer from '../components/Footer'
 
 const App = ({children}) => {
   return (
-    <div className="container-fluid">
+    <div className="wrapper">
       <Header />
       {children}
       <Footer />

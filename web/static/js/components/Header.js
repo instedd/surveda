@@ -1,11 +1,62 @@
 import React from 'react'
 import { Link } from 'react-router'
+import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 
 export default () => (
-  <nav className="navbar navbar-default">
-    <ul className="nav navbar-nav">
-      <li><Link to='/projects'>projects</Link></li>
-      <li><Link to='/channels'>channels</Link></li>
-    </ul>
-  </nav>
+  <header>
+    <nav id="TopNav">
+      <div className="nav-wrapper">
+        <div className="row">
+          <div className="col s5 offset-s1">
+            <ul>
+              <li><Link to='/projects' className="">Projects</Link></li>
+              <li><Link to='/channels' className="">Channels</Link></li>
+            </ul>
+          </div>
+          <div className="col s6">
+            <ul className="right">
+              <li>
+                <Dropdown text="Robert Stevenson">
+                  <DropdownItem><Link to='/settings'>Settings</Link></DropdownItem>
+                  <DropdownDivider />
+                  <DropdownItem><Link to='/logout'>Logout</Link></DropdownItem>
+                </Dropdown>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <nav id="Breadcrumb">
+      <div className="nav-wrapper">
+        <div className="row">
+          <div className="col s2 m1">
+            <div className="logo">
+              <img src='/images/logo.png' width='28px'/>
+            </div>
+          </div>
+          <div className="col s10 m11">
+            <a href="#!" className="breadcrumb">My Projects</a>
+            <Link to='/projects' className="breadcrumb">projects</Link>
+          </div>
+      </div>
+      </div>
+    </nav>
+    <nav id="BottomNav">
+      <div className="nav-wrapper">
+        <div className="row">
+          <div className="col s12">
+            <ul className="left">
+              <li><Link to='/' >Surveys</Link></li>
+              <li><Link to='/' >Cuestionaries</Link></li>
+              <li><Link to='/' >Resources</Link></li>
+              <li><Link to='/' >Respondents</Link></li>
+              <li><Link to='/' >Collaborators</Link></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+  </header>
 )
