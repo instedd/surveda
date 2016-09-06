@@ -5,7 +5,6 @@ import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/projects'
 import { fetchProjects, fetchProject, createProject } from '../api'
-import Project from './Project'
 import ProjectForm from '../components/ProjectForm'
 
 class CreateProject extends Component {
