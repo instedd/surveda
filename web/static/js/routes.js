@@ -8,6 +8,8 @@ import EditSurvey from './containers/EditSurvey'
 import Surveys from './containers/Surveys'
 import Survey from './containers/Survey'
 import SurveyQuestionnaireStep from './components/SurveyQuestionnaireStep'
+import Questionnaires from './containers/Questionnaires'
+import CreateQuestionnaire from './containers/CreateQuestionnaire'
 //import UserPage from './containers/UserPage'
 //import RepoPage from './containers/RepoPage'
 
@@ -26,6 +28,8 @@ export default (
         <IndexRedirect to="questionnaire"/>
         <Route path ="questionnaire" component={SurveyQuestionnaireStep} />
       </Route>
+      <Route path ="/projects/:projectId/questionnaires" component={Questionnaires} />
+      <Route path ="/projects/:projectId/questionnaires/new" component={CreateQuestionnaire} />
     </Route>
   </div>
 )

@@ -8,14 +8,15 @@ defmodule Ask.QuestionnaireController do
     render(conn, "index.json", questionnaires: questionnaires)
   end
 
-  def create(conn, %{"questionnaire" => questionnaire_params}) do
+  def create(conn, %{"project_id" => project_id, "questionnaire" => questionnaire_params}) do
+    questionnaire_params = Map.put(questionnaire_params, "project_id", project_id)
     changeset = Questionnaire.changeset(%Questionnaire{}, questionnaire_params)
 
     case Repo.insert(changeset) do
       {:ok, questionnaire} ->
         conn
         |> put_status(:created)
-        |> put_resp_header("location", project_questionnaire_path(conn, :show, questionnaire))
+        |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
         |> render("show.json", questionnaire: questionnaire)
       {:error, changeset} ->
         conn

@@ -135,6 +135,27 @@ export const createSurvey = (project_id) => {
   })
 }
 
+export const createQuestionnaire = (project_id, questionnaire) => {
+  return apiFetch(`/api/v1/projects/${project_id}/questionnaires`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      questionnaire: questionnaire
+    })
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), questionnaireSchema)
+  })
+}
+
 export const updateProject = (project) => {
   return apiFetch(`/api/v1/projects/${project.id}`, {
     method: 'PUT',
