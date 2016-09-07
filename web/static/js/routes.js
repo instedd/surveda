@@ -21,8 +21,8 @@ export default (
     <IndexRedirect to="projects"/>
     <Route path ="/projects" component={Projects} />
     <Route path ="/projects/new" component={CreateProject} />
-    <Route path ="/projects/:id/edit" component={EditProject} />
-    <Route path ="/projects/:id">
+    <Route path ="/projects/:projectId/edit" component={EditProject} />
+    <Route path ="/projects/:projectId">
       <IndexRedirect to="surveys"/>
     </Route>
     <Route path ="/projects/:projectId/surveys" components={{body: Surveys, tabs: ProjectTabs}} />

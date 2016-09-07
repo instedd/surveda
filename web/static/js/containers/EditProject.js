@@ -33,8 +33,8 @@ class EditProject extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    projectId: ownProps.params.id,
-    project: state.projects.projects[ownProps.params.id]
+    projectId: ownProps.params.projectId,
+    project: state.projects.projects[ownProps.params.projectId]
   }
 }
 
