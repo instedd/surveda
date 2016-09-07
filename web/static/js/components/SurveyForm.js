@@ -25,16 +25,16 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
             Select a questionnaire
           </div>
           <div>
-            Item 2
+            Upload your respondents list
           </div>
           <div>
-            Item 3
+            Select mode and channels
           </div>
           <div>
-            Item 4
+            Setup cutoff rules
           </div>
           <div>
-            Item 5
+            Setup a schedule
           </div>
         </div>
         <div className="col-md-8">

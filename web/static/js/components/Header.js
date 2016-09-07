@@ -48,7 +48,7 @@ export default () => (
           <div className="col s12">
             <ul className="left">
               <li><Link to='/' >Surveys</Link></li>
-              <li><Link to='/' >Cuestionaries</Link></li>
+              <li><Link to='/' >Questionnaires</Link></li>
               <li><Link to='/' >Resources</Link></li>
               <li><Link to='/' >Respondents</Link></li>
               <li><Link to='/' >Collaborators</Link></li>
@@ -57,6 +57,5 @@ export default () => (
         </div>
       </div>
     </nav>
-
   </header>
 )
