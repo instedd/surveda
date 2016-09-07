@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, IndexRedirect } from 'react-router'
+import { Route, IndexRoute, IndexRedirect } from 'react-router'
 import App from './containers/App'
 import Projects from './containers/Projects'
 import CreateProject from './containers/CreateProject'
@@ -17,26 +17,42 @@ import ProjectTabs from './components/ProjectTabs'
 //import RepoPage from './containers/RepoPage'
 
 export default (
-  <Route path ="/" component={App}>
+  <Route path="/" component={App}>
     <IndexRedirect to="projects"/>
-    <Route path ="/projects" component={Projects} />
-    <Route path ="/projects/new" component={CreateProject} />
-    <Route path ="/projects/:projectId/edit" component={EditProject} />
-    <Route path ="/projects/:projectId">
-      <IndexRedirect to="surveys"/>
+
+    <Route path="projects">
+      <IndexRoute component={Projects} />
+      <Route path="new" component={CreateProject} />
+
+      <Route path=":projectId">
+        <IndexRedirect to="surveys"/>
+        <Route path="edit" component={EditProject} />
+
+        <Route path="surveys">
+          <IndexRoute components={{body: Surveys, tabs: ProjectTabs}} />
+          <Route path=":id" component={Survey} />
+          <Route path=":id/edit" component={EditSurvey} >
+            <IndexRedirect to="questionnaire"/>
+            <Route path="questionnaire" component={SurveyQuestionnaireStep} />
+          </Route>
+        </Route>
+
+        <Route path="questionnaires">
+          <IndexRoute components={{body: Questionnaires, tabs: ProjectTabs}} />
+          <Route path="new" component={CreateQuestionnaire} />
+          <Route path=":id">
+            <IndexRedirect to="edit"/>
+          </Route>
+          <Route path=":id/edit" component={EditQuestionnaire} />
+        </Route>
+
+      </Route>
+
     </Route>
-    <Route path ="/projects/:projectId/surveys" components={{body: Surveys, tabs: ProjectTabs}} />
-    <Route path ="/projects/:projectId/surveys/:id" component={Survey} />
-    <Route path ="/projects/:projectId/surveys/:id/edit" component={EditSurvey} >
-      <IndexRedirect to="questionnaire"/>
-      <Route path ="questionnaire" component={SurveyQuestionnaireStep} />
+
+    <Route path="channels">
+     <IndexRoute component={Channels} />
     </Route>
-    <Route path ="/projects/:projectId/questionnaires" components={{body: Questionnaires, tabs: ProjectTabs}} />
-    <Route path ="/projects/:projectId/questionnaires/new" component={CreateQuestionnaire} />
-    <Route path ="/projects/:projectId/questionnaires/:id">
-      <IndexRedirect to="edit"/>
-    </Route>
-    <Route path ="/projects/:projectId/questionnaires/:id/edit" component={EditQuestionnaire} />
-    <Route path="/channels" component={Channels} />
+
   </Route>
 )
