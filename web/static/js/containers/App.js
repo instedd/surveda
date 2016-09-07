@@ -8,7 +8,9 @@ const App = ({children, tabs, body}) => {
   return (
     <div className="wrapper">
       <Header tabs={tabs}/>
-      {body || children}
+      <div className="content">
+        {body || children}
+      </div>
       <Footer />
     </div>
   );

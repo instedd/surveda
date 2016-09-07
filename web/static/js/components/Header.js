@@ -30,12 +30,10 @@ export default ({tabs}) => (
     <nav id="Breadcrumb">
       <div className="nav-wrapper">
         <div className="row">
-          <div className="col s2 m1">
+          <div className="col s12">
             <div className="logo">
               <img src='/images/logo.png' width='28px'/>
             </div>
-          </div>
-          <div className="col s10 m11">
             <a href="#!" className="breadcrumb">My Projects</a>
             <Link to='/projects' className="breadcrumb">projects</Link>
           </div>

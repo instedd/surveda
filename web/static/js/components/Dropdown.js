@@ -5,7 +5,7 @@ export const Dropdown = ({text, icon = 'arrow_drop_down', children}) => {
   const dropdownId = uniqueId('dropdown')
 
   return (<div>
-    <a className="dropdown-button" href="#!" data-activates={dropdownId}>
+    <a className="dropdown-button" href="#!" data-beloworigin="true" data-activates={dropdownId}>
       {text}
       <i className="material-icons right">{icon}</i>
     </a>

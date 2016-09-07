@@ -1,5 +1,39 @@
 
-// NCD classes
+// NCD class styles
+
+
+
+// ---------materialize reset classes ---------------
+
+.tabs {
+  background-color: transparent;
+  .tab {
+
+    a {
+      @extend .grey-text;
+      font-size: .9rem;
+      padding: 0 5px;
+      &:hover {
+        @extend .white-text;
+        background-color: transparent;
+      }
+    }
+    &.active {
+      background-color: transparent;
+      a {
+        @extend .white-text;
+      }
+    }
+
+  }
+  .indicator {
+    @extend .green;
+    height: 6px;
+  }
+}
+
+
+
 
 html, body {
   height: 100%;
@@ -26,12 +60,18 @@ header {
   background-color: $primary-color;
 
   .logo {
-    line-height: 5;
+    display: inline-block;
+    vertical-align: top;
     text-align: center;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.102);
     width: 60px;
     height: 60px;
+    padding-top: 3px;
+    margin-right: 20px;
+    + a.breadcrumb:before {
+      display: none;
+    }
   }
 
   #TopNav {
@@ -67,6 +107,16 @@ header {
     }
   }
 }
+
+#BottomNav {
+  height: auto;
+  line-height: 1;
+  .row {
+    margin-bottom: 0;
+  }
+}
+
+
 
 footer {
   position: absolute;
