@@ -17,6 +17,7 @@ import EditQuestionnaire from './containers/EditQuestionnaire'
 
 export default (
   <Route path ="/" component={App}>
+    <IndexRedirect to="projects"/>
     <Route path ="/projects" component={Projects} />
     <Route path ="/projects/new" component={CreateProject} />
     <Route path ="/projects/:id/edit" component={EditProject} />
