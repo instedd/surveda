@@ -29,7 +29,7 @@ class SurveyQuestionnaireStep extends Component {
       return <div>Loading...</div>
     }
     return (
-      <div className="col-md-8">
+      <div className="col s8">
         <label>Select a questionnaire</label>
         <div>
           The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.
@@ -38,27 +38,15 @@ class SurveyQuestionnaireStep extends Component {
         <div>
           <input type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node } }/>
         </div>
-        <h4>Questionnaires</h4>
-        <table style={{width: '300px'}}>
-          <thead>
-            <tr>
-              <th style={{width: '20px'}}/>
-              <th>Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            { Object.keys(questionnaires).map((questionnaire_id) =>
-              <tr key={questionnaire_id}>
-                <td>
-                  <input type="radio" name="questionnaire" value={ questionnaire_id } ref={ node => {questionnaires_input.push({id: questionnaire_id, node:node}) } } defaultChecked={survey.questionnaireId == questionnaire_id } />
-                </td>
-                <td>
-                  { questionnaires[questionnaire_id].name }
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <h6>Questionnaires</h6>
+        { Object.keys(questionnaires).map((questionnaire_id) =>
+          <div key={questionnaire_id}>
+            <p>
+              <input id={questionnaire_id} type="radio" name="questionnaire" className="with-gap" value={ questionnaire_id } ref={ node => {questionnaires_input.push({id: questionnaire_id, node:node}) } } defaultChecked={survey.questionnaireId == questionnaire_id } />
+              <label htmlFor={questionnaire_id}>{ questionnaires[questionnaire_id].name }</label>
+            </p>
+          </div>
+        )}
 
         <br/>
         <button type="button" onClick={() =>
