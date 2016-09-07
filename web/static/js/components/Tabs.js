@@ -1,7 +1,7 @@
 import React from 'react'
 
 export const Tabs = ({children}) => (
-  <ul className="nav nav-pills">
+  <ul className="left">
     {children}
   </ul>
 )

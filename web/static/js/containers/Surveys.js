@@ -26,7 +26,6 @@ class Surveys extends Component {
     const { surveys, projectId } = this.props
     return (
       <div>
-        <ProjectTabs projectId={projectId}/>
         <p style={{fontSize: 'larger'}}>
           <a href="#" onClick={() => this.newSurvey() }>
             Add survey

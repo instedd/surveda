@@ -12,6 +12,7 @@ import Questionnaires from './containers/Questionnaires'
 import CreateQuestionnaire from './containers/CreateQuestionnaire'
 import Channels from './containers/channels/Channels'
 import EditQuestionnaire from './containers/EditQuestionnaire'
+import ProjectTabs from './components/ProjectTabs'
 //import UserPage from './containers/UserPage'
 //import RepoPage from './containers/RepoPage'
 
@@ -24,13 +25,13 @@ export default (
     <Route path ="/projects/:id">
       <IndexRedirect to="surveys"/>
     </Route>
-    <Route path ="/projects/:projectId/surveys" component={Surveys} />
+    <Route path ="/projects/:projectId/surveys" components={{body: Surveys, tabs: ProjectTabs}} />
     <Route path ="/projects/:projectId/surveys/:id" component={Survey} />
     <Route path ="/projects/:projectId/surveys/:id/edit" component={EditSurvey} >
       <IndexRedirect to="questionnaire"/>
       <Route path ="questionnaire" component={SurveyQuestionnaireStep} />
     </Route>
-    <Route path ="/projects/:projectId/questionnaires" component={Questionnaires} />
+    <Route path ="/projects/:projectId/questionnaires" components={{body: Questionnaires, tabs: ProjectTabs}} />
     <Route path ="/projects/:projectId/questionnaires/new" component={CreateQuestionnaire} />
     <Route path ="/projects/:projectId/questionnaires/:id">
       <IndexRedirect to="edit"/>

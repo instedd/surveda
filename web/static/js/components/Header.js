@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 
-export default () => (
+export default ({tabs}) => (
   <header>
     <nav id="TopNav">
       <div className="nav-wrapper">
@@ -42,20 +42,6 @@ export default () => (
       </div>
       </div>
     </nav>
-    <nav id="BottomNav">
-      <div className="nav-wrapper">
-        <div className="row">
-          <div className="col s12">
-            <ul className="left">
-              <li><Link to='/' >Surveys</Link></li>
-              <li><Link to='/' >Questionnaires</Link></li>
-              <li><Link to='/' >Resources</Link></li>
-              <li><Link to='/' >Respondents</Link></li>
-              <li><Link to='/' >Collaborators</Link></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
+    {tabs}
   </header>
 )

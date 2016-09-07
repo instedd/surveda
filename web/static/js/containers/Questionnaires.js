@@ -18,7 +18,6 @@ class Questionnaires extends Component {
     const { questionnaires, projectId } = this.props
     return (
       <div>
-        <ProjectTabs projectId={projectId}/>
         <p style={{fontSize: 'larger'}}>
           <Link to={`/projects/${projectId}/questionnaires/new`}>Add questionnaire</Link>
         </p>
