@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react'
-import { browserHistory } from 'react-router'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/projects'
@@ -15,8 +14,13 @@ class EditProject extends Component {
   }
 
   handleSubmit(dispatch) {
+    const { router } = this.props
+
     return (project) => {
-      updateProject(project).then(project => dispatch(actions.updateProject(project))).then(() => browserHistory.push('/projects')).catch((e) => dispatch(actions.receiveProjectsError(e)))
+      updateProject(project)
+        .then(project => dispatch(actions.updateProject(project)))
+        .then(() => router.push('/projects'))
+        .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }
   }
 

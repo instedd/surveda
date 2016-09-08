@@ -1,7 +1,6 @@
 import React, { PropTypes, Component } from 'react'
-import { browserHistory } from 'react-router'
 import merge from 'lodash/merge'
-import { Link } from 'react-router'
+import { Link, withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
@@ -16,8 +15,11 @@ class SurveyQuestionnaireStep extends Component {
   }
 
   handleSubmit(survey) {
-    const { dispatch, projectId } = this.props
-    updateSurvey(survey.projectId, survey).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${survey.projectId}/surveys/`)).catch((e) => dispatch(actions.receiveSurveysError(e)))
+    const { dispatch, projectId, router } = this.props
+    updateSurvey(survey.projectId, survey)
+      .then(survey => dispatch(actions.updateSurvey(survey)))
+      .then(() => router.push(`/projects/${survey.projectId}/surveys/`))
+      .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
   render() {
@@ -65,4 +67,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.surveys[ownProps.params.id]
 })
 
-export default connect(mapStateToProps)(SurveyQuestionnaireStep);
+export default withRouter(connect(mapStateToProps)(SurveyQuestionnaireStep));

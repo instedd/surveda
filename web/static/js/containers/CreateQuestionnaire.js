@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react'
-import { browserHistory } from 'react-router'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/questionnaires'
@@ -9,10 +8,10 @@ import QuestionnaireForm from '../components/QuestionnaireForm'
 class CreateQuestionnaire extends Component {
   handleSubmit(dispatch) {
     return (questionnaire) => {
-      const { projectId } = this.props
+      const { projectId, router } = this.props
       createQuestionnaire(projectId, questionnaire)
         .then(questionnaire => dispatch(actions.createQuestionnaire(questionnaire)))
-        .then(() => browserHistory.push(`/projects/${projectId}/questionnaires`))
+        .then(() => router.push(`/projects/${projectId}/questionnaires`))
         // .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }
   }

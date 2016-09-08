@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react'
-import { browserHistory } from 'react-router'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/projects'
@@ -8,10 +7,12 @@ import ProjectForm from '../components/ProjectForm'
 
 class CreateProject extends Component {
   handleSubmit(dispatch) {
+    const { router } = this.props
+
     return (project) => {
       createProject(project)
         .then(project => dispatch(actions.createProject(project)))
-        .then(() => browserHistory.push('/projects'))
+        .then(() => router.push('/projects'))
         .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }
   }

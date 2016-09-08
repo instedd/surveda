@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link, browserHistory } from 'react-router'
+import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import { createSurvey } from '../api'
 import { ProjectTabs } from '../components'
@@ -12,10 +12,10 @@ class Surveys extends Component {
   }
 
   newSurvey() {
-    const { dispatch, projectId } = this.props
+    const { dispatch, projectId, router } = this.props
     createSurvey(projectId).then(response => {
       dispatch(actions.createSurvey(response))
-      browserHistory.push(`/projects/${projectId}/surveys/${response.result}/edit`)
+      router.push(`/projects/${projectId}/surveys/${response.result}/edit`)
     })
   }
 
@@ -56,4 +56,4 @@ const mapStateToProps = (state, ownProps) => ({
   surveys: state.surveys
 })
 
-export default connect(mapStateToProps)(Surveys)
+export default withRouter(connect(mapStateToProps)(Surveys))
