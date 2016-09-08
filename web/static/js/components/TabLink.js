@@ -9,10 +9,13 @@ export const TabLink = withRouter(props => {
     attrs.className = "active"
   }
   attrs.className += " tab col"
+  const clickHandler = () => {
+    router.push(to)
+  }
 
   return (
     <li {...attrs}>
-      <Link to={to}>{children}</Link>
+      <a onClick={clickHandler}>{children}</a>
     </li>
   )
 })
