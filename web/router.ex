@@ -37,6 +37,7 @@ defmodule Ask.Router do
   scope "/", Ask do
     pipe_through :browser
 
+    get "/oauth_helper", OAuthHelperController, :index
     get "/*path", PageController, :index
   end
 end

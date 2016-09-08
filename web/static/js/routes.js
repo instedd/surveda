@@ -13,8 +13,6 @@ import CreateQuestionnaire from './containers/CreateQuestionnaire'
 import Channels from './containers/channels/Channels'
 import EditQuestionnaire from './containers/EditQuestionnaire'
 import ProjectTabs from './components/ProjectTabs'
-//import UserPage from './containers/UserPage'
-//import RepoPage from './containers/RepoPage'
 
 export default (
   <Route path="/" component={App}>
@@ -51,7 +49,7 @@ export default (
     </Route>
 
     <Route path="channels">
-     <IndexRoute component={Channels} />
+      <IndexRoute component={Channels} />
     </Route>
 
   </Route>
