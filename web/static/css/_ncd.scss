@@ -40,19 +40,22 @@
 
 html, body {
   @extend .grey, .lighten-3;
-  height: 100%;
   > main {
-    display: inline;
     > div {
-      display: inline;
     }
   }
 }
 
 
+.content {
+  padding: 1rem 0 3rem;
+  flex: 1 0 auto;
+}
+
 .wrapper {
-  height: 100%;
-  padding-bottom: 100px;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
   min-width: 530px;
   & > * > * {
     padding-left: 5%;
@@ -120,19 +123,34 @@ header {
   }
 }
 
-.content {
-  padding: 1rem 0;
-}
-
 
 footer {
-  position: absolute;
-  width: 100%;
-  bottom: 0;
-  left: 0;
 }
 
 
+
+
+.ncdtable {
+  @extend .white;
+  @extend .z-depth-1;
+  @extend .bordered;
+
+  th {
+    @extend .grey-text, .lighten-2;
+    padding: 25px;
+     a {
+      color: inherit;
+    }
+  }
+
+  td {
+    @extend .black-text;
+    padding: 25px;
+    a {
+      color: inherit;
+    }
+  }
+}
 
 // ------- helper classes
 

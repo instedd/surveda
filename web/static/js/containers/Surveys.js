@@ -26,7 +26,7 @@ class Surveys extends Component {
         <a className="btn-floating btn-large waves-effect waves-light green right mtop" href="#" onClick={() => this.newSurvey() }>
           <i className="material-icons">add</i>
         </a>
-        <table className="white z-depth-1">
+        <table className="ncdtable">
           <thead>
             <tr>
               <th>Name</th>

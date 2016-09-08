@@ -20,8 +20,10 @@ class Channels extends Component {
 
     return (
       <div>
-        <a href='#' onClick={(e) => this.addChannel(e)}>Add channel</a>
-        <table style={{width: '300px'}}>
+        <a className="btn-floating btn-large waves-effect waves-light green right mtop" href='#' onClick={(e) => this.addChannel(e)}>
+          <i className="material-icons">add</i>
+        </a>
+        <table className="ncdtable">
           <thead>
             <tr>
               <th>Name</th>

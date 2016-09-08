@@ -17,7 +17,7 @@ class Questionnaires extends Component {
         <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to={`/projects/${projectId}/questionnaires/new`}>
           <i className="material-icons">add</i>
         </Link>
-        <table className="white z-depth-1">
+        <table className="ncdtable">
           <thead>
             <tr>
               <th>Name</th>
