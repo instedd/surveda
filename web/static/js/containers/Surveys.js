@@ -26,12 +26,10 @@ class Surveys extends Component {
     const { surveys, projectId } = this.props
     return (
       <div>
-        <p style={{fontSize: 'larger'}}>
-          <a href="#" onClick={() => this.newSurvey() }>
-            Add survey
-          </a>
-        </p>
-        <table style={{width: '300px'}}>
+        <a className="btn-floating btn-large waves-effect waves-light green right mtop" href="#" onClick={() => this.newSurvey() }>
+          <i className="material-icons">add</i>
+        </a>
+        <table className="white z-depth-1">
           <thead>
             <tr>
               <th>Name</th>

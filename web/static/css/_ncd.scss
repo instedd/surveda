@@ -35,7 +35,11 @@
 
 
 
+// --------- NCD classes ---------------
+
+
 html, body {
+  @extend .grey, .lighten-3;
   height: 100%;
   > main {
     display: inline;
@@ -57,7 +61,7 @@ html, body {
 }
 
 header {
-  background-color: $primary-color;
+  @extend .grey, .darken-3;
 
   .logo {
     display: inline-block;
@@ -116,6 +120,9 @@ header {
   }
 }
 
+.content {
+  padding: 1rem 0;
+}
 
 
 footer {
@@ -123,4 +130,13 @@ footer {
   width: 100%;
   bottom: 0;
   left: 0;
+}
+
+
+
+// ------- helper classes
+
+.mtop {
+  margin-top: -3rem;
+  margin-bottom: 2.5rem;
 }

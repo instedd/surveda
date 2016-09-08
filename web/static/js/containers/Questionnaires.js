@@ -18,10 +18,10 @@ class Questionnaires extends Component {
     const { questionnaires, projectId } = this.props
     return (
       <div>
-        <p style={{fontSize: 'larger'}}>
-          <Link to={`/projects/${projectId}/questionnaires/new`}>Add questionnaire</Link>
-        </p>
-        <table style={{width: '300px'}}>
+        <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to={`/projects/${projectId}/questionnaires/new`}>
+          <i className="material-icons">add</i>
+        </Link>
+        <table className="white z-depth-1">
           <thead>
             <tr>
               <th>Name</th>

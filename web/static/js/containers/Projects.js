@@ -17,10 +17,10 @@ class Projects extends Component {
     const { projects, ids } = this.props.projects
     return (
       <div>
-        <p style={{fontSize: 'larger'}}>
-          <Link to='/projects/new'>Add project</Link>
-        </p>
-        <table style={{width: '300px'}}>
+        <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to='/projects/new'>
+          <i className="material-icons">add</i>
+        </Link>
+        <table className="white z-depth-1">
           <thead>
             <tr>
               <th>Name</th>
