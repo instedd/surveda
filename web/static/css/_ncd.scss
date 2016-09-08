@@ -81,7 +81,7 @@ header {
   #TopNav {
     border-bottom: 1px solid color("shades", "black");
 
-    ul {
+    .col > ul {
       &:not(.right) {
         margin-left: -15px;
       }
