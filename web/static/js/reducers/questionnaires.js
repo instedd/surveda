@@ -1,7 +1,6 @@
-import { combineReducers }  from 'redux'
+import { combineReducers } from 'redux'
 import * as actions from '../actions/questionnaires'
 import merge from 'lodash/merge'
-import union from 'lodash/union'
 
 export default (state = {}, action) => {
   switch (action.type) {
@@ -13,13 +12,12 @@ export default (state = {}, action) => {
           ...action.questionnaire
         }
       }
-    case actions.FETCH_QUESTIONNAIRES_SUCCESS:
+    case actions.RECEIVE_QUESTIONNAIRES:
       if (action.response && action.response.entities) {
         return action.response.entities.questionnaires || {}
       }
       return state
     default:
       return state
-
   }
 }

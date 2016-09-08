@@ -1,10 +1,22 @@
-export const FETCH_SURVEYS_SUCCESS = 'FETCH_SURVEYS_SUCCESS'
+import * as api from '../api'
+
+export const RECEIVE_SURVEYS = 'RECEIVE_SURVEYS'
 export const CREATE_SURVEY = 'CREATE_SURVEY'
 export const UPDATE_SURVEY = 'UPDATE_SURVEY'
-export const FETCH_SURVEYS_ERROR = 'FETCH_SURVEYS_ERROR'
+export const RECEIVE_SURVEYS_ERROR = 'RECEIVE_SURVEYS_ERROR'
 
-export const fetchSurveysSuccess = (response) => ({
-  type: FETCH_SURVEYS_SUCCESS,
+export const fetchSurveys = (projectId) => dispatch => {
+  api.fetchSurveys(projectId)
+    .then(surveys => dispatch(receiveSurveys(surveys)))
+}
+
+export const fetchSurvey = (projectId, surveyId) => dispatch => {
+  api.fetchSurvey(projectId, surveyId)
+    .then(survey => dispatch(receiveSurveys(survey)))
+}
+
+export const receiveSurveys = (response) => ({
+  type: RECEIVE_SURVEYS,
   response
 })
 
@@ -20,7 +32,7 @@ export const updateSurvey = (response) => ({
   survey: response.entities.surveys[response.result]
 })
 
-export const fetchSurveysError = (error) => ({
-  type: FETCH_SURVEYS_ERROR,
+export const receiveSurveysError = (error) => ({
+  type: RECEIVE_SURVEYS_ERROR,
   error
 })

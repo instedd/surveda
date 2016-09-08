@@ -27,10 +27,8 @@ class ProjectTabs extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    projectId: ownProps.params.projectId,
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  projectId: ownProps.params.projectId,
+})
 
 export default connect(mapStateToProps)(ProjectTabs);

@@ -2,16 +2,13 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link, browserHistory } from 'react-router'
 import * as actions from '../actions/surveys'
-import { fetchSurveys, createSurvey } from '../api'
+import { createSurvey } from '../api'
 import { ProjectTabs } from '../components'
 
 class Surveys extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
-    fetchSurveys(projectId).then(surveys => dispatch(actions.fetchSurveysSuccess(surveys)))
-  }
-
-  componentDidUpdate() {
+    dispatch(actions.fetchSurveys(projectId))
   }
 
   newSurvey() {
@@ -54,11 +51,9 @@ class Surveys extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    projectId: ownProps.params.projectId,
-    surveys: state.surveys
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  projectId: ownProps.params.projectId,
+  surveys: state.surveys
+})
 
 export default connect(mapStateToProps)(Surveys)

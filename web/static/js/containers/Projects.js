@@ -2,19 +2,15 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import * as actions from '../actions/projects'
-import { fetchProjects } from '../api'
 
 class Projects extends Component {
   componentDidMount() {
-    const { dispatch } = this.props
-    fetchProjects().then(projects => dispatch(actions.fetchProjectsSuccess(projects)))
-  }
-
-  componentDidUpdate() {
+    const { dispatch } = this.props;
+    dispatch(actions.fetchProjects());
   }
 
   render() {
-    const { projects, ids } = this.props.projects
+    const { projects } = this.props
     return (
       <div>
         <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to='/projects/new'>
@@ -28,13 +24,13 @@ class Projects extends Component {
             </tr>
           </thead>
           <tbody>
-            { ids.map((project_id) =>
-              <tr key={project_id}>
+            { Object.keys(projects).map((projectId) =>
+              <tr key={projectId}>
                 <td>
-                  <Link to={`/projects/${project_id}`}>{ projects[project_id].name }</Link>
+                  <Link to={`/projects/${projectId}`}>{ projects[projectId].name }</Link>
                 </td>
                 <td>
-                  <Link to={`/projects/${project_id}/edit`}>Edit</Link>
+                  <Link to={`/projects/${projectId}/edit`}>Edit</Link>
                 </td>
               </tr>
             )}
@@ -45,10 +41,8 @@ class Projects extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
-  return {
-    projects: state.projects
-  }
-}
+const mapStateToProps = (state) => ({
+  projects: state.projects
+})
 
 export default connect(mapStateToProps)(Projects)

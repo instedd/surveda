@@ -1,10 +1,22 @@
-export const FETCH_QUESTIONNAIRES_SUCCESS = 'FETCH_QUESTIONNAIRES_SUCCESS'
+import * as api from '../api'
+
+export const RECEIVE_QUESTIONNAIRES = 'RECEIVE_QUESTIONNAIRES'
 export const CREATE_QUESTIONNAIRE = 'CREATE_QUESTIONNAIRE'
 export const UPDATE_QUESTIONNAIRE = 'UPDATE_QUESTIONNAIRE'
-export const FETCH_QUESTIONNAIRES_ERROR = 'FETCH_QUESTIONNAIRES_ERROR'
+export const RECEIVE_QUESTIONNAIRES_ERROR = 'RECEIVE_QUESTIONNAIRES_ERROR'
 
-export const fetchQuestionnairesSuccess = (response) => ({
-  type: FETCH_QUESTIONNAIRES_SUCCESS,
+export const fetchQuestionnaires = (projectId) => dispatch => {
+  api.fetchQuestionnaires(projectId)
+    .then(questionnaires => dispatch(receiveQuestionnaires(questionnaires)))
+}
+
+export const fetchQuestionnaire = (projectId, questionnaireId) => dispatch => {
+  api.fetchQuestionnaire(projectId, questionnaireId)
+    .then(questionnaire => dispatch(receiveQuestionnaires(questionnaire)))
+}
+
+export const receiveQuestionnaires = (response) => ({
+  type: RECEIVE_QUESTIONNAIRES,
   response
 })
 
@@ -20,7 +32,7 @@ export const updateQuestionnaire = (response) => ({
   questionnaire: response.entities.questionnaires[response.result]
 })
 
-export const fetchQuestionnairesError = (error) => ({
-  type: FETCH_QUESTIONNAIRES_ERROR,
+export const receiveQuestionnairesError = (error) => ({
+  type: RECEIVE_QUESTIONNAIRES_ERROR,
   error
 })

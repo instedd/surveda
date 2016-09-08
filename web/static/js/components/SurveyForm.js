@@ -3,7 +3,6 @@ import merge from 'lodash/merge'
 import { Link } from 'react-router'
 
 const SurveyForm = ({ onSubmit, survey, children, project }) => {
-  let input
   return (
     <div>
       <div className="row">

@@ -29,10 +29,8 @@ class Channels extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    channels: state.channels
-  }
-}
+const mapStateToProps = (state) => ({
+  channels: state.channels
+})
 
 export default connect(mapStateToProps)(Channels)

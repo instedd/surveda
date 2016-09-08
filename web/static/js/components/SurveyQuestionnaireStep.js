@@ -3,22 +3,21 @@ import { browserHistory } from 'react-router'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
-import { updateSurvey, fetchQuestionnaires } from '../api'
+import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
 import * as questionnairesActions from '../actions/questionnaires'
 
 class SurveyQuestionnaireStep extends Component {
-
   componentDidMount() {
     const { dispatch, projectId, questionnaires } = this.props
-    if(projectId) {
-      fetchQuestionnaires(projectId).then(questionnaires => dispatch(questionnairesActions.fetchQuestionnairesSuccess(questionnaires)))
+    if (projectId) {
+      dispatch(questionnairesActions.fetchQuestionnaires(projectId))
     }
   }
 
   handleSubmit(survey) {
     const { dispatch, projectId } = this.props
-    updateSurvey(survey.projectId, survey).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${survey.projectId}/surveys/`)).catch((e) => dispatch(actions.fetchSurveysError(e)))
+    updateSurvey(survey.projectId, survey).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${survey.projectId}/surveys/`)).catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
   render() {
@@ -58,15 +57,12 @@ class SurveyQuestionnaireStep extends Component {
       </div>
     )
   }
-
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return{
-    questionnaires: state.questionnaires,
-    projectId: ownProps.params.projectId,
-    survey: state.surveys[ownProps.params.id]
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  questionnaires: state.questionnaires,
+  projectId: ownProps.params.projectId,
+  survey: state.surveys[ownProps.params.id]
+})
 
 export default connect(mapStateToProps)(SurveyQuestionnaireStep);

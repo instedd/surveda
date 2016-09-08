@@ -1,27 +1,22 @@
 import React, { Component, PropTypes } from 'react'
 import { browserHistory } from 'react-router'
 import { connect } from 'react-redux'
-//import { v4 } from 'node-uuid'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import * as actions from '../actions/projects'
 import { createProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
 
 class CreateProject extends Component {
-  componentDidUpdate() {
-  }
-
   handleSubmit(dispatch) {
     return (project) => {
       createProject(project)
         .then(project => dispatch(actions.createProject(project)))
         .then(() => browserHistory.push('/projects'))
-        .catch((e) => dispatch(actions.fetchProjectsError(e)))
+        .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }
   }
 
   render(params) {
-    let input
     const { project } = this.props
     return (
       <ProjectForm onSubmit={this.handleSubmit(this.props.dispatch)} project={project} />
@@ -29,10 +24,8 @@ class CreateProject extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    project: state.projects.projects[ownProps.params.id] || {}
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  project: state.projects[ownProps.params.id] || {}
+})
 
 export default withRouter(connect(mapStateToProps)(CreateProject))
