@@ -4,7 +4,7 @@ defmodule Ask.SurveyController do
   alias Ask.Survey
 
   def index(conn, %{"project_id" => project_id}) do
-    surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id)
+    surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id, preload: [:channels])
     render(conn, "index.json", surveys: surveys)
   end
 
@@ -16,7 +16,7 @@ defmodule Ask.SurveyController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey)
+        |> render("show.json", survey: survey |> Repo.preload([:channels]))
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -25,12 +25,12 @@ defmodule Ask.SurveyController do
   end
 
   def show(conn, %{"id" => id}) do
-    survey = Repo.get!(Survey, id)
+    survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
     render(conn, "show.json", survey: survey)
   end
 
   def update(conn, %{"id" => id, "survey" => survey_params}) do
-    survey = Repo.get!(Survey, id)
+    survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
     changeset = Survey.changeset(survey, survey_params)
 
     case Repo.update(changeset) do

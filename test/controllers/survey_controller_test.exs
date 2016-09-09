@@ -24,7 +24,24 @@ defmodule Ask.SurveyControllerTest do
     assert json_response(conn, 200)["data"] == %{"id" => survey.id,
       "name" => survey.name,
       "project_id" => survey.project_id,
-      "questionnaire_id" => nil}
+      "questionnaire_id" => nil,
+      "channels" => []}
+  end
+
+  test "shows chosen resource with channels", %{conn: conn} do
+    channel = insert(:channel)
+    survey = insert(:survey)
+    insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
+    conn = get conn, project_survey_path(conn, :show, -1, survey)
+    assert json_response(conn, 200)["data"] == %{"id" => survey.id,
+      "name" => survey.name,
+      "project_id" => survey.project_id,
+      "questionnaire_id" => nil,
+      "channels" => [%{
+        "channel_id" => channel.id,
+        "type" => "sms"
+      }]
+    }
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do

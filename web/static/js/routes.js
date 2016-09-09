@@ -8,6 +8,7 @@ import EditSurvey from './containers/EditSurvey'
 import Surveys from './containers/Surveys'
 import Survey from './containers/Survey'
 import SurveyQuestionnaireStep from './components/SurveyQuestionnaireStep'
+import SurveyRespondentsStep from './components/SurveyRespondentsStep'
 import Questionnaires from './containers/Questionnaires'
 import CreateQuestionnaire from './containers/CreateQuestionnaire'
 import Channels from './containers/channels/Channels'
@@ -32,6 +33,7 @@ export default (
           <Route path=":id/edit" component={EditSurvey} >
             <IndexRedirect to="questionnaire"/>
             <Route path="questionnaire" component={SurveyQuestionnaireStep} />
+            <Route path="respondents" component={SurveyRespondentsStep} />
           </Route>
         </Route>
 

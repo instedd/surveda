@@ -13,7 +13,7 @@ class Projects extends Component {
     const { projects } = this.props
     return (
       <div>
-        <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to='/projects/new'>
+        <Link className="btn-floating btn-large waves-effect waves-light green right mtop tooltipped" data-position="top" data-delay="20" data-tooltip="Add project" to='/projects/new'>
           <i className="material-icons">add</i>
         </Link>
         <table className="ncdtable">

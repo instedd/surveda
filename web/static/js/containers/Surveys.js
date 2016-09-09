@@ -23,7 +23,7 @@ class Surveys extends Component {
     const { surveys, projectId } = this.props
     return (
       <div>
-        <a className="btn-floating btn-large waves-effect waves-light green right mtop" href="#" onClick={() => this.newSurvey() }>
+        <a className="btn-floating btn-large waves-effect waves-light green right mtop tooltipped" data-position="top" data-delay="20" data-tooltip="Add survey" href="#" onClick={() => this.newSurvey() }>
           <i className="material-icons">add</i>
         </a>
         <table className="ncdtable">
