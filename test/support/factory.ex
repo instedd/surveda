@@ -25,7 +25,8 @@ defmodule Ask.Factory do
     %Ask.Questionnaire{
       project: build(:project),
       name: sequence(:questionnaire, &"Questionnaire #{&1}"),
-      modes: ["SMS", "IVR"]
+      modes: ["SMS", "IVR"],
+      steps: [],
     }
   end
 
