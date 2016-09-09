@@ -38,4 +38,10 @@ defmodule Ask.Factory do
       settings: %{}
     }
   end
+
+  def survey_channel_factory do
+    %Ask.SurveyChannel{
+    }
+  end
+
 end
