@@ -14,7 +14,7 @@ class Questionnaires extends Component {
     const { questionnaires, projectId } = this.props
     return (
       <div>
-        <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to={`/projects/${projectId}/questionnaires/new`}>
+        <Link className="btn-floating btn-large waves-effect waves-light green right mtop tooltipped" data-position="top" data-delay="20" data-tooltip="Add questionnaire" to={`/projects/${projectId}/questionnaires/new`}>
           <i className="material-icons">add</i>
         </Link>
         <table className="ncdtable">
