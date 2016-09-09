@@ -10,6 +10,7 @@ defmodule Ask.QuestionnaireController do
 
   def create(conn, %{"project_id" => project_id, "questionnaire" => questionnaire_params}) do
     questionnaire_params = Map.put(questionnaire_params, "project_id", project_id)
+    questionnaire_params = Map.put(questionnaire_params, "steps", [])
     changeset = Questionnaire.changeset(%Questionnaire{}, questionnaire_params)
 
     case Repo.insert(changeset) do
