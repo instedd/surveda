@@ -51,7 +51,7 @@ class SurveyQuestionnaireStep extends Component {
 
         <br/>
         <button type="button" onClick={() =>
-          this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: questionnaires_input.find(element => element.node.checked).id }))
+          this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: (questionnaires_input.find(element => element.node.checked) || {}).id }))
         }>
           Submit
         </button>

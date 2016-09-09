@@ -42,7 +42,8 @@
     "redux-slider-monitor": "~1.0.0",
     "react-redux-loading-bar": "~2.3.0",
     "sass-brunch": "~2.6.3",
-    "uglify-js-brunch": "~2.0.1"
+    "uglify-js-brunch": "~2.0.1",
+    "react-dropzone": "~3.6.0"
   },
   "babel": {
     "presets": [

@@ -152,6 +152,24 @@ export const createSurvey = (project_id) => {
   })
 }
 
+export const uploadRespondents = (survey, files) => {
+  const formData = new FormData();
+  formData.append('file', files[0]);
+
+  return apiFetch(`/api/v1/projects/${survey.projectId}/surveys/${survey.id}/respondents`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), surveySchema)
+  })
+}
+
 export const createQuestionnaire = (project_id, questionnaire) => {
   return apiFetch(`/api/v1/projects/${project_id}/questionnaires`, {
     method: 'POST',

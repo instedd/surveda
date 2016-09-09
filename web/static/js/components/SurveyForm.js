@@ -3,6 +3,7 @@ import merge from 'lodash/merge'
 import { Link } from 'react-router'
 
 const SurveyForm = ({ onSubmit, survey, children, project }) => {
+  let linkPath = `/projects/${project.id}/surveys/${survey.id}/edit/`
   return (
     <div>
       <div className="row">
@@ -12,10 +13,10 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
         <div className="col s4" style={{border: `1px solid black`, height: `400px`}}>
           <label>Progress bar</label>
           <div>
-            Select a questionnaire
+            <Link to={`${linkPath}questionnaire`}>Select a questionnaire</Link>
           </div>
           <div>
-            Upload your respondents list
+            <Link to={`${linkPath}respondents`}>Upload your respondents list</Link>
           </div>
           <div>
             Select mode and channels
@@ -27,7 +28,8 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
             Setup a schedule
           </div>
         </div>
-        <div className="col s8">
+        <div className="col s1"/>
+        <div className="col s7">
           {children}
         </div>
       </div>
