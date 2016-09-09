@@ -15,7 +15,7 @@
   </head>
 
   <body>
-    <main id="root" role="main"></main>
+    <div id="root" role="main"></div>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>
