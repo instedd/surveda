@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
+import { config } from '../config'
 
 export default ({tabs}) => (
   <header>
@@ -16,7 +17,7 @@ export default ({tabs}) => (
           <div className="col s6">
             <ul className="right">
               <li>
-                <Dropdown text="Robert Stevenson">
+                <Dropdown text={config.user}>
                   <DropdownItem><Link to='/settings'>Settings</Link></DropdownItem>
                   <DropdownDivider />
                   <DropdownItem><Link to='/logout'>Logout</Link></DropdownItem>
