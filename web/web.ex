@@ -61,6 +61,7 @@ defmodule Ask.Web do
       import Ask.Router.Helpers
       import Ask.ErrorHelpers
       import Ask.Gettext
+      import User.Helper
     end
   end
 

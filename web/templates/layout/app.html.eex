@@ -7,8 +7,11 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Ask!</title>
+    <title>InSTEDD Ask</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <script>
+      window.appConfig = <%= raw(config(@conn)) %>
+    </script>
   </head>
 
   <body>

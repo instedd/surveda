@@ -17,6 +17,14 @@ config :ask, Ask.Endpoint,
   pubsub: [name: Ask.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+config :ask, Nuntium,
+  base_url: "",
+  guisso: [
+    base_url: "",
+    client_id: "",
+    app_id: ""
+  ]
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
@@ -33,3 +41,9 @@ config :addict,
   repo: Ask.Repo,
   from_email: "no-reply@example.com", # CHANGE THIS
 mail_service: nil
+
+try do
+  import_config "local.exs"
+rescue
+  _ -> :ok
+end
