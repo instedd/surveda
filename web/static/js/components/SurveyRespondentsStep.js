@@ -13,13 +13,16 @@ class SurveyQuestionnaireStep extends Component {
   componentDidMount() {
     const { dispatch, projectId, questionnaires } = this.props
     if(projectId) {
-      fetchQuestionnaires(projectId).then(questionnaires => dispatch(questionnairesActions.fetchQuestionnairesSuccess(questionnaires)))
+      dispatch(questionnairesActions.fetchQuestionnaires(projectId))
     }
   }
 
   handleSubmit(survey, files) {
     const { dispatch, projectId } = this.props
-    uploadRespondents(survey, files).then(survey => dispatch(actions.updateSurvey(survey))).then(() => browserHistory.push(`/projects/${survey.projectId}/surveys/`)).catch((e) => dispatch(actions.fetchSurveysError(e)))
+    uploadRespondents(survey, files)
+      .then(survey => dispatch(actions.updateSurvey(survey)))
+      .then(() => browserHistory.push(`/projects/${survey.projectId}/surveys/`))
+      .catch((e) => dispatch(actions.fetchSurveysError(e)))
   }
 
   render() {
