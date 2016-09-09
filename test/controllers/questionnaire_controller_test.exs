@@ -3,7 +3,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
   alias Ask.Project
   alias Ask.Questionnaire
-  @valid_attrs %{name: "some content", modes: ["SMS", "IVR"]}
+  @valid_attrs %{name: "some content", modes: ["SMS", "IVR"], steps: []}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
