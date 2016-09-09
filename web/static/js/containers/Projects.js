@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import * as actions from '../actions/projects'
+import { Tooltip } from '../components/Tooltip'
 
 class Projects extends Component {
   componentDidMount() {
@@ -13,9 +14,11 @@ class Projects extends Component {
     const { projects } = this.props
     return (
       <div>
-        <Link className="btn-floating btn-large waves-effect waves-light green right mtop tooltipped" data-position="top" data-delay="20" data-tooltip="Add project" to='/projects/new'>
-          <i className="material-icons">add</i>
-        </Link>
+        <Tooltip text="Add project">
+          <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to='/projects/new'>
+            <i className="material-icons">add</i>
+          </Link>
+        </Tooltip>
         <table className="ncdtable">
           <thead>
             <tr>

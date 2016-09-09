@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/channels'
+import { Tooltip } from '../../components/Tooltip'
 
 class Channels extends Component {
   componentDidMount() {
@@ -20,9 +21,11 @@ class Channels extends Component {
 
     return (
       <div>
-        <a className="btn-floating btn-large waves-effect waves-light green right mtop" href='#' onClick={(e) => this.addChannel(e)}>
-          <i className="material-icons">add</i>
-        </a>
+        <Tooltip text="Add channel">
+          <a className="btn-floating btn-large waves-effect waves-light green right mtop" href='#' onClick={(e) => this.addChannel(e)}>
+            <i className="material-icons">add</i>
+          </a>
+        </Tooltip>
         <table className="ncdtable">
           <thead>
             <tr>

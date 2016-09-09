@@ -4,6 +4,7 @@ import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import { createSurvey } from '../api'
 import { ProjectTabs } from '../components'
+import { Tooltip } from '../components/Tooltip'
 
 class Surveys extends Component {
   componentDidMount() {
@@ -23,9 +24,11 @@ class Surveys extends Component {
     const { surveys, projectId } = this.props
     return (
       <div>
-        <a className="btn-floating btn-large waves-effect waves-light green right mtop tooltipped" data-position="top" data-delay="20" data-tooltip="Add survey" href="#" onClick={() => this.newSurvey() }>
-          <i className="material-icons">add</i>
-        </a>
+        <Tooltip text="Add survey">
+          <a className="btn-floating btn-large waves-effect waves-light green right mtop" href="#" onClick={() => this.newSurvey() }>
+            <i className="material-icons">add</i>
+          </a>
+        </Tooltip>
         <table className="ncdtable">
           <thead>
             <tr>
