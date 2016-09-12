@@ -42,7 +42,7 @@ class SurveyQuestionnaireStep extends Component {
         <div className="row">
           <div className="input-field col s12">
             <input id="survey_name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node } }/>
-            <label className="active" for="survey_name">Survey Name</label>
+            <label className="active" htmlFor="survey_name">Survey Name</label>
           </div>
         </div>
         <h6>Questionnaires</h6>
