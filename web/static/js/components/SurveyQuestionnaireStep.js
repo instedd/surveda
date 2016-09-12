@@ -18,7 +18,7 @@ class SurveyQuestionnaireStep extends Component {
     const { dispatch, projectId, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(survey => dispatch(actions.updateSurvey(survey)))
-      .then(() => router.push(`/projects/${survey.projectId}/surveys/`))
+      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/respondents`))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
