@@ -26,7 +26,7 @@ channelSchema.define({
 const apiFetch = (url, options) => {
   return fetch(url, {...options, credentials: 'same-origin'})
     .then(response => {
-      if (!response.ok && response.status == 403) {
+      if (!response.ok && response.status == 401) {
         window.location = "/login"
         return Promise.reject(response.statusText)
       } else {

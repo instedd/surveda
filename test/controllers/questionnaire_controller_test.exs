@@ -20,6 +20,16 @@ defmodule Ask.QuestionnaireControllerTest do
     assert json_response(conn, :unauthorized)["error"] == "Unauthorized"
   end
 
+  test "user is deleted from session if the user does not exist" do
+    user = build(:user, id: -1)
+    conn =
+      build_conn()
+      |> put_private(:test_user, user)
+      |> put_req_header("accept", "application/json")
+    conn = get conn, project_questionnaire_path(conn, :index, user)
+    assert json_response(conn, :unauthorized)["error"] == "Unauthorized"
+  end
+
   test "lists all entries on index", %{conn: conn} do
     conn = get conn, project_questionnaire_path(conn, :index, -1)
     assert json_response(conn, 200)["data"] == []
