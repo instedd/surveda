@@ -6,6 +6,7 @@ const projectSchema = new Schema('projects');
 const surveySchema = new Schema('surveys');
 const userSchema = new Schema('users');
 const questionnaireSchema = new Schema('questionnaires');
+const respondentSchema = new Schema('respondents');
 const channelSchema = new Schema('channels');
 
 projectSchema.define({
@@ -17,6 +18,10 @@ surveySchema.define({
 });
 
 questionnaireSchema.define({
+
+});
+
+respondentSchema.define({
 
 });
 
@@ -166,7 +171,20 @@ export const uploadRespondents = (survey, files) => {
     if (!response.ok) {
       return Promise.reject(json)
     }
-    return normalize(camelizeKeys(json.data), surveySchema)
+    return normalize(camelizeKeys(json.data), arrayOf(respondentSchema))
+  })
+}
+
+export const fetchRespondents = (projectId, surveyId) => {
+  return apiFetch(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`)
+    .then(response =>
+      response.json().then(json => ({ json, response }))
+    ).then(({ json, response }) => {
+      if (!response.ok) {
+        return Promise.reject(json)
+      }
+
+    return normalize(camelizeKeys(json.data), arrayOf(respondentSchema))
   })
 }
 

@@ -3,8 +3,8 @@ defmodule Ask.RespondentController do
 
   alias Ask.Respondent
 
-  def index(conn, _params) do
-    respondents = Repo.all(Respondent)
+  def index(conn,  %{"survey_id" => survey_id}) do
+    respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
     render(conn, "index.json", respondents: respondents)
   end
 
@@ -19,11 +19,15 @@ defmodule Ask.RespondentController do
         %{phone_number: Enum.at(row, 0), survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
       end)
 
-      {inserted_rows, _} = Repo.insert_all(Respondent, entries)
+      Repo.insert_all(Respondent, entries)
 
-      render(conn, "imported.json", inserted_rows: inserted_rows)
+      respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
+
+      render(conn, "index.json", respondents: respondents)
     else
-      render(conn, "imported.json", inserted_rows: "error")
+      conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: file)
     end
   end
 

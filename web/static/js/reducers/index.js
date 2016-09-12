@@ -5,12 +5,14 @@ import surveys from './surveys';
 import questionnaires from './questionnaires';
 import channels from './channels';
 import guisso from './guisso';
+import respondents from './respondents';
 
 export default combineReducers({
   routing,
   projects,
   surveys,
   questionnaires,
+  respondents,
   channels,
   guisso
 });
