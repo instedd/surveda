@@ -78,7 +78,7 @@ class SurveyQuestionnaireStep extends Component {
         </div>
         
         <div style={{height: '300px', paddingLeft: '90px', paddingTop: '50px'}} >
-          <Dropzone multiple={false} onDrop={file => {this.handleSubmit(survey, file)}}>
+          <Dropzone multiple={false} onDrop={file => {this.handleSubmit(survey, file)}} accept="text/csv">
             <div>Drop your CSV file here, or click to browse</div>
           </Dropzone>
         </div>
