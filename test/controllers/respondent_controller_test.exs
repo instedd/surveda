@@ -1,7 +1,6 @@
 defmodule Ask.RespondentControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Respondent
   @valid_attrs %{phone_number: "some content"}
   @invalid_attrs %{}
 
