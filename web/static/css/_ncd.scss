@@ -34,7 +34,6 @@
 
 
 
-
 // --------- NCD classes ---------------
 
 
@@ -47,9 +46,13 @@ html, body {
 }
 
 
-.content {
-  padding: 1rem 0 3rem;
+main {
+  @include flexbox();
   flex: 1 0 auto;
+  > div {
+    flex: 1;
+    padding-top: 90px;
+  }
 }
 
 .wrapper {
@@ -152,9 +155,74 @@ footer {
   }
 }
 
+
+// ------- Left Wizard ----------
+
+
+.collection.wizard {
+  @extend .z-depth-1;
+  border-radius: 5px;
+  .collection-header {
+    @extend .grey, .lighten-3;
+    position: relative;
+    .progress {
+      @extend .grey, .lighten-2;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+      width: 100%;
+      height: 6px;
+      .determinate {
+       @extend .green, .accent-4;
+      }
+    }
+  }
+  .collection-item {
+    padding: 0 !important;
+    border: none;
+    opacity: .5;
+    > a {
+      @extend .truncate;
+      @extend .black-text;
+      width: 100%;
+      position: relative;
+      padding: 20px 35px 20px 20px;
+      > i {
+        vertical-align: middle;
+        margin-right: 15px;
+      }
+      .arrowright {
+        position: absolute;
+        right: 10px;
+      }
+    }
+    &.optional {
+      .arrowright:after {
+        content: 'optional';
+        font-size: 80%;
+        text-transform: uppercase;
+        position: absolute;
+        margin-left: -90px;
+      }
+    }
+    &.active {
+      @extend .transparent;
+      @extend .black-text;
+      font-weight: 700;
+      opacity: 1;
+    }
+    &.completed {
+      opacity: 1;
+      > a {
+        @extend .green-text;
+      }
+    }
+  }
+}
+
 // ------- helper classes
 
 .mtop {
-  margin-top: -3rem;
-  margin-bottom: 2.5rem;
+  margin-top: -8rem;
 }

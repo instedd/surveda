@@ -29,26 +29,30 @@ class Surveys extends Component {
             <i className="material-icons">add</i>
           </a>
         </Tooltip>
-        <table className="ncdtable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            { Object.keys(surveys).map((survey_id) =>
-              <tr key={survey_id}>
-                <td>
-                  <Link to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
-                </td>
-                <td>
-                  <Link to={`/projects/${projectId}/surveys/${survey_id}/edit`}>Edit</Link>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="row">
+          <div className="col s12">
+            <table className="ncdtable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                { Object.keys(surveys).map((survey_id) =>
+                  <tr key={survey_id}>
+                    <td>
+                      <Link to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
+                    </td>
+                    <td>
+                      <Link to={`/projects/${projectId}/surveys/${survey_id}/edit`}>Edit</Link>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     )
   }

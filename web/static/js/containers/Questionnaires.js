@@ -20,30 +20,34 @@ class Questionnaires extends Component {
             <i className="material-icons">add</i>
           </Link>
         </Tooltip>
-        <table className="ncdtable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Modes</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            { Object.keys(questionnaires).map((questionnaireId) =>
-              <tr key={questionnaireId}>
-                <td>
-                  { questionnaires[questionnaireId].name }
-                </td>
-                <td>
-                  { (questionnaires[questionnaireId].modes || []).join(", ") }
-                </td>
-                <td>
-                  <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="row">
+          <div className="col s12">
+            <table className="ncdtable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Modes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                { Object.keys(questionnaires).map((questionnaireId) =>
+                  <tr key={questionnaireId}>
+                    <td>
+                      { questionnaires[questionnaireId].name }
+                    </td>
+                    <td>
+                      { (questionnaires[questionnaireId].modes || []).join(", ") }
+                    </td>
+                    <td>
+                      <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     )
   }

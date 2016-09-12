@@ -31,13 +31,19 @@ class SurveyQuestionnaireStep extends Component {
     }
     return (
       <div className="col s8">
-        <label>Select a questionnaire</label>
-        <div>
-          The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.
+        <div className="row">
+          <div className="col s12">
+            <h4>Select a questionnaire</h4>
+            <p className="flow-text">
+              The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.
+            </p>
+          </div>
         </div>
-        <label>Survey Name</label>
-        <div>
-          <input type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node } }/>
+        <div className="row">
+          <div className="input-field col s12">
+            <input id="survey_name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node } }/>
+            <label className="active" for="survey_name">Survey Name</label>
+          </div>
         </div>
         <h6>Questionnaires</h6>
         { Object.keys(questionnaires).map((questionnaire_id) =>
@@ -50,12 +56,12 @@ class SurveyQuestionnaireStep extends Component {
         )}
 
         <br/>
-        <button type="button" onClick={() =>
+        <button type="button" className="btn waves-effect waves-light" onClick={() =>
           this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: (questionnaires_input.find(element => element.node.checked) || {}).id }))
         }>
           Submit
         </button>
-        <Link to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+        <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
       </div>
     )
   }

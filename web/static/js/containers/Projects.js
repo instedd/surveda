@@ -19,26 +19,30 @@ class Projects extends Component {
             <i className="material-icons">add</i>
           </Link>
         </Tooltip>
-        <table className="ncdtable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            { Object.keys(projects).map((projectId) =>
-              <tr key={projectId}>
-                <td>
-                  <Link to={`/projects/${projectId}`}>{ projects[projectId].name }</Link>
-                </td>
-                <td>
-                  <Link to={`/projects/${projectId}/edit`}>Edit</Link>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="row">
+          <div className="col s12">
+            <table className="ncdtable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                { Object.keys(projects).map((projectId) =>
+                  <tr key={projectId}>
+                    <td>
+                      <Link to={`/projects/${projectId}`}>{ projects[projectId].name }</Link>
+                    </td>
+                    <td>
+                      <Link to={`/projects/${projectId}/edit`}>Edit</Link>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     )
   }

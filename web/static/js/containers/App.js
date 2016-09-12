@@ -6,9 +6,9 @@ import Footer from '../components/Footer'
 const App = ({children, tabs, body}) => (
   <div className="wrapper">
     <Header tabs={tabs}/>
-    <div className="content">
+    <main>
       {body || children}
-    </div>
+    </main>
     <Footer />
   </div>
 )
