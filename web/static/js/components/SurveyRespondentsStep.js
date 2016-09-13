@@ -8,10 +8,10 @@ import { uploadRespondents, fetchQuestionnaires } from '../api'
 import * as actions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 
-class SurveyQuestionnaireStep extends Component {
+class SurveyRespondentStep extends Component {
 
   componentDidMount() {
-    const { dispatch, projectId, questionnaires, surveyId } = this.props
+    const { dispatch, projectId, surveyId } = this.props
     if(projectId && surveyId) {
       dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
     }
@@ -26,7 +26,7 @@ class SurveyQuestionnaireStep extends Component {
 
   render() {
     let files
-    const { survey, questionnaires, respondentsCount, respondents } = this.props
+    const { survey, respondentsCount, respondents } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
@@ -42,63 +42,47 @@ class SurveyQuestionnaireStep extends Component {
       }
 
       return (
-        <div className="col s12 m7 offset-m1">
-          <div className="row">
-            <div className="col s12">
-              <h4>Upload your respondents list</h4>
-              <p className="flow-text">
-                Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
-              </p>
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col s12">
-              <table className="ncdtable">
-                <thead>
-                  <tr>
-                    <th>{`${respondentsCount} contacts imported`}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
+        <RespondentsContainer content={<RespondentsList count={respondentsCount} rows={rows} />} />
       )
     }
 
     return (
-      <div className="col s12 m7 offset-m1">
-        <div className="row">
-          <div className="col s12">
-            <h4>Upload your respondents list</h4>
-            <p className="flow-text">
-              Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
-            </p>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col s12">
-            <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={file => {this.handleSubmit(survey, file)}}  accept="text/csv">
-              <div className="drophere">
-                <i className="material-icons">insert_drive_file</i>
-                <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
-              </div>
-              <div className="onlycsv">
-                <i className="material-icons">block</i>
-                <div>You can only drop CSV's files here</div>
-              </div>
-            </Dropzone>
-          </div>
-        </div>
-      </div>
+      <RespondentsContainer content={<RespondentsDropzone survey={survey} self={this} />} />
     )
   }
 
+}
+
+const RespondentsDropzone = ({survey, self}) => {
+  return(
+    <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={file => {self.handleSubmit(survey, file)}}  accept="text/csv">
+      <div className="drophere">
+        <i className="material-icons">insert_drive_file</i>
+        <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
+      </div>
+      <div className="onlycsv">
+        <i className="material-icons">block</i>
+        <div>You can only drop CSV's files here</div>
+      </div>
+    </Dropzone>
+  )
+}
+
+const RespondentsList = ({count, rows}) => {
+  return(
+    <table className="ncdtable">
+      <thead>
+        <tr>
+          <th>
+            {`${count} contacts imported`}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows}
+      </tbody>
+    </table>
+  )
 }
 
 const PhoneNumberRow = ({id, phoneNumber}) => {
@@ -111,6 +95,27 @@ const PhoneNumberRow = ({id, phoneNumber}) => {
   )
 }
 
+const RespondentsContainer = ({content}) => {
+  return (
+    <div className="col s12 m7 offset-m1">
+      <div className="row">
+        <div className="col s12">
+          <h4>Upload your respondents list</h4>
+          <p className="flow-text">
+            Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
+          </p>
+        </div>
+      </div>
+      <div className="row">
+        <div className="col s12">
+          {content}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 
 const mapStateToProps = (state, ownProps) => {
   return{
@@ -122,4 +127,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default connect(mapStateToProps)(SurveyQuestionnaireStep);
+export default connect(mapStateToProps)(SurveyRespondentStep);

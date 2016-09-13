@@ -13,7 +13,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
               <h5>Progress <span className="right">20%</span></h5>
               <p>Complete the following tasks to get your Survey ready.</p>
               <div className="progress">
-                  <div className="determinate" style={{width: '20%'}}></div>
+                <div className="determinate" style={{width: '20%'}}></div>
               </div>
             </li>
             <li className="collection-item active">
