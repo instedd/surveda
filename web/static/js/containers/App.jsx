@@ -14,4 +14,3 @@ const App = ({children, tabs, body}) => (
 )
 
 export default connect()(App)
-
