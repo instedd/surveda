@@ -82,37 +82,37 @@ header {
       display: none;
     }
   }
+}
 
-  #TopNav {
-    border-bottom: 1px solid color("shades", "black");
+#TopNav {
+  border-bottom: 1px solid color("shades", "black");
 
-    .col > ul {
-      &:not(.right) {
-        margin-left: -15px;
-      }
-      a {
-        @extend .grey-text;
-        i.right {
-          font-size: 1.6rem;
-          margin-left: 5px;
-        }
+  .col > ul {
+    &:not(.right) {
+      margin-left: -15px;
+    }
+    a {
+      @extend .grey-text;
+      i.right {
+        font-size: 1.6rem;
+        margin-left: 5px;
       }
     }
   }
+}
 
-  #Breadcrumb {
-    height: auto;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+#Breadcrumb {
+  height: auto;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 
-    a.breadcrumb {
-      font-size: 20px;
-      &:first-child {
-        @extend .grey-text;
-      }
-      &:before {
-        @extend .black-text;
-      }
+  a.breadcrumb {
+    font-size: 20px;
+    &:first-child {
+      @extend .grey-text;
+    }
+    &:before {
+      @extend .black-text;
     }
   }
 }

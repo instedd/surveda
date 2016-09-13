@@ -30,28 +30,20 @@ class Surveys extends Component {
           </a>
         </Tooltip>
         <div className="row">
-          <div className="col s12">
-            <table className="ncdtable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                { Object.keys(surveys).map((survey_id) =>
-                  <tr key={survey_id}>
-                    <td>
-                      <Link to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
-                    </td>
-                    <td>
-                      <Link to={`/projects/${projectId}/surveys/${survey_id}/edit`}>Edit</Link>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          { Object.keys(surveys).map((survey_id) =>
+            <div className="col s12 m6 l4">
+              <div className="card white"  key={survey_id}>
+                <div className="card-content">
+                  <span className="card-title">
+                    <Link className="black-text" to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
+                  </span>
+                </div>
+                <div className="card-action">
+                  <Link className="grey-text text-lighten-1" to={`/projects/${projectId}/surveys/${survey_id}/edit`}><i className="material-icons">mode_edit</i></Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
