@@ -27,7 +27,7 @@ class SurveyQuestionnaireStep extends Component {
   render() {
     let files
     const { survey, questionnaires, respondentsCount, respondents } = this.props
-    
+
     if (!survey) {
       return <div>Loading...</div>
     }
@@ -83,9 +83,15 @@ class SurveyQuestionnaireStep extends Component {
         </div>
         <div className="row">
           <div className="col s12">
-            <Dropzone className="dropfile" multiple={false} onDrop={file => {this.handleSubmit(survey, file)}}  accept="text/csv">
-              <i className="material-icons">insert_drive_file</i>
-              <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
+            <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={file => {this.handleSubmit(survey, file)}}  accept="text/csv">
+              <div className="drophere">
+                <i className="material-icons">insert_drive_file</i>
+                <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
+              </div>
+              <div className="onlycsv">
+                <i className="material-icons">block</i>
+                <div>You can only drop CSV's files here</div>
+              </div>
             </Dropzone>
           </div>
         </div>

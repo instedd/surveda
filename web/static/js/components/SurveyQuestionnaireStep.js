@@ -45,23 +45,29 @@ class SurveyQuestionnaireStep extends Component {
             <label className="active" htmlFor="survey_name">Survey Name</label>
           </div>
         </div>
-        <h6>Questionnaires</h6>
-        { Object.keys(questionnaires).map((questionnaire_id) =>
-          <div key={questionnaire_id}>
-            <p>
-              <input id={questionnaire_id} type="radio" name="questionnaire" className="with-gap" value={ questionnaire_id } ref={ node => {questionnaires_input.push({id: questionnaire_id, node:node}) } } defaultChecked={survey.questionnaireId == questionnaire_id } />
-              <label htmlFor={questionnaire_id}>{ questionnaires[questionnaire_id].name }</label>
-            </p>
+        <div className="row">
+          <div className="col s12">
+            <h6>Questionnaires</h6>
+            { Object.keys(questionnaires).map((questionnaire_id) =>
+              <div key={questionnaire_id}>
+                <p>
+                  <input id={questionnaire_id} type="radio" name="questionnaire" className="with-gap" value={ questionnaire_id } ref={ node => {questionnaires_input.push({id: questionnaire_id, node:node}) } } defaultChecked={survey.questionnaireId == questionnaire_id } />
+                  <label htmlFor={questionnaire_id}>{ questionnaires[questionnaire_id].name }</label>
+                </p>
+              </div>
+            )}
           </div>
-        )}
-
-        <br/>
-        <button type="button" className="btn waves-effect waves-light" onClick={() =>
-          this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: (questionnaires_input.find(element => element.node.checked) || {}).id }))
-        }>
-          Submit
-        </button>
-        <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+        </div>
+        <div className="row">
+          <div className="col s12">
+            <button type="button" className="btn waves-effect waves-light" onClick={() =>
+              this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: (questionnaires_input.find(element => element.node.checked) || {}).id }))
+            }>
+              Submit
+            </button>
+            <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+          </div>
+        </div>
       </div>
     )
   }

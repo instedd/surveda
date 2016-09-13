@@ -233,11 +233,24 @@ footer {
   padding: 115px 0;
   border: 2px dashed color("grey", "lighten-3");
   text-align: center;
+  .onlycsv {
+    @extend .red-text;
+    display: none;
+  }
   i {
     font-size: 50px;
   }
-  &:hover {
-    // @extend .red;
+  &.active {
+    border-color: color("blue", "lighten-1")
+  }
+  &.rejectedfile {
+    border-color: color("red", "lighten-1");
+    .drophere {
+      display: none;
+    }
+    .onlycsv {
+      display: block;
+    }
   }
 
 }
