@@ -31,6 +31,7 @@ class SurveyRespondentStep extends Component {
     if (!survey) {
       return <div>Loading...</div>
     }
+
     if (respondentsCount != 0) {
       let count = 0
       let rows = []
@@ -42,20 +43,24 @@ class SurveyRespondentStep extends Component {
       }
 
       return (
-        <RespondentsContainer content={<RespondentsList count={respondentsCount} rows={rows} />} />
+        <RespondentsContainer>
+          <RespondentsList respondentsCount={respondentsCount} rows={rows} />
+        </RespondentsContainer>
       )
     }
 
     return (
-      <RespondentsContainer content={<RespondentsDropzone survey={survey} self={this} />} />
+      <RespondentsContainer>
+        <RespondentsDropzone survey={survey} onDrop={file => {this.handleSubmit(survey, file)}} />
+      </RespondentsContainer>
     )
   }
 
 }
 
-const RespondentsDropzone = ({survey, self}) => {
+const RespondentsDropzone = ({survey, onDrop}) => {
   return(
-    <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={file => {self.handleSubmit(survey, file)}}  accept="text/csv">
+    <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={onDrop}  accept="text/csv">
       <div className="drophere">
         <i className="material-icons">insert_drive_file</i>
         <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
@@ -68,13 +73,13 @@ const RespondentsDropzone = ({survey, self}) => {
   )
 }
 
-const RespondentsList = ({count, rows}) => {
+const RespondentsList = ({respondentsCount, rows}) => {
   return(
     <table className="ncdtable">
       <thead>
         <tr>
           <th>
-            {`${count} contacts imported`}
+            {`${respondentsCount} contacts imported`}
           </th>
         </tr>
       </thead>
@@ -95,7 +100,7 @@ const PhoneNumberRow = ({id, phoneNumber}) => {
   )
 }
 
-const RespondentsContainer = ({content}) => {
+const RespondentsContainer = ({children}) => {
   return (
     <div className="col s12 m7 offset-m1">
       <div className="row">
@@ -108,14 +113,12 @@ const RespondentsContainer = ({content}) => {
       </div>
       <div className="row">
         <div className="col s12">
-          {content}
+          {children}
         </div>
       </div>
     </div>
   )
 }
-
-
 
 const mapStateToProps = (state, ownProps) => {
   return{
