@@ -29,22 +29,29 @@ class Surveys extends Component {
             <i className="material-icons">add</i>
           </a>
         </Tooltip>
-        <div className="row">
-          { Object.keys(surveys).map((survey_id) =>
-            <div className="col s12 m6 l4">
-              <div className="card white"  key={survey_id}>
-                <div className="card-content">
-                  <span className="card-title">
-                    <Link className="black-text" to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
-                  </span>
-                </div>
-                <div className="card-action">
-                  <Link className="grey-text text-lighten-1" to={`/projects/${projectId}/surveys/${survey_id}/edit`}><i className="material-icons">mode_edit</i></Link>
+        { (Object.keys(surveys).length == 0) ?
+          <div className="empty_page">
+            <i className="material-icons">assignment_turned_in</i>
+            <h5>You have no surveys on this project</h5>
+          </div>
+        :
+          <div className="row">
+            { Object.keys(surveys).map((survey_id) =>
+              <div className="col s12 m6 l4">
+                <div className="card white"  key={survey_id}>
+                  <div className="card-content">
+                    <span className="card-title">
+                      <Link className="black-text" to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
+                    </span>
+                  </div>
+                  <div className="card-action">
+                    <Link className="grey-text text-lighten-1" to={`/projects/${projectId}/surveys/${survey_id}/edit`}><i className="material-icons">mode_edit</i></Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        }
       </div>
     )
   }

@@ -20,6 +20,12 @@ class Questionnaires extends Component {
             <i className="material-icons">add</i>
           </Link>
         </Tooltip>
+        { (Object.keys(questionnaires).length == 0) ?
+          <div className="empty_page">
+            <i className="material-icons">assignment</i>
+            <h5>You have no questionnaires on this project</h5>
+          </div>
+        :
         <div className="row">
           <div className="col s12">
             <table className="ncdtable">
@@ -48,6 +54,7 @@ class Questionnaires extends Component {
             </table>
           </div>
         </div>
+        }
       </div>
     )
   }

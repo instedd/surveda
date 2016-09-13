@@ -220,11 +220,8 @@ footer {
   }
 }
 
-// ------- helper classes
 
-.mtop {
-  margin-top: -8rem;
-}
+// ------- Forms --------------
 
 .dropfile {
   @extend .grey-text;
@@ -254,3 +251,18 @@ footer {
   }
 
 }
+
+// ------- helper classes -----------
+
+.mtop {
+  margin-top: -8rem;
+}
+
+.empty_page {
+  @extend .grey-text;
+  text-align: center;
+  i {
+    font-size: 180px;
+  }
+}
+
