@@ -7,7 +7,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
   return (
     <div className="white">
       <div className="row">
-        <div className="col s4">
+        <div className="col s12 m4">
           <ul className="collection with-header wizard">
             <li className="collection-header">
               <h5>Progress <span className="right">20%</span></h5>
@@ -83,9 +83,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
 
           </ul>
         </div>
-        <div className="col s7 offset-s1">
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   )

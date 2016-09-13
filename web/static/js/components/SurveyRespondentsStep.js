@@ -38,52 +38,57 @@ class SurveyQuestionnaireStep extends Component {
       for(const respondentId of Object.keys(respondents)) {
         rows.push(<PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId}/>)
         count++
-        if (count == 5) break 
+        if (count == 5) break
       }
-    
+
       return (
-        <div className="col s8">
-          <h4>Upload your respondents list</h4>
-          <div>
-            <h5>
-              Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
-            </h5>
-          </div>
-          
-          <div style={{height: '300px', paddingLeft: '90px', paddingTop: '50px'}} >
-            <table className="ncdtable">
-              <thead>
-                <tr>
-                  <th>{`${respondentsCount} contacts imported`}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows}
-              </tbody>
-            </table>
+        <div className="col s12 m7 offset-m1">
+          <div className="row">
+            <div className="col s12">
+              <h4>Upload your respondents list</h4>
+              <p className="flow-text">
+                Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
+              </p>
+            </div>
           </div>
 
-          <br/>
+          <div className="row">
+            <div className="col s12">
+              <table className="ncdtable">
+                <thead>
+                  <tr>
+                    <th>{`${respondentsCount} contacts imported`}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       )
     }
 
     return (
-      <div className="col s8">
-        <h4>Upload your respondents list</h4>
-        <div>
-          <h5>
-            Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
-          </h5>
+      <div className="col s12 m7 offset-m1">
+        <div className="row">
+          <div className="col s12">
+            <h4>Upload your respondents list</h4>
+            <p className="flow-text">
+              Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
+            </p>
+          </div>
         </div>
-        
-        <div style={{height: '300px', paddingLeft: '90px', paddingTop: '50px'}} >
-          <Dropzone multiple={false} onDrop={file => {this.handleSubmit(survey, file)}} accept="text/csv">
-            <div>Drop your CSV file here, or click to browse</div>
-          </Dropzone>
+        <div className="row">
+          <div className="col s12">
+            <Dropzone className="dropfile" multiple={false} onDrop={file => {this.handleSubmit(survey, file)}}  accept="text/csv">
+              <i className="material-icons">insert_drive_file</i>
+              <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
+            </Dropzone>
+          </div>
         </div>
-
-        <br/>
       </div>
     )
   }

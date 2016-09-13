@@ -8,13 +8,13 @@ export default ({tabs}) => (
     <nav id="TopNav">
       <div className="nav-wrapper">
         <div className="row">
-          <div className="col s5 offset-s1">
+          <div className="col s5 m4 offset-m1">
             <ul>
               <li><Link to='/projects' className="">Projects</Link></li>
               <li><Link to='/channels' className="">Channels</Link></li>
             </ul>
           </div>
-          <div className="col s6">
+          <div className="col s7 m7">
             <ul className="right">
               <li>
                 <Dropdown text={config.user}>

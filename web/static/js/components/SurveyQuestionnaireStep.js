@@ -30,7 +30,7 @@ class SurveyQuestionnaireStep extends Component {
       return <div>Loading...</div>
     }
     return (
-      <div className="col s8">
+      <div className="col s12 m7 offset-m1">
         <div className="row">
           <div className="col s12">
             <h4>Select a questionnaire</h4>

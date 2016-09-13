@@ -33,7 +33,6 @@
 }
 
 
-
 // --------- NCD classes ---------------
 
 
@@ -59,7 +58,7 @@ main {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  min-width: 530px;
+  min-width: 320px;
   & > * > * {
     padding-left: 5%;
     padding-right: 5%;
@@ -225,4 +224,20 @@ footer {
 
 .mtop {
   margin-top: -8rem;
+}
+
+.dropfile {
+  @extend .grey-text;
+  font-size: 18px;
+  width: 100%;
+  padding: 115px 0;
+  border: 2px dashed color("grey", "lighten-3");
+  text-align: center;
+  i {
+    font-size: 50px;
+  }
+  &:hover {
+    // @extend .red;
+  }
+
 }
