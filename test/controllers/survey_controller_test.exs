@@ -25,7 +25,8 @@ defmodule Ask.SurveyControllerTest do
       "name" => survey.name,
       "project_id" => survey.project_id,
       "questionnaire_id" => nil,
-      "channels" => []}
+      "channels" => [],
+      "cutoff" => nil}
   end
 
   test "shows chosen resource with channels", %{conn: conn} do
@@ -40,7 +41,8 @@ defmodule Ask.SurveyControllerTest do
       "channels" => [%{
         "channel_id" => channel.id,
         "type" => "sms"
-      }]
+      }],
+      "cutoff" => nil
     }
   end
 
