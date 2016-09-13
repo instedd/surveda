@@ -52,7 +52,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
                 </span>
               </Link>
             </li>
-            <li className="collection-item">
+            {/* <li className="collection-item">
               <a href="#!">
                 <i className="material-icons">today</i>
                 <span>Setup a schedule</span>
@@ -79,7 +79,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
                   <i className="material-icons">keyboard_arrow_right</i>
                 </span>
               </a>
-            </li>
+            </li> */}
 
           </ul>
         </div>
