@@ -27,6 +27,7 @@ services:
       - 'build:/app/_build'
     environment:
       DATABASE_HOST: db
+      TERM: xterm
     ports:
       - 4000:4000
 
