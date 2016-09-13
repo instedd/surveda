@@ -33,27 +33,24 @@ class SurveyRespondentStep extends Component {
     }
 
     if (respondentsCount != 0) {
-      let count = 0
-      let rows = []
-
-      for(const respondentId of Object.keys(respondents)) {
-        rows.push(<PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId}/>)
-        count++
-        if (count == 5) break
-      }
+      let respondentsIds = Object.keys(respondents).slice(0,5)
 
       return (
         <RespondentsContainer>
-          <RespondentsList respondentsCount={respondentsCount} rows={rows} />
+          <RespondentsList respondentsCount={respondentsCount}>
+            {respondentsIds.map((respondentId) =>
+              <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId}/>
+            )}
+          </RespondentsList>
+        </RespondentsContainer>
+      )
+    } else {
+      return (
+        <RespondentsContainer>
+          <RespondentsDropzone survey={survey} onDrop={file => {this.handleSubmit(survey, file)}} />
         </RespondentsContainer>
       )
     }
-
-    return (
-      <RespondentsContainer>
-        <RespondentsDropzone survey={survey} onDrop={file => {this.handleSubmit(survey, file)}} />
-      </RespondentsContainer>
-    )
   }
 
 }
@@ -73,7 +70,7 @@ const RespondentsDropzone = ({survey, onDrop}) => {
   )
 }
 
-const RespondentsList = ({respondentsCount, rows}) => {
+const RespondentsList = ({respondentsCount, children}) => {
   return(
     <table className="ncdtable">
       <thead>
@@ -84,7 +81,7 @@ const RespondentsList = ({respondentsCount, rows}) => {
         </tr>
       </thead>
       <tbody>
-        {rows}
+        {children}
       </tbody>
     </table>
   )
