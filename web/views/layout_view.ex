@@ -2,9 +2,11 @@ defmodule Ask.LayoutView do
   use Ask.Web, :view
 
   def config(conn) do
+    version = Application.get_env(:ask, :version)
     nuntium_config = Application.get_env(:ask, Nuntium)
 
     client_config = %{
+      version: version,
       user: current_user(conn).email,
 
       nuntium: %{

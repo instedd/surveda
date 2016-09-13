@@ -42,6 +42,13 @@ config :addict,
   from_email: "no-reply@example.com", # CHANGE THIS
 mail_service: nil
 
+config :ask, version: (
+  case File.read("VERSION") do
+    {:ok, version} -> String.trim(version)
+    {:error, :enoent} -> "development"
+  end
+)
+
 try do
   import_config "local.exs"
 rescue
