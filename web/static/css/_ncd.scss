@@ -144,6 +144,14 @@ footer {
       color: inherit;
     }
   }
+  tr.tableHeader {
+    border-bottom: none;
+    th {
+      @extend .black-text;
+      font-size: 20px;
+      font-weight: 400;
+    }
+  }
 
   td {
     @extend .black-text;

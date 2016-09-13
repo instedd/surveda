@@ -23,6 +23,12 @@ class Projects extends Component {
           <div className="col s12">
             <table className="ncdtable">
               <thead>
+                <tr className="tableHeader">
+                  <th colSpan="2">
+                    { Object.keys(projects).length }
+                    { (Object.keys(projects).length == 1) ? ' project' : ' projects' }
+                  </th>
+                </tr>
                 <tr>
                   <th>Name</th>
                   <th>Actions</th>

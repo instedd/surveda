@@ -30,6 +30,12 @@ class Questionnaires extends Component {
           <div className="col s12">
             <table className="ncdtable">
               <thead>
+                <tr className="tableHeader">
+                  <th colSpan="2">
+                    { Object.keys(questionnaires).length }
+                    { (Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires' }
+                   </th>
+                </tr>
                 <tr>
                   <th>Name</th>
                   <th>Modes</th>
