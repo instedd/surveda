@@ -9,7 +9,6 @@ import * as actions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 
 class SurveyRespondentStep extends Component {
-
   componentDidMount() {
     const { dispatch, projectId, surveyId } = this.props
     if(projectId && surveyId) {

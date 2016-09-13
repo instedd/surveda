@@ -8,6 +8,7 @@ defmodule Ask.Survey do
     field :state, :string, default: "pending"
     belongs_to :project, Ask.Project
     belongs_to :questionnaire, Ask.Questionnaire
+    field :cutoff, :integer
 
     timestamps()
   end
@@ -17,7 +18,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :questionnaire_id, :state])
+    |> cast(params, [:name, :project_id, :questionnaire_id, :state, :cutoff])
     |> validate_required([:name, :project_id, :state])
     |> foreign_key_constraint(:project_id)
   end

@@ -14,6 +14,7 @@ defmodule Ask.SurveyView do
       name: survey.name,
       project_id: survey.project_id,
       questionnaire_id: survey.questionnaire_id,
+      cutoff: survey.cutoff,
       channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel )
     }
   end

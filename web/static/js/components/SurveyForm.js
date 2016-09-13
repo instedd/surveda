@@ -44,13 +44,13 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
               </a>
             </li>
             <li className="collection-item">
-              <a href="#!">
+              <Link to={`${linkPath}cutoff`}>
                 <i className="material-icons">remove_circle</i>
                 <span>Setup cutoff rules</span>
                 <span className="arrowright">
                   <i className="material-icons">keyboard_arrow_right</i>
                 </span>
-              </a>
+              </Link>
             </li>
             <li className="collection-item">
               <a href="#!">

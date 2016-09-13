@@ -9,6 +9,7 @@ import Surveys from './containers/Surveys'
 import Survey from './containers/Survey'
 import SurveyQuestionnaireStep from './components/SurveyQuestionnaireStep'
 import SurveyRespondentsStep from './components/SurveyRespondentsStep'
+import SurveyCutoffStep from './components/SurveyCutoffStep'
 import Questionnaires from './containers/Questionnaires'
 import CreateQuestionnaire from './containers/CreateQuestionnaire'
 import Channels from './containers/channels/Channels'
@@ -34,6 +35,7 @@ export default (
             <IndexRedirect to="questionnaire"/>
             <Route path="questionnaire" component={SurveyQuestionnaireStep} />
             <Route path="respondents" component={SurveyRespondentsStep} />
+            <Route path="cutoff" component={SurveyCutoffStep} />
           </Route>
         </Route>
 
