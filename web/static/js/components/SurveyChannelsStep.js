@@ -33,26 +33,39 @@ class SurveyChannelsStep extends Component {
     let currentChannelId = (surveyChannels.length > 0 ? surveyChannels[surveyChannels.length - 1].channelId : null)
 
     return (
-      <div>
-        <div>
-          <label>Select mode & channels </label>
-          <div>
-            Define which modes you want to use. You have to select a channel for each survey mode.
+      <div className="col s12 m7 offset-m1">
+        <div className="row">
+          <div className="col s12">
+            <h4>Select mode & channels</h4>
+            <p className="flow-text">
+              Define which modes you want to use. You have to select a channel for each survey mode.
+            </p>
           </div>
         </div>
-        <h6> Channels </h6>
-        <select style={{display: 'block'}} defaultValue={currentChannelId}>
-        { Object.keys(channels).map((channelId) =>
-          <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channels_input.push({id: channelId, node:node})}} >
-            {channels[channelId].name}
-          </option>
-        )}
-        </select>
-        <button type="button" onClick={() =>
-          this.handleSubmit(merge({}, survey, {channel_id: channels_input.find(element => element.node.selected).id }))
-        }>
-          Submit
-        </button>
+        <div className="row">
+          <div className="input-field col s12">
+            <select defaultValue={currentChannelId} ref={ref => $(ref).material_select()}>
+              { Object.keys(channels).map((channelId) =>
+                <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channels_input.push({id: channelId, node:node})}} >
+                  {channels[channelId].name}
+                </option>
+              )}
+              <option>Select please</option>
+              <option>Select please</option>
+              <option>Select please</option>
+            </select>
+            <label> Channels </label>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col s12">
+            <button className="btn waves-effect waves-light" type="button" onClick={() =>
+                this.handleSubmit(merge({}, survey, {channel_id: channels_input.find(element => element.node.selected).id }))
+              }>
+                Submit
+            </button>
+          </div>
+        </div>
       </div>
     )
   }

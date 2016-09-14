@@ -257,8 +257,35 @@ footer {
       display: block;
     }
   }
-
 }
+
+.select-wrapper {
+  .caret {
+    @extend .transparent-text;
+    font-family: Arial, Helvetica, 'san-serif';
+    position: relative;
+    width: 25px;
+    &:after {
+      content: 'keyboard_arrow_down';
+      font-family: 'Material Icons';
+      @extend .black-text;
+      font-size: 20px;
+      line-height: 1;
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+  }
+  .dropdown-content {
+    li {
+      span {
+        @extend .black-text;
+      }
+    }
+  }
+}
+
+
 
 // ------- helper classes -----------
 
