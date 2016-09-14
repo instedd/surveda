@@ -26,7 +26,7 @@ class CreateProject extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  project: state.projects[ownProps.params.id] || {}
+  project: {}
 })
 
 export default withRouter(connect(mapStateToProps)(CreateProject))

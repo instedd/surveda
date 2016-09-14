@@ -31,8 +31,8 @@ export default (
 
         <Route path="surveys">
           <IndexRoute components={{body: Surveys, tabs: ProjectTabs}} />
-          <Route path=":id" component={Survey} />
-          <Route path=":id/edit" component={EditSurvey} >
+          <Route path=":surveyId" component={Survey} />
+          <Route path=":surveyId/edit" component={EditSurvey} >
             <IndexRedirect to="questionnaire"/>
             <Route path="questionnaire" component={SurveyQuestionnaireStep} />
             <Route path="respondents" component={SurveyRespondentsStep} />
@@ -44,10 +44,10 @@ export default (
         <Route path="questionnaires">
           <IndexRoute components={{body: Questionnaires, tabs: ProjectTabs}} />
           <Route path="new" component={CreateQuestionnaire} />
-          <Route path=":id">
+          <Route path=":questionnaireId">
             <IndexRedirect to="edit"/>
           </Route>
-          <Route path=":id/edit" component={EditQuestionnaire} />
+          <Route path=":questionnaireId/edit" component={EditQuestionnaire} />
         </Route>
 
       </Route>

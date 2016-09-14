@@ -121,8 +121,8 @@ const mapStateToProps = (state, ownProps) => {
     respondents: state.respondents,
     respondentsCount: Object.keys(state.respondents).length,
     projectId: ownProps.params.projectId,
-    surveyId: ownProps.params.id,
-    survey: state.surveys[ownProps.params.id]
+    surveyId: ownProps.params.surveyId,
+    survey: state.surveys[ownProps.params.surveyId]
   }
 }
 

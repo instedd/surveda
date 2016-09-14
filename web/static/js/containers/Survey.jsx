@@ -35,8 +35,8 @@ class Survey extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.projects[ownProps.params.projectId] || {},
-  surveyId: ownProps.params.id,
-  survey: state.surveys[ownProps.params.id] || {}
+  surveyId: ownProps.params.surveyId,
+  survey: state.surveys[ownProps.params.surveyId] || {}
 })
 
 export default withRouter(connect(mapStateToProps)(Survey))

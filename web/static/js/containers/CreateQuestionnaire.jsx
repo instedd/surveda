@@ -25,7 +25,7 @@ class CreateQuestionnaire extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.projects[ownProps.params.projectId] || {},
-  questionnaire: state.questionnaires[ownProps.params.id] || {},
+  questionnaire: {},
 })
 
 export default withRouter(connect(mapStateToProps)(CreateQuestionnaire))

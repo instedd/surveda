@@ -33,8 +33,8 @@ class EditQuestionnaire extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.projects[ownProps.params.projectId] || {},
-  questionnaireId: ownProps.params.id,
-  questionnaire: state.questionnaires[ownProps.params.id]
+  questionnaireId: ownProps.params.questionnaireId,
+  questionnaire: state.questionnaires[ownProps.params.questionnaireId]
 })
 
 export default withRouter(connect(mapStateToProps)(EditQuestionnaire))
