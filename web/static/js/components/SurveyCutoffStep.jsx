@@ -33,7 +33,7 @@ class SurveyCutoffStep extends Component {
         <div className="row">
           <div className=" input-field col s12">
             <input id='completed-results' type="text" defaultValue={survey.cutoff} ref={ node => { resultsInput = node } }/>
-            <label htmlFor='completed-results'>Completed results</label>
+            <label className="active" htmlFor='completed-results'>Completed results</label>
           </div>
         </div>
         <div className="row">
