@@ -37,8 +37,8 @@ class Surveys extends Component {
         :
           <div className="row">
             { Object.keys(surveys).map((survey_id) =>
-              <div className="col s12 m6 l4">
-                <div className="card white"  key={survey_id}>
+              <div className="col s12 m6 l4" key={survey_id}>
+                <div className="card white">
                   <div className="card-content">
                     <span className="card-title">
                       <Link className="black-text" to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
