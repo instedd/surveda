@@ -36,13 +36,14 @@ defmodule Ask.SurveyController do
     case Repo.update(changeset) do
       {:ok, survey} ->
         if survey_params["channel_id"] do
-          channel_id = survey_params["channel_id"]
-          changeset = SurveyChannel.changeset(%SurveyChannel{}, %{survey_id: survey.id, channel_id: channel_id})
+          {channel_id, _} = Integer.parse survey_params["channel_id"]
+          changeset = Ecto.build_assoc(survey, :survey_channels, %{channel_id: channel_id})
           case Repo.insert(changeset) do
             {:ok, _} ->
               survey_id = survey.id
               to_delete_query = from sc in SurveyChannel, where: sc.survey_id == (^survey_id) and sc.channel_id != (^channel_id)
               Repo.delete_all(to_delete_query)
+              survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
               render(conn, "show.json", survey: survey)
             {:error, changeset} ->
               conn
@@ -50,7 +51,6 @@ defmodule Ask.SurveyController do
               |> render(Ask.ChangesetView, "error.json", changeset: changeset)
           end
         end
-        render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
