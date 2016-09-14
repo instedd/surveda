@@ -64,7 +64,7 @@ const RespondentsDropzone = ({survey, onDrop}) => {
       </div>
       <div className="onlycsv">
         <i className="material-icons">block</i>
-        <div>You can only drop CSV's files here</div>
+        <div>Invalid file type</div>
       </div>
     </Dropzone>
   )

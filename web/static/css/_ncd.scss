@@ -246,6 +246,7 @@ footer {
     font-size: 50px;
   }
   &.active {
+    @extend .blue-text, .lighten-1;
     border-color: color("blue", "lighten-1")
   }
   &.rejectedfile {
