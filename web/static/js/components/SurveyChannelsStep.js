@@ -25,8 +25,6 @@ class SurveyChannelsStep extends Component {
     let channels_input = []
     const { survey, channels } = this.props
 
-    console.log(survey, channels)
-
     if (!survey || !channels) {
       return <div>Loading...</div>
     }
