@@ -31,8 +31,8 @@ defmodule Ask.SurveyController do
   end
 
   def update(conn, %{"id" => id, "survey" => survey_params}) do
-    survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
-    changeset = Survey.changeset(survey, survey_params)
+    prev_survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
+    changeset = Survey.changeset(prev_survey, survey_params)
     case Repo.update(changeset) do
       {:ok, survey} ->
         if survey_params["channel_id"] do
@@ -43,14 +43,15 @@ defmodule Ask.SurveyController do
               survey_id = survey.id
               to_delete_query = from sc in SurveyChannel, where: sc.survey_id == (^survey_id) and sc.channel_id != (^channel_id)
               Repo.delete_all(to_delete_query)
-              survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
-              render(conn, "show.json", survey: survey)
+              updated_survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
+              render(conn, "show.json", survey: updated_survey)
             {:error, changeset} ->
               conn
               |> put_status(:unprocessable_entity)
               |> render(Ask.ChangesetView, "error.json", changeset: changeset)
           end
         end
+        render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
