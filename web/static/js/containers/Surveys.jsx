@@ -36,16 +36,16 @@ class Surveys extends Component {
           </div>
         :
           <div className="row">
-            { Object.keys(surveys).map((survey_id) =>
-              <div className="col s12 m6 l4" key={survey_id}>
+            { Object.keys(surveys).map((surveyId) =>
+              <div className="col s12 m6 l4" key={surveyId}>
                 <div className="card white">
                   <div className="card-content">
                     <span className="card-title">
-                      <Link className="black-text" to={`/projects/${projectId}/surveys/${survey_id}`}>{ surveys[survey_id].name }</Link>
+                      <Link className="black-text" to={`/projects/${projectId}/surveys/${surveyId}`}>{ surveys[surveyId].name }</Link>
                     </span>
                   </div>
                   <div className="card-action">
-                    <Link className="grey-text text-lighten-1" to={`/projects/${projectId}/surveys/${survey_id}/edit`}><i className="material-icons">mode_edit</i></Link>
+                    <Link className="grey-text text-lighten-1" to={`/projects/${projectId}/surveys/${surveyId}/edit`}><i className="material-icons">mode_edit</i></Link>
                   </div>
                 </div>
               </div>

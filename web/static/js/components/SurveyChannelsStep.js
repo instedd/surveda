@@ -25,12 +25,14 @@ class SurveyChannelsStep extends Component {
     let channels_input = []
     const { survey, channels } = this.props
 
+    console.log(survey, channels)
+
     if (!survey || !channels) {
       return <div>Loading...</div>
     }
 
-    let survey_channels = Object.values(survey.channels)
-    let current_channel_id = (survey_channels.length > 0 ? survey_channels[survey_channels.length - 1].channelId : null)
+    let surveyChannels = Object.values(survey.channels)
+    let currentChannelId = (surveyChannels.length > 0 ? surveyChannels[surveyChannels.length - 1].channelId : null)
 
     return (
       <div>
@@ -41,10 +43,10 @@ class SurveyChannelsStep extends Component {
           </div>
         </div>
         <h6> Channels </h6>
-        <select style={{display: 'block'}} defaultValue={current_channel_id}>
-        { Object.keys(channels).map((channel_id) =>
-          <option key={channel_id} id={channel_id} name="channel" value={ channel_id } ref={ node => {channels_input.push({id: channel_id, node:node})}} >
-            {channels[channel_id].name}
+        <select style={{display: 'block'}} defaultValue={currentChannelId}>
+        { Object.keys(channels).map((channelId) =>
+          <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channels_input.push({id: channelId, node:node})}} >
+            {channels[channelId].name}
           </option>
         )}
         </select>

@@ -53,8 +53,8 @@ export const fetchProjects = () => {
   })
 }
 
-export const fetchSurveys = (project_id) => {
-  return apiFetch(`/api/v1/projects/${project_id}/surveys`)
+export const fetchSurveys = (projectId) => {
+  return apiFetch(`/api/v1/projects/${projectId}/surveys`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -66,8 +66,8 @@ export const fetchSurveys = (project_id) => {
   })
 }
 
-export const fetchQuestionnaires = (project_id) => {
-  return apiFetch(`/api/v1/projects/${project_id}/questionnaires`)
+export const fetchQuestionnaires = (projectId) => {
+  return apiFetch(`/api/v1/projects/${projectId}/questionnaires`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -79,8 +79,8 @@ export const fetchQuestionnaires = (project_id) => {
   })
 }
 
-export const fetchQuestionnaire = (project_id, id) => {
-  return apiFetch(`/api/v1/projects/${project_id}/questionnaires/${id}`)
+export const fetchQuestionnaire = (projectId, id) => {
+  return apiFetch(`/api/v1/projects/${projectId}/questionnaires/${id}`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -105,8 +105,8 @@ export const fetchProject = (id) => {
   })
 }
 
-export const fetchSurvey = (project_id, id) => {
-  return apiFetch(`/api/v1/projects/${project_id}/surveys/${id}`)
+export const fetchSurvey = (projectId, id) => {
+  return apiFetch(`/api/v1/projects/${projectId}/surveys/${id}`)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
@@ -139,8 +139,8 @@ export const createProject = (project) => {
   })
 }
 
-export const createSurvey = (project_id) => {
-  return apiFetch(`/api/v1/projects/${project_id}/surveys`, {
+export const createSurvey = (projectId) => {
+  return apiFetch(`/api/v1/projects/${projectId}/surveys`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -188,8 +188,8 @@ export const fetchRespondents = (projectId, surveyId) => {
   })
 }
 
-export const createQuestionnaire = (project_id, questionnaire) => {
-  return apiFetch(`/api/v1/projects/${project_id}/questionnaires`, {
+export const createQuestionnaire = (projectId, questionnaire) => {
+  return apiFetch(`/api/v1/projects/${projectId}/questionnaires`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -230,8 +230,8 @@ export const updateProject = (project) => {
   })
 }
 
-export const updateSurvey = (project_id, survey) => {
-  return apiFetch(`/api/v1/projects/${project_id}/surveys/${survey.id}`, {
+export const updateSurvey = (projectId, survey) => {
+  return apiFetch(`/api/v1/projects/${projectId}/surveys/${survey.id}`, {
     method: 'PUT',
     headers: {
       'Accept': 'application/json',
@@ -286,8 +286,8 @@ export const createChannel = (channel) => {
 }
 
 
-export const updateQuestionnaire = (project_id, questionnaire) => {
-  return apiFetch(`/api/v1/projects/${project_id}/questionnaires/${questionnaire.id}`, {
+export const updateQuestionnaire = (projectId, questionnaire) => {
+  return apiFetch(`/api/v1/projects/${projectId}/questionnaires/${questionnaire.id}`, {
     method: 'PUT',
     headers: {
       'Accept': 'application/json',

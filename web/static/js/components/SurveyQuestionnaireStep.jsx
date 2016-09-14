@@ -48,11 +48,11 @@ class SurveyQuestionnaireStep extends Component {
         <div className="row">
           <div className="col s12">
             <h6>Questionnaires</h6>
-            { Object.keys(questionnaires).map((questionnaire_id) =>
-              <div key={questionnaire_id}>
+            { Object.keys(questionnaires).map((questionnaireId) =>
+              <div key={questionnaireId}>
                 <p>
-                  <input id={questionnaire_id} type="radio" name="questionnaire" className="with-gap" value={ questionnaire_id } ref={ node => {questionnaires_input.push({id: questionnaire_id, node:node}) } } defaultChecked={survey.questionnaireId == questionnaire_id } />
-                  <label htmlFor={questionnaire_id}>{ questionnaires[questionnaire_id].name }</label>
+                  <input id={questionnaireId} type="radio" name="questionnaire" className="with-gap" value={ questionnaireId } ref={ node => {questionnaires_input.push({id: questionnaireId, node:node}) } } defaultChecked={survey.questionnaireId == questionnaireId } />
+                  <label htmlFor={questionnaireId}>{ questionnaires[questionnaireId].name }</label>
                 </p>
               </div>
             )}
