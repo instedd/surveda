@@ -306,3 +306,21 @@ export const updateQuestionnaire = (project_id, questionnaire) => {
     return normalize(camelizeKeys(json.data), questionnaireSchema)
   })
 }
+
+export const launchSurvey = (projectId, surveyId) => {
+  return apiFetch(`/api/v1/projects/${projectId}/surveys/${surveyId}/launch`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response =>
+    response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), surveySchema)
+  })
+}

@@ -28,7 +28,8 @@ defmodule Ask.Router do
     scope "/v1" do
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
-          resources "/respondents", RespondentController, only: [:create, :index] 
+          post "/launch", SurveyController, :launch
+          resources "/respondents", RespondentController, only: [:create, :index]
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
       end

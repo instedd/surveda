@@ -84,4 +84,11 @@ defmodule Ask.SurveyControllerTest do
     assert response(conn, 204)
     refute Repo.get(Survey, survey.id)
   end
+
+  test "launch survey", %{conn: conn} do
+    survey = insert(:survey)
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "running"
+  end
 end

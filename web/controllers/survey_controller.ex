@@ -71,4 +71,17 @@ defmodule Ask.SurveyController do
 
     send_resp(conn, :no_content, "")
   end
+
+  def launch(conn, %{"survey_id" => id}) do
+    survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
+    changeset = Survey.changeset(survey, %{"state": "running"})
+    case Repo.update(changeset) do
+      {:ok, survey} ->
+        render(conn, "show.json", survey: survey)
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
 end
