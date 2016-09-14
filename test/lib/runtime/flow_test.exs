@@ -1,13 +1,14 @@
 defmodule Ask.FlowTest do
   use ExUnit.Case
+  use Ask.DummySteps
   import Ask.Factory
   alias Ask.Runtime.Flow
 
-  @quiz build(:questionnaire, steps: [%{prompt: %{text: "hi"}}])
+  @quiz build(:questionnaire, steps: @dummy_steps)
 
   test "start" do
-    session = Flow.start(@quiz)
-    assert %Flow{} = session
+    flow = Flow.start(@quiz)
+    assert %Flow{} = flow
   end
 
   test "first step of empty quiz" do
@@ -19,12 +20,14 @@ defmodule Ask.FlowTest do
   test "first step" do
     step = Flow.start(@quiz) |> Flow.step()
     assert {:ok, %Flow{}, {:prompt, prompt}} = step
-    assert prompt == hd(@quiz.steps).prompt
+    assert prompt == hd(@quiz.steps).title
   end
 
   test "last step" do
-    {:ok, session, _} = Flow.start(@quiz) |> Flow.step()
-    step = session |> Flow.step()
+    flow = Flow.start(@quiz)
+    {:ok, flow, _} = flow |> Flow.step()
+    {:ok, flow, _} = flow |> Flow.step()
+    step = flow |> Flow.step()
     assert step == :end
   end
 end
