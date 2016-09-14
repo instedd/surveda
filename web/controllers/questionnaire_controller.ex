@@ -32,6 +32,8 @@ defmodule Ask.QuestionnaireController do
   end
 
   def update(conn, %{"id" => id, "questionnaire" => questionnaire_params}) do
+    questionnaire_params = Map.put_new(questionnaire_params, "steps", dummy_steps())
+
     questionnaire = Repo.get!(Questionnaire, id)
     changeset = Questionnaire.changeset(questionnaire, questionnaire_params)
 
