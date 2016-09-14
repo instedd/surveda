@@ -60,7 +60,7 @@ class SurveyChannelsStep extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   channels: state.channels,
-  survey: state.surveys[ownProps.params.id]
+  survey: state.surveys[ownProps.params.surveyId]
 })
 
 export default withRouter(connect(mapStateToProps)(SurveyChannelsStep));
