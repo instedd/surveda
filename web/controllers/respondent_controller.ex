@@ -23,7 +23,10 @@ defmodule Ask.RespondentController do
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
 
-      render(conn, "index.json", respondents: respondents)
+      conn
+        |> put_status(:created)
+        |> render("index.json", respondents: respondents)
+         # |> render("show.json", survey: survey |> Repo.preload([:channels]))
     else
       conn
         |> put_status(:unprocessable_entity)
