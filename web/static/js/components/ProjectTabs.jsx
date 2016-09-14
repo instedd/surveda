@@ -15,9 +15,6 @@ class ProjectTabs extends Component {
               <Tabs>
                 <TabLink to={`/projects/${projectId}/surveys`} >Surveys</TabLink>
                 <TabLink to={`/projects/${projectId}/questionnaires`} >Questionnaires</TabLink>
-                <TabLink to={`/projects/${projectId}/resources`} >Resources</TabLink>
-                <TabLink to={`/projects/${projectId}/respondents`} >Respondents</TabLink>
-                <TabLink to={`/projects/${projectId}/collaborators`} >Collaborators</TabLink>
               </Tabs>
             </div>
           </div>
