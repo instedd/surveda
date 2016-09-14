@@ -30,19 +30,22 @@ class SurveyCutoffStep extends Component {
             </p>
           </div>
         </div>
-        <h6>Stop when <b>one</b> of the rules is reached</h6>
-        <p>
-          <label htmlFor='completed-results'>Completed results</label>
-          <input id='completed-results' type="text" placeholder="Leave blank for all" defaultValue={survey.cutoff} ref={ node => { resultsInput = node } }/>
-        </p>
-
-        <br/>
-        <button type="button" className="btn waves-effect waves-light" onClick={() =>
-          this.handleSubmit(merge({}, survey, {cutoff: resultsInput.value }))
-        }>
-          Submit
-        </button>
-        <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+        <div className="row">
+          <div className=" input-field col s12">
+            <input id='completed-results' type="text" defaultValue={survey.cutoff} ref={ node => { resultsInput = node } }/>
+            <label htmlFor='completed-results'>Completed results</label>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col s12">
+            <button type="button" className="btn waves-effect waves-light" onClick={() =>
+              this.handleSubmit(merge({}, survey, {cutoff: resultsInput.value }))
+            }>
+              Submit
+            </button>
+            <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+          </div>
+        </div>
       </div>
     )
   }
