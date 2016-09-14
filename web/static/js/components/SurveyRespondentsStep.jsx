@@ -20,6 +20,7 @@ class SurveyRespondentStep extends Component {
     const { dispatch, projectId } = this.props
     uploadRespondents(survey, files)
       .then(respondents => {dispatch(respondentsActions.receiveRespondents(respondents))})
+      .then(() => dispatch(actions.fetchSurvey(projectId, survey.id)))
       .catch((e) => dispatch(respondentsActions.receiveRespondentsError(e)))
   }
 
