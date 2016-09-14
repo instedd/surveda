@@ -3,6 +3,7 @@ defmodule Ask.SurveyController do
 
   alias Ask.Survey
   alias Ask.SurveyChannel
+  alias Ask.Respondent
 
   def index(conn, %{"project_id" => project_id}) do
     surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id, preload: [:channels])
@@ -27,7 +28,9 @@ defmodule Ask.SurveyController do
 
   def show(conn, %{"id" => id}) do
     survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
-    render(conn, "show.json", survey: survey)
+    respondents_count = Repo.one(from r in Respondent, select: count("*"), where: r.survey_id == ^survey.id)
+    survey = %{survey | respondents_count: respondents_count}
+    render(conn, "show.json", %{survey: survey})
   end
 
   def update(conn, %{"id" => id, "survey" => survey_params}) do
