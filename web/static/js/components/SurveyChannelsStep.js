@@ -50,9 +50,6 @@ class SurveyChannelsStep extends Component {
                   {channels[channelId].name}
                 </option>
               )}
-              <option>Select please</option>
-              <option>Select please</option>
-              <option>Select please</option>
             </select>
             <label> Channels </label>
           </div>
