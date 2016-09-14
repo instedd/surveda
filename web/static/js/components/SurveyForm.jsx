@@ -35,13 +35,13 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
               </Link>
             </li>
             <li className="collection-item">
-              <a href="#!">
+              <Link to={`${linkPath}channels`} >
                 <i className="material-icons">settings_input_antenna</i>
                 <span>Select mode and channels</span>
                 <span className="arrowright">
                   <i className="material-icons">keyboard_arrow_right</i>
                 </span>
-              </a>
+              </Link>
             </li>
             <li className="collection-item">
               <Link to={`${linkPath}cutoff`}>

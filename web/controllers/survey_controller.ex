@@ -2,6 +2,7 @@ defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
   alias Ask.Survey
+  alias Ask.SurveyChannel
 
   def index(conn, %{"project_id" => project_id}) do
     surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id, preload: [:channels])
@@ -32,9 +33,23 @@ defmodule Ask.SurveyController do
   def update(conn, %{"id" => id, "survey" => survey_params}) do
     survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
     changeset = Survey.changeset(survey, survey_params)
-
     case Repo.update(changeset) do
       {:ok, survey} ->
+        if survey_params["channel_id"] do
+          channel_id = survey_params["channel_id"]
+          changeset = SurveyChannel.changeset(%SurveyChannel{}, %{survey_id: survey.id, channel_id: channel_id})
+          case Repo.insert(changeset) do
+            {:ok, _} ->
+              survey_id = survey.id
+              to_delete_query = from sc in SurveyChannel, where: sc.survey_id == (^survey_id) and sc.channel_id != (^channel_id)
+              Repo.delete_all(to_delete_query)
+              render(conn, "show.json", survey: survey)
+            {:error, changeset} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+          end
+        end
         render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
@@ -42,6 +57,9 @@ defmodule Ask.SurveyController do
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
+
+  # defp update_changeset()
+  # end
 
   def delete(conn, %{"id" => id}) do
     survey = Repo.get!(Survey, id)

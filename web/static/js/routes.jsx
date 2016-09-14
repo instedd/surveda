@@ -15,6 +15,7 @@ import CreateQuestionnaire from './containers/CreateQuestionnaire'
 import Channels from './containers/channels/Channels'
 import EditQuestionnaire from './containers/EditQuestionnaire'
 import ProjectTabs from './components/ProjectTabs'
+import SurveyChannelsStep from './components/SurveyChannelsStep'
 
 export default (
   <Route path="/" component={App}>
@@ -36,6 +37,7 @@ export default (
             <Route path="questionnaire" component={SurveyQuestionnaireStep} />
             <Route path="respondents" component={SurveyRespondentsStep} />
             <Route path="cutoff" component={SurveyCutoffStep} />
+            <Route path="channels" component={SurveyChannelsStep} />
           </Route>
         </Route>
 
