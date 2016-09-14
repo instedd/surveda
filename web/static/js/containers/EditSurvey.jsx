@@ -32,7 +32,7 @@ class EditSurvey extends Component {
             <i className="material-icons">play_arrow</i>
           </a>
         </Tooltip>
-        <SurveyForm survey={survey} project={project} >{children}</SurveyForm>)
+        <SurveyForm survey={survey} project={project} >{children}</SurveyForm>
       </div>
       )
   }
