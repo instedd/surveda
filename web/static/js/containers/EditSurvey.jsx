@@ -26,7 +26,7 @@ class EditSurvey extends Component {
   render(params) {
     const { children, survey, project } = this.props
     return (
-      <div>
+      <div className="white">
         <Tooltip text="Launch survey">
           <a className="btn-floating btn-large waves-effect waves-light green right mtop" onClick={() => this.launchSurvey()}>
             <i className="material-icons">play_arrow</i>
