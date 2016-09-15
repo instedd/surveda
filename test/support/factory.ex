@@ -45,4 +45,11 @@ defmodule Ask.Factory do
     }
   end
 
+  def respondent_factory do
+    %Ask.Respondent{
+      survey: build(:survey),
+      phone_number: Integer.to_string(:rand.uniform(1000000000))
+    }
+  end
+
 end

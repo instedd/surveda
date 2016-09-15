@@ -3,6 +3,7 @@ defmodule Ask.Respondent do
 
   schema "respondents" do
     field :phone_number, :string
+    field :state, :string, default: "pending"
     belongs_to :survey, Ask.Survey
 
     timestamps()
@@ -13,7 +14,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number])
-    |> validate_required([:phone_number])
+    |> cast(params, [:phone_number, :state])
+    |> validate_required([:phone_number, :state])
   end
 end

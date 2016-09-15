@@ -9,6 +9,7 @@ defmodule Ask.Survey do
 
     has_many :survey_channels, Ask.SurveyChannel
     has_many :channels, through: [:survey_channels, :channel]
+    has_many :respondents, Ask.Respondent
 
     belongs_to :project, Ask.Project
     belongs_to :questionnaire, Ask.Questionnaire
