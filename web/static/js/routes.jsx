@@ -15,6 +15,7 @@ import CreateQuestionnaire from './containers/CreateQuestionnaire'
 import Channels from './containers/channels/Channels'
 import EditQuestionnaire from './containers/EditQuestionnaire'
 import ProjectTabs from './components/ProjectTabs'
+import SurveyTabs from './components/SurveyTabs'
 import SurveyChannelsStep from './components/SurveyChannelsStep'
 
 export default (
@@ -31,7 +32,7 @@ export default (
 
         <Route path="surveys">
           <IndexRoute components={{body: Surveys, tabs: ProjectTabs}} />
-          <Route path=":surveyId" component={Survey} />
+          <Route path=":surveyId" components={{body: Survey, tabs: SurveyTabs}} />
           <Route path=":surveyId/edit" component={EditSurvey} >
             <IndexRedirect to="questionnaire"/>
             <Route path="questionnaire" component={SurveyQuestionnaireStep} />

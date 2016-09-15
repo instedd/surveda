@@ -8,18 +8,10 @@ class ProjectTabs extends Component {
     const { projectId } = this.props
 
     return (
-      <nav id="BottomNav">
-        <div className="nav-wrapper">
-          <div className="row">
-            <div className="col s12 m11 l8">
-              <Tabs>
-                <TabLink to={`/projects/${projectId}/surveys`} >Surveys</TabLink>
-                <TabLink to={`/projects/${projectId}/questionnaires`} >Questionnaires</TabLink>
-              </Tabs>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Tabs>
+        <TabLink to={`/projects/${projectId}/surveys`}>Surveys</TabLink>
+        <TabLink to={`/projects/${projectId}/questionnaires`} >Questionnaires</TabLink>
+      </Tabs>
     )
   }
 }
