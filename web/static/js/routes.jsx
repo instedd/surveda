@@ -19,43 +19,43 @@ import SurveyTabs from './components/SurveyTabs'
 import SurveyChannelsStep from './components/SurveyChannelsStep'
 
 export default (
-  <Route path="/" component={App}>
+  <Route path="/" component={App} name="Home">
     <IndexRedirect to="projects"/>
 
-    <Route path="projects">
+    <Route path="projects" name="Projects">
       <IndexRoute component={Projects} />
-      <Route path="new" component={CreateProject} />
+      <Route path="new" component={CreateProject} name="New Project" />
 
-      <Route path=":projectId">
+      <Route path=":projectId" name="Project">
         <IndexRedirect to="surveys"/>
-        <Route path="edit" component={EditProject} />
+        <Route path="edit" component={EditProject} name="Project" />
 
-        <Route path="surveys">
+        <Route path="surveys" name="Surveys">
           <IndexRoute components={{body: Surveys, tabs: ProjectTabs}} />
           <Route path=":surveyId" components={{body: Survey, tabs: SurveyTabs}} />
           <Route path=":surveyId/edit" component={EditSurvey} >
             <IndexRedirect to="questionnaire"/>
-            <Route path="questionnaire" component={SurveyQuestionnaireStep} />
-            <Route path="respondents" component={SurveyRespondentsStep} />
-            <Route path="cutoff" component={SurveyCutoffStep} />
-            <Route path="channels" component={SurveyChannelsStep} />
+            <Route path="questionnaire" component={SurveyQuestionnaireStep} name="Questionnaire" />
+            <Route path="respondents" component={SurveyRespondentsStep} name="Respondents" />
+            <Route path="cutoff" component={SurveyCutoffStep} name="Cutoff" />
+            <Route path="channels" component={SurveyChannelsStep} name="Channels" />
           </Route>
         </Route>
 
-        <Route path="questionnaires">
+        <Route path="questionnaires" name="Questionnaires">
           <IndexRoute components={{body: Questionnaires, tabs: ProjectTabs}} />
-          <Route path="new" component={CreateQuestionnaire} />
-          <Route path=":questionnaireId">
+          <Route path="new" component={CreateQuestionnaire} name="Questionnaire" />
+          <Route path=":questionnaireId" name="Questionnaire">
             <IndexRedirect to="edit"/>
           </Route>
-          <Route path=":questionnaireId/edit" component={EditQuestionnaire} />
+          <Route path=":questionnaireId/edit" component={EditQuestionnaire} name="Questionnaire" />
         </Route>
 
       </Route>
 
     </Route>
 
-    <Route path="channels">
+    <Route path="channels" name="Channels">
       <IndexRoute component={Channels} />
     </Route>
 
