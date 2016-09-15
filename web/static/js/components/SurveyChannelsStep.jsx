@@ -16,7 +16,7 @@ class SurveyChannelsStep extends Component {
     const { dispatch, projectId, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(survey => dispatch(actions.updateSurvey(survey)))
-      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit`))
+      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/cutoff`))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
@@ -29,8 +29,7 @@ class SurveyChannelsStep extends Component {
       return <div>Loading...</div>
     }
 
-    let surveyChannels = Object.values(survey.channels)
-    let currentChannelId = (surveyChannels.length > 0 ? surveyChannels[surveyChannels.length - 1].channelId : null)
+    let currentChannelId = (survey.channels.length > 0 ? survey.channels[survey.channels.length - 1] : null)
 
     return (
       <div className="col s12 m7 offset-m1">

@@ -41,7 +41,7 @@ defmodule Ask.SurveyControllerTest do
       "project_id" => survey.project_id,
       "questionnaire_id" => nil,
       "channels" => [%{
-        "channel_id" => channel.id,
+        "id" => channel.id,
         "type" => "sms"
       }],
       "cutoff" => nil,
@@ -94,7 +94,7 @@ defmodule Ask.SurveyControllerTest do
       "project_id" => survey.project_id,
       "questionnaire_id" => nil,
       "channels" => [%{
-        "channel_id" => channel2.id,
+        "id" => channel2.id,
         "type" => "sms"
       }],
       "cutoff" => nil,

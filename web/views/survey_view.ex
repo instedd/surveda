@@ -34,7 +34,7 @@ defmodule Ask.SurveyView do
   def render("survey_channel.json", %{channel: channel}) do
     %{
       type: channel.type,
-      channel_id: channel.id
+      id: channel.id
     }
   end
 end
