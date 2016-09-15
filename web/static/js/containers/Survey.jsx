@@ -6,14 +6,19 @@ import { fetchSurvey } from '../api'
 
 class Survey extends Component {
   componentDidMount() {
-    const { dispatch, projectId, surveyId } = this.props
+    const { dispatch, projectId, surveyId, router } = this.props
     if (projectId && surveyId) {
       dispatch(actions.fetchSurvey(projectId, surveyId))
+        .then((survey) => {
+          if (survey.state == "pending") {
+            router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit`)
+          }
+        })
     }
   }
 
   render(params) {
-    const { survey } = this.props
+    const { survey, router } = this.props
     if (!survey) {
       return <p>Loading...</p>
     }

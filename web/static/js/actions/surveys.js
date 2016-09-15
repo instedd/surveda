@@ -5,14 +5,17 @@ export const CREATE_SURVEY = 'CREATE_SURVEY'
 export const UPDATE_SURVEY = 'UPDATE_SURVEY'
 export const RECEIVE_SURVEYS_ERROR = 'RECEIVE_SURVEYS_ERROR'
 
-export const fetchSurveys = (projectId) => dispatch => {
-  api.fetchSurveys(projectId)
+export const fetchSurveys = (projectId) => (dispatch, getState) => {
+  return api
+    .fetchSurveys(projectId)
     .then(surveys => dispatch(receiveSurveys(surveys)))
+    .then(() => getState().surveys)
 }
 
-export const fetchSurvey = (projectId, surveyId) => dispatch => {
-  api.fetchSurvey(projectId, surveyId)
+export const fetchSurvey = (projectId, surveyId) => (dispatch, getState) => {
+  return api.fetchSurvey(projectId, surveyId)
     .then(survey => dispatch(receiveSurveys(survey)))
+    .then(() => getState().surveys[surveyId])
 }
 
 export const receiveSurveys = (response) => ({

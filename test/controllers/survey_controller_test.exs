@@ -27,6 +27,7 @@ defmodule Ask.SurveyControllerTest do
       "questionnaire_id" => nil,
       "channels" => [],
       "cutoff" => nil,
+      "state" => "pending",
       "respondents_count" => 0}
   end
 
@@ -44,6 +45,7 @@ defmodule Ask.SurveyControllerTest do
         "type" => "sms"
       }],
       "cutoff" => nil,
+      "state" => "pending",
       "respondents_count" => 0
     }
   end

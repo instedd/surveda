@@ -9,9 +9,14 @@ import { launchSurvey } from '../api'
 
 class EditSurvey extends Component {
   componentDidMount() {
-    const { dispatch, projectId, surveyId } = this.props
+    const { dispatch, projectId, surveyId, router } = this.props
     if (projectId && surveyId) {
       dispatch(actions.fetchSurvey(projectId, surveyId))
+        .then((survey) => {
+          if (survey.state == "running") {
+            router.push(`/projects/${survey.projectId}/surveys/${survey.id}`)
+          }
+        })
       dispatch(projectActions.fetchProject(projectId))
     }
   }
