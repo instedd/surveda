@@ -9,24 +9,11 @@ const questionnaireSchema = new Schema('questionnaires');
 const respondentSchema = new Schema('respondents');
 const channelSchema = new Schema('channels');
 
-projectSchema.define({
-  owner: userSchema
-});
-
-surveySchema.define({
-
-});
-
-questionnaireSchema.define({
-
-});
-
-respondentSchema.define({
-
-});
-
-channelSchema.define({
-})
+projectSchema.define({owner: userSchema});
+surveySchema.define({});
+questionnaireSchema.define({});
+respondentSchema.define({});
+channelSchema.define({})
 
 const apiFetch = (url, options) => {
   return fetch(url, {...options, credentials: 'same-origin'})
@@ -40,287 +27,112 @@ const apiFetch = (url, options) => {
     })
 }
 
-export const fetchProjects = () => {
-  return apiFetch(`/api/v1/projects`)
+const apiFetchJSON = (url, schema, options) => {
+  return apiFetch(url, options)
     .then(response =>
       response.json().then(json => ({ json, response }))
     ).then(({ json, response }) => {
       if (!response.ok) {
         return Promise.reject(json)
       }
+      return normalize(camelizeKeys(json.data), schema)
+    })
+}
 
-    return normalize(camelizeKeys(json.data), arrayOf(projectSchema))
-  })
+const apiPutOrPostJSON = (url, schema, verb, body) => {
+  let options = {
+    method: verb,
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  }
+  if (body) {
+    options.body = JSON.stringify(body)
+  }
+  return apiFetchJSON(url, schema, options)
+}
+
+const apiPostJSON = (url, schema, body) => {
+  return apiPutOrPostJSON(url, schema, 'POST', body)
+}
+
+const apiPutJSON = (url, schema, body) => {
+  return apiPutOrPostJSON(url, schema, 'PUT', body)
+}
+
+export const fetchProjects = () => {
+  return apiFetchJSON(`/api/v1/projects`, arrayOf(projectSchema))
 }
 
 export const fetchSurveys = (projectId) => {
-  return apiFetch(`/api/v1/projects/${projectId}/surveys`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), arrayOf(surveySchema))
-  })
+  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys`, arrayOf(surveySchema))
 }
 
 export const fetchQuestionnaires = (projectId) => {
-  return apiFetch(`/api/v1/projects/${projectId}/questionnaires`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), arrayOf(questionnaireSchema))
-  })
+  return apiFetchJSON(`/api/v1/projects/${projectId}/questionnaires`, arrayOf(questionnaireSchema))
 }
 
 export const fetchQuestionnaire = (projectId, id) => {
-  return apiFetch(`/api/v1/projects/${projectId}/questionnaires/${id}`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), questionnaireSchema)
-  })
+  return apiFetchJSON(`/api/v1/projects/${projectId}/questionnaires/${id}`, questionnaireSchema)
 }
 
 export const fetchProject = (id) => {
-  return apiFetch(`/api/v1/projects/${id}`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), projectSchema)
-  })
+  return apiFetchJSON(`/api/v1/projects/${id}`, projectSchema)
 }
 
 export const fetchSurvey = (projectId, id) => {
-  return apiFetch(`/api/v1/projects/${projectId}/surveys/${id}`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), surveySchema)
-  })
+  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${id}`, surveySchema)
 }
 
 export const createProject = (project) => {
-  return apiFetch('/api/v1/projects', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      project: project
-    })
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), projectSchema)
-  })
+  return apiPostJSON('/api/v1/projects', projectSchema, {project})
 }
 
 export const createSurvey = (projectId) => {
-  return apiFetch(`/api/v1/projects/${projectId}/surveys`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), surveySchema)
-  })
+  return apiPostJSON(`/api/v1/projects/${projectId}/surveys`, surveySchema)
 }
 
 export const uploadRespondents = (survey, files) => {
   const formData = new FormData();
   formData.append('file', files[0]);
 
-  return apiFetch(`/api/v1/projects/${survey.projectId}/surveys/${survey.id}/respondents`, {
+  return apiFetchJSON(`/api/v1/projects/${survey.projectId}/surveys/${survey.id}/respondents`,
+    arrayOf(respondentSchema), {
     method: 'POST',
     body: formData
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), arrayOf(respondentSchema))
   })
 }
 
 export const fetchRespondents = (projectId, surveyId) => {
-  return apiFetch(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), arrayOf(respondentSchema))
-  })
+  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`, arrayOf(respondentSchema))
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
-  return apiFetch(`/api/v1/projects/${projectId}/questionnaires`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      questionnaire: questionnaire
-    })
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), questionnaireSchema)
-  })
+  return apiPostJSON(`/api/v1/projects/${projectId}/questionnaires`, questionnaireSchema, {questionnaire})
 }
 
 export const updateProject = (project) => {
-  return apiFetch(`/api/v1/projects/${project.id}`, {
-    method: 'PUT',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      project: project
-    })
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), projectSchema)
-  })
+  return apiPutJSON(`/api/v1/projects/${project.id}`, projectSchema, {project})
 }
 
 export const updateSurvey = (projectId, survey) => {
-  return apiFetch(`/api/v1/projects/${projectId}/surveys/${survey.id}`, {
-    method: 'PUT',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      survey: survey
-    })
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), surveySchema)
-  })
+  return apiPutJSON(`/api/v1/projects/${projectId}/surveys/${survey.id}`, surveySchema, {survey})
 }
 
 export const fetchChannels = () => {
-  return apiFetch(`/api/v1/channels`)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-
-    return normalize(camelizeKeys(json.data), arrayOf(channelSchema))
-  })
+  return apiFetchJSON(`/api/v1/channels`, arrayOf(channelSchema))
 }
 
 export const createChannel = (channel) => {
-  return apiFetch('/api/v1/channels', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      channel: channel
-    })
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), channelSchema)
-  })
+  return apiPostJSON('/api/v1/channels', channelSchema, {channel})
 }
 
-
 export const updateQuestionnaire = (projectId, questionnaire) => {
-  return apiFetch(`/api/v1/projects/${projectId}/questionnaires/${questionnaire.id}`, {
-    method: 'PUT',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      questionnaire: questionnaire
-    })
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), questionnaireSchema)
-  })
+  return apiPutJSON(`/api/v1/projects/${projectId}/questionnaires/${questionnaire.id}`,
+    questionnaireSchema, {questionnaire})
 }
 
 export const launchSurvey = (projectId, surveyId) => {
-  return apiFetch(`/api/v1/projects/${projectId}/surveys/${surveyId}/launch`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response =>
-    response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), surveySchema)
-  })
+  return apiPostJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/launch`, surveySchema)
 }
