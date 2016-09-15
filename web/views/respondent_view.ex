@@ -10,8 +10,20 @@ defmodule Ask.RespondentView do
   end
 
   def render("respondent.json", %{respondent: respondent}) do
-    %{id: respondent.id,
+    %{
+      id: respondent.id,
       phone_number: respondent.phone_number,
-      survey_id: respondent.survey_id}
+      survey_id: respondent.survey_id
+    }
+  end
+
+  def render("stats.json", %{stats: stats}) do
+    %{
+      data: %{
+        pending: stats.pending,
+        completed: stats.completed,
+        active: stats.active
+      }
+    }
   end
 end

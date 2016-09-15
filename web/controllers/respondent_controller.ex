@@ -8,6 +8,19 @@ defmodule Ask.RespondentController do
     render(conn, "index.json", respondents: respondents)
   end
 
+  def stats(conn,  %{"survey_id" => survey_id}) do
+    by_state = Repo.all(
+      from r in Respondent, where: r.survey_id == ^survey_id,
+      group_by: :state,
+      select: {r.state, count("*")}) |> Enum.into(%{})
+
+    active = by_state["active"] || 0
+    pending = by_state["pending"] || 0
+    completed = by_state["completed"] || 0
+    stats = %{pending: pending, completed: completed, active: active }
+    render(conn, "stats.json", stats: stats)
+  end
+
   def create(conn, %{"file" => file, "survey_id" => survey_id}) do
     {integer_survey_id, _ } = Integer.parse survey_id
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()

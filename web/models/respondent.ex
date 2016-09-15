@@ -3,7 +3,7 @@ defmodule Ask.Respondent do
 
   schema "respondents" do
     field :phone_number, :string
-    field :state, :string, default: "pending"
+    field :state, :string, default: "pending" # [pending, active, completed, failed]
     belongs_to :survey, Ask.Survey
 
     timestamps()

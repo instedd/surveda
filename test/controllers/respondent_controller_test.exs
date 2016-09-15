@@ -16,6 +16,20 @@ defmodule Ask.RespondentControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
+  test "lists stats for a given survey", %{conn: conn} do
+    project = insert(:project)
+    survey = insert(:survey, project: project)
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    assert json_response(conn, 200)["data"] == %{
+      "pending" => 14,
+      "completed" => 0,
+      "active" => 0
+    }
+  end
+
   test "creates and renders resource when data is valid", %{conn: conn} do
     project = insert(:project)
     survey = insert(:survey, project: project)

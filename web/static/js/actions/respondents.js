@@ -4,6 +4,7 @@ export const RECEIVE_RESPONDENTS = 'RECEIVE_RESPONDENTS'
 export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
+export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 
 export const fetchRespondents = (projectId, surveyId) => dispatch => {
   api.fetchRespondents(projectId, surveyId)
@@ -14,6 +15,17 @@ export const fetchRespondent = (projectId, respondentId) => dispatch => {
   api.fetchRespondent(projectId, respondentId)
     .then(respondent => dispatch(receiveRespondents(respondent)))
 }
+
+export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
+  api.fetchRespondentsStats(projectId, surveyId)
+    .then(stats => dispatch(receiveRespondentsStats(surveyId, stats)))
+}
+
+export const receiveRespondentsStats = (surveyId, response) => ({
+  type: RECEIVE_RESPONDENTS_STATS,
+  surveyId: surveyId,
+  respondentsStats: response.result
+})
 
 export const receiveRespondents = (response) => ({
   type: RECEIVE_RESPONDENTS,

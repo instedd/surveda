@@ -2,18 +2,17 @@ import { normalize, Schema, arrayOf } from 'normalizr'
 import { camelizeKeys } from 'humps'
 import 'isomorphic-fetch'
 
-const projectSchema = new Schema('projects');
-const surveySchema = new Schema('surveys');
-const userSchema = new Schema('users');
-const questionnaireSchema = new Schema('questionnaires');
-const respondentSchema = new Schema('respondents');
-const channelSchema = new Schema('channels');
+const projectSchema = new Schema('projects')
+const surveySchema = new Schema('surveys')
+const userSchema = new Schema('users')
+const questionnaireSchema = new Schema('questionnaires')
+const respondentSchema = new Schema('respondents')
+const respondentsStatsSchema = new Schema('respondents')
+const channelSchema = new Schema('channels')
 
-projectSchema.define({owner: userSchema});
-surveySchema.define({});
-questionnaireSchema.define({});
-respondentSchema.define({});
-channelSchema.define({})
+surveySchema.define({
+  channels: arrayOf(channelSchema)
+})
 
 const apiFetch = (url, options) => {
   return fetch(url, {...options, credentials: 'same-origin'})
@@ -106,6 +105,10 @@ export const uploadRespondents = (survey, files) => {
 
 export const fetchRespondents = (projectId, surveyId) => {
   return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`, arrayOf(respondentSchema))
+}
+
+export const fetchRespondentsStats = (projectId, surveyId) => {
+  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/stats`, arrayOf(respondentsStatsSchema))
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
