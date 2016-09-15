@@ -39,11 +39,11 @@ defmodule Ask.SurveyController do
     case Repo.update(changeset) do
       {:ok, survey} ->
         respondents_count = Repo.one(from r in Respondent, select: count("*"), where: r.survey_id == ^survey.id)
-        if survey_params["channels"] do
-          update_channels(conn, {id, survey_params}, survey, respondents_count)
-        else
-          survey = %{survey | respondents_count: respondents_count}
-          render(conn, "show.json", survey: survey)
+        case survey_params["channels"] do
+          [ channel | _ ] -> update_channels(conn, {id, channel}, survey, respondents_count)
+          _ ->
+            survey = %{survey | respondents_count: respondents_count}
+            render(conn, "show.json", survey: survey)
         end
       {:error, changeset} ->
         conn
@@ -52,9 +52,8 @@ defmodule Ask.SurveyController do
     end
   end
 
-  defp update_channels(conn, {id, survey_params}, survey, respondents_count) do
-    [channel_param| _ ] = survey_params["channels"]
-    {channel_id, _} = Integer.parse channel_param
+  defp update_channels(conn, {id, channel}, survey, respondents_count) do
+    channel_id  = channel["channelId"]
     changeset = Ecto.build_assoc(survey, :survey_channels, %{channel_id: channel_id})
     case Repo.insert(changeset) do
       {:ok, _} ->

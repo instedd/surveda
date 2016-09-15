@@ -22,7 +22,7 @@ class SurveyChannelsStep extends Component {
 
   render() {
     let input
-    let channels_input = []
+    let channelsInput = []
     const { survey, channels } = this.props
 
     if (!survey || !channels) {
@@ -46,7 +46,7 @@ class SurveyChannelsStep extends Component {
           <div className="input-field col s12">
             <select defaultValue={currentChannelId} ref={ref => $(ref).material_select()}>
               { Object.keys(channels).map((channelId) =>
-                <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channels_input.push({id: channelId, node:node})}} >
+                <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channelsInput.push({id: channelId, node:node})}} >
                   {channels[channelId].name}
                 </option>
               )}
@@ -57,7 +57,10 @@ class SurveyChannelsStep extends Component {
         <div className="row">
           <div className="col s12">
             <button className="btn waves-effect waves-light" type="button" onClick={() =>
-                this.handleSubmit(merge({}, survey, {channels: [channels_input.find(element => element.node.selected).id]}))
+                this.handleSubmit(merge({}, survey, {
+                  channels: [{
+                    channelId: parseInt(channelsInput.find(element => element.node.selected).id)
+                  }]}))
               }>
                 Submit
             </button>

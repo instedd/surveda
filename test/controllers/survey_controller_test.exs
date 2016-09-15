@@ -87,7 +87,7 @@ defmodule Ask.SurveyControllerTest do
     channel2 = insert(:channel)
     survey = insert(:survey)
     insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
-    conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [to_string(channel2.id)]}
+    conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [%{channelId: channel2.id}]}
 
     assert json_response(conn, 200)["data"] == %{"id" => survey.id,
       "name" => survey.name,
