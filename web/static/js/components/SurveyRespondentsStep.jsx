@@ -58,14 +58,8 @@ class SurveyRespondentStep extends Component {
 const RespondentsDropzone = ({survey, onDrop}) => {
   return(
     <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={onDrop}  accept="text/csv">
-      <div className="drophere">
-        <i className="material-icons">insert_drive_file</i>
-        <div>Drop your CSV file here, or <a href='#!'>browse</a></div>
-      </div>
-      <div className="onlycsv">
-        <i className="material-icons">block</i>
-        <div>Invalid file type</div>
-      </div>
+        <div className="drop-icon"></div>
+        <div className="drop-text"></div>
     </Dropzone>
   )
 }

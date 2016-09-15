@@ -232,30 +232,61 @@ footer {
 // ------- Forms --------------
 
 .dropfile {
+  @include  transition(border-color ease-in-out .2s);
   @extend .grey-text;
   font-size: 18px;
   width: 100%;
-  padding: 115px 0;
+  height: 350px;
   border: 2px dashed color("grey", "lighten-3");
-  text-align: center;
-  .onlycsv {
-    @extend .red-text;
-    display: none;
+  position: relative;
+  cursor: pointer;
+  .drop-icon {
+    @include  transition(color ease-in-out .2s);
+    color: inherit;
+    position: absolute;
+    width: 20%;
+    top: calc(50% - 70px);
+    margin: 0 40%;
+    &:before {
+      content: 'insert_drive_file';
+      font-family: 'Material Icons';
+      font-size: 50px;
+      position: absolute;
+      top: 0;
+      width: 100%;
+      text-align: center;
+    }
   }
-  i {
-    font-size: 50px;
+  .drop-text {
+    @include  transition(color ease-in-out .2s);
+    color: inherit;
+    position: absolute;
+    width: 70%;
+    top: 50%;
+    margin: 0 15%;
+    &:before {
+      content: 'Drop your CSV file here, or click to browse';
+      text-align: center;
+      position: absolute;
+      width: 100%;
+      text-align: center;
+    }
   }
   &.active {
     @extend .blue-text, .lighten-1;
-    border-color: color("blue", "lighten-1")
+    border-color: color("blue", "lighten-1");
+    .drop-text:before {
+      content: 'Drop your file to start uploading';
+    }
   }
   &.rejectedfile {
+    @extend .red-text;
     border-color: color("red", "lighten-1");
-    .drophere {
-      display: none;
+    .drop-icon:before {
+      content: 'block';
     }
-    .onlycsv {
-      display: block;
+    .drop-text:before {
+      content: 'Invalid file type';
     }
   }
 }
