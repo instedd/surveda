@@ -13,7 +13,7 @@ defmodule Ask.Runtime.Broker do
 
   def handle_info(:poll, state) do
     surveys = Repo.all(from s in Survey, where: s.state == "running")
-    surveys |> Enum.each(fn(survey) -> poll_survey(survey) end)
+    surveys |> Enum.each(&poll_survey(&1))
     {:noreply, state}
   end
 
@@ -43,7 +43,7 @@ defmodule Ask.Runtime.Broker do
       where: r.state == "pending",
       limit: ^count)
 
-    respondents |> Enum.each(fn(respondent) -> enqueue(survey, respondent) end)
+    respondents |> Enum.each(&enqueue(survey, &1))
   end
 
   defp enqueue(_survey, respondent) do
