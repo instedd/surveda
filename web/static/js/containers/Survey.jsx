@@ -27,12 +27,24 @@ class Survey extends Component {
 
     return (
       <div>
-        <h3>Survey view</h3>
-        <h4>Name: { survey.name }</h4>
+        <h3>{ survey.name }</h3>
         <br/>
-        <p>Pending: { respondentsStats.pending }</p>
-        <p>Completed: { respondentsStats.completed }</p>
-        <p>Active: { respondentsStats.active }</p>
+        <table className="ncdtable">
+          <thead>
+            <tr>
+              <th>Pending</th>
+              <th>Completed</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{ respondentsStats.pending }</td>
+              <td>{ respondentsStats.completed }</td>
+              <td>{ respondentsStats.active }</td>
+            </tr>
+          </tbody>
+        </table>
         <br/>
         <Link to={`/projects/${survey.projectId}/surveys/${survey.id}/edit`}>Edit</Link>
         {' '}
