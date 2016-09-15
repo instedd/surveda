@@ -80,6 +80,27 @@ defmodule Ask.SurveyControllerTest do
     assert json_response(conn, 422)["errors"] != %{}
   end
 
+  test "deletes previous channels associations when updates including channels params", %{conn: conn} do
+    channel = insert(:channel)
+    channel2 = insert(:channel)
+    survey = insert(:survey)
+    insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
+    conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [to_string(channel2.id)]}
+
+    assert json_response(conn, 200)["data"] == %{"id" => survey.id,
+      "name" => survey.name,
+      "project_id" => survey.project_id,
+      "questionnaire_id" => nil,
+      "channels" => [%{
+        "channel_id" => channel2.id,
+        "type" => "sms"
+      }],
+      "cutoff" => nil,
+      "respondents_count" => 0
+    }
+  end
+
+
   test "deletes chosen resource", %{conn: conn} do
     survey = insert(:survey)
     conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
