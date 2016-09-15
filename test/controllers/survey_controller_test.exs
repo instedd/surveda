@@ -98,6 +98,7 @@ defmodule Ask.SurveyControllerTest do
         "type" => "sms"
       }],
       "cutoff" => nil,
+      "state" => "pending",
       "respondents_count" => 0
     }
   end
