@@ -17,3 +17,8 @@ config :ask, Ask.Repo,
   database: "ask_test",
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :ask, :channel,
+  providers: %{
+    "test" => Ask.TestChannel
+  }

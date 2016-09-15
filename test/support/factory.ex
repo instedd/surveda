@@ -35,7 +35,7 @@ defmodule Ask.Factory do
       user: build(:user),
       name: "My Channel",
       type: "sms",
-      provider: "provider",
+      provider: "test",
       settings: %{}
     }
   end

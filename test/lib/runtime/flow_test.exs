@@ -20,7 +20,7 @@ defmodule Ask.FlowTest do
   test "first step" do
     step = Flow.start(@quiz) |> Flow.step()
     assert {:ok, %Flow{}, {:prompt, prompt}} = step
-    assert prompt == hd(@quiz.steps).title
+    assert prompt == hd(@quiz.steps)["title"]
   end
 
   test "last step" do

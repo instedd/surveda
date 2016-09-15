@@ -25,6 +25,12 @@ config :ask, Nuntium,
     app_id: ""
   ]
 
+config :ask, :channel,
+  providers: %{
+    "nuntium" => Ask.NuntiumChannel,
+    "verboice" => Ask.VerboiceChannel
+  }
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

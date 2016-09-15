@@ -33,6 +33,6 @@ defmodule Ask.Runtime.Flow do
 
   defp current_step(flow) do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
-    {:ok, flow, {:prompt, step.title}}
+    {:ok, flow, {:prompt, step["title"]}}
   end
 end

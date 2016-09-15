@@ -2,7 +2,8 @@ defmodule Ask.Runtime.Broker do
   use GenServer
   import Ecto.Query
   import Ecto
-  alias Ask.{ Repo, Survey, Respondent }
+  alias Ask.{Repo, Survey, Respondent}
+  alias Ask.Runtime.Session
 
   @batch_size 10
 
@@ -46,7 +47,16 @@ defmodule Ask.Runtime.Broker do
     respondents |> Enum.each(&enqueue(survey, &1))
   end
 
-  defp enqueue(_survey, respondent) do
+  defp enqueue(survey, respondent) do
     Repo.update Respondent.changeset(respondent, %{state: "active"})
+
+    survey = Repo.preload(survey, [:questionnaire, :channels])
+    channel = hd(survey.channels)
+
+    channel_config = Application.get_env(:ask, :channel)
+    channel_provider = channel_config[:providers][channel.provider]
+
+    runtime_channel = channel_provider.new(channel.settings)
+    Session.start(survey.questionnaire, respondent.phone_number, runtime_channel)
   end
 end

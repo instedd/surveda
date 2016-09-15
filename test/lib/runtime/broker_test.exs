@@ -1,7 +1,8 @@
 defmodule Ask.BrokerTest do
   use Ask.ModelCase
+  use Ask.DummySteps
   alias Ask.Runtime.Broker
-  alias Ask.{ Repo, Survey, Respondent }
+  alias Ask.{Repo, Survey, Respondent, TestChannel}
 
   test "does nothing with 'pending' survey" do
     survey = insert(:survey)
@@ -30,8 +31,12 @@ defmodule Ask.BrokerTest do
   end
 
   test "enqueue respondents" do
-    survey = insert(:survey, state: "running")
+    test_channel = TestChannel.new
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings)
+    quiz = insert(:questionnaire, steps: @dummy_steps)
+    survey = insert(:survey, state: "running", questionnaire: quiz, survey_channels: [build(:survey_channel, channel: channel)])
     respondent = insert(:respondent, survey: survey)
+    phone_number = respondent.phone_number
 
     Broker.handle_info(:poll, nil)
 
@@ -40,5 +45,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
+
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke?"]]
   end
 end
