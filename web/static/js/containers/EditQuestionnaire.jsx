@@ -15,8 +15,8 @@ class EditQuestionnaire extends Component {
     }
   }
 
-  handleSubmit(dispatch) {
-    const { projectId, router } = this.props
+  handleSubmit() {
+    const { projectId, router, dispatch } = this.props
     return (questionnaire) => {
       updateQuestionnaire(projectId, questionnaire)
         .then(questionnaire => dispatch(actions.updateQuestionnaire(questionnaire)))
@@ -25,8 +25,8 @@ class EditQuestionnaire extends Component {
   }
 
   render(params) {
-    const { children, questionnaire, project, projectId } = this.props
-    return <QuestionnaireForm onSubmit={this.handleSubmit(this.props.dispatch)} questionnaire={questionnaire} project={project} >{children}</QuestionnaireForm>
+    const { children, questionnaire, project } = this.props
+    return <QuestionnaireForm onSubmit={this.handleSubmit()} questionnaire={questionnaire} project={project} >{children}</QuestionnaireForm>
   }
 }
 

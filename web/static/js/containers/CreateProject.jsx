@@ -6,9 +6,8 @@ import { createProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
 
 class CreateProject extends Component {
-  handleSubmit(dispatch) {
-    const { router } = this.props
-
+  handleSubmit() {
+    const { router, dispatch } = this.props
     return (project) => {
       createProject(project)
         .then(project => dispatch(actions.createProject(project)))
@@ -20,7 +19,7 @@ class CreateProject extends Component {
   render(params) {
     const { project } = this.props
     return (
-      <ProjectForm onSubmit={this.handleSubmit(this.props.dispatch)} project={project} />
+      <ProjectForm onSubmit={this.handleSubmit()} project={project} />
     )
   }
 }

@@ -6,9 +6,9 @@ import { createQuestionnaire } from '../api'
 import QuestionnaireForm from '../components/QuestionnaireForm'
 
 class CreateQuestionnaire extends Component {
-  handleSubmit(dispatch) {
+  handleSubmit() {
     return (questionnaire) => {
-      const { projectId, router } = this.props
+      const { projectId, router, dispatch } = this.props
       createQuestionnaire(projectId, questionnaire)
         .then(questionnaire => dispatch(actions.createQuestionnaire(questionnaire)))
         .then(() => router.push(`/projects/${projectId}/questionnaires`))
@@ -18,7 +18,7 @@ class CreateQuestionnaire extends Component {
 
   render(params) {
     const { project, questionnaire } = this.props
-    return <QuestionnaireForm onSubmit={this.handleSubmit(this.props.dispatch)} project={project} questionnaire={questionnaire} />
+    return <QuestionnaireForm onSubmit={this.handleSubmit()} project={project} questionnaire={questionnaire} />
   }
 }
 

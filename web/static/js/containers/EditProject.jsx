@@ -13,9 +13,8 @@ class EditProject extends Component {
     }
   }
 
-  handleSubmit(dispatch) {
-    const { router } = this.props
-
+  handleSubmit() {
+    const { router, dispatch } = this.props
     return (project) => {
       updateProject(project)
         .then(project => dispatch(actions.updateProject(project)))
@@ -26,7 +25,7 @@ class EditProject extends Component {
 
   render(params) {
     const { project } = this.props
-    return <ProjectForm onSubmit={this.handleSubmit(this.props.dispatch)} project={project} />
+    return <ProjectForm onSubmit={this.handleSubmit()} project={project} />
   }
 }
 
