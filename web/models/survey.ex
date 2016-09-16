@@ -7,8 +7,7 @@ defmodule Ask.Survey do
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
 
-    has_many :survey_channels, Ask.SurveyChannel
-    has_many :channels, through: [:survey_channels, :channel]
+    many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
 
     belongs_to :project, Ask.Project

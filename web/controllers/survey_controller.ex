@@ -2,8 +2,8 @@ defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
   alias Ask.Survey
-  alias Ask.SurveyChannel
   alias Ask.Respondent
+  alias Ask.Channel
 
   def index(conn, %{"project_id" => project_id}) do
     surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id, preload: [:channels])
@@ -40,7 +40,7 @@ defmodule Ask.SurveyController do
       {:ok, survey} ->
         respondents_count = Repo.one(from r in Respondent, select: count("*"), where: r.survey_id == ^survey.id)
         case survey_params["channels"] do
-          [ channel | _ ] -> update_channels(conn, {id, channel}, survey, respondents_count)
+          [ channel | _ ] -> update_channels(conn, channel, survey, respondents_count)
           _ ->
             survey = %{survey | respondents_count: respondents_count}
             render(conn, "show.json", survey: survey)
@@ -52,26 +52,18 @@ defmodule Ask.SurveyController do
     end
   end
 
-  defp update_channels(conn, {id, channel}, survey, respondents_count) do
+  defp update_channels(conn, channel, survey, respondents_count) do
     channel_id  = channel["channelId"]
-    changeset = Ecto.build_assoc(survey, :survey_channels, %{channel_id: channel_id})
-    case Repo.insert(changeset) do
-      {:ok, _} ->
-        delete_previous_channels_associations(survey, channel_id)
-        updated_survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
-        updated_survey = %{updated_survey | respondents_count: respondents_count}
-        render(conn, "show.json", survey: updated_survey)
+    channel = Repo.get!(Channel, channel_id)
+    channels_changeset = Enum.map([channel], &Ecto.Changeset.change/1)
+    case (survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update) do
+      {:ok, updated_survey} ->
+        render(conn, "show.json", survey: %{updated_survey | respondents_count: respondents_count})
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
-  end
-
-  defp delete_previous_channels_associations(survey, channel_id) do
-    survey_id = survey.id
-    to_delete_query = from sc in SurveyChannel, where: sc.survey_id == (^survey_id) and sc.channel_id != (^channel_id)
-    Repo.delete_all(to_delete_query)
   end
 
   def delete(conn, %{"id" => id}) do

@@ -34,7 +34,9 @@ defmodule Ask.BrokerTest do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings)
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, state: "running", questionnaire: quiz, survey_channels: [build(:survey_channel, channel: channel)])
+    survey = insert(:survey, state: "running", questionnaire: quiz) |> Repo.preload([:channels])
+    channel_changeset = Ecto.Changeset.change(channel)
+    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
     respondent = insert(:respondent, survey: survey)
     phone_number = respondent.phone_number
 
