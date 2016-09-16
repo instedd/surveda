@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router'
-import Breadcrumb from './Breadcrumb'
+import Breadcrumb from '../containers/Breadcrumb'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 import { config } from '../config'
 

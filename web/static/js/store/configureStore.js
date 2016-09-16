@@ -6,12 +6,12 @@ import rootReducer from '../reducers'
 import DevTools from '../containers/DevTools'
 
 export default function configureStore(preloadedState) {
-  return createStore(
-    rootReducer,
-    preloadedState,
-    compose(
-      applyMiddleware(thunkMiddleware, routerMiddleware(), createLogger()),
-      DevTools.instrument()
-    )
-  )
+	return createStore(
+		rootReducer,
+		preloadedState,
+		compose(
+			applyMiddleware(thunkMiddleware, routerMiddleware(), createLogger()),
+			DevTools.instrument()
+		)
+	)
 }

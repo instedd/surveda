@@ -19,44 +19,43 @@ import SurveyTabs from './components/SurveyTabs'
 import SurveyChannelsStep from './components/SurveyChannelsStep'
 
 export default (
-  <Route path="/" component={App} name="Home">
+  <Route path="/" component={App} breadcrumbIgnore>
     <IndexRedirect to="projects"/>
 
-    <Route path="projects" name="Projects">
-      <IndexRoute component={Projects} />
+    <Route path="/projects" name="My Projects">
+      <IndexRoute component={Projects} breadcrumbIgnore />
       <Route path="new" component={CreateProject} name="New Project" />
 
-      <Route path=":projectId" name="Project">
+      <Route path=":projectId" name="Project" breadcrumbName=":projectId">
         <IndexRedirect to="surveys"/>
-        <Route path="edit" component={EditProject} name="Project" />
+        <Route path="edit" component={EditProject} breadcrumbIgnore/>
 
-        <Route path="surveys" name="Surveys">
-          <IndexRoute components={{body: Surveys, tabs: ProjectTabs}} />
-          <Route path=":surveyId" components={{body: Survey, tabs: SurveyTabs}} />
-          <Route path=":surveyId/edit" component={EditSurvey} >
-            <IndexRedirect to="questionnaire"/>
-            <Route path="questionnaire" component={SurveyQuestionnaireStep} name="Questionnaire" />
-            <Route path="respondents" component={SurveyRespondentsStep} name="Respondents" />
-            <Route path="cutoff" component={SurveyCutoffStep} name="Cutoff" />
-            <Route path="channels" component={SurveyChannelsStep} name="Channels" />
-          </Route>
+        <Route path="surveys" components={{body: Surveys, tabs: ProjectTabs}} breadcrumbIgnore />
+
+        <Route path="surveys/:surveyId" components={{body: Survey, tabs: SurveyTabs}} breadcrumbName=":surveyId" />
+        <Route path="surveys/:surveyId/edit" component={EditSurvey} breadcrumbName=":surveyId">
+          <IndexRedirect to="questionnaire"/>
+          <Route path="questionnaire" component={SurveyQuestionnaireStep} breadcrumbIgnore />
+          <Route path="respondents" component={SurveyRespondentsStep} breadcrumbIgnore />
+          <Route path="cutoff" component={SurveyCutoffStep} breadcrumbIgnore />
+          <Route path="channels" component={SurveyChannelsStep} breadcrumbIgnore />
         </Route>
 
-        <Route path="questionnaires" name="Questionnaires">
-          <IndexRoute components={{body: Questionnaires, tabs: ProjectTabs}} />
-          <Route path="new" component={CreateQuestionnaire} name="Questionnaire" />
-          <Route path=":questionnaireId" name="Questionnaire">
+        <Route path="questionnaires" breadcrumbIgnore>
+          <IndexRoute components={{body: Questionnaires, tabs: ProjectTabs}} breadcrumbIgnore />
+          <Route path="new" component={CreateQuestionnaire} name="New Questionnaire" />
+          <Route path=":questionnaireId" breadcrumbName=":questionnaireId">
             <IndexRedirect to="edit"/>
           </Route>
-          <Route path=":questionnaireId/edit" component={EditQuestionnaire} name="Questionnaire" />
+          <Route path=":questionnaireId/edit" component={EditQuestionnaire} breadcrumbName=":questionnaireId" />
         </Route>
 
       </Route>
 
     </Route>
 
-    <Route path="channels" name="Channels">
-      <IndexRoute component={Channels} />
+    <Route path="/channels" name="My Channels" >
+      <IndexRoute component={Channels} breadcrumbIgnore /> 
     </Route>
 
   </Route>

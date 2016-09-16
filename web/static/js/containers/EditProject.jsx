@@ -8,6 +8,7 @@ import ProjectForm from '../components/ProjectForm'
 class EditProject extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
+
     if (projectId) {
       dispatch(actions.fetchProject(projectId))
     }
