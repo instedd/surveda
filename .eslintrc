@@ -22,7 +22,9 @@
   "rules": {
     "arrow-spacing": [1],
     "consistent-return": [0],
-    "indent": [1, 2],
+    "indent": [2, 2],
+    "react/jsx-indent-props": [2, 2],
+    "react/jsx-indent": [2, 2],
     "key-spacing": [0],
     "quotes": [0],
     "new-cap": [0],
@@ -53,6 +55,7 @@
     "use-isnan": [1],
     "react/jsx-no-undef": 1,
     "react/jsx-uses-react": 1,
-    "react/jsx-uses-vars": 1
+    "react/jsx-uses-vars": 1,
+    "react/jsx-closing-bracket-location": 1
   }
 }
