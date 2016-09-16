@@ -49,6 +49,7 @@
     "no-trailing-spaces": [1],
     "no-unreachable": [1],
     "no-unused-vars": [1, { "argsIgnorePattern": "^_" }],
+    "object-curly-spacing": [1, "always"],
     "no-var": [1],
     "prefer-const": [1],
     "radix": [1],
