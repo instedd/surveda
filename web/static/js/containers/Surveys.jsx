@@ -5,6 +5,7 @@ import * as actions from '../actions/surveys'
 import { createSurvey } from '../api'
 import { ProjectTabs } from '../components'
 import { Tooltip } from '../components/Tooltip'
+import SurveyLink from '../components/SurveyLink'
 
 class Surveys extends Component {
   componentDidMount() {
@@ -41,11 +42,11 @@ class Surveys extends Component {
                 <div className="card white">
                   <div className="card-content">
                     <span className="card-title">
-                      <Link className="black-text" to={`/projects/${projectId}/surveys/${surveyId}`}>{ surveys[surveyId].name }</Link>
+                      <SurveyLink className="black-text" survey={ surveys[surveyId] }>{ surveys[surveyId].name }</SurveyLink>
                     </span>
                   </div>
                   <div className="card-action">
-                    <Link className="grey-text text-lighten-1" to={`/projects/${projectId}/surveys/${surveyId}/edit`}><i className="material-icons">mode_edit</i></Link>
+                    <SurveyLink className="grey-text text-lighten-1" survey={surveys[surveyId]}><i className="material-icons">mode_edit</i></SurveyLink>
                   </div>
                 </div>
               </div>
