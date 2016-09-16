@@ -55,8 +55,7 @@ config :ask, version: (
   end
 )
 
-try do
-  import_config "local.exs"
-rescue
-  _ -> :ok
+
+if File.exists?("#{__DIR__}/local.exs") do
+  import_config "#{__DIR__}/local.exs"
 end
