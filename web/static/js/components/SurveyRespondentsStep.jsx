@@ -11,7 +11,7 @@ import * as respondentsActions from '../actions/respondents'
 class SurveyRespondentStep extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId } = this.props
-    if(projectId && surveyId) {
+    if (projectId && surveyId) {
       dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
     }
   }
@@ -19,21 +19,21 @@ class SurveyRespondentStep extends Component {
   handleSubmit(survey, files) {
     const { dispatch, projectId } = this.props
     uploadRespondents(survey, files)
-      .then(respondents => {dispatch(respondentsActions.receiveRespondents(respondents))})
+      .then(respondents => { dispatch(respondentsActions.receiveRespondents(respondents)) })
       .then(() => dispatch(actions.fetchSurvey(projectId, survey.id)))
       .catch((e) => dispatch(respondentsActions.receiveRespondentsError(e)))
   }
 
   render() {
     let files
-    const { survey, respondentsCount, respondents } = this.props
+    const { survey, respondentsCount, respondents, projectId } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
     }
 
     if (respondentsCount != 0) {
-      let respondentsIds = Object.keys(respondents).slice(0,5)
+      let respondentsIds = Object.keys(respondents).slice(0, 5)
 
       return (
         <RespondentsContainer>
@@ -42,6 +42,7 @@ class SurveyRespondentStep extends Component {
               <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId}/>
             )}
           </RespondentsList>
+          <Link className="btn waves-effect waves-light" to={`/projects/${projectId}/surveys/${survey.id}/edit/channels`}>Next</Link>
         </RespondentsContainer>
       )
     } else {
@@ -55,8 +56,8 @@ class SurveyRespondentStep extends Component {
 
 }
 
-const RespondentsDropzone = ({survey, onDrop}) => {
-  return(
+const RespondentsDropzone = ({ survey, onDrop }) => {
+  return (
     <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={onDrop}  accept="text/csv">
         <div className="drop-icon"></div>
         <div className="drop-text"></div>
@@ -64,8 +65,8 @@ const RespondentsDropzone = ({survey, onDrop}) => {
   )
 }
 
-const RespondentsList = ({respondentsCount, children}) => {
-  return(
+const RespondentsList = ({ respondentsCount, children }) => {
+  return (
     <table className="ncdtable">
       <thead>
         <tr>
@@ -81,8 +82,8 @@ const RespondentsList = ({respondentsCount, children}) => {
   )
 }
 
-const PhoneNumberRow = ({id, phoneNumber}) => {
-  return(
+const PhoneNumberRow = ({ id, phoneNumber }) => {
+  return (
     <tr key={id}>
       <td>
         {phoneNumber}
@@ -91,7 +92,7 @@ const PhoneNumberRow = ({id, phoneNumber}) => {
   )
 }
 
-const RespondentsContainer = ({children}) => {
+const RespondentsContainer = ({ children }) => {
   return (
     <div className="col s12 m7 offset-m1">
       <div className="row">
@@ -112,7 +113,7 @@ const RespondentsContainer = ({children}) => {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  return{
+  return {
     respondents: state.respondents,
     respondentsCount: Object.keys(state.respondents).length,
     projectId: ownProps.params.projectId,

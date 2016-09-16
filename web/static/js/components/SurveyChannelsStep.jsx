@@ -61,7 +61,7 @@ class SurveyChannelsStep extends Component {
                     channelId: parseInt(channelsInput.find(element => element.node.selected).id)
                   }]}))
               }>
-                Submit
+                Next
             </button>
           </div>
         </div>

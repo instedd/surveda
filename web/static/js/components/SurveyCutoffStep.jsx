@@ -10,7 +10,6 @@ class SurveyCutoffStep extends Component {
     const { dispatch, projectId, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(survey => dispatch(actions.updateSurvey(survey)))
-      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}`))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
@@ -43,7 +42,6 @@ class SurveyCutoffStep extends Component {
             }>
               Submit
             </button>
-            <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
           </div>
         </div>
       </div>

@@ -63,9 +63,8 @@ class SurveyQuestionnaireStep extends Component {
             <button type="button" className="btn waves-effect waves-light" onClick={() =>
               this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: (questionnaires_input.find(element => element.node.checked) || {}).id }))
             }>
-              Submit
+              Next
             </button>
-            <Link className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
           </div>
         </div>
       </div>
