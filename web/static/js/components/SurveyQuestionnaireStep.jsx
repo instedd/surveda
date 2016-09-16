@@ -65,7 +65,7 @@ class SurveyQuestionnaireStep extends Component {
             }>
               Submit
             </button>
-            <Link  className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
+            <Link className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}> Back</Link>
           </div>
         </div>
       </div>

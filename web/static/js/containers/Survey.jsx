@@ -27,28 +27,43 @@ class Survey extends Component {
 
     return (
       <div>
-        <h3>{ survey.name }</h3>
-        <br/>
-        <table className="ncdtable">
-          <thead>
-            <tr>
-              <th>Pending</th>
-              <th>Completed</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{ respondentsStats.pending }</td>
-              <td>{ respondentsStats.completed }</td>
-              <td>{ respondentsStats.active }</td>
-            </tr>
-          </tbody>
-        </table>
-        <br/>
-        <Link to={`/projects/${survey.projectId}/surveys/${survey.id}/edit`}>Edit</Link>
-        {' '}
-        <Link to={`/projects/${survey.projectId}/surveys`}>Back</Link>
+
+        <div className="row">
+          <div className="col s12">
+            <div className="card">
+              <div className="card-table-title">
+                { survey.name }
+              </div>
+              <div className="card-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Pending</th>
+                      <th>Completed</th>
+                      <th>Active</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{ respondentsStats.pending }</td>
+                      <td>{ respondentsStats.completed }</td>
+                      <td>{ respondentsStats.active }</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col s12">
+            <Link className="btn waves-effect waves-light" to={`/projects/${survey.projectId}/surveys/${survey.id}/edit`}>Edit</Link>
+            {' '}
+            <Link className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}>Back</Link>
+          </div>
+        </div>
+
       </div>
     )
   }
