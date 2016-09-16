@@ -26,38 +26,41 @@ class Questionnaires extends Component {
             <h5>You have no questionnaires on this project</h5>
           </div>
         :
+
         <div className="row">
           <div className="col s12">
-            <table className="ncdtable">
-              <thead>
-                <tr className="tableHeader">
-                  <th colSpan="2">
-                    { Object.keys(questionnaires).length }
-                    { (Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires' }
-                   </th>
-                </tr>
-                <tr>
-                  <th>Name</th>
-                  <th>Modes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                { Object.keys(questionnaires).map((questionnaireId) =>
-                  <tr key={questionnaireId}>
-                    <td>
-                      { questionnaires[questionnaireId].name }
-                    </td>
-                    <td>
-                      { (questionnaires[questionnaireId].modes || []).join(", ") }
-                    </td>
-                    <td>
-                      <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            <div className="card">
+              <div className="card-table-title">
+                { Object.keys(questionnaires).length }
+                { (Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires' }
+              </div>
+              <div className="card-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Modes</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    { Object.keys(questionnaires).map((questionnaireId) =>
+                      <tr key={questionnaireId}>
+                        <td>
+                          { questionnaires[questionnaireId].name }
+                        </td>
+                        <td>
+                          { (questionnaires[questionnaireId].modes || []).join(", ") }
+                        </td>
+                        <td>
+                          <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
         }

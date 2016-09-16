@@ -26,19 +26,27 @@ class Channels extends Component {
             <i className="material-icons">add</i>
           </a>
         </Tooltip>
-        <table className="ncdtable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            { Object.keys(channels).map(id =>
-              <tr key={id}>{channels[id].name}</tr>
-            )}
-          </tbody>
-        </table>
+        <div className="row">
+          <div className="col s12">
+            <div className="card">
+              <div className="card-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    { Object.keys(channels).map(id =>
+                      <tr key={id}>{channels[id].name}</tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

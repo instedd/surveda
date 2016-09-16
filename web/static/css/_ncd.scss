@@ -131,33 +131,35 @@ footer {
 
 
 
+// ------- Card w/Table ----------
 
-.ncdtable {
-  @extend .white;
-  @extend .z-depth-1;
-  @extend .bordered;
+.card {
 
-  th {
-    @extend .grey-text, .lighten-2;
-    padding: 25px;
-     a {
-      color: inherit;
-    }
-  }
-  tr.tableHeader {
-    border-bottom: none;
-    th {
-      @extend .black-text;
-      font-size: 20px;
-      font-weight: 400;
-    }
-  }
-
-  td {
+  .card-table-title {
     @extend .black-text;
+    font-size: 20px;
+    font-weight: 400;
     padding: 25px;
-    a {
-      color: inherit;
+  }
+
+
+  .card-table > table {
+    @extend .bordered;
+
+    th {
+      @extend .grey-text, .lighten-2;
+      padding: 25px;
+       a {
+        color: inherit;
+      }
+    }
+
+    td {
+      @extend .black-text;
+      padding: 25px;
+      a {
+        color: inherit;
+      }
     }
   }
 }
