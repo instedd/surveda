@@ -22,7 +22,8 @@ defmodule Ask.RespondentView do
       data: %{
         pending: stats.pending,
         completed: stats.completed,
-        active: stats.active
+        active: stats.active,
+        failed: stats.failed
       }
     }
   end

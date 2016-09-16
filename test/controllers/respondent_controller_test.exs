@@ -26,7 +26,8 @@ defmodule Ask.RespondentControllerTest do
     assert json_response(conn, 200)["data"] == %{
       "pending" => 14,
       "completed" => 0,
-      "active" => 0
+      "active" => 0,
+      "failed" => 0
     }
   end
 

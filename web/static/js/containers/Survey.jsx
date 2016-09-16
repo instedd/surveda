@@ -39,15 +39,17 @@ class Survey extends Component {
                   <thead>
                     <tr>
                       <th>Pending</th>
-                      <th>Completed</th>
                       <th>Active</th>
+                      <th>Completed</th>
+                      <th>Failed</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>{ respondentsStats.pending }</td>
-                      <td>{ respondentsStats.completed }</td>
                       <td>{ respondentsStats.active }</td>
+                      <td>{ respondentsStats.completed }</td>
+                      <td>{ respondentsStats.failed }</td>
                     </tr>
                   </tbody>
                 </table>
