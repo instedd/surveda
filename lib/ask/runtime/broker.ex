@@ -7,6 +7,14 @@ defmodule Ask.Runtime.Broker do
 
   @batch_size 10
 
+  def start_link do
+    GenServer.start_link(__MODULE__, [])
+  end
+
+  def sync_step(pid, respondent, reply) do
+    GenServer.call(pid, {:sync_step, respondent, reply})
+  end
+
   def init(_args) do
     :timer.send_interval(1000, :poll)
     {:ok, nil}
@@ -16,6 +24,10 @@ defmodule Ask.Runtime.Broker do
     surveys = Repo.all(from s in Survey, where: s.state == "running")
     surveys |> Enum.each(&poll_survey(&1))
     {:noreply, state}
+  end
+
+  def handle_call({:sync_step, respondent, reply}, _from, state) do
+    {:reply, sync_step(respondent, reply), state}
   end
 
   defp poll_survey(survey) do
@@ -32,31 +44,49 @@ defmodule Ask.Runtime.Broker do
         Repo.update Survey.changeset(survey, %{state: "completed"})
 
       active < @batch_size && pending > 0 ->
-        enqueue_some(survey, @batch_size - active)
+        start_some(survey, @batch_size - active)
 
       true -> :ok
     end
   end
 
-  defp enqueue_some(survey, count) do
+  defp start_some(survey, count) do
     respondents = Repo.all(
       from r in assoc(survey, :respondents),
       where: r.state == "pending",
       limit: ^count)
 
-    respondents |> Enum.each(&enqueue(survey, &1))
+    respondents |> Enum.each(&start(survey, &1))
   end
 
-  defp enqueue(survey, respondent) do
-    Repo.update Respondent.changeset(respondent, %{state: "active"})
-
+  defp start(survey, respondent) do
     survey = Repo.preload(survey, [:questionnaire, :channels])
     channel = hd(survey.channels)
 
-    channel_config = Application.get_env(:ask, :channel)
-    channel_provider = channel_config[:providers][channel.provider]
+    session = Session.start(survey.questionnaire, respondent.phone_number, channel)
 
-    runtime_channel = channel_provider.new(channel.settings)
-    Session.start(survey.questionnaire, respondent.phone_number, runtime_channel)
+    respondent
+    |> Respondent.changeset(%{state: "active", session: Session.dump(session)})
+    |> Repo.update
+  end
+
+  defp sync_step(respondent, reply) do
+    session = respondent.session |> Session.load
+
+    case Session.sync_step(session, reply) do
+      {:ok, session, step} ->
+        respondent
+        |> Respondent.changeset(%{session: Session.dump(session)})
+        |> Repo.update
+
+        step
+
+      :end ->
+        respondent
+        |> Respondent.changeset(%{state: "completed", session: nil})
+        |> Repo.update
+
+        :end
+    end
   end
 end

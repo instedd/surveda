@@ -11,6 +11,12 @@ defmodule Ask.Channel do
     timestamps()
   end
 
+  def runtime_channel(channel) do
+    channel_config = Application.get_env(:ask, :channel)
+    provider = channel_config[:providers][channel.provider]
+    provider.new(channel.settings)
+  end
+
   @doc """
   Builds a changeset based on the `struct` and `params`.
   """

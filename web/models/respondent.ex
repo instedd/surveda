@@ -4,6 +4,7 @@ defmodule Ask.Respondent do
   schema "respondents" do
     field :phone_number, :string
     field :state, :string, default: "pending" # [pending, active, completed, failed]
+    field :session, Ask.Ecto.Type.JSON
     belongs_to :survey, Ask.Survey
 
     timestamps()
@@ -14,7 +15,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state])
+    |> cast(params, [:phone_number, :state, :session])
     |> validate_required([:phone_number, :state])
   end
 end

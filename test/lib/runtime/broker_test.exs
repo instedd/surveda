@@ -30,7 +30,7 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
   end
 
-  test "enqueue respondents" do
+  test "respondent flow" do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings)
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -40,7 +40,10 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey)
     phone_number = respondent.phone_number
 
-    Broker.handle_info(:poll, nil)
+    {:ok, broker} = Broker.start_link
+    broker |> send(:poll)
+
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke?"]]
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -48,6 +51,15 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke?"]]
+    reply = broker |> Broker.sync_step(respondent, "Yes")
+    assert reply == {:prompt, "Do you exercise?"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = broker |> Broker.sync_step(respondent, "Yes")
+    assert reply == :end
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "completed"
+    assert respondent.session == nil
   end
 end

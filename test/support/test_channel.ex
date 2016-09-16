@@ -12,7 +12,7 @@ defmodule Ask.TestChannel do
 
   def settings(channel) do
     encoded_pid = channel.pid |> :erlang.term_to_binary |> Base.encode64
-    %{pid: encoded_pid}
+    %{"pid" => encoded_pid}
   end
 end
 
