@@ -18,11 +18,11 @@ config :ask, Ask.Endpoint,
            adapter: Phoenix.PubSub.PG2]
 
 config :ask, Nuntium,
-  base_url: "",
+  base_url: System.get_env("NUNTIUM_BASE_URL") || "",
   guisso: [
-    base_url: "",
-    client_id: "",
-    app_id: ""
+    base_url: System.get_env("NUNTIUM_GUISSO_BASE_URL") || "",
+    client_id: System.get_env("NUNTIUM_CLIENT_ID") || "",
+    app_id: System.get_env("NUNTIUM_APP_ID") || ""
   ]
 
 config :ask, :channel,
