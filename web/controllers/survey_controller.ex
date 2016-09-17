@@ -2,7 +2,6 @@ defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
   alias Ask.Survey
-  alias Ask.Respondent
   alias Ask.Channel
 
   def index(conn, %{"project_id" => project_id}) do
@@ -27,24 +26,24 @@ defmodule Ask.SurveyController do
   end
 
   def show(conn, %{"id" => id}) do
-    survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
-    respondents_count = Repo.one(from r in Respondent, select: count("*"), where: r.survey_id == ^survey.id)
-    survey = %{survey | respondents_count: respondents_count}
-    render(conn, "show.json", %{survey: survey})
+    survey = Repo.get!(Survey, id)
+    |> Repo.preload([:channels])
+    |> with_respondents_count
+    render(conn, "show.json", survey: survey)
   end
 
   def update(conn, %{"id" => id, "survey" => survey_params}) do
-    prev_survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
-    changeset = Survey.changeset(prev_survey, survey_params)
+    survey = Repo.get!(Survey, id)
+
+    changeset = survey
+    |> Repo.preload([:channels])
+    |> change
+    |> update_channels(survey_params)
+    |> Survey.changeset(survey_params)
+
     case Repo.update(changeset) do
       {:ok, survey} ->
-        respondents_count = Repo.one(from r in Respondent, select: count("*"), where: r.survey_id == ^survey.id)
-        case survey_params["channels"] do
-          [ channel | _ ] -> update_channels(conn, channel, survey, respondents_count)
-          _ ->
-            survey = %{survey | respondents_count: respondents_count}
-            render(conn, "show.json", survey: survey)
-        end
+        render(conn, "show.json", survey: survey |> with_respondents_count)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -52,18 +51,22 @@ defmodule Ask.SurveyController do
     end
   end
 
-  defp update_channels(conn, channel, survey, respondents_count) do
-    channel_id  = channel["channelId"]
-    channel = Repo.get!(Channel, channel_id)
-    channels_changeset = Enum.map([channel], &Ecto.Changeset.change/1)
-    case (survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update) do
-      {:ok, updated_survey} ->
-        render(conn, "show.json", survey: %{updated_survey | respondents_count: respondents_count})
-      {:error, changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
+  defp update_channels(changeset, %{"channels" => channels_params}) do
+    channels_changeset = Enum.map(channels_params, fn ch ->
+      Repo.get!(Channel, ch["channelId"]) |> change
+    end)
+
+    changeset
+    |> put_assoc(:channels, channels_changeset)
+  end
+
+  defp update_channels(changeset, _) do
+    changeset
+  end
+
+  defp with_respondents_count(survey) do
+    respondents_count = survey |> assoc(:respondents) |> select(count("*")) |> Repo.one
+    %{survey | respondents_count: respondents_count}
   end
 
   def delete(conn, %{"id" => id}) do

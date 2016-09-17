@@ -33,6 +33,7 @@ defmodule Ask.Web do
       alias Ask.Repo
       import Ecto
       import Ecto.Query
+      import Ecto.Changeset
 
       import Ask.Router.Helpers
       import Ask.Gettext
