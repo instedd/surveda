@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import * as actions from '../actions/channels'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
+import CardTable from '../components/CardTable'
 
 class Channels extends Component {
   componentDidMount() {
@@ -18,6 +19,7 @@ class Channels extends Component {
 
   render() {
     const { channels } = this.props
+    const title = `${Object.keys(channels).length} ${(Object.keys(channels).length == 1) ? ' channel' : ' channels'}`
 
     return (
       <div>
@@ -25,31 +27,20 @@ class Channels extends Component {
         { (Object.keys(channels).length == 0) ?
           <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         :
-          <div className="row">
-            <div className="col s12">
-              <div className="card">
-                <div className="card-table-title">
-                  { Object.keys(channels).length }
-                  { (Object.keys(channels).length == 1) ? ' channel' : ' channels' }
-                </div>
-                <div className="card-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      { Object.keys(channels).map(id =>
-                        <tr key={id}>{channels[id].name}</tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CardTable title={ title }>
+            <thead>
+              <tr>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              { Object.keys(channels).map(id =>
+                <tr key={id}>
+                  <td>{channels[id].name}</td>
+                </tr>
+              )}
+            </tbody>
+          </CardTable>
         }
       </div>
     )
