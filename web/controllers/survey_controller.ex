@@ -54,7 +54,7 @@ defmodule Ask.SurveyController do
 
   defp update_channels(changeset, %{"channels" => channels_params}) do
     channels_changeset = Enum.map(channels_params, fn ch ->
-      Repo.get!(Channel, ch["channelId"]) |> change
+      Repo.get!(Channel, ch) |> change
     end)
 
     changeset

@@ -57,9 +57,9 @@ class SurveyChannelsStep extends Component {
           <div className="col s12">
             <button className="btn waves-effect waves-light" type="button" onClick={() =>
                 this.handleSubmit(merge({}, survey, {
-                  channels: [{
-                    channelId: parseInt(channelsInput.find(element => element.node.selected).id)
-                  }]}))
+                  channels: [
+                    parseInt(channelsInput.find(element => element.node.selected).id)
+                  ]}))
               }>
                 Next
             </button>

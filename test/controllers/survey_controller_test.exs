@@ -87,7 +87,7 @@ defmodule Ask.SurveyControllerTest do
     channel2 = insert(:channel)
     survey = insert(:survey)
     insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
-    conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [%{channelId: channel2.id}]}
+    conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [channel2.id]}
 
     assert json_response(conn, 200)["data"] == %{"id" => survey.id,
       "name" => survey.name,
@@ -149,6 +149,18 @@ defmodule Ask.SurveyControllerTest do
       new_survey = Repo.get(Survey, survey.id)
 
       assert new_survey.state == "ready"
+    end
+
+    test "updates cutoff when channels are included in params", %{conn: conn} do
+      [project, questionnaire, channel] = prepare_for_state_update()
+
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+      add_channel_to(survey, channel)
+      add_respondent_to survey
+
+      attrs = %{cutoff: 4, channels: [channel.id]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["cutoff"] == 4
     end
 
     test "does not update state when adding cutoff if missing respondents", %{conn: conn} do
