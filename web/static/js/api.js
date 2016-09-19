@@ -15,7 +15,7 @@ surveySchema.define({
 })
 
 const apiFetch = (url, options) => {
-  return fetch(url, {...options, credentials: 'same-origin'})
+  return fetch(`/api/v1/${url}`, {...options, credentials: 'same-origin'})
     .then(response => {
       if (!response.ok && response.status == 401) {
         window.location = "/login"
@@ -61,42 +61,42 @@ const apiPutJSON = (url, schema, body) => {
 }
 
 export const fetchProjects = () => {
-  return apiFetchJSON(`/api/v1/projects`, arrayOf(projectSchema))
+  return apiFetchJSON(`projects`, arrayOf(projectSchema))
 }
 
 export const fetchSurveys = (projectId) => {
-  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys`, arrayOf(surveySchema))
+  return apiFetchJSON(`projects/${projectId}/surveys`, arrayOf(surveySchema))
 }
 
 export const fetchQuestionnaires = (projectId) => {
-  return apiFetchJSON(`/api/v1/projects/${projectId}/questionnaires`, arrayOf(questionnaireSchema))
+  return apiFetchJSON(`projects/${projectId}/questionnaires`, arrayOf(questionnaireSchema))
 }
 
 export const fetchQuestionnaire = (projectId, id) => {
-  return apiFetchJSON(`/api/v1/projects/${projectId}/questionnaires/${id}`, questionnaireSchema)
+  return apiFetchJSON(`projects/${projectId}/questionnaires/${id}`, questionnaireSchema)
 }
 
 export const fetchProject = (id) => {
-  return apiFetchJSON(`/api/v1/projects/${id}`, projectSchema)
+  return apiFetchJSON(`projects/${id}`, projectSchema)
 }
 
 export const fetchSurvey = (projectId, id) => {
-  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${id}`, surveySchema)
+  return apiFetchJSON(`projects/${projectId}/surveys/${id}`, surveySchema)
 }
 
 export const createProject = (project) => {
-  return apiPostJSON('/api/v1/projects', projectSchema, {project})
+  return apiPostJSON('projects', projectSchema, {project})
 }
 
 export const createSurvey = (projectId) => {
-  return apiPostJSON(`/api/v1/projects/${projectId}/surveys`, surveySchema)
+  return apiPostJSON(`projects/${projectId}/surveys`, surveySchema)
 }
 
 export const uploadRespondents = (survey, files) => {
   const formData = new FormData();
   formData.append('file', files[0]);
 
-  return apiFetchJSON(`/api/v1/projects/${survey.projectId}/surveys/${survey.id}/respondents`,
+  return apiFetchJSON(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
     arrayOf(respondentSchema), {
     method: 'POST',
     body: formData
@@ -104,38 +104,38 @@ export const uploadRespondents = (survey, files) => {
 }
 
 export const fetchRespondents = (projectId, surveyId) => {
-  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`, arrayOf(respondentSchema))
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents`, arrayOf(respondentSchema))
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
-  return apiFetchJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/stats`, arrayOf(respondentsStatsSchema))
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, arrayOf(respondentsStatsSchema))
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
-  return apiPostJSON(`/api/v1/projects/${projectId}/questionnaires`, questionnaireSchema, {questionnaire})
+  return apiPostJSON(`projects/${projectId}/questionnaires`, questionnaireSchema, {questionnaire})
 }
 
 export const updateProject = (project) => {
-  return apiPutJSON(`/api/v1/projects/${project.id}`, projectSchema, {project})
+  return apiPutJSON(`projects/${project.id}`, projectSchema, {project})
 }
 
 export const updateSurvey = (projectId, survey) => {
-  return apiPutJSON(`/api/v1/projects/${projectId}/surveys/${survey.id}`, surveySchema, {survey})
+  return apiPutJSON(`projects/${projectId}/surveys/${survey.id}`, surveySchema, {survey})
 }
 
 export const fetchChannels = () => {
-  return apiFetchJSON(`/api/v1/channels`, arrayOf(channelSchema))
+  return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }
 
 export const createChannel = (channel) => {
-  return apiPostJSON('/api/v1/channels', channelSchema, {channel})
+  return apiPostJSON('channels', channelSchema, {channel})
 }
 
 export const updateQuestionnaire = (projectId, questionnaire) => {
-  return apiPutJSON(`/api/v1/projects/${projectId}/questionnaires/${questionnaire.id}`,
+  return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
     questionnaireSchema, {questionnaire})
 }
 
 export const launchSurvey = (projectId, surveyId) => {
-  return apiPostJSON(`/api/v1/projects/${projectId}/surveys/${surveyId}/launch`, surveySchema)
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/launch`, surveySchema)
 }
