@@ -1,11 +1,11 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import { createSurvey } from '../api'
-import { ProjectTabs } from '../components'
 import { Tooltip } from '../components/Tooltip'
 import SurveyLink from '../components/SurveyLink'
+import Card from '../components/Card'
 
 class Surveys extends Component {
   componentDidMount() {
@@ -22,7 +22,7 @@ class Surveys extends Component {
   }
 
   render() {
-    const { surveys, projectId } = this.props
+    const { surveys } = this.props
     return (
       <div>
         <Tooltip text="Add survey">
@@ -38,18 +38,7 @@ class Surveys extends Component {
         :
           <div className="row">
             { Object.keys(surveys).map((surveyId) =>
-              <div className="col s12 m6 l4" key={surveyId}>
-                <div className="card white">
-                  <div className="card-content">
-                    <span className="card-title">
-                      <SurveyLink className="black-text" survey={ surveys[surveyId] }>{ surveys[surveyId].name }</SurveyLink>
-                    </span>
-                  </div>
-                  <div className="card-action">
-                    <SurveyLink className="grey-text text-lighten-1" survey={surveys[surveyId]}><i className="material-icons">mode_edit</i></SurveyLink>
-                  </div>
-                </div>
-              </div>
+              <SurveyCard survey={surveys[surveyId]} key={surveyId}/>
             )}
           </div>
         }
@@ -64,3 +53,15 @@ const mapStateToProps = (state, ownProps) => ({
 })
 
 export default withRouter(connect(mapStateToProps)(Surveys))
+
+const SurveyCard = ({ survey }) => (
+  <Card
+    title={
+      <SurveyLink className="black-text" survey={ survey }>{ survey.name }</SurveyLink>
+    }
+  >
+    <SurveyLink className="grey-text text-lighten-1" survey={survey}>
+      <i className="material-icons">mode_edit</i>
+    </SurveyLink>
+  </Card>
+)
