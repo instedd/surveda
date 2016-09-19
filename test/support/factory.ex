@@ -52,4 +52,10 @@ defmodule Ask.Factory do
     }
   end
 
+  def response_factory do
+    %Ask.Response{
+        field_name: "Smoke"
+    }
+  end
+
 end

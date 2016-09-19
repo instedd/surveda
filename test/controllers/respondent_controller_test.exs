@@ -16,6 +16,25 @@ defmodule Ask.RespondentControllerTest do
     assert json_response(conn, 200)["data"] == []
   end
 
+  test "fetches responses on index", %{conn: conn} do
+    project = insert(:project)
+    survey = insert(:survey, project: project)
+    respondent = insert(:respondent, survey: survey)
+    response = insert(:response, respondent: respondent, value: "Yes")
+    conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
+    assert json_response(conn, 200)["data"] == [%{
+      "id" => respondent.id,
+      "phone_number" => respondent.phone_number,
+      "survey_id" => survey.id,
+      "responses" => [
+        %{
+          "value" => response.value,
+          "field_name" => response.field_name
+        }
+      ]
+    }]
+  end
+
   test "lists stats for a given survey", %{conn: conn} do
     project = insert(:project)
     survey = insert(:survey, project: project)

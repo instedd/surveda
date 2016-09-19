@@ -13,7 +13,15 @@ defmodule Ask.RespondentView do
     %{
       id: respondent.id,
       phone_number: respondent.phone_number,
-      survey_id: respondent.survey_id
+      survey_id: respondent.survey_id,
+      responses: render_many(respondent.responses, Ask.RespondentView, "response.json", as: :response)
+    }
+  end
+
+  def render("response.json", %{response: response}) do
+    %{
+      field_name: response.field_name,
+      value: response.value
     }
   end
 

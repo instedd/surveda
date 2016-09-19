@@ -4,7 +4,7 @@ defmodule Ask.RespondentController do
   alias Ask.Respondent
 
   def index(conn,  %{"survey_id" => survey_id}) do
-    respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
+    respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id) |> Repo.preload(:responses)
     render(conn, "index.json", respondents: respondents)
   end
 
@@ -39,7 +39,7 @@ defmodule Ask.RespondentController do
 
       conn
         |> put_status(:created)
-        |> render("index.json", respondents: respondents)
+        |> render("index.json", respondents: respondents |> Repo.preload(:responses))
          # |> render("show.json", survey: survey |> Repo.preload([:channels]))
     else
       conn

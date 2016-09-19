@@ -6,6 +6,7 @@ defmodule Ask.Respondent do
     field :state, :string, default: "pending" # [pending, active, completed, failed]
     field :session, Ask.Ecto.Type.JSON
     belongs_to :survey, Ask.Survey
+    has_many :responses, Ask.Response
 
     timestamps()
   end
