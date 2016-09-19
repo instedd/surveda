@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
@@ -14,7 +14,7 @@ class EditSurvey extends Component {
       dispatch(actions.fetchSurvey(projectId, surveyId))
         .then((survey) => {
           if (survey.state == "running") {
-            router.push(`/projects/${survey.projectId}/surveys/${survey.id}`)
+            router.replace(`/projects/${survey.projectId}/surveys/${survey.id}`)
           }
         })
       dispatch(projectActions.fetchProject(projectId))
@@ -28,7 +28,7 @@ class EditSurvey extends Component {
         .then(() => router.push(`/projects/${projectId}/surveys/${surveyId}`))
   }
 
-  render(params) {
+  render() {
     const { children, survey, project } = this.props
     return (
       <div className="white">
@@ -39,7 +39,7 @@ class EditSurvey extends Component {
         </Tooltip>
         <SurveyForm survey={survey} project={project} >{children}</SurveyForm>
       </div>
-      )
+    )
   }
 }
 

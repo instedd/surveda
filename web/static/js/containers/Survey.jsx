@@ -1,9 +1,8 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
-import { fetchSurvey } from '../api'
 
 class Survey extends Component {
   componentDidMount() {
@@ -12,22 +11,21 @@ class Survey extends Component {
       dispatch(actions.fetchSurvey(projectId, surveyId))
         .then((survey) => {
           if (survey.state == "pending") {
-            router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit`)
+            router.replace(`/projects/${survey.projectId}/surveys/${survey.id}/edit`)
           }
         })
       dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
     }
   }
 
-  render(params) {
-    const { survey, router, respondentsStats } = this.props
+  render() {
+    const { survey, respondentsStats } = this.props
     if (!survey) {
       return <p>Loading...</p>
     }
 
     return (
       <div>
-
         <div className="row">
           <div className="col s12">
             <div className="card">
@@ -60,12 +58,9 @@ class Survey extends Component {
 
         <div className="row">
           <div className="col s12">
-            <Link className="btn waves-effect waves-light" to={`/projects/${survey.projectId}/surveys/${survey.id}/edit`}>Edit</Link>
-            {' '}
             <Link className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}>Back</Link>
           </div>
         </div>
-
       </div>
     )
   }
