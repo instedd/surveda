@@ -28,6 +28,10 @@ class Channels extends Component {
           <div className="row">
             <div className="col s12">
               <div className="card">
+                <div className="card-table-title">
+                  { Object.keys(channels).length }
+                  { (Object.keys(channels).length == 1) ? ' channel' : ' channels' }
+                </div>
                 <div className="card-table">
                   <table>
                     <thead>

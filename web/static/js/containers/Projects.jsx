@@ -23,6 +23,7 @@ class Projects extends Component {
             <div className="col s12">
               <div className="card">
                 <div className="card-table-title">
+                  { Object.keys(projects).length }
                   { (Object.keys(projects).length == 1) ? ' project' : ' projects' }
                 </div>
                 <div className="card-table">

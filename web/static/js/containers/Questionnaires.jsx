@@ -23,6 +23,7 @@ class Questionnaires extends Component {
             <div className="col s12">
               <div className="card">
                 <div className="card-table-title">
+                  { Object.keys(questionnaires).length }
                   { (Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires' }
                 </div>
                 <div className="card-table">
