@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/channels'
-import { Tooltip } from '../components/Tooltip'
+import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 
 class Channels extends Component {
@@ -21,11 +21,7 @@ class Channels extends Component {
 
     return (
       <div>
-        <Tooltip text="Add channel">
-          <a className="btn-floating btn-large waves-effect waves-light green right mtop" href='#' onClick={(e) => this.addChannel(e)}>
-            <i className="material-icons">add</i>
-          </a>
-        </Tooltip>
+        <AddButton text="Add channel" onClick={(e) => this.addChannel(e)} />
         { (Object.keys(channels).length == 0) ?
           <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         :

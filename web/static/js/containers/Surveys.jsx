@@ -3,9 +3,9 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import { createSurvey } from '../api'
-import { Tooltip } from '../components/Tooltip'
 import SurveyLink from '../components/SurveyLink'
 import Card from '../components/Card'
+import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 
 class Surveys extends Component {
@@ -26,11 +26,7 @@ class Surveys extends Component {
     const { surveys } = this.props
     return (
       <div>
-        <Tooltip text="Add survey">
-          <a className="btn-floating btn-large waves-effect waves-light green right mtop" href="#" onClick={() => this.newSurvey() }>
-            <i className="material-icons">add</i>
-          </a>
-        </Tooltip>
+        <AddButton text="Add survey" onClick={ () => this.newSurvey() } />
         { (Object.keys(surveys).length == 0) ?
           <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         :

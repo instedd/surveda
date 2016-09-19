@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import * as actions from '../actions/questionnaires'
-import { Tooltip } from '../components/Tooltip'
+import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 
 class Questionnaires extends Component {
@@ -15,11 +15,7 @@ class Questionnaires extends Component {
     const { questionnaires, projectId } = this.props
     return (
       <div>
-        <Tooltip text="Add questionnaire">
-          <Link className="btn-floating btn-large waves-effect waves-light green right mtop" to={`/projects/${projectId}/questionnaires/new`}>
-            <i className="material-icons">add</i>
-          </Link>
-        </Tooltip>
+        <AddButton text="Add questionnaire" linkPath={`/projects/${projectId}/questionnaires/new`} />
         { (Object.keys(questionnaires).length == 0) ?
           <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={`/projects/${projectId}/questionnaires/new`} />
         :
