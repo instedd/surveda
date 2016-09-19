@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import Breadcrumb from '../containers/Breadcrumb'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 import { config } from '../config'
+import 'isomorphic-fetch'
 
 export default ({ tabs }) => (
   <header>
@@ -21,15 +22,22 @@ export default ({ tabs }) => (
                 <Dropdown text={config.user}>
                   <DropdownItem><Link to='/settings'>Settings</Link></DropdownItem>
                   <DropdownDivider />
-                  <DropdownItem><Link to='/logout'>Logout</Link></DropdownItem>
+                  <DropdownItem><a onClick={logout}>Logout</a></DropdownItem>
                 </Dropdown>
               </li>
             </ul>
           </div>
         </div>
-      </div>      
+      </div>
     </nav>
     <Breadcrumb/>
     {tabs}
   </header>
 )
+
+const logout = () => {
+  fetch("/logout", {
+    method: 'DELETE',
+    credentials: 'same-origin'
+  }).then(() => window.location.reload())
+}
