@@ -6,8 +6,6 @@ export default withRouter(props => {
 
   let to = `/projects/${survey.projectId}/surveys/${survey.id}`
 
-  console.log(survey)
-
   if (survey.state == 'pending') {
     to = to + '/edit'
   }
