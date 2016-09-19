@@ -12,7 +12,7 @@ import SurveyRespondentsStep from './components/SurveyRespondentsStep'
 import SurveyCutoffStep from './components/SurveyCutoffStep'
 import Questionnaires from './containers/Questionnaires'
 import CreateQuestionnaire from './containers/CreateQuestionnaire'
-import Channels from './containers/channels/Channels'
+import Channels from './containers/Channels'
 import EditQuestionnaire from './containers/EditQuestionnaire'
 import ProjectTabs from './components/ProjectTabs'
 import SurveyTabs from './components/SurveyTabs'
@@ -55,7 +55,7 @@ export default (
     </Route>
 
     <Route path="/channels" name="My Channels" >
-      <IndexRoute component={Channels} breadcrumbIgnore /> 
+      <IndexRoute component={Channels} breadcrumbIgnore />
     </Route>
 
   </Route>

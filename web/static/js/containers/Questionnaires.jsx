@@ -1,9 +1,9 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import * as actions from '../actions/questionnaires'
-import { ProjectTabs } from '../components'
 import { Tooltip } from '../components/Tooltip'
+import EmptyPage from '../components/EmptyPage'
 
 class Questionnaires extends Component {
   componentDidMount() {
@@ -21,48 +21,43 @@ class Questionnaires extends Component {
           </Link>
         </Tooltip>
         { (Object.keys(questionnaires).length == 0) ?
-          <div className="empty_page">
-            <i className="material-icons">assignment</i>
-            <h5>You have no questionnaires on this project</h5>
-          </div>
+          <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={`/projects/${projectId}/questionnaires/new`} />
         :
-
-        <div className="row">
-          <div className="col s12">
-            <div className="card">
-              <div className="card-table-title">
-                { Object.keys(questionnaires).length }
-                { (Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires' }
-              </div>
-              <div className="card-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Modes</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    { Object.keys(questionnaires).map((questionnaireId) =>
-                      <tr key={questionnaireId}>
-                        <td>
-                          { questionnaires[questionnaireId].name }
-                        </td>
-                        <td>
-                          { (questionnaires[questionnaireId].modes || []).join(", ") }
-                        </td>
-                        <td>
-                          <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
-                        </td>
+          <div className="row">
+            <div className="col s12">
+              <div className="card">
+                <div className="card-table-title">
+                  { (Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires' }
+                </div>
+                <div className="card-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Modes</th>
+                        <th>Actions</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      { Object.keys(questionnaires).map((questionnaireId) =>
+                        <tr key={questionnaireId}>
+                          <td>
+                            { questionnaires[questionnaireId].name }
+                          </td>
+                          <td>
+                            { (questionnaires[questionnaireId].modes || []).join(", ") }
+                          </td>
+                          <td>
+                            <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         }
       </div>
     )

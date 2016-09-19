@@ -6,6 +6,7 @@ import { createSurvey } from '../api'
 import { Tooltip } from '../components/Tooltip'
 import SurveyLink from '../components/SurveyLink'
 import Card from '../components/Card'
+import EmptyPage from '../components/EmptyPage'
 
 class Surveys extends Component {
   componentDidMount() {
@@ -31,10 +32,7 @@ class Surveys extends Component {
           </a>
         </Tooltip>
         { (Object.keys(surveys).length == 0) ?
-          <div className="empty_page">
-            <i className="material-icons">assignment_turned_in</i>
-            <h5>You have no surveys on this project</h5>
-          </div>
+          <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         :
           <div className="row">
             { Object.keys(surveys).map((surveyId) =>
