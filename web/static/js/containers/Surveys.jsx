@@ -48,14 +48,34 @@ const mapStateToProps = (state, ownProps) => ({
 
 export default withRouter(connect(mapStateToProps)(Surveys))
 
-const SurveyCard = ({ survey }) => (
-  <Card
-    title={
-      <SurveyLink className="black-text" survey={ survey }>{ survey.name }</SurveyLink>
-    }
-  >
-    <SurveyLink className="grey-text text-lighten-1" survey={survey}>
-      <i className="material-icons">mode_edit</i>
-    </SurveyLink>
-  </Card>
-)
+const SurveyCard = ({ survey }) => {
+  let icon = 'not_interested'
+  let color = "black-text"
+  switch (survey.state) {
+    case 'running':
+      icon = 'play_arrow'
+      color = 'green-text'
+      break;
+    case 'ready':
+      icon = 'done'
+      color = "black-text"
+      break;
+    case 'completed':
+      icon = 'done_all'
+      color = "black-text"
+      break;
+  }
+
+  return(
+    <Card
+      title={
+        <SurveyLink className="black-text" survey={ survey }>{ survey.name }</SurveyLink>
+      }
+    >
+      <SurveyLink className={ color } survey={survey}>
+        <i className="material-icons">{icon}</i>
+        {survey.state}
+      </SurveyLink>
+    </Card>
+  )
+}

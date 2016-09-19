@@ -3,7 +3,7 @@ defmodule Ask.Survey do
 
   schema "surveys" do
     field :name, :string
-    field :state, :string, default: "not_ready"
+    field :state, :string, default: "not_ready" # not_ready, ready, pending, completed
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
 

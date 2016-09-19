@@ -3,7 +3,7 @@ defmodule Ask.Respondent do
 
   schema "respondents" do
     field :phone_number, :string
-    field :state, :string, default: "pending" # [pending, active, completed, failed]
+    field :state, :string, default: "pending" # pending, active, completed, failed
     field :session, Ask.Ecto.Type.JSON
     belongs_to :survey, Ask.Survey
     has_many :responses, Ask.Response
