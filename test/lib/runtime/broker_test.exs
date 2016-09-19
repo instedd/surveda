@@ -4,12 +4,12 @@ defmodule Ask.BrokerTest do
   alias Ask.Runtime.Broker
   alias Ask.{Repo, Survey, Respondent, TestChannel}
 
-  test "does nothing with 'pending' survey" do
+  test "does nothing with 'not_ready' survey" do
     survey = insert(:survey)
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "pending"
+    assert survey.state == "not_ready"
   end
 
   test "set as 'completed' when there is no respondents" do

@@ -27,7 +27,7 @@ defmodule Ask.SurveyControllerTest do
       "questionnaire_id" => nil,
       "channels" => [],
       "cutoff" => nil,
-      "state" => "pending",
+      "state" => "not_ready",
       "respondents_count" => 0}
   end
 
@@ -45,7 +45,7 @@ defmodule Ask.SurveyControllerTest do
         "type" => "sms"
       }],
       "cutoff" => nil,
-      "state" => "pending",
+      "state" => "not_ready",
       "respondents_count" => 0
     }
   end
@@ -98,11 +98,90 @@ defmodule Ask.SurveyControllerTest do
         "type" => "sms"
       }],
       "cutoff" => nil,
-      "state" => "pending",
+      "state" => "not_ready",
       "respondents_count" => 0
     }
   end
 
+  describe "changes the state when needed" do
+
+    def prepare_for_state_update() do
+      project = insert(:project)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      channel = insert(:channel, name: "test")
+      [project, questionnaire, channel]
+    end
+
+    def add_respondent_to(survey) do
+      insert(:respondent, phone_number: "12345678", survey: survey)
+    end
+
+    def add_channel_to(survey, channel) do
+      changeset = Ecto.build_assoc(survey, :channels, %{channel_id: channel.id})
+      Repo.insert(changeset)
+    end
+
+    test "updates state when adding questionnaire", %{conn: conn} do
+      [project, questionnaire, channel] = prepare_for_state_update()
+
+      survey = insert(:survey, project: project, cutoff: 4)
+      add_channel_to(survey, channel)
+      add_respondent_to survey
+
+      attrs = %{questionnaire_id: questionnaire.id}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "ready"
+    end
+
+    test "updates state when adding cutoff", %{conn: conn} do
+      [project, questionnaire, channel] = prepare_for_state_update()
+
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+      add_channel_to(survey, channel)
+      add_respondent_to survey
+
+      attrs = %{cutoff: 4}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "ready"
+    end
+
+    test "does not update state when adding cutoff if missing respondents", %{conn: conn} do
+      [project, questionnaire, channel] = prepare_for_state_update()
+
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+      assert survey.state == "not_ready"
+      add_channel_to(survey, channel)
+
+      attrs = %{cutoff: 4}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+
+    test "does not update state when adding questionnaire if missing cutoff", %{conn: conn} do
+      [project, questionnaire, channel] = prepare_for_state_update()
+
+      survey = insert(:survey, project: project)
+      assert survey.state == "not_ready"
+      add_channel_to(survey, channel)
+      add_respondent_to survey
+
+      attrs = %{questionnaire_id: questionnaire.id}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+  end
 
   test "deletes chosen resource", %{conn: conn} do
     survey = insert(:survey)

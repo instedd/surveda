@@ -32,11 +32,15 @@ class EditSurvey extends Component {
     const { children, survey, project } = this.props
     return (
       <div className="white">
-        <Tooltip text="Launch survey">
-          <a className="btn-floating btn-large waves-effect waves-light green right mtop" onClick={() => this.launchSurvey()}>
-            <i className="material-icons">play_arrow</i>
-          </a>
-        </Tooltip>
+        { survey.state == "ready" ?
+          <Tooltip text="Launch survey">
+            <a className="btn-floating btn-large waves-effect waves-light green right mtop" onClick={() => this.launchSurvey()}>
+              <i className="material-icons">play_arrow</i>
+            </a>
+          </Tooltip>
+          :
+          ""
+        }
         <SurveyForm survey={survey} project={project} >{children}</SurveyForm>
       </div>
     )

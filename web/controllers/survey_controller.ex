@@ -37,13 +37,14 @@ defmodule Ask.SurveyController do
 
     changeset = survey
     |> Repo.preload([:channels])
+    |> with_respondents_count
     |> change
     |> update_channels(survey_params)
     |> Survey.changeset(survey_params)
 
     case Repo.update(changeset) do
       {:ok, survey} ->
-        render(conn, "show.json", survey: survey |> with_respondents_count)
+        render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)

@@ -10,7 +10,7 @@ class Survey extends Component {
     if (projectId && surveyId) {
       dispatch(actions.fetchSurvey(projectId, surveyId))
         .then((survey) => {
-          if (survey.state == "pending") {
+          if (survey.state == "not_ready") {
             router.replace(`/projects/${survey.projectId}/surveys/${survey.id}/edit`)
           }
         })
