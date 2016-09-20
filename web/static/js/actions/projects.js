@@ -15,6 +15,18 @@ export const fetchProject = (projectId) => dispatch => {
     .then(project => dispatch(receiveProjects(project)))
 }
 
+export const fetchProjectIfNeeded = (projectId) => {
+  return (dispatch, getState) => {
+    if (shouldFetchProject(getState(), projectId)) {
+      return dispatch(fetchProject(projectId))
+    }
+  }
+}
+
+const shouldFetchProject = (state, projectId) => {
+  return state.projects
+}
+
 export const receiveProjects = (response) => ({
   type: RECEIVE_PROJECTS,
   response

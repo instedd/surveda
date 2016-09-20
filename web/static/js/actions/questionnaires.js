@@ -15,6 +15,19 @@ export const fetchQuestionnaire = (projectId, questionnaireId) => dispatch => {
     .then(questionnaire => dispatch(receiveQuestionnaires(questionnaire)))
 }
 
+export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
+  return (dispatch, getState) => {
+    if (shouldFetchQuestionnaire(getState(), projectId, questionnaireId)) {
+      return dispatch(fetchQuestionnaire(projectId, questionnaireId))
+    }
+  }
+}
+
+const shouldFetchQuestionnaire = (state, projectId, questionnaireId) => {
+  return state.questionnaire
+}
+
+
 export const receiveQuestionnaires = (response) => ({
   type: RECEIVE_QUESTIONNAIRES,
   response

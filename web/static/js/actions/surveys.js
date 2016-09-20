@@ -18,6 +18,18 @@ export const fetchSurvey = (projectId, surveyId) => (dispatch, getState) => {
     .then(() => getState().surveys[surveyId])
 }
 
+export const fetchSurveyIfNeeded = (projectId, surveyId) => {
+  return (dispatch, getState) => {
+    if (shouldFetchSurvey(getState(), projectId, surveyId)) {
+      return dispatch(fetchSurvey(projectId, surveyId))
+    }
+  }
+}
+
+const shouldFetchSurvey = (state, projectId, surveyId) => {
+  return state.surveys
+}
+
 export const receiveSurveys = (response) => ({
   type: RECEIVE_SURVEYS,
   response

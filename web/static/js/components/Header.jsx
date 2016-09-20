@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router'
-import Breadcrumb from '../containers/Breadcrumb'
+import BreadcrumbContainer from '../containers/BreadcrumbContainer'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 import { config } from '../config'
 import 'isomorphic-fetch'
@@ -30,7 +30,7 @@ export default ({ tabs }) => (
         </div>
       </div>
     </nav>
-    <Breadcrumb/>
+    <BreadcrumbContainer/>
     {tabs}
   </header>
 )
