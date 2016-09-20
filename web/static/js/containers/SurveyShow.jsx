@@ -55,12 +55,6 @@ class SurveyShow extends Component {
             </div>
           </div>
         </div>
-
-        <div className="row">
-          <div className="col s12">
-            <Link className="btn btn-flat waves-effect waves-light" to={`/projects/${survey.projectId}/surveys`}>Back</Link>
-          </div>
-        </div>
       </div>
     )
   }

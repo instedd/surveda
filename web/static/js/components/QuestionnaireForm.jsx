@@ -12,34 +12,37 @@ const QuestionnaireForm = ({ onSubmit, project, questionnaire }) => {
   let defaultMode = (questionnaire.modes || ["SMS"]).join(",")
 
   return (
-    <div>
-      <div>
-        <label>Questionnaire Name</label>
-        <div>
-          <input type="text" placeholder="Questionnaire name" defaultValue={questionnaire.name} ref={ node => { nameInput = node }
-          }/>
+    <div className="row">
+      <div className="col s12 m8">
+        <div className="row">
+          <div className="input-field col s12">
+            <input type="text" id="questionnaire_name" placeholder="Questionnaire name" defaultValue={questionnaire.name} ref={ node => { nameInput = node }}/>
+            <label className="active" htmlFor="questionnaire_name">Questionnaire Name</label>
+          </div>
         </div>
       </div>
-      <div>
-        <label>Mode</label>
-        <div>
-          <select defaultValue={defaultMode} ref={ node => { modesInput = node }}>
-            <option value="SMS">SMS</option>
-            <option value="IVR">IVR</option>
-            <option value="SMS,IVR">SMS and IVR</option>
-          </select>
+      <div className="col s12 m3 offset-m1">
+        <div className="row">
+          <div className="input-field col s12">
+            <select defaultValue={defaultMode} ref={ node => { modesInput = node; $(node).material_select() }}>
+              <option value="SMS">SMS</option>
+              <option value="IVR">IVR</option>
+              <option value="SMS,IVR">SMS and IVR</option>
+            </select>
+            <label>Mode</label>
+          </div>
         </div>
       </div>
-      <br/>
-      <div>
-        <button type="button" onClick={() => {
-          let newQuestionnaire = merge({}, questionnaire, {name: nameInput.value})
-          newQuestionnaire.modes = modesInput.value.split(",")
-          return onSubmit(newQuestionnaire)
-        }}>
-          Submit
-        </button>
-        <Link to={`/projects/${project.id}/questionnaires`}> Back</Link>
+      <div className="row">
+        <div className="col s12">
+          <button type="button" className="btn waves-effect waves-light" onClick={() => {
+            let newQuestionnaire = merge({}, questionnaire, {name: nameInput.value})
+            newQuestionnaire.modes = modesInput.value.split(",")
+            return onSubmit(newQuestionnaire)
+          }}>
+            Submit
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -143,22 +143,25 @@ footer {
   }
 
 
-  .card-table > table {
-    @extend .bordered;
+  .card-table {
+    padding: 0;
+    > table {
+      @extend .bordered;
 
-    th {
-      @extend .grey-text, .lighten-2;
-      padding: 25px;
-       a {
-        color: inherit;
+      th {
+        @extend .grey-text, .lighten-2;
+        padding: 25px;
+         a {
+          color: inherit;
+        }
       }
-    }
 
-    td {
-      @extend .black-text;
-      padding: 25px;
-      a {
-        color: inherit;
+      td {
+        @extend .black-text;
+        padding: 25px;
+        a {
+          color: inherit;
+        }
       }
     }
   }
