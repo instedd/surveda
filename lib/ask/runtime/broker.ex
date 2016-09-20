@@ -63,7 +63,7 @@ defmodule Ask.Runtime.Broker do
     survey = Repo.preload(survey, [:questionnaire, :channels])
     channel = hd(survey.channels)
 
-    session = Session.start(survey.questionnaire, respondent.phone_number, channel)
+    session = Session.start(survey.questionnaire, respondent, channel)
 
     respondent
     |> Respondent.changeset(%{state: "active", session: Session.dump(session)})
