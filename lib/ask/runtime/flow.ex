@@ -26,9 +26,13 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, current_step: state["current_step"]}
   end
 
-  defp accept_reply(flow = %Flow{current_step: nil}, _) do
+  defp accept_reply(flow = %Flow{current_step: nil}, nil) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}}
+  end
+
+  defp accept_reply(flow = %Flow{current_step: nil}, _) do
+    raise "Flow was not expecting any reply"
   end
 
   defp accept_reply(flow, reply) do
