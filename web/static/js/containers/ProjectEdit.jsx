@@ -5,7 +5,7 @@ import * as actions from '../actions/projects'
 import { updateProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
 
-class EditProject extends Component {
+class ProjectEdit extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
 
@@ -35,4 +35,4 @@ const mapStateToProps = (state, ownProps) => ({
   project: state.projects[ownProps.params.projectId]
 })
 
-export default withRouter(connect(mapStateToProps)(EditProject))
+export default withRouter(connect(mapStateToProps)(ProjectEdit))

@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
 
-class Survey extends Component {
+class SurveyShow extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId, router } = this.props
     if (projectId && surveyId) {
@@ -74,4 +74,4 @@ const mapStateToProps = (state, ownProps) => ({
   respondentsStats: state.respondentsStats[ownProps.params.surveyId] || {},
 })
 
-export default withRouter(connect(mapStateToProps)(Survey))
+export default withRouter(connect(mapStateToProps)(SurveyShow))

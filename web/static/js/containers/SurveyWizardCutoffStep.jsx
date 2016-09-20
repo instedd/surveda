@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
 
-class SurveyCutoffStep extends Component {
+class SurveyWizardCutoffStep extends Component {
   handleSubmit(survey) {
     const { dispatch, projectId, router } = this.props
     updateSurvey(survey.projectId, survey)
@@ -54,4 +54,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.surveys[ownProps.params.surveyId]
 })
 
-export default withRouter(connect(mapStateToProps)(SurveyCutoffStep));
+export default withRouter(connect(mapStateToProps)(SurveyWizardCutoffStep));

@@ -6,7 +6,7 @@ import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
 
-class Questionnaires extends Component {
+class QuestionnaireIndex extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
     dispatch(actions.fetchQuestionnaires(projectId))
@@ -56,4 +56,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaires: state.questionnaires
 })
 
-export default connect(mapStateToProps)(Questionnaires)
+export default connect(mapStateToProps)(QuestionnaireIndex)

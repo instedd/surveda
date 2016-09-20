@@ -6,7 +6,7 @@ import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
 
-class Projects extends Component {
+class ProjectIndex extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(actions.fetchProjects());
@@ -52,4 +52,4 @@ const mapStateToProps = (state) => ({
   projects: state.projects
 })
 
-export default connect(mapStateToProps)(Projects)
+export default connect(mapStateToProps)(ProjectIndex)

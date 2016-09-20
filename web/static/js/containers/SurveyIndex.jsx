@@ -8,7 +8,7 @@ import Card from '../components/Card'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 
-class Surveys extends Component {
+class SurveyIndex extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
     dispatch(actions.fetchSurveys(projectId))
@@ -46,7 +46,7 @@ const mapStateToProps = (state, ownProps) => ({
   surveys: state.surveys
 })
 
-export default withRouter(connect(mapStateToProps)(Surveys))
+export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 const SurveyCard = ({ survey }) => {
   let icon = 'mode_edit'

@@ -6,7 +6,7 @@ import * as actions from '../actions/surveys'
 import * as channelsActions from '../actions/channels'
 import { updateSurvey } from '../api'
 
-class SurveyChannelsStep extends Component {
+class SurveyWizardChannelsStep extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(channelsActions.fetchChannels());
@@ -75,4 +75,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.surveys[ownProps.params.surveyId]
 })
 
-export default withRouter(connect(mapStateToProps)(SurveyChannelsStep));
+export default withRouter(connect(mapStateToProps)(SurveyWizardChannelsStep));

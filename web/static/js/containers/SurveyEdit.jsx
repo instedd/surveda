@@ -7,7 +7,7 @@ import SurveyForm from '../components/SurveyForm'
 import { Tooltip } from '../components/Tooltip'
 import { launchSurvey } from '../api'
 
-class EditSurvey extends Component {
+class SurveyEdit extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId, router } = this.props
     if (projectId && surveyId) {
@@ -54,4 +54,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.surveys[ownProps.params.surveyId] || {}
 })
 
-export default withRouter(connect(mapStateToProps)(EditSurvey))
+export default withRouter(connect(mapStateToProps)(SurveyEdit))

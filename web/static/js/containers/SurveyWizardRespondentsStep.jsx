@@ -8,7 +8,7 @@ import { uploadRespondents, fetchQuestionnaires } from '../api'
 import * as actions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 
-class SurveyRespondentStep extends Component {
+class SurveyWizardRespondentsStep extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId } = this.props
     if (projectId && surveyId) {
@@ -122,4 +122,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default connect(mapStateToProps)(SurveyRespondentStep);
+export default connect(mapStateToProps)(SurveyWizardRespondentsStep);

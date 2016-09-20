@@ -5,7 +5,7 @@ import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
 
-class Channels extends Component {
+class ChannelIndex extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(actions.fetchChannels());
@@ -51,4 +51,4 @@ const mapStateToProps = (state) => ({
   channels: state.channels
 })
 
-export default connect(mapStateToProps)(Channels)
+export default connect(mapStateToProps)(ChannelIndex)

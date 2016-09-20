@@ -5,7 +5,7 @@ import * as actions from '../actions/projects'
 import { createProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
 
-class CreateProject extends Component {
+class ProjectNew extends Component {
   handleSubmit() {
     const { router, dispatch } = this.props
     return (project) => {
@@ -28,4 +28,4 @@ const mapStateToProps = (state, ownProps) => ({
   project: {}
 })
 
-export default withRouter(connect(mapStateToProps)(CreateProject))
+export default withRouter(connect(mapStateToProps)(ProjectNew))

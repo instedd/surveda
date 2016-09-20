@@ -6,7 +6,7 @@ import * as projectActions from '../actions/projects'
 import { updateQuestionnaire } from '../api'
 import QuestionnaireForm from '../components/QuestionnaireForm'
 
-class EditQuestionnaire extends Component {
+class QuestionnaireEdit extends Component {
   componentDidMount() {
     const { dispatch, projectId, questionnaireId } = this.props
     if (projectId && questionnaireId) {
@@ -37,4 +37,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaire: state.questionnaires[ownProps.params.questionnaireId]
 })
 
-export default withRouter(connect(mapStateToProps)(EditQuestionnaire))
+export default withRouter(connect(mapStateToProps)(QuestionnaireEdit))

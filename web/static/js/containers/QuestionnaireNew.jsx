@@ -5,7 +5,7 @@ import * as actions from '../actions/questionnaires'
 import { createQuestionnaire } from '../api'
 import QuestionnaireForm from '../components/QuestionnaireForm'
 
-class CreateQuestionnaire extends Component {
+class QuestionnaireNew extends Component {
   handleSubmit() {
     return (questionnaire) => {
       const { projectId, router, dispatch } = this.props
@@ -28,4 +28,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaire: {},
 })
 
-export default withRouter(connect(mapStateToProps)(CreateQuestionnaire))
+export default withRouter(connect(mapStateToProps)(QuestionnaireNew))
