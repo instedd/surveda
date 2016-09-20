@@ -72,17 +72,19 @@ const SurveyCard = ({ survey }) => {
 
   return(
     <SurveyLink className="black-text" survey={ survey }>
-      <Card>
-        <div className="card-content">
-          <span className="card-title">
-            { survey.name }
-          </span>
-          <p className={ color }>
-            <i className="material-icons" style={{ verticalAlign: 'middle' }}>{icon}</i>
-            { text }
-          </p>
-        </div>
-      </Card>
+      <div className="col s12 m6 l4">
+        <Card>
+          <div className="card-content">
+            <span className="card-title">
+              { survey.name }
+            </span>
+            <p className={ color }>
+              <i className="material-icons">{icon}</i>
+              { text }
+            </p>
+          </div>
+        </Card>
+      </div>
     </SurveyLink>
   )
 }
