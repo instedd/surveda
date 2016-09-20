@@ -2,6 +2,7 @@ defmodule Ask.RespondentController do
   use Ask.Web, :controller
 
   alias Ask.Respondent
+  alias Ask.Survey
 
   def index(conn,  %{"survey_id" => survey_id}) do
     respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id) |> Repo.preload(:responses)
@@ -33,14 +34,22 @@ defmodule Ask.RespondentController do
         %{phone_number: Enum.at(row, 0), survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
       end)
 
-      Repo.insert_all(Respondent, entries)
+      {respondents_count, _ } = Repo.insert_all(Respondent, entries)
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
+
+      survey = Repo.get!(Survey, survey_id)
+      survey = Map.merge(survey, %{respondents_count: respondents_count})
+
+      changeset = survey
+      |> Repo.preload([:channels])
+      |> change
+      |> Survey.update_state
+      Repo.update(changeset)
 
       conn
         |> put_status(:created)
         |> render("index.json", respondents: respondents |> Repo.preload(:responses))
-         # |> render("show.json", survey: survey |> Repo.preload([:channels]))
     else
       conn
         |> put_status(:unprocessable_entity)

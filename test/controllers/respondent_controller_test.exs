@@ -50,7 +50,7 @@ defmodule Ask.RespondentControllerTest do
     }
   end
 
-  test "creates and renders resource when data is valid", %{conn: conn} do
+  test "uploads CSV file with phone numbers and creates and renders resource when data is valid", %{conn: conn} do
     project = insert(:project)
     survey = insert(:survey, project: project)
 
@@ -63,5 +63,35 @@ defmodule Ask.RespondentControllerTest do
     assert length(all) == 14
     assert Enum.at(all, 0).survey_id == survey.id
     assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
+  end
+
+  test "updates survey state if the respondents CSV upload is the only remaining step on the survey wizard", %{conn: conn} do
+    project = insert(:project)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id)
+    channel = insert(:channel, name: "test")
+
+    add_channel_to(survey, channel)
+
+    assert survey.state == "not_ready"
+
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+
+    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+
+    new_survey = Repo.get(Ask.Survey, survey.id)
+
+    assert new_survey.state == "ready"
+  end
+
+  def add_channel_to(survey, channel) do
+    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
+
+    changeset = survey
+    |> Repo.preload([:channels])
+    |> Ecto.Changeset.change
+    |> put_assoc(:channels, [channels_changeset])
+
+    Repo.update(changeset)
   end
 end
