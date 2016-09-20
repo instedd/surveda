@@ -18,10 +18,14 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def sync_step(session, _reply) do
-    case Flow.step(session.flow) do
-      {:end, _} -> :end
-      {:ok, flow, %{prompts: [prompt]}} ->
+  def sync_step(session, reply) do
+    case Flow.step(session.flow, reply) do
+      {:end, %{stores: stores}} ->
+        store_responses(session.respondent, stores)
+        :end
+
+      {:ok, flow, %{prompts: [prompt], stores: stores}} ->
+        store_responses(session.respondent, stores)
         {:ok, %{session | flow: flow}, {:prompt, prompt}}
     end
   end
@@ -40,5 +44,13 @@ defmodule Ask.Runtime.Session do
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"])
     }
+  end
+
+  defp store_responses(respondent, stores) do
+    stores |> Enum.each(fn {field_name, value} ->
+      respondent
+      |> Ecto.build_assoc(:responses, field_name: field_name, value: value)
+      |> Ask.Repo.insert
+    end)
   end
 end
