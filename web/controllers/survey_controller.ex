@@ -41,6 +41,7 @@ defmodule Ask.SurveyController do
     |> change
     |> update_channels(survey_params)
     |> Survey.changeset(survey_params)
+    |> Survey.update_state
 
     case Repo.update(changeset) do
       {:ok, survey} ->
