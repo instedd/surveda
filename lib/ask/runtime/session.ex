@@ -6,8 +6,8 @@ defmodule Ask.Runtime.Session do
   def start(questionnaire, phone_number, channel) do
     flow = Flow.start(questionnaire)
     case flow |> Flow.step do
-      :end -> :end
-      {:ok, flow, {:prompt, prompt}} ->
+      {:end, _} -> :end
+      {:ok, flow, %{prompts: [prompt]}} ->
         runtime_channel = Ask.Channel.runtime_channel(channel)
         runtime_channel |> Channel.ask(phone_number, [prompt])
         %Ask.Runtime.Session{
@@ -19,9 +19,9 @@ defmodule Ask.Runtime.Session do
 
   def sync_step(session, _reply) do
     case Flow.step(session.flow) do
-      :end -> :end
-      {:ok, flow, step} ->
-        {:ok, %{session | flow: flow}, step}
+      {:end, _} -> :end
+      {:ok, flow, %{prompts: [prompt]}} ->
+        {:ok, %{session | flow: flow}, {:prompt, prompt}}
     end
   end
 
