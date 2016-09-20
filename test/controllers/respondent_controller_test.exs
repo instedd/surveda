@@ -77,7 +77,7 @@ defmodule Ask.RespondentControllerTest do
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
 
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+    post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
 
     new_survey = Repo.get(Ask.Survey, survey.id)
 
