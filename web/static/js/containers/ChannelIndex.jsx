@@ -14,7 +14,7 @@ class ChannelIndex extends Component {
   addChannel(event) {
     event.preventDefault()
     const { dispatch } = this.props
-    dispatch(actions.createNuntiumChannel()).then(x => console.log(x))
+    dispatch(actions.createNuntiumChannel())
   }
 
   render() {

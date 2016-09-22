@@ -4,9 +4,9 @@ export const GUISSO_TOKEN = 'GUISSO_TOKEN';
 
 export const obtainToken = (guissoConfig) => {
   return (dispatch, getState) => {
-    const token = getState().guisso[guissoConfig.appId];
-    if (token) {
-      return Promise.resolve(token);
+    const existingToken = getState().guisso[guissoConfig.appId];
+    if (existingToken) {
+      return Promise.resolve(existingToken);
     }
 
     return guisso.obtainToken(guissoConfig).then(token => {

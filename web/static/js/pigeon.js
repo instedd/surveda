@@ -16,7 +16,7 @@ export const loadPigeonScript = (nuntiumBaseUrl) => {
 }
 
 export const addChannel = (accessToken) =>
-  new Promise((resolve, reject) => {
+  new Promise((resolve, _) => {
     const callback = (channel) => resolve(channel)
-    window.pigeon.addChannel({callback: callback, accessToken: accessToken})
+    window.pigeon.addChannel({ callback: callback, accessToken: accessToken })
   });

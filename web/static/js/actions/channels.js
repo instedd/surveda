@@ -29,16 +29,19 @@ export const createNuntiumChannel = () => dispatch => {
   return Promise.all([
     dispatch(guisso.obtainToken(config.nuntium.guisso)),
     pigeon.loadPigeonScript(config.nuntium.baseUrl)
-  ]).then(([token, _]) =>
-    pigeon.addChannel(token.access_token)
-  ).then(nuntiumChannel => {
-    dispatch(createChannel({
-      name: nuntiumChannel.name,
-      type: 'sms',
-      provider: 'nuntium',
-      settings: {
-        nuntiumChannel: nuntiumChannel.name
+  ])
+    .then(([token, _]) => pigeon.addChannel(token.access_token))
+    .then(nuntiumChannel => {
+      if (nuntiumChannel === null) {
+        return Promise.reject('User cancelled')
       }
-    }))
-  })
+      dispatch(createChannel({
+        name: nuntiumChannel.name,
+        type: 'sms',
+        provider: 'nuntium',
+        settings: {
+          nuntiumChannel: nuntiumChannel.name
+        }
+      }))
+    }).catch((_) => _)
 }
