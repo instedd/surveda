@@ -57,13 +57,11 @@ defmodule Ask.RespondentController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    respondent = Repo.get!(Respondent, id)
-
-    # Here we use delete! (with a bang) because we expect
-    # it to always work (and if it does not, it will raise).
-    Repo.delete!(respondent)
+  def delete(conn, %{"survey_id" => survey_id}) do
+    from(r in Respondent, where: r.survey_id == ^survey_id)
+    |> Repo.delete_all
 
     send_resp(conn, :no_content, "")
   end
+
 end

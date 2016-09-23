@@ -85,6 +85,29 @@ defmodule Ask.RespondentControllerTest do
     assert new_survey.state == "ready"
   end
 
+  test "deletes all the respondents from a survey", %{conn: conn} do
+    project = insert(:project)
+    survey = insert(:survey, project: project)
+    {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+
+    entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
+    CSV.decode(separator: ?\t) |>
+    Enum.map(fn row ->
+      %{phone_number: Enum.at(row, 0), survey_id: survey.id, inserted_at: local_time, updated_at: local_time}
+    end)
+
+    {respondents_count, _ } = Repo.insert_all(Respondent, entries)
+
+    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+    assert length(all) == respondents_count
+
+    conn = delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
+    assert response(conn, 204)
+
+    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+    assert length(all) == 0
+  end
+
   def add_channel_to(survey, channel) do
     channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
 
