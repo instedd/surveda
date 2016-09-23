@@ -1,9 +1,5 @@
-import React, { PropTypes, Component } from 'react'
-import { browserHistory } from 'react-router'
-import merge from 'lodash/merge'
-import { Link } from 'react-router'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import Dropzone from 'react-dropzone'
 import * as respondentsActions from '../actions/respondents'
 import CardTable from '../components/CardTable'
 
@@ -18,44 +14,44 @@ class SurveyRespondents extends Component {
   render() {
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
-    let respondents = generateResponsesDictionaryFor(jQuery.extend(true, {}, this.props.respondents))
-    const title = parseInt(Object.keys(respondents).length) + " Respondents"
+    const respondents = generateResponsesDictionaryFor(jQuery.extend(true, {}, this.props.respondents))
+    const title = parseInt(Object.keys(respondents).length, 10) + " Respondents"
 
     if (Object.keys(respondents).length === 0) {
       return <div>Loading...</div>
     }
 
-    function generateResponsesDictionaryFor(respondents){
-      Object.keys(respondents).forEach((respondent_id, _) =>
-        respondents[respondent_id].responses = responsesDictionaryFrom(respondents[respondent_id].responses)
+    function generateResponsesDictionaryFor(rs){
+      Object.keys(rs).forEach((respondent_id, _) =>
+        rs[respondent_id].responses = responsesDictionaryFrom(rs[respondent_id].responses)
       )
-      return respondents
+      return rs
     }
 
     function responsesDictionaryFrom(responseArray){
-      let res = {}
-      for (var key in responseArray){
+      const res = {}
+      for (const key in responseArray){
         res[responseArray[key].name] = responseArray[key].value
       }
       return res
     }
 
-    function allFieldNames(respondents) {
-      let fieldNames = Object.keys(respondents).map((key) => (respondents[key].responses))
+    function allFieldNames(rs) {
+      let fieldNames = Object.keys(rs).map((key) => (rs[key].responses))
       fieldNames = fieldNames.map((response) => Object.keys(response))
       return [].concat.apply([], fieldNames)
     }
 
-    function respondentKeys(respondents) {
-      return Object.keys(respondents)
+    function respondentKeys(rs) {
+      return Object.keys(rs)
     }
 
-    function hasResponded(respondents, respondent_id, fieldName){
-      return Object.keys(respondents[respondent_id].responses).includes(fieldName)
+    function hasResponded(rs, respondent_id, fieldName){
+      return Object.keys(rs[respondent_id].responses).includes(fieldName)
     }
 
-    function responseOf(respondents, respondent_id, fieldName){
-      return hasResponded(respondents, respondent_id, fieldName) ? respondents[respondent_id].responses[fieldName] : "-"
+    function responseOf(rs, respondent_id, fieldName){
+      return hasResponded(rs, respondent_id, fieldName) ? rs[respondent_id].responses[fieldName] : "-"
     }
 
     return (
@@ -74,7 +70,7 @@ class SurveyRespondents extends Component {
             <tr key={respondent_id}>
               <td> {respondents[respondent_id].phoneNumber}</td>
               {allFieldNames(respondents).map(function(field){
-                return <td key={parseInt(respondent_id)+field}>{responseOf(respondents, respondent_id, field)}</td>
+                return <td key={parseInt(respondent_id, 10)+field}>{responseOf(respondents, respondent_id, field)}</td>
               })}
               <td>
                 {respondents[respondent_id].date ? new Date(respondents[respondent_id].date).toUTCString() : "-"}
