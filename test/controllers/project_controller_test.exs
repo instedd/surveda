@@ -45,8 +45,9 @@ defmodule Ask.ProjectControllerTest do
 
   test "rejects show if the project doesn't belong to the current user", %{conn: conn} do
     project = insert(:project)
-    conn = get conn, project_path(conn, :show, project)
-    assert conn.status == 403
+    assert_error_sent :forbidden, fn ->
+      get conn, project_path(conn, :show, project)
+    end
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
@@ -75,8 +76,9 @@ defmodule Ask.ProjectControllerTest do
 
   test "rejects update if the project doesn't belong to the current user", %{conn: conn} do
     project = insert(:project)
-    conn = put conn, project_path(conn, :update, project), project: @valid_attrs
-    assert conn.status == 403
+    assert_error_sent :forbidden, fn ->
+      put conn, project_path(conn, :update, project), project: @valid_attrs
+    end
   end
 
   test "deletes chosen resource", %{conn: conn, user: user} do
@@ -88,8 +90,8 @@ defmodule Ask.ProjectControllerTest do
 
   test "rejects delete if the project doesn't belong to the current user", %{conn: conn} do
     project = insert(:project)
-    conn = delete conn, project_path(conn, :delete, project)
-    assert conn.status == 403
+    assert_error_sent :forbidden, fn ->
+      delete conn, project_path(conn, :delete, project)
+    end
   end
-
 end
