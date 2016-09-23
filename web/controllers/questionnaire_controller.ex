@@ -6,21 +6,24 @@ defmodule Ask.QuestionnaireController do
   alias Ask.UnauthorizedError
 
   def index(conn, %{"project_id" => project_id}) do
-    project = Repo.get!(Project, project_id)
-    if authorized_for(conn, project) do
-      questionnaires = Repo.all(from q in Questionnaire, where: q.project_id == ^project_id)
-      render(conn, "index.json", questionnaires: questionnaires)
-    else
-      conn
-      |> put_status(:forbidden)
-      |> json(%{error: "Forbidden"})
-    end
+    questionnaires = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:questionnaires)
+    |> Repo.all
+
+    render(conn, "index.json", questionnaires: questionnaires)
   end
 
-  def create(conn, %{"project_id" => project_id, "questionnaire" => questionnaire_params}) do
-    questionnaire_params = Map.put(questionnaire_params, "project_id", project_id)
-    questionnaire_params = Map.put_new(questionnaire_params, "steps", dummy_steps())
-    changeset = Questionnaire.changeset(%Questionnaire{}, questionnaire_params)
+  def create(conn, %{"project_id" => project_id, "questionnaire" => params}) do
+    params = params
+    |> Map.put_new("steps", dummy_steps())
+
+    changeset = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> build_assoc(:questionnaires)
+    |> Questionnaire.changeset(params)
 
     case Repo.insert(changeset) do
       {:ok, questionnaire} ->
@@ -36,18 +39,25 @@ defmodule Ask.QuestionnaireController do
   end
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
-    project = Repo.get!(Project, project_id)
-    authorize(conn, project)
-    project_assoc = assoc(project, :questionnaires)
-    questionnaire = Repo.get!(Questionnaire, id)
+    questionnaire = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:questionnaires)
+    |> Repo.get!(id)
+
     render(conn, "show.json", questionnaire: questionnaire)
   end
 
-  def update(conn, %{"id" => id, "questionnaire" => questionnaire_params}) do
-    questionnaire_params = Map.put_new(questionnaire_params, "steps", dummy_steps())
+  def update(conn, %{"project_id" => project_id, "id" => id, "questionnaire" => params}) do
+    params = params
+    |> Map.put_new("steps", dummy_steps())
 
-    questionnaire = Repo.get!(Questionnaire, id)
-    changeset = Questionnaire.changeset(questionnaire, questionnaire_params)
+    changeset = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:questionnaires)
+    |> Repo.get!(id)
+    |> Questionnaire.changeset(params)
 
     case Repo.update(changeset) do
       {:ok, questionnaire} ->
@@ -59,8 +69,12 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    questionnaire = Repo.get!(Questionnaire, id)
+  def delete(conn, %{"project_id" => project_id, "id" => id}) do
+    questionnaire = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:questionnaires)
+    |> Repo.get!(id)
 
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
@@ -106,10 +120,10 @@ defmodule Ask.QuestionnaireController do
     ]
   end
 
-  defp authorize(conn, project) do
+  defp authorize(project, conn) do
     if project.user_id != current_user(conn).id do
-      raise UnauthorizedError
+      raise UnauthorizedError, conn: conn
     end
+    project
   end
-
 end

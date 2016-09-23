@@ -4,12 +4,18 @@ defmodule Ask.ProjectController do
   alias Ask.Project
 
   def index(conn, _params) do
-    projects = assoc(current_user(conn), :projects) |> Repo.all()
+    projects = conn
+    |> current_user
+    |> assoc(:projects)
+    |> Repo.all
     render(conn, "index.json", projects: projects)
   end
 
   def create(conn, %{"project" => project_params}) do
-    changeset = Project.changeset(%Project{user_id: current_user(conn).id}, project_params)
+    changeset = conn
+    |> current_user
+    |> build_assoc(:projects)
+    |> Project.changeset(project_params)
 
     case Repo.insert(changeset) do
       {:ok, project} ->

@@ -5,6 +5,8 @@ defmodule Ask.Project do
     field :name, :string
     belongs_to :user, Ask.User
 
+    has_many :questionnaires, Ask.Questionnaire
+
     timestamps()
   end
 
