@@ -36,9 +36,7 @@ export default (
 
         <Route path="surveys/:surveyId" components={{ body: SurveyShow, tabs: SurveyTabs }} breadcrumbName=":surveyId" />
         <Route path="surveys/:surveyId/edit" component={ SurveyEdit } breadcrumbName=":surveyId">
-        <Route path="surveys/:surveyId" components={{body: Survey, tabs: SurveyTabs}} breadcrumbName=":surveyId" />
         <Route path="surveys/:surveyId/respondents" components={{body: SurveyRespondents, tabs: SurveyTabs}} breadcrumbName=":surveyId" />
-        <Route path="surveys/:surveyId/edit" component={EditSurvey} breadcrumbName=":surveyId">
           <IndexRedirect to="questionnaire"/>
           <Route path="questionnaire" component={ SurveyWizardQuestionnaireStep } breadcrumbIgnore />
           <Route path="respondents" component={ SurveyWizardRespondentsStep } breadcrumbIgnore />
