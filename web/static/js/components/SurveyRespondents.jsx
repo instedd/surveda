@@ -7,7 +7,7 @@ import Dropzone from 'react-dropzone'
 import * as respondentsActions from '../actions/respondents'
 import CardTable from '../components/CardTable'
 
-class SurveyRespondentStep extends Component {
+class SurveyRespondents extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId } = this.props
     if (projectId && surveyId) {
@@ -95,4 +95,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default connect(mapStateToProps)(SurveyRespondentStep);
+export default connect(mapStateToProps)(SurveyRespondents);
