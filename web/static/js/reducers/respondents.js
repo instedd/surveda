@@ -17,6 +17,8 @@ export default (state = {}, action) => {
         return action.response.entities.respondents || {}
       }
       return state
+    case actions.REMOVE_RESPONDENTS:
+      return {}
     default:
       return state
   }

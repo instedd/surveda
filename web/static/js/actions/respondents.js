@@ -3,6 +3,7 @@ import * as api from '../api'
 export const RECEIVE_RESPONDENTS = 'RECEIVE_RESPONDENTS'
 export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
+export const REMOVE_RESPONDENTS = 'REMOVE_RESPONDENTS'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 
@@ -29,6 +30,11 @@ export const receiveRespondentsStats = (surveyId, response) => ({
 
 export const receiveRespondents = (response) => ({
   type: RECEIVE_RESPONDENTS,
+  response
+})
+
+export const removeRespondents = (response) => ({
+  type: REMOVE_RESPONDENTS,
   response
 })
 

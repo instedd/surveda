@@ -63,6 +63,10 @@ const apiPutJSON = (url, schema, body) => {
   return apiPutOrPostJSON(url, schema, 'PUT', body)
 }
 
+const apiDelete = (url, schema) => {
+  return apiPutOrPostJSON(url, schema, 'DELETE', null)
+}
+
 export const fetchProjects = () => {
   return apiFetchJSON(`projects`, arrayOf(projectSchema))
 }
@@ -104,6 +108,10 @@ export const uploadRespondents = (survey, files) => {
       method: 'POST',
       body: formData
     })
+}
+
+export const removeRespondents = (survey) => {
+  return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`, respondentSchema)
 }
 
 export const fetchRespondents = (projectId, surveyId) => {
