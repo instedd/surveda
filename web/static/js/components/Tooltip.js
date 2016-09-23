@@ -2,6 +2,18 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
 export class Tooltip extends Component {
+  defaultProps = {
+    position: 'top',
+    delay: 20
+  }
+
+  propTypes = {
+    children: React.PropTypes.element.isRequired,
+    position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
+    delay: React.PropTypes.number,
+    text: React.PropTypes.string.isRequired
+  }
+
   componentDidMount() {
     const node = ReactDOM.findDOMNode(this.refs.node)
     $(node).tooltip()
@@ -24,16 +36,4 @@ export class Tooltip extends Component {
       "ref": "node"
     })
   }
-}
-
-Tooltip.propTypes = {
-  children: React.PropTypes.element.isRequired,
-  position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
-  delay: React.PropTypes.number,
-  text: React.PropTypes.string.isRequired
-}
-
-Tooltip.defaultProps = {
-  position: 'top',
-  delay: 20
 }

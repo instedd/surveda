@@ -3,6 +3,11 @@ import merge from 'lodash/merge'
 import { Link } from 'react-router'
 
 class ProjectForm extends Component {
+  propTypes = {
+    onSubmit: PropTypes.func.isRequired,
+    project: PropTypes.object
+  }
+
   render() {
     const { onSubmit, project } = this.props
 
@@ -30,11 +35,6 @@ class ProjectForm extends Component {
       </div>
     )
   }
-}
-
-ProjectForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  project: PropTypes.object
 }
 
 export default ProjectForm
