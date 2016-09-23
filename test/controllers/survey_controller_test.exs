@@ -76,6 +76,18 @@ defmodule Ask.SurveyControllerTest do
     assert Repo.get_by(Survey, @valid_attrs)
   end
 
+  test "updates cutoff when channels are included in params", %{conn: conn} do
+    [project, questionnaire, channel] = prepare_for_state_update()
+
+    survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+    add_channel_to(survey, channel)
+    add_respondent_to survey
+
+    attrs = %{cutoff: 4, channels: [channel.id]}
+    conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+    assert json_response(conn, 200)["data"]["cutoff"] == 4
+  end
+
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     survey = insert(:survey)
     conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
@@ -104,28 +116,6 @@ defmodule Ask.SurveyControllerTest do
   end
 
   describe "changes the survey state when needed" do
-
-    def prepare_for_state_update() do
-      project = insert(:project)
-      questionnaire = insert(:questionnaire, name: "test", project: project)
-      channel = insert(:channel, name: "test")
-      [project, questionnaire, channel]
-    end
-
-    def add_respondent_to(survey) do
-      insert(:respondent, phone_number: "12345678", survey: survey)
-    end
-
-    def add_channel_to(survey, channel) do
-      channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
-
-      changeset = survey
-      |> Repo.preload([:channels])
-      |> Ecto.Changeset.change
-      |> put_assoc(:channels, [channels_changeset])
-
-      Repo.update(changeset)
-    end
 
     test "updates state when adding questionnaire", %{conn: conn} do
       [project, questionnaire, channel] = prepare_for_state_update()
@@ -223,18 +213,6 @@ defmodule Ask.SurveyControllerTest do
       assert new_survey.state == "not_ready"
     end
 
-    test "updates cutoff when channels are included in params", %{conn: conn} do
-      [project, questionnaire, channel] = prepare_for_state_update()
-
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
-      add_channel_to(survey, channel)
-      add_respondent_to survey
-
-      attrs = %{cutoff: 4, channels: [channel.id]}
-      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
-      assert json_response(conn, 200)["data"]["cutoff"] == 4
-    end
-
     test "does not update state when adding cutoff if missing questionnaire", %{conn: conn} do
       [project, _, channel] = prepare_for_state_update()
 
@@ -310,4 +288,29 @@ defmodule Ask.SurveyControllerTest do
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
   end
+
+  ### Auxiliar functions ###
+
+  def prepare_for_state_update() do
+    project = insert(:project)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    channel = insert(:channel, name: "test")
+    [project, questionnaire, channel]
+  end
+
+  def add_respondent_to(survey) do
+    insert(:respondent, phone_number: "12345678", survey: survey)
+  end
+
+  def add_channel_to(survey, channel) do
+    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
+
+    changeset = survey
+    |> Repo.preload([:channels])
+    |> Ecto.Changeset.change
+    |> put_assoc(:channels, [channels_changeset])
+
+    Repo.update(changeset)
+  end
+
 end
