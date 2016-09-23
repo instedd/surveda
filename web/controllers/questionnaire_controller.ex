@@ -3,7 +3,6 @@ defmodule Ask.QuestionnaireController do
 
   alias Ask.Questionnaire
   alias Ask.Project
-  alias Ask.UnauthorizedError
 
   def index(conn, %{"project_id" => project_id}) do
     questionnaires = Project
@@ -118,12 +117,5 @@ defmodule Ask.QuestionnaireController do
         ]
       }
     ]
-  end
-
-  defp authorize(project, conn) do
-    if project.user_id != current_user(conn).id do
-      raise UnauthorizedError, conn: conn
-    end
-    project
   end
 end
