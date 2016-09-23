@@ -2,10 +2,19 @@ defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
   alias Ask.Questionnaire
+  alias Ask.Project
+  alias Ask.UnauthorizedError
 
   def index(conn, %{"project_id" => project_id}) do
-    questionnaires = Repo.all(from q in Questionnaire, where: q.project_id == ^project_id)
-    render(conn, "index.json", questionnaires: questionnaires)
+    project = Repo.get!(Project, project_id)
+    if authorized_for(conn, project) do
+      questionnaires = Repo.all(from q in Questionnaire, where: q.project_id == ^project_id)
+      render(conn, "index.json", questionnaires: questionnaires)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Forbidden"})
+    end
   end
 
   def create(conn, %{"project_id" => project_id, "questionnaire" => questionnaire_params}) do
@@ -26,7 +35,10 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
+  def show(conn, %{"project_id" => project_id, "id" => id}) do
+    project = Repo.get!(Project, project_id)
+    authorize(conn, project)
+    project_assoc = assoc(project, :questionnaires)
     questionnaire = Repo.get!(Questionnaire, id)
     render(conn, "show.json", questionnaire: questionnaire)
   end
@@ -93,4 +105,11 @@ defmodule Ask.QuestionnaireController do
       }
     ]
   end
+
+  defp authorize(conn, project) do
+    if project.user_id != current_user(conn).id do
+      raise UnauthorizedError
+    end
+  end
+
 end
