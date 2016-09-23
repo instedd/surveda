@@ -2,12 +2,12 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
 export class Tooltip extends Component {
-  defaultProps = {
+  static defaultProps = {
     position: 'top',
     delay: 20
   }
 
-  propTypes = {
+  static propTypes = {
     children: React.PropTypes.element.isRequired,
     position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
     delay: React.PropTypes.number,

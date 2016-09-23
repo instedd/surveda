@@ -4,7 +4,7 @@ import routes from '../routes'
 import { Router } from 'react-router'
 
 export default class Root extends Component {
-  propTypes = {
+  static propTypes = {
     store: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired
   }
