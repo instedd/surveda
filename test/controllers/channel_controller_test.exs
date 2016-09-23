@@ -13,15 +13,22 @@ defmodule Ask.ChannelControllerTest do
     {:ok, conn: conn, user: user}
   end
 
-  test "lists all entries on index", %{conn: conn} do
+  test "check index response is 200", %{conn: conn} do
     conn = get conn, channel_path(conn, :index)
     assert json_response(conn, 200)["data"] == []
   end
 
-  test "do not list channels from other users", %{conn: conn} do
+  test "list only channels from the current user", %{conn: conn, user: user} do
+    channel = insert(:channel, user: user)
+    channel_map = %{"id"       => channel.id,
+                    "name"     => channel.name,
+                    "provider" => channel.provider,
+                    "settings" => channel.settings,
+                    "type"     => channel.type,
+                    "user_id"  => channel.user_id}
     insert(:channel)
     conn = get conn, channel_path(conn, :index)
-    assert json_response(conn, 200)["data"] == []
+    assert json_response(conn, 200)["data"] == [channel_map]
   end
 
   test "shows chosen resource", %{conn: conn, user: user} do
