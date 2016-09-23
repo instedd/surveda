@@ -9,7 +9,7 @@ defmodule Ask.RespondentView do
     %{data: render_one(respondent, Ask.RespondentView, "respondent.json")}
   end
 
-  def render("empty.json", %{respondent: respondent}) do
+  def render("empty.json", %{respondent: _respondent}) do
     %{data: %{}}
   end
 
