@@ -5,6 +5,8 @@ defmodule Ask.User do
     field :email, :string
     field :encrypted_password, :string
 
+    has_many :projects, Ask.Project
+
     timestamps()
   end
 
