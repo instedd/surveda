@@ -26,10 +26,11 @@ defmodule Ask.RespondentControllerTest do
       "id" => respondent.id,
       "phone_number" => respondent.phone_number,
       "survey_id" => survey.id,
+      "date" => Ecto.DateTime.to_iso8601(response.updated_at),
       "responses" => [
         %{
           "value" => response.value,
-          "field_name" => response.field_name
+          "name" => response.field_name
         }
       ]
     }]

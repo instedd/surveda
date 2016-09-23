@@ -17,6 +17,8 @@ import ChannelIndex from './containers/ChannelIndex'
 import QuestionnaireEdit from './containers/QuestionnaireEdit'
 import ProjectTabs from './components/ProjectTabs'
 import SurveyTabs from './components/SurveyTabs'
+import SurveyChannelsStep from './components/SurveyChannelsStep'
+import SurveyRespondents from './components/SurveyRespondents'
 
 export default (
   <Route path="/" component={ App } breadcrumbIgnore>
@@ -34,6 +36,9 @@ export default (
 
         <Route path="surveys/:surveyId" components={{ body: SurveyShow, tabs: SurveyTabs }} breadcrumbName=":surveyId" />
         <Route path="surveys/:surveyId/edit" component={ SurveyEdit } breadcrumbName=":surveyId">
+        <Route path="surveys/:surveyId" components={{body: Survey, tabs: SurveyTabs}} breadcrumbName=":surveyId" />
+        <Route path="surveys/:surveyId/respondents" components={{body: SurveyRespondents, tabs: SurveyTabs}} breadcrumbName=":surveyId" />
+        <Route path="surveys/:surveyId/edit" component={EditSurvey} breadcrumbName=":surveyId">
           <IndexRedirect to="questionnaire"/>
           <Route path="questionnaire" component={ SurveyWizardQuestionnaireStep } breadcrumbIgnore />
           <Route path="respondents" component={ SurveyWizardRespondentsStep } breadcrumbIgnore />

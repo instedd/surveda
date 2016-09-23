@@ -10,17 +10,19 @@ defmodule Ask.RespondentView do
   end
 
   def render("respondent.json", %{respondent: respondent}) do
+    date = calculate_date_for(respondent.responses)
     %{
       id: respondent.id,
       phone_number: respondent.phone_number,
       survey_id: respondent.survey_id,
-      responses: render_many(respondent.responses, Ask.RespondentView, "response.json", as: :response)
+      responses: render_many(respondent.responses, Ask.RespondentView, "response.json", as: :response),
+      date: date
     }
   end
 
   def render("response.json", %{response: response}) do
     %{
-      field_name: response.field_name,
+      name: response.field_name,
       value: response.value
     }
   end
@@ -35,4 +37,19 @@ defmodule Ask.RespondentView do
       }
     }
   end
+
+  def calculate_date_for(responses) do
+    case responses do
+      [h | _] -> Enum.reduce(responses, h.updated_at, &max_date/2)
+      _ -> nil
+    end
+  end
+
+  def max_date(response, max_date) do
+    case response.updated_at > max_date do
+      true -> response.updated_at
+      false -> max_date
+    end
+  end
+
 end

@@ -10,7 +10,7 @@ class SurveyTabs extends Component {
     return (
       <Tabs>
         <TabLink to={`/projects/${projectId}/surveys/${surveyId}`}>Overview</TabLink>
-        <TabLink to={`/projects/${projectId}/surveys/${surveyId}`}>Respondents</TabLink>
+        <TabLink to={`/projects/${projectId}/surveys/${surveyId}/respondents`}>Respondents</TabLink>
       </Tabs>
     )
   }

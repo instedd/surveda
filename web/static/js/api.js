@@ -6,11 +6,16 @@ const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
 const questionnaireSchema = new Schema('questionnaires')
 const respondentSchema = new Schema('respondents')
+const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
 
 surveySchema.define({
   channels: arrayOf(channelSchema)
+})
+
+responseSchema.define({
+  channels: arrayOf(responseSchema)
 })
 
 const apiFetch = (url, options) => {
