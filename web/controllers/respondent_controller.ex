@@ -38,14 +38,7 @@ defmodule Ask.RespondentController do
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
 
-      survey = Repo.get!(Survey, survey_id)
-      survey = Map.merge(survey, %{respondents_count: respondents_count})
-
-      changeset = survey
-      |> Repo.preload([:channels])
-      |> change
-      |> Survey.update_state
-      Repo.update(changeset)
+      update_survey_state(survey_id, respondents_count)
 
       conn
         |> put_status(:created)
@@ -61,7 +54,22 @@ defmodule Ask.RespondentController do
     from(r in Respondent, where: r.survey_id == ^survey_id)
     |> Repo.delete_all
 
-    send_resp(conn, :no_content, "")
+    update_survey_state(survey_id, 0)
+
+    conn
+      |> put_status(:ok)
+      |> render("empty.json", respondent: [])
+  end
+
+  def update_survey_state(survey_id, respondents_count) do
+    survey = Repo.get!(Survey, survey_id)
+    survey = Map.merge(survey, %{respondents_count: respondents_count})
+
+    changeset = survey
+    |> Repo.preload([:channels])
+    |> change
+    |> Survey.update_state
+    Repo.update(changeset)
   end
 
 end

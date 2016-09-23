@@ -102,10 +102,29 @@ defmodule Ask.RespondentControllerTest do
     assert length(all) == respondents_count
 
     conn = delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
-    assert response(conn, 204)
+    assert response(conn, 200)
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 0
+  end
+
+  test "updates survey state if the respondents are deleted from a 'ready' survey", %{conn: conn} do
+    project = insert(:project)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready")
+    channel = insert(:channel, name: "test")
+
+    add_channel_to(survey, channel)
+    insert(:respondent, phone_number: "12345678", survey: survey)
+
+    assert survey.state == "ready"
+
+    conn = delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
+    assert response(conn, 200)
+
+    new_survey = Repo.get(Ask.Survey, survey.id)
+
+    assert new_survey.state == "not_ready"
   end
 
   def add_channel_to(survey, channel) do
