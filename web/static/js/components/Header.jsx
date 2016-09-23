@@ -2,27 +2,33 @@ import React from 'react'
 import { Link } from 'react-router'
 import BreadcrumbContainer from '../containers/BreadcrumbContainer'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
-import { config } from '../config'
-import 'isomorphic-fetch'
 
-export default ({ tabs }) => (
+export default ({ tabs, logout, user }) => (
   <header>
-    <nav id="TopNav">
-      <div className="nav-wrapper">
-        <div className="row">
-          <div className="col s5 m4 offset-m1">
+    <nav id='TopNav'>
+      <div className='nav-wrapper'>
+        <div className='row'>
+          <div className='col s5 m4 offset-m1'>
             <ul>
-              <li><Link to='/projects' className="">Projects</Link></li>
-              <li><Link to='/channels' className="">Channels</Link></li>
+              <li>
+                <Link to='/projects' className=''> Projects
+                </Link>
+              </li>
+              <li>
+                <Link to='/channels' className=''> Channels
+                </Link>
+              </li>
             </ul>
           </div>
-          <div className="col s7 m7">
-            <ul className="right">
+          <div className='col s7 m7'>
+            <ul className='right'>
               <li>
-                <Dropdown text={config.user}>
-                  <DropdownItem><Link to='/settings'>Settings</Link></DropdownItem>
+                <Dropdown text={user}>
+                  {/* <DropdownItem><Link to='#'>Settings</Link></DropdownItem> */}
                   <DropdownDivider />
-                  <DropdownItem><a onClick={logout}>Logout</a></DropdownItem>
+                  <DropdownItem>
+                    <a onClick={logout}>Logout</a>
+                  </DropdownItem>
                 </Dropdown>
               </li>
             </ul>
@@ -34,10 +40,3 @@ export default ({ tabs }) => (
     {tabs}
   </header>
 )
-
-const logout = () => {
-  fetch("/logout", {
-    method: 'DELETE',
-    credentials: 'same-origin'
-  }).then(() => window.location.reload())
-}

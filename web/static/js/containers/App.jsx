@@ -1,16 +1,15 @@
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
+import React from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import { logout } from '../api'
+import { config } from '../config'
 
-const App = ({children, tabs, body}) => (
+export default ({ children, tabs, body }) => (
   <div className="wrapper">
-    <Header tabs={tabs}/>
+    <Header tabs={tabs} logout={logout} user={config.user}/>
     <main>
       {body || children}
     </main>
     <Footer />
   </div>
 )
-
-export default connect()(App)

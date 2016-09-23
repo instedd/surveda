@@ -4,7 +4,6 @@ import 'isomorphic-fetch'
 
 const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
-const userSchema = new Schema('users')
 const questionnaireSchema = new Schema('questionnaires')
 const respondentSchema = new Schema('respondents')
 const respondentsStatsSchema = new Schema('respondents')
@@ -15,10 +14,10 @@ surveySchema.define({
 })
 
 const apiFetch = (url, options) => {
-  return fetch(`/api/v1/${url}`, {...options, credentials: 'same-origin'})
+  return fetch(`/api/v1/${url}`, { ...options, credentials: 'same-origin' })
     .then(response => {
       if (!response.ok && response.status == 401) {
-        window.location = "/login"
+        window.location = '/login'
         return Promise.reject(response.statusText)
       } else {
         return response
@@ -28,18 +27,17 @@ const apiFetch = (url, options) => {
 
 const apiFetchJSON = (url, schema, options) => {
   return apiFetch(url, options)
-    .then(response =>
-      response.json().then(json => ({ json, response }))
-    ).then(({ json, response }) => {
-      if (!response.ok) {
-        return Promise.reject(json)
-      }
-      return normalize(camelizeKeys(json.data), schema)
-    })
+    .then(response => response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+    return normalize(camelizeKeys(json.data), schema)
+  })
 }
 
 const apiPutOrPostJSON = (url, schema, verb, body) => {
-  let options = {
+  const options = {
     method: verb,
     headers: {
       'Accept': 'application/json',
@@ -85,7 +83,7 @@ export const fetchSurvey = (projectId, id) => {
 }
 
 export const createProject = (project) => {
-  return apiPostJSON('projects', projectSchema, {project})
+  return apiPostJSON('projects', projectSchema, { project })
 }
 
 export const createSurvey = (projectId) => {
@@ -93,14 +91,14 @@ export const createSurvey = (projectId) => {
 }
 
 export const uploadRespondents = (survey, files) => {
-  const formData = new FormData();
-  formData.append('file', files[0]);
+  const formData = new FormData()
+  formData.append('file', files[0])
 
   return apiFetchJSON(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
     arrayOf(respondentSchema), {
-    method: 'POST',
-    body: formData
-  })
+      method: 'POST',
+      body: formData
+    })
 }
 
 export const fetchRespondents = (projectId, surveyId) => {
@@ -112,15 +110,15 @@ export const fetchRespondentsStats = (projectId, surveyId) => {
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
-  return apiPostJSON(`projects/${projectId}/questionnaires`, questionnaireSchema, {questionnaire})
+  return apiPostJSON(`projects/${projectId}/questionnaires`, questionnaireSchema, { questionnaire })
 }
 
 export const updateProject = (project) => {
-  return apiPutJSON(`projects/${project.id}`, projectSchema, {project})
+  return apiPutJSON(`projects/${project.id}`, projectSchema, { project })
 }
 
 export const updateSurvey = (projectId, survey) => {
-  return apiPutJSON(`projects/${projectId}/surveys/${survey.id}`, surveySchema, {survey})
+  return apiPutJSON(`projects/${projectId}/surveys/${survey.id}`, surveySchema, { survey })
 }
 
 export const fetchChannels = () => {
@@ -128,14 +126,21 @@ export const fetchChannels = () => {
 }
 
 export const createChannel = (channel) => {
-  return apiPostJSON('channels', channelSchema, {channel})
+  return apiPostJSON('channels', channelSchema, { channel })
 }
 
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
-    questionnaireSchema, {questionnaire})
+    questionnaireSchema, { questionnaire })
 }
 
 export const launchSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/launch`, surveySchema)
+}
+
+export const logout = () => {
+  fetch('/logout', {
+    method: 'DELETE',
+    credentials: 'same-origin'
+  }).then(() => window.location.reload())
 }
