@@ -20,7 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex]]
+                    :phoenix_ecto, :mariaex, :oauth2]]
   end
 
   # Specifies which paths to compile per environment.
@@ -42,7 +42,8 @@ defmodule Ask.Mixfile do
       {:cowboy, "~> 1.0"},
       {:addict, "~> 0.3"},
       {:ex_machina, "~> 1.0", only: :test},
-      {:csv, "~> 1.4.2"}
+      {:csv, "~> 1.4.2"},
+      {:oauth2, "~> 0.7.0"}
    ]
   end
 

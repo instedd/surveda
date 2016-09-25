@@ -6,6 +6,7 @@ defmodule Ask.User do
     field :encrypted_password, :string
 
     has_many :projects, Ask.Project
+    has_many :oauth_tokens, Ask.OAuthToken
 
     timestamps()
   end

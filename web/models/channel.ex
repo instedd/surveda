@@ -11,10 +11,19 @@ defmodule Ask.Channel do
     timestamps()
   end
 
+  @doc """
+  Returns a new instance of the runtime channel implementation (Ask.Runtime.Channel)
+  """
   def runtime_channel(channel) do
+    provider(channel.provider).new(channel.settings)
+  end
+
+  @doc """
+  Returns the runtime chanel provider (module) by name
+  """
+  def provider(name) do
     channel_config = Application.get_env(:ask, :channel)
-    provider = channel_config[:providers][channel.provider]
-    provider.new(channel.settings)
+    channel_config[:providers][name]
   end
 
   @doc """

@@ -1,5 +1,6 @@
 import * as api from '../api'
 import * as guisso from './guisso'
+import * as guissoApi from '../guisso'
 import * as pigeon from '../pigeon'
 import { config } from '../config'
 
@@ -26,8 +27,16 @@ export const receiveChannels = (response) => ({
 })
 
 export const createNuntiumChannel = () => dispatch => {
+  const guissoSession = guissoApi.newSession(config.nuntium.guisso)
   return Promise.all([
-    dispatch(guisso.obtainToken(config.nuntium.guisso)),
+    dispatch(guisso.obtainToken(guissoSession))
+      .then((token) => {
+        return guissoSession.authorize('code', 'nuntium')
+          .then(() => {
+            guissoSession.close()
+            return token
+          })
+      }),
     pigeon.loadPigeonScript(config.nuntium.baseUrl)
   ])
     .then(([token, _]) => pigeon.addChannel(token.access_token))

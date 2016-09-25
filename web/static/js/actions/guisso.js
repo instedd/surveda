@@ -1,18 +1,16 @@
-import * as guisso from '../guisso'
-
 export const GUISSO_TOKEN = 'GUISSO_TOKEN';
 
-export const obtainToken = (guissoConfig) => {
+export const obtainToken = (guissoSession) => {
   return (dispatch, getState) => {
-    const existingToken = getState().guisso[guissoConfig.appId];
+    const existingToken = getState().guisso[guissoSession.config.appId];
     if (existingToken) {
       return Promise.resolve(existingToken);
     }
 
-    return guisso.obtainToken(guissoConfig).then(token => {
+    return guissoSession.authorize("token").then(token => {
       dispatch({
         type: GUISSO_TOKEN,
-        app: guissoConfig.appId,
+        app: guissoSession.config.appId,
         token
       });
       return token

@@ -1,21 +1,46 @@
-import queryString from 'query-string';
+import queryString from 'query-string'
 
-export const obtainToken = (guissoConfig) =>
-  new Promise((resolve, reject) => {
-    var authorizeUrl = guissoConfig.baseUrl + "/oauth2/authorize" +
-      "?client_id=" + guissoConfig.clientId +
-      "&scope=" + escape("app=" + guissoConfig.appId) +
-      "&response_type=token" +
-      "&redirect_uri=" + escape(window.location.origin + "/oauth_helper")
+class GuissoSession {
+  constructor(config) {
+    this.config = config
+  }
 
-    var popup = window.open(authorizeUrl, "_blank", "chrome=yes,centerscreen=yes,width=600,height=400");
-    const listener = function(event) {
-      if (event.source == popup) {
-        window.removeEventListener("message", listener);
-        popup.close();
-        const token = queryString.parse(event.data);
-        resolve(token);
-      }
+  showPopup(url) {
+    if (this.popup) {
+      this.popup.location = url
+    } else {
+      this.popup = window.open(url, "_blank", "chrome=yes,centerscreen=yes,width=600,height=400")
     }
-    window.addEventListener("message", listener, false)
-  });
+    return this.popup
+  }
+
+  close() {
+    if (this.popup) {
+      this.popup.close()
+      this.popup = null
+    }
+  }
+
+  authorize(responseType, provider = null) {
+    return new Promise((resolve, reject) => {
+      const authorizeUrl = this.config.baseUrl + "/oauth2/authorize" +
+        "?client_id=" + this.config.clientId +
+        "&scope=" + escape("app=" + this.config.appId) +
+        "&state=" + provider +
+        "&response_type=" + responseType +
+        "&redirect_uri=" + escape(window.location.origin + "/oauth_helper")
+
+      const popup = this.showPopup(authorizeUrl)
+      const listener = function(event) {
+        if (event.source == popup) {
+          window.removeEventListener("message", listener)
+          const token = queryString.parse(event.data)
+          resolve(token)
+        }
+      }
+      window.addEventListener("message", listener, false)
+    })
+  }
+}
+
+export const newSession = (config) => new GuissoSession(config)

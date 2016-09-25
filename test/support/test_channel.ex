@@ -1,4 +1,5 @@
 defmodule Ask.TestChannel do
+  @behaviour Ask.Runtime.ChannelProvider
   defstruct [:pid]
 
   def new do
@@ -13,6 +14,10 @@ defmodule Ask.TestChannel do
   def settings(channel) do
     encoded_pid = channel.pid |> :erlang.term_to_binary |> Base.encode64
     %{"pid" => encoded_pid}
+  end
+
+  def oauth2_authorize(_code, _redirect_uri) do
+    %OAuth2.AccessToken{}
   end
 end
 

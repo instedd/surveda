@@ -22,6 +22,7 @@ config :ask, Nuntium,
   guisso: [
     base_url: System.get_env("NUNTIUM_GUISSO_BASE_URL") || "",
     client_id: System.get_env("NUNTIUM_CLIENT_ID") || "",
+    client_secret: System.get_env("NUNTIUM_CLIENT_SECRET") || "",
     app_id: System.get_env("NUNTIUM_APP_ID") || ""
   ]
 
