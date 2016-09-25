@@ -31,7 +31,7 @@ defmodule Ask.Runtime.Flow do
     {flow, %Reply{}}
   end
 
-  defp accept_reply(flow = %Flow{current_step: nil}, _) do
+  defp accept_reply(%Flow{current_step: nil}, _) do
     raise "Flow was not expecting any reply"
   end
 
