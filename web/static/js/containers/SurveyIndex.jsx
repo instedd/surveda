@@ -6,6 +6,7 @@ import { createSurvey } from '../api'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
+import surveyRoute from '../components/SurveyRoute'
 import * as channelsActions from '../actions/channels'
 
 class SurveyIndex extends Component {
@@ -70,15 +71,6 @@ const mapStateToProps = (state, ownProps) => ({
 
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
-const surveyRoute = (survey, router) => {
-  let to = `/projects/${survey.projectId}/surveys/${survey.id}`
-
-  if (survey.state == 'not_ready' || survey.state == 'ready') {
-    to = to + '/edit'
-  }
-  router.push(to)
-}
-
 const SurveyRow = ({ survey, mode, router }) => {
   let color = "black-text"
   let text = 'Editing'
@@ -98,7 +90,7 @@ const SurveyRow = ({ survey, mode, router }) => {
   }
 
   return(
-    <tr onClick={() => surveyRoute(survey, router)}>
+    <tr onClick={() => router.push(surveyRoute(survey))}>
       <td>{survey.name}</td>
       <td>{mode}</td>
       <td>

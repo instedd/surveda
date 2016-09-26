@@ -1,12 +1,8 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router'
-
+import surveyRoute from './SurveyRoute'
 export default withRouter(({ children, className, survey }) => {
-  let to = `/projects/${survey.projectId}/surveys/${survey.id}`
-
-  if (survey.state == 'not_ready' || survey.state == 'ready') {
-    to = to + '/edit'
-  }
+  const to = surveyRoute(survey)
 
   return (
     <Link className={className} to={to}>{children}</Link>
