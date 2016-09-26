@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default ({ title, children }) => (
+export default ({ title, children, highlight }) => (
   <div className="row">
     <div className="col s12">
       <div className="card">
@@ -8,7 +8,7 @@ export default ({ title, children }) => (
           { title }
         </div>
         <div className="card-table">
-          <table>
+          <table className={highlight ? "highlight" : ""}>
             { children }
           </table>
         </div>

@@ -3,8 +3,6 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import { createSurvey } from '../api'
-import SurveyLink from '../components/SurveyLink'
-import Card from '../components/Card'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
@@ -33,7 +31,6 @@ class SurveyIndex extends Component {
     }
 
     const title = parseInt(Object.keys(surveys).length, 10) + " Surveys"
-    const thisContext = this
 
     return (
       <div>
@@ -41,7 +38,7 @@ class SurveyIndex extends Component {
         { (Object.keys(surveys).length == 0) ?
           <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         :
-          <CardTable title={ title }>
+          <CardTable highlight={true} title={ title }>
             <thead>
               <tr>
                 <th>Name</th>
@@ -82,23 +79,19 @@ const surveyRoute = (survey, router) => {
   router.push(to)
 }
 
-const SurveyRow = ({ survey, mode, router}) => {
-  let icon = 'mode_edit'
+const SurveyRow = ({ survey, mode, router }) => {
   let color = "black-text"
   let text = 'Editing'
   switch (survey.state) {
     case 'running'  :
-      icon = 'play_arrow'
       color = 'green-text'
       text = 'Running'
       break;
     case 'ready':
-      icon = 'play_circle_outline'
       color = "black-text"
       text = 'Ready to launch'
       break;
     case 'completed':
-      icon = 'done'
       color = "black-text"
       text = 'Completed'
       break;
@@ -110,7 +103,6 @@ const SurveyRow = ({ survey, mode, router}) => {
       <td>{mode}</td>
       <td>
         <span className={ color }>
-          <i className="material-icons">{icon}</i>
           { text }
         </span>
       </td>
