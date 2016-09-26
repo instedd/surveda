@@ -31,7 +31,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "changes the respondent state from pending to running if neccessary" do
-    [survey, _, respondent, _] = create_survey_with_channel_and_respondent()
+    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
     Broker.handle_info(:poll, nil)
 
@@ -41,8 +41,8 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.state == "active"
   end
 
-  test "keeps batch_size respondents running" do
-    [survey, _, _, _] = create_survey_with_channel_and_respondent()
+  test "always keeps batch_size number of respondents running" do
+    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, 20)
 
     Broker.handle_info(:poll, nil)
@@ -74,8 +74,30 @@ defmodule Ask.BrokerTest do
     assert pending == 10
   end
 
+  test "changes running survey state to 'completed' when there are no more running respondents" do
+    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+
+    Broker.handle_info(:poll, nil)
+
+    [active, pending] = get_respondents_by_state(survey)
+
+    assert active == 1
+    assert pending == 0
+
+    active_respondent = Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.at(0)
+
+    Repo.update(active_respondent |> change |> Respondent.changeset(%{state: "failed"}))
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+
+    assert survey.state == "completed"
+  end
+
   test "respondent flow" do
-    [survey, test_channel, respondent, phone_number] = create_survey_with_channel_and_respondent()
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, broker} = Broker.start_link
     broker |> send(:poll)
@@ -100,7 +122,7 @@ defmodule Ask.BrokerTest do
     assert respondent.session == nil
   end
 
-  def create_survey_with_channel_and_respondent() do
+  def create_running_survey_with_channel_and_respondent() do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings)
     quiz = insert(:questionnaire, steps: @dummy_steps)
