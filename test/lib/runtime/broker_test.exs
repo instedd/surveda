@@ -84,10 +84,7 @@ defmodule Ask.BrokerTest do
     assert active == 1
     assert pending == 0
 
-    active_respondent = Repo.all(from r in Respondent, where: r.state == "active")
-    |> Enum.at(0)
-
-    Repo.update(active_respondent |> change |> Respondent.changeset(%{state: "failed"}))
+    Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
 
     Broker.handle_info(:poll, nil)
 
