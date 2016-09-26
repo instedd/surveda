@@ -17,4 +17,8 @@ defmodule Ask.OAuthToken do
     |> cast(params, [:user_id, :provider, :access_token])
     |> validate_required([:user_id, :provider, :access_token])
   end
+
+  def access_token(token) do
+    OAuth2.AccessToken.new(token.access_token)
+  end
 end

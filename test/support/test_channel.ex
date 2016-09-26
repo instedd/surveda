@@ -6,8 +6,8 @@ defmodule Ask.TestChannel do
     %Ask.TestChannel{pid: self()}
   end
 
-  def new(settings) do
-    pid = settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
+  def new(channel) do
+    pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
     %Ask.TestChannel{pid: pid}
   end
 

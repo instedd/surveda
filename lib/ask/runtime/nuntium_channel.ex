@@ -1,8 +1,12 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
+  alias Ask.Runtime.NuntiumChannel
+  defstruct [:oauth_token, :name, :settings]
 
-  def new(_settings) do
-    raise "not implemented"
+  def new(channel) do
+    oauth_token = Ask.Repo.get_by(Ask.OAuthToken, provider: "nuntium", user_id: channel.user_id) |> Ask.OAuthToken.access_token
+    name = channel.name
+    %NuntiumChannel{oauth_token: oauth_token, name: name, settings: channel.settings}
   end
 
   def oauth2_authorize(code, redirect_uri) do
@@ -21,5 +25,20 @@ defmodule Ask.Runtime.NuntiumChannel do
       token_type: "bearer")
 
     client.token
+  end
+
+  defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
+    def ask(channel, phone_number, prompts) do
+      nuntium_config = Application.get_env(:ask, Nuntium)
+      messages = prompts |> Enum.map(fn prompt ->
+        %{
+          to: "sms://#{phone_number}",
+          body: prompt,
+          suggested_channel: channel.name,
+        }
+      end)
+      Nuntium.Client.new(nuntium_config[:base_url], channel.oauth_token)
+      |> Nuntium.Client.send_ao(messages)
+    end
   end
 end

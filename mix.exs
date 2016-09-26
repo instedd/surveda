@@ -43,7 +43,8 @@ defmodule Ask.Mixfile do
       {:addict, "~> 0.3"},
       {:ex_machina, "~> 1.0", only: :test},
       {:csv, "~> 1.4.2"},
-      {:oauth2, "~> 0.7.0"}
+      {:oauth2, "~> 0.7.0"},
+      {:mock, "~> 0.1.1", only: :test},
    ]
   end
 
