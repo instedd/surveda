@@ -3,25 +3,28 @@ defmodule Ask.LayoutView do
 
   def config(conn) do
     version = Application.get_env(:ask, :version)
-    nuntium_config = Application.get_env(:ask, Nuntium)
     sentry_dsn = Application.get_env(:sentry, :public_dsn)
 
     client_config = %{
       version: version,
       user: current_user(conn).email,
       sentryDsn: sentry_dsn,
-
-      nuntium: %{
-        baseUrl: nuntium_config[:base_url],
-        guisso: %{
-          baseUrl: nuntium_config[:guisso][:base_url],
-          clientId: nuntium_config[:guisso][:client_id],
-          appId: nuntium_config[:guisso][:app_id]
-        }
-      }
+      nuntium: Application.get_env(:ask, Nuntium) |> guisso_config,
+      verboice: Application.get_env(:ask, Verboice) |> guisso_config
     }
 
     {:ok, config_json} = client_config |> Poison.encode
     config_json
+  end
+
+  defp guisso_config(app_env) do
+    %{
+      baseUrl: app_env[:base_url],
+      guisso: %{
+        baseUrl: app_env[:guisso][:base_url],
+        clientId: app_env[:guisso][:client_id],
+        appId: app_env[:guisso][:app_id]
+      }
+    }
   end
 end
