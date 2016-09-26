@@ -41,3 +41,9 @@ services:
       - 'deps:/app/deps'
       - 'node_modules:/app/node_modules'
 
+  ngrok:
+    image: wernight/ngrok
+    ports:
+      - 4040:4040
+    environment:
+      NGROK_PORT: 'app:4000'
