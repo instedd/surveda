@@ -75,7 +75,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "changes running survey state to 'completed' when there are no more running respondents" do
-    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    [survey, _, _respondent, _] = create_running_survey_with_channel_and_respondent()
 
     Broker.handle_info(:poll, nil)
 

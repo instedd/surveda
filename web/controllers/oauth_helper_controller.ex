@@ -12,7 +12,7 @@ defmodule Ask.OAuthHelperController do
 
     if token == nil do
       provider = Ask.Channel.provider(provider_name)
-      access_token = provider.oauth2_authorize(code, "http://app.ask.dev/oauth_helper")
+      access_token = provider.oauth2_authorize(code, "http://localhost:4000/oauth_helper")
       |> Map.from_struct
 
       user
