@@ -24,6 +24,9 @@ defmodule Ask.TestChannel do
     random_access_token
   end
 
+  def callback(_conn, _params) do
+  end
+
   defp random_access_token do
     %OAuth2.AccessToken{
       access_token: :crypto.strong_rand_bytes(27) |> Base.encode64,
