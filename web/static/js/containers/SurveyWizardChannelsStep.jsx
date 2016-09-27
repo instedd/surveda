@@ -44,6 +44,7 @@ class SurveyWizardChannelsStep extends Component {
         <div className="row">
           <div className="input-field col s12">
             <select defaultValue={currentChannelId} ref={ref => $(ref).material_select()}>
+              <option name="channel">Select a channel...</option>
               { Object.keys(channels).map((channelId) =>
                 <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channelsInput.push({id: channelId, node:node})}} >
                   {channels[channelId].name}
@@ -55,12 +56,13 @@ class SurveyWizardChannelsStep extends Component {
         </div>
         <div className="row">
           <div className="col s12">
-            <button className="btn waves-effect waves-light" type="button" onClick={() =>
-                this.handleSubmit(merge({}, survey, {
-                  channels: [
-                    parseInt(channelsInput.find(element => element.node.selected).id)
-                  ]}))
-              }>
+            <button className="btn waves-effect waves-light" type="button" onClick={() => {
+                let option = channelsInput.find(element => element.node.selected)
+                let channels = option ? [parseInt(option.id)] : []
+                let merged = merge({}, survey)
+                merged.channels = channels
+                this.handleSubmit(merged)
+              }}>
                 Next
             </button>
           </div>
