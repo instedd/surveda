@@ -30,6 +30,15 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
   end
 
+  test "set the respondent as complete when the questionnaire is empty" do
+    [_, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "completed"
+  end
+
   test "changes the respondent state from pending to running if neccessary" do
     [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
@@ -144,10 +153,10 @@ defmodule Ask.BrokerTest do
     assert respondent.session == nil
   end
 
-  def create_running_survey_with_channel_and_respondent() do
+  def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps) do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings)
-    quiz = insert(:questionnaire, steps: @dummy_steps)
+    quiz = insert(:questionnaire, steps: steps)
     survey = insert(:survey, state: "running", questionnaire: quiz) |> Repo.preload([:channels])
     channel_changeset = Ecto.Changeset.change(channel)
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update

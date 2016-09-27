@@ -69,11 +69,17 @@ defmodule Ask.Runtime.Broker do
     survey = Repo.preload(survey, [:questionnaire, :channels])
     channel = hd(survey.channels)
 
-    session = Session.start(survey.questionnaire, respondent, channel)
+    case Session.start(survey.questionnaire, respondent, channel) do
+      :end ->
+        respondent
+        |> Respondent.changeset(%{state: "completed", session: nil})
+        |> Repo.update
 
-    respondent
-    |> Respondent.changeset(%{state: "active", session: Session.dump(session)})
-    |> Repo.update
+      session ->
+        respondent
+        |> Respondent.changeset(%{state: "active", session: Session.dump(session)})
+        |> Repo.update
+    end
   end
 
   defp do_sync_step(respondent, reply) do
