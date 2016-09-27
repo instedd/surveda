@@ -38,6 +38,8 @@ defmodule Ask.Router do
     end
   end
 
+  get "/callbacks/:provider", Ask.CallbackController, :callback
+
   scope "/", Ask do
     pipe_through :browser
 

@@ -1,6 +1,8 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  alias Ask.Runtime.NuntiumChannel
+  alias Ask.Runtime.{Broker, NuntiumChannel}
+  alias Ask.{Repo, Respondent}
+  import Ecto.Query
   defstruct [:oauth_token, :name, :settings]
 
   def new(channel) do
@@ -29,6 +31,29 @@ defmodule Ask.Runtime.NuntiumChannel do
 
   def oauth2_refresh(access_token) do
     access_token
+  end
+
+  def callback(conn, %{"from" => from, "body" => body}) do
+    %URI{host: phone_number} = URI.parse(from)
+
+    respondent = Repo.one(from r in Respondent,
+      where: r.phone_number == ^phone_number and r.state == "active",
+      order_by: [desc: r.updated_at],
+      limit: 1)
+
+    reply = case respondent do
+      nil ->
+        []
+      _ ->
+        case Broker.sync_step(respondent, body) do
+          {:prompt, prompt} ->
+            [%{"to": from, "body": prompt}]
+          :end ->
+            []
+        end
+    end
+
+    Phoenix.Controller.json(conn, reply)
   end
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do

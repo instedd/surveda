@@ -9,6 +9,8 @@ defmodule Ask.Runtime.Broker do
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
 
+  def server_ref, do: @server_ref
+
   def start_link do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
