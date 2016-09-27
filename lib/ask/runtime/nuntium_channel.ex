@@ -27,6 +27,10 @@ defmodule Ask.Runtime.NuntiumChannel do
     client.token
   end
 
+  def oauth2_refresh(access_token) do
+    access_token
+  end
+
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
     def ask(channel, phone_number, prompts) do
       nuntium_config = Application.get_env(:ask, Nuntium)

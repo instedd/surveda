@@ -16,6 +16,12 @@ defmodule Ask do
       # worker(Ask.Worker, [arg1, arg2, arg3]),
     ]
 
+    children = if Mix.env != :test do
+      [worker(Ask.OAuthTokenServer, []) | children]
+    else
+      children
+    end
+
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Ask.Supervisor]

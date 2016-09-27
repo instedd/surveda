@@ -13,11 +13,10 @@ defmodule Ask.OAuthHelperController do
     if token == nil do
       provider = Ask.Channel.provider(provider_name)
       access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}")
-      |> Map.from_struct
 
       user
-      |> build_assoc(:oauth_tokens)
-      |> Ask.OAuthToken.changeset(%{provider: provider_name, access_token: access_token})
+      |> build_assoc(:oauth_tokens, provider: provider_name)
+      |> Ask.OAuthToken.from_access_token(access_token)
       |> Repo.insert!
     end
 

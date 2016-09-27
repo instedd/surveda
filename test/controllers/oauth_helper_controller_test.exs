@@ -12,6 +12,9 @@ defmodule Ask.OAuthHelperControllerTest do
     get conn, o_auth_helper_path(conn, :index, %{code: "1234", state: "test"})
     token = user |> assoc(:oauth_tokens) |> Repo.get_by(provider: "test")
     assert token != nil
+    assert token.expires_at != nil
+    assert Timex.after?(token.expires_at, Timex.now)
+    assert Timex.before?(token.expires_at, Timex.now |> Timex.add(Timex.Duration.from_seconds(3601)))
     assert %OAuth2.AccessToken{} = OAuth2.AccessToken.new(token.access_token)
   end
 end
