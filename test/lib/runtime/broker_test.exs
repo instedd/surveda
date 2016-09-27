@@ -110,11 +110,11 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = broker |> Broker.sync_step(respondent, "Yes")
+    reply = Broker.sync_step(respondent, "Yes")
     assert reply == {:prompt, "Do you exercise?"}
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = broker |> Broker.sync_step(respondent, "Yes")
+    reply = Broker.sync_step(respondent, "Yes")
     assert reply == :end
 
     respondent = Repo.get(Respondent, respondent.id)

@@ -6,17 +6,19 @@ defmodule Ask.Runtime.Broker do
   alias Ask.Runtime.Session
 
   @batch_size 10
+  @poll_interval :timer.minutes(1)
+  @server_ref {:global, __MODULE__}
 
   def start_link do
-    GenServer.start_link(__MODULE__, [])
+    GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  def sync_step(pid, respondent, reply) do
-    GenServer.call(pid, {:sync_step, respondent, reply})
+  def sync_step(respondent, reply) do
+    GenServer.call(@server_ref, {:sync_step, respondent, reply})
   end
 
   def init(_args) do
-    :timer.send_interval(1000, :poll)
+    :timer.send_interval(@poll_interval, :poll)
     {:ok, nil}
   end
 
@@ -27,7 +29,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   def handle_call({:sync_step, respondent, reply}, _from, state) do
-    {:reply, sync_step(respondent, reply), state}
+    {:reply, do_sync_step(respondent, reply), state}
   end
 
   defp poll_survey(survey) do
@@ -70,7 +72,7 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update
   end
 
-  defp sync_step(respondent, reply) do
+  defp do_sync_step(respondent, reply) do
     session = respondent.session |> Session.load
 
     case Session.sync_step(session, reply) do

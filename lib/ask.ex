@@ -17,7 +17,10 @@ defmodule Ask do
     ]
 
     children = if Mix.env != :test do
-      [worker(Ask.OAuthTokenServer, []) | children]
+      [
+        worker(Ask.OAuthTokenServer, []),
+        worker(Ask.Runtime.Broker, [])
+      | children]
     else
       children
     end
