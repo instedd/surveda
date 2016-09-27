@@ -41,7 +41,7 @@ class SurveyWizardQuestionnaireStep extends Component {
         </div>
         <div className="row">
           <div className="input-field col s12">
-            <input id="survey_name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node } }/>
+            <input id="survey_name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node; if (input != null) input.focus() } }/>
             <label className="active" htmlFor="survey_name">Survey Name</label>
           </div>
         </div>
