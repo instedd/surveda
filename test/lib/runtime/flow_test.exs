@@ -37,11 +37,19 @@ defmodule Ask.FlowTest do
     assert prompts == ["Do you exercise?"]
   end
 
+  test "next step with store, case insensitive, strip space" do
+    {:ok, flow, _} = Flow.start(@quiz) |> Flow.step()
+    step = flow |> Flow.step(" y ")
+    assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
+    assert stores == %{"Smokes" => "Yes"}
+    assert prompts == ["Do you exercise?"]
+  end
+
   test "last step" do
     flow = Flow.start(@quiz)
     {:ok, flow, _} = flow |> Flow.step()
-    {:ok, flow, _} = flow |> Flow.step()
-    step = flow |> Flow.step()
+    {:ok, flow, _} = flow |> Flow.step("Y")
+    step = flow |> Flow.step("N")
     assert {:end, _} = step
   end
 end

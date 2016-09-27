@@ -36,11 +36,13 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp accept_reply(flow, reply) do
+    reply = reply |> clean_string
+
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
     flow = %{flow | current_step: flow.current_step + 1}
 
     choice = step["choices"] |> Enum.find(fn choice ->
-      choice["responses"] |> Enum.member?(reply)
+      choice["responses"] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
     end)
 
     case choice do
@@ -59,5 +61,9 @@ defmodule Ask.Runtime.Flow do
       step ->
         {:ok, flow, %{state | prompts: [step["title"]]}}
     end
+  end
+
+  defp clean_string(string) do
+    string |> String.trim |> String.downcase
   end
 end
