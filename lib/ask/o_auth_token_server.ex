@@ -32,7 +32,7 @@ defmodule Ask.OAuthTokenServer do
 
   defp refresh(provider_name, token) do
     provider = Ask.Channel.provider(provider_name)
-    access_token = provider.oauth2_refresh(token.access_token)
+    access_token = provider.oauth2_refresh(OAuthToken.access_token(token))
 
     token
     |> OAuthToken.from_access_token(access_token)

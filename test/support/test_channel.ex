@@ -20,7 +20,7 @@ defmodule Ask.TestChannel do
     random_access_token
   end
 
-  def oauth2_refresh(_access_token) do
+  def oauth2_refresh(%OAuth2.AccessToken{}) do
     random_access_token
   end
 

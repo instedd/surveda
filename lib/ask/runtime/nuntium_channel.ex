@@ -6,7 +6,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   defstruct [:oauth_token, :name, :settings]
 
   def new(channel) do
-    oauth_token = Ask.Repo.get_by(Ask.OAuthToken, provider: "nuntium", user_id: channel.user_id) |> Ask.OAuthToken.access_token
+    oauth_token = Ask.OAuthTokenServer.get_token "nuntium", channel.user_id
     name = channel.name
     %NuntiumChannel{oauth_token: oauth_token, name: name, settings: channel.settings}
   end
@@ -30,7 +30,19 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def oauth2_refresh(access_token) do
-    access_token
+    nuntium_config = Application.get_env(:ask, Nuntium)
+    guisso_config = nuntium_config[:guisso]
+
+    client = OAuth2.Client.new([
+      token: access_token,
+      client_id: guisso_config[:client_id],
+      token_url: "#{guisso_config[:base_url]}/oauth2/token",
+    ])
+
+    client = OAuth2.Client.refresh_token!(client,
+      client_secret: guisso_config[:client_secret])
+
+    client.token
   end
 
   def callback(conn, %{"from" => from, "body" => body}) do
