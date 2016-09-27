@@ -40,11 +40,13 @@ defmodule Ask.Runtime.Broker do
 
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
+    completed = by_state["completed"] || 0
 
     cond do
-      active == 0 && pending == 0 ->
+      active == 0 && (pending == 0 || survey.cutoff == completed)->
         Repo.update Survey.changeset(survey, %{state: "completed"})
-
+      survey.cutoff && survey.cutoff > 0 && survey.cutoff - completed < @batch_size && active < @batch_size && pending > 0 ->
+        start_some(survey, survey.cutoff - completed - active)
       active < @batch_size && pending > 0 ->
         start_some(survey, @batch_size - active)
 

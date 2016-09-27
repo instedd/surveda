@@ -41,6 +41,52 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.state == "active"
   end
 
+  test "marks the survey as completed when the cutoff is reached" do
+    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, 20)
+
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 12}))
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+
+    assert survey.state == "running"
+
+    [active, pending] = get_respondents_by_state(survey)
+
+    assert active == 10
+    assert pending == 11
+
+    Repo.all(from r in Respondent, where: r.state == "active", limit: 5)
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    [active, pending] = get_respondents_by_state(survey)
+
+    assert active == 7
+    assert pending == 9
+
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    [active, pending] = get_respondents_by_state(survey)
+
+    assert active == 0
+    assert pending == 9
+
+    survey = Repo.get(Survey, survey.id)
+
+    assert survey.state == "completed"
+  end
+
   test "always keeps batch_size number of respondents running" do
     [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, 20)
