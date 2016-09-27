@@ -53,10 +53,7 @@ defmodule Ask.BrokerTest do
 
     assert survey.state == "running"
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 10
-    assert pending == 11
+    assert_respondents_by_state(survey, 10, 11)
 
     Repo.all(from r in Respondent, where: r.state == "active", limit: 5)
     |> Enum.map(fn respondent ->
@@ -65,10 +62,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 7
-    assert pending == 9
+    assert_respondents_by_state(survey, 7, 9)
 
     Repo.all(from r in Respondent, where: r.state == "active")
     |> Enum.map(fn respondent ->
@@ -77,10 +71,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 0
-    assert pending == 9
+    assert_respondents_by_state(survey, 0, 9)
 
     survey = Repo.get(Survey, survey.id)
 
@@ -97,27 +88,18 @@ defmodule Ask.BrokerTest do
 
     assert survey.state == "running"
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 10
-    assert pending == 11
+    assert_respondents_by_state(survey, 10, 11)
 
     active_respondent = Repo.all(from r in Respondent, where: r.state == "active")
     |> Enum.at(0)
 
     Repo.update(active_respondent |> change |> Respondent.changeset(%{state: "failed"}))
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 9
-    assert pending == 11
+    assert_respondents_by_state(survey, 9, 11)
 
     Broker.handle_info(:poll, nil)
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 10
-    assert pending == 10
+    assert_respondents_by_state(survey, 10, 10)
   end
 
   test "changes running survey state to 'completed' when there are no more running respondents" do
@@ -125,10 +107,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    [active, pending] = get_respondents_by_state(survey)
-
-    assert active == 1
-    assert pending == 0
+    assert_respondents_by_state(survey, 1, 0)
 
     Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
 
@@ -184,6 +163,13 @@ defmodule Ask.BrokerTest do
 
   def create_several_respondents(survey, n) do
     [create_several_respondents(survey, n - 1) | insert(:respondent, survey: survey)]
+  end
+
+  def assert_respondents_by_state(survey, active, pending) do
+    [a, p] = get_respondents_by_state(survey)
+
+    assert a == active
+    assert p == pending
   end
 
   def get_respondents_by_state(survey) do
