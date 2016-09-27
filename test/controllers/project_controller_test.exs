@@ -49,7 +49,7 @@ defmodule Ask.ProjectControllerTest do
       end
     end
 
-    test "rejects show if the project doesn't belong to the current user", %{conn: conn} do
+    test "forbid access to projects from other users", %{conn: conn} do
       project = insert(:project)
       assert_error_sent :forbidden, fn ->
         get conn, project_path(conn, :show, project)

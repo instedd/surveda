@@ -56,13 +56,12 @@ defmodule Ask.ProjectController do
   end
 
   def delete(conn, %{"id" => id}) do
-    project = Project
+    Project
     |> Repo.get!(id)
     |> authorize(conn)
-
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
-    Repo.delete!(project)
+    |> Repo.delete!()
 
     send_resp(conn, :no_content, "")
   end
