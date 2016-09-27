@@ -29,7 +29,7 @@ export const receiveChannels = (response) => ({
 export const createNuntiumChannel = () => dispatch => {
   const guissoSession = guissoApi.newSession(config.nuntium.guisso)
   return Promise.all([
-    dispatch(guisso.obtainToken(guissoSession))
+      dispatch(guisso.obtainToken(guissoSession))
       .then((token) => {
         return guissoSession.authorize('code', 'nuntium')
           .then(() => {
@@ -37,8 +37,8 @@ export const createNuntiumChannel = () => dispatch => {
             return token
           })
       }),
-    pigeon.loadPigeonScript(config.nuntium.baseUrl)
-  ])
+      pigeon.loadPigeonScript(config.nuntium.baseUrl)
+    ])
     .then(([token, _]) => pigeon.addChannel(token.access_token))
     .then(nuntiumChannel => {
       if (nuntiumChannel === null) {
@@ -53,4 +53,12 @@ export const createNuntiumChannel = () => dispatch => {
         }
       }))
     }).catch((_) => _)
+}
+
+export const createVerboiceChannel = () => dispatch => {
+  const guissoSession = guissoApi.newSession(config.verboice.guisso)
+
+  return Promise.all([
+    dispatch(guisso.obtainToken(guissoSession))
+  ])
 }
