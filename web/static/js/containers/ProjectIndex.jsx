@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/projects'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
@@ -13,7 +13,7 @@ class ProjectIndex extends Component {
   }
 
   render() {
-    const { projects } = this.props
+    const { projects, router } = this.props
     const title = `${Object.keys(projects).length} ${(Object.keys(projects).length == 1) ? ' project' : ' projects'}`
 
     return (
@@ -22,7 +22,7 @@ class ProjectIndex extends Component {
         { (Object.keys(projects).length == 0) ?
           <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath='/projects/new' />
         :
-          <CardTable title={ title }>
+          <CardTable title={ title } highlight={true}>
             <thead>
               <tr>
                 <th>Name</th>
@@ -32,11 +32,11 @@ class ProjectIndex extends Component {
             <tbody>
               { Object.keys(projects).map((projectId) =>
                 <tr key={projectId}>
-                  <td>
-                    <Link to={`/projects/${projectId}`}>{ projects[projectId].name }</Link>
+                  <td onClick={() => router.push(`/projects/${projectId}`)}>
+                    {projects[projectId].name}
                   </td>
-                  <td>
-                    <Link to={`/projects/${projectId}/edit`}>Edit</Link>
+                  <td onClick={() => router.push(`/projects/${projectId}/edit`)}>
+                    Edit
                   </td>
                 </tr>
               )}
@@ -52,4 +52,4 @@ const mapStateToProps = (state) => ({
   projects: state.projects
 })
 
-export default connect(mapStateToProps)(ProjectIndex)
+export default withRouter(connect(mapStateToProps)(ProjectIndex))

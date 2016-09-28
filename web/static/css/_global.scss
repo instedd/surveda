@@ -390,6 +390,7 @@ table {
     transition: background-color .25s ease;
     &:hover {
       background-color: $table-striped-color;
+      cursor: pointer;
     }
   }
 
