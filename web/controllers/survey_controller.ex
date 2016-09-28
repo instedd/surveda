@@ -1,16 +1,26 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.Survey
+  alias Ask.Project
   alias Ask.Channel
+  alias Ask.Survey
 
   def index(conn, %{"project_id" => project_id}) do
-    surveys = Repo.all(from s in Survey, where: s.project_id == ^project_id, preload: [:channels])
+    surveys = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:surveys)
+    |> Repo.all(preload: [:channels])
+
     render(conn, "index.json", surveys: surveys)
   end
 
   def create(conn, %{"project_id" => project_id}) do
-    changeset = Survey.changeset(%Survey{}, %{project_id: project_id, name: "Untitled"})
+    changeset = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> build_assoc(:surveys)
+    |> Survey.changeset(%{project_id: project_id, name: "Untitled"})
 
     case Repo.insert(changeset) do
       {:ok, survey} ->
@@ -25,17 +35,24 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    survey = Repo.get!(Survey, id)
+  def show(conn, %{"project_id" => project_id, "id" => id}) do
+    survey = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:surveys)
+    |> Repo.get!(id)
     |> Repo.preload([:channels])
     |> with_respondents_count
+
     render(conn, "show.json", survey: survey)
   end
 
-  def update(conn, %{"id" => id, "survey" => survey_params}) do
-    survey = Repo.get!(Survey, id)
-
-    changeset = survey
+  def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
+    changeset = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:surveys)
+    |> Repo.get!(id)
     |> Repo.preload([:channels])
     |> with_respondents_count
     |> change
@@ -71,12 +88,15 @@ defmodule Ask.SurveyController do
     %{survey | respondents_count: respondents_count}
   end
 
-  def delete(conn, %{"id" => id}) do
-    survey = Repo.get!(Survey, id)
-
+  def delete(conn, %{"project_id" => project_id, "id" => id}) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:surveys)
+    |> Repo.get!(id)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
-    Repo.delete!(survey)
+    |> Repo.delete!
 
     send_resp(conn, :no_content, "")
   end

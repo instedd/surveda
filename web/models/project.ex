@@ -6,6 +6,7 @@ defmodule Ask.Project do
     belongs_to :user, Ask.User
 
     has_many :questionnaires, Ask.Questionnaire
+    has_many :surveys, Ask.Survey
 
     timestamps()
   end
