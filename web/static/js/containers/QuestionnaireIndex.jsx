@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
+import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/questionnaires'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
@@ -13,7 +13,7 @@ class QuestionnaireIndex extends Component {
   }
 
   render() {
-    const { questionnaires, projectId } = this.props
+    const { questionnaires, projectId, router } = this.props
     const title = `${Object.keys(questionnaires).length} ${(Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires'}`
     return (
       <div>
@@ -21,25 +21,21 @@ class QuestionnaireIndex extends Component {
         { (Object.keys(questionnaires).length == 0) ?
           <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={`/projects/${projectId}/questionnaires/new`} />
         :
-          <CardTable title={ title }>
+          <CardTable title={ title } highlight={true}>
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Modes</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               { Object.keys(questionnaires).map((questionnaireId) =>
-                <tr key={questionnaireId}>
+                <tr key={questionnaireId} onClick={() => router.push(`/projects/${projectId}/questionnaires/${questionnaireId}/edit`)}>
                   <td>
                     { questionnaires[questionnaireId].name }
                   </td>
                   <td>
                     { (questionnaires[questionnaireId].modes || []).join(", ") }
-                  </td>
-                  <td>
-                    <Link to={`/projects/${projectId}/questionnaires/${questionnaireId}/edit`}>Edit</Link>
                   </td>
                 </tr>
               )}
@@ -56,4 +52,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaires: state.questionnaires
 })
 
-export default connect(mapStateToProps)(QuestionnaireIndex)
+export default withRouter(connect(mapStateToProps)(QuestionnaireIndex))

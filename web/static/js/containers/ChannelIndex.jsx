@@ -27,7 +27,7 @@ class ChannelIndex extends Component {
         { (Object.keys(channels).length == 0) ?
           <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         :
-          <CardTable title={ title }>
+          <CardTable title={ title } highlight={true}>
             <thead>
               <tr>
                 <th>Name</th>
