@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
+import QuestionnaireStep from './QuestionnaireStep'
 
 const QuestionnaireForm = ({ onSubmit, project, questionnaire }) => {
   let nameInput
@@ -13,23 +14,36 @@ const QuestionnaireForm = ({ onSubmit, project, questionnaire }) => {
 
   return (
     <div className="row">
-      <div className="col s12 m8">
-        <div className="row">
-          <div className="input-field col s12">
-            <input type="text" id="questionnaire_name" placeholder="Questionnaire name" defaultValue={questionnaire.name} ref={ node => { nameInput = node }}/>
-            <label className="active" htmlFor="questionnaire_name">Questionnaire Name</label>
+      <div className="row">
+        <div className="col s12 m4">
+          <div className="row">
+            <div className="input-field col s12">
+              <input type="text" id="questionnaire_name" placeholder="Questionnaire name" defaultValue={questionnaire.name} ref={ node => { nameInput = node }}/>
+              <label className="active" htmlFor="questionnaire_name">Questionnaire Name</label>
+            </div>
+          </div>
+          <div className="row">
+            <div className="input-field col s12">
+              <select defaultValue={defaultMode} ref={ node => { modesInput = node; $(node).material_select() }}>
+                <option value="SMS">SMS</option>
+                <option value="IVR">IVR</option>
+                <option value="SMS,IVR">SMS and IVR</option>
+              </select>
+              <label>Mode</label>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="col s12 m3 offset-m1">
-        <div className="row">
-          <div className="input-field col s12">
-            <select defaultValue={defaultMode} ref={ node => { modesInput = node; $(node).material_select() }}>
-              <option value="SMS">SMS</option>
-              <option value="IVR">IVR</option>
-              <option value="SMS,IVR">SMS and IVR</option>
-            </select>
-            <label>Mode</label>
+        <div className="col s12 m8">
+          <div className="row">
+            <div className="col s12">
+              <ul className="collection">
+                { questionnaire.steps.map((step) => (
+                  <li className="collection-item" key={step.id}>
+                    <QuestionnaireStep step={step} />
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
