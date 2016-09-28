@@ -1,5 +1,5 @@
 #!/bin/bash
-PROJECT_VERSION=`mix run --no-compile --no-start -e 'IO.write Mix.Project.config[:version]'`
+PROJECT_VERSION=`docker-compose run --rm app mix run --no-compile --no-start -e 'IO.write Mix.Project.config[:version]'`
 TAG=`git describe --exact-match 2>/dev/null`
 
 if [ "$TAG" = "" ]; then
