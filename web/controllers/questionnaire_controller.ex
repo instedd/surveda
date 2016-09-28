@@ -69,15 +69,14 @@ defmodule Ask.QuestionnaireController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    questionnaire = Project
+    Project
     |> Repo.get!(project_id)
     |> authorize(conn)
     |> assoc(:questionnaires)
     |> Repo.get!(id)
-
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
-    Repo.delete!(questionnaire)
+    |> Repo.delete!
 
     send_resp(conn, :no_content, "")
   end
