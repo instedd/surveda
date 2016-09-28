@@ -59,7 +59,8 @@ defmodule Ask.QuestionnaireControllerTest do
       assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
         "name" => questionnaire.name,
         "project_id" => questionnaire.project_id,
-        "modes" => ["SMS", "IVR"]
+        "modes" => ["SMS", "IVR"],
+        "steps" => [],
       }
     end
 
