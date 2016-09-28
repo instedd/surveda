@@ -51,7 +51,7 @@ mail_service: nil
 config :ask, version: (
   case File.read("VERSION") do
     {:ok, version} -> String.trim(version)
-    {:error, :enoent} -> "development"
+    {:error, :enoent} -> "#{Mix.Project.config[:version]}-#{Mix.env}"
   end
 )
 
