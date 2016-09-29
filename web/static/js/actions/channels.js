@@ -27,16 +27,8 @@ export const receiveChannels = (response) => ({
 })
 
 export const createNuntiumChannel = () => dispatch => {
-  const guissoSession = guissoApi.newSession(config.nuntium.guisso)
   return Promise.all([
-    dispatch(guisso.obtainToken(guissoSession))
-      .then((token) => {
-        return guissoSession.authorize('code', 'nuntium')
-          .then(() => {
-            guissoSession.close()
-            return token
-          })
-      }),
+    authorizeWithGuisso(dispatch, 'nuntium', config.nuntium),
     pigeon.loadPigeonScript(config.nuntium.baseUrl)
   ])
     .then(([token, _]) => pigeon.addChannel(token.access_token))
@@ -53,4 +45,16 @@ export const createNuntiumChannel = () => dispatch => {
         }
       }))
     }).catch((_) => _)
+}
+
+const authorizeWithGuisso = (dispatch, app, appConfig) => {
+  const guissoSession = guissoApi.newSession(appConfig.guisso)
+  return dispatch(guisso.obtainToken(guissoSession))
+    .then((token) => {
+      return guissoSession.authorize('code', app)
+        .then(() => {
+          guissoSession.close()
+          return token
+        })
+    })
 }
