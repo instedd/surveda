@@ -3,7 +3,9 @@ import { connect } from 'react-redux'
 import * as actions from '../actions/questionnaireEditor'
 
 class QuestionnaireClosedStep extends Component {
-  selectStep(step) {
+  selectStep(event, step) {
+    event.preventDefault()
+
     const { dispatch } = this.props
     dispatch(actions.selectStep(step.id))
   }
@@ -12,10 +14,7 @@ class QuestionnaireClosedStep extends Component {
     const { step } = this.props
 
     return (
-      <a href="#!" onClick={(event) => {
-          this.selectStep(step)
-          event.preventDefault()
-        }} className="collection-item">
+      <a href="#!" onClick={(event) => this.selectStep(event, step)} className="collection-item">
         {step.title}
       </a>
     )
