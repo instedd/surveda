@@ -22,8 +22,8 @@ class SurveyRespondents extends Component {
     }
 
     function generateResponsesDictionaryFor(rs){
-      Object.keys(rs).forEach((respondent_id, _) =>
-        rs[respondent_id].responses = responsesDictionaryFrom(rs[respondent_id].responses)
+      Object.keys(rs).forEach((respondentId, _) =>
+        rs[respondentId].responses = responsesDictionaryFrom(rs[respondentId].responses)
       )
       return rs
     }
@@ -46,12 +46,12 @@ class SurveyRespondents extends Component {
       return Object.keys(rs)
     }
 
-    function hasResponded(rs, respondent_id, fieldName){
-      return Object.keys(rs[respondent_id].responses).includes(fieldName)
+    function hasResponded(rs, respondentId, fieldName){
+      return Object.keys(rs[respondentId].responses).includes(fieldName)
     }
 
-    function responseOf(rs, respondent_id, fieldName){
-      return hasResponded(rs, respondent_id, fieldName) ? rs[respondent_id].responses[fieldName] : "-"
+    function responseOf(rs, respondentId, fieldName){
+      return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : "-"
     }
 
     return (
@@ -66,14 +66,14 @@ class SurveyRespondents extends Component {
           </tr>
         </thead>
         <tbody>
-          {respondentKeys(respondents).map(respondent_id =>
-            <tr key={respondent_id}>
-              <td> {respondents[respondent_id].phoneNumber}</td>
+          {respondentKeys(respondents).map(respondentId =>
+            <tr key={respondentId}>
+              <td> {respondents[respondentId].phoneNumber}</td>
               {allFieldNames(respondents).map(function(field){
-                return <td key={parseInt(respondent_id, 10)+field}>{responseOf(respondents, respondent_id, field)}</td>
+                return <td key={parseInt(respondentId, 10)+field}>{responseOf(respondents, respondentId, field)}</td>
               })}
               <td>
-                {respondents[respondent_id].date ? new Date(respondents[respondent_id].date).toUTCString() : "-"}
+                {respondents[respondentId].date ? new Date(respondents[respondentId].date).toUTCString() : "-"}
               </td>
             </tr>
           )}

@@ -2,8 +2,7 @@ import * as actions from '../actions/surveys'
 
 export default (state = {}, action) => {
   switch (action.type) {
-    case actions.CREATE_SURVEY:
-    case actions.UPDATE_SURVEY:
+    case actions.SET_SURVEY:
       return {
         ...state,
         [action.id]: {

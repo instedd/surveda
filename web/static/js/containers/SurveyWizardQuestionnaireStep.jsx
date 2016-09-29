@@ -1,6 +1,6 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
 import merge from 'lodash/merge'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
@@ -8,23 +8,23 @@ import * as questionnairesActions from '../actions/questionnaires'
 
 class SurveyWizardQuestionnaireStep extends Component {
   componentDidMount() {
-    const { dispatch, projectId, questionnaires } = this.props
+    const { dispatch, projectId } = this.props
     if (projectId) {
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
     }
   }
 
   handleSubmit(survey) {
-    const { dispatch, projectId, router } = this.props
+    const { dispatch, router } = this.props
     updateSurvey(survey.projectId, survey)
-      .then(survey => dispatch(actions.updateSurvey(survey)))
+      .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
       .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/respondents`))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
   render() {
     let input
-    let questionnaires_input = []
+    const questionnairesInput = []
     const { survey, questionnaires } = this.props
     if (!survey || !questionnaires) {
       return <div>Loading...</div>
@@ -41,8 +41,8 @@ class SurveyWizardQuestionnaireStep extends Component {
         </div>
         <div className="row">
           <div className="input-field col s12">
-            <input id="survey_name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node; if (input != null) input.focus() } }/>
-            <label className="active" htmlFor="survey_name">Survey Name</label>
+            <input id="survey-name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node; if (input != null) input.focus() } }/>
+            <label className="active" htmlFor="survey-name">Survey Name</label>
           </div>
         </div>
         <div className="row">
@@ -51,7 +51,7 @@ class SurveyWizardQuestionnaireStep extends Component {
             { Object.keys(questionnaires).map((questionnaireId) =>
               <div key={questionnaireId}>
                 <p>
-                  <input id={questionnaireId} type="radio" name="questionnaire" className="with-gap" value={ questionnaireId } ref={ node => {questionnaires_input.push({id: questionnaireId, node:node}) } } defaultChecked={survey.questionnaireId == questionnaireId } />
+                  <input id={questionnaireId} type="radio" name="questionnaire" className="with-gap" value={ questionnaireId } ref={ node => {questionnairesInput.push({ id: questionnaireId, node:node })}} defaultChecked={survey.questionnaireId == questionnaireId } />
                   <label htmlFor={questionnaireId}>{ questionnaires[questionnaireId].name }</label>
                 </p>
               </div>
@@ -61,7 +61,7 @@ class SurveyWizardQuestionnaireStep extends Component {
         <div className="row">
           <div className="col s12">
             <button type="button" className="btn waves-effect waves-light" onClick={() =>
-              this.handleSubmit(merge({}, survey, {name: input.value, questionnaire_id: (questionnaires_input.find(element => element.node.checked) || {}).id }))
+              this.handleSubmit(merge({}, survey, { name: input.value, questionnaireId: (questionnairesInput.find(element => element.node.checked) || {}).id }))
             }>
               Next
             </button>

@@ -28,7 +28,10 @@ defmodule Ask.SurveyView do
       questionnaire_id: survey.questionnaire_id,
       cutoff: survey.cutoff,
       channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel ),
-      respondents_count: survey.respondents_count
+      respondents_count: survey.respondents_count,
+      schedule_day_of_week: survey.schedule_day_of_week,
+      schedule_start_time: survey.schedule_start_time,
+      schedule_end_time: survey.schedule_end_time
     }
   end
 

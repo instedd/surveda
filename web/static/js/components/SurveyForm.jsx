@@ -1,21 +1,19 @@
 import React, { PropTypes } from 'react'
-import merge from 'lodash/merge'
-import { Link } from 'react-router'
 import { CollectionItem } from '.'
 
-const SurveyForm = ({ onSubmit, survey, children, project }) => {
-  let linkPath = `/projects/${project.id}/surveys/${survey.id}/edit/`
+const SurveyForm = ({ survey, children, project }) => {
+  const linkPath = `/projects/${project.id}/surveys/${survey.id}/edit/`
 
-  let questionnaireStepCompleted = survey.questionnaireId != null
-  let respondentsStepCompleted = survey.respondentsCount > 0
-  let channelStepCompleted = survey.channels && survey.channels.length > 0
-  let cutoffStepCompleted = survey.cutoff != null
+  const questionnaireStepCompleted = survey.questionnaireId != null
+  const respondentsStepCompleted = survey.respondentsCount > 0
+  const channelStepCompleted = survey.channels && survey.channels.length > 0
+  const cutoffStepCompleted = survey.cutoff != null
+  const scheduleStepCompleted = survey.scheduleDayOfWeek != null &&(survey.scheduleDayOfWeek.sun || survey.scheduleDayOfWeek.mon || survey.scheduleDayOfWeek.tue || survey.scheduleDayOfWeek.wed || survey.scheduleDayOfWeek.thu || survey.scheduleDayOfWeek.fri || survey.scheduleDayOfWeek.sat)
 
-  let steps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted]
+  const steps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted]
 
-  let numberOfCompletedSteps = steps.filter(function(item){ return item == true; }).length
-  let totalSteps = 3
-  let percentage = `${(100/totalSteps*numberOfCompletedSteps).toFixed(0)}%`
+  const numberOfCompletedSteps = steps.filter(function(item){ return item == true; }).length
+  const percentage = `${(100/steps.length*numberOfCompletedSteps).toFixed(0)}%`
 
   return (
     <div className="row">
@@ -25,7 +23,7 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
             <h5>Progress <span className="right">{percentage}</span></h5>
             <p>Complete the following tasks to get your Survey ready.</p>
             <div className="progress">
-              <div className="determinate" style={{width: percentage}}></div>
+              <div className="determinate" style={{ width: percentage }}></div>
             </div>
           </li>
           <CollectionItem path={`${linkPath}questionnaire`} icon="assignment" text="Select a questionnaire" completed={questionnaireStepCompleted} />
@@ -33,17 +31,9 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
           <CollectionItem path={`${linkPath}channels`}  icon="settings_input_antenna" text="Select mode and channels" completed={channelStepCompleted} />
           <li className="divider"></li>
           <CollectionItem className="optional" path={`${linkPath}cutoff`} icon="remove_circle" text="Setup cutoff rules" completed={cutoffStepCompleted} />
+          <CollectionItem className="optional" path={`${linkPath}schedule`} icon="today" text="Setup a schedule" completed={scheduleStepCompleted} />
 
-          {/* <li className={`collection-item ${}`}>
-            <a href="#!">
-              <i className="material-icons">today</i>
-              <span>Setup a schedule</span>
-              <span className="arrowright">
-                <i className="material-icons">keyboard_arrow_right</i>
-              </span>
-            </a>
-          </li>
-          <li className="divider"></li>
+          {/*
           <li className="collection-item optional">
             <a href="#!">
               <i className="material-icons">attach_money</i>

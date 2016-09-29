@@ -1,5 +1,5 @@
 import { normalize, Schema, arrayOf } from 'normalizr'
-import { camelizeKeys } from 'humps'
+import { camelizeKeys, decamelizeKeys } from 'humps'
 import 'isomorphic-fetch'
 
 const projectSchema = new Schema('projects')
@@ -50,7 +50,7 @@ const apiPutOrPostJSON = (url, schema, verb, body) => {
     }
   }
   if (body) {
-    options.body = JSON.stringify(body)
+    options.body = JSON.stringify(decamelizeKeys(body, { separator: '_' }))
   }
   return apiFetchJSON(url, schema, options)
 }

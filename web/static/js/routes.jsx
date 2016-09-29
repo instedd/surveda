@@ -9,8 +9,9 @@ import SurveyIndex from './containers/SurveyIndex'
 import SurveyShow from './containers/SurveyShow'
 import SurveyWizardQuestionnaireStep from './containers/SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './containers/SurveyWizardRespondentsStep'
-import SurveyWizardCutoffStep from './containers/SurveyWizardCutoffStep'
 import SurveyWizardChannelsStep from './containers/SurveyWizardChannelsStep'
+import SurveyWizardCutoffStep from './containers/SurveyWizardCutoffStep'
+import SurveyWizardScheduleStep from './containers/SurveyWizardScheduleStep'
 import QuestionnaireIndex from './containers/QuestionnaireIndex'
 import QuestionnaireNew from './containers/QuestionnaireNew'
 import ChannelIndex from './containers/ChannelIndex'
@@ -39,8 +40,9 @@ export default (
           <IndexRedirect to="questionnaire"/>
           <Route path="questionnaire" component={ SurveyWizardQuestionnaireStep } breadcrumbIgnore />
           <Route path="respondents" component={ SurveyWizardRespondentsStep } breadcrumbIgnore />
-          <Route path="cutoff" component={ SurveyWizardCutoffStep } breadcrumbIgnore />
           <Route path="channels" component={ SurveyWizardChannelsStep } breadcrumbIgnore />
+          <Route path="cutoff" component={ SurveyWizardCutoffStep } breadcrumbIgnore />
+          <Route path="schedule" component={ SurveyWizardScheduleStep } breadcrumbIgnore />
         </Route>
 
         <Route path="questionnaires" breadcrumbIgnore>
