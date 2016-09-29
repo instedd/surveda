@@ -49,12 +49,10 @@ export const createNuntiumChannel = () => dispatch => {
 
 const authorizeWithGuisso = (dispatch, app, appConfig) => {
   const guissoSession = guissoApi.newSession(appConfig.guisso)
-  return dispatch(guisso.obtainToken(guissoSession))
+  return guissoSession.authorize('code', app)
+    .then( () => dispatch(guisso.obtainToken(guissoSession)))
     .then((token) => {
-      return guissoSession.authorize('code', app)
-        .then(() => {
-          guissoSession.close()
-          return token
-        })
+      guissoSession.close()
+      return token
     })
 }
