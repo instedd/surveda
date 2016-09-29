@@ -10,7 +10,8 @@ defmodule Ask.SurveyController do
     |> Repo.get!(project_id)
     |> authorize(conn)
     |> assoc(:surveys)
-    |> Repo.all(preload: [:channels])
+    |> preload(:channels)
+    |> Repo.all
 
     render(conn, "index.json", surveys: surveys)
   end
