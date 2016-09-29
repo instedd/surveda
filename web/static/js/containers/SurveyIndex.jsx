@@ -27,10 +27,6 @@ class SurveyIndex extends Component {
   render() {
     const { surveys, router, channels } = this.props
 
-    if ( channels == null || surveys == null) {
-      return(<div>Loading...</div>)
-    }
-
     const title = parseInt(Object.keys(surveys).length, 10) + " Surveys"
 
     return (
@@ -50,7 +46,13 @@ class SurveyIndex extends Component {
             <tbody>
               { (Object.keys(surveys).map( function (surveyId){
                 const survey = surveys[surveyId]
-                const channelMode = survey.channels.length > 0 ? channels[survey.channels[0]].type : "-"
+                channels[survey.channels[0]]
+                const channelMode = do {
+                  if (survey.channels.length > 0 && channels[survey.channels[0]])
+                    channels[survey.channels[0]].type
+                  else
+                    "-"
+                }
                 return(
                   <SurveyRow survey={survey} mode={channelMode} router={router} key={surveyId}/>
                 )}
