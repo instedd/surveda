@@ -11,11 +11,11 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
   let channelStepCompleted = survey.channels && survey.channels.length > 0
   let cutoffStepCompleted = survey.cutoff != null
 
-  let steps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, cutoffStepCompleted]
+  let steps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted]
 
   let numberOfCompletedSteps = steps.filter(function(item){ return item == true; }).length
-  let totalSteps = 4
-  let percentage = `${100/totalSteps*numberOfCompletedSteps}%`
+  let totalSteps = 3
+  let percentage = `${(100/totalSteps*numberOfCompletedSteps).toFixed(0)}%`
 
   return (
     <div className="row">
@@ -31,7 +31,8 @@ const SurveyForm = ({ onSubmit, survey, children, project }) => {
           <CollectionItem path={`${linkPath}questionnaire`} icon="assignment" text="Select a questionnaire" completed={questionnaireStepCompleted} />
           <CollectionItem path={`${linkPath}respondents`} icon="group" text="Upload your respondents list" completed={respondentsStepCompleted} />
           <CollectionItem path={`${linkPath}channels`}  icon="settings_input_antenna" text="Select mode and channels" completed={channelStepCompleted} />
-          <CollectionItem path={`${linkPath}cutoff`} icon="remove_circle" text="Setup cutoff rules" completed={cutoffStepCompleted} />
+          <li className="divider"></li>
+          <CollectionItem className="optional" path={`${linkPath}cutoff`} icon="remove_circle" text="Setup cutoff rules" completed={cutoffStepCompleted} />
 
           {/* <li className={`collection-item ${}`}>
             <a href="#!">
