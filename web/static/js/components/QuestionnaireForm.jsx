@@ -1,9 +1,8 @@
 import React, { PropTypes } from 'react'
 import merge from 'lodash/merge'
-import { Link } from 'react-router'
-import QuestionnaireStep from './QuestionnaireStep'
+import QuestionnaireSteps from './QuestionnaireSteps'
 
-const QuestionnaireForm = ({ onSubmit, project, questionnaire }) => {
+const QuestionnaireForm = ({ onSubmit, project, questionnaire, currentStepId }) => {
   let nameInput
   let modesInput
   if (!project || !questionnaire) {
@@ -36,13 +35,7 @@ const QuestionnaireForm = ({ onSubmit, project, questionnaire }) => {
         <div className="col s12 m8">
           <div className="row">
             <div className="col s12">
-              <ul className="collection">
-                { questionnaire.steps.map((step) => (
-                  <li className="collection-item" key={step.id}>
-                    <QuestionnaireStep step={step} />
-                  </li>
-                ))}
-              </ul>
+              <QuestionnaireSteps steps={questionnaire.steps} currentStepId={currentStepId} />
             </div>
           </div>
         </div>
@@ -65,6 +58,8 @@ const QuestionnaireForm = ({ onSubmit, project, questionnaire }) => {
 QuestionnaireForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   project: PropTypes.object.isRequired,
+  questionnaire: PropTypes.object,
+  currentStepId: PropTypes.string,
 }
 
 export default QuestionnaireForm

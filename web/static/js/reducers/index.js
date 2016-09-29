@@ -4,6 +4,7 @@ import projects from './projects';
 import surveys from './surveys';
 import respondentsStats from './respondentsStats';
 import questionnaires from './questionnaires';
+import questionnaireEditor from './questionnaireEditor';
 import channels from './channels';
 import guisso from './guisso';
 import respondents from './respondents';
@@ -14,6 +15,7 @@ export default combineReducers({
   surveys,
   respondentsStats,
   questionnaires,
+  questionnaireEditor,
   respondents,
   channels,
   guisso

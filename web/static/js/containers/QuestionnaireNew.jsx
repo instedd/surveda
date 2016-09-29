@@ -17,8 +17,8 @@ class QuestionnaireNew extends Component {
   }
 
   render(params) {
-    const { project, questionnaire } = this.props
-    return <QuestionnaireForm onSubmit={this.handleSubmit()} project={project} questionnaire={questionnaire} />
+    const { project, questionnaire, currentStepId } = this.props
+    return <QuestionnaireForm onSubmit={this.handleSubmit()} project={project} questionnaire={questionnaire} currentStepId={currentStepId} />
   }
 }
 
@@ -26,6 +26,7 @@ const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.projects[ownProps.params.projectId] || {},
   questionnaire: {},
+  currentStepId: state.questionnaireEditor.currentStepId,
 })
 
 export default withRouter(connect(mapStateToProps)(QuestionnaireNew))
