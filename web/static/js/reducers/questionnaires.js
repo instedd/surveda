@@ -1,6 +1,4 @@
-import { combineReducers } from 'redux'
 import * as actions from '../actions/questionnaires'
-import merge from 'lodash/merge'
 
 export default (state = {}, action) => {
   switch (action.type) {
