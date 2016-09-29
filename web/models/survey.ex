@@ -29,15 +29,14 @@ defmodule Ask.Survey do
   def update_state(changeset) do
     state = get_field(changeset, :state)
     questionnaire_id = get_field(changeset, :questionnaire_id)
-    cutoff = get_field(changeset, :cutoff)
     respondents_count = get_field(changeset, :respondents_count)
 
     channels = get_field(changeset, :channels)
 
-    changes = if state == "not_ready" && questionnaire_id && cutoff && respondents_count && respondents_count > 0 && length(channels) > 0 do
+    changes = if state == "not_ready" && questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 do
       Map.merge(changeset.changes, %{state: "ready"})
     else
-      if state == "ready" && !(questionnaire_id && cutoff && respondents_count && respondents_count > 0 && length(channels) > 0) do
+      if state == "ready" && !(questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0) do
         Map.merge(changeset.changes, %{state: "not_ready"})
       else
         changeset.changes
