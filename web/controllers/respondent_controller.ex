@@ -1,15 +1,29 @@
 defmodule Ask.RespondentController do
-  use Ask.Web, :controller
+  use Ask.Web, :api_controller
 
-  alias Ask.Respondent
+  alias Ask.Project
   alias Ask.Survey
+  alias Ask.Respondent
 
-  def index(conn,  %{"survey_id" => survey_id}) do
-    respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id) |> Repo.preload(:responses)
+  def index(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+
+    respondents = Survey
+    |> Repo.get!(survey_id)
+    |> assoc(:respondents)
+    |> preload(:responses)
+    |> Repo.all
+
     render(conn, "index.json", respondents: respondents)
   end
 
-  def stats(conn,  %{"survey_id" => survey_id}) do
+  def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+
     by_state = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
       group_by: :state,
@@ -23,7 +37,11 @@ defmodule Ask.RespondentController do
     render(conn, "stats.json", stats: stats)
   end
 
-  def create(conn, %{"file" => file, "survey_id" => survey_id}) do
+  def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+
     {integer_survey_id, _ } = Integer.parse survey_id
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
 
@@ -50,7 +68,11 @@ defmodule Ask.RespondentController do
     end
   end
 
-  def delete(conn, %{"survey_id" => survey_id}) do
+  def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+
     from(r in Respondent, where: r.survey_id == ^survey_id)
     |> Repo.delete_all
 
