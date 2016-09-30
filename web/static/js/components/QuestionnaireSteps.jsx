@@ -26,28 +26,36 @@ const renderCurrentStep = (step) => (
 )
 
 const QuestionnaireSteps = ({ steps, currentStepId }) => {
-  const index = steps.findIndex(step => step.id == currentStepId)
-  if (index == -1) {
-    // All collapsed
-    return renderSteps(steps)
-  } else {
-    // Only one expanded
-    const stepsBefore = steps.slice(0, index)
-    const currentStep = steps[index]
-    const stepsAfter = steps.slice(index + 1)
+  if (steps) {
+    const index = steps.findIndex(step => step.id == currentStepId)
+    if (index == -1) {
+      // All collapsed
+      return renderSteps(steps)
+    } else {
+      // Only one expanded
+      const stepsBefore = steps.slice(0, index)
+      const currentStep = steps[index]
+      const stepsAfter = steps.slice(index + 1)
 
-    return (
-      <div>
+      return (
+        <div>
         {renderSteps(stepsBefore)}
         {renderCurrentStep(currentStep)}
         {renderSteps(stepsAfter)}
+      </div>
+      )
+    }
+  } else {
+    return (
+      <div>
+        Sorry! There are no steps here and there's no way to create them yet. It's a bit embarrasing, but the Ask team is working really hard on that feature. In the meantime, if you save this questionnaire we'll create two steps for you to play around.
       </div>
     )
   }
 }
 
 QuestionnaireSteps.propTypes = {
-  steps: PropTypes.array.isRequired,
+  steps: PropTypes.array,
 }
 
 export default QuestionnaireSteps
