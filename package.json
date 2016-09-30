@@ -7,9 +7,11 @@
   },
   "dependencies": {
     "babel-preset-stage-0": "^6.5.0",
+    "d3-time": "^1.0.4",
     "jquery": "^3.1.0",
     "phoenix": "file:deps/phoenix",
-    "phoenix_html": "file:deps/phoenix_html"
+    "phoenix_html": "file:deps/phoenix_html",
+    "react-d3-library": "^1.1.7"
   },
   "devDependencies": {
     "babel-brunch": "~6.0.5",

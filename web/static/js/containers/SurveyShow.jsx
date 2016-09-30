@@ -3,6 +3,9 @@ import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
+import RespondentsChart from '../components/RespondentsChart'
+import Chart from '../components/Chart'
+import Card from '../components/Card'
 
 class SurveyShow extends Component {
   componentDidMount() {
@@ -19,7 +22,10 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats } = this.props
+    const { survey, respondentsStats, completedByDate } = this.props
+
+    console.log(respondentsStats)
+
     if (!survey) {
       return <p>Loading...</p>
     }
@@ -55,17 +61,39 @@ class SurveyShow extends Component {
             </div>
           </div>
         </div>
+        <div className="row">
+          <div className="col s12">
+            <div className="card">
+              <RespondentsChart completedByDate={completedByDate}/>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
-  project: state.projects[ownProps.params.projectId] || {},
-  surveyId: ownProps.params.surveyId,
-  survey: state.surveys[ownProps.params.surveyId] || {},
-  respondentsStats: state.respondentsStats[ownProps.params.surveyId] || {},
-})
+const mapStateToProps = (state, ownProps) => {
+  console.log("survey show map state to props")
+  console.log(state)
+  const respondentsStatsRoot =  state.respondentsStats[ownProps.params.surveyId]
+
+  let respondentsStats = {}
+  let completedRespondentsByDate = []
+
+  if(respondentsStatsRoot){
+    respondentsStats = respondentsStatsRoot.respondentsStats
+    completedRespondentsByDate = respondentsStatsRoot.completedRespondentsByDate
+  }
+
+  return ({
+    projectId: ownProps.params.projectId,
+    project: state.projects[ownProps.params.projectId] || {},
+    surveyId: ownProps.params.surveyId,
+    survey: state.surveys[ownProps.params.surveyId] || {},
+    respondentsStats: respondentsStats,
+    completedByDate: completedRespondentsByDate
+  })
+}
 
 export default withRouter(connect(mapStateToProps)(SurveyShow))
