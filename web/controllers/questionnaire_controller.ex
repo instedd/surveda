@@ -114,6 +114,12 @@ defmodule Ask.QuestionnaireController do
             "responses": ["No", "N", "1"]
           }
         ]
+      },
+      %{
+        "id" => "c6588daa-cd81-40b1-8cac-ff2e72a15c15",
+        "type" => "numeric",
+        "title" => "Which is the second perfect number?",
+        "store" => "Perfect Number",
       }
     ]
   end

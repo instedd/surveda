@@ -146,6 +146,10 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, "Yes")
+    assert reply == {:prompt, "Which is the second perfect number?"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, "99")
     assert reply == :end
 
     respondent = Repo.get(Respondent, respondent.id)

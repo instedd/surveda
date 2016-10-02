@@ -49,7 +49,8 @@ defmodule Ask.FlowTest do
     flow = Flow.start(@quiz)
     {:ok, flow, _} = flow |> Flow.step()
     {:ok, flow, _} = flow |> Flow.step("Y")
-    step = flow |> Flow.step("N")
+    {:ok, flow, _} = flow |> Flow.step("N")
+    step = flow |> Flow.step("99")
     assert {:end, _} = step
   end
 end
