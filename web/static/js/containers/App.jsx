@@ -12,7 +12,7 @@ export default ({ children, tabs, body }) => (
       {body || children}
     </main>
     <Footer />
-    <ConfirmationModal modalId="unhandledError" modalText="Please go to the site's index" header="Sorry, something went wrong" confirmationText="Go to index" onConfirm={(event) => onConfirm(event)}/>
+    <ConfirmationModal modalId="unhandledError" modalText="Please go to the home page" header="Sorry, something went wrong" confirmationText="Click to go to the home page" onConfirm={(event) => onConfirm(event)}/>
   </div>
 )
 
