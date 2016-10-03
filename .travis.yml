@@ -19,6 +19,7 @@ before_script:
 
 script:
   - docker-compose run --rm app mix test
+  - docker-compose run --rm brunch npm test
 
 before_deploy:
   - docker-compose run --rm brunch npm --loglevel=silent install
