@@ -8,9 +8,7 @@ import * as actions from '../actions/surveys'
 class SurveyWizardScheduleStep extends Component {
   toggleDay(day) {
     const { survey, dispatch } = this.props
-    const updatedSurvey = merge({}, survey, { scheduleDayOfWeek : { [day] : !survey.scheduleDayOfWeek[day] } })
-    console.log(updatedSurvey)
-    updateSurvey(survey.projectId, updatedSurvey)
+    updateSurvey(survey.projectId, merge({}, survey, { scheduleDayOfWeek : { [day] : !survey.scheduleDayOfWeek[day] } }))
       .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
