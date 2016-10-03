@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import merge from 'lodash/merge'
-import { withRouter } from 'react-router'
+import { Link, withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
@@ -14,7 +14,14 @@ class SurveyWizardQuestionnaireStep extends Component {
     }
   }
 
-  handleSubmit(survey) {
+  handleSubmit(oldSurvey, inputValue, questionnairesInput) {
+    const newSurveyValues = {
+      name: inputValue,
+      questionnaire_id: (questionnairesInput.find(element => element.node.checked) || {}).id
+    }
+
+    const survey = merge({}, oldSurvey, newSurveyValues)
+
     const { dispatch, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
@@ -22,46 +29,61 @@ class SurveyWizardQuestionnaireStep extends Component {
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
+  newQuestionnaireButton(projectId, questionnaires) {
+    let buttonLabel = "NEW QUESTIONNAIRE"
+    if (Object.keys(questionnaires).length === 0) {
+      buttonLabel = "You still haven't created any questionnaire. Click here to create one."
+    }
+
+    return (
+      <div className='col s12'>
+        <Link className='waves-effect waves-teal btn-flat btn-flat-link' to={`/projects/${projectId}/questionnaires/new`}>
+          {buttonLabel}
+        </Link>
+      </div>
+    )
+  }
+
   render() {
     let input
     const questionnairesInput = []
-    const { survey, questionnaires } = this.props
+    const { survey, questionnaires, projectId } = this.props
     if (!survey || !questionnaires) {
       return <div>Loading...</div>
     }
     return (
-      <div className="col s12 m7 offset-m1">
-        <div className="row">
-          <div className="col s12">
+      <div className='col s12 m7 offset-m1'>
+        <div className='row'>
+          <div className='input-field col s12'>
+            <input id='survey-name' type='text' placeholder='Survey name' defaultValue={survey.name} ref={node => { input = node; if (input != null) input.focus() }} />
+            <label className='active' htmlFor='survey_name'>Survey Name</label>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
             <h4>Select a questionnaire</h4>
-            <p className="flow-text">
+            <p className='flow-text'>
               The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.
             </p>
           </div>
         </div>
-        <div className="row">
-          <div className="input-field col s12">
-            <input id="survey-name" type="text" placeholder="Survey name" defaultValue={survey.name} ref={ node => { input = node; if (input != null) input.focus() } }/>
-            <label className="active" htmlFor="survey-name">Survey Name</label>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col s12">
-            <h6>Questionnaires</h6>
+        <div className='row'>
+          <div className='col s12'>
             { Object.keys(questionnaires).map((questionnaireId) =>
               <div key={questionnaireId}>
                 <p>
-                  <input id={questionnaireId} type="radio" name="questionnaire" className="with-gap" value={ questionnaireId } ref={ node => {questionnairesInput.push({ id: questionnaireId, node:node })}} defaultChecked={survey.questionnaireId == questionnaireId } />
+                  <input id={questionnaireId} type='radio' name='questionnaire' className='with-gap' value={questionnaireId} ref={node => { questionnairesInput.push({ id: questionnaireId, node: node }) }} defaultChecked={survey.questionnaireId == questionnaireId} />
                   <label htmlFor={questionnaireId}>{ questionnaires[questionnaireId].name }</label>
                 </p>
               </div>
             )}
           </div>
+          {this.newQuestionnaireButton(projectId, questionnaires)}
         </div>
-        <div className="row">
-          <div className="col s12">
-            <button type="button" className="btn waves-effect waves-light" onClick={() =>
-              this.handleSubmit(merge({}, survey, { name: input.value, questionnaireId: (questionnairesInput.find(element => element.node.checked) || {}).id }))
+        <div className='row'>
+          <div className='col s12'>
+            <button type='button' className='btn waves-effect waves-light' onClick={() =>
+              this.handleSubmit(survey, input.value, questionnairesInput)
             }>
               Next
             </button>
@@ -78,4 +100,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.surveys[ownProps.params.surveyId]
 })
 
-export default withRouter(connect(mapStateToProps)(SurveyWizardQuestionnaireStep));
+export default withRouter(connect(mapStateToProps)(SurveyWizardQuestionnaireStep))
