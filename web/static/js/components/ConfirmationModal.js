@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 
 export class ConfirmationModal extends Component {
   static propTypes = {
-    linkText: React.PropTypes.string.isRequired,
+    linkText: React.PropTypes.string,
     header: React.PropTypes.string.isRequired,
     modalText: React.PropTypes.string.isRequired,
     confirmationText: React.PropTypes.string.isRequired,
