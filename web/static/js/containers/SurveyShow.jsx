@@ -23,8 +23,7 @@ class SurveyShow extends Component {
 
   render() {
     const { survey, respondentsStats, completedByDate } = this.props
-
-    console.log(respondentsStats)
+    const { dispatch, projectId, surveyId } = this.props
 
     if (!survey) {
       return <p>Loading...</p>
@@ -35,6 +34,7 @@ class SurveyShow extends Component {
         <div className="row">
           <div className="col s12">
             <div className="card">
+              <button onClick={() => {dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))}}>Click me!!</button>
               <div className="card-table-title">
                 { survey.name }
               </div>
@@ -74,8 +74,6 @@ class SurveyShow extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  console.log("survey show map state to props")
-  console.log(state)
   const respondentsStatsRoot =  state.respondentsStats[ownProps.params.surveyId]
 
   let respondentsStats = {}
@@ -83,7 +81,7 @@ const mapStateToProps = (state, ownProps) => {
 
   if(respondentsStatsRoot){
     respondentsStats = respondentsStatsRoot.respondentsStats
-    completedRespondentsByDate = respondentsStatsRoot.completedRespondentsByDate
+    completedRespondentsByDate = respondentsStatsRoot.completedByDate
   }
 
   return ({
