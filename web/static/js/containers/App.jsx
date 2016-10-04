@@ -26,6 +26,7 @@ window.addEventListener('error', () => {
 
 const onError = () => {
   event.preventDefault()
+  console.log(event)
   $('#unhandledError').openModal();
 }
 
