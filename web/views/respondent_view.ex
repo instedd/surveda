@@ -34,7 +34,7 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: stats}) do
+  def render("stats.json", %{stats: %{table_stats: stats}}) do
     %{
       data: %{
         pending: stats.pending,

@@ -38,7 +38,7 @@ defmodule Ask.RespondentController do
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0
     failed = by_state["failed"] || 0
-    stats = %{pending: pending, completed: completed, active: active, failed: failed }
+    stats = %{table_stats: %{pending: pending, completed: completed, active: active, failed: failed }, chart_stats: completed_by_date}
     render(conn, "stats.json", stats: stats)
   end
 

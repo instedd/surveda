@@ -25,25 +25,7 @@ export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
 export const receiveRespondentsStats = (surveyId, response) => ({
   type: RECEIVE_RESPONDENTS_STATS,
   surveyId: surveyId,
-  respondentsStats: {
-    respondentsStats: response.result,
-    completedByDate: [
-      {completed_date: "24-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "25-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "26-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "27-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "28-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "29-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "30-Apr-07", respondents:	Math.random() * 100},
-      {completed_date: "01-May-07", respondents:	Math.random() * 100},
-      {completed_date: "02-May-07", respondents:	Math.random() * 100},
-      {completed_date: "03-May-07", respondents:	Math.random() * 100},
-      {completed_date: "04-May-07", respondents:	Math.random() * 100},
-      {completed_date: "05-May-07", respondents:	Math.random() * 100},
-      {completed_date: "06-May-07", respondents:	Math.random() * 100},
-      {completed_date: "07-May-07", respondents:	Math.random() * 100}
-    ]
-  }
+  respondentsStats: response.result
 })
 
 export const receiveRespondents = (response) => ({
