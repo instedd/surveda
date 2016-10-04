@@ -34,7 +34,6 @@ class SurveyShow extends Component {
         <div className="row">
           <div className="col s12">
             <div className="card">
-              <button onClick={() => {dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))}}>Click me!!</button>
               <div className="card-table-title">
                 { survey.name }
               </div>
@@ -64,7 +63,7 @@ class SurveyShow extends Component {
         <div className="row">
           <div className="col s12">
             <div className="card">
-              <RespondentsChart completedByDate={completedByDate}/>
+              <RespondentsChart completedByDate={ completedByDate } width={ 1000 } height= { 500 }/>
             </div>
           </div>
         </div>
