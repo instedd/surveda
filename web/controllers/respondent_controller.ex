@@ -29,6 +29,11 @@ defmodule Ask.RespondentController do
       group_by: :state,
       select: {r.state, count("*")}) |> Enum.into(%{})
 
+    completed_by_date = Repo.all(
+      from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
+      group_by: :completed_at,
+      select: {r.completed_at, count("*")}) |> Enum.into(%{})
+
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0

@@ -48,7 +48,7 @@ class RespondentsChart extends Component {
     })
 
     x.domain(d3.extent(data, function(d) { return d.date; }))
-    y.domain(d3.extent(data, function(d) { return d.close; }))
+    y.domain([0,100])
 
     svg.append("g")
     .attr("id", "xaxis")
