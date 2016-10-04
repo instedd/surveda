@@ -4,32 +4,28 @@ import { withRouter } from 'react-router'
 import * as projectActions from '../actions/projects'
 import * as surveyActions from '../actions/surveys'
 import * as questionnaireActions from '../actions/questionnaires'
-import Breadcrumb from '../components/Breadcrumb'
+import Title from '../components/Title'
 
-class BreadcrumbContainer extends Component {
-  // The breadcrumb needs different entities to resolve
+class TitleContainer extends Component {
+  // The title needs different entities to resolve
   // its view, depending on the current route.
   //
   // Those entities may or may not be available at the time of rendering,
   // since the user may be using a URL to access a part of the app
-  // directly. 
+  // directly.
   //
   // So fetchEntities takes care of filling any gaps in the store
-  // for the breadcrumb component to fully render. 
+  // for the breadcrumb component to fully render.
   fetchEntities() {
     const { dispatch } = this.props
     const { projectId, surveyId, questionnaireId } = this.props.params
 
-    if (projectId) {
+    if (questionnaireId) {
+      dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
+    } else if (surveyId) {
+      dispatch(surveyActions.fetchSurveyIfNeeded(projectId, surveyId))
+    } else if (projectId) {
       dispatch(projectActions.fetchProjectIfNeeded(projectId))
-
-      if (surveyId) {
-        dispatch(surveyActions.fetchSurveyIfNeeded(projectId, surveyId))
-      }
-
-      if (questionnaireId) {
-        dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
-      }
     }
   }
 
@@ -47,7 +43,7 @@ class BreadcrumbContainer extends Component {
     } = this.props
 
     return (
-      <Breadcrumb 
+      <Title
         params={params}
         project={project}
         survey={survey}
@@ -75,4 +71,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(BreadcrumbContainer))
+export default withRouter(connect(mapStateToProps)(TitleContainer))
