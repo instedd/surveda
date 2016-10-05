@@ -21,11 +21,29 @@ export default (state = defaultState, action) => {
         currentStepId: null
       }
     case actions.INITIALIZE_EDITOR:
+      var stepsItems = {}
+      action.questionnaire.steps.map((step) =>{
+        var responses = {}
+        if(step.choices){
+          responses['items'] = step.choices.map((choice) =>{
+            var responseItem = {}
+            responseItem["response"] = choice.value
+            return responseItem
+          })
+        }
+        stepsItems[step.id] = {title: step.title, responses: responses}
+      })
       return {
         ...state,
         questionnaire: {
           id: action.questionnaire.id,
           name: action.questionnaire.name
+        },
+        steps: {
+          ids: action.questionnaire.steps.map((step) =>{
+            return step.id
+          }),
+          items: stepsItems
         }
       }
     default:

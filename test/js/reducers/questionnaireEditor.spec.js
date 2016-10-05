@@ -24,6 +24,20 @@ describe('questionnaireEditor reducer', () => {
   it('should start with all steps collapsed when there are steps already', () => {
     expect(reducer(initialState, actions.initializeEditor(questionnaire)).steps.current).toEqual(null)
   })
+
+  it('should create an array with the steps Ids', () => {
+    expect(reducer(initialState, actions.initializeEditor(questionnaire)).steps.ids)
+      .toEqual(['17141bea-a81c-4227-bdda-f5f69188b0e7', 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'])
+  })
+
+  it('should put the steps inside the "items" hash', () => {
+    var result = reducer(initialState, actions.initializeEditor(questionnaire)).steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7']
+
+    expect(result.title).toEqual("Do you smoke?")
+    expect(result.responses.items[0].response).toEqual("Yes")
+    expect(result.responses.items[1].response).toEqual("No")
+  })
+
 })
 
 const questionnaire = {
