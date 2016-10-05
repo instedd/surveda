@@ -11,10 +11,6 @@ const defaultState = {
 export default (state = defaultState, action) => {
   switch (action.type) {
     case actions.SELECT_STEP:
-      // console.log("en el reducer veamos el state: ", {
-      //   ...state,
-      //   currentStepId: action.stepId
-      // })
       return {
         ...state,
         currentStepId: action.stepId
@@ -35,6 +31,7 @@ export default (state = defaultState, action) => {
             return responseItem
           })
         }
+        // The id isn't in the proposed model, but it's necessary for the view
         stepsItems[step.id] = {title: step.title, responses: responses, id: step.id}
       })
       return {
