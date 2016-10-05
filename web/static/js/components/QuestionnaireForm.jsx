@@ -38,8 +38,7 @@ const QuestionnaireForm = ({ onSubmit, questionnaireEditor, dispatch }) => {
           <div className='row'>
             <div className='col s12'>
               <QuestionnaireSteps
-                steps={questionnaireEditor.steps}
-                currentStepId={questionnaireEditor.steps.current}
+                questionnaireEditor={questionnaireEditor}
                 />
             </div>
           </div>

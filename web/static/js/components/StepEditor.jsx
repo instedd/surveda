@@ -39,7 +39,7 @@ class StepEditor extends Component {
     const { step, editingTitle } = this.props
 
     return (
-      <Card>
+      <Card key={step.title}>
         <ul className='collection'>
           <li className='collection-item'>
             <div className='row'>

@@ -18,7 +18,9 @@ class QuestionnaireEdit extends Component {
 
       dispatch(questionnaireActions.fetchQuestionnaire(projectId, questionnaireId))
         .then((questionnaire) => {
-          dispatch(editorActions.initializeEditor(questionnaire))
+          // TODO: Fix this, or decide how to make it better
+          var quest = questionnaire.response.entities.questionnaires[questionnaire.response.result]
+          dispatch(editorActions.initializeEditor(quest))
         })
     }
   }
