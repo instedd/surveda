@@ -25,7 +25,9 @@ defmodule Ask.Runtime.Broker do
   end
 
   def handle_info(:poll, state) do
-    surveys = Repo.all(from s in Survey, where: s.state == "running")
+    ischedule = today_schedule()
+    surveys = Repo.all(from s in Survey, where: s.state == "running" and
+      fragment("(? & ?) = ?", s.schedule_day_of_week, ^ischedule, ^ischedule))
     surveys |> Enum.each(&poll_survey(&1))
     {:noreply, state}
   end
@@ -101,4 +103,19 @@ defmodule Ask.Runtime.Broker do
         :end
     end
   end
+
+  defp today_schedule do
+    week_day = Timex.weekday(Timex.today)
+    schedule = %Ask.DayOfWeek{
+      mon: week_day == 1,
+      tue: week_day == 2,
+      wed: week_day == 3,
+      thu: week_day == 4,
+      fri: week_day == 5,
+      sat: week_day == 6,
+      sun: week_day == 7}
+    {:ok, ischedule} = Ask.DayOfWeek.dump(schedule)
+    ischedule
+  end
+
 end
