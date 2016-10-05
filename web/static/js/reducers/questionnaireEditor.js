@@ -1,7 +1,11 @@
 import * as actions from '../actions/questionnaireEditor'
 
 const defaultState = {
-  currentStepId: null
+  steps: {
+    ids: [],
+    items: {},
+    current: null
+  }
 }
 
 export default (state = defaultState, action) => {
@@ -9,12 +13,20 @@ export default (state = defaultState, action) => {
     case actions.SELECT_STEP:
       return {
         ...state,
-        currentStepId: action.stepId,
+        currentStepId: action.stepId
       }
     case actions.DESELECT_STEP:
       return {
         ...state,
-        currentStepId: null,
+        currentStepId: null
+      }
+    case actions.INITIALIZE_EDITOR:
+      return {
+        ...state,
+        questionnaire: {
+          id: action.questionnaire.id,
+          name: action.questionnaire.name
+        }
       }
     default:
       return state

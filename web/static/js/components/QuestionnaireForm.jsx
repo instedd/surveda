@@ -1,50 +1,55 @@
 import React, { PropTypes } from 'react'
 import merge from 'lodash/merge'
 import QuestionnaireSteps from './QuestionnaireSteps'
+import * as editorActions from '../actions/questionnaireEditor'
 
-const QuestionnaireForm = ({ onSubmit, project, questionnaire, currentStepId }) => {
+const QuestionnaireForm = ({ onSubmit, questionnaireEditor, dispatch }) => {
   let nameInput
   let modesInput
-  if (!project || !questionnaire) {
+
+  if (!questionnaireEditor.questionnaire) {
     return <div>Loading...</div>
   }
 
-  let defaultMode = (questionnaire.modes || ["SMS"]).join(",")
+  const questionnaire = questionnaireEditor.questionnaire
 
   return (
-    <div className="row">
-      <div className="row">
-        <div className="col s12 m4">
-          <div className="row">
-            <div className="input-field col s12">
-              <input type="text" id="questionnaire_name" placeholder="Questionnaire name" defaultValue={questionnaire.name} ref={ node => { nameInput = node }}/>
-              <label className="active" htmlFor="questionnaire_name">Questionnaire Name</label>
+    <div className='row'>
+      <div className='row'>
+        <div className='col s12 m4'>
+          <div className='row'>
+            <div className='input-field col s12'>
+              <input type='text' id='questionnaire_name' placeholder='Questionnaire name' defaultValue={questionnaire.name} ref={node => { nameInput = node }} />
+              <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
             </div>
           </div>
-          <div className="row">
-            <div className="input-field col s12">
-              <select defaultValue={defaultMode} ref={ node => { modesInput = node; $(node).material_select() }}>
-                <option value="SMS">SMS</option>
-                <option value="IVR">IVR</option>
-                <option value="SMS,IVR">SMS and IVR</option>
+          <div className='row'>
+            <div className='input-field col s12'>
+              <select defaultValue={'SMS'} ref={node => { modesInput = node; $(node).material_select() }}>
+                <option value='SMS'>SMS</option>
+                <option value='IVR'>IVR</option>
+                <option value='SMS,IVR'>SMS and IVR</option>
               </select>
               <label>Mode</label>
             </div>
           </div>
         </div>
-        <div className="col s12 m8">
-          <div className="row">
-            <div className="col s12">
-              <QuestionnaireSteps steps={questionnaire.steps} currentStepId={currentStepId} />
+        <div className='col s12 m8'>
+          <div className='row'>
+            <div className='col s12'>
+              <QuestionnaireSteps
+                steps={questionnaireEditor.steps}
+                currentStepId={questionnaireEditor.steps.current}
+                />
             </div>
           </div>
         </div>
       </div>
-      <div className="row">
-        <div className="col s12">
-          <button type="button" className="btn waves-effect waves-light" onClick={() => {
+      <div className='row'>
+        <div className='col s12'>
+          <button type='button' className='btn waves-effect waves-light' onClick={() => {
             let newQuestionnaire = merge({}, questionnaire, {name: nameInput.value})
-            newQuestionnaire.modes = modesInput.value.split(",")
+            newQuestionnaire.modes = modesInput.value.split(',')
             return onSubmit(newQuestionnaire)
           }}>
             Submit
@@ -57,9 +62,7 @@ const QuestionnaireForm = ({ onSubmit, project, questionnaire, currentStepId }) 
 
 QuestionnaireForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  project: PropTypes.object.isRequired,
-  questionnaire: PropTypes.object,
-  currentStepId: PropTypes.string,
+  questionnaireEditor: PropTypes.object.isRequired
 }
 
 export default QuestionnaireForm

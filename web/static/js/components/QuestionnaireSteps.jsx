@@ -1,15 +1,14 @@
 import React, { PropTypes } from 'react'
-import merge from 'lodash/merge'
-import { Link } from 'react-router'
 import Card from '../components/Card'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
 const renderSteps = (steps) => {
-  if (steps.length != 0) {
+  console.log(steps)
+  if (steps.length !== 0) {
     return (
       <Card>
-        <ul className="collection">
+        <ul className='collection'>
           { steps.map((step) => (
             <QuestionnaireClosedStep step={step} key={step.id} />
           ))}
@@ -25,24 +24,25 @@ const renderCurrentStep = (step) => (
   <StepEditor step={step} />
 )
 
-const QuestionnaireSteps = ({ steps, currentStepId }) => {
+const QuestionnaireSteps = ({ steps }) => {
   if (steps) {
-    const index = steps.findIndex(step => step.id == currentStepId)
-    if (index == -1) {
+    if (!steps.current) {
       // All collapsed
-      return renderSteps(steps)
+      return renderSteps(steps.ids.map((id) => steps.items[id]))
     } else {
+      const index = steps.ids.findIndex(stepId => stepId === steps.current)
+
       // Only one expanded
-      const stepsBefore = steps.slice(0, index)
-      const currentStep = steps[index]
-      const stepsAfter = steps.slice(index + 1)
+      const stepsBefore = steps.ids.slice(0, index).map((id) => steps.items[id])
+      const currentStep = steps[steps.current]
+      const stepsAfter = steps.ids.slice(index + 1).map((id) => steps.items[id])
 
       return (
         <div>
-        {renderSteps(stepsBefore)}
-        {renderCurrentStep(currentStep)}
-        {renderSteps(stepsAfter)}
-      </div>
+          {renderSteps(stepsBefore)}
+          {renderCurrentStep(currentStep)}
+          {renderSteps(stepsAfter)}
+        </div>
       )
     }
   } else {
@@ -55,7 +55,8 @@ const QuestionnaireSteps = ({ steps, currentStepId }) => {
 }
 
 QuestionnaireSteps.propTypes = {
-  steps: PropTypes.array,
+  steps: PropTypes.object,
+  currentStepId: PropTypes.string
 }
 
 export default QuestionnaireSteps
