@@ -10,11 +10,13 @@ describe('questionnaireEditor reducer', () => {
   })
 
   it('should generate initial editor state from questionnaire model', () => {
-    expect(reducer(initialState, actions.initializeEditor(questionnaire)).questionnaire)
-      .toEqual({
-        id: questionnaire.id,
-        name: questionnaire.name
-      })
+    const result = reducer(initialState, actions.initializeEditor(questionnaire))
+
+    expect(result.questionnaire)
+    .toEqual({
+      id: questionnaire.id,
+      name: questionnaire.name
+    })
   })
 
   it('should start with all steps collapsed', () => {
@@ -22,7 +24,9 @@ describe('questionnaireEditor reducer', () => {
   })
 
   it('should start with all steps collapsed when there are steps already', () => {
-    expect(reducer(initialState, actions.initializeEditor(questionnaire)).steps.current).toEqual(null)
+    const result = reducer(initialState, actions.initializeEditor(questionnaire))
+
+    expect(result.steps.current).toEqual(null)
   })
 
   it('should create an array with the steps Ids', () => {
@@ -31,11 +35,14 @@ describe('questionnaireEditor reducer', () => {
   })
 
   it('should put the steps inside the "items" hash', () => {
-    var result = reducer(initialState, actions.initializeEditor(questionnaire)).steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7']
+    const result = reducer(
+      initialState,
+      actions.initializeEditor(questionnaire)
+    ).steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7']
 
-    expect(result.title).toEqual("Do you smoke?")
-    expect(result.responses.items[0].response).toEqual("Yes")
-    expect(result.responses.items[1].response).toEqual("No")
+    expect(result.title).toEqual('Do you smoke?')
+    expect(result.responses.items[0].response).toEqual('Yes')
+    expect(result.responses.items[1].response).toEqual('No')
   })
 
 })
