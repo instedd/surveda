@@ -22,15 +22,16 @@ export default (state = defaultState, action) => {
         currentStepId: null
       }
     case actions.INITIALIZE_EDITOR:
+      const q = action.questionnaire
       return {
         ...state,
         questionnaire: {
-          id: action.questionnaire.id,
-          name: action.questionnaire.name
+          id: q.id,
+          name: q.name
         },
         steps: {
-          ids: action.questionnaire.steps.map(step => step.id),
-          items: reduce(action.questionnaire.steps, mapStepModel, {})
+          ids: q.steps.map(step => step.id),
+          items: reduce(q.steps, reduceStepsForEditor, {})
         }
       }
     default:
@@ -38,15 +39,22 @@ export default (state = defaultState, action) => {
   }
 }
 
-const mapStepModel = (items, currentStep) => {
+// TODO: there's a terminology disconnect between what comes from the
+// server and what we use here: choice vs. response. Analyze whether
+// it's ok for them to be different or we should unify the vocabulary.
+const reduceStepsForEditor = (items, currentStep) => {
   let responses = {}
   if (currentStep.choices) {
-    responses['items'] = currentStep.choices.map((choice) => {
-      var responseItem = {}
-      responseItem['response'] = choice.value
-      return responseItem
+    responses['items'] = currentStep.choices.map(choice => {
+      return { response: choice.value }
     })
   }
-  items[currentStep.id] = {title: currentStep.title, responses: responses, id: currentStep.id}
+
+  items[currentStep.id] = {
+    id: currentStep.id,
+    title: currentStep.title,
+    responses: responses
+  }
+
   return items
 }
