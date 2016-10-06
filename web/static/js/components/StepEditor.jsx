@@ -23,20 +23,8 @@ class StepEditor extends Component {
     this.props.dispatch(actions.saveStep())
   }
 
-  renderTitle(step) {
-    return (
-      <div className='col s10'>
-        <input
-          placeholder='Untitled question'
-          id='question_title'
-          type='text'
-          defaultValue={step.title}
-          autoFocus />
-      </div>)
-  }
-
   render() {
-    const { step, editingTitle } = this.props
+    const { step } = this.props
 
     return (
       <Card key={step.title}>
@@ -44,7 +32,7 @@ class StepEditor extends Component {
           <li className='collection-item'>
             <div className='row'>
               {this.renderStepNumber()}
-              {this.renderTitle(step, editingTitle)}
+              <RenderTitle step={step} />
               <div>
                 <a href='#!'
                   className='col s1'
@@ -68,8 +56,20 @@ class StepEditor extends Component {
 }
 
 StepEditor.propTypes = {
-  step: PropTypes.object.isRequired,
-  editingTitle: PropTypes.bool
+  step: PropTypes.object.isRequired
+}
+
+const RenderTitle = ({step}) => {
+  return (
+    <div className='col s10'>
+      <input
+        placeholder='Untitled question'
+        id='question_title'
+        type='text'
+        defaultValue={step.title}
+        autoFocus />
+    </div>
+  )
 }
 
 export default connect()(StepEditor)

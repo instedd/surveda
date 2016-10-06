@@ -19,10 +19,6 @@ const renderSteps = (steps) => {
   }
 }
 
-const renderCurrentStep = (step) => (
-  <StepEditor step={step} />
-)
-
 const QuestionnaireSteps = ({ questionnaireEditor }) => {
   if (questionnaireEditor.steps) {
     var steps = questionnaireEditor.steps
@@ -40,7 +36,7 @@ const QuestionnaireSteps = ({ questionnaireEditor }) => {
       return (
         <div>
           {renderSteps(stepsBefore)}
-          {renderCurrentStep(currentStep)}
+          <StepEditor step={currentStep} />
           {renderSteps(stepsAfter)}
         </div>
       )
