@@ -3,13 +3,13 @@ import Card from '../components/Card'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
-const renderSteps = (steps) => {
+const RenderSteps = ({steps}) => {
   if (steps.length !== 0) {
     return (
       <Card>
         <ul className='collection'>
           { steps.map((step) => (
-            <QuestionnaireClosedStep step={step} key={step.title} />
+            <QuestionnaireClosedStep step={step[0]} key={step[0].title} index={step[1]} />
           ))}
         </ul>
       </Card>
@@ -24,20 +24,21 @@ const QuestionnaireSteps = ({ questionnaireEditor }) => {
     var steps = questionnaireEditor.steps
     if (!questionnaireEditor.currentStepId) {
       // All collapsed
-      return renderSteps(steps.ids.map((id) => steps.items[id]))
+      return <RenderSteps steps={steps.ids.map((id, index) => [steps.items[id], index + 1])} />
     } else {
-      const index = steps.ids.findIndex(stepId => stepId === questionnaireEditor.currentStepId)
+      const itemIndex = steps.ids.findIndex(stepId => stepId === questionnaireEditor.currentStepId)
 
       // Only one expanded
-      const stepsBefore = steps.ids.slice(0, index).map((id) => steps.items[id])
+      const stepsBefore = steps.ids.slice(0, itemIndex).map((id, index) => [steps.items[id], index + 1])
       const currentStep = steps.items[questionnaireEditor.currentStepId]
-      const stepsAfter = steps.ids.slice(index + 1).map((id) => steps.items[id])
+      currentStep.index = itemIndex + 1
+      const stepsAfter = steps.ids.slice(itemIndex + 1).map((id, index) => [steps.items[id], index + itemIndex + 2 ])
 
       return (
         <div>
-          {renderSteps(stepsBefore)}
+          <RenderSteps steps={stepsBefore} />
           <StepEditor step={currentStep} />
-          {renderSteps(stepsAfter)}
+          <RenderSteps steps={stepsAfter} />
         </div>
       )
     }

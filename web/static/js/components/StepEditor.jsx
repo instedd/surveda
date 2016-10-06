@@ -14,10 +14,6 @@ class StepEditor extends Component {
     this.props.dispatch(actions.editTitle())
   }
 
-  renderStepNumber() {
-    return <div className='col s1' style={{fontWeight: 'bold'}}>1.</div>
-  }
-
   save(e) {
     e.preventDefault()
     this.props.dispatch(actions.saveStep())
@@ -31,7 +27,7 @@ class StepEditor extends Component {
         <ul className='collection'>
           <li className='collection-item'>
             <div className='row'>
-              {this.renderStepNumber()}
+              <div className='col s1' style={{fontWeight: 'bold'}}>{step.index}</div>
               <RenderTitle step={step} />
               <div>
                 <a href='#!'
