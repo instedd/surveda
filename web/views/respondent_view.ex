@@ -34,14 +34,20 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: %{table_stats: stats}}) do
+  def render("stats.json", %{stats: %{id: id, respondents_by_state: respondents_by_state, completed_by_date: completed_by_date}}) do
     %{
       data: %{
-        pending: stats.pending,
-        completed: stats.completed,
-        active: stats.active,
-        failed: stats.failed
+        id: id,
+        respondents_by_state: respondents_by_state,
+        completed_by_date: render_many(completed_by_date, Ask.RespondentView, "completed_by_date.json", as: :completed)
       }
+    }
+  end
+
+  def render("completed_by_date.json", %{completed: {date, respondents_count}}) do
+    %{
+      date: Ecto.Date.cast!(date) |> Ecto.Date.to_string,
+      count: respondents_count
     }
   end
 

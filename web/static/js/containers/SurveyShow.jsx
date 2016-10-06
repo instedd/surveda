@@ -4,7 +4,6 @@ import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
-import Chart from '../components/Chart'
 import Card from '../components/Card'
 
 class SurveyShow extends Component {
@@ -79,7 +78,7 @@ const mapStateToProps = (state, ownProps) => {
   let completedRespondentsByDate = []
 
   if(respondentsStatsRoot){
-    respondentsStats = respondentsStatsRoot.respondentsStats
+    respondentsStats = respondentsStatsRoot.respondentsByState
     completedRespondentsByDate = respondentsStatsRoot.completedByDate
   }
 

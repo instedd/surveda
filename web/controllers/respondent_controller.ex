@@ -20,9 +20,11 @@ defmodule Ask.RespondentController do
   end
 
   def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
-    Project
+    survey = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
 
     by_state = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
@@ -31,14 +33,18 @@ defmodule Ask.RespondentController do
 
     completed_by_date = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
-      group_by: :completed_at,
-      select: {r.completed_at, count("*")}) |> Enum.into(%{})
+      group_by: fragment("DATE(completed_at)"),
+      select: {fragment("DATE(completed_at)"), count("*")})
 
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0
     failed = by_state["failed"] || 0
-    stats = %{table_stats: %{pending: pending, completed: completed, active: active, failed: failed }, chart_stats: completed_by_date}
+    stats = %{
+      id: survey.id,
+      respondents_by_state: %{pending: pending, completed: completed, active: active, failed: failed },
+      completed_by_date: completed_by_date
+    }
     render(conn, "stats.json", stats: stats)
   end
 

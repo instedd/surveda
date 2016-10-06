@@ -19,13 +19,12 @@ export const fetchRespondent = (projectId, respondentId) => dispatch => {
 
 export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
   api.fetchRespondentsStats(projectId, surveyId)
-    .then(stats => dispatch(receiveRespondentsStats(surveyId, stats)))
+    .then(stats => dispatch(receiveRespondentsStats(stats)))
 }
 
-export const receiveRespondentsStats = (surveyId, response) => ({
+export const receiveRespondentsStats = (response) => ({
   type: RECEIVE_RESPONDENTS_STATS,
-  surveyId: surveyId,
-  respondentsStats: response.result
+  response
 })
 
 export const receiveRespondents = (response) => ({

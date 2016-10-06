@@ -119,7 +119,7 @@ export const fetchRespondents = (projectId, surveyId) => {
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, arrayOf(respondentsStatsSchema))
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, respondentsStatsSchema)
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {

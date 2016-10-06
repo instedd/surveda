@@ -59,15 +59,31 @@ defmodule Ask.RespondentControllerTest do
   test "lists stats for a given survey", %{conn: conn, user: user} do
     project = insert(:project, user: user)
     survey = insert(:survey, project: project)
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
-    post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+    insert_list(10, :respondent, survey: survey, state: "pending")
+    insert(:respondent, survey: survey, state: "completed", completed_at: Ecto.DateTime.cast!("2016-01-01T10:00:00"))
+    insert(:respondent, survey: survey, state: "completed", completed_at: Ecto.DateTime.cast!("2016-01-01T11:00:00"))
+    insert_list(3, :respondent, survey: survey, state: "completed", completed_at: Ecto.DateTime.cast!("2016-01-02T10:00:00"))
+
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
     assert json_response(conn, 200)["data"] == %{
-      "pending" => 14,
-      "completed" => 0,
-      "active" => 0,
-      "failed" => 0
+      "id" => survey.id,
+      "respondents_by_state" => %{
+        "pending" => 10,
+        "completed" => 5,
+        "active" => 0,
+        "failed" => 0
+      },
+      "completed_by_date" => [
+        %{
+          "date" => "2016-01-01",
+          "count" => 2
+        },
+        %{
+          "date" => "2016-01-02",
+          "count" => 3
+        }
+      ]
     }
   end
 
