@@ -15,7 +15,7 @@ class QuestionnaireClosedStep extends Component {
 
     return (
       <a href="#!" onClick={(event) => this.selectStep(event, step)} className="collection-item">
-        {index}. {step.title}
+        {step.title}
       </a>
     )
   }

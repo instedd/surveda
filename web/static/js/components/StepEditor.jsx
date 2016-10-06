@@ -4,22 +4,22 @@ import * as actions from '../actions/questionnaireEditor'
 import Card from '../components/Card'
 
 class StepEditor extends Component {
-  deselectStep(e) {
+  deselectStep (e) {
     e.preventDefault()
     this.props.dispatch(actions.deselectStep())
   }
 
-  editTitle(e) {
+  editTitle (e) {
     e.preventDefault()
     this.props.dispatch(actions.editTitle())
   }
 
-  save(e) {
+  save (e) {
     e.preventDefault()
     this.props.dispatch(actions.saveStep())
   }
 
-  render() {
+  render () {
     const { step } = this.props
 
     return (
@@ -27,7 +27,6 @@ class StepEditor extends Component {
         <ul className='collection'>
           <li className='collection-item'>
             <div className='row'>
-              <div className='col s1' style={{fontWeight: 'bold'}}>{step.index}</div>
               <RenderTitle step={step} />
               <div>
                 <a href='#!'
