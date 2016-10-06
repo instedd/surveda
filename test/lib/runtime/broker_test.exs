@@ -1,6 +1,7 @@
 defmodule Ask.BrokerTest do
   use Ask.ModelCase
   use Ask.DummySteps
+  use Timex
   alias Ask.Runtime.Broker
   alias Ask.{Repo, Survey, Respondent, TestChannel}
 
@@ -148,9 +149,15 @@ defmodule Ask.BrokerTest do
     reply = Broker.sync_step(respondent, "Yes")
     assert reply == :end
 
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
+
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "completed"
     assert respondent.session == nil
+    assert respondent.completed_at in interval
+
+
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps) do

@@ -4,7 +4,7 @@ defmodule Ask.Respondent do
   schema "respondents" do
     field :phone_number, :string
     field :state, :string, default: "pending" # pending, active, completed, failed
-    field :completed_at, Ecto.DateTime # only when state=="pending"
+    field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :session, Ask.Ecto.Type.JSON
     belongs_to :survey, Ask.Survey
     has_many :responses, Ask.Response

@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.Broker do
   use GenServer
+  use Timex
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Survey, Respondent}
@@ -95,7 +96,7 @@ defmodule Ask.Runtime.Broker do
 
       :end ->
         respondent
-        |> Respondent.changeset(%{state: "completed", session: nil})
+        |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now})
         |> Repo.update
 
         :end

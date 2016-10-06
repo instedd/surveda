@@ -60,9 +60,9 @@ defmodule Ask.RespondentControllerTest do
     project = insert(:project, user: user)
     survey = insert(:survey, project: project)
     insert_list(10, :respondent, survey: survey, state: "pending")
-    insert(:respondent, survey: survey, state: "completed", completed_at: Ecto.DateTime.cast!("2016-01-01T10:00:00"))
-    insert(:respondent, survey: survey, state: "completed", completed_at: Ecto.DateTime.cast!("2016-01-01T11:00:00"))
-    insert_list(3, :respondent, survey: survey, state: "completed", completed_at: Ecto.DateTime.cast!("2016-01-02T10:00:00"))
+    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
