@@ -1,7 +1,8 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import * as actions from '../actions/questionnaires'
+import * as questionnaireActions from '../actions/questionnaires'
+import * as editorActions from '../actions/questionnaireEditor'
 import * as projectActions from '../actions/projects'
 import { updateQuestionnaire } from '../api'
 import QuestionnaireForm from '../components/QuestionnaireForm'
@@ -9,9 +10,18 @@ import QuestionnaireForm from '../components/QuestionnaireForm'
 class QuestionnaireEdit extends Component {
   componentDidMount() {
     const { dispatch, projectId, questionnaireId } = this.props
+
+    console.log(dispatch)
+
     if (projectId && questionnaireId) {
-      dispatch(actions.fetchQuestionnaire(projectId, questionnaireId))
       dispatch(projectActions.fetchProject(projectId))
+
+      dispatch(questionnaireActions.fetchQuestionnaire(projectId, questionnaireId))
+        .then((questionnaire) => {
+          // TODO: Fix this, or decide how to make it better
+          var quest = questionnaire.response.entities.questionnaires[questionnaire.response.result]
+          dispatch(editorActions.initializeEditor(quest))
+        })
     }
   }
 
@@ -19,24 +29,25 @@ class QuestionnaireEdit extends Component {
     const { projectId, router, dispatch } = this.props
     return (questionnaire) => {
       updateQuestionnaire(projectId, questionnaire)
-        .then(questionnaire => dispatch(actions.updateQuestionnaire(questionnaire)))
+        .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
         .then(() => router.push(`/projects/${projectId}/questionnaires`))
     }
   }
 
   render(params) {
-    const { children, project, questionnaire, currentStepId } = this.props
+    const { questionnaireEditor } = this.props
 
-    return <QuestionnaireForm onSubmit={this.handleSubmit()} questionnaire={questionnaire} currentStepId={currentStepId} project={project}>{children}</QuestionnaireForm>
+    return (
+      <QuestionnaireForm
+        onSubmit={this.handleSubmit()}
+        questionnaireEditor={questionnaireEditor} />)
   }
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
-  project: state.projects[ownProps.params.projectId] || {},
   questionnaireId: ownProps.params.questionnaireId,
-  questionnaire: state.questionnaires[ownProps.params.questionnaireId],
-  currentStepId: state.questionnaireEditor.currentStepId,
+  questionnaireEditor: state.questionnaireEditor
 })
 
 export default withRouter(connect(mapStateToProps)(QuestionnaireEdit))

@@ -5,8 +5,10 @@ defmodule Ask.BrokerTest do
   alias Ask.Runtime.Broker
   alias Ask.{Repo, Survey, Respondent, TestChannel}
 
+  @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
+
   test "does nothing with 'not_ready' survey" do
-    survey = insert(:survey)
+    survey = insert(:survey, schedule_day_of_week: @everyday_schedule)
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
@@ -14,7 +16,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "set as 'completed' when there is no respondents" do
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, schedule_day_of_week: @everyday_schedule, state: "running")
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
@@ -22,7 +24,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "does nothing when there are no pending respondents" do
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, schedule_day_of_week: @everyday_schedule, state: "running")
     insert(:respondent, survey: survey, state: "active")
 
     Broker.handle_info(:poll, nil)
@@ -147,6 +149,10 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, "Yes")
+    assert reply == {:prompt, "Which is the second perfect number?"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, "99")
     assert reply == :end
 
     now = Timex.now
@@ -160,11 +166,40 @@ defmodule Ask.BrokerTest do
 
   end
 
+  test "only polls surveys schedule for todays weekday" do
+    week_day = Timex.weekday(Timex.today)
+    schedule1 = %Ask.DayOfWeek{
+      mon: week_day == 1,
+      tue: week_day == 2,
+      wed: week_day == 3,
+      thu: week_day == 4,
+      fri: week_day == 5,
+      sat: week_day == 6,
+      sun: week_day == 7}
+    schedule2 = %Ask.DayOfWeek{
+      mon: week_day != 1,
+      tue: week_day != 2,
+      wed: week_day != 3,
+      thu: week_day != 4,
+      fri: week_day != 5,
+      sat: week_day != 6,
+      sun: week_day != 7}
+    survey1 = insert(:survey, state: "running", schedule_day_of_week: schedule1)
+    survey2 = insert(:survey, state: "running", schedule_day_of_week: schedule2)
+
+    Broker.handle_info(:poll, nil)
+
+    survey1 = Repo.get(Survey, survey1.id)
+    survey2 = Repo.get(Survey, survey2.id)
+    assert survey1.state == "completed"
+    assert survey2.state == "running"
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps) do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings)
     quiz = insert(:questionnaire, steps: steps)
-    survey = insert(:survey, state: "running", questionnaire: quiz) |> Repo.preload([:channels])
+    survey = insert(:survey, schedule_day_of_week: @everyday_schedule, state: "running", questionnaire: quiz) |> Repo.preload([:channels])
     channel_changeset = Ecto.Changeset.change(channel)
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
     respondent = insert(:respondent, survey: survey)

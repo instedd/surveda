@@ -26,6 +26,14 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, current_step: state["current_step"]}
   end
 
+  defp is_numeric(str) do
+    case Float.parse(str) do
+      {_num, ""} -> true
+      {_num, _r} -> false               # _r : remainder_of_bianry
+      :error     -> false
+    end
+  end
+
   defp accept_reply(flow = %Flow{current_step: nil}, nil) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}}
@@ -41,15 +49,22 @@ defmodule Ask.Runtime.Flow do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
     flow = %{flow | current_step: flow.current_step + 1}
 
-    choice = step["choices"] |> Enum.find(fn choice ->
-      choice["responses"] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
-    end)
+    reply_value = case step["type"] do
+                    "multiple-choice" ->
+                      choice = step["choices"]
+                      |> Enum.find(fn choice ->
+                        choice["responses"] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+                      end)
+                      if (choice), do: choice["value"], else: nil
+                    "numeric" ->
+                      if (is_numeric(reply)), do: reply, else: nil
+                  end
 
-    case choice do
+    case reply_value do
       nil ->
         {flow, %Reply{}}
-      choice ->
-        {flow, %Reply{stores: %{step["store"] => choice["value"]}}}
+      reply_value ->
+        {flow, %Reply{stores: %{step["store"] => reply_value}}}
     end
   end
 

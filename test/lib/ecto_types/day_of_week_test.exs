@@ -99,12 +99,23 @@ defmodule Ask.DayOfWeekTest do
       assert {:ok, %DayOfWeek{sun: true, sat: true}} = DayOfWeek.cast(%DayOfWeek{sun: true, sat: true})
     end
 
+    test "shuld cast a struct with string keys" do
+      assert {
+        :ok,
+        %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}
+      } = DayOfWeek.cast(%{"sun" => true, "mon" => true, "tue" => true, "wed" => true, "thu" => true, "fri" => false, "sat" => true})
+    end
+
     test "shuld cast an integer if it's smaller than 127" do
       assert {:ok, %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true}} = DayOfWeek.cast(127)
     end
 
     test "shuld error if the integer is bigger than 127" do
       assert :error = DayOfWeek.cast(128)
+    end
+
+    test "shuld cast nil" do
+      assert {:ok, %DayOfWeek{sun: nil, mon: nil, tue: nil, wed: nil, thu: nil, fri: nil, sat: nil}} = DayOfWeek.cast(nil)
     end
   end
 end

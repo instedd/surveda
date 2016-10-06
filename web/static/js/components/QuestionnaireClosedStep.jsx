@@ -11,7 +11,7 @@ class QuestionnaireClosedStep extends Component {
   }
 
   render() {
-    const { step } = this.props
+    const { step, index } = this.props
 
     return (
       <a href="#!" onClick={(event) => this.selectStep(event, step)} className="collection-item">

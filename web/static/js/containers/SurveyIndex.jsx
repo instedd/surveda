@@ -19,7 +19,7 @@ class SurveyIndex extends Component {
   newSurvey() {
     const { dispatch, projectId, router } = this.props
     createSurvey(projectId).then(response => {
-      dispatch(actions.createSurvey(response))
+      dispatch(actions.setSurvey(response))
       router.push(`/projects/${projectId}/surveys/${response.result}/edit`)
     })
   }

@@ -29,7 +29,14 @@ defmodule Ask.DayOfWeek do
   def cast(%Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
     {:ok, %Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
   end
+  def cast(map = %{}) do
+    {:ok, %Ask.DayOfWeek{sun: map["sun"], mon: map["mon"], tue: map["tue"], wed: map["wed"], thu: map["thu"], fri: map["fri"], sat: map["sat"]}}
+  end
+  def cast(%{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
+    {:ok, %Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
+  end
   def cast(int) when is_integer(int) and int < 128, do: load(int)
+  def cast(nil), do: {:ok, %Ask.DayOfWeek{}}
   def cast(_), do: :error
 
   def load(int) when is_integer(int) and int < 128 do

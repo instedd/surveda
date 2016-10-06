@@ -1,6 +1,6 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
 import merge from 'lodash/merge'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as actions from '../actions/surveys'
 import * as channelsActions from '../actions/channels'
@@ -13,23 +13,22 @@ class SurveyWizardChannelsStep extends Component {
   }
 
   handleSubmit(survey) {
-    const { dispatch, projectId, router } = this.props
+    const { dispatch, router } = this.props
     updateSurvey(survey.projectId, survey)
-      .then(survey => dispatch(actions.updateSurvey(survey)))
+      .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
       .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/cutoff`))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
   render() {
-    let input
-    let channelsInput = []
+    const channelsInput = []
     const { survey, channels } = this.props
 
     if (!survey || !channels) {
       return <div>Loading...</div>
     }
 
-    let currentChannelId = (survey.channels.length > 0 ? survey.channels[survey.channels.length - 1] : null)
+    const currentChannelId = (survey.channels.length > 0 ? survey.channels[survey.channels.length - 1] : null)
 
     return (
       <div className="col s12 m7 offset-m1">
@@ -57,13 +56,13 @@ class SurveyWizardChannelsStep extends Component {
         <div className="row">
           <div className="col s12">
             <button className="btn waves-effect waves-light" type="button" onClick={() => {
-                let option = channelsInput.find(element => element.node.selected)
-                let channels = option ? [parseInt(option.id)] : []
-                let merged = merge({}, survey)
-                merged.channels = channels
-                this.handleSubmit(merged)
-              }}>
-                Next
+              const option = channelsInput.find(element => element.node.selected)
+              const selectedChannels = option ? [parseInt(option.id, 10)] : []
+              const merged = merge({}, survey)
+              merged.channels = selectedChannels
+              this.handleSubmit(merged)
+            }}>
+              Next
             </button>
           </div>
         </div>

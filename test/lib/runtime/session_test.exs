@@ -41,7 +41,8 @@ defmodule Ask.SessionTest do
     session = Session.start(quiz, respondent, channel)
 
     {:ok, session, _} = Session.sync_step(session, "Y")
-    step_result = Session.sync_step(session, "N")
+    {:ok, session, _} = Session.sync_step(session, "N")
+    step_result = Session.sync_step(session, "99")
     assert :end == step_result
 
     responses = respondent
@@ -51,6 +52,7 @@ defmodule Ask.SessionTest do
 
     assert [
       %{field_name: "Smokes", value: "Yes"},
-      %{field_name: "Exercises", value: "No"}] = responses
+      %{field_name: "Exercises", value: "No"},
+      %{field_name: "Perfect Number", value: "99"}] = responses
   end
 end

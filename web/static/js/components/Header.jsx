@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router'
-import BreadcrumbContainer from '../containers/BreadcrumbContainer'
+import TitleContainer from '../containers/TitleContainer'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 
 export default ({ tabs, logout, user }) => (
@@ -36,7 +36,7 @@ export default ({ tabs, logout, user }) => (
         </div>
       </div>
     </nav>
-    <BreadcrumbContainer/>
+    <TitleContainer/>
     {tabs}
   </header>
 )

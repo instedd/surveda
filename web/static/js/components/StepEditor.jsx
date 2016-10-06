@@ -4,21 +4,45 @@ import * as actions from '../actions/questionnaireEditor'
 import Card from '../components/Card'
 
 class StepEditor extends Component {
-  deselectStep(event) {
-    event.preventDefault()
-
-    const { dispatch } = this.props
-    dispatch(actions.deselectStep())
+  deselectStep (e) {
+    e.preventDefault()
+    this.props.dispatch(actions.deselectStep())
   }
 
-  render() {
+  editTitle (e) {
+    e.preventDefault()
+    this.props.dispatch(actions.editTitle())
+  }
+
+  save (e) {
+    e.preventDefault()
+    this.props.dispatch(actions.saveStep())
+  }
+
+  render () {
     const { step } = this.props
 
     return (
-      <Card>
-        <ul className="collection">
-          <li className="collection-item">
-            <a href="#!" onClick={(event) => this.deselectStep(event)}>{step.title}</a>
+      <Card key={step.title}>
+        <ul className='collection'>
+          <li className='collection-item'>
+            <div className='row'>
+              <RenderTitle step={step} />
+              <div>
+                <a href='#!'
+                  className='col s1'
+                  onClick={(e) => this.deselectStep(e)}>
+                  Deselect
+                </a>
+              </div>
+            </div>
+
+            <div className='row'>
+              <a href='#!'
+                onClick={(e) => this.save(e)}>
+                Save
+              </a>
+            </div>
           </li>
         </ul>
       </Card>
@@ -27,7 +51,20 @@ class StepEditor extends Component {
 }
 
 StepEditor.propTypes = {
-  step: PropTypes.object.isRequired,
+  step: PropTypes.object.isRequired
 }
 
-export default connect()(StepEditor);
+const RenderTitle = ({step}) => {
+  return (
+    <div className='col s10'>
+      <input
+        placeholder='Untitled question'
+        id='question_title'
+        type='text'
+        defaultValue={step.title}
+        autoFocus />
+    </div>
+  )
+}
+
+export default connect()(StepEditor)

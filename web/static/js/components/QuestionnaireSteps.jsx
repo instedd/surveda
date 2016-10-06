@@ -1,17 +1,15 @@
 import React, { PropTypes } from 'react'
-import merge from 'lodash/merge'
-import { Link } from 'react-router'
 import Card from '../components/Card'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
-const renderSteps = (steps) => {
-  if (steps.length != 0) {
+const RenderSteps = ({steps}) => {
+  if (steps.length !== 0) {
     return (
       <Card>
-        <ul className="collection">
+        <ul className='collection'>
           { steps.map((step) => (
-            <QuestionnaireClosedStep step={step} key={step.id} />
+            <QuestionnaireClosedStep step={step} key={step.title} />
           ))}
         </ul>
       </Card>
@@ -21,28 +19,26 @@ const renderSteps = (steps) => {
   }
 }
 
-const renderCurrentStep = (step) => (
-  <StepEditor step={step} />
-)
-
-const QuestionnaireSteps = ({ steps, currentStepId }) => {
-  if (steps) {
-    const index = steps.findIndex(step => step.id == currentStepId)
-    if (index == -1) {
+const QuestionnaireSteps = ({ questionnaireEditor }) => {
+  if (questionnaireEditor.steps) {
+    var steps = questionnaireEditor.steps
+    if (!questionnaireEditor.currentStepId) {
       // All collapsed
-      return renderSteps(steps)
+      return <RenderSteps steps={steps.ids.map((id) => steps.items[id])} />
     } else {
+      const itemIndex = steps.ids.findIndex(stepId => stepId === questionnaireEditor.currentStepId)
+
       // Only one expanded
-      const stepsBefore = steps.slice(0, index)
-      const currentStep = steps[index]
-      const stepsAfter = steps.slice(index + 1)
+      const stepsBefore = steps.ids.slice(0, itemIndex).map((id) => steps.items[id])
+      const currentStep = steps.items[questionnaireEditor.currentStepId]
+      const stepsAfter = steps.ids.slice(itemIndex + 1).map((id) => steps.items[id])
 
       return (
         <div>
-        {renderSteps(stepsBefore)}
-        {renderCurrentStep(currentStep)}
-        {renderSteps(stepsAfter)}
-      </div>
+          <RenderSteps steps={stepsBefore} />
+          <StepEditor step={currentStep} />
+          <RenderSteps steps={stepsAfter} />
+        </div>
       )
     }
   } else {
@@ -55,7 +51,8 @@ const QuestionnaireSteps = ({ steps, currentStepId }) => {
 }
 
 QuestionnaireSteps.propTypes = {
-  steps: PropTypes.array,
+  steps: PropTypes.object,
+  currentStepId: PropTypes.string
 }
 
 export default QuestionnaireSteps

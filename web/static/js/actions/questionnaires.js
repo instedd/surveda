@@ -6,12 +6,12 @@ export const UPDATE_QUESTIONNAIRE = 'UPDATE_QUESTIONNAIRE'
 export const RECEIVE_QUESTIONNAIRES_ERROR = 'RECEIVE_QUESTIONNAIRES_ERROR'
 
 export const fetchQuestionnaires = (projectId) => dispatch => {
-  api.fetchQuestionnaires(projectId)
+  return api.fetchQuestionnaires(projectId)
     .then(questionnaires => dispatch(receiveQuestionnaires(questionnaires)))
 }
 
 export const fetchQuestionnaire = (projectId, questionnaireId) => dispatch => {
-  api.fetchQuestionnaire(projectId, questionnaireId)
+  return api.fetchQuestionnaire(projectId, questionnaireId)
     .then(questionnaire => dispatch(receiveQuestionnaires(questionnaire)))
 }
 
@@ -24,9 +24,8 @@ export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
 }
 
 const shouldFetchQuestionnaire = (state, projectId, questionnaireId) => {
-  return state.questionnaire
+  return !(state.questionnaire && state.questionnaire.id === questionnaireId)
 }
-
 
 export const receiveQuestionnaires = (response) => ({
   type: RECEIVE_QUESTIONNAIRES,

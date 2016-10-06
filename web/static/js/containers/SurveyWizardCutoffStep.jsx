@@ -1,15 +1,15 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
 import merge from 'lodash/merge'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
 
 class SurveyWizardCutoffStep extends Component {
   handleSubmit(survey) {
-    const { dispatch, projectId, router } = this.props
+    const { dispatch } = this.props
     updateSurvey(survey.projectId, survey)
-      .then(survey => dispatch(actions.updateSurvey(survey)))
+      .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
@@ -38,7 +38,7 @@ class SurveyWizardCutoffStep extends Component {
         <div className="row">
           <div className="col s12">
             <button type="button" className="btn waves-effect waves-light" onClick={() =>
-              this.handleSubmit(merge({}, survey, {cutoff: resultsInput.value }))
+              this.handleSubmit(merge({}, survey, { cutoff: resultsInput.value }))
             }>
               Submit
             </button>

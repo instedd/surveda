@@ -14,7 +14,6 @@ defmodule Ask.SurveyControllerTest do
   end
 
   describe "index" do
-
     test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       conn = get conn, project_survey_path(conn, :index, project.id)
@@ -33,11 +32,9 @@ defmodule Ask.SurveyControllerTest do
         get conn, project_survey_path(conn, :index, survey.project)
       end
     end
-
   end
 
   describe "show" do
-
     test "shows chosen resource", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       survey = insert(:survey, project: project)
@@ -49,7 +46,13 @@ defmodule Ask.SurveyControllerTest do
         "channels" => [],
         "cutoff" => nil,
         "state" => "not_ready",
-        "respondents_count" => 0}
+        "respondents_count" => 0,
+        "schedule_day_of_week" => %{
+          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+        },
+        "schedule_start_time" => nil,
+        "schedule_end_time" => nil
+      }
     end
 
     test "shows chosen resource with channels", %{conn: conn, user: user} do
@@ -68,7 +71,12 @@ defmodule Ask.SurveyControllerTest do
         }],
         "cutoff" => nil,
         "state" => "not_ready",
-        "respondents_count" => 0
+        "respondents_count" => 0,
+        "schedule_day_of_week" => %{
+          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+        },
+        "schedule_start_time" => nil,
+        "schedule_end_time" => nil
       }
     end
 
@@ -84,11 +92,9 @@ defmodule Ask.SurveyControllerTest do
         get conn, project_survey_path(conn, :show, survey.project, survey)
       end
     end
-
   end
 
   describe "create" do
-
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       conn = post conn, project_survey_path(conn, :create, project.id)
@@ -108,17 +114,25 @@ defmodule Ask.SurveyControllerTest do
         post conn, project_survey_path(conn, :create, project.id), survey: @valid_attrs
       end
     end
-
   end
 
   describe "update" do
-
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       survey = insert(:survey, project: project)
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
       assert Repo.get_by(Survey, @valid_attrs)
+    end
+
+    test "updates schedule when data is valid", %{conn: conn, user: user} do
+      [project, questionnaire, _] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+
+      attrs = %{schedule_day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["schedule_day_of_week"]["sun"] == true
     end
 
     test "updates cutoff when channels are included in params", %{conn: conn, user: user} do
@@ -148,18 +162,24 @@ defmodule Ask.SurveyControllerTest do
       insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [channel2.id]}
 
-      assert json_response(conn, 200)["data"] == %{"id" => survey.id,
-                                                   "name" => survey.name,
-                                                   "project_id" => survey.project_id,
-                                                   "questionnaire_id" => nil,
-                                                   "channels" => [%{
-                                                                     "id" => channel2.id,
-                                                                     "type" => "sms"
-                                                                  }],
-                                                   "cutoff" => nil,
-                                                   "state" => "not_ready",
-                                                   "respondents_count" => 0
-                                                  }
+      assert json_response(conn, 200)["data"] == %{
+        "id" => survey.id,
+        "name" => survey.name,
+        "project_id" => survey.project_id,
+        "questionnaire_id" => nil,
+        "channels" => [%{
+           "id" => channel2.id,
+           "type" => "sms"
+        }],
+        "cutoff" => nil,
+        "state" => "not_ready",
+        "respondents_count" => 0,
+        "schedule_day_of_week" => %{
+          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+        },
+        "schedule_start_time" => nil,
+        "schedule_end_time" => nil
+      }
     end
 
     test "rejects update if the survey doesn't belong to the current user", %{conn: conn} do
@@ -168,11 +188,9 @@ defmodule Ask.SurveyControllerTest do
         put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
       end
     end
-
   end
 
   describe "delete" do
-
     test "deletes chosen resource", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       survey = insert(:survey, project: project)
@@ -187,11 +205,9 @@ defmodule Ask.SurveyControllerTest do
         delete conn, project_survey_path(conn, :delete, survey.project, survey)
       end
     end
-
   end
 
   describe "changes the survey state when needed" do
-
     test "updates state when adding questionnaire", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
@@ -347,5 +363,4 @@ defmodule Ask.SurveyControllerTest do
 
     Repo.update(changeset)
   end
-
 end

@@ -16,9 +16,11 @@ install:
 before_script:
   - docker-compose build
   - docker-compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
+  - docker-compose run --rm brunch npm install
 
 script:
   - docker-compose run --rm app mix test
+  - docker-compose run --rm brunch npm test
 
 before_deploy:
   - docker-compose run --rm brunch npm --loglevel=silent install

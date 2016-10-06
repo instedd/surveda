@@ -1,8 +1,7 @@
 import * as api from '../api'
 
 export const RECEIVE_SURVEYS = 'RECEIVE_SURVEYS'
-export const CREATE_SURVEY = 'CREATE_SURVEY'
-export const UPDATE_SURVEY = 'UPDATE_SURVEY'
+export const SET_SURVEY = 'SET_SURVEY'
 export const RECEIVE_SURVEYS_ERROR = 'RECEIVE_SURVEYS_ERROR'
 
 export const fetchSurveys = (projectId) => (dispatch, getState) => {
@@ -14,20 +13,20 @@ export const fetchSurveys = (projectId) => (dispatch, getState) => {
 
 export const fetchSurvey = (projectId, surveyId) => (dispatch, getState) => {
   return api.fetchSurvey(projectId, surveyId)
-    .then(survey => dispatch(receiveSurveys(survey)))
+    .then(survey => dispatch(setSurvey(survey)))
     .then(() => getState().surveys[surveyId])
 }
 
 export const fetchSurveyIfNeeded = (projectId, surveyId) => {
   return (dispatch, getState) => {
-    if (shouldFetchSurvey(getState(), projectId, surveyId)) {
+    if (shouldFetchSurvey(getState())) {
       return dispatch(fetchSurvey(projectId, surveyId))
     }
   }
 }
 
-const shouldFetchSurvey = (state, projectId, surveyId) => {
-  return state.surveys
+const shouldFetchSurvey = (state) => {
+  return state.surveys === {}
 }
 
 export const receiveSurveys = (response) => ({
@@ -35,14 +34,8 @@ export const receiveSurveys = (response) => ({
   response
 })
 
-export const createSurvey = (response) => ({
-  type: CREATE_SURVEY,
-  id: response.result,
-  survey: response.entities.surveys[response.result]
-})
-
-export const updateSurvey = (response) => ({
-  type: UPDATE_SURVEY,
+export const setSurvey = (response) => ({
+  type: SET_SURVEY,
   id: response.result,
   survey: response.entities.surveys[response.result]
 })

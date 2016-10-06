@@ -4,6 +4,7 @@ import merge from 'lodash/merge'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
+import { ConfirmationModal } from '../components/ConfirmationModal'
 import { uploadRespondents, fetchQuestionnaires, removeRespondents } from '../api'
 import * as actions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
@@ -14,10 +15,6 @@ class SurveyWizardRespondentsStep extends Component {
     if (projectId && surveyId) {
       dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
     }
-  }
-
-  componentDidUpdate() {
-    initializeModals()
   }
 
   handleSubmit(survey, files) {
@@ -55,7 +52,7 @@ class SurveyWizardRespondentsStep extends Component {
               <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId}/>
             )}
           </RespondentsList>
-          <ConfirmationModal modalId="removeRespondents" linkText="REMOVE RESPONDENTS" modalText="Are you sure?" header="Please confirm" confirmationText="Delete all" onConfirm={(event) => this.removeRespondents(event)}/>
+          <ConfirmationModal showLink={true} modalId="removeRespondents" linkText="REMOVE RESPONDENTS" modalText="Are you sure?" header="Please confirm" confirmationText="Delete all" onConfirm={(event) => this.removeRespondents(event)}/>
           <br/>
           <br/>
           <Link className="btn waves-effect waves-light" to={`/projects/${projectId}/surveys/${survey.id}/edit/channels`}>Next</Link>
@@ -126,30 +123,6 @@ const RespondentsContainer = ({ children }) => {
       </div>
     </div>
   )
-}
-
-const ConfirmationModal = ({linkText, header, modalText, confirmationText, onConfirm, modalId}) => {
-  return(
-    <div>
-      <a className="modal-trigger" href={`#${modalId}`}>{linkText}</a>
-
-      <div id={modalId} className="modal">
-        <div className="modal-content">
-          <h4>{header}</h4>
-          <p>{modalText}</p>
-        </div>
-        <div className="modal-footer">
-          <a href="#!" className=" modal-action modal-close waves-effect waves-green btn-flat" onClick={onConfirm}>{confirmationText}</a>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const initializeModals = () => {
-  $(document).ready(function(){
-    $('.modal-trigger').leanModal();
-  });
 }
 
 const mapStateToProps = (state, ownProps) => {

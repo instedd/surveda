@@ -6,6 +6,9 @@ defmodule Ask.Survey do
     field :state, :string, default: "not_ready" # not_ready, ready, pending, completed
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
+    field :schedule_day_of_week, Ask.DayOfWeek, default: %Ask.DayOfWeek{}
+    field :schedule_start_time, Ecto.DateTime
+    field :schedule_end_time, Ecto.DateTime
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
@@ -21,7 +24,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :questionnaire_id, :state, :cutoff, :respondents_count])
+    |> cast(params, [:name, :project_id, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time])
     |> validate_required([:name, :project_id, :state])
     |> foreign_key_constraint(:project_id)
   end
