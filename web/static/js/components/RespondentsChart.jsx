@@ -26,7 +26,7 @@ class RespondentsChart extends Component {
   create(completedByDate, node, width, height){
     const svg = d3.select(node).select("svg")
 
-    const formatDate = d3.time.format("%d-%b-%y")
+    const formatDate = function(date){return new Date(Date.parse(date))}
 
     const x = d3.time.scale().range([0, width])
     const y = d3.time.scale().range([height, 0])
@@ -44,7 +44,7 @@ class RespondentsChart extends Component {
     .y(function(d) { return y(d.close); })
 
     const data = completedByDate.map((d) => {
-      return { date: formatDate.parse(d.completed_date), close: Number(d.respondents) }
+      return { date: formatDate(d.date), close: Number(d.count) }
     })
 
     x.domain(d3.extent(data, function(d) { return d.date; }))
@@ -76,7 +76,7 @@ class RespondentsChart extends Component {
     const svg = d3.select(node).select("svg")
 
     const data = completedByDate.map((d) => {
-      return { date: formatDate.parse(d.completed_date), close: Number(d.respondents) }
+      return { date: formatDate(d.date), close: Number(d.count) }
     })
 
     x.domain(d3.extent(data, function(d) { return d.date; }))

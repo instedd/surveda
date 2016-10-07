@@ -20,13 +20,32 @@ class SurveyShow extends Component {
     }
   }
 
+  cumulativeCountFor(d, completedByDate){
+    const dateMilliseconds = Date.parse(d)
+    return completedByDate.reduce( (pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
+  }
+
+  cumulativeCount(completedByDate){
+    const cumulativeCount = []
+    for(let i=0; i < completedByDate.length; i++){
+      let d = completedByDate[i].date
+      let current = {}
+      current["date"] = d
+      current["count"] = this.cumulativeCountFor(d, completedByDate)
+      cumulativeCount.push(current)
+    }
+    return cumulativeCount
+  }
+
   render() {
     const { survey, respondentsStats, completedByDate } = this.props
     const { dispatch, projectId, surveyId } = this.props
+    const cumulativeCount = this.cumulativeCount(completedByDate)
 
     if (!survey) {
       return <p>Loading...</p>
     }
+
 
     return (
       <div>
@@ -62,7 +81,7 @@ class SurveyShow extends Component {
         <div className="row">
           <div className="col s12">
             <div className="card">
-              <RespondentsChart completedByDate={ completedByDate } width={ 1000 } height= { 500 }/>
+              <RespondentsChart completedByDate={ cumulativeCount } width={ 1000 } height= { 500 }/>
             </div>
           </div>
         </div>
