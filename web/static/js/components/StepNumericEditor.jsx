@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 class StepNumericEditor extends Component {
   render () {
     const { step } = this.props
-    return <div>Numeric step</div>
+    return <div></div>
   }
 }
 
