@@ -383,7 +383,7 @@ defmodule Ask.SurveyControllerTest do
     insert(:respondent, phone_number: "12345678", survey: survey)
   end
 
-  def completed_schedule() do
+  def completed_schedule do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end
 

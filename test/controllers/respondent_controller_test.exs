@@ -89,7 +89,7 @@ defmodule Ask.RespondentControllerTest do
   test "updates survey state if the respondents CSV upload is the only remaining step on the survey wizard", %{conn: conn, user: user} do
     project = insert(:project, user: user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule)
     channel = insert(:channel, name: "test")
 
     add_channel_to(survey, channel)
@@ -152,7 +152,7 @@ defmodule Ask.RespondentControllerTest do
   test "updates survey state if the respondents are deleted from a 'ready' survey", %{conn: conn, user: user} do
     project = insert(:project, user: user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready")
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready", schedule_day_of_week: completed_schedule)
     channel = insert(:channel, name: "test")
 
     add_channel_to(survey, channel)
@@ -166,6 +166,10 @@ defmodule Ask.RespondentControllerTest do
     new_survey = Repo.get(Ask.Survey, survey.id)
 
     assert new_survey.state == "not_ready"
+  end
+
+  def completed_schedule do
+    %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end
 
   def add_channel_to(survey, channel) do
