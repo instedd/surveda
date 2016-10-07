@@ -1,17 +1,13 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
 import * as questionnaireActions from '../actions/questionnaires'
 import * as editorActions from '../actions/questionnaireEditor'
 import * as projectActions from '../actions/projects'
-import { updateQuestionnaire } from '../api'
 import QuestionnaireForm from '../components/QuestionnaireForm'
 
 class QuestionnaireEdit extends Component {
-  componentDidMount() {
+  componentWillMount () {
     const { dispatch, projectId, questionnaireId } = this.props
-
-    console.log(dispatch)
 
     if (projectId && questionnaireId) {
       dispatch(projectActions.fetchProject(projectId))
@@ -25,22 +21,11 @@ class QuestionnaireEdit extends Component {
     }
   }
 
-  handleSubmit() {
-    const { projectId, router, dispatch } = this.props
-    return (questionnaire) => {
-      updateQuestionnaire(projectId, questionnaire)
-        .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
-        .then(() => router.push(`/projects/${projectId}/questionnaires`))
-    }
-  }
-
-  render(params) {
+  render (params) {
     const { questionnaireEditor } = this.props
 
     return (
-      <QuestionnaireForm
-        onSubmit={this.handleSubmit()}
-        questionnaireEditor={questionnaireEditor} />)
+      <QuestionnaireForm questionnaireEditor={questionnaireEditor} />)
   }
 }
 
@@ -50,4 +35,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaireEditor: state.questionnaireEditor
 })
 
-export default withRouter(connect(mapStateToProps)(QuestionnaireEdit))
+export default connect(mapStateToProps)(QuestionnaireEdit)

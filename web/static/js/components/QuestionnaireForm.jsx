@@ -1,67 +1,142 @@
-import React, { PropTypes } from 'react'
-import merge from 'lodash/merge'
+import React, { Component, PropTypes } from 'react'
+import { Input } from 'react-materialize'
+import { withRouter } from 'react-router'
+import { connect } from 'react-redux'
+import { createQuestionnaire, updateQuestionnaire } from '../api'
+import * as questionnaireActions from '../actions/questionnaires'
+import * as actions from '../actions/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import * as editorActions from '../actions/questionnaireEditor'
 
-const QuestionnaireForm = ({ onSubmit, questionnaireEditor, dispatch }) => {
-  let nameInput
-  let modesInput
+class QuestionnaireForm extends Component {
+  constructor (props) {
+    super(props)
 
-  if (!questionnaireEditor.questionnaire) {
-    return <div>Loading...</div>
+    this.state = { questionnaireName: '' }
+
+    this.questionnaireNameChange = this.questionnaireNameChange.bind(this)
+    this.questionnaireNameSubmit = this.questionnaireNameSubmit.bind(this)
+
+    this.questionnaireModesChange = this.questionnaireModesChange.bind(this)
+
+    this.questionnaireSave = this.questionnaireSave.bind(this)
   }
 
-  const questionnaire = questionnaireEditor.questionnaire
+  questionnaireModesChange (event) {
+    const { dispatch } = this.props
+    dispatch(actions.changeQuestionnaireModes(event.target.value))
+  }
 
-  return (
-    <div className='row'>
+  questionnaireNameChange (event) {
+    event.preventDefault()
+    this.setState({questionnaireName: event.target.value})
+  }
+
+  questionnaireNameSubmit (event) {
+    event.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.changeQuestionnaireName(event.target.value))
+  }
+
+  questionnaireSave (event) {
+    event.preventDefault()
+    const { dispatch, questionnaireEditor, router } = this.props
+
+    const questionnaire = questionnaireEditor.questionnaire
+
+    console.log(questionnaireEditor)
+
+    if (questionnaire.id == null) {
+      createQuestionnaire(questionnaire.projectId, questionnaire)
+        .then(questionnaire => dispatch(questionnaireActions.createQuestionnaire(questionnaire)))
+        .then(() => router.push(`/projects/${questionnaire.projectId}/questionnaires`))
+    } else {
+      updateQuestionnaire(questionnaire.projectId, questionnaire)
+        .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
+        .then(() => router.push(`/projects/${questionnaire.projectId}/questionnaires`))
+    }
+  }
+
+  componentWillMount () {
+    const { questionnaireEditor } = this.props
+
+    if (questionnaireEditor.questionnaire) {
+      this.setState({questionnaireName: questionnaireEditor.questionnaire.name})
+    }
+  }
+
+  componentWillReceiveProps () {
+    const { questionnaireEditor } = this.props
+
+    if (questionnaireEditor.questionnaire) {
+      this.setState({questionnaireName: questionnaireEditor.questionnaire.name})
+    }
+  }
+
+  render () {
+    const { questionnaireEditor } = this.props
+
+    if (!questionnaireEditor.questionnaire) {
+      return <div>Loading...</div>
+    }
+
+    const questionnaire = questionnaireEditor.questionnaire
+
+    console.log(questionnaireEditor.questionnaire)
+
+    return (
       <div className='row'>
-        <div className='col s12 m4'>
-          <div className='row'>
-            <div className='input-field col s12'>
-              <input type='text' id='questionnaire_name' placeholder='Questionnaire name' defaultValue={questionnaire.name} ref={node => { nameInput = node }} />
-              <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
+        <div className='row'>
+          <div className='col s12 m4'>
+            <div className='row'>
+              <div className='input-field col s12'>
+                <input
+                  type='text'
+                  id='questionnaire_name'
+                  placeholder='Questionnaire name'
+                  value={this.state.questionnaireName}
+                  onChange={this.questionnaireNameChange}
+                  onBlur={this.questionnaireNameSubmit}
+                  />
+                <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
+              </div>
             </div>
-          </div>
-          <div className='row'>
-            <div className='input-field col s12'>
-              <select defaultValue={'SMS'} ref={node => { modesInput = node; $(node).material_select() }}>
+            <div className='row'>
+              <Input s={12} type='select' label='Mode'
+                value={questionnaire.modes.join(',')}
+                onChange={this.questionnaireModesChange}>
                 <option value='SMS'>SMS</option>
                 <option value='IVR'>IVR</option>
                 <option value='SMS,IVR'>SMS and IVR</option>
-              </select>
-              <label>Mode</label>
+              </Input>
+            </div>
+          </div>
+          <div className='col s12 m8'>
+            <div className='row'>
+              <div className='col s12'>
+                <QuestionnaireSteps
+                  questionnaireEditor={questionnaireEditor}
+                  />
+              </div>
             </div>
           </div>
         </div>
-        <div className='col s12 m8'>
-          <div className='row'>
-            <div className='col s12'>
-              <QuestionnaireSteps
-                questionnaireEditor={questionnaireEditor}
-                />
-            </div>
+        <div className='row'>
+          <div className='col s12'>
+            <button
+              type='button'
+              className='btn waves-effect waves-light'
+              onClick={this.questionnaireSave}>
+              Submit
+            </button>
           </div>
         </div>
       </div>
-      <div className='row'>
-        <div className='col s12'>
-          <button type='button' className='btn waves-effect waves-light' onClick={() => {
-            let newQuestionnaire = merge({}, questionnaire, {name: nameInput.value})
-            newQuestionnaire.modes = modesInput.value.split(',')
-            return onSubmit(newQuestionnaire)
-          }}>
-            Submit
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+    )
+  }
 }
 
 QuestionnaireForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
   questionnaireEditor: PropTypes.object.isRequired
 }
 
-export default QuestionnaireForm
+export default withRouter(connect()(QuestionnaireForm))

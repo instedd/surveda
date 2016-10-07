@@ -22,20 +22,63 @@ export default (state = defaultState, action) => {
         currentStepId: null
       }
     case actions.INITIALIZE_EDITOR:
-      const q = action.questionnaire
+      return initializeEditor(state, action)
+    case actions.NEW_QUESTIONNAIRE:
       return {
         ...state,
         questionnaire: {
-          id: q.id,
-          name: q.name
-        },
-        steps: {
-          ids: q.steps.map(step => step.id),
-          items: reduce(q.steps, reduceStepsForEditor, {})
+          ...state.questionnaire,
+          id: null,
+          name: '',
+          modes: ['SMS'],
+          projectId: action.projectId
         }
       }
+    case actions.CHANGE_QUESTIONNAIRE_NAME:
+      if (state.questionnaire.name !== action.newName) {
+        return {
+          ...state,
+          questionnaire: {
+            ...state.questionnaire,
+            name: action.newName
+          }
+        }
+      } else {
+        return state
+      }
+    case actions.CHANGE_QUESTIONNAIRE_MODES:
+      return changeQuestionnaireModes(state, action)
     default:
       return state
+  }
+}
+
+const changeQuestionnaireModes = (state, action) => {
+  return {
+    ...state,
+    questionnaire: {
+      ...state.questionnaire,
+      modes: action.newModes.split(',')
+    }
+  }
+}
+
+const initializeEditor = (state, action) => {
+  const q = action.questionnaire
+  return {
+    ...state,
+    questionnaire: {
+      ...state.questionnaire,
+      id: q.id,
+      name: q.name,
+      modes: q.modes,
+      projectId: q.projectId
+    },
+    steps: {
+      ...state.steps,
+      ids: q.steps.map(step => step.id),
+      items: reduce(q.steps, reduceStepsForEditor, {})
+    }
   }
 }
 
