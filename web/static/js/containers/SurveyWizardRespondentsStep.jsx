@@ -1,49 +1,46 @@
 import React, { PropTypes, Component } from 'react'
-import { browserHistory } from 'react-router'
-import merge from 'lodash/merge'
-import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
 import { ConfirmationModal } from '../components/ConfirmationModal'
-import { uploadRespondents, fetchQuestionnaires, removeRespondents } from '../api'
-import * as actions from '../actions/surveys'
+import { uploadRespondents, removeRespondents } from '../api'
+import * as actions from '../actions/surveyEdit'
 import * as respondentsActions from '../actions/respondents'
-import * as routes from '../routes'
 
 class SurveyWizardRespondentsStep extends Component {
-  componentDidMount() {
-    const { dispatch, projectId, surveyId } = this.props
-    if (projectId && surveyId) {
-      dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
-    }
+  static propTypes = {
+    survey: PropTypes.object,
+    respondents: PropTypes.object.isRequired,
+    respondentsCount: PropTypes.number.isRequired,
+    dispatch: PropTypes.func.isRequired
   }
 
   handleSubmit(survey, files) {
-    const { dispatch, projectId } = this.props
+    const { dispatch } = this.props
     uploadRespondents(survey, files)
-      .then(respondents => { dispatch(respondentsActions.receiveRespondents(respondents)) })
-      .then(() => dispatch(actions.fetchSurvey(projectId, survey.id)))
-      .catch((e) => dispatch(respondentsActions.receiveRespondentsError(e)))
+      .then(respondents => {
+        dispatch(respondentsActions.receiveRespondents(respondents))
+        dispatch(actions.updateRespondentsCount(Object.keys(respondents).length))
+      })
   }
 
   removeRespondents(event) {
-    const { dispatch, projectId, survey } = this.props
+    const { dispatch, survey } = this.props
     event.preventDefault()
     removeRespondents(survey)
-      .then(respondents => { dispatch(respondentsActions.removeRespondents(respondents)) })
-      .then(() => dispatch(actions.fetchSurvey(projectId, survey.id)))
-      .catch((e) => dispatch(respondentsActions.receiveRespondentsError(e)))
+      .then(respondents => {
+        dispatch(respondentsActions.removeRespondents(respondents))
+        dispatch(actions.updateRespondentsCount(0))
+      })
   }
 
   render() {
-    let files
-    const { survey, respondentsCount, respondents, projectId } = this.props
+    const { survey, respondentsCount, respondents } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
     }
 
-    if (respondentsCount != 0) {
+    if (respondentsCount !== 0) {
       let respondentsIds = Object.keys(respondents).slice(0, 5)
 
       return (
@@ -54,9 +51,6 @@ class SurveyWizardRespondentsStep extends Component {
             )}
           </RespondentsList>
           <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText='Are you sure?' header='Please confirm' confirmationText='Delete all' onConfirm={(event) => this.removeRespondents(event)} />
-          <br />
-          <br />
-          <Link className='btn waves-effect waves-light' to={routes.editSurveyChannels(projectId, survey.id)}>Next</Link>
         </RespondentsContainer>
       )
     } else {
@@ -67,7 +61,6 @@ class SurveyWizardRespondentsStep extends Component {
       )
     }
   }
-
 }
 
 const RespondentsDropzone = ({ survey, onDrop }) => {
@@ -108,7 +101,7 @@ const PhoneNumberRow = ({ id, phoneNumber }) => {
 
 const RespondentsContainer = ({ children }) => {
   return (
-    <div className='col s12 m7 offset-m1'>
+    <div>
       <div className='row'>
         <div className='col s12'>
           <h4>Upload your respondents list</h4>
@@ -128,11 +121,7 @@ const RespondentsContainer = ({ children }) => {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    respondents: state.respondents,
-    respondentsCount: Object.keys(state.respondents).length,
-    projectId: ownProps.params.projectId,
-    surveyId: ownProps.params.surveyId,
-    survey: state.surveys[ownProps.params.surveyId]
+    respondentsCount: Object.keys(ownProps.respondents).length
   }
 }
 

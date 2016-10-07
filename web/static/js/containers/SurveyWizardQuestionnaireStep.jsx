@@ -1,32 +1,21 @@
-import React, { Component } from 'react'
-import merge from 'lodash/merge'
-import { Link, withRouter } from 'react-router'
-import { connect } from 'react-redux'
-import { updateSurvey } from '../api'
-import * as actions from '../actions/surveys'
-import * as questionnairesActions from '../actions/questionnaires'
+import React, { PropTypes, Component } from 'react'
+import * as actions from '../actions/surveyEdit'
+import { Link } from 'react-router'
 import * as routes from '../routes'
 
-class SurveyWizardQuestionnaireStep extends Component {
-  componentDidMount() {
-    const { dispatch, projectId } = this.props
-    if (projectId) {
-      dispatch(questionnairesActions.fetchQuestionnaires(projectId))
-    }
+export default class SurveyWizardQuestionnaireStep extends Component {
+  static propTypes = {
+    survey: PropTypes.object.isRequired,
+    questionnaires: PropTypes.object.isRequired,
+    projectId: PropTypes.string.isRequired,
+    dispatch: PropTypes.func.isRequired
   }
 
-  handleSubmit(oldSurvey, questionnairesInput) {
-    const newSurveyValues = {
-      questionnaire_id: (questionnairesInput.find(element => element.node.checked) || {}).id
-    }
-
-    const survey = merge({}, oldSurvey, newSurveyValues)
-
-    const { dispatch, router } = this.props
-    updateSurvey(survey.projectId, survey)
-      .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
-      .then(() => router.push(routes.editSurveyRespondents(survey.projectId, survey.id)))
-      .catch((e) => dispatch(actions.receiveSurveysError(e)))
+  questionnaireChange(e) {
+    const { dispatch } = this.props
+    console.log('checkeando', e)
+    console.log('checkeando', e.target)
+    dispatch(actions.changeQuestionnaire(parseInt(e.target.value)))
   }
 
   newQuestionnaireButton(projectId, questionnaires) {
@@ -45,13 +34,9 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   render() {
-    const questionnairesInput = []
-    const { survey, questionnaires, projectId } = this.props
-    if (!survey || !questionnaires) {
-      return <div>Loading...</div>
-    }
+    const { questionnaires, projectId } = this.props
     return (
-      <div className='col s12 m7 offset-m1'>
+      <div>
         <div className='row'>
           <div className='col s12'>
             <h4>Select a questionnaire</h4>
@@ -62,35 +47,26 @@ class SurveyWizardQuestionnaireStep extends Component {
         </div>
         <div className='row'>
           <div className='col s12'>
-            { Object.keys(questionnaires).map((questionnaireId) =>
+            { Object.keys(questionnaires).map((questionnaireId) => (
               <div key={questionnaireId}>
                 <p>
-                  <input id={questionnaireId} type='radio' name='questionnaire' className='with-gap' value={questionnaireId} ref={node => { questionnairesInput.push({ id: questionnaireId, node: node }) }} defaultChecked={survey.questionnaireId == questionnaireId} />
+                  <input
+                    id={questionnaireId}
+                    type='radio'
+                    name='questionnaire'
+                    className='with-gap'
+                    value={questionnaireId}
+                    defaultChecked={this.props.survey.questionnaireId == questionnaireId}
+                    onClick={e => this.questionnaireChange(e)}
+                  />
                   <label htmlFor={questionnaireId}>{ questionnaires[questionnaireId].name }</label>
                 </p>
               </div>
-            )}
+            ))}
           </div>
           {this.newQuestionnaireButton(projectId, questionnaires)}
-        </div>
-        <div className='row'>
-          <div className='col s12'>
-            <button type='button' className='btn waves-effect waves-light' onClick={() =>
-              this.handleSubmit(survey, questionnairesInput)
-            }>
-              Next
-            </button>
-          </div>
         </div>
       </div>
     )
   }
 }
-
-const mapStateToProps = (state, ownProps) => ({
-  questionnaires: state.questionnaires,
-  projectId: ownProps.params.projectId,
-  survey: state.surveys[ownProps.params.surveyId]
-})
-
-export default withRouter(connect(mapStateToProps)(SurveyWizardQuestionnaireStep))

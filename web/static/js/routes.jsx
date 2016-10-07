@@ -7,11 +7,6 @@ import ProjectEdit from './containers/ProjectEdit'
 import SurveyEdit from './containers/SurveyEdit'
 import SurveyIndex from './containers/SurveyIndex'
 import SurveyShow from './containers/SurveyShow'
-import SurveyWizardQuestionnaireStep from './containers/SurveyWizardQuestionnaireStep'
-import SurveyWizardRespondentsStep from './containers/SurveyWizardRespondentsStep'
-import SurveyWizardChannelsStep from './containers/SurveyWizardChannelsStep'
-import SurveyWizardCutoffStep from './containers/SurveyWizardCutoffStep'
-import SurveyWizardScheduleStep from './containers/SurveyWizardScheduleStep'
 import QuestionnaireIndex from './containers/QuestionnaireIndex'
 import QuestionnaireEditor from './components/questionnaire_editor/QuestionnaireEditor'
 import ChannelIndex from './containers/ChannelIndex'
@@ -35,15 +30,7 @@ export default (
 
         <Route path='surveys/:surveyId' components={{ body: SurveyShow, tabs: SurveyTabs }} />
         <Route path='surveys/:surveyId/respondents' components={{ body: SurveyRespondents, tabs: SurveyTabs }} />
-        <Route path='surveys/:surveyId/edit' component={SurveyEdit} >
-          <IndexRedirect to='questionnaire' />
-          <Route path='questionnaire' component={SurveyWizardQuestionnaireStep} />
-          <Route path='respondents' component={SurveyWizardRespondentsStep} />
-          <Route path='channels' component={SurveyWizardChannelsStep} />
-          <Route path='schedule' component={SurveyWizardScheduleStep} />
-          <Route path='cutoff' component={SurveyWizardCutoffStep} />
-        </Route>
-
+        <Route path='surveys/:surveyId/edit' component={SurveyEdit} />
         <Route path='questionnaires' >
           <IndexRoute components={{ body: QuestionnaireIndex, tabs: ProjectTabs }} />
           <Route path='new' component={QuestionnaireEditor} name='New Questionnaire' />
@@ -72,11 +59,11 @@ export const surveys = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveys(projectId)}/${surveyId}`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
 export const editSurvey = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
-export const editSurveyQuestionnaire = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/questionnaire`
-export const editSurveyRespondents = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/respondents`
-export const editSurveyChannels = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/channels`
-export const editSurveySchedule = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/schedule`
-export const editSurveyCutoff = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/cutoff`
+export const editSurveyQuestionnaire = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#questionnaire`
+export const editSurveyRespondents = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#respondents`
+export const editSurveyChannels = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/#hannels`
+export const editSurveySchedule = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#schedule`
+export const editSurveyCutoff = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#cutoff`
 export const questionnaires = (projectId) => `${project(projectId)}/questionnaires`
 export const newQuestionnaire = (projectId) => `${questionnaires(projectId)}/new`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaires(projectId)}/${questionnaireId}`
