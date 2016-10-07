@@ -65,8 +65,6 @@ describe('questionnaireEditor reducer', () => {
     ).steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7']
 
     expect(result.title).toEqual('Do you smoke?')
-    expect(result.responses.items[0].response).toEqual('Yes')
-    expect(result.responses.items[1].response).toEqual('No')
   })
 
   it('should update questionnaire with new name', () => {

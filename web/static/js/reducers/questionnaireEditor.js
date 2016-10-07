@@ -125,21 +125,7 @@ const initializeEditor = (state, action) => {
   }
 }
 
-// TODO: there's a terminology disconnect between what comes from the
-// server and what we use here: choice vs. response. Analyze whether
-// it's ok for them to be different or we should unify the vocabulary.
 const reduceStepsForEditor = (items, currentStep) => {
-  let responses = {}
-  if (currentStep.choices) {
-    responses['items'] = currentStep.choices.map(choice => {
-      return { response: choice.value }
-    })
-  }
-
-  items[currentStep.id] = {
-    ...currentStep,
-    responses: responses
-  }
-
+  items[currentStep.id] = currentStep
   return items
 }
