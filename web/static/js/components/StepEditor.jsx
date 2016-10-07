@@ -1,7 +1,9 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/questionnaireEditor'
-import Card from '../components/Card'
+import Card from './Card'
+import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
+import StepNumericEditor from './StepNumericEditor'
 
 class StepEditor extends Component {
   deselectStep (e) {
@@ -22,6 +24,15 @@ class StepEditor extends Component {
   render () {
     const { step } = this.props
 
+    let editor
+    if (step.type == "multiple-choice") {
+      editor = <StepMultipleChoiceEditor step={step} />
+    } else if (step.type == "numeric") {
+      editor = <StepNumericEditor step={step} />
+    } else {
+      throw `unknown step type: ${step.type}`
+    }
+
     return (
       <Card key={step.title}>
         <ul className='collection'>
@@ -35,6 +46,9 @@ class StepEditor extends Component {
                   Deselect
                 </a>
               </div>
+            </div>
+            <div className='row'>
+              {editor}
             </div>
             <div className='row'>
               <a href='#!'

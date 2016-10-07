@@ -137,8 +137,7 @@ const reduceStepsForEditor = (items, currentStep) => {
   }
 
   items[currentStep.id] = {
-    id: currentStep.id,
-    title: currentStep.title,
+    ...currentStep,
     responses: responses
   }
 
