@@ -3,6 +3,7 @@ import { Input } from 'react-materialize'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { createQuestionnaire, updateQuestionnaire } from '../api'
+import * as projectActions from '../actions/projects'
 import * as questionnaireActions from '../actions/questionnaires'
 import * as actions from '../actions/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
@@ -51,6 +52,25 @@ class QuestionnaireForm extends Component {
       updateQuestionnaire(questionnaire.projectId, questionnaire)
         .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
         .then(() => router.push(`/projects/${questionnaire.projectId}/questionnaires`))
+    }
+  }
+
+  componentWillMount () {
+    const { dispatch, projectId, questionnaireId } = this.props
+
+    if (projectId) {
+      if (questionnaireId) {
+        dispatch(projectActions.fetchProject(projectId))
+
+        dispatch(questionnaireActions.fetchQuestionnaire(projectId, questionnaireId))
+          .then((questionnaire) => {
+            // TODO: Fix this, or decide how to make it better
+            var quest = questionnaire.response.entities.questionnaires[questionnaire.response.result]
+            dispatch(actions.initializeEditor(quest))
+          })
+      } else {
+        dispatch(actions.newQuestionnaire(projectId))
+      }
     }
   }
 
@@ -126,4 +146,10 @@ QuestionnaireForm.propTypes = {
   questionnaireEditor: PropTypes.object.isRequired
 }
 
-export default withRouter(connect()(QuestionnaireForm))
+const mapStateToProps = (state, ownProps) => ({
+  projectId: ownProps.params.projectId,
+  questionnaireId: ownProps.params.questionnaireId,
+  questionnaireEditor: state.questionnaireEditor
+})
+
+export default withRouter(connect(mapStateToProps)(QuestionnaireForm))
