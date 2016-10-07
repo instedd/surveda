@@ -59,5 +59,9 @@
     "plugins": [
       "transform-object-rest-spread"
     ]
+  },
+  "standard": {
+    "parser": "babel-eslint",
+    "globals": ["$"]
   }
 }
