@@ -43,8 +43,6 @@ class QuestionnaireForm extends Component {
 
     const questionnaire = questionnaireEditor.questionnaire
 
-    console.log(questionnaireEditor)
-
     if (questionnaire.id == null) {
       createQuestionnaire(questionnaire.projectId, questionnaire)
         .then(questionnaire => dispatch(questionnaireActions.createQuestionnaire(questionnaire)))
@@ -56,17 +54,8 @@ class QuestionnaireForm extends Component {
     }
   }
 
-  componentWillMount () {
-    const { questionnaireEditor } = this.props
-
-    if (questionnaireEditor.questionnaire) {
-      this.setState({questionnaireName: questionnaireEditor.questionnaire.name})
-    }
-  }
-
-  componentWillReceiveProps () {
-    const { questionnaireEditor } = this.props
-
+  componentWillReceiveProps (newProps) {
+    const { questionnaireEditor } = newProps
     if (questionnaireEditor.questionnaire) {
       this.setState({questionnaireName: questionnaireEditor.questionnaire.name})
     }
@@ -80,8 +69,6 @@ class QuestionnaireForm extends Component {
     }
 
     const questionnaire = questionnaireEditor.questionnaire
-
-    console.log(questionnaireEditor.questionnaire)
 
     return (
       <div className='row'>
