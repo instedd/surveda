@@ -9,7 +9,7 @@ const RenderSteps = ({steps}) => {
       <Card>
         <ul className='collection'>
           { steps.map((step) => (
-            <QuestionnaireClosedStep step={step} key={step.title} />
+            <QuestionnaireClosedStep step={step} key={step.id} />
           ))}
         </ul>
       </Card>

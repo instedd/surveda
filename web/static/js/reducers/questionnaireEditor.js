@@ -27,6 +27,19 @@ export default (state = defaultState, action) => {
           current: null
         }
       }
+    case actions.ADD_STEP:
+      return {
+        ...state,
+        steps: {
+          ...state.steps,
+          ids: state.steps.ids.concat([action.step.id]),
+          items: {
+            ...state.steps.items,
+            [action.step.id]: action.step
+          },
+          current: action.step.id
+        }
+      }
     case actions.INITIALIZE_EDITOR:
       return initializeEditor(state, action)
     case actions.NEW_QUESTIONNAIRE:

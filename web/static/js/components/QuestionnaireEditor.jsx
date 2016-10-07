@@ -7,6 +7,7 @@ import * as projectActions from '../actions/projects'
 import * as questionnaireActions from '../actions/questionnaires'
 import * as actions from '../actions/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
+import uuid from 'node-uuid'
 
 class QuestionnaireEditor extends Component {
   constructor (props) {
@@ -53,6 +54,29 @@ class QuestionnaireEditor extends Component {
         .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
         .then(() => router.push(`/projects/${questionnaire.projectId}/questionnaires`))
     }
+  }
+
+  questionnaireAddMultipleChoiceStep () {
+    this.questionnaireAddStep({
+      id: uuid.v4(),
+      type: 'multiple-choice',
+      title: 'Untitled multiple-choice',
+      choices: []
+    })
+  }
+
+  questionnaireAddNumericStep () {
+    this.questionnaireAddStep({
+      id: uuid.v4(),
+      type: 'numeric',
+      title: 'Untitled numeric',
+      choices: []
+    })
+  }
+
+  questionnaireAddStep (step) {
+    const { dispatch } = this.props
+    dispatch(actions.addStep(step))
   }
 
   componentWillMount () {
@@ -123,6 +147,13 @@ class QuestionnaireEditor extends Component {
                 <QuestionnaireSteps
                   questionnaireEditor={questionnaireEditor}
                   />
+              </div>
+            </div>
+            <div className='row'>
+              <div className='col s12'>
+                <a href='#!' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
+                &nbsp; | &nbsp;
+                <a href='#!' onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
               </div>
             </div>
           </div>

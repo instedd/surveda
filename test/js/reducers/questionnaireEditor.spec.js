@@ -118,6 +118,18 @@ describe('questionnaireEditor reducer', () => {
 
     expect(resultState.steps.items[resultState.steps.current].title).toEqual('New title')
   })
+
+  it('should add step', () => {
+    const id = 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
+    const title = 'Another title'
+    const preState = playActions([actions.initializeEditor(questionnaire)])
+    const resultState = playActionsFromState(preState, [
+      actions.addStep({id: id, title: title})]
+    )
+    expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length + 1)
+    expect(resultState.steps.items[id].title).toEqual(title)
+    expect(resultState.steps.current).toEqual(id)
+  })
 })
 
 const questionnaire = {
