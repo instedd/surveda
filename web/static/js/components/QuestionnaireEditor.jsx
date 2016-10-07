@@ -142,13 +142,7 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           <div className='col s12 m8'>
-            <div className='row'>
-              <div className='col s12'>
-                <QuestionnaireSteps
-                  questionnaireEditor={questionnaireEditor}
-                  />
-              </div>
-            </div>
+            <QuestionnaireSteps steps={questionnaireEditor.steps} />
             <div className='row'>
               <div className='col s12'>
                 <a href='#!' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
