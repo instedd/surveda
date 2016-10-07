@@ -16,7 +16,7 @@ defmodule Ask.TestChannel do
     %{"pid" => encoded_pid}
   end
 
-  def oauth2_authorize(_code, _redirect_uri) do
+  def oauth2_authorize(_code, _redirect_uri, _callback_uri) do
     random_access_token
   end
 
