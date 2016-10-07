@@ -130,6 +130,20 @@ describe('questionnaireEditor reducer', () => {
     expect(resultState.steps.items[id].title).toEqual(title)
     expect(resultState.steps.current).toEqual(id)
   })
+
+  it('should delete step', () => {
+    const preState = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+    const resultState = playActionsFromState(preState, [
+      actions.deleteStep()]
+    )
+    expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length - 1)
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15']).toEqual(null)
+    expect(resultState.steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7'].title).toEqual('Do you smoke?')
+    expect(resultState.steps.current).toEqual(null)
+  })
 })
 
 const questionnaire = {

@@ -40,6 +40,20 @@ export default (state = defaultState, action) => {
           current: action.step.id
         }
       }
+    case actions.DELETE_STEP:
+      let ids = state.steps.ids.filter(id => id != state.steps.current)
+      let items = Object.assign({}, state.steps.items)
+      delete items[state.steps.current]
+
+      return {
+        ...state,
+        steps: {
+          ...state.steps,
+          ids,
+          items,
+          current: null,
+        }
+      }
     case actions.INITIALIZE_EDITOR:
       return initializeEditor(state, action)
     case actions.NEW_QUESTIONNAIRE:

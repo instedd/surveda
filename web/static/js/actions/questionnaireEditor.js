@@ -6,6 +6,7 @@ export const CHANGE_QUESTIONNAIRE_NAME = 'QUESTIONNAIRE_EDITOR_CHANGE_QUESTIONNA
 export const CHANGE_QUESTIONNAIRE_MODES = 'QUESTIONNAIRE_EDITOR_CHANGE_QUESTIONNAIRE_MODES'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_EDITOR_CHANGE_STEP_TITLE'
 export const ADD_STEP = 'QUESTIONNAIRE_EDITOR_ADD_STEP'
+export const DELETE_STEP = 'QUESTIONNAIRE_EDITOR_DELETE_STEP'
 
 export const selectStep = (stepId) => ({
   type: SELECT_STEP,
@@ -44,4 +45,8 @@ export const changeStepTitle = (newTitle) => ({
 export const addStep = (step) => ({
   type: ADD_STEP,
   step
+})
+
+export const deleteStep = (step) => ({
+  type: DELETE_STEP
 })

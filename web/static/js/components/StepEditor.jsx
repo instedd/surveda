@@ -14,9 +14,9 @@ class StepEditor extends Component {
     this.props.dispatch(actions.editTitle())
   }
 
-  save (e) {
+  delete (e) {
     e.preventDefault()
-    this.props.dispatch(actions.saveStep())
+    this.props.dispatch(actions.deleteStep())
   }
 
   render () {
@@ -36,11 +36,10 @@ class StepEditor extends Component {
                 </a>
               </div>
             </div>
-
             <div className='row'>
               <a href='#!'
-                onClick={(e) => this.save(e)}>
-                Save
+                onClick={(e) => this.delete(e)}>
+                Delete
               </a>
             </div>
           </li>
