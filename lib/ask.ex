@@ -16,7 +16,7 @@ defmodule Ask do
       # worker(Ask.Worker, [arg1, arg2, arg3]),
     ]
 
-    children = if Mix.env != :test do
+    children = if Mix.env != :test && !IEx.started? do
       [
         worker(Ask.OAuthTokenServer, []),
         worker(Ask.Runtime.Broker, [])
