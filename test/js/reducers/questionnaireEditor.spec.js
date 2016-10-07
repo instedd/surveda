@@ -8,11 +8,15 @@ describe('questionnaireEditor reducer', () => {
   const initialState = reducer(undefined, {})
 
   const playActions = (actions) => {
-    let state = initialState
+    return playActionsFromState(initialState, actions)
+  }
+
+  const playActionsFromState = (state, actions) => {
+    let resultState = state
     each(actions, (a) => {
-      state = reducer(state, a)
+      resultState = reducer(resultState, a)
     })
-    return state
+    return resultState
   }
 
   it('should generate initial editor state from questionnaire model', () => {
@@ -84,6 +88,15 @@ describe('questionnaireEditor reducer', () => {
     expect(result.modes).toEqual(['IVR'])
   })
 
+  it('should select a step', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+
+    expect(result.steps.current).toEqual('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+  })
+
   it('should change to multiple modes', () => {
     const result = playActions([
       actions.initializeEditor(questionnaire),
@@ -94,6 +107,16 @@ describe('questionnaireEditor reducer', () => {
     because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
     expect(result.modes.length).toEqual(2)
     expect(result.modes).toEqual(['SMS', 'IVR'])
+  })
+
+  it('should update step title', () => {
+    const preState = playActions([actions.initializeEditor(questionnaire)])
+    const resultState = playActionsFromState(preState, [
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeStepTitle('New title')]
+    )
+
+    expect(resultState.steps.items[resultState.steps.current].title).toEqual('New title')
   })
 })
 

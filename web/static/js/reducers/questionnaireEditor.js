@@ -14,12 +14,18 @@ export default (state = defaultState, action) => {
     case actions.SELECT_STEP:
       return {
         ...state,
-        currentStepId: action.stepId
+        steps: {
+          ...state.steps,
+          current: action.stepId
+        }
       }
     case actions.DESELECT_STEP:
       return {
         ...state,
-        currentStepId: null
+        steps: {
+          ...state.steps,
+          current: null
+        }
       }
     case actions.INITIALIZE_EDITOR:
       return initializeEditor(state, action)
@@ -35,19 +41,29 @@ export default (state = defaultState, action) => {
         }
       }
     case actions.CHANGE_QUESTIONNAIRE_NAME:
-      if (state.questionnaire.name !== action.newName) {
-        return {
-          ...state,
-          questionnaire: {
-            ...state.questionnaire,
-            name: action.newName
-          }
+      return {
+        ...state,
+        questionnaire: {
+          ...state.questionnaire,
+          name: action.newName
         }
-      } else {
-        return state
       }
     case actions.CHANGE_QUESTIONNAIRE_MODES:
       return changeQuestionnaireModes(state, action)
+    case actions.CHANGE_STEP_TITLE:
+      return {
+        ...state,
+        steps: {
+          ...state.steps,
+          items: {
+            ...state.steps.items,
+            [state.steps.current]: {
+              ...state.steps.items[state.steps.current],
+              title: action.newTitle
+            }
+          }
+        }
+      }
     default:
       return state
   }

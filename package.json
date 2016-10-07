@@ -63,6 +63,8 @@
   },
   "standard": {
     "parser": "babel-eslint",
-    "globals": ["$"]
+    "globals": [
+      "$"
+    ]
   }
 }

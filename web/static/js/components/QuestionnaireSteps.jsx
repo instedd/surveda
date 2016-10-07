@@ -21,16 +21,16 @@ const RenderSteps = ({steps}) => {
 
 const QuestionnaireSteps = ({ questionnaireEditor }) => {
   if (questionnaireEditor.steps) {
-    var steps = questionnaireEditor.steps
-    if (!questionnaireEditor.currentStepId) {
+    const steps = questionnaireEditor.steps
+    if (!steps.current) {
       // All collapsed
       return <RenderSteps steps={steps.ids.map((id) => steps.items[id])} />
     } else {
-      const itemIndex = steps.ids.findIndex(stepId => stepId === questionnaireEditor.currentStepId)
+      const itemIndex = steps.ids.findIndex(stepId => stepId === steps.current)
 
       // Only one expanded
       const stepsBefore = steps.ids.slice(0, itemIndex).map((id) => steps.items[id])
-      const currentStep = steps.items[questionnaireEditor.currentStepId]
+      const currentStep = steps.items[steps.current]
       const stepsAfter = steps.ids.slice(itemIndex + 1).map((id) => steps.items[id])
 
       return (
@@ -51,8 +51,7 @@ const QuestionnaireSteps = ({ questionnaireEditor }) => {
 }
 
 QuestionnaireSteps.propTypes = {
-  steps: PropTypes.object,
-  currentStepId: PropTypes.string
+  steps: PropTypes.object
 }
 
 export default QuestionnaireSteps
