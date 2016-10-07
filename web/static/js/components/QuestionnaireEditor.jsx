@@ -8,7 +8,7 @@ import * as questionnaireActions from '../actions/questionnaires'
 import * as actions from '../actions/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
 
-class QuestionnaireForm extends Component {
+class QuestionnaireEditor extends Component {
   constructor (props) {
     super(props)
 
@@ -142,7 +142,7 @@ class QuestionnaireForm extends Component {
   }
 }
 
-QuestionnaireForm.propTypes = {
+QuestionnaireEditor.propTypes = {
   questionnaireEditor: PropTypes.object.isRequired
 }
 
@@ -152,4 +152,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaireEditor: state.questionnaireEditor
 })
 
-export default withRouter(connect(mapStateToProps)(QuestionnaireForm))
+export default withRouter(connect(mapStateToProps)(QuestionnaireEditor))

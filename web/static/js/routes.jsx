@@ -13,7 +13,7 @@ import SurveyWizardChannelsStep from './containers/SurveyWizardChannelsStep'
 import SurveyWizardCutoffStep from './containers/SurveyWizardCutoffStep'
 import SurveyWizardScheduleStep from './containers/SurveyWizardScheduleStep'
 import QuestionnaireIndex from './containers/QuestionnaireIndex'
-import QuestionnaireForm from './components/QuestionnaireForm'
+import QuestionnaireEditor from './components/QuestionnaireEditor'
 import ChannelIndex from './containers/ChannelIndex'
 import ProjectTabs from './components/ProjectTabs'
 import SurveyTabs from './components/SurveyTabs'
@@ -46,11 +46,11 @@ export default (
 
         <Route path='questionnaires' >
           <IndexRoute components={{ body: QuestionnaireIndex, tabs: ProjectTabs }} />
-          <Route path='new' component={QuestionnaireForm} name='New Questionnaire' />
+          <Route path='new' component={QuestionnaireEditor} name='New Questionnaire' />
           <Route path=':questionnaireId' >
             <IndexRedirect to='edit' />
           </Route>
-          <Route path=':questionnaireId/edit' component={QuestionnaireForm} />
+          <Route path=':questionnaireId/edit' component={QuestionnaireEditor} />
         </Route>
       </Route>
 
