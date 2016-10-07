@@ -10,10 +10,10 @@ const SurveyForm = ({ survey, children, project }) => {
   const cutoffStepCompleted = survey.cutoff != null
   const scheduleStepCompleted = survey.scheduleDayOfWeek != null &&(survey.scheduleDayOfWeek.sun || survey.scheduleDayOfWeek.mon || survey.scheduleDayOfWeek.tue || survey.scheduleDayOfWeek.wed || survey.scheduleDayOfWeek.thu || survey.scheduleDayOfWeek.fri || survey.scheduleDayOfWeek.sat)
 
-  const steps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted]
+  const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
 
-  const numberOfCompletedSteps = steps.filter(function(item){ return item == true; }).length
-  const percentage = `${(100/steps.length*numberOfCompletedSteps).toFixed(0)}%`
+  const numberOfCompletedSteps = mandatorySteps.filter(function(item){ return item == true; }).length
+  const percentage = `${(100/mandatorySteps.length*numberOfCompletedSteps).toFixed(0)}%`
 
   return (
     <div className="row">
@@ -29,9 +29,8 @@ const SurveyForm = ({ survey, children, project }) => {
           <CollectionItem path={`${linkPath}questionnaire`} icon="assignment" text="Select a questionnaire" completed={questionnaireStepCompleted} />
           <CollectionItem path={`${linkPath}respondents`} icon="group" text="Upload your respondents list" completed={respondentsStepCompleted} />
           <CollectionItem path={`${linkPath}channels`}  icon="settings_input_antenna" text="Select mode and channels" completed={channelStepCompleted} />
-          <li className="divider"></li>
           <CollectionItem className="optional" path={`${linkPath}cutoff`} icon="remove_circle" text="Setup cutoff rules" completed={cutoffStepCompleted} />
-          <CollectionItem className="optional" path={`${linkPath}schedule`} icon="today" text="Setup a schedule" completed={scheduleStepCompleted} />
+          <CollectionItem path={`${linkPath}schedule`} icon="today" text="Setup a schedule" completed={scheduleStepCompleted} />
 
           {/*
           <li className="collection-item optional">
