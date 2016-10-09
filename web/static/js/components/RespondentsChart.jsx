@@ -9,106 +9,86 @@ class RespondentsChart extends Component {
     this.state = { d3: '' }
   }
 
+  //Init
   componentWillMount(){
-    const { completedByDate, width, height } = this.props
+    const { completedByDate, margin, width, height } = this.props
 
     const node = document.createElement('div')
-
     const svg = d3.select(node).append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .append("g")
 
-    this.setState({d3: node})
-    this.create([], node, width, height)
+    const x = d3.time.scale()
+    const y = d3.scale.linear()
+    const yaxis = d3.svg.axis()
+                        .scale(y)
+                        .ticks(10)
+                        .tickSize(width)
+                        .orient("right")
+    const xaxis = d3.svg.axis()
+                        .scale(x)
+    const line = d3.svg.line()
+                        .x(function(d) { return x(d.date) })
+                        .y(function(d) { return y(d.count) })
+
+    this.init(svg, margin, width, height)
+    this.setSize(x, y, margin, width, height)
+    this.setState({ d3: node, svg: svg, x: x, y: y, yaxis: yaxis, xaxis: xaxis, line: line, margin: margin, width: width, height: height})
   }
 
-  create(completedByDate, node, width, height){
-    const svg = d3.select(node).select("svg")
-
+  data(completedByDate, x, y){
     const formatDate = function(date){return new Date(Date.parse(date))}
-
-    const x = d3.time.scale().range([0, width])
-    const y = d3.time.scale().range([height, 0])
-
-    const xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
-
-    const yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left")
-
-    const line = d3.svg.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.close); })
-
-    const data = completedByDate.map((d) => {
-      return { date: formatDate(d.date), close: Number(d.count) }
-    })
-
-    x.domain(d3.extent(data, function(d) { return d.date; }))
-    y.domain([0,100])
-
-    svg.append("g")
-    .attr("id", "xaxis")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis)
-
-    svg.append("g")
-    .attr("id", "yaxis")
-    .attr("class", "y axis")
-    .call(yAxis)
-
-    svg.append("path")
-    .attr("id", "pathline")
-    .datum(data)
-    .attr("class", "line")
-    .attr("d", line);
-
-    this.setState({ xAxis: xAxis, yAxis: yAxis, x: x, y: y, width: width, height: height, formatDate: formatDate })
+    const data =  completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } } )
+    x.domain(d3.extent(data, function(d) { return d.date; }));
+    y.domain(d3.extent(data, function(d) { return d.count; }));
+    return data
   }
 
-  update(completedByDate){
-    const { width, height, formatDate, x, y, xAxis, yAxis } = this.state
-    const node = this.state.d3
-    const svg = d3.select(node).select("svg")
+  setSize(x, y, margin, width, height){
+    const w = width
+    const h = height
+    x.range([0, w])
+    y.range([h, 0])
+  }
 
-    const data = completedByDate.map((d) => {
-      return { date: formatDate(d.date), close: Number(d.count) }
-    })
-
-    x.domain(d3.extent(data, function(d) { return d.date; }))
-    y.domain(d3.extent(data, function(d) { return d.close; }))
-
-    const line = d3.svg.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.close); })
-
-    svg.select("#xaxis")
-    .call(xAxis)
-
-    svg.select("#yaxis")
-    .call(yAxis)
-
-    svg.select("#pathline")
-    .datum(data)
-    .attr("class", "line")
-    .attr("d", line);
+  init(svg, margin, width, height){
+    const container = svg.append("g")
+    const YAxis = container.append("g")
+                          .attr("class", "y axis")
+                          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    const XAxis = container.append("g")
+                          .attr("class", "x axis")
+                          .attr("transform", "translate(" + margin.left + "," + (margin.top+height) + ")")
+    const path = container.append("path")
+                          .attr("class", "line")
+                          .attr("transform", "translate(" + margin.left + "," + (margin.top) + ")")
+    this.setState({YAxis: YAxis, XAxis: XAxis, path: path})
   }
 
   render(){
     const { completedByDate } = this.props
+    const { d3, svg, width, height, margin, YAxis, XAxis, path, line, yaxis, xaxis, x, y } = this.state
 
-    if (!completedByDate) {
-      return <div>Loading stats...</div>
+    if(!svg){
+      return <div>Loading...</div>
     }
 
-    this.update(completedByDate)
+    const data = this.data(completedByDate, x, y)
+
+    svg.attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+
+    YAxis.call(yaxis)
+        .selectAll("text")
+          .attr("x", -25)
+
+    XAxis.call(xaxis)
+
+    path.datum(data)
+        .attr("class", "line")
+        .attr("d", line)
+
     return(
       <div>
-        <RD3Component data={this.state.d3}/>
+        <RD3Component data={d3}/>
       </div>
     )
   }

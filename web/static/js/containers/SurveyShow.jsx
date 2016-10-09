@@ -41,11 +41,11 @@ class SurveyShow extends Component {
     const { survey, respondentsStats, completedByDate } = this.props
     const { dispatch, projectId, surveyId } = this.props
     const cumulativeCount = this.cumulativeCount(completedByDate)
+    const margin = {"top": 100, "left": 100, "right" : 100, "bottom" : 100}
 
     if (!survey) {
       return <p>Loading...</p>
     }
-
 
     return (
       <div>
@@ -81,7 +81,7 @@ class SurveyShow extends Component {
         <div className="row">
           <div className="col s12">
             <div className="card">
-              <RespondentsChart completedByDate={ cumulativeCount } width={ 1000 } height= { 500 }/>
+              <RespondentsChart completedByDate={ cumulativeCount } margin={ margin } width={ 800 } height= { 400 }/>
             </div>
           </div>
         </div>

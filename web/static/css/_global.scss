@@ -781,25 +781,19 @@ nav ul a span.badge {
   padding: 0 !important;
 }
 
-.linechart{
-  .axis {
-  font: 10px sans-serif;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-.axis--x path {
-  display: none;
-}
-
 .line {
   fill: none;
-  stroke: steelblue;
+  stroke: #4caf50;
   stroke-width: 1.5px;
-  }
+}
+
+.axis line, .axis path{
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.0;
+}
+
+.axis text {
+  text-transform: uppercase;
+  dominant-baseline:text-after-edge;
 }
