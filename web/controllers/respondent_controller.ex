@@ -25,16 +25,19 @@ defmodule Ask.RespondentController do
     |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
+    |> Repo.preload(:respondents)
 
     by_state = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
       group_by: :state,
       select: {r.state, count("*")}) |> Enum.into(%{})
 
-    completed_by_date = Repo.all(
+    respondents_by_date = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
       group_by: fragment("DATE(completed_at)"),
       select: {fragment("DATE(completed_at)"), count("*")})
+
+    target_value = survey.cutoff || length(survey.respondents)
 
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
@@ -43,7 +46,10 @@ defmodule Ask.RespondentController do
     stats = %{
       id: survey.id,
       respondents_by_state: %{pending: pending, completed: completed, active: active, failed: failed },
-      completed_by_date: completed_by_date
+      completed_by_date: %{
+        respondents_by_date: respondents_by_date,
+        target_value: target_value
+      }
     }
     render(conn, "stats.json", stats: stats)
   end

@@ -58,7 +58,7 @@ defmodule Ask.RespondentControllerTest do
 
   test "lists stats for a given survey", %{conn: conn, user: user} do
     project = insert(:project, user: user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, cutoff: 10)
     insert_list(10, :respondent, survey: survey, state: "pending")
     insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
     insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
@@ -74,16 +74,41 @@ defmodule Ask.RespondentControllerTest do
         "active" => 0,
         "failed" => 0
       },
-      "completed_by_date" => [
-        %{
-          "date" => "2016-01-01",
-          "count" => 2
-        },
-        %{
-          "date" => "2016-01-02",
-          "count" => 3
-        }
-      ]
+      "completed_by_date" => %{
+        "respondents_by_date" => [
+          %{
+            "date" => "2016-01-01",
+            "count" => 2
+          },
+          %{
+            "date" => "2016-01-02",
+            "count" => 3
+          }
+        ],
+        "target_value" => 10
+      }
+    }
+  end
+
+  test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project)
+    insert_list(5, :respondent, survey: survey, state: "pending")
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+
+    assert json_response(conn, 200)["data"] == %{
+      "id" => survey.id,
+      "respondents_by_state" => %{
+        "pending" => 5,
+        "completed" => 0,
+        "active" => 0,
+        "failed" => 0
+      },
+      "completed_by_date" => %{
+        "respondents_by_date" => [],
+        "target_value" => 5
+      }
     }
   end
 
