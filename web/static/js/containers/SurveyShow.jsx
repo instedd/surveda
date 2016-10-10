@@ -25,22 +25,22 @@ class SurveyShow extends Component {
     return completedByDate.reduce( (pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
   }
 
-  cumulativeCount(completedByDate){
+  cumulativeCount(completedByDate, targetValue){
     const cumulativeCount = []
     for(let i=0; i < completedByDate.length; i++){
       let d = completedByDate[i].date
       let current = {}
       current["date"] = d
-      current["count"] = this.cumulativeCountFor(d, completedByDate)
+      current["count"] = this.cumulativeCountFor(d, completedByDate) / targetValue
       cumulativeCount.push(current)
     }
     return cumulativeCount
   }
 
   render() {
-    const { survey, respondentsStats, completedByDate } = this.props
+    const { survey, respondentsStats, completedByDate, targetValue } = this.props
     const { dispatch, projectId, surveyId } = this.props
-    const cumulativeCount = this.cumulativeCount(completedByDate)
+    const cumulativeCount = this.cumulativeCount(completedByDate, targetValue)
     const margin = {"top": 100, "left": 100, "right" : 100, "bottom" : 100}
 
     if (!survey) {
@@ -95,10 +95,12 @@ const mapStateToProps = (state, ownProps) => {
 
   let respondentsStats = {}
   let completedRespondentsByDate = []
+  let targetValue = 1
 
   if(respondentsStatsRoot){
     respondentsStats = respondentsStatsRoot.respondentsByState
-    completedRespondentsByDate = respondentsStatsRoot.completedByDate
+    completedRespondentsByDate = respondentsStatsRoot.completedByDate.respondentsByDate
+    targetValue = respondentsStatsRoot.completedByDate.targetValue
   }
 
   return ({
@@ -107,7 +109,8 @@ const mapStateToProps = (state, ownProps) => {
     surveyId: ownProps.params.surveyId,
     survey: state.surveys[ownProps.params.surveyId] || {},
     respondentsStats: respondentsStats,
-    completedByDate: completedRespondentsByDate
+    completedByDate: completedRespondentsByDate,
+    targetValue: targetValue
   })
 }
 

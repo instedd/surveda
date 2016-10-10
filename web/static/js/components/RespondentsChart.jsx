@@ -17,7 +17,7 @@ class RespondentsChart extends Component {
     const svg = d3.select(node).append("svg")
 
     const x = d3.time.scale()
-    const y = d3.scale.linear()
+    const y = d3.scale.linear().domain([0,1])
     const yaxis = d3.svg.axis()
                         .scale(y)
                         .ticks(10)
@@ -38,7 +38,6 @@ class RespondentsChart extends Component {
     const formatDate = function(date){return new Date(Date.parse(date))}
     const data =  completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } } )
     x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain(d3.extent(data, function(d) { return d.count; }));
     return data
   }
 
