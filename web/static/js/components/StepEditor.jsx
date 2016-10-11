@@ -4,49 +4,58 @@ import * as actions from '../actions/questionnaireEditor'
 import Card from './Card'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
+import { isEqual } from 'underscore'
 
 class StepEditor extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
-    this.state = { stepTitle: '' }
+    this.state = this.stateFromProps(props)
 
     this.stepTitleChange = this.stepTitleChange.bind(this)
     this.stepTitleSubmit = this.stepTitleSubmit.bind(this)
   }
 
-  stepTitleChange (e) {
+  stepTitleChange(e) {
     e.preventDefault
     this.setState({stepTitle: e.target.value})
   }
 
-  stepTitleSubmit (e) {
+  stepTitleSubmit(e) {
     e.preventDefault()
     const { dispatch } = this.props
     dispatch(actions.changeStepTitle(e.target.value))
   }
 
-  deselectStep (e) {
+  deselectStep(e) {
     e.preventDefault()
     this.props.dispatch(actions.deselectStep())
   }
 
-  editTitle (e) {
+  editTitle(e) {
     e.preventDefault()
     this.props.dispatch(actions.editTitle())
   }
 
-  delete (e) {
+  delete(e) {
     e.preventDefault()
     this.props.dispatch(actions.deleteStep())
   }
 
-  componentWillReceiveProps (newProps) {
-    const { step } = newProps
-    this.setState({stepTitle: step.title})
+  componentWillReceiveProps(newProps) {
+    this.setState(this.stateFromProps(newProps))
   }
 
-  render () {
+  stateFromProps(props) {
+    const { step } = props
+    return {stepTitle: step.title}
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !isEqual(this.state, nextState)
+  }
+
+  render() {
     const { step } = this.props
 
     let editor
