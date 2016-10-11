@@ -12,15 +12,22 @@ To open a shell in a container: `docker exec -it ask_db_1 bash`, where `ask_db_1
 
 To start an Elixir console in your running Phoenix app container: `docker exec -it ask_app_1 iex -S mix`.
 
-## Linting
+## Linting and Formatting
 
-To help us keep a consistent coding style, we're using ESLint. In the root of the project there's a `.eslintrc` file specifying the project's style rules. 
+To help us keep a consistent coding style, we're using StandardJS. Follow their instructions to install it: http://standardjs.com/#install
 
-To lint-check your code, you'll need to install some `npm` packages:
+If you're using Sublime, you can setup a Build System that will use StandardJS to format your code when you hit `Ctrl+B`. To do so:
 
-`npm install -g eslint eslint-plugin-import eslint-plugin-react babel-eslint`
+1. In Sublime, go to `Tools -> Build System -> New Build System...`
+1. A file will open, replace its contents with:
 
-Note: we're not installing project-local ESLint packages because we generally work on editors in the host machine instead and the project source code is mounted on a Docker container.
+```
+{
+  "cmd": ["standard", "--fix", "$file"],
+  "selector": "source.js"
+}
+```
+1. Save. That's it. When you want to format, just hit `Ctrl+B`. Note that the formatter is a bit slow, so it's not a good idea to format on save.
 
 ## Learn more
 

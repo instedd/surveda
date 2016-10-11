@@ -1,13 +1,23 @@
+/* eslint-env mocha */
 import expect from 'expect'
+import each from 'lodash/each'
 import reducer from '../../../web/static/js/reducers/questionnaireEditor'
 import * as actions from '../../../web/static/js/actions/questionnaireEditor'
 
 describe('questionnaireEditor reducer', () => {
-  let initialState = {}
+  const initialState = reducer(undefined, {})
 
-  beforeEach(() => {
-    initialState = reducer(undefined, {})
-  })
+  const playActions = (actions) => {
+    return playActionsFromState(initialState, actions)
+  }
+
+  const playActionsFromState = (state, actions) => {
+    let resultState = state
+    each(actions, (a) => {
+      resultState = reducer(resultState, a)
+    })
+    return resultState
+  }
 
   it('should generate initial editor state from questionnaire model', () => {
     const result = reducer(initialState, actions.initializeEditor(questionnaire))
@@ -15,7 +25,21 @@ describe('questionnaireEditor reducer', () => {
     expect(result.questionnaire)
     .toEqual({
       id: questionnaire.id,
-      name: questionnaire.name
+      name: questionnaire.name,
+      modes: questionnaire.modes,
+      projectId: questionnaire.projectId
+    })
+  })
+
+  it('should initialize for the questionnaire creation use case', () => {
+    const result = reducer(initialState, actions.newQuestionnaire(123)).questionnaire
+
+    expect(result)
+    .toEqual({
+      id: null,
+      name: '',
+      modes: ['SMS'],
+      projectId: 123
     })
   })
 
@@ -41,10 +65,83 @@ describe('questionnaireEditor reducer', () => {
     ).steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7']
 
     expect(result.title).toEqual('Do you smoke?')
-    expect(result.responses.items[0].response).toEqual('Yes')
-    expect(result.responses.items[1].response).toEqual('No')
   })
 
+  it('should update questionnaire with new name', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.changeQuestionnaireName('Some other name')
+    ]).questionnaire
+
+    expect(result.name).toEqual('Some other name')
+  })
+
+  it('should change to a single mode', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.changeQuestionnaireModes('IVR')
+    ]).questionnaire
+
+    expect(result.modes.length).toEqual(1)
+    expect(result.modes).toEqual(['IVR'])
+  })
+
+  it('should select a step', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+
+    expect(result.steps.current).toEqual('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+  })
+
+  it('should change to multiple modes', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.changeQuestionnaireModes('SMS,IVR')
+    ]).questionnaire
+
+    /* Expectations on arrays must include a check for length
+    because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
+    expect(result.modes.length).toEqual(2)
+    expect(result.modes).toEqual(['SMS', 'IVR'])
+  })
+
+  it('should update step title', () => {
+    const preState = playActions([actions.initializeEditor(questionnaire)])
+    const resultState = playActionsFromState(preState, [
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeStepTitle('New title')]
+    )
+
+    expect(resultState.steps.items[resultState.steps.current].title).toEqual('New title')
+  })
+
+  it('should add step', () => {
+    const id = 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
+    const title = 'Another title'
+    const preState = playActions([actions.initializeEditor(questionnaire)])
+    const resultState = playActionsFromState(preState, [
+      actions.addStep({id: id, title: title})]
+    )
+    expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length + 1)
+    expect(resultState.steps.items[id].title).toEqual(title)
+    expect(resultState.steps.current).toEqual(id)
+  })
+
+  it('should delete step', () => {
+    const preState = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+    const resultState = playActionsFromState(preState, [
+      actions.deleteStep()]
+    )
+    expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length - 1)
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15']).toEqual(null)
+    expect(resultState.steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7'].title).toEqual('Do you smoke?')
+    expect(resultState.steps.current).toEqual(null)
+  })
 })
 
 const questionnaire = {

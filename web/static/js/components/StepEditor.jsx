@@ -1,9 +1,31 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/questionnaireEditor'
-import Card from '../components/Card'
+import Card from './Card'
+import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
+import StepNumericEditor from './StepNumericEditor'
 
 class StepEditor extends Component {
+  constructor (props) {
+    super(props)
+
+    this.state = { stepTitle: '' }
+
+    this.stepTitleChange = this.stepTitleChange.bind(this)
+    this.stepTitleSubmit = this.stepTitleSubmit.bind(this)
+  }
+
+  stepTitleChange (e) {
+    e.preventDefault
+    this.setState({stepTitle: e.target.value})
+  }
+
+  stepTitleSubmit (e) {
+    e.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.changeStepTitle(e.target.value))
+  }
+
   deselectStep (e) {
     e.preventDefault()
     this.props.dispatch(actions.deselectStep())
@@ -14,20 +36,42 @@ class StepEditor extends Component {
     this.props.dispatch(actions.editTitle())
   }
 
-  save (e) {
+  delete (e) {
     e.preventDefault()
-    this.props.dispatch(actions.saveStep())
+    this.props.dispatch(actions.deleteStep())
+  }
+
+  componentWillReceiveProps (newProps) {
+    const { step } = newProps
+    this.setState({stepTitle: step.title})
   }
 
   render () {
     const { step } = this.props
+
+    let editor
+    if (step.type === 'multiple-choice') {
+      editor = <StepMultipleChoiceEditor step={step} />
+    } else if (step.type === 'numeric') {
+      editor = <StepNumericEditor step={step} />
+    } else {
+      throw new Error(`unknown step type: ${step.type}`)
+    }
 
     return (
       <Card key={step.title}>
         <ul className='collection'>
           <li className='collection-item'>
             <div className='row'>
-              <RenderTitle step={step} />
+              <div className='col s10'>
+                <input
+                  placeholder='Untitled question'
+                  type='text'
+                  value={this.state.stepTitle}
+                  onChange={this.stepTitleChange}
+                  onBlur={this.stepTitleSubmit}
+                  autoFocus />
+              </div>
               <div>
                 <a href='#!'
                   className='col s1'
@@ -36,11 +80,13 @@ class StepEditor extends Component {
                 </a>
               </div>
             </div>
-
+            <div className='row'>
+              {editor}
+            </div>
             <div className='row'>
               <a href='#!'
-                onClick={(e) => this.save(e)}>
-                Save
+                onClick={(e) => this.delete(e)}>
+                Delete
               </a>
             </div>
           </li>
@@ -52,19 +98,6 @@ class StepEditor extends Component {
 
 StepEditor.propTypes = {
   step: PropTypes.object.isRequired
-}
-
-const RenderTitle = ({step}) => {
-  return (
-    <div className='col s10'>
-      <input
-        placeholder='Untitled question'
-        id='question_title'
-        type='text'
-        defaultValue={step.title}
-        autoFocus />
-    </div>
-  )
 }
 
 export default connect()(StepEditor)

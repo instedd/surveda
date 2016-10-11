@@ -11,7 +11,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     %NuntiumChannel{oauth_token: oauth_token, name: name, settings: channel.settings}
   end
 
-  def oauth2_authorize(code, redirect_uri) do
+  def oauth2_authorize(code, redirect_uri, callback_url) do
     nuntium_config = Application.get_env(:ask, Nuntium)
     guisso_config = nuntium_config[:guisso]
 
@@ -25,6 +25,16 @@ defmodule Ask.Runtime.NuntiumChannel do
       code: code,
       client_secret: guisso_config[:client_secret],
       token_type: "bearer")
+
+    # Update the Nuntium app to setup the callback URL
+    nuntium_config = Application.get_env(:ask, Nuntium)
+    Nuntium.Client.new(nuntium_config[:base_url], client.token)
+    |> Nuntium.Client.application_update(%{
+      interface: %{
+        type: "http_get_callback",
+        url: callback_url
+      }
+    })
 
     client.token
   end

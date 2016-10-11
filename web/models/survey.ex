@@ -34,12 +34,16 @@ defmodule Ask.Survey do
     questionnaire_id = get_field(changeset, :questionnaire_id)
     respondents_count = get_field(changeset, :respondents_count)
 
+    schedule = get_field(changeset, :schedule_day_of_week)
+    [ _ | values ] = Map.values(schedule)
+    schedule_completed = Enum.reduce(values, fn (x, acc) -> acc || x end)
+
     channels = get_field(changeset, :channels)
 
-    changes = if state == "not_ready" && questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 do
+    changes = if state == "not_ready" && questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed do
       Map.merge(changeset.changes, %{state: "ready"})
     else
-      if state == "ready" && !(questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0) do
+      if state == "ready" && !(questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed) do
         Map.merge(changeset.changes, %{state: "not_ready"})
       else
         changeset.changes

@@ -15,4 +15,9 @@ defmodule Nuntium.Client do
     url = "#{client.base_url}/api/ao_messages.json"
     OAuth2.Client.post(client.oauth2_client, url, messages)
   end
+
+  def application_update(client, app = %{}) do
+    url = "#{client.base_url}/api/applications/me"
+    OAuth2.Client.put(client.oauth2_client, url, app)
+  end
 end

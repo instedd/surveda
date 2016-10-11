@@ -13,52 +13,51 @@ import SurveyWizardChannelsStep from './containers/SurveyWizardChannelsStep'
 import SurveyWizardCutoffStep from './containers/SurveyWizardCutoffStep'
 import SurveyWizardScheduleStep from './containers/SurveyWizardScheduleStep'
 import QuestionnaireIndex from './containers/QuestionnaireIndex'
-import QuestionnaireNew from './containers/QuestionnaireNew'
+import QuestionnaireEditor from './components/QuestionnaireEditor'
 import ChannelIndex from './containers/ChannelIndex'
-import QuestionnaireEdit from './containers/QuestionnaireEdit'
 import ProjectTabs from './components/ProjectTabs'
 import SurveyTabs from './components/SurveyTabs'
 import SurveyRespondents from './components/SurveyRespondents'
 
 export default (
-  <Route path="/" component={ App }>
-    <IndexRedirect to="projects"/>
+  <Route path='/' component={App}>
+    <IndexRedirect to='projects' />
 
-    <Route path="/projects" name="My Projects">
-      <IndexRoute component={ ProjectIndex }/>
-      <Route path="new" component={ ProjectNew } name="New Project" />
+    <Route path='/projects' name='My Projects'>
+      <IndexRoute component={ProjectIndex} />
+      <Route path='new' component={ProjectNew} name='New Project' />
 
-      <Route path=":projectId" name="Project">
-        <IndexRedirect to="surveys"/>
-        <Route path="edit" component={ ProjectEdit }/>
+      <Route path=':projectId' name='Project'>
+        <IndexRedirect to='surveys' />
+        <Route path='edit' component={ProjectEdit} />
 
-        <Route path="surveys" components={{ body: SurveyIndex, tabs: ProjectTabs }}/>
+        <Route path='surveys' components={{ body: SurveyIndex, tabs: ProjectTabs }} />
 
-        <Route path="surveys/:surveyId" components={{ body: SurveyShow, tabs: SurveyTabs }} />
-        <Route path="surveys/:surveyId/respondents" components={{ body: SurveyRespondents, tabs: SurveyTabs }} />
-        <Route path="surveys/:surveyId/edit" component={ SurveyEdit } >
-          <IndexRedirect to="questionnaire"/>
-          <Route path="questionnaire" component={ SurveyWizardQuestionnaireStep } />
-          <Route path="respondents" component={ SurveyWizardRespondentsStep } />
-          <Route path="channels" component={ SurveyWizardChannelsStep } />
-          <Route path="cutoff" component={ SurveyWizardCutoffStep } />
-          <Route path="schedule" component={ SurveyWizardScheduleStep } />
+        <Route path='surveys/:surveyId' components={{ body: SurveyShow, tabs: SurveyTabs }} />
+        <Route path='surveys/:surveyId/respondents' components={{ body: SurveyRespondents, tabs: SurveyTabs }} />
+        <Route path='surveys/:surveyId/edit' component={SurveyEdit} >
+          <IndexRedirect to='questionnaire' />
+          <Route path='questionnaire' component={SurveyWizardQuestionnaireStep} />
+          <Route path='respondents' component={SurveyWizardRespondentsStep} />
+          <Route path='channels' component={SurveyWizardChannelsStep} />
+          <Route path='cutoff' component={SurveyWizardCutoffStep} />
+          <Route path='schedule' component={SurveyWizardScheduleStep} />
         </Route>
 
-        <Route path="questionnaires" >
+        <Route path='questionnaires' >
           <IndexRoute components={{ body: QuestionnaireIndex, tabs: ProjectTabs }} />
-          <Route path="new" component={ QuestionnaireNew } name="New Questionnaire" />
-          <Route path=":questionnaireId" >
-            <IndexRedirect to="edit"/>
+          <Route path='new' component={QuestionnaireEditor} name='New Questionnaire' />
+          <Route path=':questionnaireId' >
+            <IndexRedirect to='edit' />
           </Route>
-          <Route path=":questionnaireId/edit" component={ QuestionnaireEdit } />
+          <Route path=':questionnaireId/edit' component={QuestionnaireEditor} />
         </Route>
       </Route>
 
     </Route>
 
-    <Route path="/channels" name="My Channels" >
-      <IndexRoute component={ ChannelIndex } />
+    <Route path='/channels' name='My Channels' >
+      <IndexRoute component={ChannelIndex} />
     </Route>
 
   </Route>

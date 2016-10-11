@@ -12,7 +12,7 @@ defmodule Ask.OAuthHelperController do
 
     if token == nil do
       provider = Ask.Channel.provider(provider_name)
-      access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}")
+      access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}", callback_url(conn, :callback, provider_name))
 
       user
       |> build_assoc(:oauth_tokens, provider: provider_name)
