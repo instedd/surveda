@@ -42,7 +42,7 @@ export default (state = defaultState, action) => {
       }
     case actions.DELETE_STEP:
       let ids = state.steps.ids.filter(id => id !== state.steps.current)
-      let items = Object.assign({}, state.steps.items)
+      var items = Object.assign({}, state.steps.items)
       delete items[state.steps.current]
 
       return {
@@ -52,6 +52,23 @@ export default (state = defaultState, action) => {
           ids,
           items,
           current: null
+        }
+      }
+    case actions.DELETE_CHOICE:
+      var choices = state.steps.items[state.steps.current].choices.slice()
+      choices.splice(action.index, 1)
+
+      return {
+        ...state,
+        steps: {
+          ...state.steps,
+          items: {
+            ...state.steps.items,
+            [state.steps.current]: {
+              ...state.steps.items[state.steps.current],
+              choices: choices
+            }
+          }
         }
       }
     case actions.INITIALIZE_EDITOR:

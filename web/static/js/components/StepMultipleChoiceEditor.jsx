@@ -1,9 +1,16 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
+import * as actions from '../actions/questionnaireEditor'
 import Card from './Card'
 
 class StepMultipleChoiceEditor extends Component {
-  render () {
+  deleteChoice(e, index) {
+    e.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.deleteChoice(index))
+  }
+
+  render() {
     const { step } = this.props
     const { choices } = step
     return (
@@ -13,6 +20,7 @@ class StepMultipleChoiceEditor extends Component {
             <tr>
               <th>Response</th>
               <th>SMS</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -22,7 +30,10 @@ class StepMultipleChoiceEditor extends Component {
                   {choice.value}
                 </td>
                 <td>
-                  {choice.responses.join(", ")}
+                  {choice.responses.join(', ')}
+                </td>
+                <td>
+                  <a href='#!' onClick={(e) => this.deleteChoice(e, index)}><i className='material-icons'>delete</i></a>
                 </td>
               </tr>
             )}
