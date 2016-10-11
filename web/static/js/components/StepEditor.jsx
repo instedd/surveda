@@ -4,7 +4,6 @@ import * as actions from '../actions/questionnaireEditor'
 import Card from './Card'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
-import { isEqual } from 'underscore'
 
 class StepEditor extends Component {
   constructor(props) {
@@ -51,10 +50,6 @@ class StepEditor extends Component {
     return {stepTitle: step.title}
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return !isEqual(this.state, nextState)
-  }
-
   render() {
     const { step } = this.props
 
@@ -68,7 +63,7 @@ class StepEditor extends Component {
     }
 
     return (
-      <Card key={step.title}>
+      <Card key={step.id}>
         <ul className='collection'>
           <li className='collection-item'>
             <div className='row'>
