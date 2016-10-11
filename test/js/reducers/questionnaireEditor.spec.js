@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import each from 'lodash/each'
-import reducer from '../../../web/static/js/reducers/questionnaireEditor'
+import reducer, { questionnaireForServer } from '../../../web/static/js/reducers/questionnaireEditor'
 import * as actions from '../../../web/static/js/actions/questionnaireEditor'
 
 describe('questionnaireEditor reducer', () => {
@@ -153,6 +153,12 @@ describe('questionnaireEditor reducer', () => {
     )
     expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices.length).toEqual(1)
     expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices[0].value).toEqual('Yes')
+  })
+
+  it('should include steps in questionnaire for server', () => {
+    const state = playActions([actions.initializeEditor(questionnaire)])
+    const quizForServer = questionnaireForServer(state)
+    expect(quizForServer.steps).toEqual(questionnaire.steps)
   })
 })
 

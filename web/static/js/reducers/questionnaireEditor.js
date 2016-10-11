@@ -1,5 +1,6 @@
 import * as actions from '../actions/questionnaireEditor'
 import reduce from 'lodash/reduce'
+import toArray from 'lodash/toArray'
 
 const defaultState = {
   steps: {
@@ -111,6 +112,13 @@ export default (state = defaultState, action) => {
     default:
       return state
   }
+}
+
+export const questionnaireForServer = (questionnaireEditor) => {
+  let quiz = Object.assign({}, questionnaireEditor.questionnaire)
+  quiz['steps'] = toArray(questionnaireEditor.steps.items)
+
+  return quiz
 }
 
 const changeQuestionnaireModes = (state, action) => {
