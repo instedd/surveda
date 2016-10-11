@@ -44,9 +44,9 @@ export const changeStepTitle = (newTitle) => ({
   newTitle
 })
 
-export const addStep = (step) => ({
+export const addStep = (stepType) => ({
   type: ADD_STEP,
-  step
+  stepType
 })
 
 export const deleteStep = (step) => ({

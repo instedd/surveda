@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import each from 'lodash/each'
-import reducer, { questionnaireForServer } from '../../../web/static/js/reducers/questionnaireEditor'
+import reducer, { questionnaireForServer, buildNewStep } from '../../../web/static/js/reducers/questionnaireEditor'
 import * as actions from '../../../web/static/js/actions/questionnaireEditor'
 
 describe('questionnaireEditor reducer', () => {
@@ -118,15 +118,17 @@ describe('questionnaireEditor reducer', () => {
   })
 
   it('should add step', () => {
-    const id = 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
-    const title = 'Another title'
     const preState = playActions([actions.initializeEditor(questionnaire)])
+
     const resultState = playActionsFromState(preState, [
-      actions.addStep({id: id, title: title})]
-    )
+      actions.addStep('multiple-choice')
+    ])
+
+    const newStepId = resultState.steps.ids[resultState.steps.ids.length - 1]
+
     expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length + 1)
-    expect(resultState.steps.items[id].title).toEqual(title)
-    expect(resultState.steps.current).toEqual(id)
+    expect(resultState.steps.items[newStepId].title).toEqual(buildNewStep('multiple-choice').title)
+    expect(resultState.steps.current).toEqual(newStepId)
   })
 
   it('should delete step', () => {
@@ -171,6 +173,14 @@ describe('questionnaireEditor reducer', () => {
     const state = playActions([actions.initializeEditor(questionnaire)])
     const quizForServer = questionnaireForServer(state)
     expect(quizForServer.steps).toEqual(questionnaire.steps)
+  })
+
+  it('should send new step to server', () => {
+    /* const state = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.addStep({ type: 'multiple-choice' })
+    ]) */
+    return 'foo'
   })
 })
 

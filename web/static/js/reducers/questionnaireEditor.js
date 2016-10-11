@@ -1,6 +1,7 @@
 import * as actions from '../actions/questionnaireEditor'
 import reduce from 'lodash/reduce'
 import toArray from 'lodash/toArray'
+import uuid from 'node-uuid'
 
 const defaultState = {
   steps: {
@@ -29,16 +30,18 @@ export default (state = defaultState, action) => {
         }
       }
     case actions.ADD_STEP:
+      const newStep = buildNewStep(action.stepType)
+
       return {
         ...state,
         steps: {
           ...state.steps,
-          ids: state.steps.ids.concat([action.step.id]),
+          ids: state.steps.ids.concat([newStep.id]),
           items: {
             ...state.steps.items,
-            [action.step.id]: action.step
+            [newStep.id]: newStep
           },
-          current: action.step.id
+          current: newStep.id
         }
       }
     case actions.DELETE_STEP:
@@ -128,6 +131,24 @@ const updateChoices = (state, func) => {
     }
   }
 }
+
+const stepTypeDisplay = (stepType) => {
+  switch (stepType) {
+    case 'multiple-choice':
+      return 'multiple choice'
+    case 'numeric':
+      return 'numeric'
+    default:
+      return 'question'
+  }
+}
+
+export const buildNewStep = (stepType) => ({
+  id: uuid.v4(),
+  type: stepType,
+  title: `Untitled ${stepTypeDisplay(stepType)}`,
+  choices: []
+})
 
 const changeQuestionnaireModes = (state, action) => {
   return {

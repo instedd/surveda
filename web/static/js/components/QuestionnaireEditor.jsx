@@ -8,7 +8,6 @@ import * as questionnaireActions from '../actions/questionnaires'
 import * as actions from '../actions/questionnaireEditor'
 import { questionnaireForServer } from '../reducers/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import uuid from 'node-uuid'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -58,26 +57,16 @@ class QuestionnaireEditor extends Component {
   }
 
   questionnaireAddMultipleChoiceStep() {
-    this.questionnaireAddStep({
-      id: uuid.v4(),
-      type: 'multiple-choice',
-      title: 'Untitled multiple-choice',
-      choices: []
-    })
+    this.questionnaireAddStep('multiple-choice')
   }
 
   questionnaireAddNumericStep() {
-    this.questionnaireAddStep({
-      id: uuid.v4(),
-      type: 'numeric',
-      title: 'Untitled numeric',
-      choices: []
-    })
+    this.questionnaireAddStep('numeric')
   }
 
-  questionnaireAddStep(step) {
+  questionnaireAddStep(stepType) {
     const { dispatch } = this.props
-    dispatch(actions.addStep(step))
+    dispatch(actions.addStep(stepType))
   }
 
   componentWillMount() {
