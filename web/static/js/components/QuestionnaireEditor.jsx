@@ -160,7 +160,7 @@ class QuestionnaireEditor extends Component {
 QuestionnaireEditor.propTypes = {
   dispatch: PropTypes.func,
   router: PropTypes.object,
-  projectId: PropTypes.string.required,
+  projectId: PropTypes.string,
   questionnaireId: PropTypes.string,
   questionnaireEditor: PropTypes.object.isRequired
 }
