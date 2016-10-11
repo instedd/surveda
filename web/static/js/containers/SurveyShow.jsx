@@ -12,7 +12,7 @@ class SurveyShow extends Component {
     if (projectId && surveyId) {
       dispatch(actions.fetchSurvey(projectId, surveyId))
         .then((survey) => {
-          if (survey.state == "not_ready") {
+          if (survey.state == 'not_ready') {
             router.replace(`/projects/${survey.projectId}/surveys/${survey.id}/edit`)
           }
         })
@@ -20,18 +20,18 @@ class SurveyShow extends Component {
     }
   }
 
-  cumulativeCountFor(d, completedByDate){
+  cumulativeCountFor(d, completedByDate) {
     const dateMilliseconds = Date.parse(d)
-    return completedByDate.reduce( (pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
+    return completedByDate.reduce((pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
   }
 
-  cumulativeCount(completedByDate, targetValue){
+  cumulativeCount(completedByDate, targetValue) {
     const cumulativeCount = []
-    for(let i=0; i < completedByDate.length; i++){
+    for (let i = 0; i < completedByDate.length; i++) {
       let d = completedByDate[i].date
       let current = {}
-      current["date"] = d
-      current["count"] = this.cumulativeCountFor(d, completedByDate) / targetValue * 100
+      current['date'] = d
+      current['count'] = this.cumulativeCountFor(d, completedByDate) / targetValue * 100
       cumulativeCount.push(current)
     }
     return cumulativeCount
@@ -41,7 +41,6 @@ class SurveyShow extends Component {
     const { survey, respondentsStats, completedByDate, targetValue } = this.props
     const { dispatch, projectId, surveyId } = this.props
     const cumulativeCount = this.cumulativeCount(completedByDate, targetValue)
-    const margin = {"top": 100, "left": 100, "right" : 100, "bottom" : 100}
 
     if (!survey) {
       return <p>Loading...</p>
@@ -49,13 +48,13 @@ class SurveyShow extends Component {
 
     return (
       <div>
-        <div className="row">
-          <div className="col s12 m8">
-            <div className="card">
-              <div className="card-table-title">
+        <div className='row'>
+          <div className='col s12 m8'>
+            <div className='card'>
+              <div className='card-table-title'>
                 { survey.name }
               </div>
-              <div className="card-table">
+              <div className='card-table'>
                 <table>
                   <thead>
                     <tr>
@@ -77,10 +76,8 @@ class SurveyShow extends Component {
               </div>
             </div>
           </div>
-          <div className="col s12 m4">
-            <div className="card">
-              <RespondentsChart completedByDate={ cumulativeCount } margin={ margin } width={ 400 } height= { 200 }/>
-            </div>
+          <div className='col s12 m4'>
+            <RespondentsChart completedByDate={cumulativeCount} />
           </div>
         </div>
       </div>
@@ -89,13 +86,13 @@ class SurveyShow extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const respondentsStatsRoot =  state.respondentsStats[ownProps.params.surveyId]
+  const respondentsStatsRoot = state.respondentsStats[ownProps.params.surveyId]
 
   let respondentsStats = {}
   let completedRespondentsByDate = []
   let targetValue = 1
 
-  if(respondentsStatsRoot){
+  if (respondentsStatsRoot) {
     respondentsStats = respondentsStatsRoot.respondentsByState
     completedRespondentsByDate = respondentsStatsRoot.completedByDate.respondentsByDate
     targetValue = respondentsStatsRoot.completedByDate.targetValue

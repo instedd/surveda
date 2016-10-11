@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { Component as RD3Component } from 'react-d3-library'
+import rd3 from 'react-d3-library'
+const RD3Component = rd3.Component
 
 class RespondentsChart extends Component {
   constructor(props) {
@@ -7,10 +8,44 @@ class RespondentsChart extends Component {
     this.state = { d3: '' }
   }
 
-  // Init
-  componentWillMount() {
-    const { completedByDate, margin, width, height } = this.props
+  componentDidMount() {
+    const width = this.refs.container.offsetWidth
+    this.setState({width: width, height: (width * 1/2)})
+  }
 
+  data(completedByDate, x, y) {
+    const formatDate = function(date) { return new Date(Date.parse(date)) }
+    const data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } })
+    x.domain(d3.extent(data, function(d) { return d.date }))
+    return data
+  }
+
+  setSize(x, y, margin, width, height) {
+    const chartWidth = width
+    const chartHeight = height - margin.bottom
+    x.range([0, chartWidth])
+    y.range([chartHeight, 0])
+  }
+
+  init(svg, margin, width, height) {
+    const container = svg.append('g')
+    const YAxis = container.append('g')
+                          .attr('class', 'y axis')
+    const XAxis = container.append('g')
+                          .attr('class', 'x axis')
+                          .attr('transform', 'translate(0,' + (height) + ')')
+    const path = container.append('path')
+                          .attr('class', 'line')
+    return({YAxis: YAxis, XAxis: XAxis, path: path})
+  }
+
+  renderD3() {
+    const { width, height, margin } = this.state
+    if (!width) {
+      return null
+    }
+
+    const { completedByDate } = this.props
     const node = document.createElement('div')
     const svg = d3.select(node).append('svg')
 
@@ -28,51 +63,10 @@ class RespondentsChart extends Component {
                         .x(function(d) { return x(d.date) })
                         .y(function(d) { return y(d.count) })
 
-    this.init(svg, margin, width, height)
+    const margin = {top: 0, left: 0, right: 0, bottom: 20}
+
+    const { YAxis, XAxis, path } = this.init(svg, margin, width, height)
     this.setSize(x, y, margin, width, height)
-    this.setState({ d3: node, svg: svg, x: x, y: y, yaxis: yaxis, xaxis: xaxis, line: line, margin: margin, width: width, height: height})
-  }
-
-  componentDidMount() {
-    console.log(this.refs.container.offsetWidth)
-  }
-
-  data(completedByDate, x, y) {
-    const formatDate = function(date) { return new Date(Date.parse(date)) }
-    const data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } })
-    x.domain(d3.extent(data, function(d) { return d.date }))
-    return data
-  }
-
-  setSize(x, y, margin, width, height) {
-    const w = width
-    const h = height
-    x.range([0, w])
-    y.range([h, 0])
-  }
-
-  init(svg, margin, width, height) {
-    const container = svg.append('g')
-    const YAxis = container.append('g')
-                          .attr('class', 'y axis')
-                          .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-    const XAxis = container.append('g')
-                          .attr('class', 'x axis')
-                          .attr('transform', 'translate(' + margin.left + ',' + (margin.top + height) + ')')
-    const path = container.append('path')
-                          .attr('class', 'line')
-                          .attr('transform', 'translate(' + margin.left + ',' + (margin.top) + ')')
-    this.setState({YAxis: YAxis, XAxis: XAxis, path: path})
-  }
-
-  render() {
-    const { completedByDate } = this.props
-    const { d3, svg, width, height, margin, YAxis, XAxis, path, line, yaxis, xaxis, x, y } = this.state
-
-    if (!svg) {
-      return <div>Loading...</div>
-    }
-
     const data = this.data(completedByDate, x, y)
 
     svg.attr('width', width + margin.left + margin.right)
@@ -91,9 +85,13 @@ class RespondentsChart extends Component {
         .attr('class', 'line')
         .attr('d', line)
 
+    return (<RD3Component data={node} />)
+  }
+
+  render() {
     return (
       <div ref='container'>
-        <RD3Component data={d3} />
+        {this.renderD3()}
       </div>
     )
   }
