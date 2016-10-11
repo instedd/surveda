@@ -31,7 +31,7 @@ class SurveyShow extends Component {
       let d = completedByDate[i].date
       let current = {}
       current["date"] = d
-      current["count"] = this.cumulativeCountFor(d, completedByDate) / targetValue
+      current["count"] = this.cumulativeCountFor(d, completedByDate) / targetValue * 100
       cumulativeCount.push(current)
     }
     return cumulativeCount
@@ -50,7 +50,7 @@ class SurveyShow extends Component {
     return (
       <div>
         <div className="row">
-          <div className="col s12">
+          <div className="col s12 m8">
             <div className="card">
               <div className="card-table-title">
                 { survey.name }
@@ -77,11 +77,9 @@ class SurveyShow extends Component {
               </div>
             </div>
           </div>
-        </div>
-        <div className="row">
-          <div className="col s12">
+          <div className="col s12 m4">
             <div className="card">
-              <RespondentsChart completedByDate={ cumulativeCount } margin={ margin } width={ 800 } height= { 400 }/>
+              <RespondentsChart completedByDate={ cumulativeCount } margin={ margin } width={ 400 } height= { 200 }/>
             </div>
           </div>
         </div>

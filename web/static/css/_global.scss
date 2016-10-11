@@ -784,16 +784,31 @@ nav ul a span.badge {
 .line {
   fill: none;
   stroke: #4caf50;
-  stroke-width: 1.5px;
+  stroke-width: 2.0px;
 }
 
 .axis line, .axis path{
   fill: none;
   stroke: #000;
   stroke-width: 1.0;
+  opacity: 0.25;
+}
+
+.axis > path{
+  stroke: none;
+}
+
+.y.axis g:first-child text{
+  fill: none;
+}
+
+.x.axis .tick line{
+  stroke: none;
 }
 
 .axis text {
   text-transform: uppercase;
   dominant-baseline:text-after-edge;
+  font-size: 12px;
+  opacity: 0.25;
 }
