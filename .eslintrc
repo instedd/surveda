@@ -1,0 +1,10 @@
+{
+  "extends": ["standard", "standard-react"],
+  "parser": "babel-eslint",
+  "globals": {
+    "$": true
+  },
+  "rules": {
+    "space-before-function-paren": [2, "never"]
+  }
+}

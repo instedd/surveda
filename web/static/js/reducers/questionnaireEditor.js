@@ -41,7 +41,7 @@ export default (state = defaultState, action) => {
         }
       }
     case actions.DELETE_STEP:
-      let ids = state.steps.ids.filter(id => id != state.steps.current)
+      let ids = state.steps.ids.filter(id => id !== state.steps.current)
       let items = Object.assign({}, state.steps.items)
       delete items[state.steps.current]
 
@@ -51,7 +51,7 @@ export default (state = defaultState, action) => {
           ...state.steps,
           ids,
           items,
-          current: null,
+          current: null
         }
       }
     case actions.INITIALIZE_EDITOR:

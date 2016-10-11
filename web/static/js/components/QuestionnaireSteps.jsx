@@ -3,7 +3,7 @@ import Card from '../components/Card'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
-const RenderSteps = ({steps}) => {
+const StepsList = ({steps}) => {
   if (steps.length !== 0) {
     return (
       <Card>
@@ -19,12 +19,11 @@ const RenderSteps = ({steps}) => {
   }
 }
 
-const QuestionnaireSteps = ({ questionnaireEditor }) => {
-  if (questionnaireEditor.steps) {
-    const steps = questionnaireEditor.steps
+const QuestionnaireSteps = ({ steps }) => {
+  if (steps) {
     if (!steps.current) {
       // All collapsed
-      return <RenderSteps steps={steps.ids.map((id) => steps.items[id])} />
+      return <StepsList steps={steps.ids.map((id) => steps.items[id])} />
     } else {
       const itemIndex = steps.ids.findIndex(stepId => stepId === steps.current)
 
@@ -34,10 +33,12 @@ const QuestionnaireSteps = ({ questionnaireEditor }) => {
       const stepsAfter = steps.ids.slice(itemIndex + 1).map((id) => steps.items[id])
 
       return (
-        <div>
-          <RenderSteps steps={stepsBefore} />
-          <StepEditor step={currentStep} />
-          <RenderSteps steps={stepsAfter} />
+        <div className='row'>
+          <div className='col s12'>
+            <StepsList steps={stepsBefore} />
+            <StepEditor step={currentStep} />
+            <StepsList steps={stepsAfter} />
+          </div>
         </div>
       )
     }
