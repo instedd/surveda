@@ -55,23 +55,13 @@ export default (state = defaultState, action) => {
           current: null
         }
       }
+    case actions.ADD_CHOICE:
+      return updateChoices(state, choices => choices.push({
+        value: 'Untitled option',
+        responses: ['Untitled', 'u']
+      }))
     case actions.DELETE_CHOICE:
-      var choices = state.steps.items[state.steps.current].choices.slice()
-      choices.splice(action.index, 1)
-
-      return {
-        ...state,
-        steps: {
-          ...state.steps,
-          items: {
-            ...state.steps.items,
-            [state.steps.current]: {
-              ...state.steps.items[state.steps.current],
-              choices: choices
-            }
-          }
-        }
-      }
+      return updateChoices(state, choices => choices.splice(action.index, 1))
     case actions.INITIALIZE_EDITOR:
       return initializeEditor(state, action)
     case actions.NEW_QUESTIONNAIRE:
@@ -119,6 +109,24 @@ export const questionnaireForServer = (questionnaireEditor) => {
   quiz['steps'] = toArray(questionnaireEditor.steps.items)
 
   return quiz
+}
+
+const updateChoices = (state, func) => {
+  var choices = state.steps.items[state.steps.current].choices.slice()
+  func(choices)
+  return {
+    ...state,
+    steps: {
+      ...state.steps,
+      items: {
+        ...state.steps.items,
+        [state.steps.current]: {
+          ...state.steps.items[state.steps.current],
+          choices: choices
+        }
+      }
+    }
+  }
 }
 
 const changeQuestionnaireModes = (state, action) => {

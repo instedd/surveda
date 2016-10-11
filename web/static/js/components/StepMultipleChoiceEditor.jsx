@@ -4,6 +4,12 @@ import * as actions from '../actions/questionnaireEditor'
 import Card from './Card'
 
 class StepMultipleChoiceEditor extends Component {
+  addChoice(e) {
+    e.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.addChoice())
+  }
+
   deleteChoice(e, index) {
     e.preventDefault()
     const { dispatch } = this.props
@@ -37,6 +43,11 @@ class StepMultipleChoiceEditor extends Component {
                 </td>
               </tr>
             )}
+            <tr>
+              <td colSpan='3'>
+                <a href='#!' onClick={(e) => this.addChoice(e)}>ADD</a>
+              </td>
+            </tr>
           </tbody>
         </table>
       </Card>

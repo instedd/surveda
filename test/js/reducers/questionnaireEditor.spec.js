@@ -143,6 +143,18 @@ describe('questionnaireEditor reducer', () => {
     expect(resultState.steps.current).toEqual(null)
   })
 
+  it('should add choice', () => {
+    const preState = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+    const resultState = playActionsFromState(preState, [
+      actions.addChoice()]
+    )
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices.length).toEqual(3)
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices[2].value).toEqual('Untitled option')
+  })
+
   it('should delete choice', () => {
     const preState = playActions([
       actions.initializeEditor(questionnaire),
