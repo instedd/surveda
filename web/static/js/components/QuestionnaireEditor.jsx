@@ -164,7 +164,7 @@ class QuestionnaireEditor extends Component {
               type='button'
               className='btn waves-effect waves-light'
               onClick={this.questionnaireSave}>
-              Submit
+              Save
             </button>
           </div>
         </div>
