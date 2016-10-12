@@ -5,6 +5,7 @@ export const NEW_QUESTIONNAIRE = 'QUESTIONNAIRE_NEW'
 export const CHANGE_QUESTIONNAIRE_NAME = 'QUESTIONNAIRE_EDITOR_CHANGE_QUESTIONNAIRE_NAME'
 export const CHANGE_QUESTIONNAIRE_MODES = 'QUESTIONNAIRE_EDITOR_CHANGE_QUESTIONNAIRE_MODES'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_EDITOR_CHANGE_STEP_TITLE'
+export const CHANGE_STEP_SMS_PROMPT = 'QUESTIONNAIRE_EDITOR_CHANGE_STEP_SMS_PROMPT'
 export const ADD_STEP = 'QUESTIONNAIRE_EDITOR_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_EDITOR_DELETE_STEP'
 export const ADD_CHOICE = 'QUESTIONNAIRE_EDITOR_ADD_CHOICE'
@@ -42,6 +43,11 @@ export const changeQuestionnaireModes = (newModes) => ({
 export const changeStepTitle = (newTitle) => ({
   type: CHANGE_STEP_TITLE,
   newTitle
+})
+
+export const changeStepPromptSms = (newPrompt) => ({
+  type: CHANGE_STEP_SMS_PROMPT,
+  newPrompt
 })
 
 export const addStep = (stepType) => ({

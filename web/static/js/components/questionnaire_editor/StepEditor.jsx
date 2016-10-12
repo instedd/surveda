@@ -13,7 +13,7 @@ class StepEditor extends Component {
   }
 
   stepTitleChange(e) {
-    e.preventDefault
+    e.preventDefault()
     this.setState({stepTitle: e.target.value})
   }
 
@@ -21,6 +21,17 @@ class StepEditor extends Component {
     e.preventDefault()
     const { dispatch } = this.props
     dispatch(actions.changeStepTitle(e.target.value))
+  }
+
+  stepPromptSmsChange(e) {
+    e.preventDefault()
+    this.setState({stepPromptSms: e.target.value})
+  }
+
+  stepPromptSmsSubmit(e) {
+    e.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.changeStepPromptSms(e.target.value))
   }
 
   deselectStep(e) {
@@ -44,7 +55,10 @@ class StepEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
-    return {stepTitle: step.title}
+    return {
+      stepTitle: step.title,
+      stepPromptSms: step.prompt.sms
+    }
   }
 
   render() {
@@ -76,9 +90,23 @@ class StepEditor extends Component {
               <div>
                 <a href='#!'
                   className='col s1'
-                  onClick={(e) => this.deselectStep(e)}>
+                  onClick={e => this.deselectStep(e)}>
                   <i className='material-icons'>expand_less</i>
                 </a>
+              </div>
+            </div>
+          </li>
+          <li className='collection-item'>
+            <div className='section'>
+              <div className='row'>
+                <h5>Prompt</h5>
+                <input
+                  placeholder='SMS message'
+                  type='text'
+                  value={this.state.stepPromptSms}
+                  onChange={e => this.stepPromptSmsChange(e)}
+                  onBlur={e => this.stepPromptSmsSubmit(e)}
+                  />
               </div>
             </div>
           </li>

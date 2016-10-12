@@ -110,6 +110,23 @@ export default (state = defaultState, action) => {
           }
         }
       }
+    case actions.CHANGE_STEP_SMS_PROMPT:
+      return {
+        ...state,
+        steps: {
+          ...state.steps,
+          items: {
+            ...state.steps.items,
+            [state.steps.current]: {
+              ...state.steps.items[state.steps.current],
+              prompt: {
+                ...state.steps.items[state.steps.current].prompt,
+                sms: action.newPrompt
+              }
+            }
+          }
+        }
+      }
     default:
       return state
   }
@@ -155,6 +172,9 @@ export const buildNewStep = (stepType) => ({
   id: uuid.v4(),
   type: stepType,
   title: `Untitled ${stepTypeDisplay(stepType)}`,
+  prompt: {
+    sms: ''
+  },
   choices: []
 })
 
