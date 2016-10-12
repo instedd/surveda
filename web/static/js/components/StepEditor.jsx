@@ -80,13 +80,17 @@ class StepEditor extends Component {
                 <a href='#!'
                   className='col s1'
                   onClick={(e) => this.deselectStep(e)}>
-                  Deselect
+                  Collapse
                 </a>
               </div>
             </div>
+          </li>
+          <li className='collection-item'>
             <div className='row'>
               {editor}
             </div>
+          </li>
+          <li className='collection-item'>
             <div className='row'>
               <a href='#!'
                 onClick={(e) => this.delete(e)}>
@@ -101,6 +105,7 @@ class StepEditor extends Component {
 }
 
 StepEditor.propTypes = {
+  dispatch: PropTypes.func,
   step: PropTypes.object.isRequired
 }
 
