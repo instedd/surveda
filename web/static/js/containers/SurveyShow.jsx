@@ -1,10 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
-import Card from '../components/Card'
 
 class SurveyShow extends Component {
   componentDidMount() {
@@ -12,8 +11,8 @@ class SurveyShow extends Component {
     if (projectId && surveyId) {
       dispatch(actions.fetchSurvey(projectId, surveyId))
         .then((survey) => {
-          if (survey.state == 'not_ready') {
-            router.replace(`/projects/${survey.projectId}/surveys/${survey.id}/edit`)
+          if (survey.state === 'not_ready') {
+            router.replace(`/projects/${projectId}/surveys/${survey.id}/edit`)
           }
         })
       dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
@@ -38,16 +37,15 @@ class SurveyShow extends Component {
   }
 
   respondentsReached(completedByDate, targetValue) {
-    const reached = completedByDate.length === 0 ? 0 : this.cumulativeCountFor(completedByDate[completedByDate.length-1].date, completedByDate)
+    const reached = completedByDate.length === 0 ? 0 : this.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
     return reached + '/' + targetValue
   }
 
   render() {
     const { survey, respondentsStats, completedByDate, targetValue } = this.props
-    const { dispatch, projectId, surveyId } = this.props
     const cumulativeCount = this.cumulativeCount(completedByDate, targetValue)
 
-    if (!survey || !cumulativeCount) {
+    if (!survey || !completedByDate) {
       return <p>Loading...</p>
     }
 
@@ -83,8 +81,6 @@ class SurveyShow extends Component {
           </div>
           <div className='col s12 m4'>
             <RespondentsChart completedByDate={cumulativeCount} />
-          </div>
-          <div className='col s12 m4'>
           </div>
         </div>
       </div>
