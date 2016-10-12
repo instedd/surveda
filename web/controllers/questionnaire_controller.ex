@@ -48,9 +48,6 @@ defmodule Ask.QuestionnaireController do
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "questionnaire" => params}) do
-    params = params
-    |> Map.put_new("steps", dummy_steps())
-
     changeset = Project
     |> Repo.get!(project_id)
     |> authorize(conn)

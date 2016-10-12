@@ -6,47 +6,51 @@ import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 
 class StepEditor extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
-    this.state = { stepTitle: '' }
+    this.state = this.stateFromProps(props)
 
     this.stepTitleChange = this.stepTitleChange.bind(this)
     this.stepTitleSubmit = this.stepTitleSubmit.bind(this)
   }
 
-  stepTitleChange (e) {
+  stepTitleChange(e) {
     e.preventDefault
     this.setState({stepTitle: e.target.value})
   }
 
-  stepTitleSubmit (e) {
+  stepTitleSubmit(e) {
     e.preventDefault()
     const { dispatch } = this.props
     dispatch(actions.changeStepTitle(e.target.value))
   }
 
-  deselectStep (e) {
+  deselectStep(e) {
     e.preventDefault()
     this.props.dispatch(actions.deselectStep())
   }
 
-  editTitle (e) {
+  editTitle(e) {
     e.preventDefault()
     this.props.dispatch(actions.editTitle())
   }
 
-  delete (e) {
+  delete(e) {
     e.preventDefault()
     this.props.dispatch(actions.deleteStep())
   }
 
-  componentWillReceiveProps (newProps) {
-    const { step } = newProps
-    this.setState({stepTitle: step.title})
+  componentWillReceiveProps(newProps) {
+    this.setState(this.stateFromProps(newProps))
   }
 
-  render () {
+  stateFromProps(props) {
+    const { step } = props
+    return {stepTitle: step.title}
+  }
+
+  render() {
     const { step } = this.props
 
     let editor
@@ -59,7 +63,7 @@ class StepEditor extends Component {
     }
 
     return (
-      <Card key={step.title}>
+      <Card key={step.id}>
         <ul className='collection'>
           <li className='collection-item'>
             <div className='row'>

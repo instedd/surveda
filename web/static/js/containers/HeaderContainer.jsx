@@ -9,15 +9,22 @@ import * as projectActions from '../actions/projects'
 class HeaderContainer extends Component {
   componentDidMount() {
     const { dispatch } = this.props
-    const { projectId } = this.props.params
+    const { projectId, surveyId, questionnaireId } = this.props.params
 
-    if (projectId) {
+    if (projectId && (surveyId || questionnaireId)) {
       dispatch(projectActions.fetchProjectIfNeeded(projectId))
     }
   }
 
   render () {
-    const { tabs, logout, user, project } = this.props
+    const { tabs, logout, user } = this.props
+    let { project } = this.props
+    const { surveyId, questionnaireId } = this.props.params
+
+    if (!surveyId && !questionnaireId) {
+      project = null
+    }
+
     return (
       <Header tabs={tabs} logout={logout} user={user} project={project || null} />
     )

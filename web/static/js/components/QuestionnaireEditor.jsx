@@ -6,11 +6,11 @@ import { createQuestionnaire, updateQuestionnaire } from '../api'
 import * as projectActions from '../actions/projects'
 import * as questionnaireActions from '../actions/questionnaires'
 import * as actions from '../actions/questionnaireEditor'
+import { questionnaireForServer } from '../reducers/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import uuid from 'node-uuid'
 
 class QuestionnaireEditor extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.state = { questionnaireName: '' }
@@ -23,27 +23,27 @@ class QuestionnaireEditor extends Component {
     this.questionnaireSave = this.questionnaireSave.bind(this)
   }
 
-  questionnaireModesChange (event) {
+  questionnaireModesChange(event) {
     const { dispatch } = this.props
     dispatch(actions.changeQuestionnaireModes(event.target.value))
   }
 
-  questionnaireNameChange (event) {
+  questionnaireNameChange(event) {
     event.preventDefault()
     this.setState({questionnaireName: event.target.value})
   }
 
-  questionnaireNameSubmit (event) {
+  questionnaireNameSubmit(event) {
     event.preventDefault()
     const { dispatch } = this.props
     dispatch(actions.changeQuestionnaireName(event.target.value))
   }
 
-  questionnaireSave (event) {
+  questionnaireSave(event) {
     event.preventDefault()
     const { dispatch, questionnaireEditor, router } = this.props
 
-    const questionnaire = questionnaireEditor.questionnaire
+    const questionnaire = questionnaireForServer(questionnaireEditor)
 
     if (questionnaire.id == null) {
       createQuestionnaire(questionnaire.projectId, questionnaire)
@@ -56,30 +56,20 @@ class QuestionnaireEditor extends Component {
     }
   }
 
-  questionnaireAddMultipleChoiceStep () {
-    this.questionnaireAddStep({
-      id: uuid.v4(),
-      type: 'multiple-choice',
-      title: 'Untitled multiple-choice',
-      choices: []
-    })
+  questionnaireAddMultipleChoiceStep() {
+    this.questionnaireAddStep('multiple-choice')
   }
 
-  questionnaireAddNumericStep () {
-    this.questionnaireAddStep({
-      id: uuid.v4(),
-      type: 'numeric',
-      title: 'Untitled numeric',
-      choices: []
-    })
+  questionnaireAddNumericStep() {
+    this.questionnaireAddStep('numeric')
   }
 
-  questionnaireAddStep (step) {
+  questionnaireAddStep(stepType) {
     const { dispatch } = this.props
-    dispatch(actions.addStep(step))
+    dispatch(actions.addStep(stepType))
   }
 
-  componentWillMount () {
+  componentWillMount() {
     const { dispatch, projectId, questionnaireId } = this.props
 
     if (projectId) {
@@ -98,14 +88,14 @@ class QuestionnaireEditor extends Component {
     }
   }
 
-  componentWillReceiveProps (newProps) {
+  componentWillReceiveProps(newProps) {
     const { questionnaireEditor } = newProps
     if (questionnaireEditor.questionnaire) {
       this.setState({questionnaireName: questionnaireEditor.questionnaire.name})
     }
   }
 
-  render () {
+  render() {
     const { questionnaireEditor } = this.props
 
     if (!questionnaireEditor.questionnaire) {
@@ -168,6 +158,10 @@ class QuestionnaireEditor extends Component {
 }
 
 QuestionnaireEditor.propTypes = {
+  dispatch: PropTypes.func,
+  router: PropTypes.object,
+  projectId: PropTypes.string,
+  questionnaireId: PropTypes.string,
   questionnaireEditor: PropTypes.object.isRequired
 }
 

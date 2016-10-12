@@ -1,5 +1,7 @@
 import * as actions from '../actions/questionnaireEditor'
 import reduce from 'lodash/reduce'
+import toArray from 'lodash/toArray'
+import uuid from 'node-uuid'
 
 const defaultState = {
   steps: {
@@ -28,21 +30,23 @@ export default (state = defaultState, action) => {
         }
       }
     case actions.ADD_STEP:
+      const newStep = buildNewStep(action.stepType)
+
       return {
         ...state,
         steps: {
           ...state.steps,
-          ids: state.steps.ids.concat([action.step.id]),
+          ids: state.steps.ids.concat([newStep.id]),
           items: {
             ...state.steps.items,
-            [action.step.id]: action.step
+            [newStep.id]: newStep
           },
-          current: action.step.id
+          current: newStep.id
         }
       }
     case actions.DELETE_STEP:
       let ids = state.steps.ids.filter(id => id !== state.steps.current)
-      let items = Object.assign({}, state.steps.items)
+      var items = Object.assign({}, state.steps.items)
       delete items[state.steps.current]
 
       return {
@@ -54,6 +58,13 @@ export default (state = defaultState, action) => {
           current: null
         }
       }
+    case actions.ADD_CHOICE:
+      return updateChoices(state, choices => choices.push({
+        value: 'Untitled option',
+        responses: ['Untitled', 'u']
+      }))
+    case actions.DELETE_CHOICE:
+      return updateChoices(state, choices => choices.splice(action.index, 1))
     case actions.INITIALIZE_EDITOR:
       return initializeEditor(state, action)
     case actions.NEW_QUESTIONNAIRE:
@@ -95,6 +106,49 @@ export default (state = defaultState, action) => {
       return state
   }
 }
+
+export const questionnaireForServer = (questionnaireEditor) => {
+  let quiz = Object.assign({}, questionnaireEditor.questionnaire)
+  quiz['steps'] = toArray(questionnaireEditor.steps.items)
+
+  return quiz
+}
+
+const updateChoices = (state, func) => {
+  var choices = state.steps.items[state.steps.current].choices.slice()
+  func(choices)
+  return {
+    ...state,
+    steps: {
+      ...state.steps,
+      items: {
+        ...state.steps.items,
+        [state.steps.current]: {
+          ...state.steps.items[state.steps.current],
+          choices: choices
+        }
+      }
+    }
+  }
+}
+
+const stepTypeDisplay = (stepType) => {
+  switch (stepType) {
+    case 'multiple-choice':
+      return 'multiple choice'
+    case 'numeric':
+      return 'numeric'
+    default:
+      return 'question'
+  }
+}
+
+export const buildNewStep = (stepType) => ({
+  id: uuid.v4(),
+  type: stepType,
+  title: `Untitled ${stepTypeDisplay(stepType)}`,
+  choices: []
+})
 
 const changeQuestionnaireModes = (state, action) => {
   return {

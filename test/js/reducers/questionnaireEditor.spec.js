@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import each from 'lodash/each'
-import reducer from '../../../web/static/js/reducers/questionnaireEditor'
+import reducer, { questionnaireForServer, buildNewStep } from '../../../web/static/js/reducers/questionnaireEditor'
 import * as actions from '../../../web/static/js/actions/questionnaireEditor'
 
 describe('questionnaireEditor reducer', () => {
@@ -118,15 +118,17 @@ describe('questionnaireEditor reducer', () => {
   })
 
   it('should add step', () => {
-    const id = 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
-    const title = 'Another title'
     const preState = playActions([actions.initializeEditor(questionnaire)])
+
     const resultState = playActionsFromState(preState, [
-      actions.addStep({id: id, title: title})]
-    )
+      actions.addStep('multiple-choice')
+    ])
+
+    const newStepId = resultState.steps.ids[resultState.steps.ids.length - 1]
+
     expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length + 1)
-    expect(resultState.steps.items[id].title).toEqual(title)
-    expect(resultState.steps.current).toEqual(id)
+    expect(resultState.steps.items[newStepId].title).toEqual(buildNewStep('multiple-choice').title)
+    expect(resultState.steps.current).toEqual(newStepId)
   })
 
   it('should delete step', () => {
@@ -141,6 +143,44 @@ describe('questionnaireEditor reducer', () => {
     expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15']).toEqual(null)
     expect(resultState.steps.items['17141bea-a81c-4227-bdda-f5f69188b0e7'].title).toEqual('Do you smoke?')
     expect(resultState.steps.current).toEqual(null)
+  })
+
+  it('should add choice', () => {
+    const preState = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+    const resultState = playActionsFromState(preState, [
+      actions.addChoice()]
+    )
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices.length).toEqual(3)
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices[2].value).toEqual('Untitled option')
+  })
+
+  it('should delete choice', () => {
+    const preState = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+    const resultState = playActionsFromState(preState, [
+      actions.deleteChoice(1)]
+    )
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices.length).toEqual(1)
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices[0].value).toEqual('Yes')
+  })
+
+  it('should include steps in questionnaire for server', () => {
+    const state = playActions([actions.initializeEditor(questionnaire)])
+    const quizForServer = questionnaireForServer(state)
+    expect(quizForServer.steps).toEqual(questionnaire.steps)
+  })
+
+  it('should send new step to server', () => {
+    /* const state = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.addStep({ type: 'multiple-choice' })
+    ]) */
+    return 'foo'
   })
 })
 
