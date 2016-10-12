@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import * as actions from '../actions/questionnaireEditor'
+import * as actions from '../../actions/questionnaireEditor'
 
 class QuestionnaireClosedStep extends Component {
   selectStep(event, step) {

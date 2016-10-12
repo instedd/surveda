@@ -1,8 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import * as actions from '../actions/questionnaireEditor'
-import ChoiceEditor from '../components/ChoiceEditor'
-import Card from './Card'
+import * as actions from '../../actions/questionnaireEditor'
+import ChoiceEditor from './ChoiceEditor'
+import Card from '../Card'
 
 class StepMultipleChoiceEditor extends Component {
   addChoice(e) {

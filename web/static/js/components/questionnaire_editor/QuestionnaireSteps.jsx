@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import Card from '../components/Card'
+import Card from '../Card'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
