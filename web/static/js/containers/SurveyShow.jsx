@@ -37,12 +37,17 @@ class SurveyShow extends Component {
     return cumulativeCount
   }
 
+  respondentsReached(completedByDate, targetValue) {
+    const reached = completedByDate.length === 0 ? 0 : this.cumulativeCountFor(completedByDate[completedByDate.length-1].date, completedByDate)
+    return reached + '/' + targetValue
+  }
+
   render() {
     const { survey, respondentsStats, completedByDate, targetValue } = this.props
     const { dispatch, projectId, surveyId } = this.props
     const cumulativeCount = this.cumulativeCount(completedByDate, targetValue)
 
-    if (!survey) {
+    if (!survey || !cumulativeCount) {
       return <p>Loading...</p>
     }
 
@@ -78,6 +83,8 @@ class SurveyShow extends Component {
           </div>
           <div className='col s12 m4'>
             <RespondentsChart completedByDate={cumulativeCount} />
+          </div>
+          <div className='col s12 m4'>
           </div>
         </div>
       </div>

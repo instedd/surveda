@@ -9,83 +9,83 @@ class RespondentsChart extends Component {
   }
 
   componentDidMount() {
-    const width = this.refs.container.offsetWidth
-    this.setState({width: width, height: (width * 1/2)})
+    this.width = this.refs.container.offsetWidth
+    this.height = this.width * (1 / 2)
+    this.chartMargin = {top: 0, bottom: 20, left: 0, right: 0}
+    this.chartWidth = this.width - this.chartMargin.left - this.chartMargin.right
+    this.chartHeight = this.height - this.chartMargin.top - this.chartMargin.bottom
   }
 
-  data(completedByDate, x, y) {
+  setData(completedByDate) {
     const formatDate = function(date) { return new Date(Date.parse(date)) }
-    const data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } })
-    x.domain(d3.extent(data, function(d) { return d.date }))
-    return data
+    this.data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } });
+    (this._x).domain(d3.extent(this.data, function(d) { return d.date }))
   }
 
-  setSize(x, y, margin, width, height) {
-    const chartWidth = width
-    const chartHeight = height - margin.bottom
-    x.range([0, chartWidth])
-    y.range([chartHeight, 0])
+  setSize() {
+    this._x.range([0, this.chartWidth])
+    this._y.range([this.chartHeight, 0])
   }
 
-  init(svg, margin, width, height) {
-    const container = svg.append('g')
-    const YAxis = container.append('g')
+  init() {
+    this.container = this.svg.append('g')
+    this.YAxis = this.container.append('g')
                           .attr('class', 'y axis')
-    const XAxis = container.append('g')
+    this.XAxis = this.container.append('g')
                           .attr('class', 'x axis')
-                          .attr('transform', 'translate(0,' + (height) + ')')
-    const path = container.append('path')
+                          .attr('transform', 'translate(0,' + (this.chartHeight) + ')')
+    this.path = this.container.append('path')
                           .attr('class', 'line')
-    return({YAxis: YAxis, XAxis: XAxis, path: path})
+
+    this._x = d3.time.scale()
+    this._y = d3.scale.linear().domain([0, 100])
+
+    this.yaxis = d3.svg.axis()
+                        .scale(this._y)
+                        .tickSize(this.width)
+                        .ticks(4)
+                        .orient('right')
+    this.xaxis = d3.svg.axis()
+                        .scale(this._x)
+                        .ticks(4)
+
+    const _x = this._x
+    const _y = this._y
+    this.line = d3.svg.line()
+                        .x(function(d) { return _x(d.date) })
+                        .y(function(d) { return _y(d.count) })
   }
 
   renderD3() {
-    const { width, height, margin } = this.state
-    if (!width) {
+    if (!this.width) {
       return null
     }
 
     const { completedByDate } = this.props
-    const node = document.createElement('div')
-    const svg = d3.select(node).append('svg')
+    this.node = document.createElement('div')
+    this.svg = d3.select(this.node).append('svg')
 
-    const x = d3.time.scale()
-    const y = d3.scale.linear().domain([0, 100])
-    const yaxis = d3.svg.axis()
-                        .scale(y)
-                        .tickSize(width)
-                        .ticks(4)
-                        .orient('right')
-    const xaxis = d3.svg.axis()
-                        .scale(x)
-                        .ticks(4)
-    const line = d3.svg.line()
-                        .x(function(d) { return x(d.date) })
-                        .y(function(d) { return y(d.count) })
+    this.init()
+    this.setSize()
+    this.setData(completedByDate)
 
-    const margin = {top: 0, left: 0, right: 0, bottom: 20}
+    this.svg.attr('width', this.width)
+        .attr('height', this.height)
 
-    const { YAxis, XAxis, path } = this.init(svg, margin, width, height)
-    this.setSize(x, y, margin, width, height)
-    const data = this.data(completedByDate, x, y)
-
-    svg.attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-
-    YAxis.call(yaxis)
+    this.YAxis.call(this.yaxis)
         .selectAll('text')
           .attr('x', 0)
           .attr('dy', 16)
 
-    XAxis.call(xaxis)
+    this.XAxis.call(this.xaxis)
         .selectAll('text')
         .attr('dy', 7)
 
-    path.datum(data)
+    this.path.datum(this.data)
         .attr('class', 'line')
-        .attr('d', line)
+        .attr('d', this.line)
 
-    return (<RD3Component data={node} />)
+    return (<RD3Component data={this.node} />)
   }
 
   render() {
