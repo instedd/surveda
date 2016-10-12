@@ -46,7 +46,7 @@ class SurveyIndex extends Component {
         :
           <div className="row">
             { Object.keys(surveys).map((surveyId) =>
-              <SurveyCard survey={surveys[surveyId]} completedByDate={respondentsStats[surveyId] ? respondentsStats[surveyId] : null} key={surveyId}/>
+              <SurveyCard survey={surveys[surveyId]} completedByDate={respondentsStats[surveyId] ? respondentsStats[surveyId] : {}} key={surveyId}/>
             )}
           </div>
         }
@@ -65,11 +65,8 @@ const mapStateToProps = (state, ownProps) => ({
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 const SurveyCard = ({ survey, completedByDate }) => {
-  let acum
-  if (!completedByDate) {
-    acum = []
-  }
 
+  /* Begining Auxiliar functions */
   const cumulativeCountFor = function(d, completedByDate) {
     const dateMilliseconds = Date.parse(d)
     return completedByDate.reduce((pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
@@ -87,10 +84,23 @@ const SurveyCard = ({ survey, completedByDate }) => {
     return cumulativeCount
   }
 
-  if(completedByDate){
+  const respondentsReached = function(completedByDate, targetValue) {
+    const reached = completedByDate.length === 0 ? 0 : cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
+    return reached/targetValue
+  }
+  /* End Auxiliar functions */
+
+  let acum = []
+  let target = 1
+  let reached = 0
+
+  if(survey && completedByDate.completedByDate){
     const data = completedByDate.completedByDate.respondentsByDate
     const target = completedByDate.completedByDate.targetValue
     acum = cumulativeCount(data, target)
+    if(survey.state === 'running' || survey.state === 'completed'){
+      reached = respondentsReached(data, target)
+    }
   }
 
   let icon = 'mode_edit'
@@ -119,6 +129,9 @@ const SurveyCard = ({ survey, completedByDate }) => {
       <div className="col s12 m6 l4">
         <Card>
           <div className="card-content">
+            <div>
+              { reached + '% respondents reached'}
+            </div>
             <div style={{padding: '30px'}}>
               <RespondentsChart completedByDate={acum} />
             </div>
