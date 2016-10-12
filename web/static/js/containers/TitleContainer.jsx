@@ -39,7 +39,8 @@ class TitleContainer extends Component {
       project,
       survey,
       questionnaire,
-      routes
+      routes,
+      dispatch
     } = this.props
 
     return (
@@ -48,7 +49,9 @@ class TitleContainer extends Component {
         project={project}
         survey={survey}
         questionnaire={questionnaire}
-        routes={routes} />
+        routes={routes}
+        dispatch={dispatch}
+        />
     )
   }
 }
