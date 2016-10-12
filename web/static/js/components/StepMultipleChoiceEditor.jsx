@@ -20,42 +20,47 @@ class StepMultipleChoiceEditor extends Component {
     const { step } = this.props
     const { choices } = step
     return (
-      <Card>
-        <table>
-          <thead>
-            <tr>
-              <th>Response</th>
-              <th>SMS</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            { choices.map((choice, index) =>
-              <tr key={index}>
-                <td>
-                  {choice.value}
-                </td>
-                <td>
-                  {choice.responses.join(', ')}
-                </td>
-                <td>
-                  <a href='#!' onClick={(e) => this.deleteChoice(e, index)}><i className='material-icons'>delete</i></a>
+      <div>
+        <h5>Responses</h5>
+        <p>List the strings you want to store for each possible choice and define valid values by commas.</p>
+        <Card>
+          <table>
+            <thead>
+              <tr>
+                <th>Response</th>
+                <th>SMS</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              { choices.map((choice, index) =>
+                <tr key={index}>
+                  <td>
+                    {choice.value}
+                  </td>
+                  <td>
+                    {choice.responses.join(', ')}
+                  </td>
+                  <td>
+                    <a href='#!' onClick={(e) => this.deleteChoice(e, index)}><i className='material-icons'>delete</i></a>
+                  </td>
+                </tr>
+              )}
+              <tr>
+                <td colSpan='3'>
+                  <a href='#!' onClick={(e) => this.addChoice(e)}>ADD</a>
                 </td>
               </tr>
-            )}
-            <tr>
-              <td colSpan='3'>
-                <a href='#!' onClick={(e) => this.addChoice(e)}>ADD</a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </Card>
+            </tbody>
+          </table>
+        </Card>
+      </div>
     )
   }
 }
 
 StepMultipleChoiceEditor.propTypes = {
+  dispatch: PropTypes.func,
   step: PropTypes.object.isRequired
 }
 

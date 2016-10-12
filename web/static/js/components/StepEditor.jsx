@@ -86,15 +86,17 @@ class StepEditor extends Component {
             </div>
           </li>
           <li className='collection-item'>
-            <div className='row'>
-              {editor}
+            <div className='section'>
+              <div className='row'>
+                {editor}
+              </div>
             </div>
           </li>
           <li className='collection-item'>
             <div className='row'>
               <a href='#!'
                 onClick={(e) => this.delete(e)}>
-                Delete
+                DELETE
               </a>
             </div>
           </li>
