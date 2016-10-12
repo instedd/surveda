@@ -14,12 +14,35 @@ class RespondentsChart extends Component {
     this.chartMargin = {top: 0, bottom: 20, left: 0, right: 0}
     this.chartWidth = this.width - this.chartMargin.left - this.chartMargin.right
     this.chartHeight = this.height - this.chartMargin.top - this.chartMargin.bottom
+    this.renderD3()
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setData(nextProps.completedByDate)
   }
 
   setData(completedByDate) {
     const formatDate = function(date) { return new Date(Date.parse(date)) }
     this.data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } });
     (this._x).domain(d3.extent(this.data, function(d) { return d.date }))
+
+    this.xaxis = d3.svg.axis()
+                        .scale(this._x)
+                        .ticks(4)
+
+    const _x = this._x
+    const _y = this._y
+    this.line = d3.svg.line()
+                        .x(function(d) { return _x(d.date) })
+                        .y(function(d) { return _y(d.count) })
+                        
+    this.XAxis.call(this.xaxis)
+        .selectAll('text')
+        .attr('dy', 7)
+
+    this.path.datum(this.data)
+        .attr('class', 'line')
+        .attr('d', this.line)
   }
 
   setSize() {
@@ -58,12 +81,12 @@ class RespondentsChart extends Component {
 
   renderD3() {
     if (!this.width) {
-      return null
+      return
     }
 
     const { completedByDate } = this.props
-    this.node = document.createElement('div')
-    this.svg = d3.select(this.node).append('svg')
+    const node = document.createElement('div')
+    this.svg = d3.select(node).append('svg')
 
     this.init()
     this.setSize()
@@ -81,17 +104,13 @@ class RespondentsChart extends Component {
         .selectAll('text')
         .attr('dy', 7)
 
-    this.path.datum(this.data)
-        .attr('class', 'line')
-        .attr('d', this.line)
-
-    return (<RD3Component data={this.node} />)
+    this.setState({node: node})
   }
 
   render() {
     return (
       <div ref='container'>
-        {this.renderD3()}
+        <RD3Component data={this.state.node} />
       </div>
     )
   }
