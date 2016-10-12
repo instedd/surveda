@@ -80,7 +80,7 @@ class StepEditor extends Component {
                 <a href='#!'
                   className='col s1'
                   onClick={(e) => this.deselectStep(e)}>
-                  Collapse
+                  <i className='material-icons'>expand_less</i>
                 </a>
               </div>
             </div>
