@@ -32,15 +32,22 @@ describe('questionnaireEditor reducer', () => {
   })
 
   it('should initialize for the questionnaire creation use case', () => {
-    const result = reducer(initialState, actions.newQuestionnaire(123)).questionnaire
+    const result = reducer(initialState, actions.newQuestionnaire(123))
+    const { questionnaire, steps } = result
 
-    expect(result)
+    expect(questionnaire)
     .toEqual({
       id: null,
       name: '',
       modes: ['SMS'],
       projectId: 123
     })
+
+    expect(steps.ids.length).toEqual(1)
+
+    const item = steps.items[steps.ids[0]]
+    expect(item.type).toEqual('multiple-choice')
+    expect(item.choices.length).toEqual(0)
   })
 
   it('should start with all steps collapsed', () => {

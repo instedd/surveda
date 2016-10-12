@@ -1,6 +1,7 @@
 import * as actions from '../actions/questionnaireEditor'
 import reduce from 'lodash/reduce'
 import toArray from 'lodash/toArray'
+import cloneDeep from 'lodash/cloneDeep'
 import uuid from 'node-uuid'
 
 const defaultState = {
@@ -68,6 +69,12 @@ export default (state = defaultState, action) => {
     case actions.INITIALIZE_EDITOR:
       return initializeEditor(state, action)
     case actions.NEW_QUESTIONNAIRE:
+      let steps = cloneDeep(defaultState.steps)
+      let defaultStep = buildNewStep('multiple-choice')
+      steps.ids.push(defaultStep.id)
+      steps.items[defaultStep.id] = defaultStep
+      steps.current = defaultStep.id
+
       return {
         ...state,
         questionnaire: {
@@ -76,7 +83,8 @@ export default (state = defaultState, action) => {
           name: '',
           modes: ['SMS'],
           projectId: action.projectId
-        }
+        },
+        steps
       }
     case actions.CHANGE_QUESTIONNAIRE_NAME:
       return {
@@ -174,7 +182,8 @@ const initializeEditor = (state, action) => {
     steps: {
       ...state.steps,
       ids: q.steps.map(step => step.id),
-      items: reduce(q.steps, reduceStepsForEditor, {})
+      items: reduce(q.steps, reduceStepsForEditor, {}),
+      current: null
     }
   }
 }
