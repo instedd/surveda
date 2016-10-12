@@ -14,7 +14,7 @@ defmodule Ask.SessionTest do
 
     session = Session.start(quiz, respondent, channel)
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke?"]]
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Press 1 for YES, 2 for NO"]]
     assert %Session{} = session
   end
 
@@ -26,7 +26,7 @@ defmodule Ask.SessionTest do
     session = Session.start(quiz, respondent, channel)
 
     step_result = Session.sync_step(session, "N")
-    assert {:ok, %Session{}, {:prompt, "Do you exercise?"}} = step_result
+    assert {:ok, %Session{}, {:prompt, "Do you exercise? Press 1 for YES, 2 for NO"}} = step_result
 
     assert [response] = respondent |> Ecto.assoc(:responses) |> Ask.Repo.all
     assert response.field_name == "Smokes"

@@ -6,6 +6,9 @@ defmodule Ask.DummySteps do
           "id" => "17141bea-a81c-4227-bdda-f5f69188b0e7",
           "type" => "multiple-choice",
           "title" => "Do you smoke?",
+          "prompt" => %{
+            "sms" => "Do you smoke? Press 1 for YES, 2 for NO",
+          },
           "store" => "Smokes",
           "choices" => [
             %{
@@ -22,6 +25,9 @@ defmodule Ask.DummySteps do
           "id" => "b6588daa-cd81-40b1-8cac-ff2e72a15c15",
           "type" => "multiple-choice",
           "title" => "Do you exercise?",
+          "prompt" => %{
+            "sms" => "Do you exercise? Press 1 for YES, 2 for NO",
+          },
           "store" => "Exercises",
           "choices" => [
             %{
@@ -38,6 +44,9 @@ defmodule Ask.DummySteps do
           "id" => "c6588daa-cd81-40b1-8cac-ff2e72a15c15",
           "type" => "numeric",
           "title" => "Which is the second perfect number?",
+          "prompt" => %{
+            "sms" => "Which is the second perfect number??"
+          },
           "store" => "Perfect Number",
         }
       ]

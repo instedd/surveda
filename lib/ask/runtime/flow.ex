@@ -74,7 +74,7 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [step["title"]]}}
+        {:ok, flow, %{state | prompts: [step["prompt"]["sms"]]}}
     end
   end
 

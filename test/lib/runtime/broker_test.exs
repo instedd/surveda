@@ -136,7 +136,7 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = Broker.start_link
     broker |> send(:poll)
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke?"]]
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Press 1 for YES, 2 for NO"]]
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -145,11 +145,11 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
 
     reply = Broker.sync_step(respondent, "Yes")
-    assert reply == {:prompt, "Do you exercise?"}
+    assert reply == {:prompt, "Do you exercise? Press 1 for YES, 2 for NO"}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, "Yes")
-    assert reply == {:prompt, "Which is the second perfect number?"}
+    assert reply == {:prompt, "Which is the second perfect number??"}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, "99")
@@ -162,8 +162,6 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
     assert respondent.session == nil
     assert respondent.completed_at in interval
-
-
   end
 
   test "only polls surveys schedule for todays weekday" do

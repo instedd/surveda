@@ -20,7 +20,7 @@ defmodule Ask.FlowTest do
   test "first step" do
     step = Flow.start(@quiz) |> Flow.step()
     assert {:ok, %Flow{}, %{prompts: prompts}} = step
-    assert prompts == ["Do you smoke?"]
+    assert prompts == ["Do you smoke? Press 1 for YES, 2 for NO"]
   end
 
   test "fail if a response is given to a flow that was never executed" do
@@ -34,7 +34,7 @@ defmodule Ask.FlowTest do
     step = flow |> Flow.step("Y")
     assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
     assert stores == %{"Smokes" => "Yes"}
-    assert prompts == ["Do you exercise?"]
+    assert prompts == ["Do you exercise? Press 1 for YES, 2 for NO"]
   end
 
   test "next step with store, case insensitive, strip space" do
@@ -42,7 +42,7 @@ defmodule Ask.FlowTest do
     step = flow |> Flow.step(" y ")
     assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
     assert stores == %{"Smokes" => "Yes"}
-    assert prompts == ["Do you exercise?"]
+    assert prompts == ["Do you exercise? Press 1 for YES, 2 for NO"]
   end
 
   test "last step" do
