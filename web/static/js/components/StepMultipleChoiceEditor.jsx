@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/questionnaireEditor'
+import ChoiceEditor from '../components/ChoiceEditor'
 import Card from './Card'
 
 class StepMultipleChoiceEditor extends Component {
@@ -24,35 +25,27 @@ class StepMultipleChoiceEditor extends Component {
         <h5>Responses</h5>
         <p>List the strings you want to store for each possible choice and define valid values by commas.</p>
         <Card>
-          <table>
-            <thead>
-              <tr>
-                <th>Response</th>
-                <th>SMS</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              { choices.map((choice, index) =>
-                <tr key={index}>
-                  <td>
-                    {choice.value}
-                  </td>
-                  <td>
-                    {choice.responses.join(', ')}
-                  </td>
-                  <td>
-                    <a href='#!' onClick={(e) => this.deleteChoice(e, index)}><i className='material-icons'>delete</i></a>
-                  </td>
-                </tr>
-              )}
-              <tr>
-                <td colSpan='3'>
-                  <a href='#!' onClick={(e) => this.addChoice(e)}>ADD</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <ul className='collection'>
+            <li className='collection-item'>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Response</th>
+                    <th>SMS</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  { choices.map((choice, index) =>
+                    <ChoiceEditor key={index} choice={choice} onDelete={(e) => this.deleteChoice(e, index)} />
+                  )}
+                </tbody>
+              </table>
+            </li>
+            <li className='collection-item'>
+              <a href='#!' onClick={(e) => this.addChoice(e)}>ADD</a>
+            </li>
+          </ul>
         </Card>
       </div>
     )
