@@ -14,13 +14,6 @@ class QuestionnaireEditor extends Component {
     super(props)
 
     this.state = { questionnaireName: '' }
-
-    this.questionnaireNameChange = this.questionnaireNameChange.bind(this)
-    this.questionnaireNameSubmit = this.questionnaireNameSubmit.bind(this)
-
-    this.questionnaireModesChange = this.questionnaireModesChange.bind(this)
-
-    this.questionnaireSave = this.questionnaireSave.bind(this)
   }
 
   questionnaireModesChange(event) {
@@ -115,8 +108,8 @@ class QuestionnaireEditor extends Component {
                   id='questionnaire_name'
                   placeholder='Questionnaire name'
                   value={this.state.questionnaireName}
-                  onChange={this.questionnaireNameChange}
-                  onBlur={this.questionnaireNameSubmit}
+                  onChange={e => this.questionnaireNameChange(e)}
+                  onBlur={e => this.questionnaireNameSubmit(e)}
                   />
                 <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
               </div>
@@ -124,7 +117,7 @@ class QuestionnaireEditor extends Component {
             <div className='row'>
               <Input s={12} type='select' label='Mode'
                 value={questionnaire.modes.join(',')}
-                onChange={this.questionnaireModesChange}>
+                onChange={e => this.questionnaireModesChange(e)}>
                 <option value='SMS'>SMS</option>
                 <option value='IVR'>IVR</option>
                 <option value='SMS,IVR'>SMS and IVR</option>
@@ -147,7 +140,7 @@ class QuestionnaireEditor extends Component {
             <button
               type='button'
               className='btn waves-effect waves-light'
-              onClick={this.questionnaireSave}>
+              onClick={e => this.questionnaireSave(e)}>
               Save
             </button>
           </div>

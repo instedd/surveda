@@ -10,9 +10,6 @@ class StepEditor extends Component {
     super(props)
 
     this.state = this.stateFromProps(props)
-
-    this.stepTitleChange = this.stepTitleChange.bind(this)
-    this.stepTitleSubmit = this.stepTitleSubmit.bind(this)
   }
 
   stepTitleChange(e) {
@@ -72,8 +69,8 @@ class StepEditor extends Component {
                   placeholder='Untitled question'
                   type='text'
                   value={this.state.stepTitle}
-                  onChange={this.stepTitleChange}
-                  onBlur={this.stepTitleSubmit}
+                  onChange={e => this.stepTitleChange(e)}
+                  onBlur={e => this.stepTitleSubmit(e)}
                   autoFocus />
               </div>
               <div>
