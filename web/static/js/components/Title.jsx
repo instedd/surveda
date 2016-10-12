@@ -6,6 +6,7 @@ import { updateSurvey, updateProject, updateQuestionnaire } from '../api'
 import * as projectsActions from '../actions/projects'
 import * as surveysActions from '../actions/surveys'
 import * as questionnairesActions from '../actions/questionnaires'
+import * as questionnaireEditorActions from '../actions/questionnaireEditor'
 
 const Title = ({ params, project, survey, questionnaire, routes, dispatch }) => {
   let name
@@ -65,6 +66,7 @@ var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
     case 'questionnaire':
       updateQuestionnaire(newObject.projectId, newObject)
           .then(updatedQuestionnaire => dispatch(questionnairesActions.receiveQuestionnaires(updatedQuestionnaire)))
+          .then(() => dispatch(questionnaireEditorActions.changeQuestionnaireName(inputValue)))
           .catch((e) => dispatch(questionnairesActions.receiveQuestionnairesError(e)))
       break
     case 'survey':

@@ -14,9 +14,8 @@ class SurveyWizardQuestionnaireStep extends Component {
     }
   }
 
-  handleSubmit(oldSurvey, inputValue, questionnairesInput) {
+  handleSubmit(oldSurvey, questionnairesInput) {
     const newSurveyValues = {
-      name: inputValue,
       questionnaire_id: (questionnairesInput.find(element => element.node.checked) || {}).id
     }
 
@@ -30,7 +29,7 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   newQuestionnaireButton(projectId, questionnaires) {
-    let buttonLabel = "NEW QUESTIONNAIRE"
+    let buttonLabel = 'NEW QUESTIONNAIRE'
     if (Object.keys(questionnaires).length === 0) {
       buttonLabel = "You still haven't created any questionnaire. Click here to create one."
     }
@@ -45,7 +44,6 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   render() {
-    let input
     const questionnairesInput = []
     const { survey, questionnaires, projectId } = this.props
     if (!survey || !questionnaires) {
@@ -53,12 +51,6 @@ class SurveyWizardQuestionnaireStep extends Component {
     }
     return (
       <div className='col s12 m7 offset-m1'>
-        <div className='row'>
-          <div className='input-field col s12'>
-            <input id='survey-name' type='text' placeholder='Survey name' defaultValue={survey.name} ref={node => { input = node; if (input != null) input.focus() }} />
-            <label className='active' htmlFor='survey_name'>Survey Name</label>
-          </div>
-        </div>
         <div className='row'>
           <div className='col s12'>
             <h4>Select a questionnaire</h4>
@@ -83,7 +75,7 @@ class SurveyWizardQuestionnaireStep extends Component {
         <div className='row'>
           <div className='col s12'>
             <button type='button' className='btn waves-effect waves-light' onClick={() =>
-              this.handleSubmit(survey, input.value, questionnairesInput)
+              this.handleSubmit(survey, questionnairesInput)
             }>
               Next
             </button>
