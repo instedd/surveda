@@ -18,7 +18,7 @@ export default ({ tabs, logout, user, project }) => {
       <nav id='TopNav'>
         <div className='nav-wrapper'>
           <div className='row'>
-            <div className='col s5 m4 offset-m1'>
+            <div className='col s5 m4'>
               <ul>
                 <li>
                   <Link to='/projects' className=''> Projects </Link>
@@ -29,7 +29,7 @@ export default ({ tabs, logout, user, project }) => {
                 </li>
               </ul>
             </div>
-            <div className='col s7 m7'>
+            <div className='col s8 m8'>
               <ul className='right'>
                 <li>
                   <Dropdown text={user}>

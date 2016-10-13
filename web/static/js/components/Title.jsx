@@ -37,10 +37,10 @@ const Title = ({ params, project, survey, questionnaire, routes, dispatch }) => 
   }
 
   return (
-    <nav id='Breadcrumb'>
+    <nav id='MainNav'>
       <div className='nav-wrapper'>
         <div className='row'>
-          <div className='breadcrumbs'>
+          <div className='col s12'>
             <div className='logo'><img src='/images/logo.png' width='28px' /></div>
             {entity
             ? <EditableTitleLabel title={name} onSubmit={(value) => { handleSubmit(titleOwner, entity, value, dispatch) }} />

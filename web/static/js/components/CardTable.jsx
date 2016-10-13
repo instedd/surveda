@@ -8,7 +8,7 @@ export default ({ title, children, highlight }) => (
           { title }
         </div>
         <div className="card-table">
-          <table className={`responsive-table ${highlight ? "highlight" : ""}`}>
+          <table className={`${highlight ? "highlight" : ""}`}>
             { children }
           </table>
         </div>

@@ -47,29 +47,23 @@ export class EditableTitleLabel extends Component {
     const { title } = this.props
     if (!this.state.editing) {
       return (
-        <div onClick={this.handleClick} style={{display: 'inline-block'}}>
-          <div style={{display: 'inline-block'}}><a className='breadcrumb'>{title}</a></div>
-          <div style={{display: 'inline-block'}}>
-            <i className='material-icons' style={{fontSize: '1.5rem', color: '#9e9e9e', paddingLeft: '15px'}}>mode_edit</i>
-          </div>
-        </div>
+        <a className='page-title' onClick={this.handleClick}>
+          <span>{title}</span>
+          <i className='material-icons'>mode_edit</i>
+        </a>
       )
     } else {
       return (
-        <div
-          // className='input-field'
+        <input
           onClick={this.clickAfuera}
-          style={{display: 'inline-block'}}>
-          <input
-            type='text'
-            id='questionnaire_name'
-            ref={node => { this.inputRef = node }}
-            autoFocus
-            defaultValue={title}
-            onKeyDown={this.onKeyDown}
-            onBlur={this.endAndSubmit}
-            />
-        </div>
+          type='text'
+          id='questionnaire_name'
+          ref={node => { this.inputRef = node }}
+          autoFocus
+          defaultValue={title}
+          onKeyDown={this.onKeyDown}
+          onBlur={this.endAndSubmit}
+          />
       )
     }
   }
