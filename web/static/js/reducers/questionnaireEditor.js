@@ -97,14 +97,16 @@ export default (state = defaultState, action) => {
     case actions.CHANGE_QUESTIONNAIRE_MODES:
       return changeQuestionnaireModes(state, action)
     case actions.CHANGE_STEP_TITLE:
-      return changeStep(state, step => step.title = action.newTitle)
+      return changeStep(state, step => { step.title = action.newTitle })
     case actions.CHANGE_STEP_SMS_PROMPT:
-      return changeStep(state, step => step.prompt = {
-        ...state.steps.items[state.steps.current].prompt,
-        sms: action.newPrompt
+      return changeStep(state, step => {
+        step.prompt = {
+          ...state.steps.items[state.steps.current].prompt,
+          sms: action.newPrompt
+        }
       })
     case actions.CHANGE_STEP_STORE:
-      return changeStep(state, step => step.store = action.newStore)
+      return changeStep(state, step => { step.store = action.newStore })
     default:
       return state
   }

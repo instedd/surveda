@@ -12,6 +12,18 @@ import QuestionnaireSteps from './QuestionnaireSteps'
 class QuestionnaireEditor extends Component {
   constructor(props) {
     super(props)
+    this.state = { questionnaireName: '' }
+  }
+
+  questionnaireNameChange(event) {
+    event.preventDefault()
+    this.setState({questionnaireName: event.target.value})
+  }
+
+  questionnaireNameSubmit(event) {
+    event.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.changeQuestionnaireName(event.target.value))
   }
 
   questionnaireModesChange(event) {
@@ -68,6 +80,13 @@ class QuestionnaireEditor extends Component {
     }
   }
 
+  componentWillReceiveProps(newProps) {
+    const { questionnaireEditor } = newProps
+    if (questionnaireEditor.questionnaire) {
+      this.setState({questionnaireName: questionnaireEditor.questionnaire.name})
+    }
+  }
+
   render() {
     const { questionnaireEditor } = this.props
 
@@ -81,6 +100,17 @@ class QuestionnaireEditor extends Component {
       <div className='row'>
         <div className='row'>
           <div className='col s12 m4'>
+            <div className='input-field col s12'>
+              <input
+                type='text'
+                id='questionnaire_name'
+                placeholder='Questionnaire name'
+                value={this.state.questionnaireName}
+                onChange={e => this.questionnaireNameChange(e)}
+                onBlur={e => this.questionnaireNameSubmit(e)}
+                />
+              <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
+            </div>
             <div className='row'>
               <Input s={12} type='select' label='Mode'
                 value={questionnaire.modes.join(',')}
