@@ -10,6 +10,7 @@ import SurveyLink from '../components/SurveyLink'
 import * as channelsActions from '../actions/channels'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
+import * as RespondentsChartCount from '../components/RespondentsChartCount'
 
 class SurveyIndex extends Component {
   componentDidMount() {
@@ -64,40 +65,22 @@ const mapStateToProps = (state, ownProps) => ({
 
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
+const respondentsReached = function(completedByDate, targetValue) {
+  const reached = completedByDate.length === 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
+  return reached/targetValue
+}
+
 const SurveyCard = ({ survey, completedByDate }) => {
 
-  /* Begining Auxiliar functions */
-  const cumulativeCountFor = function(d, completedByDate) {
-    const dateMilliseconds = Date.parse(d)
-    return completedByDate.reduce((pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
-  }
-
-  const cumulativeCount = function(completedByDate, targetValue) {
-    const cumulativeCount = []
-    for (let i = 0; i < completedByDate.length; i++) {
-      let d = completedByDate[i].date
-      let current = {}
-      current['date'] = d
-      current['count'] = cumulativeCountFor(d, completedByDate) / targetValue * 100
-      cumulativeCount.push(current)
-    }
-    return cumulativeCount
-  }
-
-  const respondentsReached = function(completedByDate, targetValue) {
-    const reached = completedByDate.length === 0 ? 0 : cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
-    return reached/targetValue
-  }
-  /* End Auxiliar functions */
-
-  let acum = []
+  let cumulativeCount = []
+  // Target could be any number at initialization, because reached equals 0 so reached will always be 0
   let target = 1
   let reached = 0
 
   if(survey && completedByDate.completedByDate){
     const data = completedByDate.completedByDate.respondentsByDate
     const target = completedByDate.completedByDate.targetValue
-    acum = cumulativeCount(data, target)
+    cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
     if(survey.state === 'running' || survey.state === 'completed'){
       reached = respondentsReached(data, target)
     }
@@ -130,10 +113,10 @@ const SurveyCard = ({ survey, completedByDate }) => {
         <Card>
           <div className="card-content">
             <div>
-              { reached + '% respondents reached'}
+              { reached * 100 + '% respondents reached'}
             </div>
             <div style={{padding: '30px'}}>
-              <RespondentsChart completedByDate={acum} />
+              <RespondentsChart completedByDate={cumulativeCount} />
             </div>
             <span className="card-title">
               { survey.name }

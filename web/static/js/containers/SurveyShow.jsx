@@ -4,6 +4,7 @@ import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
+import * as RespondentsChartCount from '../components/RespondentsChartCount'
 
 class SurveyShow extends Component {
   componentDidMount() {
@@ -19,23 +20,6 @@ class SurveyShow extends Component {
     }
   }
 
-  cumulativeCountFor(d, completedByDate) {
-    const dateMilliseconds = Date.parse(d)
-    return completedByDate.reduce((pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
-  }
-
-  cumulativeCount(completedByDate, targetValue) {
-    const cumulativeCount = []
-    for (let i = 0; i < completedByDate.length; i++) {
-      let d = completedByDate[i].date
-      let current = {}
-      current['date'] = d
-      current['count'] = this.cumulativeCountFor(d, completedByDate) / targetValue * 100
-      cumulativeCount.push(current)
-    }
-    return cumulativeCount
-  }
-
   respondentsReached(completedByDate, targetValue) {
     const reached = completedByDate.length === 0 ? 0 : this.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
     return reached + '/' + targetValue
@@ -43,7 +27,7 @@ class SurveyShow extends Component {
 
   render() {
     const { survey, respondentsStats, completedByDate, targetValue } = this.props
-    const cumulativeCount = this.cumulativeCount(completedByDate, targetValue)
+    const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, targetValue)
 
     if (!survey || !completedByDate) {
       return <p>Loading...</p>
