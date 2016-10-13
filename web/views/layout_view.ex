@@ -4,10 +4,12 @@ defmodule Ask.LayoutView do
   def config(conn) do
     version = Application.get_env(:ask, :version)
     nuntium_config = Application.get_env(:ask, Nuntium)
+    sentry_dsn = Application.get_env(:sentry, :public_dsn)
 
     client_config = %{
       version: version,
       user: current_user(conn).email,
+      sentryDsn: sentry_dsn,
 
       nuntium: %{
         baseUrl: nuntium_config[:base_url],

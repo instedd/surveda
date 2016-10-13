@@ -1,6 +1,8 @@
 defmodule Ask.Router do
   use Ask.Web, :router
   use Addict.RoutesHelper
+  use Plug.ErrorHandler
+  use Sentry.Plug
 
   pipeline :browser do
     plug :accepts, ["html"]

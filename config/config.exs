@@ -55,6 +55,13 @@ config :ask, version: (
   end
 )
 
+config :sentry,
+  dsn: System.get_env("SENTRY_DSN"),
+  public_dsn: System.get_env("SENTRY_PUBLIC_DSN"),
+  environment_name: Mix.env || :dev,
+  included_environments: ~w(prod)a,
+  use_error_logger: true
+
 
 if File.exists?("#{__DIR__}/local.exs") do
   import_config "#{__DIR__}/local.exs"

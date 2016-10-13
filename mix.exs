@@ -20,7 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto]]
+                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry]]
   end
 
   # Specifies which paths to compile per environment.
@@ -46,7 +46,8 @@ defmodule Ask.Mixfile do
       {:oauth2, "~> 0.7.0"},
       {:mock, "~> 0.1.1", only: :test},
       {:timex, "~> 3.0"},
-      {:timex_ecto, "~> 3.0"}
+      {:timex_ecto, "~> 3.0"},
+      {:sentry, "~> 1.0"}
    ]
   end
 
