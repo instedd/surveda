@@ -15,8 +15,6 @@ defmodule Ask.QuestionnaireController do
   end
 
   def create(conn, %{"project_id" => project_id, "questionnaire" => params}) do
-    params = params
-
     changeset = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
