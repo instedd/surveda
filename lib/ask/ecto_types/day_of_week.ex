@@ -53,6 +53,7 @@ defmodule Ask.DayOfWeek do
       }
     }
   end
+  def load(nil), do: {:ok, %Ask.DayOfWeek{}}
   def load(_), do: :error
 
   def dump(%Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
@@ -68,4 +69,8 @@ defmodule Ask.DayOfWeek do
     }
   end
   def dump(_), do: :error
+
+  def every_day do
+    %Ask.DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true}
+  end
 end

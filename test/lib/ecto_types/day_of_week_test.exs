@@ -2,6 +2,10 @@ defmodule Ask.DayOfWeekTest do
   use Ask.ModelCase
   alias Ask.DayOfWeek
 
+  test "every_day" do
+    assert %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true} = DayOfWeek.every_day
+  end
+
   describe "dump:" do
     test "should dump 1 for Saturday" do
       assert {:ok, 1} = DayOfWeek.dump(%DayOfWeek{sat: true})

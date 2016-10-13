@@ -48,7 +48,7 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+          "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil
@@ -73,7 +73,7 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+          "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil
@@ -175,7 +175,7 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+          "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil
