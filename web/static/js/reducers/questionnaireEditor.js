@@ -154,7 +154,24 @@ export const buildNewStep = (stepType) => ({
   prompt: {
     sms: ''
   },
-  choices: []
+  choices: [
+    {
+      value: 'Yes',
+      responses: [
+        'Yes',
+        'Y',
+        '1'
+      ]
+    },
+    {
+      value: 'No',
+      responses: [
+        'No',
+        'N',
+        '1'
+      ]
+    }
+  ]
 })
 
 const changeQuestionnaireModes = (state, action) => {

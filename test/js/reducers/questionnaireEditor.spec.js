@@ -47,7 +47,7 @@ describe('questionnaireEditor reducer', () => {
 
     const item = steps.items[steps.ids[0]]
     expect(item.type).toEqual('multiple-choice')
-    expect(item.choices.length).toEqual(0)
+    expect(item.choices.length).toEqual(2)
   })
 
   it('should start with all steps collapsed', () => {
