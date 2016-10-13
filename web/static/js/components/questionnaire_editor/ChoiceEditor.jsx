@@ -2,12 +2,12 @@ import React, { Component, PropTypes } from 'react'
 
 class ChoiceEditor extends Component {
   render() {
-    const { choice, onDelete } = this.props
+    const { choice, onValueClick, onDelete } = this.props
 
     return (
       <tr>
         <td>
-          {choice.value}
+          <div onClick={onValueClick}>{choice.value}</div>
         </td>
         <td>
           {choice.responses.join(', ')}
@@ -22,7 +22,9 @@ class ChoiceEditor extends Component {
 
 ChoiceEditor.propTypes = {
   onDelete: PropTypes.func,
-  choice: PropTypes.object
+  onValueClick: PropTypes.func,
+  choice: PropTypes.object,
+  editing: PropTypes.bool
 }
 
 export default ChoiceEditor

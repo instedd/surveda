@@ -99,7 +99,7 @@ describe('questionnaireEditor reducer', () => {
       actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     ])
 
-    expect(result.steps.current).toEqual('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(result.steps.current.id).toEqual('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
   })
 
   it('should change to multiple modes', () => {
@@ -121,7 +121,7 @@ describe('questionnaireEditor reducer', () => {
       actions.changeStepTitle('New title')]
     )
 
-    expect(resultState.steps.items[resultState.steps.current].title).toEqual('New title')
+    expect(resultState.steps.items[resultState.steps.current.id].title).toEqual('New title')
   })
 
   it('should update step prompt sms', () => {
@@ -131,7 +131,7 @@ describe('questionnaireEditor reducer', () => {
       actions.changeStepPromptSms('New prompt')]
     )
 
-    expect(resultState.steps.items[resultState.steps.current].prompt.sms).toEqual('New prompt')
+    expect(resultState.steps.items[resultState.steps.current.id].prompt.sms).toEqual('New prompt')
   })
 
   it('should update step store', () => {
@@ -141,7 +141,7 @@ describe('questionnaireEditor reducer', () => {
       actions.changeStepStore('New store')]
     )
 
-    expect(resultState.steps.items[resultState.steps.current].store).toEqual('New store')
+    expect(resultState.steps.items[resultState.steps.current.id].store).toEqual('New store')
   })
 
   it('should add step', () => {
@@ -155,7 +155,7 @@ describe('questionnaireEditor reducer', () => {
 
     expect(resultState.steps.ids.length).toEqual(preState.steps.ids.length + 1)
     expect(resultState.steps.items[newStepId].title).toEqual(buildNewStep('multiple-choice').title)
-    expect(resultState.steps.current).toEqual(newStepId)
+    expect(resultState.steps.current.id).toEqual(newStepId)
   })
 
   it('should delete step', () => {
@@ -202,12 +202,15 @@ describe('questionnaireEditor reducer', () => {
     expect(quizForServer.steps).toEqual(questionnaire.steps)
   })
 
-  it('should send new step to server', () => {
-    /* const state = playActions([
+  it('should select choice', () => {
+    const state = playActions([
       actions.initializeEditor(questionnaire),
-      actions.addStep({ type: 'multiple-choice' })
-    ]) */
-    return 'foo'
+      actions.selectStep('17141bea-a81c-4227-bdda-f5f69188b0e7'),
+      actions.editChoice(1)
+    ])
+
+    expect(state.steps.current.id).toEqual('17141bea-a81c-4227-bdda-f5f69188b0e7')
+    expect(state.steps.current.currentChoice).toEqual(1)
   })
 })
 

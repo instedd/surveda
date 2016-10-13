@@ -17,6 +17,12 @@ class StepMultipleChoiceEditor extends Component {
     dispatch(actions.deleteChoice(index))
   }
 
+  editChoice(e, index) {
+    e.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.editChoice(index))
+  }
+
   render() {
     const { step } = this.props
     const { choices } = step
@@ -37,7 +43,12 @@ class StepMultipleChoiceEditor extends Component {
                 </thead>
                 <tbody>
                   { choices.map((choice, index) =>
-                    <ChoiceEditor key={index} choice={choice} onDelete={(e) => this.deleteChoice(e, index)} />
+                    <ChoiceEditor
+                      key={index}
+                      choice={choice}
+                      onDelete={(e) => this.deleteChoice(e, index)}
+                      onValueClick={(e) => this.editChoice(e, index)}
+                      editing={false} />
                   )}
                 </tbody>
               </table>

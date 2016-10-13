@@ -25,11 +25,11 @@ const QuestionnaireSteps = ({ steps }) => {
       // All collapsed
       return <StepsList steps={steps.ids.map((id) => steps.items[id])} />
     } else {
-      const itemIndex = steps.ids.findIndex(stepId => stepId === steps.current)
+      const itemIndex = steps.ids.findIndex(stepId => stepId === steps.current.id)
 
       // Only one expanded
       const stepsBefore = steps.ids.slice(0, itemIndex).map((id) => steps.items[id])
-      const currentStep = steps.items[steps.current]
+      const currentStep = steps.items[steps.current.id]
       const stepsAfter = steps.ids.slice(itemIndex + 1).map((id) => steps.items[id])
 
       return (
@@ -52,6 +52,10 @@ const QuestionnaireSteps = ({ steps }) => {
 }
 
 QuestionnaireSteps.propTypes = {
+  steps: PropTypes.object
+}
+
+StepsList.propTypes = {
   steps: PropTypes.object
 }
 
