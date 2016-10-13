@@ -34,6 +34,17 @@ class StepEditor extends Component {
     dispatch(actions.changeStepPromptSms(e.target.value))
   }
 
+  stepStoreChange(e) {
+    e.preventDefault()
+    this.setState({stepStore: e.target.value})
+  }
+
+  stepStoreSubmit(e) {
+    e.preventDefault()
+    const { dispatch } = this.props
+    dispatch(actions.changeStepStore(e.target.value))
+  }
+
   deselectStep(e) {
     e.preventDefault()
     this.props.dispatch(actions.deselectStep())
@@ -57,7 +68,8 @@ class StepEditor extends Component {
     const { step } = props
     return {
       stepTitle: step.title,
-      stepPromptSms: step.prompt.sms
+      stepPromptSms: step.prompt.sms,
+      stepStore: step.store || ''
     }
   }
 
@@ -114,6 +126,23 @@ class StepEditor extends Component {
             <div className='section'>
               <div className='row'>
                 {editor}
+              </div>
+            </div>
+          </li>
+          <li className='collection-item'>
+            <div className='section'>
+              <div className='row'>
+                <div className='col s4'>
+                  Save this response as:
+                </div>
+                <div className='col s8'>
+                  <input
+                    type='text'
+                    value={this.state.stepStore}
+                    onChange={e => this.stepStoreChange(e)}
+                    onBlur={e => this.stepStoreSubmit(e)}
+                    />
+                </div>
               </div>
             </div>
           </li>

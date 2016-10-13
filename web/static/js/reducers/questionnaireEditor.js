@@ -97,36 +97,14 @@ export default (state = defaultState, action) => {
     case actions.CHANGE_QUESTIONNAIRE_MODES:
       return changeQuestionnaireModes(state, action)
     case actions.CHANGE_STEP_TITLE:
-      return {
-        ...state,
-        steps: {
-          ...state.steps,
-          items: {
-            ...state.steps.items,
-            [state.steps.current]: {
-              ...state.steps.items[state.steps.current],
-              title: action.newTitle
-            }
-          }
-        }
-      }
+      return changeStep(state, step => step.title = action.newTitle)
     case actions.CHANGE_STEP_SMS_PROMPT:
-      return {
-        ...state,
-        steps: {
-          ...state.steps,
-          items: {
-            ...state.steps.items,
-            [state.steps.current]: {
-              ...state.steps.items[state.steps.current],
-              prompt: {
-                ...state.steps.items[state.steps.current].prompt,
-                sms: action.newPrompt
-              }
-            }
-          }
-        }
-      }
+      return changeStep(state, step => step.prompt = {
+        ...state.steps.items[state.steps.current].prompt,
+        sms: action.newPrompt
+      })
+    case actions.CHANGE_STEP_STORE:
+      return changeStep(state, step => step.store = action.newStore)
     default:
       return state
   }
@@ -172,6 +150,7 @@ export const buildNewStep = (stepType) => ({
   id: uuid.v4(),
   type: stepType,
   title: `Untitled ${stepTypeDisplay(stepType)}`,
+  store: '',
   prompt: {
     sms: ''
   },
@@ -186,6 +165,23 @@ const changeQuestionnaireModes = (state, action) => {
       modes: action.newModes.split(',')
     }
   }
+}
+
+const changeStep = (state, func) => {
+  let newState = {
+    ...state,
+    steps: {
+      ...state.steps,
+      items: {
+        ...state.steps.items,
+        [state.steps.current]: {
+          ...state.steps.items[state.steps.current]
+        }
+      }
+    }
+  }
+  func(newState.steps.items[state.steps.current])
+  return newState
 }
 
 const initializeEditor = (state, action) => {

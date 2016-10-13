@@ -134,6 +134,16 @@ describe('questionnaireEditor reducer', () => {
     expect(resultState.steps.items[resultState.steps.current].prompt.sms).toEqual('New prompt')
   })
 
+  it('should update step store', () => {
+    const preState = playActions([actions.initializeEditor(questionnaire)])
+    const resultState = playActionsFromState(preState, [
+      actions.selectStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeStepStore('New store')]
+    )
+
+    expect(resultState.steps.items[resultState.steps.current].store).toEqual('New store')
+  })
+
   it('should add step', () => {
     const preState = playActions([actions.initializeEditor(questionnaire)])
 
