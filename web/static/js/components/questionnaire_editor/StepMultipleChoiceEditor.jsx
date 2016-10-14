@@ -23,6 +23,13 @@ class StepMultipleChoiceEditor extends Component {
     dispatch(actions.editChoice(index))
   }
 
+  changeChoice(index) {
+    const { dispatch } = this.props
+    return (value, responses) => {
+      dispatch(actions.changeChoice(index, value, responses))
+    }
+  }
+
   render() {
     const { step } = this.props
     const { choices } = step
@@ -47,7 +54,7 @@ class StepMultipleChoiceEditor extends Component {
                       key={index}
                       choice={choice}
                       onDelete={(e) => this.deleteChoice(e, index)}
-                      onValueClick={(e) => this.editChoice(e, index)}
+                      onChoiceChange={this.changeChoice(index)}
                       editing={false} />
                   )}
                 </tbody>

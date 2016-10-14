@@ -47,7 +47,7 @@ describe('questionnaireEditor reducer', () => {
 
     const item = steps.items[steps.ids[0]]
     expect(item.type).toEqual('multiple-choice')
-    expect(item.choices.length).toEqual(2)
+    expect(item.choices.length).toEqual(0)
   })
 
   it('should start with all steps collapsed', () => {
@@ -211,6 +211,27 @@ describe('questionnaireEditor reducer', () => {
 
     expect(state.steps.current.id).toEqual('17141bea-a81c-4227-bdda-f5f69188b0e7')
     expect(state.steps.current.currentChoice).toEqual(1)
+  })
+
+  it('should modify choice', () => {
+    const preState = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep('17141bea-a81c-4227-bdda-f5f69188b0e7')
+    ])
+
+    const state = playActionsFromState(preState, [
+      actions.changeChoice(1, 'Maybe', 'M,MB, 3')
+    ])
+
+    expect(state.steps.items[state.steps.current.id].choices.length).toEqual(2)
+    expect(state.steps.items[state.steps.current.id].choices[1]).toEqual({
+      value: 'Maybe',
+      responses: [
+        'M',
+        'MB',
+        '3'
+      ]
+    })
   })
 })
 

@@ -50,6 +50,7 @@ const stepsReducer = (state, action) => {
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_SMS_PROMPT: return changeStepSmsPrompt(state, action)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
+    case actions.CHANGE_CHOICE: return changeChoice(state, action)
     default: return state
   }
 }
@@ -75,6 +76,16 @@ const editChoice = (state, action) => {
       currentChoice: action.index
     }
   }
+}
+
+const changeChoice = (state, action) => {
+  return updateChoices(state, (choices) => {
+    choices[action.choiceChange.index] = {
+      ...choices[action.choiceChange.index],
+      value: action.choiceChange.value,
+      responses: action.choiceChange.responses.split(',').map((r) => r.trim())
+    }
+  })
 }
 
 const updateChoices = (state, func) => {
@@ -111,24 +122,7 @@ export const buildNewStep = (stepType) => ({
   prompt: {
     sms: ''
   },
-  choices: [
-    {
-      value: 'Yes',
-      responses: [
-        'Yes',
-        'Y',
-        '1'
-      ]
-    },
-    {
-      value: 'No',
-      responses: [
-        'No',
-        'N',
-        '1'
-      ]
-    }
-  ]
+  choices: []
 })
 
 const changeQuestionnaireModes = (state, action) => {
@@ -143,7 +137,7 @@ const changeStep = (state, func) => {
     ...state,
     items: {
       ...state.items,
-      [state.current]: {
+      [state.current.id]: {
         ...state.items[state.current.id]
       }
     }
@@ -244,7 +238,7 @@ const newQuestionnaireSteps = (state, action) => {
   let defaultStep = buildNewStep('multiple-choice')
   steps.ids.push(defaultStep.id)
   steps.items[defaultStep.id] = defaultStep
-  steps.current = defaultStep.id
+  steps.current = { id: defaultStep.id }
 
   return steps
 }

@@ -56,7 +56,7 @@ QuestionnaireSteps.propTypes = {
 }
 
 StepsList.propTypes = {
-  steps: PropTypes.object
+  steps: PropTypes.array
 }
 
 export default QuestionnaireSteps
