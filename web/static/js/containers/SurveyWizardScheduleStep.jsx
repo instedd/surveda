@@ -13,9 +13,22 @@ class SurveyWizardScheduleStep extends Component {
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
+  componentDidMount() {
+    const { dispatch, projectId, survey, surveyId } = this.props
+
+    // It can happen that the survey is loaded (because it was in the index)
+    // but is not loaded with details. In that case we need to reload it
+    // with details.
+    if (!survey || !survey.scheduleDayOfWeek) {
+      dispatch(actions.fetchSurvey(projectId, surveyId))
+    }
+  }
+
   render() {
     const { survey, days } = this.props
-    if (!survey) {
+
+    // Survey might be loaded without details
+    if (!survey || !survey.scheduleDayOfWeek) {
       return <div>Loading...</div>
     }
     return (
@@ -46,6 +59,7 @@ class SurveyWizardScheduleStep extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
+  surveyId: ownProps.params.surveyId,
   survey: state.surveys[ownProps.params.surveyId],
   days: ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 })
