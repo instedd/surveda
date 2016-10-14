@@ -8,6 +8,7 @@ import * as questionnaireActions from '../../actions/questionnaires'
 import * as actions from '../../actions/questionnaireEditor'
 import { questionnaireForServer } from '../../reducers/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
+import * as routes from '../../routes'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -40,11 +41,11 @@ class QuestionnaireEditor extends Component {
     if (questionnaire.id == null) {
       createQuestionnaire(questionnaire.projectId, questionnaire)
         .then(questionnaire => dispatch(questionnaireActions.createQuestionnaire(questionnaire)))
-        .then(() => router.push(`/projects/${questionnaire.projectId}/questionnaires`))
+        .then(() => router.push(routes.questionnaires(questionnaire.projectId)))
     } else {
       updateQuestionnaire(questionnaire.projectId, questionnaire)
         .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
-        .then(() => router.push(`/projects/${questionnaire.projectId}/questionnaires`))
+        .then(() => router.push(routes.questionnaires(questionnaire.projectId)))
     }
   }
 

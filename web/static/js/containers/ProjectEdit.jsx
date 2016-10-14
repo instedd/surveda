@@ -4,6 +4,7 @@ import { withRouter } from 'react-router'
 import * as actions from '../actions/projects'
 import { updateProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
+import * as routes from '../routes'
 
 class ProjectEdit extends Component {
   componentDidMount() {
@@ -19,7 +20,7 @@ class ProjectEdit extends Component {
     return (project) => {
       updateProject(project)
         .then(project => dispatch(actions.updateProject(project)))
-        .then(() => router.push('/projects'))
+        .then(() => router.push(routes.projects))
         .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }
   }

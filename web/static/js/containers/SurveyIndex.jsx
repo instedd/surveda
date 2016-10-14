@@ -11,6 +11,7 @@ import * as channelsActions from '../actions/channels'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
 import * as RespondentsChartCount from '../components/RespondentsChartCount'
+import * as routes from '../routes'
 
 class SurveyIndex extends Component {
   componentDidMount() {
@@ -30,7 +31,7 @@ class SurveyIndex extends Component {
     const { dispatch, projectId, router } = this.props
     createSurvey(projectId).then(response => {
       dispatch(actions.setSurvey(response))
-      router.push(`/projects/${projectId}/surveys/${response.result}/edit`)
+      router.push(routes.editSurvey(projectId, response.result))
     })
   }
 

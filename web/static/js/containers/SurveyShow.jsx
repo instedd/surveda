@@ -5,6 +5,7 @@ import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
 import * as RespondentsChartCount from '../components/RespondentsChartCount'
+import * as routes from '../routes'
 
 class SurveyShow extends Component {
   componentDidMount() {
@@ -13,7 +14,7 @@ class SurveyShow extends Component {
       dispatch(actions.fetchSurvey(projectId, surveyId))
         .then((survey) => {
           if (survey.state === 'not_ready') {
-            router.replace(`/projects/${projectId}/surveys/${survey.id}/edit`)
+            router.replace(routes.editSurvey(projectId, survey.id))
           }
         })
       dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))

@@ -1,9 +1,9 @@
-export default (( survey ) => {
-  let to = `/projects/${survey.projectId}/surveys/${survey.id}`
+import * as routes from '../routes'
 
-  if (survey.state == 'not_ready' || survey.state == 'ready') {
-    to = to + '/edit'
+export default (survey => {
+  if (survey.state === 'not_ready' || survey.state === 'ready') {
+    return routes.editSurvey(survey.projectId, survey.id)
+  } else {
+    return routes.survey(survey.projectId, survey.id)
   }
-
-  return to
 })

@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import * as actions from '../actions/surveys'
 import * as channelsActions from '../actions/channels'
 import { updateSurvey } from '../api'
+import * as routes from '../routes'
 
 class SurveyWizardChannelsStep extends Component {
   componentDidMount() {
@@ -16,7 +17,7 @@ class SurveyWizardChannelsStep extends Component {
     const { dispatch, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
-      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/schedule`))
+      .then(() => router.push(routes.editSurveySchedule(survey.projectId, survey.id)))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 

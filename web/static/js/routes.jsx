@@ -62,3 +62,23 @@ export default (
 
   </Route>
 )
+
+export const root = '/'
+export const projects = '/projects'
+export const newProject = `${projects}/new`
+export const project = (id) => `${projects}/${id}`
+export const editProject = (id) => `${project(id)}/edit`
+export const surveys = (projectId) => `${project(projectId)}/surveys`
+export const survey = (projectId, surveyId) => `${surveys(projectId)}/${surveyId}`
+export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
+export const editSurvey = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
+export const editSurveyQuestionnaire = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/questionnaire`
+export const editSurveyRespondents = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/respondents`
+export const editSurveyChannels = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/channels`
+export const editSurveySchedule = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/schedule`
+export const editSurveyCutoff = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/cutoff`
+export const questionnaires = (projectId) => `${project(projectId)}/questionnaires`
+export const newQuestionnaire = (projectId) => `${questionnaires(projectId)}/new`
+export const questionnaire = (projectId, questionnaireId) => `${questionnaires(projectId)}/${questionnaireId}`
+export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
+export const channels = '/channels'

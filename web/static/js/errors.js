@@ -1,12 +1,13 @@
 import Raven from 'raven-js'
 import { config } from './config'
 import { Unauthorized } from './api'
+import * as routes from './routes'
 
 Raven.config(config.sentryDsn).install()
 
 window.addEventListener('unhandledrejection', (e) => {
   if (e.reason instanceof Unauthorized) {
-    window.location = '/'
+    window.location = routes.root
     // Ignore unauthorized errors
     return
   }
