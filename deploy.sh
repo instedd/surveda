@@ -1,51 +1,48 @@
 #!/bin/bash
 PROJECT_VERSION=`docker-compose run --rm app mix run --no-compile --no-start -e 'IO.write Mix.Project.config[:version]'`
-TAG=`git describe --exact-match 2>/dev/null`
 
-if [ "$TAG" = "" ]; then
+if [ "$TRAVIS_TAG" = "" ]; then
   REV=`git rev-parse --short HEAD`
   VERSION="$PROJECT_VERSION-dev-$REV (build $TRAVIS_BUILD_NUMBER)"
+  case $TRAVIS_BRANCH in
+    master)
+      DOCKER_TAG="dev"
+      ;;
+
+    release/*)
+      DOCKER_TAG="$PROJECT_VERSION-dev"
+      ;;
+
+    stable)
+      echo "Pulling $PROJECT_VERSION and tagging as latest"
+      docker login -e ${DOCKER_EMAIL} -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
+      docker pull ${DOCKER_REPOSITORY}:${PROJECT_VERSION}
+      docker tag ${DOCKER_REPOSITORY}:${PROJECT_VERSION} ${DOCKER_REPOSITORY}:latest
+      docker push ${DOCKER_REPOSITORY}:latest
+      exit 0
+      ;;
+
+    *)
+      exit 0
+      ;;
+  esac
 else
-  if [ "$PROJECT_VERSION" != "$TAG" ]; then
-    echo "Project version and tag differs: $PROJECT_VERSION != $TAG"
+  TAG_VERSION="${TRAVIS_TAG/-*/}"
+  if [ "$PROJECT_VERSION" != "$TAG_VERSION" ]; then
+    echo "Project version and tag differs: $PROJECT_VERSION != $TRAVIS_TAG"
     exit 1
   fi
 
   VERSION="$PROJECT_VERSION (build $TRAVIS_BUILD_NUMBER)"
+  DOCKER_TAG="$TRAVIS_TAG"
+
+  if [ "$TAG_VERSION" = "$TRAVIS_TAG" ]; then
+    EXTRA_DOCKER_TAG="${TRAVIS_TAG%.*}"
+  fi
 fi
 
 echo "Version: $VERSION"
 echo $VERSION > VERSION
-
-case $TRAVIS_BRANCH in
-  release/*)
-    if [ "$TAG" == "" ]; then
-      DOCKER_TAG="${TRAVIS_BRANCH/#*\//}-dev"
-    else
-      DOCKER_TAG="$TAG"
-      EXTRA_DOCKER_TAG="${TRAVIS_BRANCH/#*\//}"
-    fi
-
-    ;;
-
-  master)
-    DOCKER_TAG="dev"
-    ;;
-
-  stable)
-    echo "Pulling $PROJECT_VERSION and tagging as latest"
-    docker login -e ${DOCKER_EMAIL} -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
-    docker pull ${DOCKER_REPOSITORY}:${PROJECT_VERSION}
-    docker tag ${DOCKER_REPOSITORY}:${PROJECT_VERSION} ${DOCKER_REPOSITORY}:latest
-    docker push ${DOCKER_REPOSITORY}:latest
-    exit 0
-    ;;
-
-  *)
-    exit 0
-    # DOCKER_TAG=${TRAVIS_BRANCH/\//_}
-    ;;
-esac
 
 # Build assets
 docker-compose run --rm brunch ./node_modules/brunch/bin/brunch build -p
