@@ -1,5 +1,5 @@
 import React from 'react'
-// import { Link } from 'react-router'
+import { Link } from 'react-router'
 import { EditableTitleLabel } from './EditableTitleLabel'
 import merge from 'lodash/merge'
 import { updateSurvey, updateProject, updateQuestionnaire } from '../api'
@@ -41,7 +41,7 @@ const Title = ({ params, project, survey, questionnaire, routes, dispatch }) => 
       <div className='nav-wrapper'>
         <div className='row'>
           <div className='col s12'>
-            <div className='logo'><img src='/images/logo.png' width='28px' /></div>
+            <div className='logo'><Link to='/'><img src='/images/logo.png' width='28px' /></Link></div>
             {entity
             ? <EditableTitleLabel title={name} onSubmit={(value) => { handleSubmit(titleOwner, entity, value, dispatch) }} />
             : <a className='breadcrumb'>{name}</a>
