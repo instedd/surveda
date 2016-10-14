@@ -7,8 +7,8 @@ defmodule Ask.Survey do
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
     field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
-    field :schedule_start_time, Ecto.DateTime
-    field :schedule_end_time, Ecto.DateTime
+    field :schedule_start_time, Ecto.Time
+    field :schedule_end_time, Ecto.Time
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
@@ -27,6 +27,7 @@ defmodule Ask.Survey do
     |> cast(params, [:name, :project_id, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time])
     |> validate_required([:project_id, :state])
     |> foreign_key_constraint(:project_id)
+    |> validate_from_less_than_to
   end
 
   def update_state(changeset) do
@@ -50,8 +51,16 @@ defmodule Ask.Survey do
       end
     end
 
-    changeset = Map.merge(changeset, %{changes: changes})
+  def validate_from_less_than_to(changeset) do
+    from = get_field(changeset, :schedule_start_time)
+    to = get_field(changeset, :schedule_end_time)
 
-    changeset
+    cond do
+      from && to && from >= to ->
+        add_error(changeset, :from, "has to be less than the To")
+      true ->
+        changeset
+    end
   end
+
 end

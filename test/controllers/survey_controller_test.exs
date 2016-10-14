@@ -114,6 +114,7 @@ defmodule Ask.SurveyControllerTest do
         post conn, project_survey_path(conn, :create, project.id), survey: @valid_attrs
       end
     end
+
   end
 
   describe "update" do
@@ -188,6 +189,28 @@ defmodule Ask.SurveyControllerTest do
         put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
       end
     end
+
+    test "fails if the schedule from is greater or equal to the to", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      survey = insert(:survey, project: project)
+      attrs = Map.merge(@valid_attrs, %{schedule_start_time: "02:00:00", schedule_end_time: "01:00:00"})
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+
+    test "schedule to and from are saved successfully", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      survey = insert(:survey, project: project)
+      attrs = Map.merge(@valid_attrs, %{schedule_start_time: "01:00:00", schedule_end_time: "02:00:00"})
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)
+      created_survey = Repo.get_by(Survey, %{project_id: project.id})
+      {:ok, one_oclock} = Ecto.Time.cast("01:00:00")
+      {:ok, two_oclock} = Ecto.Time.cast("02:00:00")
+      assert created_survey.schedule_start_time == one_oclock
+      assert created_survey.schedule_end_time == two_oclock
+    end
+
   end
 
   describe "delete" do
