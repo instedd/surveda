@@ -1,6 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import merge from 'lodash/merge'
 import { Link } from 'react-router'
+import * as routes from '../routes'
 
 class ProjectForm extends Component {
   propTypes = {
@@ -20,17 +21,17 @@ class ProjectForm extends Component {
         <div>
           <label>Project Name</label>
           <div>
-            <input type="text" placeholder="Project name" defaultValue={project.name} ref="input"/>
+            <input type='text' placeholder='Project name' defaultValue={project.name} ref='input' />
           </div>
         </div>
-        <br/>
+        <br />
         <div>
-          <button type="button" onClick={() =>
+          <button type='button' onClick={() =>
             onSubmit(merge({}, project, { name: this.refs.input.value }))
           }>
             Submit
           </button>
-          <Link to='/projects'> Back</Link>
+          <Link to={routes.projects}> Back</Link>
         </div>
       </div>
     )

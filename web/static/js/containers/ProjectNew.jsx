@@ -4,6 +4,7 @@ import { withRouter } from 'react-router'
 import * as actions from '../actions/projects'
 import { createProject } from '../api'
 import ProjectForm from '../components/ProjectForm'
+import * as routes from '../routes'
 
 class ProjectNew extends Component {
   handleSubmit() {
@@ -11,7 +12,7 @@ class ProjectNew extends Component {
     return (project) => {
       createProject(project)
         .then(project => dispatch(actions.createProject(project)))
-        .then(() => router.push('/projects'))
+        .then(() => router.push(routes.projects))
         .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }
   }

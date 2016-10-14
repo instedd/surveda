@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import {Tabs, TabLink} from '.'
+import * as routes from '../routes'
 
 class ProjectTabs extends Component {
   render() {
@@ -9,15 +10,15 @@ class ProjectTabs extends Component {
 
     return (
       <Tabs>
-        <TabLink to={`/projects/${projectId}/surveys`}>Surveys</TabLink>
-        <TabLink to={`/projects/${projectId}/questionnaires`} >Questionnaires</TabLink>
+        <TabLink to={routes.surveys(projectId)}>Surveys</TabLink>
+        <TabLink to={routes.questionnaires(projectId)} >Questionnaires</TabLink>
       </Tabs>
     )
   }
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
+  projectId: ownProps.params.projectId
 })
 
-export default connect(mapStateToProps)(ProjectTabs);
+export default connect(mapStateToProps)(ProjectTabs)

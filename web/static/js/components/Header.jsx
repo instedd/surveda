@@ -2,13 +2,14 @@ import React from 'react'
 import { Link } from 'react-router'
 import TitleContainer from '../containers/TitleContainer'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
+import * as routes from '../routes'
 
 export default ({ tabs, logout, user, project }) => {
   let projectLink
   if (project) {
     projectLink = (
       <li>
-        <Link to={`/projects/${project.id}`} className=''> {project.name} </Link>
+        <Link to={routes.project(project.id)} className=''> {project.name} </Link>
       </li>
     )
   }
@@ -21,11 +22,11 @@ export default ({ tabs, logout, user, project }) => {
             <div className='col s5 m4'>
               <ul>
                 <li>
-                  <Link to='/projects' className=''> Projects </Link>
+                  <Link to={routes.projects} className=''> Projects </Link>
                 </li>
                 { projectLink }
                 <li>
-                  <Link to='/channels' className=''> Channels </Link>
+                  <Link to={routes.channels} className=''> Channels </Link>
                 </li>
               </ul>
             </div>
@@ -45,7 +46,7 @@ export default ({ tabs, logout, user, project }) => {
           </div>
         </div>
       </nav>
-      <TitleContainer/>
+      <TitleContainer />
       {tabs}
     </header>
   )

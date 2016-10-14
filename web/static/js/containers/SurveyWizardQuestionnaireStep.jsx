@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { updateSurvey } from '../api'
 import * as actions from '../actions/surveys'
 import * as questionnairesActions from '../actions/questionnaires'
+import * as routes from '../routes'
 
 class SurveyWizardQuestionnaireStep extends Component {
   componentDidMount() {
@@ -24,7 +25,7 @@ class SurveyWizardQuestionnaireStep extends Component {
     const { dispatch, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
-      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/respondents`))
+      .then(() => router.push(routes.editSurveyRespondents(survey.projectId, survey.id)))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
@@ -36,7 +37,7 @@ class SurveyWizardQuestionnaireStep extends Component {
 
     return (
       <div className='col s12'>
-        <Link className='waves-effect waves-teal btn-flat btn-flat-link' to={`/projects/${projectId}/questionnaires/new`}>
+        <Link className='waves-effect waves-teal btn-flat btn-flat-link' to={routes.newQuestionnaire(projectId)}>
           {buttonLabel}
         </Link>
       </div>

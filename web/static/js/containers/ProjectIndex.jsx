@@ -5,11 +5,12 @@ import * as actions from '../actions/projects'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
+import * as routes from '../routes'
 
 class ProjectIndex extends Component {
   componentDidMount() {
-    const { dispatch } = this.props;
-    dispatch(actions.fetchProjects());
+    const { dispatch } = this.props
+    dispatch(actions.fetchProjects())
   }
 
   render() {
@@ -18,11 +19,11 @@ class ProjectIndex extends Component {
 
     return (
       <div>
-        <AddButton text="Add project" linkPath='/projects/new' />
+        <AddButton text='Add project' linkPath={routes.newProject} />
         { (Object.keys(projects).length == 0) ?
-          <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath='/projects/new' />
+          <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
         :
-          <CardTable title={ title } highlight={true}>
+          <CardTable title={title} highlight>
             <thead>
               <tr>
                 <th>Name</th>
@@ -32,10 +33,10 @@ class ProjectIndex extends Component {
             <tbody>
               { Object.keys(projects).map((projectId) =>
                 <tr key={projectId}>
-                  <td onClick={() => router.push(`/projects/${projectId}`)}>
+                  <td onClick={() => router.push(routes.project(projectId))}>
                     {projects[projectId].name}
                   </td>
-                  <td onClick={() => router.push(`/projects/${projectId}/edit`)}>
+                  <td onClick={() => router.push(routes.editProject(projectId))}>
                     Edit
                   </td>
                 </tr>

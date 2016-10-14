@@ -1,9 +1,8 @@
 import React, { PropTypes } from 'react'
 import { CollectionItem } from '.'
+import * as routes from '../routes'
 
 const SurveyForm = ({ survey, children, project }) => {
-  const linkPath = `/projects/${project.id}/surveys/${survey.id}/edit/`
-
   const questionnaireStepCompleted = survey.questionnaireId != null
   const respondentsStepCompleted = survey.respondentsCount > 0
   const channelStepCompleted = survey.channels && survey.channels.length > 0
@@ -26,11 +25,11 @@ const SurveyForm = ({ survey, children, project }) => {
               <div className='determinate' style={{ width: percentage }} />
             </div>
           </li>
-          <CollectionItem path={`${linkPath}questionnaire`} icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
-          <CollectionItem path={`${linkPath}respondents`} icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
-          <CollectionItem path={`${linkPath}channels`} icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
-          <CollectionItem path={`${linkPath}schedule`} icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
-          <CollectionItem className='optional' path={`${linkPath}cutoff`} icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
+          <CollectionItem path={routes.editSurveyQuestionnaire(project.id, survey.id)} icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
+          <CollectionItem path={routes.editSurveyRespondents(project.id, survey.id)} icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
+          <CollectionItem path={routes.editSurveyChannels(project.id, survey.id)} icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
+          <CollectionItem path={routes.editSurveySchedule(project.id, survey.id)} icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
+          <CollectionItem path={routes.editSurveyCutoff(project.id, survey.id)} icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} className='optional' />
 
           {/*
           <li className="collection-item optional">

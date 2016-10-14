@@ -8,6 +8,7 @@ import { ConfirmationModal } from '../components/ConfirmationModal'
 import { uploadRespondents, fetchQuestionnaires, removeRespondents } from '../api'
 import * as actions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
+import * as routes from '../routes'
 
 class SurveyWizardRespondentsStep extends Component {
   componentDidMount() {
@@ -55,7 +56,7 @@ class SurveyWizardRespondentsStep extends Component {
           <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText='Are you sure?' header='Please confirm' confirmationText='Delete all' onConfirm={(event) => this.removeRespondents(event)} />
           <br />
           <br />
-          <Link className='btn waves-effect waves-light' to={`/projects/${projectId}/surveys/${survey.id}/edit/channels`}>Next</Link>
+          <Link className='btn waves-effect waves-light' to={routes.editSurveyChannels(projectId, survey.id)}>Next</Link>
         </RespondentsContainer>
       )
     } else {

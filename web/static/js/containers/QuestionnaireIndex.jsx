@@ -5,6 +5,7 @@ import * as actions from '../actions/questionnaires'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
+import * as routes from '../routes'
 
 class QuestionnaireIndex extends Component {
   componentDidMount() {
@@ -17,11 +18,11 @@ class QuestionnaireIndex extends Component {
     const title = `${Object.keys(questionnaires).length} ${(Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires'}`
     return (
       <div>
-        <AddButton text="Add questionnaire" linkPath={`/projects/${projectId}/questionnaires/new`} />
+        <AddButton text='Add questionnaire' linkPath={routes.newQuestionnaire(projectId)} />
         { (Object.keys(questionnaires).length == 0) ?
-          <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={`/projects/${projectId}/questionnaires/new`} />
+          <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
         :
-          <CardTable title={ title } highlight={true}>
+          <CardTable title={title} highlight>
             <thead>
               <tr>
                 <th>Name</th>
@@ -30,12 +31,12 @@ class QuestionnaireIndex extends Component {
             </thead>
             <tbody>
               { Object.keys(questionnaires).map((questionnaireId) =>
-                <tr key={questionnaireId} onClick={() => router.push(`/projects/${projectId}/questionnaires/${questionnaireId}/edit`)}>
+                <tr key={questionnaireId} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
                   <td>
                     { questionnaires[questionnaireId].name }
                   </td>
                   <td>
-                    { (questionnaires[questionnaireId].modes || []).join(", ") }
+                    { (questionnaires[questionnaireId].modes || []).join(', ') }
                   </td>
                 </tr>
               )}
