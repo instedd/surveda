@@ -10,6 +10,12 @@ const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
 
+export class Unauthorized {
+  constructor(response) {
+    this.response = response
+  }
+}
+
 surveySchema.define({
   channels: arrayOf(channelSchema)
 })
@@ -21,12 +27,8 @@ responseSchema.define({
 const apiFetch = (url, options) => {
   return fetch(`/api/v1/${url}`, { ...options, credentials: 'same-origin' })
     .then(response => {
-      if (!response.ok && response.status == 401) {
-        window.location = '/login'
-        return Promise.reject(response.statusText)
-      } else {
-        return response
-      }
+      return handleResponse(response, () =>
+        response)
     })
 }
 
@@ -34,11 +36,19 @@ const apiFetchJSON = (url, schema, options) => {
   return apiFetch(url, options)
     .then(response => response.json().then(json => ({ json, response }))
   ).then(({ json, response }) => {
-    if (!response.ok) {
-      return Promise.reject(json)
-    }
-    return normalize(camelizeKeys(json.data), schema)
+    return handleResponse(response, () =>
+      normalize(camelizeKeys(json.data), schema))
   })
+}
+
+const handleResponse = (response, callback) => {
+  if (response.ok) {
+    return callback()
+  } else if (response.status === 401 || response.status === 403) {
+    return Promise.reject(new Unauthorized(response.statusText))
+  } else {
+    return Promise.reject(response.statusText)
+  }
 }
 
 const apiPutOrPostJSON = (url, schema, verb, body) => {
