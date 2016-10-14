@@ -67,14 +67,11 @@ export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 const respondentsReached = function(completedByDate, targetValue) {
   const reached = completedByDate.length === 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
-  return reached/targetValue
+  return Math.round(reached * 100 / targetValue)
 }
 
 const SurveyCard = ({ survey, completedByDate }) => {
-
   let cumulativeCount = []
-  // Target could be any number at initialization, because reached equals 0 so reached will always be 0
-  let target = 1
   let reached = 0
 
   if(survey && completedByDate.completedByDate){
@@ -113,7 +110,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
         <Card>
           <div className="card-content">
             <div className="grey-text">
-              { reached * 100 + '% respondents reached'}
+              { reached + '% respondents reached'}
             </div>
             <div className="card-chart">
               <RespondentsChart completedByDate={cumulativeCount} />
