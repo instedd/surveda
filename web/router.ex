@@ -42,10 +42,12 @@ defmodule Ask.Router do
 
   get "/callbacks/:provider", Ask.CallbackController, :callback
 
+  get "/landing", Ask.LandingController, :index
+
   scope "/", Ask do
     pipe_through :browser
 
     get "/oauth_helper", OAuthHelperController, :index
-    get "/*path", PageController, :index
-  end
+    get "/*path", PageController, :index        
+  end  
 end
