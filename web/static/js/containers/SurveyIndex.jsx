@@ -17,7 +17,7 @@ class SurveyIndex extends Component {
     const { dispatch, projectId } = this.props
     dispatch(actions.fetchSurveys(projectId))
     .then(
-      function x(value){
+      function x(value) {
         for (const surveyId in value) {
           dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
         }
@@ -45,9 +45,9 @@ class SurveyIndex extends Component {
         { (Object.keys(surveys).length === 0) ?
           <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         :
-          <div className="row">
+          <div className='row'>
             { Object.keys(surveys).map((surveyId) =>
-              <SurveyCard survey={surveys[surveyId]} completedByDate={respondentsStats[surveyId] ? respondentsStats[surveyId] : {}} key={surveyId}/>
+              <SurveyCard survey={surveys[surveyId]} completedByDate={respondentsStats[surveyId] ? respondentsStats[surveyId] : {}} key={surveyId} />
             )}
           </div>
         }
@@ -74,53 +74,53 @@ const SurveyCard = ({ survey, completedByDate }) => {
   let cumulativeCount = []
   let reached = 0
 
-  if(survey && completedByDate.completedByDate){
+  if (survey && completedByDate.completedByDate) {
     const data = completedByDate.completedByDate.respondentsByDate
     const target = completedByDate.completedByDate.targetValue
     cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
-    if(survey.state === 'running' || survey.state === 'completed'){
+    if (survey.state === 'running' || survey.state === 'completed') {
       reached = respondentsReached(data, target)
     }
   }
 
   let icon = 'mode_edit'
-  let color = "black-text"
+  let color = 'black-text'
   let text = 'Editing'
   switch (survey.state) {
     case 'running':
       icon = 'play_arrow'
       color = 'green-text'
       text = 'Running'
-      break;
+      break
     case 'ready':
       icon = 'play_circle_outline'
-      color = "black-text"
+      color = 'black-text'
       text = 'Ready to launch'
-      break;
+      break
     case 'completed':
       icon = 'done'
-      color = "black-text"
+      color = 'black-text'
       text = 'Completed'
-      break;
+      break
   }
 
-  return(
-    <SurveyLink className="survey-card" survey={ survey }>
-      <div className="col s12 m6 l4">
+  return (
+    <SurveyLink className='survey-card' survey={survey}>
+      <div className='col s12 m6 l4'>
         <Card>
-          <div className="card-content">
-            <div className="grey-text">
+          <div className='card-content'>
+            <div className='grey-text'>
               { reached + '% respondents reached'}
             </div>
-            <div className="card-chart">
+            <div className='card-chart'>
               <RespondentsChart completedByDate={cumulativeCount} />
             </div>
-            <div className="card-status">
-              <span className="card-title">
+            <div className='card-status'>
+              <span className='card-title'>
                 { survey.name }
               </span>
-              <p className={ color }>
-                <i className="material-icons">{icon}</i>
+              <p className={color}>
+                <i className='material-icons'>{icon}</i>
                 { text }
               </p>
             </div>
