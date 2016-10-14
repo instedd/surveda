@@ -42,7 +42,7 @@ const Title = ({ params, project, survey, questionnaire, routes, dispatch }) => 
         <div className='row'>
           <div className='col s12'>
             <div className='logo'><Link to='/'><img src='/images/logo.png' width='28px' /></Link></div>
-            {entity
+            { entity
             ? <EditableTitleLabel title={name} onSubmit={(value) => { handleSubmit(titleOwner, entity, value, dispatch) }} />
             : <a className='breadcrumb'>{name}</a>
             }
@@ -54,33 +54,33 @@ const Title = ({ params, project, survey, questionnaire, routes, dispatch }) => 
 }
 
 var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
-  const newValue = {
-    name: inputValue
-  }
+  if (inputValue !== oldObject.name) {
+    const newValue = {
+      name: inputValue
+    }
 
-  const newObject = merge({}, oldObject, newValue)
+    const newObject = merge({}, oldObject, newValue)
 
-  console.log('estamos submitteando: ', oldObject, entity, inputValue, newObject)
-
-  switch (entity) {
-    case 'questionnaire':
-      updateQuestionnaire(newObject.projectId, newObject)
-          .then(updatedQuestionnaire => dispatch(questionnairesActions.receiveQuestionnaires(updatedQuestionnaire)))
-          .then(() => dispatch(questionnaireEditorActions.changeQuestionnaireName(inputValue)))
-          .catch((e) => dispatch(questionnairesActions.receiveQuestionnairesError(e)))
-      break
-    case 'survey':
-      updateSurvey(newObject.projectId, newObject)
-          .then(updatedSurvey => dispatch(surveysActions.setSurvey(updatedSurvey)))
-          .catch((e) => dispatch(surveysActions.receiveSurveysError(e)))
-      break
-    case 'project':
-      updateProject(newObject)
-          .then(project => dispatch(projectsActions.updateProject(project)))
-          .catch((e) => dispatch(projectsActions.receiveProjectsError(e)))
-      break
-    default:
-      console.log('This should be never reached')
+    switch (entity) {
+      case 'questionnaire':
+        updateQuestionnaire(newObject.projectId, newObject)
+            .then(updatedQuestionnaire => dispatch(questionnairesActions.receiveQuestionnaires(updatedQuestionnaire)))
+            .then(() => dispatch(questionnaireEditorActions.changeQuestionnaireName(inputValue)))
+            .catch((e) => dispatch(questionnairesActions.receiveQuestionnairesError(e)))
+        break
+      case 'survey':
+        updateSurvey(newObject.projectId, newObject)
+            .then(updatedSurvey => dispatch(surveysActions.setSurvey(updatedSurvey)))
+            .catch((e) => dispatch(surveysActions.receiveSurveysError(e)))
+        break
+      case 'project':
+        updateProject(newObject)
+            .then(project => dispatch(projectsActions.updateProject(project)))
+            .catch((e) => dispatch(projectsActions.receiveProjectsError(e)))
+        break
+      default:
+        console.log('This should be never reached')
+    }
   }
 }
 
