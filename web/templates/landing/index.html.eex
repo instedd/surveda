@@ -24,11 +24,6 @@
                   Ask
                 </div>
                 <div class='col s8 m8'>
-                  <ul class='right'>
-                    <li>
-                      <a href='/login'>LOGIN</a>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </div>
