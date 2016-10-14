@@ -73,4 +73,8 @@ defmodule Ask.DayOfWeek do
   def every_day do
     %Ask.DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true}
   end
+
+  def never do
+    %Ask.DayOfWeek{sun: false, mon: false, tue: false, wed: false, thu: false, fri: false, sat: false}
+  end
 end

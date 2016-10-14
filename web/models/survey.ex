@@ -6,7 +6,7 @@ defmodule Ask.Survey do
     field :state, :string, default: "not_ready" # not_ready, ready, pending, completed
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
-    field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.every_day
+    field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
     field :schedule_start_time, Ecto.DateTime
     field :schedule_end_time, Ecto.DateTime
 

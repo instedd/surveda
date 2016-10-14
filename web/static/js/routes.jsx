@@ -40,8 +40,8 @@ export default (
           <Route path='questionnaire' component={SurveyWizardQuestionnaireStep} />
           <Route path='respondents' component={SurveyWizardRespondentsStep} />
           <Route path='channels' component={SurveyWizardChannelsStep} />
-          <Route path='cutoff' component={SurveyWizardCutoffStep} />
           <Route path='schedule' component={SurveyWizardScheduleStep} />
+          <Route path='cutoff' component={SurveyWizardCutoffStep} />
         </Route>
 
         <Route path='questionnaires' >

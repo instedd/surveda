@@ -26,11 +26,11 @@ const SurveyForm = ({ survey, children, project }) => {
               <div className="determinate" style={{ width: percentage }}></div>
             </div>
           </li>
-          <CollectionItem path={`${linkPath}questionnaire`} icon="assignment" text="Select a questionnaire" completed={questionnaireStepCompleted} />
-          <CollectionItem path={`${linkPath}respondents`} icon="group" text="Upload your respondents list" completed={respondentsStepCompleted} />
-          <CollectionItem path={`${linkPath}channels`}  icon="settings_input_antenna" text="Select mode and channels" completed={channelStepCompleted} />
-          <CollectionItem className="optional" path={`${linkPath}cutoff`} icon="remove_circle" text="Setup cutoff rules" completed={cutoffStepCompleted} />
-          <CollectionItem path={`${linkPath}schedule`} icon="today" text="Setup a schedule" completed={scheduleStepCompleted} />
+          <CollectionItem path={`${linkPath}questionnaire`} icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
+          <CollectionItem path={`${linkPath}respondents`} icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
+          <CollectionItem path={`${linkPath}channels`} icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
+          <CollectionItem path={`${linkPath}schedule`} icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
+          <CollectionItem className='optional' path={`${linkPath}cutoff`} icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
 
           {/*
           <li className="collection-item optional">
