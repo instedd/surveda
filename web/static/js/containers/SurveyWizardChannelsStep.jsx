@@ -8,8 +8,8 @@ import { updateSurvey } from '../api'
 
 class SurveyWizardChannelsStep extends Component {
   componentDidMount() {
-    const { dispatch } = this.props;
-    dispatch(channelsActions.fetchChannels());
+    const { dispatch } = this.props
+    dispatch(channelsActions.fetchChannels())
   }
 
   handleSubmit(survey) {
@@ -31,21 +31,21 @@ class SurveyWizardChannelsStep extends Component {
     const currentChannelId = (survey.channels.length > 0 ? survey.channels[survey.channels.length - 1] : null)
 
     return (
-      <div className="col s12 m7 offset-m1">
-        <div className="row">
-          <div className="col s12">
+      <div className='col s12 m7 offset-m1'>
+        <div className='row'>
+          <div className='col s12'>
             <h4>Select mode & channels</h4>
-            <p className="flow-text">
+            <p className='flow-text'>
               Define which modes you want to use. You have to select a channel for each survey mode.
             </p>
           </div>
         </div>
-        <div className="row">
-          <div className="input-field col s12">
+        <div className='row'>
+          <div className='input-field col s12'>
             <select defaultValue={currentChannelId} ref={ref => $(ref).material_select()}>
-              <option name="channel">Select a channel...</option>
+              <option name='channel'>Select a channel...</option>
               { Object.keys(channels).map((channelId) =>
-                <option key={channelId} id={channelId} name="channel" value={ channelId } ref={ node => {channelsInput.push({id: channelId, node:node})}} >
+                <option key={channelId} id={channelId} name='channel' value={channelId} ref={node => { channelsInput.push({id: channelId, node: node}) }} >
                   {channels[channelId].name}
                 </option>
               )}
@@ -53,9 +53,9 @@ class SurveyWizardChannelsStep extends Component {
             <label> Channels </label>
           </div>
         </div>
-        <div className="row">
-          <div className="col s12">
-            <button className="btn waves-effect waves-light" type="button" onClick={() => {
+        <div className='row'>
+          <div className='col s12'>
+            <button className='btn waves-effect waves-light' type='button' onClick={() => {
               const option = channelsInput.find(element => element.node.selected)
               const selectedChannels = option ? [parseInt(option.id, 10)] : []
               const merged = merge({}, survey)
@@ -76,4 +76,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.surveys[ownProps.params.surveyId]
 })
 
-export default withRouter(connect(mapStateToProps)(SurveyWizardChannelsStep));
+export default withRouter(connect(mapStateToProps)(SurveyWizardChannelsStep))
