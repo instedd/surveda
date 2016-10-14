@@ -33,7 +33,7 @@ else
     exit 1
   fi
 
-  VERSION="$PROJECT_VERSION (build $TRAVIS_BUILD_NUMBER)"
+  VERSION="$TRAVIS_TAG (build $TRAVIS_BUILD_NUMBER)"
   DOCKER_TAG="$TRAVIS_TAG"
 
   if [ "$TAG_VERSION" = "$TRAVIS_TAG" ]; then
