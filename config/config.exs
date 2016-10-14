@@ -49,19 +49,20 @@ config :addict,
   not_logged_in_url: "/landing",
   mail_service: nil
 
-config :ask, version: (
-  case File.read("VERSION") do
-    {:ok, version} -> String.trim(version)
-    {:error, :enoent} -> "#{Mix.Project.config[:version]}-#{Mix.env}"
-  end
-)
+version = case File.read("VERSION") do
+  {:ok, version} -> String.trim(version)
+  {:error, :enoent} -> "#{Mix.Project.config[:version]}-#{Mix.env}"
+end
+
+config :ask, version: version
 
 config :sentry,
   dsn: System.get_env("SENTRY_DSN"),
   public_dsn: System.get_env("SENTRY_PUBLIC_DSN"),
   environment_name: Mix.env || :dev,
   included_environments: ~w(prod)a,
-  use_error_logger: true
+  use_error_logger: true,
+  release: version
 
 
 if File.exists?("#{__DIR__}/local.exs") do

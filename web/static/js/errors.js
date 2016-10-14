@@ -1,7 +1,8 @@
 import Raven from 'raven-js'
 import { config } from './config'
 
-Raven.config(config.sentryDsn).install()
+Raven.config(config.sentryDsn, {release: config.version}).install()
+Raven.setUserContext({email: config.user})
 
 window.addEventListener('unhandledrejection', (e) => {
   onError(e)
