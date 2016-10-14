@@ -3,7 +3,7 @@ defmodule Ask.SurveyControllerTest do
 
   alias Ask.Survey
   @valid_attrs %{name: "some content"}
-  @invalid_attrs %{name: ""}
+  @invalid_attrs %{state: ""}
 
   setup %{conn: conn} do
     user = insert(:user)

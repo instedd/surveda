@@ -25,7 +25,7 @@ defmodule Ask.Survey do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:name, :project_id, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time])
-    |> validate_required([:name, :project_id, :state])
+    |> validate_required([:project_id, :state])
     |> foreign_key_constraint(:project_id)
   end
 

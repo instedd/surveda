@@ -15,7 +15,7 @@ export class EditableTitleLabel extends Component {
 
   static propTypes = {
     onSubmit: React.PropTypes.func.isRequired,
-    title: React.PropTypes.string.isRequired,
+    title: React.PropTypes.string,
     editing: React.PropTypes.bool
   }
 
@@ -45,10 +45,18 @@ export class EditableTitleLabel extends Component {
 
   render() {
     const { title } = this.props
+
+    let titleComponent
+    if (!title || title.trim() === '') {
+      titleComponent = <i>Untitled</i>
+    } else {
+      titleComponent = title
+    }
+
     if (!this.state.editing) {
       return (
         <a className='page-title' onClick={this.handleClick}>
-          <span>{title}</span>
+          <span>{titleComponent}</span>
           <i className='material-icons'>mode_edit</i>
         </a>
       )

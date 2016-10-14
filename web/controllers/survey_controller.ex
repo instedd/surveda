@@ -21,7 +21,7 @@ defmodule Ask.SurveyController do
     |> Repo.get!(project_id)
     |> authorize(conn)
     |> build_assoc(:surveys)
-    |> Survey.changeset(%{project_id: project_id, name: "Untitled"})
+    |> Survey.changeset(%{project_id: project_id, name: ""})
 
     case Repo.insert(changeset) do
       {:ok, survey} ->

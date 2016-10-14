@@ -104,6 +104,13 @@ const SurveyCard = ({ survey, completedByDate }) => {
       break
   }
 
+  let surveyNameComponent
+  if (!survey.name || survey.name.trim() === '') {
+    surveyNameComponent = <i>Untitled</i>
+  } else {
+    surveyNameComponent = survey.name
+  }
+
   return (
     <SurveyLink className='survey-card' survey={survey}>
       <div className='col s12 m6 l4'>
@@ -117,7 +124,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
             </div>
             <div className='card-status'>
               <span className='card-title'>
-                { survey.name }
+                { surveyNameComponent }
               </span>
               <p className={color}>
                 <i className='material-icons'>{icon}</i>
