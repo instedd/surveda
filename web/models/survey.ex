@@ -41,15 +41,15 @@ defmodule Ask.Survey do
 
     channels = get_field(changeset, :channels)
 
-    changes = if state == "not_ready" && questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed do
-      Map.merge(changeset.changes, %{state: "ready"})
-    else
-      if state == "ready" && !(questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed) do
-        Map.merge(changeset.changes, %{state: "not_ready"})
-      else
-        changeset.changes
-      end
+    cond do
+      state == "not_ready" && questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed ->
+        change(changeset, state: "ready")
+      state == "ready" && !(questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed) ->
+        change(changeset, state: "not_ready")
+      true ->
+        changeset
     end
+  end
 
   def validate_from_less_than_to(changeset) do
     from = get_field(changeset, :schedule_start_time)

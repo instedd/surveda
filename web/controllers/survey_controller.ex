@@ -56,9 +56,8 @@ defmodule Ask.SurveyController do
     |> Repo.get!(id)
     |> Repo.preload([:channels])
     |> with_respondents_count
-    |> change
-    |> update_channels(survey_params)
     |> Survey.changeset(survey_params)
+    |> update_channels(survey_params)
     |> Survey.update_state
 
     case Repo.update(changeset) do
