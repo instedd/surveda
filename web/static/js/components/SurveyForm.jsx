@@ -8,22 +8,22 @@ const SurveyForm = ({ survey, children, project }) => {
   const respondentsStepCompleted = survey.respondentsCount > 0
   const channelStepCompleted = survey.channels && survey.channels.length > 0
   const cutoffStepCompleted = survey.cutoff != null
-  const scheduleStepCompleted = survey.scheduleDayOfWeek != null &&(survey.scheduleDayOfWeek.sun || survey.scheduleDayOfWeek.mon || survey.scheduleDayOfWeek.tue || survey.scheduleDayOfWeek.wed || survey.scheduleDayOfWeek.thu || survey.scheduleDayOfWeek.fri || survey.scheduleDayOfWeek.sat)
+  const scheduleStepCompleted = survey.scheduleDayOfWeek != null && (survey.scheduleDayOfWeek.sun || survey.scheduleDayOfWeek.mon || survey.scheduleDayOfWeek.tue || survey.scheduleDayOfWeek.wed || survey.scheduleDayOfWeek.thu || survey.scheduleDayOfWeek.fri || survey.scheduleDayOfWeek.sat)
 
   const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
 
-  const numberOfCompletedSteps = mandatorySteps.filter(function(item){ return item == true; }).length
-  const percentage = `${(100/mandatorySteps.length*numberOfCompletedSteps).toFixed(0)}%`
+  const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item == true }).length
+  const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
   return (
-    <div className="row">
-      <div className="col s12 m4">
-        <ul className="collection with-header wizard">
-          <li className="collection-header">
-            <h5>Progress <span className="right">{percentage}</span></h5>
+    <div className='row'>
+      <div className='col s12 m4'>
+        <ul className='collection with-header wizard'>
+          <li className='collection-header'>
+            <h5>Progress <span className='right'>{percentage}</span></h5>
             <p>Complete the following tasks to get your Survey ready.</p>
-            <div className="progress">
-              <div className="determinate" style={{ width: percentage }}></div>
+            <div className='progress'>
+              <div className='determinate' style={{ width: percentage }} />
             </div>
           </li>
           <CollectionItem path={`${linkPath}questionnaire`} icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
