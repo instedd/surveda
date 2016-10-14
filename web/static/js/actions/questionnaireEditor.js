@@ -11,7 +11,6 @@ export const ADD_STEP = 'QUESTIONNAIRE_EDITOR_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_EDITOR_DELETE_STEP'
 export const ADD_CHOICE = 'QUESTIONNAIRE_EDITOR_ADD_CHOICE'
 export const DELETE_CHOICE = 'QUESTIONNAIRE_EDITOR_DELETE_CHOICE'
-export const EDIT_CHOICE = 'QUESTIONNAIRE_EDITOR_EDIT_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_EDITOR_CHANGE_CHOICE'
 
 export const selectStep = (stepId) => ({
@@ -69,11 +68,6 @@ export const deleteStep = (step) => ({
 
 export const addChoice = () => ({
   type: ADD_CHOICE
-})
-
-export const editChoice = (index) => ({
-  type: EDIT_CHOICE,
-  index
 })
 
 export const changeChoice = (index, value, responses) => ({

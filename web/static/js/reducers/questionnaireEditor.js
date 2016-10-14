@@ -45,7 +45,6 @@ const stepsReducer = (state, action) => {
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
-    case actions.EDIT_CHOICE: return editChoice(state, action)
     case actions.INITIALIZE_EDITOR: return initializeQuestionnaireSteps(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_SMS_PROMPT: return changeStepSmsPrompt(state, action)
@@ -66,16 +65,6 @@ const changeStepSmsPrompt = (state, action) => {
       sms: action.newPrompt
     }
   })
-}
-
-const editChoice = (state, action) => {
-  return {
-    ...state,
-    current: {
-      ...state.current,
-      currentChoice: action.index
-    }
-  }
 }
 
 const changeChoice = (state, action) => {

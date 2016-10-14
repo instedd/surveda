@@ -202,17 +202,6 @@ describe('questionnaireEditor reducer', () => {
     expect(quizForServer.steps).toEqual(questionnaire.steps)
   })
 
-  it('should select choice', () => {
-    const state = playActions([
-      actions.initializeEditor(questionnaire),
-      actions.selectStep('17141bea-a81c-4227-bdda-f5f69188b0e7'),
-      actions.editChoice(1)
-    ])
-
-    expect(state.steps.current.id).toEqual('17141bea-a81c-4227-bdda-f5f69188b0e7')
-    expect(state.steps.current.currentChoice).toEqual(1)
-  })
-
   it('should modify choice', () => {
     const preState = playActions([
       actions.initializeEditor(questionnaire),
