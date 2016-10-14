@@ -16,7 +16,7 @@ class SurveyWizardChannelsStep extends Component {
     const { dispatch, router } = this.props
     updateSurvey(survey.projectId, survey)
       .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
-      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/cutoff`))
+      .then(() => router.push(`/projects/${survey.projectId}/surveys/${survey.id}/edit/schedule`))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 
