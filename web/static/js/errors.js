@@ -3,7 +3,8 @@ import { config } from './config'
 import { Unauthorized } from './api'
 import * as routes from './routes'
 
-Raven.config(config.sentryDsn).install()
+Raven.config(config.sentryDsn, {release: config.version}).install()
+Raven.setUserContext({email: config.user})
 
 window.addEventListener('unhandledrejection', (e) => {
   if (e.reason instanceof Unauthorized) {
