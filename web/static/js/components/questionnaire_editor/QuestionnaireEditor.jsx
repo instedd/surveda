@@ -116,8 +116,6 @@ class QuestionnaireEditor extends Component {
                 value={questionnaire.modes.join(',')}
                 onChange={e => this.questionnaireModesChange(e)}>
                 <option value='SMS'>SMS</option>
-                <option value='IVR'>IVR</option>
-                <option value='SMS,IVR'>SMS and IVR</option>
               </Input>
             </div>
           </div>
