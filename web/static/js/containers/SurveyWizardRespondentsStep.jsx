@@ -49,19 +49,19 @@ class SurveyWizardRespondentsStep extends Component {
         <RespondentsContainer>
           <RespondentsList respondentsCount={respondentsCount}>
             {respondentsIds.map((respondentId) =>
-              <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId}/>
+              <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
-          <ConfirmationModal showLink={true} modalId="removeRespondents" linkText="REMOVE RESPONDENTS" modalText="Are you sure?" header="Please confirm" confirmationText="Delete all" onConfirm={(event) => this.removeRespondents(event)}/>
-          <br/>
-          <br/>
-          <Link className="btn waves-effect waves-light" to={`/projects/${projectId}/surveys/${survey.id}/edit/channels`}>Next</Link>
+          <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText='Are you sure?' header='Please confirm' confirmationText='Delete all' onConfirm={(event) => this.removeRespondents(event)} />
+          <br />
+          <br />
+          <Link className='btn waves-effect waves-light' to={`/projects/${projectId}/surveys/${survey.id}/edit/channels`}>Next</Link>
         </RespondentsContainer>
       )
     } else {
       return (
         <RespondentsContainer>
-          <RespondentsDropzone survey={survey} onDrop={file => {this.handleSubmit(survey, file)}} />
+          <RespondentsDropzone survey={survey} onDrop={file => { this.handleSubmit(survey, file) }} />
         </RespondentsContainer>
       )
     }
@@ -71,16 +71,16 @@ class SurveyWizardRespondentsStep extends Component {
 
 const RespondentsDropzone = ({ survey, onDrop }) => {
   return (
-    <Dropzone className="dropfile" activeClassName="active" rejectClassName="rejectedfile" multiple={false} onDrop={onDrop}  accept="text/csv">
-        <div className="drop-icon"></div>
-        <div className="drop-text"></div>
+    <Dropzone className='dropfile' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} accept='text/csv'>
+      <div className='drop-icon' />
+      <div className='drop-text' />
     </Dropzone>
   )
 }
 
 const RespondentsList = ({ respondentsCount, children }) => {
   return (
-    <table className="ncdtable">
+    <table className='ncdtable'>
       <thead>
         <tr>
           <th>
@@ -107,17 +107,17 @@ const PhoneNumberRow = ({ id, phoneNumber }) => {
 
 const RespondentsContainer = ({ children }) => {
   return (
-    <div className="col s12 m7 offset-m1">
-      <div className="row">
-        <div className="col s12">
+    <div className='col s12 m7 offset-m1'>
+      <div className='row'>
+        <div className='col s12'>
           <h4>Upload your respondents list</h4>
-          <p className="flow-text">
+          <p className='flow-text'>
             Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
           </p>
         </div>
       </div>
-      <div className="row">
-        <div className="col s12">
+      <div className='row'>
+        <div className='col s12'>
           {children}
         </div>
       </div>
@@ -135,4 +135,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default connect(mapStateToProps)(SurveyWizardRespondentsStep);
+export default connect(mapStateToProps)(SurveyWizardRespondentsStep)
