@@ -15,3 +15,8 @@ export default ({ children, tabs, body }) => (
     <ConfirmationModal modalId='unhandledError' modalText='Please go to the home page' header='Sorry, something went wrong' confirmationText='Click to go to the home page' onConfirm={(event) => onConfirm(event)} />
   </div>
 )
+
+const onConfirm = (event) => {
+  event.preventDefault()
+  window.location.href = '/'
+}
