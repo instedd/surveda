@@ -108,23 +108,25 @@ const SurveyCard = ({ survey, completedByDate }) => {
   }
 
   return(
-    <SurveyLink className="black-text" survey={ survey }>
+    <SurveyLink className="survey-card" survey={ survey }>
       <div className="col s12 m6 l4">
         <Card>
           <div className="card-content">
-            <div>
+            <div className="grey-text">
               { reached * 100 + '% respondents reached'}
             </div>
-            <div style={{padding: '30px'}}>
+            <div className="card-chart">
               <RespondentsChart completedByDate={cumulativeCount} />
             </div>
-            <span className="card-title">
-              { survey.name }
-            </span>
-            <p className={ color }>
-              <i className="material-icons">{icon}</i>
-              { text }
-            </p>
+            <div className="card-status">
+              <span className="card-title">
+                { survey.name }
+              </span>
+              <p className={ color }>
+                <i className="material-icons">{icon}</i>
+                { text }
+              </p>
+            </div>
           </div>
         </Card>
       </div>
