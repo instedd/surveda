@@ -8,7 +8,7 @@ import * as actions from '../actions/surveys'
 class SurveyWizardScheduleStep extends Component {
   toggleDay(day) {
     const { survey, dispatch } = this.props
-    updateSurvey(survey.projectId, merge({}, survey, { scheduleDayOfWeek : { [day] : !survey.scheduleDayOfWeek[day] } }))
+    updateSurvey(survey.projectId, merge({}, survey, { scheduleDayOfWeek: { [day]: !survey.scheduleDayOfWeek[day] } }))
       .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
@@ -31,20 +31,21 @@ class SurveyWizardScheduleStep extends Component {
     if (!survey || !survey.scheduleDayOfWeek) {
       return <div>Loading...</div>
     }
+
     return (
-      <div className="col s12 m7 offset-m1">
-        <div className="row">
-          <div className="col s12">
+      <div className='col s12 m7 offset-m1'>
+        <div className='row'>
+          <div className='col s12'>
             <h4>Set up a schedule</h4>
-            <p className="flow-text">
+            <p className='flow-text'>
               The schedule of your survey restricts the days and hours during which respondents will be contacted. You can also specify re-contact attempts intevals.
             </p>
           </div>
         </div>
-        <div className="row">
+        <div className='row'>
           {days.map((day) => (
-            <div className="col s1" key={day}>
-              <button type="button" className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.scheduleDayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`} onClick={() =>
+            <div className='col s1' key={day}>
+              <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.scheduleDayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`} onClick={() =>
                 this.toggleDay(day)
               }>
                 {day}
@@ -61,7 +62,7 @@ const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   surveyId: ownProps.params.surveyId,
   survey: state.surveys[ownProps.params.surveyId],
-  days: ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+  days: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 })
 
-export default withRouter(connect(mapStateToProps)(SurveyWizardScheduleStep));
+export default withRouter(connect(mapStateToProps)(SurveyWizardScheduleStep))
