@@ -117,17 +117,9 @@ defmodule Ask.RespondentController do
     masked = respondents
     |>
     Enum.map(fn respondent ->
-      %{respondent | phone_number: mask_phone_number(respondent.phone_number)}
+      %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
     end)
     masked
-  end
-
-  def mask_phone_number(phone_number) do
-    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-4)), String.slice(phone_number, -4, 4)], "")
-  end
-
-  def replace_numbers_by_hash(string) do
-    Regex.replace(~r/[0-9]/, string, "#")
   end
 
 end

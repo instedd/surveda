@@ -20,4 +20,12 @@ defmodule Ask.Respondent do
     |> cast(params, [:phone_number, :state, :session, :completed_at])
     |> validate_required([:phone_number, :state])
   end
+
+  def mask_phone_number(phone_number) do
+    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-4)), String.slice(phone_number, -4, 4)], "")
+  end
+
+  def replace_numbers_by_hash(string) do
+    Regex.replace(~r/[0-9]/, string, "#")
+  end
 end

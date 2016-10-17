@@ -33,7 +33,7 @@ defmodule Ask.RespondentControllerTest do
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"] == [%{
                                                      "id" => respondent.id,
-                                                     "phone_number" => respondent.phone_number,
+                                                     "phone_number" => Respondent.mask_phone_number(respondent.phone_number),
                                                      "survey_id" => survey.id,
                                                      "date" => Ecto.DateTime.to_iso8601(response.updated_at),
                                                      "responses" => [
