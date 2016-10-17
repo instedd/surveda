@@ -211,6 +211,23 @@ defmodule Ask.SurveyControllerTest do
       assert created_survey.schedule_end_time == two_oclock
     end
 
+    test "rejects update with correct error when cutoff field is greater than the max value", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      survey = insert(:survey, project: project)
+      max_int = 2147483648
+      attrs = Map.merge(@valid_attrs, %{cutoff: max_int})
+      conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: attrs
+      assert json_response(conn, 422)["errors"] != %{cutoff: "must be less than #{max_int}"}
+    end
+
+    test "rejects update with correct error when cutoff field is less than zero", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      survey = insert(:survey, project: project)
+      attrs = Map.merge(@valid_attrs, %{cutoff: 0})
+      conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: attrs
+      assert json_response(conn, 422)["errors"] != %{cutoff: "must be greater than 0"}
+    end
+
   end
 
   describe "delete" do
