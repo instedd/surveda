@@ -6,9 +6,12 @@ defmodule Ask.BrokerTest do
   alias Ask.{Repo, Survey, Respondent, TestChannel}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
+  @always_schedule %{schedule_day_of_week: @everyday_schedule,
+                     schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
+                     schedule_end_time: elem(Ecto.Time.cast("23:59:59"), 1)}
 
   test "does nothing with 'not_ready' survey" do
-    survey = insert(:survey, schedule_day_of_week: @everyday_schedule)
+    survey = insert(:survey, @always_schedule)
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
@@ -16,7 +19,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "set as 'completed' when there is no respondents" do
-    survey = insert(:survey, schedule_day_of_week: @everyday_schedule, state: "running")
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running"}))
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
@@ -24,7 +27,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "does nothing when there are no pending respondents" do
-    survey = insert(:survey, schedule_day_of_week: @everyday_schedule, state: "running")
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running"}))
     insert(:respondent, survey: survey, state: "active")
 
     Broker.handle_info(:poll, nil)
@@ -182,8 +185,8 @@ defmodule Ask.BrokerTest do
       fri: week_day != 5,
       sat: week_day != 6,
       sun: week_day != 7}
-    survey1 = insert(:survey, state: "running", schedule_day_of_week: schedule1)
-    survey2 = insert(:survey, state: "running", schedule_day_of_week: schedule2)
+    survey1 = insert(:survey, Map.merge(@always_schedule, %{schedule_day_of_week: schedule1, state: "running"}))
+    survey2 = insert(:survey, Map.merge(@always_schedule, %{schedule_day_of_week: schedule2, state: "running"}))
 
     Broker.handle_info(:poll, nil)
 
@@ -193,11 +196,45 @@ defmodule Ask.BrokerTest do
     assert survey2.state == "running"
   end
 
+  test "doesn't poll surveys with a start time schedule greater than the current hour" do
+    now = Timex.now
+    ten_oclock = Timex.shift(now, hours: (10-now.hour), minutes: -now.minute)
+    eleven_oclock = Timex.add(ten_oclock, Timex.Duration.from_hours(1))
+    twelve_oclock = Timex.add(eleven_oclock, Timex.Duration.from_hours(1))
+    {:ok, mock_now} = Ecto.Time.cast(ten_oclock)
+    {:ok, start_time} = Ecto.Time.cast(eleven_oclock)
+    {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
+    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
+    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
+  test "doesn't poll surveys with an end time schedule smaller than the current hour" do
+    now = Timex.now
+    ten_oclock = Timex.shift(now, hours: (10-now.hour), minutes: -now.minute)
+    eleven_oclock = Timex.add(ten_oclock, Timex.Duration.from_hours(1))
+    twelve_oclock = Timex.add(eleven_oclock, Timex.Duration.from_hours(1))
+    {:ok, start_time} = Ecto.Time.cast(ten_oclock)
+    {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
+    {:ok, mock_now} = Ecto.Time.cast(twelve_oclock)
+    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
+    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps) do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings)
     quiz = insert(:questionnaire, steps: steps)
-    survey = insert(:survey, schedule_day_of_week: @everyday_schedule, state: "running", questionnaire: quiz) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz})) |> Repo.preload([:channels])
     channel_changeset = Ecto.Changeset.change(channel)
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
     respondent = insert(:respondent, survey: survey)

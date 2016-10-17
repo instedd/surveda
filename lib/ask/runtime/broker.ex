@@ -25,10 +25,11 @@ defmodule Ask.Runtime.Broker do
     {:ok, nil}
   end
 
-  def handle_info(:poll, state) do
+  def handle_info(:poll, state, now \\ Timex.now) do
     ischedule = today_schedule()
     surveys = Repo.all(from s in Survey, where: s.state == "running" and
-      fragment("(? & ?) = ?", s.schedule_day_of_week, ^ischedule, ^ischedule))
+      fragment("(? & ?) = ?", s.schedule_day_of_week, ^ischedule, ^ischedule) and
+      s.schedule_start_time <= ^now and s.schedule_end_time > ^now)
     surveys |> Enum.each(&poll_survey(&1))
     {:noreply, state}
   end
