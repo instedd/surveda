@@ -5,7 +5,9 @@ defmodule Ask.RespondentController do
   alias Ask.Survey
   alias Ask.Respondent
 
-  def index(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+    limit = Map.get(params, "limit", "")
+
     Project
     |> Repo.get!(project_id)
     |> authorize(conn)
@@ -14,11 +16,23 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
     |> assoc(:respondents)
     |> preload(:responses)
+
+    respondents_count = respondents |> Repo.aggregate(:count, :id)
+
+    respondents = respondents
+    |> conditional_limit(limit)
     |> Repo.all
 
     respondents = mask_phone_numbers(respondents)
 
-    render(conn, "index.json", respondents: respondents)
+    render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+  end
+
+  def conditional_limit param, limit do
+    case limit do
+      "" -> param
+      number -> param |> limit(^number)
+    end
   end
 
   def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -73,13 +87,13 @@ defmodule Ask.RespondentController do
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)
 
-      respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id))
+      respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
 
       update_survey_state(survey_id, respondents_count)
 
       conn
         |> put_status(:created)
-        |> render("index.json", respondents: respondents |> Repo.preload(:responses))
+        |> render("index.json", respondents: respondents |> Repo.preload(:responses), respondents_count: respondents_count)
     else
       conn
         |> put_status(:unprocessable_entity)

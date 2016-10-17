@@ -1,11 +1,9 @@
-import React, { PropTypes, Component } from 'react'
-import { browserHistory } from 'react-router'
-import merge from 'lodash/merge'
+import React, { Component } from 'react'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
 import { ConfirmationModal } from '../components/ConfirmationModal'
-import { uploadRespondents, fetchQuestionnaires, removeRespondents } from '../api'
+import { uploadRespondents, removeRespondents } from '../api'
 import * as actions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 import * as routes from '../routes'
@@ -14,7 +12,7 @@ class SurveyWizardRespondentsStep extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId } = this.props
     if (projectId && surveyId) {
-      dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
+      dispatch(respondentsActions.fetchRespondentsWithLimit(projectId, surveyId, 5))
     }
   }
 
@@ -36,20 +34,17 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    let files
     const { survey, respondentsCount, respondents, projectId } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
     }
 
-    if (respondentsCount != 0) {
-      let respondentsIds = Object.keys(respondents).slice(0, 5)
-
+    if (respondentsCount !== 0) {
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={respondentsCount}>
-            {respondentsIds.map((respondentId) =>
+            {Object.keys(respondents).map((respondentId) =>
               <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
@@ -129,7 +124,7 @@ const RespondentsContainer = ({ children }) => {
 const mapStateToProps = (state, ownProps) => {
   return {
     respondents: state.respondents,
-    respondentsCount: Object.keys(state.respondents).length,
+    respondentsCount: state.respondentsCount,
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
     survey: state.surveys[ownProps.params.surveyId]

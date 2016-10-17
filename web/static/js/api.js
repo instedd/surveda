@@ -36,8 +36,20 @@ const apiFetchJSON = (url, schema, options) => {
   return apiFetch(url, options)
     .then(response => response.json().then(json => ({ json, response }))
   ).then(({ json, response }) => {
-    return handleResponse(response, () =>
-      normalize(camelizeKeys(json.data), schema))
+    return handleResponse(response, () => normalize(camelizeKeys(json.data), schema))
+  })
+}
+
+const apiFetchJSON2 = (url, schema, options) => {
+  return apiFetch(url, options)
+    .then(response => response.json().then(json => ({ json, response }))
+  ).then(({ json, response }) => {
+    return handleResponse(response, () => {
+      let map = normalize(camelizeKeys(json.data.respondents), schema)
+      map.respondentsCount = json.data.respondents_count
+      return map
+    }
+    )
   })
 }
 
@@ -113,7 +125,7 @@ export const uploadRespondents = (survey, files) => {
   const formData = new FormData()
   formData.append('file', files[0])
 
-  return apiFetchJSON(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
+  return apiFetchJSON2(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
     arrayOf(respondentSchema), {
       method: 'POST',
       body: formData
@@ -124,8 +136,14 @@ export const removeRespondents = (survey) => {
   return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`, respondentSchema)
 }
 
-export const fetchRespondents = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents`, arrayOf(respondentSchema))
+export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => {
+  const formData = new FormData()
+  if (limit) formData.append('limit', limit)
+
+  return apiFetchJSON2(`projects/${projectId}/surveys/${surveyId}/respondents/index`, arrayOf(respondentSchema), {
+    method: 'POST',
+    body: formData
+  })
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {

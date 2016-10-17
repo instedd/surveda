@@ -8,7 +8,12 @@ export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 
 export const fetchRespondents = (projectId, surveyId) => dispatch => {
-  api.fetchRespondents(projectId, surveyId)
+  api.fetchRespondentsWithLimit(projectId, surveyId, null)
+    .then(respondents => dispatch(receiveRespondents(respondents)))
+}
+
+export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => dispatch => {
+  api.fetchRespondentsWithLimit(projectId, surveyId, limit)
     .then(respondents => dispatch(receiveRespondents(respondents)))
 }
 

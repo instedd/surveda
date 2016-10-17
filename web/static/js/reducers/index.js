@@ -8,6 +8,7 @@ import questionnaireEditor from './questionnaireEditor'
 import channels from './channels'
 import guisso from './guisso'
 import respondents from './respondents'
+import respondentsCount from './respondentsCount'
 
 export default combineReducers({
   routing,
@@ -17,6 +18,7 @@ export default combineReducers({
   questionnaires,
   questionnaireEditor,
   respondents,
+  respondentsCount,
   channels,
   guisso
 })

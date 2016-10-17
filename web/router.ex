@@ -31,7 +31,8 @@ defmodule Ask.Router do
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/launch", SurveyController, :launch
-          resources "/respondents", RespondentController, only: [:create, :index, :delete]
+          resources "/respondents", RespondentController, only: [:create, :delete]
+          post "/respondents/index", RespondentController, :index
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
@@ -48,6 +49,6 @@ defmodule Ask.Router do
     pipe_through :browser
 
     get "/oauth_helper", OAuthHelperController, :index
-    get "/*path", PageController, :index        
-  end  
+    get "/*path", PageController, :index
+  end
 end
