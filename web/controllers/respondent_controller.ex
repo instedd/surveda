@@ -16,6 +16,8 @@ defmodule Ask.RespondentController do
     |> preload(:responses)
     |> Repo.all
 
+    respondents = mask_phone_numbers(respondents)
+
     render(conn, "index.json", respondents: respondents)
   end
 
@@ -71,7 +73,7 @@ defmodule Ask.RespondentController do
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)
 
-      respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey_id)
+      respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id))
 
       update_survey_state(survey_id, respondents_count)
 
@@ -110,4 +112,22 @@ defmodule Ask.RespondentController do
     |> Survey.update_state
     |> Repo.update
   end
+
+  def mask_phone_numbers(respondents) do
+    masked = respondents
+    |>
+    Enum.map(fn respondent ->
+      %{respondent | phone_number: mask_phone_number(respondent.phone_number)}
+    end)
+    masked
+  end
+
+  def mask_phone_number(phone_number) do
+    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-4)), String.slice(phone_number, -4, 4)], "")
+  end
+
+  def replace_numbers_by_hash(string) do
+    Regex.replace(~r/[0-9]/, string, "#")
+  end
+
 end
