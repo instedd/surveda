@@ -5,6 +5,7 @@ import * as actions from '../actions/questionnaires'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
+import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as routes from '../routes'
 
 class QuestionnaireIndex extends Component {
@@ -31,17 +32,10 @@ class QuestionnaireIndex extends Component {
             </thead>
             <tbody>
               { Object.keys(questionnaires).map((questionnaireId) => {
-                const name = questionnaires[questionnaireId].name
-                let nameComponent
-                if (!name || name.trim() === '') {
-                  nameComponent = <i>Untitled</i>
-                } else {
-                  nameComponent = name
-                }
                 return (
                   <tr key={questionnaireId} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
                     <td>
-                      { nameComponent }
+                      <UntitledIfEmpty text={questionnaires[questionnaireId].name} />
                     </td>
                     <td>
                       { (questionnaires[questionnaireId].modes || []).join(', ') }

@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import UntitledIfEmpty from './UntitledIfEmpty'
 
 export class EditableTitleLabel extends Component {
   constructor(props) {
@@ -45,18 +46,10 @@ export class EditableTitleLabel extends Component {
 
   render() {
     const { title } = this.props
-
-    let titleComponent
-    if (!title || title.trim() === '') {
-      titleComponent = <i>Untitled</i>
-    } else {
-      titleComponent = title
-    }
-
     if (!this.state.editing) {
       return (
         <a className='page-title' onClick={this.handleClick}>
-          <span>{titleComponent}</span>
+          <span><UntitledIfEmpty text={title} /></span>
           <i className='material-icons'>mode_edit</i>
         </a>
       )

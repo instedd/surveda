@@ -10,6 +10,7 @@ import SurveyLink from '../components/SurveyLink'
 import * as channelsActions from '../actions/channels'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
+import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as RespondentsChartCount from '../components/RespondentsChartCount'
 import * as routes from '../routes'
 
@@ -84,6 +85,8 @@ const SurveyCard = ({ survey, completedByDate }) => {
     }
   }
 
+  console.log(survey.name)
+
   let icon = 'mode_edit'
   let color = 'black-text'
   let text = 'Editing'
@@ -104,14 +107,6 @@ const SurveyCard = ({ survey, completedByDate }) => {
       text = 'Completed'
       break
   }
-
-  let surveyNameComponent
-  if (!survey.name || survey.name.trim() === '') {
-    surveyNameComponent = <i>Untitled</i>
-  } else {
-    surveyNameComponent = survey.name
-  }
-
   return (
     <SurveyLink className='survey-card' survey={survey}>
       <div className='col s12 m6 l4'>
@@ -125,7 +120,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
             </div>
             <div className='card-status'>
               <span className='card-title'>
-                { surveyNameComponent }
+                <UntitledIfEmpty text={survey.name} />
               </span>
               <p className={color}>
                 <i className='material-icons'>{icon}</i>

@@ -4,6 +4,7 @@ import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
+import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as RespondentsChartCount from '../components/RespondentsChartCount'
 import * as routes from '../routes'
 
@@ -40,7 +41,7 @@ class SurveyShow extends Component {
           <div className='col s12 m8'>
             <div className='card'>
               <div className='card-table-title'>
-                { survey.name }
+                <UntitledIfEmpty text={survey.name} />
               </div>
               <div className='card-table'>
                 <table>
