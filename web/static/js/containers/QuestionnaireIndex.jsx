@@ -30,15 +30,25 @@ class QuestionnaireIndex extends Component {
               </tr>
             </thead>
             <tbody>
-              { Object.keys(questionnaires).map((questionnaireId) =>
-                <tr key={questionnaireId} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
-                  <td>
-                    { questionnaires[questionnaireId].name }
-                  </td>
-                  <td>
-                    { (questionnaires[questionnaireId].modes || []).join(', ') }
-                  </td>
-                </tr>
+              { Object.keys(questionnaires).map((questionnaireId) => {
+                const name = questionnaires[questionnaireId].name
+                let nameComponent
+                if (!name || name.trim() === '') {
+                  nameComponent = <i>Untitled</i>
+                } else {
+                  nameComponent = name
+                }
+                return (
+                  <tr key={questionnaireId} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
+                    <td>
+                      { nameComponent }
+                    </td>
+                    <td>
+                      { (questionnaires[questionnaireId].modes || []).join(', ') }
+                    </td>
+                  </tr>
+                )
+              }
               )}
             </tbody>
           </CardTable>

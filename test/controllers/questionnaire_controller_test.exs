@@ -3,7 +3,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
   alias Ask.Questionnaire
   @valid_attrs %{name: "some content", modes: ["SMS", "IVR"], steps: []}
-  @invalid_attrs %{name: ""}
+  @invalid_attrs %{}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -107,13 +107,6 @@ defmodule Ask.QuestionnaireControllerTest do
       conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
       assert Repo.get_by(Questionnaire, @valid_attrs)
-    end
-
-    test "does not update chosen resource and renders errors when data is invalid", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
-      questionnaire = insert(:questionnaire, project: project)
-      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
     end
 
     test "rejects update if the questionnaire doesn't belong to the current user", %{conn: conn} do
