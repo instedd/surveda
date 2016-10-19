@@ -30,7 +30,7 @@ class StepMultipleChoiceEditor extends Component {
     return (
       <div>
         <h5>Responses</h5>
-        <p>List the strings you want to store for each possible choice and define valid values by commas.</p>
+        <p>List the texts you want to store for each possible choice and define valid values by commas.</p>
         <Card>
           <ul className='collection'>
             <li className='collection-item'>
