@@ -21,7 +21,7 @@ defmodule Ask.RespondentControllerTest do
     test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       survey = insert(:survey, project: project)
-      conn = post conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
+      conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == []
       assert json_response(conn, 200)["data"]["respondents_count"] == 0
     end
@@ -31,7 +31,7 @@ defmodule Ask.RespondentControllerTest do
       survey = insert(:survey, project: project)
       respondent = insert(:respondent, survey: survey)
       response = insert(:response, respondent: respondent, value: "Yes")
-      conn = post conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
+      conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == [%{
                                                      "id" => respondent.id,
                                                      "phone_number" => Respondent.mask_phone_number(respondent.phone_number),
@@ -51,7 +51,7 @@ defmodule Ask.RespondentControllerTest do
       respondent = insert(:respondent, survey: survey)
       insert(:response, respondent: respondent, value: "Yes")
       assert_error_sent :forbidden, fn ->
-        post conn, project_survey_respondent_path(conn, :index, survey.project.id, survey.id)
+        get conn, project_survey_respondent_path(conn, :index, survey.project.id, survey.id)
       end
     end
 

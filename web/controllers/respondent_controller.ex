@@ -28,10 +28,10 @@ defmodule Ask.RespondentController do
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
 
-  def conditional_limit param, limit do
+  def conditional_limit query, limit do
     case limit do
-      "" -> param
-      number -> param |> limit(^number)
+      "" -> query
+      number -> query |> limit(^number)
     end
   end
 

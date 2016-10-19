@@ -142,14 +142,7 @@ export const removeRespondents = (survey) => {
 }
 
 export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => {
-  const formData = new FormData()
-  if (limit) formData.append('limit', limit)
-
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/index`, arrayOf(respondentSchema), {
-    method: 'POST',
-    body: formData
-  },
-  respondentsCallback)
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}`, arrayOf(respondentSchema), {}, respondentsCallback)
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
