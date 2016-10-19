@@ -1,13 +1,10 @@
 import React, { PropTypes, Component } from 'react'
-import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
 import { ConfirmationModal } from '../components/ConfirmationModal'
 import { uploadRespondents, removeRespondents } from '../api'
-// import * as actions from '../actions/surveys'
 import * as actions from '../actions/surveyEdit'
 import * as respondentsActions from '../actions/respondents'
-import * as routes from '../routes'
 
 class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
@@ -16,13 +13,6 @@ class SurveyWizardRespondentsStep extends Component {
     respondentsCount: PropTypes.number.isRequired,
     dispatch: PropTypes.func.isRequired
   }
-
-  // componentDidMount() {
-  //   const { dispatch, projectId, surveyId } = this.props
-  //   if (projectId && surveyId) {
-  //     dispatch(respondentsActions.fetchRespondentsWithLimit(projectId, surveyId, 5))
-  //   }
-  // }
 
   handleSubmit(survey, files) {
     const { dispatch } = this.props
@@ -44,21 +34,13 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    const { survey, respondentsCount, respondents, projectId } = this.props
-// =======
-//     const { survey, respondentsCount, respondents } = this.props
-// >>>>>>> c58a02fd041d3e374d71909bc3d2ddba0590c79c
+    const { survey, respondentsCount, respondents } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
     }
 
     if (respondentsCount !== 0) {
-// <<<<<<< HEAD
-// =======
-//       let respondentsIds = Object.keys(respondents).slice(0, 5)
-
-// >>>>>>> c58a02fd041d3e374d71909bc3d2ddba0590c79c
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={respondentsCount}>
@@ -137,15 +119,7 @@ const RespondentsContainer = ({ children }) => {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-// <<<<<<< HEAD
-//     respondents: state.respondents,
-//     respondentsCount: state.respondentsCount,
-//     projectId: ownProps.params.projectId,
-//     surveyId: ownProps.params.surveyId,
-//     survey: state.surveys[ownProps.params.surveyId]
-// =======
     respondentsCount: state.respondentsCount
-// >>>>>>> c58a02fd041d3e374d71909bc3d2ddba0590c79c
   }
 }
 
