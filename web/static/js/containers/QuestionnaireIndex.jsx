@@ -5,6 +5,7 @@ import * as actions from '../actions/questionnaires'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
+import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as routes from '../routes'
 
 class QuestionnaireIndex extends Component {
@@ -30,15 +31,18 @@ class QuestionnaireIndex extends Component {
               </tr>
             </thead>
             <tbody>
-              { Object.keys(questionnaires).map((questionnaireId) =>
-                <tr key={questionnaireId} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
-                  <td>
-                    { questionnaires[questionnaireId].name }
-                  </td>
-                  <td>
-                    { (questionnaires[questionnaireId].modes || []).join(', ') }
-                  </td>
-                </tr>
+              { Object.keys(questionnaires).map((questionnaireId) => {
+                return (
+                  <tr key={questionnaireId} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
+                    <td>
+                      <UntitledIfEmpty text={questionnaires[questionnaireId].name} />
+                    </td>
+                    <td>
+                      { (questionnaires[questionnaireId].modes || []).join(', ') }
+                    </td>
+                  </tr>
+                )
+              }
               )}
             </tbody>
           </CardTable>

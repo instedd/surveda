@@ -52,7 +52,7 @@ const commonCallback = (json, schema) => {
 const respondentsCallback = (json, schema) => {
   return () => {
     let normalized = normalize(camelizeKeys(json.data.respondents), schema)
-    normalized.respondentsCount = json.data.respondents_count
+    normalized.respondentsCount = parseInt(json.data.respondents_count)
     return normalized
   }
 }

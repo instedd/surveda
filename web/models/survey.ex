@@ -1,6 +1,8 @@
 defmodule Ask.Survey do
   use Ask.Web, :model
 
+  @max_int 2147483647
+
   schema "surveys" do
     field :name, :string
     field :state, :string, default: "not_ready" # not_ready, ready, pending, completed
@@ -28,6 +30,7 @@ defmodule Ask.Survey do
     |> validate_required([:project_id, :state])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
+    |> validate_number(:cutoff, greater_than: 0, less_than: @max_int)
   end
 
   def update_state(changeset) do

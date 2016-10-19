@@ -105,7 +105,7 @@ class QuestionnaireEditor extends Component {
               <input
                 type='text'
                 id='questionnaire_name'
-                placeholder='Questionnaire name'
+                placeholder='Untitled'
                 value={this.state.questionnaireName}
                 onChange={e => this.questionnaireNameChange(e)}
                 onBlur={e => this.questionnaireNameSubmit(e)}
