@@ -138,7 +138,6 @@ const changeStep = (state, func) => {
 const initializeQuestionnaire = (state, action) => {
   const q = action.questionnaire
   return {
-    ...state,
     id: q.id,
     name: q.name,
     modes: q.modes,
@@ -149,7 +148,7 @@ const initializeQuestionnaire = (state, action) => {
 const initializeQuestionnaireSteps = (state, action) => {
   const q = action.questionnaire
   return {
-    ...state,
+    ...defaultState.steps,
     ids: q.steps.map(step => step.id),
     items: reduce(q.steps, reduceStepsForEditor, {})
   }

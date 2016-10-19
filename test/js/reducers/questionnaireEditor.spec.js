@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import each from 'lodash/each'
+import keyBy from 'lodash/keyBy'
 import reducer, { questionnaireForServer, buildNewStep } from '../../../web/static/js/reducers/questionnaireEditor'
 import * as actions from '../../../web/static/js/actions/questionnaireEditor'
 
@@ -29,6 +30,24 @@ describe('questionnaireEditor reducer', () => {
       modes: questionnaire.modes,
       projectId: questionnaire.projectId
     })
+
+    expect(result.steps)
+      .toEqual({
+        ids: questionnaire.steps.map(s => s.id),
+        items: keyBy(questionnaire.steps, s => s.id),
+        current: null
+      })
+  })
+
+  // Regression test for https://github.com/instedd/ask/issues/146
+  it('should start with all steps collapsed even if there is older state that suggests otherwise', () => {
+    const state = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.selectStep(questionnaire.steps[0].id),
+      actions.initializeEditor(questionnaire)
+    ])
+
+    expect(state.steps.current).toEqual(null)
   })
 
   it('should initialize for the questionnaire creation use case', () => {
