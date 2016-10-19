@@ -79,7 +79,7 @@ var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
             .catch((e) => dispatch(projectsActions.receiveProjectsError(e)))
         break
       default:
-        console.log('This should be never reached')
+        throw `Unknown entity in Title.handleSubmit: ${entity}`
     }
   }
 }
