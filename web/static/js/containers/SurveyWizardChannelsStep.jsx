@@ -1,8 +1,9 @@
 import React, { PropTypes, Component } from 'react'
+import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
 import * as actions from '../actions/surveyEdit'
 
-export default class SurveyWizardChannelsStep extends Component {
+class SurveyWizardChannelsStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     channels: PropTypes.object.isRequired,
@@ -52,3 +53,5 @@ export default class SurveyWizardChannelsStep extends Component {
     )
   }
 }
+
+export default connect()(SurveyWizardChannelsStep)

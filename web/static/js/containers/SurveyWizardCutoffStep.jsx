@@ -1,4 +1,5 @@
 import React, { PropTypes, Component } from 'react'
+import { connect } from 'react-redux'
 import * as actions from '../actions/surveyEdit'
 
 class SurveyWizardCutoffStep extends Component {
@@ -39,4 +40,4 @@ class SurveyWizardCutoffStep extends Component {
   }
 }
 
-export default SurveyWizardCutoffStep
+export default connect()(SurveyWizardCutoffStep)

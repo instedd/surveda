@@ -1,9 +1,10 @@
 import React, { PropTypes, Component } from 'react'
+import { connect } from 'react-redux'
 import * as actions from '../actions/surveyEdit'
 import { Link } from 'react-router'
 import * as routes from '../routes'
 
-export default class SurveyWizardQuestionnaireStep extends Component {
+class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object.isRequired,
@@ -70,3 +71,5 @@ export default class SurveyWizardQuestionnaireStep extends Component {
     )
   }
 }
+
+export default connect()(SurveyWizardQuestionnaireStep)

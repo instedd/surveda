@@ -1,8 +1,9 @@
 import * as actions from '../actions/surveyEdit'
+import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
 import React, { PropTypes, Component } from 'react'
 
-export default class SurveyWizardScheduleStep extends Component {
+class SurveyWizardScheduleStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired
@@ -89,3 +90,5 @@ export default class SurveyWizardScheduleStep extends Component {
     )
   }
 }
+
+export default connect()(SurveyWizardScheduleStep)

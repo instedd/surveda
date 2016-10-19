@@ -71,19 +71,19 @@ export default class SurveyForm extends Component {
         </div>
         <div className='col s12 m7 scrollable-body offset-m1'>
           <div className='row'>
-            <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} dispatch={dispatch} />
+            <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} />
           </div>
           <div className='row'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} dispatch={dispatch} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} />
           </div>
           <div className='row'>
-            <SurveyWizardChannelsStep channels={channels} survey={survey} dispatch={dispatch} />
+            <SurveyWizardChannelsStep channels={channels} survey={survey} />
           </div>
           <div className='row'>
-            <SurveyWizardScheduleStep survey={survey} dispatch={dispatch} />
+            <SurveyWizardScheduleStep survey={survey} />
           </div>
           <div className='row'>
-            <SurveyWizardCutoffStep survey={survey} dispatch={dispatch} />
+            <SurveyWizardCutoffStep survey={survey} />
           </div>
         </div>
       </div>
