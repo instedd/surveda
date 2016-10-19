@@ -81,7 +81,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
     const target = completedByDate.completedByDate.targetValue
     cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
     if (survey.state === 'running' || survey.state === 'completed') {
-      reached = respondentsReached(data, target)
+      reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
     }
   }
 
@@ -111,7 +111,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
         <Card>
           <div className='card-content'>
             <div className='grey-text'>
-              { reached + '% respondents reached'}
+              { reached + '% of target completed' }
             </div>
             <div className='card-chart'>
               <RespondentsChart completedByDate={cumulativeCount} />

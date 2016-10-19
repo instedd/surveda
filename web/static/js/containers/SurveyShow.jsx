@@ -22,8 +22,8 @@ class SurveyShow extends Component {
     }
   }
 
-  respondentsReached(completedByDate, targetValue) {
-    const reached = completedByDate.length === 0 ? 0 : this.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
+  respondentsFraction(completedByDate, targetValue) {
+    const reached = completedByDate.length === 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
     return reached + '/' + targetValue
   }
 
@@ -65,8 +65,15 @@ class SurveyShow extends Component {
               </div>
             </div>
           </div>
+          <div>
+            { RespondentsChartCount.respondentsReachedPercentage(completedByDate, targetValue) + '% of target completed' }
+          </div>
           <div className='col s12 m4'>
             <RespondentsChart completedByDate={cumulativeCount} />
+            <div>
+              Respondents contacted
+            </div>
+            { this.respondentsFraction(completedByDate, targetValue) }
           </div>
         </div>
       </div>
