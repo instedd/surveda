@@ -40,7 +40,7 @@ class SurveyWizardQuestionnaireStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4>Select a questionnaire</h4>
+            <h4 id='questionnaire'>Select a questionnaire</h4>
             <p className='flow-text'>
               The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.
             </p>

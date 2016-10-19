@@ -19,7 +19,7 @@ class SurveyWizardCutoffStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4>Configure cutoff rules</h4>
+            <h4 id='cutoff'>Configure cutoff rules</h4>
             <p className='flow-text'>
               Cutoff rules define when the survey will stop. You can use one or more of these options. If you don't select any, the survey will be sent to all respondents.
             </p>

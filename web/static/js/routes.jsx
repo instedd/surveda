@@ -61,7 +61,7 @@ export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, s
 export const editSurvey = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
 export const editSurveyQuestionnaire = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#questionnaire`
 export const editSurveyRespondents = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#respondents`
-export const editSurveyChannels = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}/#hannels`
+export const editSurveyChannels = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#channels`
 export const editSurveySchedule = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#schedule`
 export const editSurveyCutoff = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#cutoff`
 export const questionnaires = (projectId) => `${project(projectId)}/questionnaires`
