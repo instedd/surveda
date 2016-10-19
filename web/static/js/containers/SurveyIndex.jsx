@@ -85,8 +85,6 @@ const SurveyCard = ({ survey, completedByDate }) => {
     }
   }
 
-  console.log(survey.name)
-
   let icon = 'mode_edit'
   let color = 'black-text'
   let text = 'Editing'

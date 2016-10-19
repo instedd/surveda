@@ -14,8 +14,6 @@ class SurveyWizardQuestionnaireStep extends Component {
 
   questionnaireChange(e) {
     const { dispatch } = this.props
-    console.log('checkeando', e)
-    console.log('checkeando', e.target)
     dispatch(actions.changeQuestionnaire(parseInt(e.target.value)))
   }
 
