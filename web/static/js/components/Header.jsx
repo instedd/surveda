@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router'
 import TitleContainer from '../containers/TitleContainer'
+import UntitledIfEmpty from './UntitledIfEmpty'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 import * as routes from '../routes'
 
@@ -9,7 +10,9 @@ export default ({ tabs, logout, user, project }) => {
   if (project) {
     projectLink = (
       <li>
-        <Link to={routes.project(project.id)} className=''> {project.name} </Link>
+        <Link to={routes.project(project.id)} className=''>
+          <UntitledIfEmpty text={project.name} />
+        </Link>
       </li>
     )
   }

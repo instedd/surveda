@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaireEditor'
+import UntitledIfEmpty from '../UntitledIfEmpty'
 
 class QuestionnaireClosedStep extends Component {
   selectStep(event, step) {
@@ -14,15 +15,15 @@ class QuestionnaireClosedStep extends Component {
     const { step, index } = this.props
 
     return (
-      <a href="#!" onClick={(event) => this.selectStep(event, step)} className="collection-item">
-        {step.title}
+      <a href='#!' onClick={(event) => this.selectStep(event, step)} className='collection-item'>
+        <UntitledIfEmpty text={step.title} emptyText='Untitled question' />
       </a>
     )
   }
 }
 
 QuestionnaireClosedStep.propTypes = {
-  step: PropTypes.object.isRequired,
+  step: PropTypes.object.isRequired
 }
 
-export default connect()(QuestionnaireClosedStep);
+export default connect()(QuestionnaireClosedStep)

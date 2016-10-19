@@ -3,7 +3,6 @@ defmodule Ask.ProjectControllerTest do
 
   alias Ask.Project
   @valid_attrs %{name: "some content"}
-  @invalid_attrs %{name: ""}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -66,11 +65,6 @@ defmodule Ask.ProjectControllerTest do
       assert Repo.get_by(Project, @valid_attrs)
     end
 
-    test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, project_path(conn, :create), project: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-
   end
 
   describe "update" do
@@ -80,12 +74,6 @@ defmodule Ask.ProjectControllerTest do
       conn = put conn, project_path(conn, :update, project), project: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
       assert Repo.get_by(Project, @valid_attrs)
-    end
-
-    test "does not update chosen resource and renders errors when data is invalid", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
-      conn = put conn, project_path(conn, :update, project), project: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
     end
 
     test "rejects update if the project doesn't belong to the current user", %{conn: conn} do

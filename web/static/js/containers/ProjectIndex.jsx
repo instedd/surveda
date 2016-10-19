@@ -5,6 +5,7 @@ import * as actions from '../actions/projects'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
+import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as routes from '../routes'
 
 class ProjectIndex extends Component {
@@ -34,7 +35,7 @@ class ProjectIndex extends Component {
               { Object.keys(projects).map((projectId) =>
                 <tr key={projectId}>
                   <td onClick={() => router.push(routes.project(projectId))}>
-                    {projects[projectId].name}
+                    <UntitledIfEmpty text={projects[projectId].name} />
                   </td>
                   <td onClick={() => router.push(routes.editProject(projectId))}>
                     Edit

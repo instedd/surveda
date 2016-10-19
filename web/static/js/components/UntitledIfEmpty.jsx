@@ -1,8 +1,8 @@
 import React from 'react'
 
-export default ({ text }) => {
+export default ({ text, emptyText = 'Untitled' }) => {
   if (!text || text.trim() === '') {
-    return <i>Untitled</i>
+    return <em>{emptyText}</em>
   } else {
     return <span>{text}</span>
   }

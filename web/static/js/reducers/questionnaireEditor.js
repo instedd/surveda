@@ -106,7 +106,7 @@ const stepTypeDisplay = (stepType) => {
 export const buildNewStep = (stepType) => ({
   id: uuid.v4(),
   type: stepType,
-  title: `Untitled ${stepTypeDisplay(stepType)}`,
+  title: '',
   store: '',
   prompt: {
     sms: ''
@@ -202,8 +202,8 @@ const deleteStep = (state, action) => {
 
 const addChoice = (state, action) => {
   return updateChoices(state, choices => choices.push({
-    value: 'Untitled option',
-    responses: ['Untitled', 'u']
+    value: '',
+    responses: []
   }))
 }
 

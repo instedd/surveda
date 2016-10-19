@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import UntitledIfEmpty from '../UntitledIfEmpty'
 
 class ChoiceEditor extends Component {
   constructor(props) {
@@ -66,6 +67,7 @@ class ChoiceEditor extends Component {
           <td>
             <input
               type='text'
+              placeholder='Response'
               value={this.state.response}
               onChange={e => this.responseChange(e)}
               onBlur={e => onChoiceChange(this.state.response, this.state.sms)}
@@ -74,6 +76,7 @@ class ChoiceEditor extends Component {
           <td>
             <input
               type='text'
+              placeholder='SMS'
               value={this.state.sms}
               onChange={e => this.smsChange(e)}
               onBlur={e => onChoiceChange(this.state.response, this.state.sms)}
@@ -87,10 +90,10 @@ class ChoiceEditor extends Component {
       return (
         <tr onClick={e => this.enterEditMode(e)} >
           <td>
-            {this.state.response}
+            <UntitledIfEmpty text={this.state.response} emptyText='No response' />
           </td>
           <td>
-            {this.state.sms}
+            <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
           </td>
           <td>
             <a href='#!' onClick={onDelete}><i className='material-icons'>delete</i></a>
