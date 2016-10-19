@@ -200,7 +200,7 @@ describe('questionnaireEditor reducer', () => {
       actions.addChoice()]
     )
     expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices.length).toEqual(3)
-    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices[2].value).toEqual('Untitled option')
+    expect(resultState.steps.items['b6588daa-cd81-40b1-8cac-ff2e72a15c15'].choices[2].value).toEqual('')
   })
 
   it('should delete choice', () => {
