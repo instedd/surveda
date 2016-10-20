@@ -1,47 +1,29 @@
 import * as api from '../api'
 
 export const RECEIVE_PROJECTS = 'RECEIVE_PROJECTS'
-export const CREATE_PROJECT = 'CREATE_PROJECT'
-export const UPDATE_PROJECT = 'UPDATE_PROJECT'
 export const RECEIVE_PROJECTS_ERROR = 'RECEIVE_PROJECTS_ERROR'
+export const FETCH_PROJECTS = 'FETCH_PROJECTS'
 
-export const fetchProjects = () => dispatch => {
-  api.fetchProjects()
-    .then(projects => dispatch(receiveProjects(projects)))
-}
+export const fetchProjects = () => (dispatch, getState) => {
+  const state = getState()
 
-export const fetchProject = (projectId) => dispatch => {
-  api.fetchProject(projectId)
-    .then(project => dispatch(receiveProjects(project)))
-}
-
-export const fetchProjectIfNeeded = (projectId) => {
-  return (dispatch, getState) => {
-    if (shouldFetchProject(getState(), projectId)) {
-      return dispatch(fetchProject(projectId))
-    }
+  // Don't fetch projects if they are already being fetched
+  if (state.projects.fetching) {
+    return
   }
+
+  dispatch(startFetchingProjects())
+  api.fetchProjects()
+    .then(response => dispatch(receiveProjects(response.entities.projects)))
 }
 
-const shouldFetchProject = (state, projectId) => {
-  return state.projects
-}
+export const startFetchingProjects = () => ({
+  type: FETCH_PROJECTS
+})
 
-export const receiveProjects = (response) => ({
+export const receiveProjects = (projects) => ({
   type: RECEIVE_PROJECTS,
-  response
-})
-
-export const createProject = (response) => ({
-  type: CREATE_PROJECT,
-  id: response.result,
-  project: response.entities.projects[response.result]
-})
-
-export const updateProject = (response) => ({
-  type: UPDATE_PROJECT,
-  id: response.result,
-  project: response.entities.projects[response.result]
+  projects
 })
 
 export const receiveProjectsError = (error) => ({

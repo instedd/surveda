@@ -3,7 +3,7 @@ import { Input } from 'react-materialize'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { createQuestionnaire, updateQuestionnaire } from '../../api'
-import * as projectActions from '../../actions/projects'
+import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaires'
 import * as actions from '../../actions/questionnaireEditor'
 import { questionnaireForServer } from '../../reducers/questionnaireEditor'
@@ -150,13 +150,13 @@ class QuestionnaireEditor extends Component {
 QuestionnaireEditor.propTypes = {
   dispatch: PropTypes.func,
   router: PropTypes.object,
-  projectId: PropTypes.string,
+  projectId: PropTypes.number,
   questionnaireId: PropTypes.string,
   questionnaireEditor: PropTypes.object.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
+  projectId: parseInt(ownProps.params.projectId),
   questionnaireId: ownProps.params.questionnaireId,
   questionnaireEditor: state.questionnaireEditor
 })

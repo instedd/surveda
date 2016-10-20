@@ -11,7 +11,7 @@ class ProjectNew extends Component {
     const { router, dispatch } = this.props
     return (project) => {
       createProject(project)
-        .then(project => dispatch(actions.createProject(project)))
+        .then(response => dispatch(actions.createProject(response.entities.projects[response.result])))
         .then(() => router.push(routes.projects))
         .catch((e) => dispatch(actions.receiveProjectsError(e)))
     }

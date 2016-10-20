@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as surveyActions from '../actions/surveyEdit'
 import * as actions from '../actions/surveys'
-import * as projectActions from '../actions/projects'
+import * as projectActions from '../actions/project'
 import * as channelsActions from '../actions/channels'
 import * as questionnairesActions from '../actions/questionnaires'
 import * as respondentsActions from '../actions/respondents'
@@ -15,7 +15,7 @@ import * as routes from '../routes'
 class SurveyEdit extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
-    projectId: PropTypes.string.isRequired,
+    projectId: PropTypes.number.isRequired,
     surveyId: PropTypes.string.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
@@ -80,7 +80,7 @@ class SurveyEdit extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
+  projectId: parseInt(ownProps.params.projectId),
   project: state.projects[ownProps.params.projectId] || {},
   surveyId: ownProps.params.surveyId,
   channels: state.channels,

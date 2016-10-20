@@ -18,7 +18,7 @@ class SurveyTabs extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
+  projectId: parseInt(ownProps.params.projectId),
   surveyId: ownProps.params.surveyId
 })
 

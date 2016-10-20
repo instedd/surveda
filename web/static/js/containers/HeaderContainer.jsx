@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router'
 import TitleContainer from './TitleContainer'
 import { Dropdown, DropdownItem, DropdownDivider } from '../components/Dropdown'
 import Header from '../components/Header'
-import * as projectActions from '../actions/projects'
+import * as projectAction from '../actions/project'
 
 class HeaderContainer extends Component {
   componentDidMount() {
@@ -12,11 +12,11 @@ class HeaderContainer extends Component {
     const { projectId, surveyId, questionnaireId } = this.props.params
 
     if (projectId && (surveyId || questionnaireId)) {
-      dispatch(projectActions.fetchProjectIfNeeded(projectId))
+      dispatch(projectAction.fetchProject(projectId))
     }
   }
 
-  render () {
+  render() {
     const { tabs, logout, user } = this.props
     let { project } = this.props
     const { surveyId, questionnaireId } = this.props.params
@@ -31,18 +31,10 @@ class HeaderContainer extends Component {
   }
 }
 
-const findById = (id, col) => {
-  if (col) {
-    return col[id]
-  } else {
-    return undefined
-  }
-}
-
 const mapStateToProps = (state, ownProps) => {
   return {
     params: ownProps.params,
-    project: findById(ownProps.params.projectId, state.projects),
+    project: state.project.data
   }
 }
 

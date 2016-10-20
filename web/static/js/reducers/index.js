@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux'
 import { routerReducer as routing } from 'react-router-redux'
 import projects from './projects'
+import project from './project'
 import surveys from './surveys'
 import respondentsStats from './respondentsStats'
 import questionnaires from './questionnaires'
@@ -12,6 +13,7 @@ import respondents from './respondents'
 
 export default combineReducers({
   routing,
+  project,
   projects,
   surveys,
   respondentsStats,

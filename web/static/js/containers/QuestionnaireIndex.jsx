@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router'
 import * as actions from '../actions/questionnaires'
+import * as projectActions from '../actions/project'
 import AddButton from '../components/AddButton'
 import EmptyPage from '../components/EmptyPage'
 import CardTable from '../components/CardTable'
@@ -11,6 +12,8 @@ import * as routes from '../routes'
 class QuestionnaireIndex extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
+    // Fetch project for title
+    dispatch(projectActions.fetchProject(projectId))
     dispatch(actions.fetchQuestionnaires(projectId))
   }
 
@@ -53,7 +56,7 @@ class QuestionnaireIndex extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
+  projectId: parseInt(ownProps.params.projectId),
   questionnaires: state.questionnaires
 })
 

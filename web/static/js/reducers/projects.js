@@ -1,20 +1,23 @@
 import * as actions from '../actions/projects'
 
-export default (state = {}, action) => {
+const initialState = {
+  fetching: false,
+  items: null
+}
+
+export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.CREATE_PROJECT:
-    case actions.UPDATE_PROJECT:
+    case actions.FETCH_PROJECTS:
       return {
         ...state,
-        [action.id]: {
-          ...action.project
-        }
+        fetching: true
       }
     case actions.RECEIVE_PROJECTS:
-      if (action.response && action.response.entities) {
-        return action.response.entities.projects || {}
+      return {
+        ...state,
+        fetching: false,
+        items: action.projects
       }
-      return state
     default:
       return state
   }

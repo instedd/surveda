@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { EditableTitleLabel } from './EditableTitleLabel'
 import merge from 'lodash/merge'
 import { updateSurvey, updateProject, updateQuestionnaire } from '../api'
-import * as projectsActions from '../actions/projects'
+import * as projectsAction from '../actions/project'
 import * as surveysActions from '../actions/surveys'
 import * as questionnairesActions from '../actions/questionnaires'
 import * as questionnaireEditorActions from '../actions/questionnaireEditor'
@@ -75,8 +75,7 @@ var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
         break
       case 'project':
         updateProject(newObject)
-            .then(project => dispatch(projectsActions.updateProject(project)))
-            .catch((e) => dispatch(projectsActions.receiveProjectsError(e)))
+            .then(response => dispatch(projectsAction.updateProject(response.entities.projects[response.result])))
         break
       default:
         throw `Unknown entity in Title.handleSubmit: ${entity}`

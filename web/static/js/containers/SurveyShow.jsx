@@ -95,7 +95,7 @@ const mapStateToProps = (state, ownProps) => {
   }
 
   return ({
-    projectId: ownProps.params.projectId,
+    projectId: parseInt(ownProps.params.projectId),
     project: state.projects[ownProps.params.projectId] || {},
     surveyId: ownProps.params.surveyId,
     survey: state.surveys[ownProps.params.surveyId] || {},

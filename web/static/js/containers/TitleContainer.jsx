@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import * as projectActions from '../actions/projects'
+import * as projectAction from '../actions/project'
 import * as surveyActions from '../actions/surveys'
 import * as questionnaireActions from '../actions/questionnaires'
 import Title from '../components/Title'
@@ -25,11 +25,11 @@ class TitleContainer extends Component {
     } else if (surveyId) {
       dispatch(surveyActions.fetchSurveyIfNeeded(projectId, surveyId))
     } else if (projectId) {
-      dispatch(projectActions.fetchProjectIfNeeded(projectId))
+      dispatch(projectAction.fetchProject(projectId))
     }
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.fetchEntities()
   }
 
@@ -67,7 +67,7 @@ const findById = (id, col) => {
 const mapStateToProps = (state, ownProps) => {
   return {
     params: ownProps.params,
-    project: findById(ownProps.params.projectId, state.projects),
+    project: state.project.data,
     survey: findById(ownProps.params.surveyId, state.surveys),
     questionnaire: findById(ownProps.params.questionnaireId, state.questionnaires),
     routes: ownProps.routes

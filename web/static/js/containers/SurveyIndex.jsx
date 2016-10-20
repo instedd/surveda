@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../actions/surveys'
+import * as projectActions from '../actions/project'
 import { createSurvey } from '../api'
 import AddButton from '../components/AddButton'
 import Card from '../components/Card'
@@ -17,6 +18,10 @@ import * as routes from '../routes'
 class SurveyIndex extends Component {
   componentDidMount() {
     const { dispatch, projectId } = this.props
+
+    // Fetch project for title
+    dispatch(projectActions.fetchProject(projectId))
+
     dispatch(actions.fetchSurveys(projectId))
     .then(
       function x(value) {
@@ -59,7 +64,7 @@ class SurveyIndex extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
+  projectId: parseInt(ownProps.params.projectId),
   surveys: state.surveys,
   channels: state.channels,
   respondentsStats: state.respondentsStats

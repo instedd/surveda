@@ -8,7 +8,7 @@ class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object.isRequired,
-    projectId: PropTypes.string.isRequired,
+    projectId: PropTypes.number.isRequired,
     dispatch: PropTypes.func.isRequired
   }
 

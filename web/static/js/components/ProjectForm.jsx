@@ -4,11 +4,6 @@ import { Link } from 'react-router'
 import * as routes from '../routes'
 
 class ProjectForm extends Component {
-  propTypes = {
-    onSubmit: PropTypes.func.isRequired,
-    project: PropTypes.object
-  }
-
   render() {
     const { onSubmit, project } = this.props
 
@@ -21,7 +16,7 @@ class ProjectForm extends Component {
         <div>
           <label>Project Name</label>
           <div>
-            <input type='text' placeholder='Project name' defaultValue={project.name} ref='input' />
+            <input type='text' placeholder='Project name' value={project.name} ref='input' />
           </div>
         </div>
         <br />
@@ -36,6 +31,11 @@ class ProjectForm extends Component {
       </div>
     )
   }
+}
+
+ProjectForm.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  project: PropTypes.object
 }
 
 export default ProjectForm
