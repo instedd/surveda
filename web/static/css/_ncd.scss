@@ -366,6 +366,43 @@ footer {
   }
 }
 
+.collection-item.header {
+  padding: 20px;
+  .material-icons.prefix {
+    @extend .grey-text, .lighten-2;
+    font-size: 1.6rem;
+    top: 1.8rem;
+  }
+  input[type=text].editable-field {
+    font-size: 20px;
+    border-bottom: none;
+    width: 85%;
+    margin-left: 2.4rem;
+    margin-bottom: 0;
+  }
+  .collapse {
+    @extend .grey-text, .lighten-2;
+    margin-top: 1rem;
+  }
+}
+
+.character-counter {
+  @extend .grey-text, .lighten-2;
+}
+
+.closed-step {
+  a {
+    @extend .black-text;
+    @extend .clearfix;
+    font-size: 20px;
+    display: block;
+    padding: 10px 0;
+    span {
+      width: 85%;
+      float: left;
+    }
+  }
+}
 
 
 // ------- helper classes -----------

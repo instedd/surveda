@@ -83,7 +83,7 @@ class ChoiceEditor extends Component {
               onKeyDown={e => this.onKeyDown(e)} />
           </td>
           <td>
-            <a href='#!' onClick={onDelete}><i className='material-icons'>delete</i></a>
+            <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
           </td>
         </tr>)
     } else {
@@ -96,7 +96,7 @@ class ChoiceEditor extends Component {
             <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
           </td>
           <td>
-            <a href='#!' onClick={onDelete}><i className='material-icons'>delete</i></a>
+            <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
           </td>
         </tr>
       )

@@ -15,8 +15,9 @@ class QuestionnaireClosedStep extends Component {
     const { step, index } = this.props
 
     return (
-      <a href='#!' onClick={(event) => this.selectStep(event, step)} className='collection-item'>
+      <a href="#!" className="truncate" onClick={(event) => this.selectStep(event, step)}>
         <UntitledIfEmpty text={step.title} emptyText='Untitled question' />
+        <i className='material-icons right grey-text'>expand_more</i>
       </a>
     )
   }

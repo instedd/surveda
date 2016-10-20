@@ -88,67 +88,64 @@ class StepEditor extends Component {
     return (
       <Card key={step.id}>
         <ul className='collection'>
+          <li className='collection-item input-field header'>
+            <i className="material-icons prefix">mode_edit</i>
+            <input
+              placeholder='Untitled question'
+              type='text'
+              value={this.state.stepTitle}
+              onChange={e => this.stepTitleChange(e)}
+              onBlur={e => this.stepTitleSubmit(e)}
+              className='editable-field'
+              autoFocus />
+            <a href='#!'
+              className='right collapse'
+              onClick={e => this.deselectStep(e)}>
+              <i className='material-icons'>expand_less</i>
+            </a>
+          </li>
+          <li className='collection-item'>
+              <div className='row'>
+                <div className="col s12 input-field">
+                  <h5>Question Prompt</h5>
+                  <input
+                    type='text'
+                    placeholder="SMS message"
+                    is length='140'
+                    value={this.state.stepPromptSms}
+                    onChange={e => this.stepPromptSmsChange(e)}
+                    onBlur={e => this.stepPromptSmsSubmit(e)}
+                    ref={ref => $(ref).characterCounter()}
+                    />
+                </div>
+              </div>
+          </li>
           <li className='collection-item'>
             <div className='row'>
-              <div className='col s10'>
-                <input
-                  placeholder='Untitled question'
-                  type='text'
-                  value={this.state.stepTitle}
-                  onChange={e => this.stepTitleChange(e)}
-                  onBlur={e => this.stepTitleSubmit(e)}
-                  autoFocus />
-              </div>
-              <div>
-                <a href='#!'
-                  className='col s1'
-                  onClick={e => this.deselectStep(e)}>
-                  <i className='material-icons'>expand_less</i>
-                </a>
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='section'>
-              <div className='row'>
-                <h5>Prompt</h5>
-                <input
-                  placeholder='SMS message'
-                  type='text'
-                  value={this.state.stepPromptSms}
-                  onChange={e => this.stepPromptSmsChange(e)}
-                  onBlur={e => this.stepPromptSmsSubmit(e)}
-                  />
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='section'>
-              <div className='row'>
+              <div className="col s12">
                 {editor}
               </div>
             </div>
           </li>
           <li className='collection-item'>
-            <div className='section'>
-              <div className='row'>
-                <div className='col s4'>
-                  Save this response as:
-                </div>
-                <div className='col s8'>
-                  <input
-                    type='text'
-                    value={this.state.stepStore}
-                    onChange={e => this.stepStoreChange(e)}
-                    onBlur={e => this.stepStoreSubmit(e)}
-                    />
-                </div>
+            <div className='row'>
+              <div className='col s4'>
+                <p>Save this response as:</p>
+              </div>
+              <div className='col s8'>
+                <input
+                  type='text'
+                  value={this.state.stepStore}
+                  onChange={e => this.stepStoreChange(e)}
+                  onBlur={e => this.stepStoreSubmit(e)}
+                  />
               </div>
             </div>
           </li>
           <li className='collection-item'>
             <div className='row'>
               <a href='#!'
+                className="right"
                 onClick={(e) => this.delete(e)}>
                 DELETE
               </a>

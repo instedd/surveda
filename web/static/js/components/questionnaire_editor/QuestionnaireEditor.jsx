@@ -113,20 +113,21 @@ class QuestionnaireEditor extends Component {
               <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
             </div>
             <div className='row'>
-              <Input s={12} type='select' label='Mode'
+              <Input s={12} type='select' label='Modes'
                 value={questionnaire.modes.join(',')}
                 onChange={e => this.questionnaireModesChange(e)}>
                 <option value='SMS'>SMS</option>
               </Input>
             </div>
           </div>
-          <div className='col s12 m8'>
+          <div className='col s12 m7 offset-m1'>
             <QuestionnaireSteps steps={questionnaireEditor.steps} />
             <div className='row'>
-              <div className='col s12'>
-                <a href='#!' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
-                &nbsp; | &nbsp;
-                <a href='#!' onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
+              <div className='col s12 m6 center-align'>
+                <a href='#!' className="btn-flat blue-text" onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
+              </div>
+              <div className='col s12 m6 center-align'>
+                <a href='#!' className="btn-flat blue-text" onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
               </div>
             </div>
           </div>

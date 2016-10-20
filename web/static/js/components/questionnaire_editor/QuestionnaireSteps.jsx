@@ -6,13 +6,15 @@ import StepEditor from './StepEditor'
 const StepsList = ({steps}) => {
   if (steps.length !== 0) {
     return (
-      <Card>
-        <ul className='collection'>
-          { steps.map((step) => (
-            <QuestionnaireClosedStep step={step} key={step.id} />
-          ))}
-        </ul>
-      </Card>
+      <div>
+        { steps.map((step) => (
+          <Card key={step.id} >
+            <div className="card-content closed-step">
+              <QuestionnaireClosedStep step={step} />
+            </div>
+          </Card>
+        ))}
+      </div>
     )
   } else {
     return null
@@ -33,12 +35,10 @@ const QuestionnaireSteps = ({ steps }) => {
       const stepsAfter = steps.ids.slice(itemIndex + 1).map((id) => steps.items[id])
 
       return (
-        <div className='row'>
-          <div className='col s12'>
-            <StepsList steps={stepsBefore} />
-            <StepEditor step={currentStep} />
-            <StepsList steps={stepsAfter} />
-          </div>
+        <div>
+          <StepsList steps={stepsBefore} />
+          <StepEditor step={currentStep} />
+          <StepsList steps={stepsAfter} />
         </div>
       )
     }

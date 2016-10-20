@@ -30,16 +30,15 @@ class StepMultipleChoiceEditor extends Component {
     return (
       <div>
         <h5>Responses</h5>
-        <p>List the texts you want to store for each possible choice and define valid values by commas.</p>
+        <p><b>List the texts you want to store for each possible choice and define valid values by commas.</b></p>
         <Card>
-          <ul className='collection'>
-            <li className='collection-item'>
+          <div className='card-table'>
               <table>
                 <thead>
                   <tr>
                     <th>Response</th>
                     <th>SMS</th>
-                    <th />
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -53,11 +52,10 @@ class StepMultipleChoiceEditor extends Component {
                   )}
                 </tbody>
               </table>
-            </li>
-            <li className='collection-item'>
-              <a href='#!' onClick={(e) => this.addChoice(e)}>ADD</a>
-            </li>
-          </ul>
+          </div>
+          <div className='card-action'>
+            <a className="blue-text" href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
+          </div>
         </Card>
       </div>
     )
