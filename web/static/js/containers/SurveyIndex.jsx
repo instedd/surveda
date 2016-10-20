@@ -16,6 +16,14 @@ import * as RespondentsChartCount from '../components/RespondentsChartCount'
 import * as routes from '../routes'
 
 class SurveyIndex extends Component {
+  static propTypes = {
+    dispatch: React.PropTypes.func,
+    router: React.PropTypes.object,
+    projectId: React.PropTypes.string.isRequired,
+    surveys: React.PropTypes.object,
+    respondentsStats: React.PropTypes.object.isRequired
+  }
+
   componentDidMount() {
     const { dispatch, projectId } = this.props
 
@@ -42,9 +50,7 @@ class SurveyIndex extends Component {
   }
 
   render() {
-    const { surveys, router, channels, respondentsStats } = this.props
-
-    const title = parseInt(Object.keys(surveys).length, 10) + ' Surveys'
+    const { surveys, respondentsStats } = this.props
 
     return (
       <div>
@@ -71,11 +77,6 @@ const mapStateToProps = (state, ownProps) => ({
 })
 
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
-
-const respondentsReached = function(completedByDate, targetValue) {
-  const reached = completedByDate.length === 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
-  return Math.round(reached * 100 / targetValue)
-}
 
 const SurveyCard = ({ survey, completedByDate }) => {
   let cumulativeCount = []
@@ -135,4 +136,9 @@ const SurveyCard = ({ survey, completedByDate }) => {
       </div>
     </SurveyLink>
   )
+}
+
+SurveyCard.propTypes = {
+  completedByDate: React.PropTypes.array.isRequired,
+  survey: React.PropTypes.object.isRequired
 }

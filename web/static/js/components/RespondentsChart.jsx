@@ -8,6 +8,10 @@ class RespondentsChart extends Component {
     this.state = { d3: '' }
   }
 
+  static propTypes = {
+    completedByDate: React.PropTypes.array.isRequired
+  }
+
   componentDidMount() {
     this.width = this.refs.container.offsetWidth
     this.height = this.width * (1 / 2)
@@ -35,7 +39,7 @@ class RespondentsChart extends Component {
     this.line = d3.svg.line()
                         .x(function(d) { return _x(d.date) })
                         .y(function(d) { return _y(d.count) })
-                        
+
     this.XAxis.call(this.xaxis)
         .selectAll('text')
         .attr('dy', 7)

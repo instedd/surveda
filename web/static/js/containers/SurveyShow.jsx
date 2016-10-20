@@ -9,6 +9,17 @@ import * as RespondentsChartCount from '../components/RespondentsChartCount'
 import * as routes from '../routes'
 
 class SurveyShow extends Component {
+  static propTypes = {
+    dispatch: React.PropTypes.func,
+    router: React.PropTypes.object,
+    projectId: React.PropTypes.string.isRequired,
+    surveyId: React.PropTypes.string.isRequired,
+    survey: React.PropTypes.object,
+    respondentsStats: React.PropTypes.object,
+    completedByDate: React.PropTypes.array,
+    targetValue: React.PropTypes.number
+  }
+
   componentDidMount() {
     const { dispatch, projectId, surveyId, router } = this.props
     if (projectId && surveyId) {

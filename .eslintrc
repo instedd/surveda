@@ -2,7 +2,8 @@
   "extends": ["standard", "standard-react"],
   "parser": "babel-eslint",
   "globals": {
-    "$": true
+    "$": true,
+    "d3": false
   },
   "rules": {
     "space-before-function-paren": [2, "never"]
