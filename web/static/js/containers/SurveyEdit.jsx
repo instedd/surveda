@@ -40,7 +40,7 @@ class SurveyEdit extends Component {
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchChannels())
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
-      dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
+      dispatch(respondentsActions.fetchRespondentsWithLimit(projectId, surveyId, 5))
     }
   }
 

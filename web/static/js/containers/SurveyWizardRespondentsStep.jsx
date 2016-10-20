@@ -11,7 +11,7 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
     respondents: PropTypes.object.isRequired,
-    respondentsCount: PropTypes.number.isRequired,
+    respondentsCount: PropTypes.any.isRequired,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -48,12 +48,10 @@ class SurveyWizardRespondentsStep extends Component {
     }
 
     if (respondentsCount !== 0) {
-      let respondentsIds = Object.keys(respondents).slice(0, 5)
-
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={respondentsCount}>
-            {respondentsIds.map((respondentId) =>
+            {Object.keys(respondents).map((respondentId) =>
               <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
@@ -128,7 +126,7 @@ const RespondentsContainer = ({ children }) => {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    respondentsCount: Object.keys(ownProps.respondents).length
+    respondentsCount: state.respondentsCount
   }
 }
 

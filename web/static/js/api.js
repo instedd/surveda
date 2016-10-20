@@ -33,12 +33,28 @@ const apiFetch = (url, options) => {
 }
 
 const apiFetchJSON = (url, schema, options) => {
+  return apiFetchJSONWithCallback(url, schema, options, commonCallback)
+}
+
+const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
   return apiFetch(url, options)
     .then(response => response.json().then(json => ({ json, response }))
   ).then(({ json, response }) => {
-    return handleResponse(response, () =>
-      normalize(camelizeKeys(json.data), schema))
+    return handleResponse(response, responseCallback(json, schema)
+    )
   })
+}
+
+const commonCallback = (json, schema) => {
+  return () => normalize(camelizeKeys(json.data), schema)
+}
+
+const respondentsCallback = (json, schema) => {
+  return () => {
+    let normalized = normalize(camelizeKeys(json.data.respondents), schema)
+    normalized.respondentsCount = parseInt(json.meta.count)
+    return normalized
+  }
 }
 
 const handleResponse = (response, callback) => {
@@ -113,19 +129,20 @@ export const uploadRespondents = (survey, files) => {
   const formData = new FormData()
   formData.append('file', files[0])
 
-  return apiFetchJSON(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
+  return apiFetchJSONWithCallback(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
     arrayOf(respondentSchema), {
       method: 'POST',
       body: formData
-    })
+    },
+    respondentsCallback)
 }
 
 export const removeRespondents = (survey) => {
   return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`, respondentSchema)
 }
 
-export const fetchRespondents = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents`, arrayOf(respondentSchema))
+export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}`, arrayOf(respondentSchema), {}, respondentsCallback)
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {

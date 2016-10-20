@@ -15,22 +15,22 @@ class SurveyRespondents extends Component {
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
     const respondents = generateResponsesDictionaryFor(jQuery.extend(true, {}, this.props.respondents))
-    const title = parseInt(Object.keys(respondents).length, 10) + " Respondents"
+    const title = parseInt(Object.keys(respondents).length, 10) + ' Respondents'
 
     if (Object.keys(respondents).length === 0) {
       return <div>Loading...</div>
     }
 
-    function generateResponsesDictionaryFor(rs){
+    function generateResponsesDictionaryFor(rs) {
       Object.keys(rs).forEach((respondentId, _) =>
         rs[respondentId].responses = responsesDictionaryFrom(rs[respondentId].responses)
       )
       return rs
     }
 
-    function responsesDictionaryFrom(responseArray){
+    function responsesDictionaryFrom(responseArray) {
       const res = {}
-      for (const key in responseArray){
+      for (const key in responseArray) {
         res[responseArray[key].name] = responseArray[key].value
       }
       return res
@@ -46,16 +46,16 @@ class SurveyRespondents extends Component {
       return Object.keys(rs)
     }
 
-    function hasResponded(rs, respondentId, fieldName){
+    function hasResponded(rs, respondentId, fieldName) {
       return Object.keys(rs[respondentId].responses).includes(fieldName)
     }
 
-    function responseOf(rs, respondentId, fieldName){
-      return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : "-"
+    function responseOf(rs, respondentId, fieldName) {
+      return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
     }
 
     return (
-      <CardTable title={ title }>
+      <CardTable title={title}>
         <thead>
           <tr>
             <th>Phone number</th>
@@ -69,11 +69,11 @@ class SurveyRespondents extends Component {
           {respondentKeys(respondents).map(respondentId =>
             <tr key={respondentId}>
               <td> {respondents[respondentId].phoneNumber}</td>
-              {allFieldNames(respondents).map(function(field){
-                return <td key={parseInt(respondentId, 10)+field}>{responseOf(respondents, respondentId, field)}</td>
+              {allFieldNames(respondents).map(function(field) {
+                return <td key={parseInt(respondentId, 10) + field}>{responseOf(respondents, respondentId, field)}</td>
               })}
               <td>
-                {respondents[respondentId].date ? new Date(respondents[respondentId].date).toUTCString() : "-"}
+                {respondents[respondentId].date ? new Date(respondents[respondentId].date).toUTCString() : '-'}
               </td>
             </tr>
           )}
@@ -91,4 +91,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default connect(mapStateToProps)(SurveyRespondents);
+export default connect(mapStateToProps)(SurveyRespondents)

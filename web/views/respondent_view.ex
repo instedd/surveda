@@ -1,8 +1,8 @@
 defmodule Ask.RespondentView do
   use Ask.Web, :view
 
-  def render("index.json", %{respondents: respondents}) do
-    %{data: render_many(respondents, Ask.RespondentView, "respondent.json")}
+  def render("index.json", %{respondents: respondents, respondents_count: respondents_count}) do
+    %{data: %{respondents: render_many(respondents, Ask.RespondentView, "respondent.json")}, meta: %{count: respondents_count}}
   end
 
   def render("show.json", %{respondent: respondent}) do

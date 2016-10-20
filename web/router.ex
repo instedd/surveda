@@ -48,6 +48,6 @@ defmodule Ask.Router do
     pipe_through :browser
 
     get "/oauth_helper", OAuthHelperController, :index
-    get "/*path", PageController, :index        
-  end  
+    get "/*path", PageController, :index
+  end
 end
