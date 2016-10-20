@@ -2,7 +2,11 @@ import * as actions from '../actions/projects'
 
 const initialState = {
   fetching: false,
-  items: null
+  items: null,
+  page: {
+    index: 0,
+    size: 5
+  }
 }
 
 export default (state = initialState, action) => {
@@ -10,13 +14,33 @@ export default (state = initialState, action) => {
     case actions.FETCH_PROJECTS:
       return {
         ...state,
-        fetching: true
+        fetching: true,
+        page: {
+          index: 0,
+          size: 5
+        }
       }
     case actions.RECEIVE_PROJECTS:
       return {
         ...state,
         fetching: false,
         items: action.projects
+      }
+    case actions.NEXT_PROJECTS_PAGE:
+      return {
+        ...state,
+        page: {
+          ...state.page,
+          index: state.page.index + state.page.size
+        }
+      }
+    case actions.PREVIOUS_PROJECTS_PAGE:
+      return {
+        ...state,
+        page: {
+          ...state.page,
+          index: state.page.index - state.page.size
+        }
       }
     default:
       return state
