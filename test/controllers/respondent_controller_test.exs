@@ -23,7 +23,7 @@ defmodule Ask.RespondentControllerTest do
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == []
-      assert json_response(conn, 200)["data"]["respondents_count"] == 0
+      assert json_response(conn, 200)["meta"]["count"] == 0
     end
 
     test "fetches responses on index", %{conn: conn, user: user} do
@@ -121,7 +121,7 @@ defmodule Ask.RespondentControllerTest do
 
     conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
     assert length(json_response(conn, 201)["data"]["respondents"]) == 5
-    assert json_response(conn, 201)["data"]["respondents_count"] == 14
+    assert json_response(conn, 201)["meta"]["count"] == 14
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 14

@@ -2,7 +2,7 @@ defmodule Ask.RespondentView do
   use Ask.Web, :view
 
   def render("index.json", %{respondents: respondents, respondents_count: respondents_count}) do
-    %{data: %{respondents: render_many(respondents, Ask.RespondentView, "respondent.json"), respondents_count: respondents_count}}
+    %{data: %{respondents: render_many(respondents, Ask.RespondentView, "respondent.json")}, meta: %{count: respondents_count}}
   end
 
   def render("show.json", %{respondent: respondent}) do
