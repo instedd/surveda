@@ -20,7 +20,10 @@ export default class SurveyForm extends Component {
   componentDidMount() {
     $(document).ready(function() {
       $('.scrollspy').scrollSpy()
-      $('.sidebar').pushpin({ top: $('.sidebar').offset().top })
+      const sidebar = $('.sidebar')
+      if (sidebar.offset()) {
+        $('.sidebar').pushpin({ top: sidebar.offset().top })
+      }
     })
   }
 
