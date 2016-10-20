@@ -53,7 +53,7 @@ class SurveyWizardScheduleStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4 id='schedule'>Set up a schedule</h4>
+            <h4>Set up a schedule</h4>
             <p className='flow-text'>
               The schedule of your survey restricts the days and hours during which respondents will be contacted. You can also specify re-contact attempts intervals.
             </p>

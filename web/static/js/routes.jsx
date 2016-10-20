@@ -37,13 +37,11 @@ export default (
           <Route path=':questionnaireId/edit' component={QuestionnaireEditor} />
         </Route>
       </Route>
-
     </Route>
 
     <Route path='/channels' name='My Channels' >
       <IndexRoute component={ChannelIndex} />
     </Route>
-
   </Route>
 )
 
@@ -55,11 +53,6 @@ export const surveys = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveys(projectId)}/${surveyId}`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
 export const editSurvey = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
-export const editSurveyQuestionnaire = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#questionnaire`
-export const editSurveyRespondents = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#respondents`
-export const editSurveyChannels = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#channels`
-export const editSurveySchedule = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#schedule`
-export const editSurveyCutoff = (projectId, surveyId) => `${editSurvey(projectId, surveyId)}#cutoff`
 export const questionnaires = (projectId) => `${project(projectId)}/questionnaires`
 export const newQuestionnaire = (projectId) => `${questionnaires(projectId)}/new`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaires(projectId)}/${questionnaireId}`

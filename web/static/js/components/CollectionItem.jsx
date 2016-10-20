@@ -1,12 +1,10 @@
 import React from 'react'
-import { withRouter } from 'react-router'
 
-export const CollectionItem = withRouter(props => {
-  const { path, icon, text, completed, router, className } = props
-  const active = router.isActive(path) ? 'active' : ''
+export const CollectionItem = (props) => {
+  const { path, icon, text, completed, className } = props
 
   return (
-    <li className={`collection-item ${completed ? 'completed' : ''} ${active} ${className}`}>
+    <li className={`collection-item ${completed ? 'completed' : ''} ${className || ''}`}>
       <a href={path}>
         <i className='material-icons'>{completed ? 'check_circle' : icon}</i>
         <span>{text}</span>
@@ -16,4 +14,4 @@ export const CollectionItem = withRouter(props => {
       </a>
     </li>
   )
-})
+}

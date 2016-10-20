@@ -258,7 +258,7 @@ footer {
         margin-left: -90px;
       }
     }
-    &.active {
+    a.active {
       @extend .transparent;
       @extend .black-text;
       font-weight: 700;
@@ -266,16 +266,11 @@ footer {
     }
     &.completed {
       opacity: 1;
-      > a {
+      a, a.active {
         @extend .green-text;
       }
     }
   }
-}
-
-.scrollable-body{
-  overflow-y: scroll;
-  height: 550px;
 }
 
 // ------- Forms --------------

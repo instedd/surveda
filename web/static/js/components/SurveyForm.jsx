@@ -14,12 +14,19 @@ export default class SurveyForm extends Component {
     questionnaires: PropTypes.object,
     respondents: PropTypes.object,
     channels: PropTypes.object,
-    dispatch: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired
   }
 
+  componentDidUpdate() {
+    $(document).ready(function() {
+      console.log('seteando scroll spy')
+      $('.scrollspy').scrollSpy()
+      $('.sidebar').pushpin({ top: $('.sidebar').offset().top })
+    })
+  }
+
   render() {
-    const { survey, projectId, dispatch, questionnaires, onSubmit, channels, respondents } = this.props
+    const { survey, projectId, questionnaires, onSubmit, channels, respondents } = this.props
 
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
@@ -43,46 +50,48 @@ export default class SurveyForm extends Component {
     return (
       <div className='row'>
         <div className='col s12 m4'>
-          <ul className='collection with-header wizard'>
-            <li className='collection-header'>
-              <h5>Progress <span className='right'>{percentage}</span></h5>
-              <p>
+          <div className='sidebar'>
+            <ul className='collection with-header wizard'>
+              <li className='collection-header'>
+                <h5>Progress <span className='right'>{percentage}</span></h5>
+                <p>
                 Complete the following tasks to get your Survey ready.
-              </p>
-              <div className='progress'>
-                <div className='determinate' style={{ width: percentage }} />
-              </div>
-            </li>
-            <CollectionItem path={routes.editSurveyQuestionnaire(projectId, survey.id)} icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
-            <CollectionItem path={routes.editSurveyRespondents(projectId, survey.id)} icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
-            <CollectionItem path={routes.editSurveyChannels(projectId, survey.id)} icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
-            <CollectionItem path={routes.editSurveySchedule(projectId, survey.id)} icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
-            <CollectionItem className='optional' path={routes.editSurveyCutoff(projectId, survey.id)} icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
-            {/* <CollectionItem className='optional' path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
+                </p>
+                <div className='progress'>
+                  <div className='determinate' style={{ width: percentage }} />
+                </div>
+              </li>
+              <CollectionItem path='#questionnaire' icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
+              <CollectionItem path='#respondents' icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
+              <CollectionItem path='#channels' icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
+              <CollectionItem path='#schedule' icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
+              <CollectionItem className='optional' path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
+              {/* <CollectionItem className='optional' path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
             <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
-          </ul>
-          <div className='row'>
-            <div className='col s12'>
-              <button type='button' className='btn waves-effect waves-light' onClick={onSubmit}>
+            </ul>
+            <div className='row'>
+              <div className='col s12'>
+                <button type='button' className='btn waves-effect waves-light' onClick={onSubmit}>
                 Save
-              </button>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <div className='col s12 m7 scrollable-body offset-m1'>
-          <div className='row'>
+        <div className='col s12 m7 offset-m1'>
+          <div id='questionnaire' className='row scrollspy'>
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} />
           </div>
-          <div className='row'>
+          <div id='respondents' className='row scrollspy'>
             <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} />
           </div>
-          <div className='row'>
+          <div id='channels' className='row scrollspy'>
             <SurveyWizardChannelsStep channels={channels} survey={survey} />
           </div>
-          <div className='row'>
+          <div id='schedule' className='row scrollspy'>
             <SurveyWizardScheduleStep survey={survey} />
           </div>
-          <div className='row'>
+          <div id='cutoff' className='row scrollspy'>
             <SurveyWizardCutoffStep survey={survey} />
           </div>
         </div>

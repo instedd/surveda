@@ -29,7 +29,7 @@ class SurveyWizardChannelsStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4 id='channels'>Select mode & channels</h4>
+            <h4>Select mode & channels</h4>
             <p className='flow-text'>
               Define which modes you want to use. You have to select a channel for each survey mode.
             </p>
