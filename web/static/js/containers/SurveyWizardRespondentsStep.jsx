@@ -4,6 +4,7 @@ import Dropzone from 'react-dropzone'
 import { ConfirmationModal } from '../components/ConfirmationModal'
 import { uploadRespondents, removeRespondents } from '../api'
 import * as actions from '../actions/surveyEdit'
+import * as surveyActions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 
 class SurveyWizardRespondentsStep extends Component {
@@ -20,6 +21,9 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.receiveRespondents(respondents))
         dispatch(actions.updateRespondentsCount(Object.keys(respondents).length))
+        dispatch(surveyActions.fetchSurvey(survey.projectId, survey.id))
+          .then(survey => dispatch(actions.setState(survey.state)))
+          .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })
   }
 
@@ -30,6 +34,9 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
+        dispatch(surveyActions.fetchSurvey(survey.projectId, survey.id))
+          .then(survey => dispatch(actions.setState(survey.state)))
+          .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })
   }
 

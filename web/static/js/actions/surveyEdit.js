@@ -6,6 +6,7 @@ export const SET_SCHEDULE_TO = 'SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SET_SCHEDULE_FROM'
 export const SELECT_CHANNELS = 'SELECT_CHANNELS'
 export const UPDATE_RESPONDENTS_COUNT = 'UPDATE_RESPONDENTS_COUNT'
+export const SET_STATE = 'SET_STATE'
 
 export const changeCutoff = (cutoff) => ({
   type: CHANGE_CUTOFF,
@@ -15,6 +16,11 @@ export const changeCutoff = (cutoff) => ({
 export const toggleDay = (day) => ({
   type: TOGGLE_DAY,
   day
+})
+
+export const setState = (state) => ({
+  type: SET_STATE,
+  state
 })
 
 export const setScheduleFrom = (hour) => ({

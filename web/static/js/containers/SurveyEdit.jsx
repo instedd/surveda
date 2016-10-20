@@ -54,7 +54,7 @@ class SurveyEdit extends Component {
   onSubmit(e) {
     const { dispatch, survey } = this.props
     updateSurvey(survey.projectId, survey)
-      .then(updatedSurvey => dispatch(actions.setSurvey(updatedSurvey)))
+      .then(response => dispatch(surveyActions.setState(response.entities.surveys[response.result].state)))
       .catch((e) => dispatch(actions.receiveSurveysError(e)))
   }
 

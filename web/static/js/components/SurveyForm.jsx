@@ -17,7 +17,7 @@ export default class SurveyForm extends Component {
     onSubmit: PropTypes.func.isRequired
   }
 
-  componentDidUpdate() {
+  componentDidMount() {
     $(document).ready(function() {
       $('.scrollspy').scrollSpy()
       $('.sidebar').pushpin({ top: $('.sidebar').offset().top })

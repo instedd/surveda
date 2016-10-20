@@ -10,6 +10,7 @@ export default (state = {}, action) => {
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
     case actions.SELECT_CHANNELS: return selectChannels(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
+    case actions.SET_STATE: return setState(state, action)
     default: return state
   }
 }
@@ -18,6 +19,13 @@ const changeCutoff = (state, action) => {
   return {
     ...state,
     cutoff: action.cutoff
+  }
+}
+
+const setState = (state, action) => {
+  return {
+    ...state,
+    state: action.state
   }
 }
 
