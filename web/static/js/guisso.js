@@ -5,11 +5,16 @@ class GuissoSession {
     this.config = config
   }
 
+  isPopupOpen() {
+    return this.popup && !this.popup.closed
+  }
+
   showPopup(url) {
     if (this.popup) {
       this.popup.location = url
     } else {
       this.popup = window.open(url, "_blank", "chrome=yes,centerscreen=yes,width=600,height=400")
+      window.the_guisso_popup = this.popup
     }
     return this.popup
   }
