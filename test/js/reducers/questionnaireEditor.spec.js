@@ -93,15 +93,6 @@ describe('questionnaireEditor reducer', () => {
     expect(result.title).toEqual('Do you smoke?')
   })
 
-  it('should update questionnaire with new name', () => {
-    const result = playActions([
-      actions.initializeEditor(questionnaire),
-      actions.changeQuestionnaireName('Some other name')
-    ]).questionnaire
-
-    expect(result.name).toEqual('Some other name')
-  })
-
   it('should change to a single mode', () => {
     const result = playActions([
       actions.initializeEditor(questionnaire),

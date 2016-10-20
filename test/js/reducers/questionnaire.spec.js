@@ -94,6 +94,16 @@ describe('questionnaire reducer', () => {
       data: null
     })
   })
+
+  it('should update questionnaire with new name', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name')
+    ])
+
+    expect(result.data.name).toEqual('Some other name')
+  })
 })
 
 const questionnaire = {

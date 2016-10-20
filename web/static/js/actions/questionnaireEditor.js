@@ -2,7 +2,6 @@ export const SELECT_STEP = 'QUESTIONNAIRE_EDITOR_SELECT_STEP'
 export const DESELECT_STEP = 'QUESTIONNAIRE_EDITOR_DESELECT_STEP'
 export const INITIALIZE_EDITOR = 'QUESTIONNAIRE_EDITOR_INITIALIZE'
 export const NEW_QUESTIONNAIRE = 'QUESTIONNAIRE_NEW'
-export const CHANGE_QUESTIONNAIRE_NAME = 'QUESTIONNAIRE_EDITOR_CHANGE_QUESTIONNAIRE_NAME'
 export const CHANGE_QUESTIONNAIRE_MODES = 'QUESTIONNAIRE_EDITOR_CHANGE_QUESTIONNAIRE_MODES'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_EDITOR_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_SMS_PROMPT = 'QUESTIONNAIRE_EDITOR_CHANGE_STEP_SMS_PROMPT'
@@ -30,11 +29,6 @@ export const initializeEditor = (questionnaire) => ({
 export const newQuestionnaire = (projectId) => ({
   type: NEW_QUESTIONNAIRE,
   projectId
-})
-
-export const changeQuestionnaireName = (newName) => ({
-  type: CHANGE_QUESTIONNAIRE_NAME,
-  newName
 })
 
 export const changeQuestionnaireModes = (newModes) => ({

@@ -11,8 +11,20 @@ export default (state = defaultState, action) => {
   switch (action.type) {
     case actions.FETCH: return fetch(state, action)
     case actions.RECEIVE: return receive(state, action)
+    case actions.CHANGE_NAME:
+      return {
+        ...state,
+        data: changeName(state.data, action)
+      }
   }
   return state
+}
+
+const changeName = (state, action) => {
+  return {
+    ...state,
+    name: action.newName
+  }
 }
 
 const receive = (state, action) => {

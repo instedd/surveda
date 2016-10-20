@@ -5,7 +5,7 @@ import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { createQuestionnaire, updateQuestionnaire } from '../../api'
 import * as projectActions from '../../actions/project'
-import * as questionnaireActions from '../../actions/questionnaires'
+import * as questionnaireActions from '../../actions/questionnaire'
 import * as actions from '../../actions/questionnaireEditor'
 import { questionnaireForServer } from '../../reducers/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
@@ -23,7 +23,7 @@ class QuestionnaireEditor extends Component {
 
   questionnaireNameSubmit(event) {
     event.preventDefault()
-    this.props.actions.changeQuestionnaireName(event.target.value)
+    this.props.actions.changeName(event.target.value)
   }
 
   questionnaireModesChange(event) {
@@ -151,13 +151,15 @@ QuestionnaireEditor.propTypes = {
   router: PropTypes.object,
   projectId: PropTypes.number,
   questionnaireId: PropTypes.string,
-  questionnaireEditor: PropTypes.object.isRequired
+  questionnaireEditor: PropTypes.object.isRequired,
+  questionnaire: PropTypes.object.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   questionnaireId: ownProps.params.questionnaireId,
-  questionnaireEditor: state.questionnaireEditor
+  questionnaireEditor: state.questionnaireEditor,
+  questionnaire: state.questionnaire
 })
 
 const mapDispatchToProps = (dispatch) => ({

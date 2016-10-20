@@ -31,7 +31,6 @@ const questionnaireReducer = (state, action) => {
     case actions.CHANGE_QUESTIONNAIRE_MODES: return changeQuestionnaireModes(state, action)
     case actions.INITIALIZE_EDITOR: return initializeQuestionnaire(state, action)
     case actions.NEW_QUESTIONNAIRE: return newQuestionnaire(state, action)
-    case actions.CHANGE_QUESTIONNAIRE_NAME: return changeQuestionnaireName(state, action)
     default: return state
   }
 }
@@ -229,13 +228,6 @@ const newQuestionnaireSteps = (state, action) => {
   steps.current = { id: defaultStep.id }
 
   return steps
-}
-
-const changeQuestionnaireName = (state, action) => {
-  return {
-    ...state,
-    name: action.newName
-  }
 }
 
 const changeStepTitle = (state, action) => {
