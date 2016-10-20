@@ -19,7 +19,6 @@ export default class SurveyForm extends Component {
 
   componentDidUpdate() {
     $(document).ready(function() {
-      console.log('seteando scroll spy')
       $('.scrollspy').scrollSpy()
       $('.sidebar').pushpin({ top: $('.sidebar').offset().top })
     })
