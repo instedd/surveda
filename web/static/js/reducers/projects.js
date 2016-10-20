@@ -3,6 +3,8 @@ import * as actions from '../actions/projects'
 const initialState = {
   fetching: false,
   items: null,
+  sortBy: null,
+  sortAsc: true,
   page: {
     index: 0,
     size: 5
@@ -41,6 +43,13 @@ export default (state = initialState, action) => {
           ...state.page,
           index: state.page.index - state.page.size
         }
+      }
+    case actions.SORT_PROJECTS:
+      const sortAsc = state.sortBy == action.property ? !state.sortAsc : true
+      return {
+        ...state,
+        sortBy: action.property,
+        sortAsc
       }
     default:
       return state

@@ -7,12 +7,12 @@ describe('projects reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, items: null, page: {index: 0, size: 5}})
+    expect(initialState).toEqual({fetching: false, items: null, sortBy: null, sortAsc: true, page: {index: 0, size: 5}})
   })
 
   it('should start fetching projects', () => {
     const result = reducer(initialState, actions.startFetchingProjects())
-    expect(result).toEqual({fetching: true, items: null, page: {index: 0, size: 5}})
+    expect(result.fetching).toEqual(true)
   })
 
   it('should receive projects', () => {
