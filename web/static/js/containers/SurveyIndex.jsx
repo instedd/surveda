@@ -19,7 +19,7 @@ class SurveyIndex extends Component {
   static propTypes = {
     dispatch: React.PropTypes.func,
     router: React.PropTypes.object,
-    projectId: React.PropTypes.string.isRequired,
+    projectId: React.PropTypes.number.isRequired,
     surveys: React.PropTypes.object,
     respondentsStats: React.PropTypes.object.isRequired
   }
