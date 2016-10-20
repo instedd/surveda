@@ -74,6 +74,7 @@ var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
             .catch((e) => dispatch(surveysActions.receiveSurveysError(e)))
         break
       case 'project':
+        dispatch(projectsAction.updateProject(newObject)) // Optimistic update
         updateProject(newObject)
             .then(response => dispatch(projectsAction.updateProject(response.entities.projects[response.result])))
         break
