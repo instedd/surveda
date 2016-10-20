@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import HeaderContainer from './HeaderContainer'
 import Footer from './Footer'
-import { ConfirmationModal } from '../shared'
+import { ConfirmationModal } from '../ui'
 import { logout } from '../../api'
 import { config } from '../../config'
 

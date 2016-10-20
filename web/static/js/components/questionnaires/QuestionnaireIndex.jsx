@@ -6,7 +6,7 @@ import range from 'lodash/range'
 import { orderedItems } from '../../dataTable'
 import * as actions from '../../actions/questionnaires'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty } from '../shared'
+import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty } from '../ui'
 import * as routes from '../../routes'
 
 class QuestionnaireIndex extends Component {

@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaireEditor'
-import { UntitledIfEmpty } from '../shared'
+import { UntitledIfEmpty } from '../ui'
 
 class QuestionnaireClosedStep extends Component {
   selectStep(event, step) {

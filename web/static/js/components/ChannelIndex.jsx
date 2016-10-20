@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../actions/channels'
-import { AddButton, EmptyPage, CardTable } from './shared'
+import { AddButton, EmptyPage, CardTable } from './ui'
 
 class ChannelIndex extends Component {
   componentDidMount() {

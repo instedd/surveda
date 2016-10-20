@@ -4,7 +4,7 @@ import { withRouter } from 'react-router'
 import * as actions from '../../actions/surveys'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
-import { UntitledIfEmpty } from '../shared'
+import { UntitledIfEmpty } from '../ui'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
 

@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as respondentsActions from '../../actions/respondents'
-import { CardTable } from '../shared'
+import { CardTable } from '../ui'
 
 class SurveyRespondents extends Component {
   componentDidMount() {

@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import { Card } from '../shared'
+import { Card } from '../ui'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 

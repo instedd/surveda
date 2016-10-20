@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { UntitledIfEmpty } from '../shared'
+import { UntitledIfEmpty } from '../ui'
 
 class ChoiceEditor extends Component {
   constructor(props) {

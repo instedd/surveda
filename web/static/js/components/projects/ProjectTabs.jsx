@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import {Tabs, TabLink} from '../shared'
+import {Tabs, TabLink} from '../ui'
 import * as routes from '../../routes'
 
 class ProjectTabs extends Component {

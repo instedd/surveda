@@ -8,7 +8,7 @@ import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
 import * as respondentsActions from '../../actions/respondents'
 import SurveyForm from './SurveyForm'
-import { Tooltip } from '../shared'
+import { Tooltip } from '../ui'
 import { launchSurvey, updateSurvey } from '../../api'
 import * as routes from '../../routes'
 

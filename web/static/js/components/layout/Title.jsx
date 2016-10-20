@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
-import { EditableTitleLabel } from '../shared/EditableTitleLabel'
+import { EditableTitleLabel } from '../ui'
 import merge from 'lodash/merge'
 import { updateSurvey, updateProject, updateQuestionnaire } from '../../api'
 import * as projectsAction from '../../actions/project'

@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { CollectionItem } from '../shared'
+import { CollectionItem } from '../ui'
 import SurveyWizardQuestionnaireStep from './SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardChannelsStep from './SurveyWizardChannelsStep'

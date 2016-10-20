@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
 import TitleContainer from './TitleContainer'
-import {UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../shared'
+import {UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
 
 const Header = ({ tabs, logout, user, project }) => {

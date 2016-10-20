@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
-import { ConfirmationModal } from '../shared/ConfirmationModal'
+import { ConfirmationModal } from '../ui'
 import { uploadRespondents, removeRespondents } from '../../api'
 import * as actions from '../../actions/survey'
 import * as surveyActions from '../../actions/surveys'

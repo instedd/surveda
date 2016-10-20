@@ -3,7 +3,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaireEditor'
 import ChoiceEditor from './ChoiceEditor'
-import { Card } from '../shared'
+import { Card } from '../ui'
 
 class StepMultipleChoiceEditor extends Component {
   addChoice(e) {
