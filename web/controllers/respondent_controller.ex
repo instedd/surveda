@@ -56,6 +56,27 @@ defmodule Ask.RespondentController do
     render(conn, "stats.json", stats: stats)
   end
 
+  defp csv_rows(csv_string) do
+    delimiters = ["\r\n", "\r", "\n"]
+    [{_, delimiter} | _] =
+      delimiters
+      |> Enum.map(fn d ->
+          case :binary.match(csv_string, d) do
+            {index, _} -> {index, d}
+            _ -> {d, -1}
+          end
+        end)
+      |> Enum.filter(fn {index, _} -> index != -1 end)
+      |> Enum.sort
+
+    csv_string
+    |> String.split(delimiter)
+    |> Enum.filter(fn r ->
+      length = r |> String.trim |> String.length
+      length != 0
+    end)
+  end
+
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
     Project
     |> Repo.get!(project_id)
@@ -65,11 +86,13 @@ defmodule Ask.RespondentController do
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
 
     if Path.extname(file.filename) == ".csv" do
-      entries = File.stream!(file.path) |>
-      CSV.decode(separator: ?\t) |>
-      Enum.map(fn row ->
-        %{phone_number: Enum.at(row, 0), survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
-      end)
+      csv_string = File.read!(file.path)
+      rows = csv_rows(csv_string)
+      entries =
+        rows
+        |> Enum.map(fn row ->
+          %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
+        end)
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)
 
