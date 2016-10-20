@@ -59,6 +59,12 @@ describe('project reducer', () => {
     expect(r3).toEqual({fetching: false, projectId: null, data: null})
   })
 
+  it('should create project', () => {
+    const project = {id: 1, name: 'p1'}
+    const r1 = reducer(initialState, actions.createProject(project))
+    expect(r1).toEqual({fetching: false, projectId: 1, data: project})
+  })
+
   it('should update project', () => {
     const project = {id: 1, name: 'p1'}
     const r1 = reducer(initialState, actions.startFetchingProject(1))

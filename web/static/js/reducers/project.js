@@ -33,6 +33,7 @@ export default (state = initialState, action) => {
       return {
         ...state,
         fetching: false,
+        projectId: action.project.id,
         data: action.project
       }
     case actions.CLEAR_PROJECT:
