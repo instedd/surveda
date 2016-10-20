@@ -86,10 +86,10 @@ defmodule Ask.RespondentController do
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
 
     if Path.extname(file.filename) == ".csv" do
-      csv_string = File.read!(file.path)
-      rows = csv_rows(csv_string)
       entries =
-        rows
+        file.path
+        |> File.read!
+        |> csv_rows
         |> Enum.map(fn row ->
           %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
         end)
