@@ -136,7 +136,7 @@ defmodule Ask.RespondentControllerTest do
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_r.csv", filename: "phone_numbers.csv"}
 
     conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]) == 4
+    assert length(json_response(conn, 201)["data"]["respondents"]) == 4
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 4
@@ -151,7 +151,7 @@ defmodule Ask.RespondentControllerTest do
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_newline.csv", filename: "phone_numbers.csv"}
 
     conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]) == 4
+    assert length(json_response(conn, 201)["data"]["respondents"]) == 4
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 4
