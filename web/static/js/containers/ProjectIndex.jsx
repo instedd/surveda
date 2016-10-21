@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
+import { createProject } from '../api'
 import * as actions from '../actions/projects'
 import * as projectActions from '../actions/project'
 import AddButton from '../components/AddButton'
@@ -15,8 +16,31 @@ import range from 'lodash/range'
 
 class ProjectIndex extends Component {
   componentWillMount() {
+    this.creatingProject = false
+
     this.props.projectActions.clearProject()
     this.props.actions.fetchProjects()
+  }
+
+  newProject(e) {
+    e.preventDefault()
+
+    // Prevent multiple clicks to create multiple projects
+    if (this.creatingProject) return
+    this.creatingProject = true
+
+    const { router } = this.props
+
+    let theProject
+    createProject({name: ''})
+        .then(response => {
+          theProject = response.entities.projects[response.result]
+          this.props.projectActions.createProject(theProject)
+        })
+        .then(() => {
+          this.creatingProject = false
+          router.push(routes.project(theProject.id))
+        })
   }
 
   nextPage(e) {
@@ -45,7 +69,7 @@ class ProjectIndex extends Component {
       )
     }
 
-    const title = `${Object.keys(projects).length} ${(Object.keys(projects).length === 1) ? ' project' : ' projects'}`
+    const title = `${totalCount} ${(totalCount === 1) ? ' project' : ' projects'}`
     const footer = (
       <div className='right-align'>
         <ul className='pagination'>
@@ -64,7 +88,7 @@ class ProjectIndex extends Component {
 
     return (
       <div>
-        <AddButton text='Add project' linkPath={routes.newProject} />
+        <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (Object.keys(projects).length === 0)
           ? <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
           : <CardTable title={title} footer={footer} highlight>

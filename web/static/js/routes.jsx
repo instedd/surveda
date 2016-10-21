@@ -2,7 +2,6 @@ import React from 'react'
 import { Route, IndexRoute, IndexRedirect } from 'react-router'
 import App from './containers/App'
 import ProjectIndex from './containers/ProjectIndex'
-import ProjectNew from './containers/ProjectNew'
 import SurveyEdit from './containers/SurveyEdit'
 import SurveyIndex from './containers/SurveyIndex'
 import SurveyShow from './containers/SurveyShow'
@@ -19,7 +18,6 @@ export default (
 
     <Route path='/projects' name='My Projects'>
       <IndexRoute component={ProjectIndex} />
-      <Route path='new' component={ProjectNew} name='New Project' />
 
       <Route path=':projectId' name='Project'>
         <IndexRedirect to='surveys' />
@@ -47,7 +45,6 @@ export default (
 
 export const root = '/'
 export const projects = '/projects'
-export const newProject = `${projects}/new`
 export const project = (id) => `${projects}/${id}`
 export const surveys = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveys(projectId)}/${surveyId}`
