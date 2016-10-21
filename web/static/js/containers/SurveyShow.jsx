@@ -23,7 +23,7 @@ class SurveyShow extends Component {
   componentDidMount() {
     const { dispatch, projectId, surveyId, router } = this.props
     if (projectId && surveyId) {
-      dispatch(actions.fetchSurvey(projectId, surveyId))
+      dispatch(actions.fetch(projectId, surveyId))
         .then((survey) => {
           if (survey.state === 'not_ready') {
             router.replace(routes.editSurvey(projectId, survey.id))

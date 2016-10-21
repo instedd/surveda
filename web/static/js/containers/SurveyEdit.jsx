@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import * as surveyActions from '../actions/surveyEdit'
+import * as surveyActions from '../actions/survey'
 import * as actions from '../actions/surveys'
 import * as projectActions from '../actions/project'
 import * as channelsActions from '../actions/channels'
@@ -30,7 +30,7 @@ class SurveyEdit extends Component {
     dispatch(surveyActions.initializeEditor({}))
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
-      dispatch(actions.fetchSurvey(projectId, surveyId))
+      dispatch(surveyActions.fetch({projectId, id: surveyId}))
         .then((survey) => {
           dispatch(surveyActions.initializeEditor(survey))
           if (survey.state === 'running') {
@@ -47,7 +47,7 @@ class SurveyEdit extends Component {
   launchSurvey() {
     const { dispatch, projectId, surveyId, router } = this.props
     launchSurvey(projectId, surveyId)
-        .then(survey => dispatch(actions.receiveSurveys(survey)))
+        .then(survey => dispatch(actions.setSurvey(survey)))
         .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 
@@ -86,7 +86,7 @@ const mapStateToProps = (state, ownProps) => ({
   channels: state.channels,
   questionnaires: state.questionnaires.items || {},
   respondents: state.respondents,
-  survey: state.surveyEdit || {}
+  survey: state.survey.data || {}
 })
 
 export default withRouter(connect(mapStateToProps)(SurveyEdit))

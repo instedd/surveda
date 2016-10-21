@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
 import ConfirmationModal from '../components/ConfirmationModal'
 import { uploadRespondents, removeRespondents } from '../api'
-import * as actions from '../actions/surveyEdit'
+import * as actions from '../actions/survey'
 import * as surveyActions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 
