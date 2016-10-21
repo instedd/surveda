@@ -8,7 +8,7 @@ class ConfirmationModal extends Component {
   }
 
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId } = this.props
+    const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId, style } = this.props
 
     let modalLink = null
     if (showLink) {
@@ -18,13 +18,14 @@ class ConfirmationModal extends Component {
     return (
       <div>
         {modalLink}
-        <div id={modalId} className='modal'>
+        <div id={modalId} className='modal' style={style}>
           <div className='modal-content'>
             <h4>{header}</h4>
             <p>{modalText}</p>
           </div>
           <div className='modal-footer'>
             <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
+            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
           </div>
         </div>
       </div>
