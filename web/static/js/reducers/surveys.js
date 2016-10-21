@@ -17,7 +17,6 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case actions.FETCH_SURVEYS: return fetchSurveys(state, action)
-    case actions.SET_SURVEY: return setSurvey(state, action)
     case actions.RECEIVE_SURVEYS: return receiveSurveys(state, action)
     case actions.NEXT_SURVEYS_PAGE: return nextPage(state)
     case actions.PREVIOUS_SURVEYS_PAGE: return previousPage(state)
@@ -42,13 +41,6 @@ const fetchSurveys = (state, action) => {
   }
 }
 
-const setSurvey = (state, action) => ({
-  ...state,
-  [action.id]: {
-    ...action.survey
-  }
-})
-
 const receiveSurveys = (state, action) => {
   const surveys = action.surveys
 
@@ -64,4 +56,3 @@ const receiveSurveys = (state, action) => {
     order
   }
 }
-
