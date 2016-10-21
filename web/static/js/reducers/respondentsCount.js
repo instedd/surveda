@@ -7,7 +7,7 @@ export default (state = {}, action) => {
       return 1
     case actions.RECEIVE_RESPONDENTS:
       if (action.response) {
-        return action.response.respondentsCount || {}
+        return action.response.respondentsCount
       }
       return state
     case actions.REMOVE_RESPONDENTS:
