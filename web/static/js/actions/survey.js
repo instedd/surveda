@@ -12,11 +12,12 @@ export const UPDATE_RESPONDENTS_COUNT = 'UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SET_STATE'
 export const SET_SURVEY = 'SET_SURVEY'
 export const FETCH = 'FETCH'
+export const RECEIVE = 'RECEIVE'
 
 const fetchSurvey = ({projectId, id}) => (dispatch, getState) => {
   dispatch(fetching(projectId, id))
   return api.fetchSurvey(projectId, id)
-    .then(survey => dispatch(setSurvey(survey)))
+    .then(survey => dispatch(receive(survey)))
     .then(() => getState().surveys[id])
 }
 
@@ -37,6 +38,11 @@ export const fetchIfNeeded = (filter, fetch) => {
     }
   }
 }
+
+export const receive = (survey) => ({
+  type: RECEIVE,
+  survey
+})
 
 const shouldFetch = (state, filter) => {
   return isEqual(state.filter, filter) || state.fetching === false

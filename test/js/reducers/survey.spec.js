@@ -1,8 +1,8 @@
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/survey'
-import * as actions from '../../../web/static/js/actions/survey'
 import each from 'lodash/each'
+import reducer, {surveyReducer} from '../../../web/static/js/reducers/survey'
+import * as actions from '../../../web/static/js/actions/survey'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
@@ -25,18 +25,9 @@ describe('survey reducer', () => {
     expect(initialState.data).toEqual(null)
   })
 
-  it('receives a survey', () => {
-    const state = playActions([
-      actions.fetch(1, 1),
-      actions.receive(survey)
-    ])
-    expect(state.fetching).toEqual(false)
-    expect(state.data).toEqual(survey)
-  })
-
   it('fetches a survey', () => {
     const state = playActions([
-      actions.fetch(1, 1)
+      actions.fetching(1, 1)
     ])
 
     expect(state).toEqual({
@@ -44,17 +35,26 @@ describe('survey reducer', () => {
       fetching: true,
       filter: {
         projectId: 1,
-        surveyId: 1
+        id: 1
       },
       data: null
     })
   })
 
+  it('receives a survey', () => {
+    const state = playActions([
+      actions.fetching(1, 1),
+      actions.receive(survey)
+    ])
+    expect(state.fetching).toEqual(false)
+    expect(state.data).toEqual(survey)
+  })
+
   it('clears data when fetching a different survey', () => {
     const state = playActions([
-      actions.fetch(1, 1),
+      actions.fetching(1, 1),
       actions.receive(survey),
-      actions.fetch(2, 2)
+      actions.fetching(2, 2)
     ])
 
     expect(state).toEqual({
@@ -62,7 +62,7 @@ describe('survey reducer', () => {
       fetching: true,
       filter: {
         projectId: 2,
-        surveyId: 2
+        id: 2
       },
       data: null
     })
@@ -70,9 +70,9 @@ describe('survey reducer', () => {
 
   it('keeps old data when fetching new data for the same filter', () => {
     const state = playActions([
-      actions.fetch(1, 1),
+      actions.fetching(1, 1),
       actions.receive(survey),
-      actions.fetch(1, 1)
+      actions.fetching(1, 1)
     ])
 
     expect(state).toEqual({
@@ -84,19 +84,20 @@ describe('survey reducer', () => {
 
   it('ignores data received based on different filter', () => {
     const state = playActions([
-      actions.fetch(2, 2),
+      actions.fetching(2, 2),
       actions.receive(survey)
     ])
 
     expect(state).toEqual({
       ...state,
+      filter: {projectId: 2, id: 2},
       fetching: true,
       data: null
     })
   })
 
   it('should toggle a single day preserving the others', () => {
-    const result = reducer(survey, actions.toggleDay('wed'))
+    const result = surveyReducer(survey, actions.toggleDay('wed'))
     expect(result.scheduleDayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })

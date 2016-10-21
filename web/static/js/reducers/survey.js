@@ -1,45 +1,66 @@
+import isEqual from 'lodash/isEqual'
 import * as actions from '../actions/survey'
 
-export default (state = {}, action) => {
+const initialState = {
+  fetching: false,
+  filter: null,
+  data: null
+}
+
+export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCHING_SURVEY: return fetchingSurvey(state, action)
-    // case actions.INITIALIZE_EDITOR: return initializeEditor(state, action)
+    case actions.FETCH: return fetch(state, action)
+    case actions.RECEIVE: return receive(state, action)
     default: return {
       ...state,
-      filters: filtersReducer(state, action),
-      data: surveyReducer(state, action),
-      validations: validationsReducer(state, action)
+      data: surveyReducer(state.data, action)
     }
   }
 }
 
-const fetchingSurvey = (state, action) => {
+const receive = (state, action) => {
+  const survey = action.survey
+  const dataFilter = {
+    projectId: survey.projectId,
+    id: survey.id
+  }
+
+  return do {
+    if (isEqual(state.filter, dataFilter)) {
+      ({
+        ...state,
+        fetching: false,
+        data: survey
+      })
+    } else {
+      state
+    }
+  }
+}
+
+const fetch = (state, action) => {
+  const newFilter = {
+    projectId: action.projectId,
+    id: action.id
+  }
+
+  const newData = do {
+    if (isEqual(state.filter, newFilter)) {
+      state.data
+    } else {
+      initialState.data
+    }
+  }
+
   return {
+    ...state,
     fetching: true,
-    filters: filtersReducer(state, action),
-    data: surveyReducer(state, action),
-    validations: validationsReducer(state, action)
+    filter: newFilter,
+    data: newData
   }
 }
 
-const filtersReducer = (state = {}, action) => {
-  switch (action.type) {
-    case actions.FETCH: return fetchingSurveyFilters(state, action)
-    default: return state
-  }
-}
-
-const fetchingSurveyFilters = (state, {projectId, id}) => {
-  return {projectId, id}
-}
-
-const validationsReducer = (state = {}, action) => {
-  switch (action.type) {
-    default: return state
-  }
-}
-
-const surveyReducer = (state = {}, action) => {
+export const surveyReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
