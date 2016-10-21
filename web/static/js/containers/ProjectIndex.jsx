@@ -36,7 +36,8 @@ class ProjectIndex extends Component {
   render() {
     const { fetching, projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, router } = this.props
-    if (fetching || !projects) {
+
+    if (fetching && !projects) {
       return (
         <div>
           <CardTable title='Loading projects...' highlight />
