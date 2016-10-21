@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
 import { Input } from 'react-materialize'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
@@ -23,28 +24,26 @@ class QuestionnaireEditor extends Component {
 
   questionnaireNameSubmit(event) {
     event.preventDefault()
-    const { dispatch } = this.props
-    dispatch(actions.changeQuestionnaireName(event.target.value))
+    this.props.actions.changeQuestionnaireName(event.target.value)
   }
 
   questionnaireModesChange(event) {
-    const { dispatch } = this.props
-    dispatch(actions.changeQuestionnaireModes(event.target.value))
+    this.props.actions.changeQuestionnaireModes(event.target.value)
   }
 
   questionnaireSave(event) {
     event.preventDefault()
-    const { dispatch, questionnaireEditor, router } = this.props
+    const { questionnaireEditor, router } = this.props
 
     const questionnaire = questionnaireForServer(questionnaireEditor)
 
     if (questionnaire.id == null) {
       createQuestionnaire(questionnaire.projectId, questionnaire)
-        .then(questionnaire => dispatch(questionnaireActions.createQuestionnaire(questionnaire)))
+        .then(questionnaire => this.props.questionnaireActions.createQuestionnaire(questionnaire))
         .then(() => router.push(routes.questionnaires(questionnaire.projectId)))
     } else {
       updateQuestionnaire(questionnaire.projectId, questionnaire)
-        .then(questionnaire => dispatch(questionnaireActions.updateQuestionnaire(questionnaire)))
+        .then(questionnaire => this.props.questionnaireActions.updateQuestionnaire(questionnaire))
         .then(() => router.push(routes.questionnaires(questionnaire.projectId)))
     }
   }
@@ -58,25 +57,24 @@ class QuestionnaireEditor extends Component {
   }
 
   questionnaireAddStep(stepType) {
-    const { dispatch } = this.props
-    dispatch(actions.addStep(stepType))
+    this.props.actions.addStep(stepType)
   }
 
   componentWillMount() {
-    const { dispatch, projectId, questionnaireId } = this.props
+    const { projectId, questionnaireId } = this.props
 
     if (projectId) {
       if (questionnaireId) {
-        dispatch(projectActions.fetchProject(projectId))
+        this.props.projectActions.fetchProject(projectId)
 
-        dispatch(questionnaireActions.fetchQuestionnaire(projectId, questionnaireId))
+        this.props.questionnaireActions.fetchQuestionnaire(projectId, questionnaireId)
           .then((questionnaire) => {
             // TODO: Fix this, or decide how to make it better
             var quest = questionnaire.response.entities.questionnaires[questionnaire.response.result]
-            dispatch(actions.initializeEditor(quest))
+            this.props.actions.initializeEditor(quest)
           })
       } else {
-        dispatch(actions.newQuestionnaire(projectId))
+        this.props.actions.newQuestionnaire(projectId)
       }
     }
   }
@@ -124,10 +122,10 @@ class QuestionnaireEditor extends Component {
             <QuestionnaireSteps steps={questionnaireEditor.steps} />
             <div className='row'>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className="btn-flat blue-text" onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
               </div>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className="btn-flat blue-text" onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
               </div>
             </div>
           </div>
@@ -148,7 +146,9 @@ class QuestionnaireEditor extends Component {
 }
 
 QuestionnaireEditor.propTypes = {
-  dispatch: PropTypes.func,
+  actions: PropTypes.object.isRequired,
+  projectActions: PropTypes.object.isRequired,
+  questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
   projectId: PropTypes.number,
   questionnaireId: PropTypes.string,
@@ -161,4 +161,10 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaireEditor: state.questionnaireEditor
 })
 
-export default withRouter(connect(mapStateToProps)(QuestionnaireEditor))
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators(actions, dispatch),
+  projectActions: bindActionCreators(projectActions, dispatch),
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireEditor))

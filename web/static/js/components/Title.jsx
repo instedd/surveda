@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
-import { EditableTitleLabel } from './EditableTitleLabel'
+import EditableTitleLabel from './EditableTitleLabel'
 import merge from 'lodash/merge'
 import { updateSurvey, updateProject, updateQuestionnaire } from '../api'
 import * as projectsAction from '../actions/project'
@@ -53,6 +53,15 @@ const Title = ({ params, project, survey, questionnaire, routes, dispatch }) => 
   )
 }
 
+Title.propTypes = {
+  params: PropTypes.object,
+  project: PropTypes.object,
+  survey: PropTypes.object,
+  questionnaire: PropTypes.object,
+  routes: PropTypes.array,
+  dispatch: PropTypes.func
+}
+
 var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
   if (inputValue !== oldObject.name) {
     const newValue = {
@@ -79,7 +88,7 @@ var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
             .then(response => dispatch(projectsAction.updateProject(response.entities.projects[response.result])))
         break
       default:
-        throw `Unknown entity in Title.handleSubmit: ${entity}`
+        throw new Error(`Unknown entity in Title.handleSubmit: ${entity}`)
     }
   }
 }

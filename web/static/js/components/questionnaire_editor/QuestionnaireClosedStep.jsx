@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaireEditor'
 import UntitledIfEmpty from '../UntitledIfEmpty'
@@ -6,16 +7,13 @@ import UntitledIfEmpty from '../UntitledIfEmpty'
 class QuestionnaireClosedStep extends Component {
   selectStep(event, step) {
     event.preventDefault()
-
-    const { dispatch } = this.props
-    dispatch(actions.selectStep(step.id))
+    this.props.actions.selectStep(step.id)
   }
 
   render() {
-    const { step, index } = this.props
-
+    const { step } = this.props
     return (
-      <a href="#!" className="truncate" onClick={(event) => this.selectStep(event, step)}>
+      <a href='#!' className='truncate' onClick={(event) => this.selectStep(event, step)}>
         <UntitledIfEmpty text={step.title} emptyText='Untitled question' />
         <i className='material-icons right grey-text'>expand_more</i>
       </a>
@@ -24,7 +22,12 @@ class QuestionnaireClosedStep extends Component {
 }
 
 QuestionnaireClosedStep.propTypes = {
+  actions: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired
 }
 
-export default connect()(QuestionnaireClosedStep)
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators(actions, dispatch)
+})
+
+export default connect(null, mapDispatchToProps)(QuestionnaireClosedStep)

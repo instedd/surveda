@@ -4,7 +4,7 @@ export default (state = {}, action) => {
   switch (action.type) {
     case actions.RECEIVE_CHANNELS:
       if (action.response && action.response.entities) {
-        return action.response.entities.channels || {};
+        return action.response.entities.channels || {}
       }
       return state
     case actions.CREATE_CHANNEL:
@@ -15,6 +15,6 @@ export default (state = {}, action) => {
         }
       }
     default:
-      return state;
+      return state
   }
 }

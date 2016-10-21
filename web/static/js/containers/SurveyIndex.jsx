@@ -1,13 +1,12 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
+import { withRouter, Link } from 'react-router'
 import * as actions from '../actions/surveys'
 import * as projectActions from '../actions/project'
 import { createSurvey } from '../api'
 import AddButton from '../components/AddButton'
 import Card from '../components/Card'
 import EmptyPage from '../components/EmptyPage'
-import SurveyLink from '../components/SurveyLink'
 import * as channelsActions from '../actions/channels'
 import * as respondentActions from '../actions/respondents'
 import RespondentsChart from '../components/RespondentsChart'
@@ -112,7 +111,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
       break
   }
   return (
-    <SurveyLink className='survey-card' survey={survey}>
+    <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
       <div className='col s12 m6 l4'>
         <Card>
           <div className='card-content'>
@@ -134,7 +133,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
           </div>
         </Card>
       </div>
-    </SurveyLink>
+    </Link>
   )
 }
 

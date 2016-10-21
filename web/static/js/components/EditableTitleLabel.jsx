@@ -1,7 +1,13 @@
 import React, { Component } from 'react'
 import UntitledIfEmpty from './UntitledIfEmpty'
 
-export class EditableTitleLabel extends Component {
+class EditableTitleLabel extends Component {
+  static propTypes = {
+    onSubmit: React.PropTypes.func.isRequired,
+    title: React.PropTypes.string,
+    editing: React.PropTypes.bool
+  }
+
   constructor(props) {
     super(props)
     this.state = {
@@ -12,12 +18,6 @@ export class EditableTitleLabel extends Component {
     this.onKeyDown = this.onKeyDown.bind(this)
     this.endEdit = this.endEdit.bind(this)
     this.endAndSubmit = this.endAndSubmit.bind(this)
-  }
-
-  static propTypes = {
-    onSubmit: React.PropTypes.func.isRequired,
-    title: React.PropTypes.string,
-    editing: React.PropTypes.bool
   }
 
   handleClick() {
@@ -69,3 +69,5 @@ export class EditableTitleLabel extends Component {
     }
   }
 }
+
+export default EditableTitleLabel

@@ -8,8 +8,8 @@ export default (state = {}, action) => {
         [action.app]: {
           ...action.token
         }
-      };
+      }
     default:
-      return state;
+      return state
   }
 }

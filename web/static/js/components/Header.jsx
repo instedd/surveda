@@ -1,11 +1,11 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
 import TitleContainer from '../containers/TitleContainer'
 import UntitledIfEmpty from './UntitledIfEmpty'
 import { Dropdown, DropdownItem, DropdownDivider } from './Dropdown'
 import * as routes from '../routes'
 
-export default ({ tabs, logout, user, project }) => {
+const Header = ({ tabs, logout, user, project }) => {
   let projectLink
   if (project) {
     projectLink = (
@@ -54,3 +54,12 @@ export default ({ tabs, logout, user, project }) => {
     </header>
   )
 }
+
+Header.propTypes = {
+  tabs: PropTypes.node,
+  logout: PropTypes.func.isRequired,
+  user: PropTypes.string.isRequired,
+  project: PropTypes.object
+}
+
+export default Header

@@ -1,36 +1,30 @@
-import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
+import React, { Component, PropTypes } from 'react'
 
-export class ConfirmationModal extends Component {
-  static propTypes = {
-    linkText: React.PropTypes.string,
-    header: React.PropTypes.string.isRequired,
-    modalText: React.PropTypes.string.isRequired,
-    confirmationText: React.PropTypes.string.isRequired,
-    onConfirm: React.PropTypes.func.isRequired,
-    modalId: React.PropTypes.string.isRequired
-  }
-
+class ConfirmationModal extends Component {
   componentDidMount() {
-    $(document).ready(function(){
-      $('.modal-trigger').leanModal();
+    $(document).ready(function() {
+      $('.modal-trigger').leanModal()
     })
   }
 
   render() {
     const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId } = this.props
 
-    return(
-      <div>
-        <ModalLink showLink={showLink} modalId={modalId} linkText={linkText} />
+    let modalLink = null
+    if (showLink) {
+      modalLink = (<a className='modal-trigger' href={`#${modalId}`}>{linkText}</a>)
+    }
 
-        <div id={modalId} className="modal">
-          <div className="modal-content">
+    return (
+      <div>
+        {modalLink}
+        <div id={modalId} className='modal'>
+          <div className='modal-content'>
             <h4>{header}</h4>
             <p>{modalText}</p>
           </div>
-          <div className="modal-footer">
-            <a href="#!" className=" modal-action modal-close waves-effect waves-green btn-flat" onClick={onConfirm}>{confirmationText}</a>
+          <div className='modal-footer'>
+            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
           </div>
         </div>
       </div>
@@ -38,9 +32,15 @@ export class ConfirmationModal extends Component {
   }
 }
 
-const ModalLink = ({showLink, modalId, linkText}) => {
-  if (showLink){
-    return (<a className="modal-trigger" href={`#${modalId}`}>{linkText}</a>)
-  }
-  return null
+ConfirmationModal.propTypes = {
+  showLink: PropTypes.bool,
+  linkText: PropTypes.string,
+  header: PropTypes.string.isRequired,
+  modalText: PropTypes.string.isRequired,
+  confirmationText: PropTypes.string.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  modalId: PropTypes.string.isRequired
 }
+
+export default ConfirmationModal
+

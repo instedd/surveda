@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 
-export default ({ title, children, footer, highlight }) => (
+const CardTable = ({ title, children, footer, highlight }) => (
   <div className='row'>
     <div className='col s12'>
       <div className='card'>
@@ -17,3 +17,12 @@ export default ({ title, children, footer, highlight }) => (
     </div>
   </div>
 )
+
+CardTable.propTypes = {
+  title: PropTypes.string.isRequired,
+  highlight: PropTypes.bool,
+  children: PropTypes.node,
+  footer: PropTypes.object
+}
+
+export default CardTable

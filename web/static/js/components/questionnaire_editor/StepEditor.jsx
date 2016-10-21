@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaireEditor'
 import Card from '../Card'
@@ -8,7 +9,6 @@ import StepNumericEditor from './StepNumericEditor'
 class StepEditor extends Component {
   constructor(props) {
     super(props)
-
     this.state = this.stateFromProps(props)
   }
 
@@ -19,8 +19,7 @@ class StepEditor extends Component {
 
   stepTitleSubmit(e) {
     e.preventDefault()
-    const { dispatch } = this.props
-    dispatch(actions.changeStepTitle(e.target.value))
+    this.props.actions.changeStepTitle(e.target.value)
   }
 
   stepPromptSmsChange(e) {
@@ -30,8 +29,7 @@ class StepEditor extends Component {
 
   stepPromptSmsSubmit(e) {
     e.preventDefault()
-    const { dispatch } = this.props
-    dispatch(actions.changeStepPromptSms(e.target.value))
+    this.props.actions.changeStepPromptSms(e.target.value)
   }
 
   stepStoreChange(e) {
@@ -41,23 +39,22 @@ class StepEditor extends Component {
 
   stepStoreSubmit(e) {
     e.preventDefault()
-    const { dispatch } = this.props
-    dispatch(actions.changeStepStore(e.target.value))
+    this.props.actions.changeStepStore(e.target.value)
   }
 
   deselectStep(e) {
     e.preventDefault()
-    this.props.dispatch(actions.deselectStep())
+    this.props.actions.deselectStep()
   }
 
   editTitle(e) {
     e.preventDefault()
-    this.props.dispatch(actions.editTitle())
+    this.props.actions.editTitle()
   }
 
   delete(e) {
     e.preventDefault()
-    this.props.dispatch(actions.deleteStep())
+    this.props.actions.deleteStep()
   }
 
   componentWillReceiveProps(newProps) {
@@ -89,7 +86,7 @@ class StepEditor extends Component {
       <Card key={step.id}>
         <ul className='collection'>
           <li className='collection-item input-field header'>
-            <i className="material-icons prefix">mode_edit</i>
+            <i className='material-icons prefix'>mode_edit</i>
             <input
               placeholder='Untitled question'
               type='text'
@@ -105,24 +102,24 @@ class StepEditor extends Component {
             </a>
           </li>
           <li className='collection-item'>
-              <div className='row'>
-                <div className="col s12 input-field">
-                  <h5>Question Prompt</h5>
-                  <input
-                    type='text'
-                    placeholder="SMS message"
-                    is length='140'
-                    value={this.state.stepPromptSms}
-                    onChange={e => this.stepPromptSmsChange(e)}
-                    onBlur={e => this.stepPromptSmsSubmit(e)}
-                    ref={ref => $(ref).characterCounter()}
+            <div className='row'>
+              <div className='col s12 input-field'>
+                <h5>Question Prompt</h5>
+                <input
+                  type='text'
+                  placeholder='SMS message'
+                  is length='140'
+                  value={this.state.stepPromptSms}
+                  onChange={e => this.stepPromptSmsChange(e)}
+                  onBlur={e => this.stepPromptSmsSubmit(e)}
+                  ref={ref => $(ref).characterCounter()}
                     />
-                </div>
               </div>
+            </div>
           </li>
           <li className='collection-item'>
             <div className='row'>
-              <div className="col s12">
+              <div className='col s12'>
                 {editor}
               </div>
             </div>
@@ -145,7 +142,7 @@ class StepEditor extends Component {
           <li className='collection-item'>
             <div className='row'>
               <a href='#!'
-                className="right"
+                className='right'
                 onClick={(e) => this.delete(e)}>
                 DELETE
               </a>
@@ -158,8 +155,12 @@ class StepEditor extends Component {
 }
 
 StepEditor.propTypes = {
-  dispatch: PropTypes.func,
+  actions: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired
 }
 
-export default connect()(StepEditor)
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators(actions, dispatch)
+})
+
+export default connect(null, mapDispatchToProps)(StepEditor)

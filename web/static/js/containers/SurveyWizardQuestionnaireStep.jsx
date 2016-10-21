@@ -55,7 +55,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                     name='questionnaire'
                     className='with-gap'
                     value={questionnaireId}
-                    defaultChecked={this.props.survey.questionnaireId == questionnaireId}
+                    defaultChecked={this.props.survey.questionnaireId === questionnaireId}
                     onClick={e => this.questionnaireChange(e)}
                   />
                   <label htmlFor={questionnaireId}>{ questionnaires[questionnaireId].name }</label>

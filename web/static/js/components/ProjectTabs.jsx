@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import { Link } from 'react-router'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import {Tabs, TabLink} from '.'
+import Tabs from './Tabs'
+import TabLink from './TabLink'
 import * as routes from '../routes'
 
 class ProjectTabs extends Component {
@@ -11,10 +11,14 @@ class ProjectTabs extends Component {
     return (
       <Tabs>
         <TabLink to={routes.surveys(projectId)}>Surveys</TabLink>
-        <TabLink to={routes.questionnaires(projectId)} >Questionnaires</TabLink>
+        <TabLink to={routes.questionnaires(projectId)}>Questionnaires</TabLink>
       </Tabs>
     )
   }
+}
+
+ProjectTabs.propTypes = {
+  projectId: PropTypes.number.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({

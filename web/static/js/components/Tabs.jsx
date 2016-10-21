@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 
-export class Tabs extends Component {
+class Tabs extends Component {
   componentDidMount() {
     $(this.refs.node).tabs()
   }
@@ -8,11 +8,11 @@ export class Tabs extends Component {
   render() {
     const { children } = this.props
     return (
-      <nav id="BottomNav">
-        <div className="nav-wrapper">
-          <div className="row">
-            <div className="col s12 m11 l8">
-              <ul className="tabs" key="foo" ref="node">
+      <nav id='BottomNav'>
+        <div className='nav-wrapper'>
+          <div className='row'>
+            <div className='col s12 m11 l8'>
+              <ul className='tabs' key='foo' ref='node'>
                 {children}
               </ul>
             </div>
@@ -22,3 +22,9 @@ export class Tabs extends Component {
     )
   }
 }
+
+Tabs.propTypes = {
+  children: PropTypes.node
+}
+
+export default Tabs

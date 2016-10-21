@@ -9,7 +9,7 @@ const StepsList = ({steps}) => {
       <div>
         { steps.map((step) => (
           <Card key={step.id} >
-            <div className="card-content closed-step">
+            <div className='card-content closed-step'>
               <QuestionnaireClosedStep step={step} />
             </div>
           </Card>

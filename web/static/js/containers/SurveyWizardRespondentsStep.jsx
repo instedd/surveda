@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
-import { ConfirmationModal } from '../components/ConfirmationModal'
+import ConfirmationModal from '../components/ConfirmationModal'
 import { uploadRespondents, removeRespondents } from '../api'
 import * as actions from '../actions/surveyEdit'
 import * as surveyActions from '../actions/surveys'
@@ -77,6 +77,11 @@ const RespondentsDropzone = ({ survey, onDrop }) => {
   )
 }
 
+RespondentsDropzone.propTypes = {
+  survey: PropTypes.object,
+  onDrop: PropTypes.func.isRequired
+}
+
 const RespondentsList = ({ respondentsCount, children }) => {
   return (
     <table className='ncdtable'>
@@ -94,6 +99,11 @@ const RespondentsList = ({ respondentsCount, children }) => {
   )
 }
 
+RespondentsList.propTypes = {
+  respondentsCount: PropTypes.any.isRequired,
+  children: PropTypes.node
+}
+
 const PhoneNumberRow = ({ id, phoneNumber }) => {
   return (
     <tr key={id}>
@@ -102,6 +112,11 @@ const PhoneNumberRow = ({ id, phoneNumber }) => {
       </td>
     </tr>
   )
+}
+
+PhoneNumberRow.propTypes = {
+  id: PropTypes.string,
+  phoneNumber: PropTypes.string
 }
 
 const RespondentsContainer = ({ children }) => {
@@ -122,6 +137,10 @@ const RespondentsContainer = ({ children }) => {
       </div>
     </div>
   )
+}
+
+RespondentsContainer.propTypes = {
+  children: PropTypes.node
 }
 
 const mapStateToProps = (state, ownProps) => {

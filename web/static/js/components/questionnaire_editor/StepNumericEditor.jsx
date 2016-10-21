@@ -2,9 +2,8 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 
 class StepNumericEditor extends Component {
-  render () {
-    const { step } = this.props
-    return <div></div>
+  render() {
+    return <div />
   }
 }
 

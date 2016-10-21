@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { CollectionItem } from '.'
-import * as routes from '../routes'
+import CollectionItem from './CollectionItem'
 import SurveyWizardQuestionnaireStep from '../containers/SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from '../containers/SurveyWizardRespondentsStep'
 import SurveyWizardChannelsStep from '../containers/SurveyWizardChannelsStep'

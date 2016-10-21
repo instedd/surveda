@@ -8,7 +8,7 @@ export class Tooltip extends Component {
   }
 
   static propTypes = {
-    children: React.PropTypes.element.isRequired,
+    children: React.PropTypes.node.isRequired,
     position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
     delay: React.PropTypes.number,
     text: React.PropTypes.string.isRequired
@@ -29,11 +29,11 @@ export class Tooltip extends Component {
     const child = React.Children.only(children)
 
     return React.cloneElement(child, {
-      className: child.props.className + " tooltipped",
-      "data-position": position,
-      "data-delay": delay,
-      "data-tooltip": text,
-      "ref": "node"
+      className: child.props.className + ' tooltipped',
+      'data-position': position,
+      'data-delay': delay,
+      'data-tooltip': text,
+      'ref': 'node'
     })
   }
 }

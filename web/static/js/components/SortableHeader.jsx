@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 
-export default ({ property, text, sortBy, sortAsc, onClick }) => {
+const SortableHeader = ({ property, text, sortBy, sortAsc, onClick }) => {
   const clickHandler = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -25,3 +25,13 @@ export default ({ property, text, sortBy, sortAsc, onClick }) => {
     </th>
   )
 }
+
+SortableHeader.propTypes = {
+  property: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  sortBy: PropTypes.string,
+  sortAsc: PropTypes.bool,
+  onClick: PropTypes.func.isRequired
+}
+
+export default SortableHeader

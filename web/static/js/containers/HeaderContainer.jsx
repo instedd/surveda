@@ -1,18 +1,16 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Link, withRouter } from 'react-router'
-import TitleContainer from './TitleContainer'
-import { Dropdown, DropdownItem, DropdownDivider } from '../components/Dropdown'
+import { withRouter } from 'react-router'
 import Header from '../components/Header'
-import * as projectAction from '../actions/project'
+import * as projectActions from '../actions/project'
 
 class HeaderContainer extends Component {
   componentDidMount() {
-    const { dispatch } = this.props
     const { projectId, surveyId, questionnaireId } = this.props.params
 
     if (projectId && (surveyId || questionnaireId)) {
-      dispatch(projectAction.fetchProject(projectId))
+      this.props.projectActions.fetchProject(projectId)
     }
   }
 
@@ -31,6 +29,15 @@ class HeaderContainer extends Component {
   }
 }
 
+HeaderContainer.propTypes = {
+  projectActions: PropTypes.object.isRequired,
+  params: PropTypes.object,
+  project: PropTypes.object,
+  tabs: PropTypes.node,
+  logout: PropTypes.func.isRequired,
+  user: PropTypes.string.isRequired
+}
+
 const mapStateToProps = (state, ownProps) => {
   return {
     params: ownProps.params,
@@ -38,4 +45,8 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(HeaderContainer))
+const mapDispatchToProps = (dispatch) => ({
+  projectActions: bindActionCreators(projectActions, dispatch)
+})
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(HeaderContainer))

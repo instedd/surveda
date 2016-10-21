@@ -56,6 +56,15 @@ class TitleContainer extends Component {
   }
 }
 
+TitleContainer.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  params: PropTypes.object,
+  project: PropTypes.object,
+  survey: PropTypes.object,
+  questionnaire: PropTypes.object,
+  routes: PropTypes.any
+}
+
 const findById = (id, col) => {
   if (col) {
     return col[id]

@@ -1,8 +1,6 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 
-export const CollectionItem = (props) => {
-  const { path, icon, text, completed, className } = props
-
+const CollectionItem = ({ path, icon, text, completed, className }) => {
   return (
     <li className={`collection-item ${completed ? 'completed' : ''} ${className || ''}`}>
       <a href={path}>
@@ -15,3 +13,13 @@ export const CollectionItem = (props) => {
     </li>
   )
 }
+
+CollectionItem.propTypes = {
+  path: PropTypes.string.isRequired,
+  icon: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  completed: PropTypes.bool.isRequired,
+  className: PropTypes.string
+}
+
+export default CollectionItem

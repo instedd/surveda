@@ -1,20 +1,21 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as respondentsActions from '../actions/respondents'
 import CardTable from '../components/CardTable'
 
 class SurveyRespondents extends Component {
   componentDidMount() {
-    const { dispatch, projectId, surveyId } = this.props
+    const { projectId, surveyId } = this.props
     if (projectId && surveyId) {
-      dispatch(respondentsActions.fetchRespondents(projectId, surveyId))
+      this.props.respondentsActions.fetchRespondents(projectId, surveyId)
     }
   }
 
   render() {
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
-    const respondents = generateResponsesDictionaryFor(jQuery.extend(true, {}, this.props.respondents))
+    const respondents = generateResponsesDictionaryFor($.extend(true, {}, this.props.respondents))
     const title = parseInt(Object.keys(respondents).length, 10) + ' Respondents'
 
     if (Object.keys(respondents).length === 0) {
@@ -83,12 +84,23 @@ class SurveyRespondents extends Component {
   }
 }
 
+SurveyRespondents.propTypes = {
+  respondentsActions: PropTypes.object.isRequired,
+  projectId: PropTypes.number,
+  surveyId: PropTypes.number,
+  respondents: PropTypes.object
+}
+
 const mapStateToProps = (state, ownProps) => {
   return {
-    projectId: ownProps.params.projectId,
-    surveyId: ownProps.params.surveyId,
+    projectId: parseInt(ownProps.params.projectId),
+    surveyId: parseInt(ownProps.params.surveyId),
     respondents: state.respondents
   }
 }
 
-export default connect(mapStateToProps)(SurveyRespondents)
+const mapDispatchToProps = (dispatch) => ({
+  respondentsActions: bindActionCreators(respondentsActions, dispatch)
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(SurveyRespondents)

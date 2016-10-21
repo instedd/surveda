@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Link, withRouter } from 'react-router'
+import { withRouter } from 'react-router'
 import * as actions from '../actions/questionnaires'
 import * as projectActions from '../actions/project'
 import AddButton from '../components/AddButton'
@@ -19,13 +19,13 @@ class QuestionnaireIndex extends Component {
 
   render() {
     const { questionnaires, projectId, router } = this.props
-    const title = `${Object.keys(questionnaires).length} ${(Object.keys(questionnaires).length == 1) ? ' questionnaire' : ' questionnaires'}`
+    const title = `${Object.keys(questionnaires).length} ${(Object.keys(questionnaires).length === 1) ? ' questionnaire' : ' questionnaires'}`
     return (
       <div>
         <AddButton text='Add questionnaire' linkPath={routes.newQuestionnaire(projectId)} />
-        { (Object.keys(questionnaires).length == 0) ?
-          <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
-        :
+        { (Object.keys(questionnaires).length === 0)
+          ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
+        : (
           <CardTable title={title} highlight>
             <thead>
               <tr>
@@ -49,10 +49,18 @@ class QuestionnaireIndex extends Component {
               )}
             </tbody>
           </CardTable>
+          )
         }
       </div>
     )
   }
+}
+
+QuestionnaireIndex.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  projectId: PropTypes.number,
+  questionnaires: PropTypes.object,
+  router: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
