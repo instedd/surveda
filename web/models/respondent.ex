@@ -22,7 +22,7 @@ defmodule Ask.Respondent do
   end
 
   def mask_phone_number(phone_number) do
-    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-4)), String.slice(phone_number, -4, 4)], "")
+    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-5)), String.slice(phone_number, -4, 4)], "")
   end
 
   def replace_numbers_by_hash(string) do
