@@ -135,11 +135,10 @@ ProjectIndex.propTypes = {
 }
 
 const mapStateToProps = (state) => {
-  let projects = state.projects.items ? values(state.projects.items) : []
+  let projects = orderedProjects(state.projects.items || {}, state.projects.order || [])
   const fetching = state.projects.fetching
   const sortBy = state.projects.sortBy
   const sortAsc = state.projects.sortAsc
-  sortProjects(projects, sortBy, sortAsc)
   const totalCount = projects.length
   const pageIndex = state.projects.page.index
   const pageSize = state.projects.page.size
@@ -167,24 +166,8 @@ const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch)
 })
 
-const sortProjects = (projects, sortBy, sortAsc) => {
-  if (!sortBy) return
-
-  projects.sort((p1, p2) => {
-    let x1 = p1[sortBy]
-    let x2 = p2[sortBy]
-
-    if (typeof (x1) === 'string') x1 = x1.toLowerCase()
-    if (typeof (x2) === 'string') x2 = x2.toLowerCase()
-
-    if (x1 < x2) {
-      return sortAsc ? -1 : 1
-    } else if (x1 > x2) {
-      return sortAsc ? 1 : -1
-    } else {
-      return 0
-    }
-  })
+const orderedProjects = (projects, order) => {
+  return order.map(id => projects[id])
 }
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex))
