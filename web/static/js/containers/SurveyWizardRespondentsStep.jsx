@@ -126,7 +126,9 @@ const RespondentsContainer = ({ children }) => {
         <div className='col s12'>
           <h4>Upload your respondents list</h4>
           <p className='flow-text'>
-            Upload a CSV file like this one with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
+            Upload a CSV file like
+            <a href='/files/phone_numbers_example.csv'> this one </a>
+            with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
           </p>
         </div>
       </div>

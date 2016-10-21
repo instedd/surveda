@@ -10,6 +10,8 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug Plug.Static,
+      at: "files/", from: "web/static/assets/files/", gzip: false
   end
 
   pipeline :api do
