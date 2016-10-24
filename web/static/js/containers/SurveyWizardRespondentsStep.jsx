@@ -55,22 +55,23 @@ class SurveyWizardRespondentsStep extends Component {
               <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
-          <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} onConfirm={(event) => this.removeRespondents(event)} />
+          <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} showCancel onConfirm={(event) => this.removeRespondents(event)} />
         </RespondentsContainer>
       )
     } else {
       return (
         <RespondentsContainer>
-          <RespondentsDropzone survey={survey} onDrop={file => { this.handleSubmit(survey, file) }} />
+          <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+          <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').openModal()} />
         </RespondentsContainer>
       )
     }
   }
 }
 
-const RespondentsDropzone = ({ survey, onDrop }) => {
+const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
   return (
-    <Dropzone className='dropfile' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} accept='text/csv'>
+    <Dropzone className='dropfile' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} accept='text/csv' onDropRejected={onDropRejected} >
       <div className='drop-icon' />
       <div className='drop-text' />
     </Dropzone>
@@ -79,7 +80,8 @@ const RespondentsDropzone = ({ survey, onDrop }) => {
 
 RespondentsDropzone.propTypes = {
   survey: PropTypes.object,
-  onDrop: PropTypes.func.isRequired
+  onDrop: PropTypes.func.isRequired,
+  onDropRejected: PropTypes.func.isRequired
 }
 
 const RespondentsList = ({ respondentsCount, children }) => {
