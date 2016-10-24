@@ -108,7 +108,11 @@ defmodule Ask.RespondentController do
           %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
         end)
 
-      {respondents_count, _ } = Repo.insert_all(Respondent, entries)
+      respondents_count = entries
+        |> Enum.chunk(1_000, 1_000, []) |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
+          {count, _ } = Repo.insert_all(Respondent, chunked_entries)
+          total_count + count
+        end)
 
       respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
 
