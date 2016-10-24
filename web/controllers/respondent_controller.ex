@@ -104,6 +104,7 @@ defmodule Ask.RespondentController do
         file.path
         |> File.read!
         |> csv_rows
+        |> Enum.uniq
         |> Enum.map(fn row ->
           %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
         end)

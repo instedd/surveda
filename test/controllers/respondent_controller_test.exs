@@ -129,6 +129,22 @@ defmodule Ask.RespondentControllerTest do
     assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
   end
 
+  test "uploads CSV file with phone numbers rejecting duplicated entries", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project)
+
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_duplicated.csv", filename: "phone_numbers.csv"}
+
+    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+    assert length(json_response(conn, 201)["data"]["respondents"]) == 5
+    assert json_response(conn, 201)["meta"]["count"] == 16
+
+    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+    assert length(all) == 16
+    assert Enum.at(all, 0).survey_id == survey.id
+    assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
+  end
+
   test "it supports \r as a field separator", %{conn: conn, user: user} do
     project = insert(:project, user: user)
     survey = insert(:survey, project: project)
