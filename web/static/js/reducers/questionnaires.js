@@ -1,7 +1,35 @@
 import * as actions from '../actions/questionnaires'
+import { itemsOrder, sortItems, nextPage, previousPage } from '../dataTable'
 
-export default (state = {}, action) => {
+const initialState = {
+  fetching: false,
+  projectId: null,
+  items: null,
+  order: null,
+  sortBy: null,
+  sortAsc: true,
+  page: {
+    index: 0,
+    size: 5
+  }
+}
+
+export default (state = initialState, action) => {
   switch (action.type) {
+    case actions.FETCH_QUESTIONNAIRES:
+      const items = state.projectId === action.projectId ? state.items : null
+      return {
+        ...state,
+        items,
+        fetching: true,
+        projectId: action.projectId,
+        sortBy: null,
+        sortAsc: true,
+        page: {
+          index: 0,
+          size: 5
+        }
+      }
     case actions.CREATE_QUESTIONNAIRE:
     case actions.UPDATE_QUESTIONNAIRE:
       return {
@@ -11,10 +39,25 @@ export default (state = {}, action) => {
         }
       }
     case actions.RECEIVE_QUESTIONNAIRES:
-      if (action.response && action.response.entities) {
-        return action.response.entities.questionnaires || {}
+      const questionnaires = action.questionnaires
+
+      if (state.projectId !== action.projectId) {
+        return state
       }
-      return state
+
+      let order = itemsOrder(questionnaires, state.sortBy, state.sortAsc)
+      return {
+        ...state,
+        fetching: false,
+        items: questionnaires,
+        order
+      }
+    case actions.NEXT_QUESTIONNAIRES_PAGE:
+      return nextPage(state)
+    case actions.PREVIOUS_QUESTIONNAIRES_PAGE:
+      return previousPage(state)
+    case actions.SORT_QUESTIONNAIRES:
+      return sortItems(state, action)
     default:
       return state
   }
