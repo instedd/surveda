@@ -47,7 +47,7 @@ class QuestionnaireIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount === 1) ? ' questionnaires' : ' questionnairess'}`
+    const title = `${totalCount} ${(totalCount === 1) ? ' questionnaire' : ' questionnaires'}`
     const footer = (
       <div className='right-align'>
         <ul className='pagination'>
