@@ -61,6 +61,7 @@ class EditableTitleLabel extends Component {
           id='questionnaire_name'
           ref={node => { this.inputRef = node }}
           autoFocus
+          maxLength='255'
           defaultValue={title}
           onKeyDown={this.onKeyDown}
           onBlur={this.endAndSubmit}
