@@ -13,7 +13,7 @@ class SurveyWizardCutoffStep extends Component {
     const { dispatch } = this.props
     var onlyNumbers = e.target.value.replace(/[^0-9.]/g, '')
 
-    dispatch(actions.changeCutoff(onlyNumbers))
+    if (onlyNumbers === e.target.value && onlyNumbers < Math.pow(2, 31) - 1) dispatch(actions.changeCutoff(onlyNumbers))
   }
 
   render() {
