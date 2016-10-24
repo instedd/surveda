@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
 import * as actions from '../actions/surveys'
@@ -13,14 +13,15 @@ import RespondentsChart from '../components/RespondentsChart'
 import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as RespondentsChartCount from '../components/RespondentsChartCount'
 import * as routes from '../routes'
+import values from 'lodash/values'
 
 class SurveyIndex extends Component {
   static propTypes = {
-    dispatch: React.PropTypes.func,
-    router: React.PropTypes.object,
-    projectId: React.PropTypes.number.isRequired,
-    surveys: React.PropTypes.object,
-    respondentsStats: React.PropTypes.object.isRequired
+    dispatch: PropTypes.func,
+    router: PropTypes.object,
+    projectId: PropTypes.number.isRequired,
+    surveys: PropTypes.array,
+    respondentsStats: PropTypes.object.isRequired
   }
 
   componentDidMount() {
@@ -30,13 +31,11 @@ class SurveyIndex extends Component {
     dispatch(projectActions.fetchProject(projectId))
 
     dispatch(actions.fetchSurveys(projectId))
-    .then(
-      function x(value) {
-        for (const surveyId in value) {
-          dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
-        }
+    .then(value => {
+      for (const surveyId in value) {
+        dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
       }
-    )
+    })
     dispatch(channelsActions.fetchChannels())
   }
 
@@ -51,29 +50,41 @@ class SurveyIndex extends Component {
   render() {
     const { surveys, respondentsStats } = this.props
 
+    if (!surveys) {
+      return (
+        <div>Loading surveys...</div>
+      )
+    }
+
     return (
       <div>
         <AddButton text='Add survey' onClick={() => this.newSurvey()} />
-        { (Object.keys(surveys).length === 0) ?
-          <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
-        :
-          <div className='row'>
-            { Object.keys(surveys).map((surveyId) =>
-              <SurveyCard survey={surveys[surveyId]} completedByDate={respondentsStats[surveyId] ? respondentsStats[surveyId] : {}} key={surveyId} />
-            )}
-          </div>
+        { surveys.length === 0
+        ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
+        : <div className='row'>
+          { surveys.map(survey => (
+            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.Id] || {}} key={survey.Id} />
+          )) }
+        </div>
         }
       </div>
     )
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  projectId: parseInt(ownProps.params.projectId),
-  surveys: state.surveys,
-  channels: state.channels,
-  respondentsStats: state.respondentsStats
-})
+const mapStateToProps = (state, ownProps) => {
+  // Right now we show all surveys: they are not paginated nor sorted
+  let surveys = state.surveys.items
+  if (surveys) {
+    surveys = values(surveys)
+  }
+  return {
+    projectId: parseInt(ownProps.params.projectId),
+    surveys,
+    channels: state.channels,
+    respondentsStats: state.respondentsStats
+  }
+}
 
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
@@ -138,6 +149,6 @@ const SurveyCard = ({ survey, completedByDate }) => {
 }
 
 SurveyCard.propTypes = {
-  completedByDate: React.PropTypes.array.isRequired,
+  completedByDate: React.PropTypes.object.isRequired,
   survey: React.PropTypes.object.isRequired
 }
