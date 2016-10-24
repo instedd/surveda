@@ -12,6 +12,7 @@ import SortableHeader from '../components/SortableHeader'
 import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as routes from '../routes'
 import range from 'lodash/range'
+import { orderedItems } from '../dataTable'
 
 class ProjectIndex extends Component {
   componentWillMount() {
@@ -133,7 +134,7 @@ ProjectIndex.propTypes = {
 }
 
 const mapStateToProps = (state) => {
-  let projects = orderedProjects(state.projects.items, state.projects.order)
+  let projects = orderedItems(state.projects.items, state.projects.order)
   const sortBy = state.projects.sortBy
   const sortAsc = state.projects.sortAsc
   const totalCount = projects ? projects.length : 0
@@ -163,13 +164,5 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch)
 })
-
-const orderedProjects = (projects, order) => {
-  if (projects && order) {
-    return order.map(id => projects[id])
-  } else {
-    return null
-  }
-}
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex))

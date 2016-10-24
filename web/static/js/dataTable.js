@@ -36,6 +36,14 @@ export const sortItems = (state, action) => {
   }
 }
 
+export const orderedItems = (items, order) => {
+  if (items && order) {
+    return order.map(id => items[id])
+  } else {
+    return null
+  }
+}
+
 export const nextPage = (state) => ({
   ...state,
   page: {
