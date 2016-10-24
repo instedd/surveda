@@ -91,6 +91,12 @@ defmodule Ask.RespondentController do
     end)
   end
 
+  def render_unprocessable_entity(conn) do
+    conn
+      |> put_status(:unprocessable_entity)
+      |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
+  end
+
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
     Project
     |> Repo.get!(project_id)
@@ -109,23 +115,25 @@ defmodule Ask.RespondentController do
           %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
         end)
 
-      respondents_count = entries
+      if Enum.any?(entries, fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end) do
+        render_unprocessable_entity(conn)
+      else
+        respondents_count = entries
         |> Enum.chunk(1_000, 1_000, []) |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
           {count, _ } = Repo.insert_all(Respondent, chunked_entries)
           total_count + count
         end)
 
-      respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
+        respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
 
-      update_survey_state(survey_id, respondents_count)
+        update_survey_state(survey_id, respondents_count)
 
-      conn
-        |> put_status(:created)
-        |> render("index.json", respondents: respondents |> Repo.preload(:responses), respondents_count: respondents_count)
+        conn
+          |> put_status(:created)
+          |> render("index.json", respondents: respondents |> Repo.preload(:responses), respondents_count: respondents_count)
+        end
     else
-      conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
+      render_unprocessable_entity(conn)
     end
   end
 

@@ -129,6 +129,31 @@ defmodule Ask.RespondentControllerTest do
     assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
   end
 
+  test "uploads CSV file with phone and creates and renders resource when data contains special characters but is valid", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project)
+
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_special_characters.csv", filename: "phone_numbers.csv"}
+
+    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+    assert conn.status == 201
+    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+    assert length(all) == 3
+    assert Enum.at(all, 0).phone_number == "+154 11 1213 2345"
+  end
+
+  test "uploads CSV file with phone numbers but does not create and render resource when numbers contains invalid characters", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project)
+
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_invalid.csv", filename: "phone_numbers.csv"}
+
+    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+    assert conn.status == 422
+    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+    assert length(all) == 0
+  end
+
   test "uploads CSV file with phone numbers rejecting duplicated entries", %{conn: conn, user: user} do
     project = insert(:project, user: user)
     survey = insert(:survey, project: project)
