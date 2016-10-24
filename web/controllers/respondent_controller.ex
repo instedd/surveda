@@ -125,7 +125,7 @@ defmodule Ask.RespondentController do
     else
       conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: file)
+        |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
     end
   end
 
