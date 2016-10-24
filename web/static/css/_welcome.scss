@@ -1,0 +1,116 @@
+
+// NCD Welcome screen
+
+
+body.welcome {
+  @extend .white;
+
+  .wrapper {
+    & > * > * {
+      padding-left: 2%;
+      padding-right: 2%;
+    }
+  }
+
+  header {
+    @extend .white;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    nav {
+      li {
+        background: none !important;
+        a {
+          @extend .grey-text, .text-darken-2;
+          font-size: 90%;
+          margin-left: 5px;
+          margin-right: 0px;
+          height: 48px;
+          line-height: 48px;
+          padding: 0 1.3rem;
+
+          &:hover {
+            @extend .black-text;
+            background: none;
+          }
+          &.outlined {
+            @extend .green-text;
+            border: 2px solid color("green", "base");
+            border-radius: 3px;
+            &:hover {
+              color: color("green", "lighten-1") !important;
+              border-color: color("green", "lighten-1") !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    border-top: 1px solid color("grey", "lighten-3");
+
+    p {
+      @extend .grey-text, .text-darken-2;
+      font-size: 125%;
+    }
+
+    &.main {
+      @extend .white-text;
+      background: rgb(66,66,66);
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+
+      p {
+        @extend .white-text;
+        margin-top: 6rem;
+      }
+    }
+    &.right-img {
+      padding-right: 0;
+
+      .col.m7 {
+        padding-right: 0;
+      }
+    }
+    &.left-img {
+      padding-left: 0;
+
+      .col.m7 {
+        padding-left: 0;
+      }
+    }
+  }
+
+  footer {
+    @extend .grey-text, .text-darken-2;
+    border-top: 1px solid color("grey", "lighten-2");
+    padding-top: 1.3rem;
+    padding-bottom: 1.3rem;
+
+    > .row {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    ul {
+      li {
+        display: inline-block;
+        a {
+          @extend .grey-text, .text-darken-2;
+          display: block;
+          padding: 5px;
+
+          &:hover {
+            @extend .black-text;
+          }
+        }
+      }
+    }
+  }
+
+}
+
+

@@ -6,42 +6,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-
     <title>InSTEDD Ask</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
-  <body>
+  <body class="welcome">
     <div class='wrapper'>
         <header>
-          <nav id='TopNav'>
+          <nav>
             <div class='nav-wrapper'>
-              <div class='row'>
-                <div class='col s5 m4'>
-                  <div class='logo'>
-                    <img src='/images/logo.png' width='28px' />                    
-                  </div>
-                  Ask
-                </div>
-                <div class='col s8 m8'>
-                </div>
-              </div>
+              <a href="#!" class="brand-logo"><img src='/images/ask-logo.png' width='114px' />
+              <a href="#" data-activates="mobile-demo" class="button-collapse grey-text"><i class="material-icons">menu</i></a></a>
+              <ul class="right hide-on-med-and-down">
+                <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
+                <li><a href='/login' class="btn-flat btn-large">Login</a></li>
+                <li><a href="#.html" class="btn-flat btn-large outlined">Sign up for free</a></li>
+              </ul>
+              <ul class="side-nav" id="mobile-demo">
+                <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
+                <li><a href='/login' class="btn-flat btn-large">Login</a></li>
+                <li><a href="#.html" class="btn-flat btn-large outlined">Sign up for free</a></li>
+              </ul>
             </div>
           </nav>
         </header>
-        <main>
-          <div class='row'>
-            <div class='col s12'>
-              <h3>Collect opinions</h3>
-              <h4>Get better data and run larger surveys anywhere in the world</h4>
-              <p>Ask is a free, open source tool for conducting polls using text messages, voice, web and more. Step-by-step, Ask guides participants through polls and collects real-time results. Ask shrinks the gap between audiences and pollers, taking the pulse of the people anytime and anywhere there's mobile phone service.</p>
-              <div>
-                <br/>
-                <a class='waves-effect waves-light btn-large' href='/login'>LOGIN</a>
+        <main class="main-welcome">
+          <div class="section main">
+            <div class='row main'>
+              <div class='col s12 m5'>
+                <h3>Collect opinions</h3>
+                <h5>Get better data and run larger surveys anywhere in the world</h5>
+                <p>Ask is a free, open source tool for conducting polls using text messages, voice, web and more. Step-by-step, Ask guides participants through polls and collects real-time results. Ask shrinks the gap between audiences and pollers, taking the pulse of the people anytime and anywhere there's mobile phone service.</p>
+              </div>
+              <div class='col s12 m7'>
+                <img class="right responsive-img" src='/images/welcome-main.png' width='581px' />
               </div>
             </div>
           </div>
+
+          <div class="section right-img">
+            <div class='row'>
+              <div class='col s12 m5'>
+                <h3>Easy questionnaire design</h3>
+                <p>Vestibulum diam mi, malesuada imperdiet lorem eget, vehicula sagittis tellus. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra at. </p>
+              </div>
+              <div class='col s12 m7'>
+                <img class="right responsive-img" src='/images/welcome-img01.png' width='646px' />
+              </div>
+            </div>
+          </div>
+
+          <div class="section left-img">
+            <div class='row'>
+              <div class='col s12 m7'>
+                <img class="left responsive-img" src='/images/welcome-img02.png' width='631px' />
+              </div>
+              <div class='col s12 m5'>
+                <h3>Organize your surveys by projects</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="section right-img">
+            <div class='row'>
+              <div class='col s12 m5'>
+                <h3>Live survey follow up</h3>
+                <p>Vestibulum diam mi, malesuada imperdiet lorem eget, vehicula sagittis tellus. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra at. </p>
+              </div>
+              <div class='col s12 m7'>
+                <img class="right responsive-img" src='/images/welcome-img03.png' width='646px' />
+              </div>
+            </div>
+          </div>
+
+
+          <div class="section left-img">
+            <div class='row'>
+              <div class='col s12 m7'>
+                <img class="left responsive-img" src='/images/welcome-img04.png' width='553px' />
+              </div>
+              <div class='col s12 m5'>
+                <h3>Effortless schedule setup</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra.</p>
+              </div>
+            </div>
+          </div>
+
         </main>
+        <footer>
+            <div class="row">
+              <div class="col m9 s12">
+                <ul>
+                  <li><a href="#!">InSTEDD</a></li>
+                  <li><a href="#!">Terms of service</a></li>
+                  <li><a href="#!">Support</a></li>
+                </ul>
+              </div>
+              <div class="col m2 offset-m1 s12">
+                <p class="center-align">Version 2.17.1</p>
+              </div>
+            </div>
+        </footer>
       </div>
+      <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+      <script type="text/javascript">
+        $(document).ready(function() {
+          $(".button-collapse").sideNav();
+        });
+      </script>
   </body>
 </html>
