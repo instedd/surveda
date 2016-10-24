@@ -26,9 +26,14 @@ export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
     .then(() => getState().questionnaires.items)
 }
 
-export const fetchQuestionnaire = (projectId, questionnaireId) => dispatch => {
+export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
+  dispatch(startFetchingQuestionnaires(projectId))
   return api.fetchQuestionnaire(projectId, questionnaireId)
-    .then(questionnaire => dispatch(receiveQuestionnaires(questionnaire)))
+    .then(response => {
+      const questionnaire = response.entities.questionnaires[response.result]
+      dispatch(receiveQuestionnaires(projectId, [questionnaire]))
+    })
+    .then(() => getState().questionnaires.items)
 }
 
 export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {

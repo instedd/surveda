@@ -68,10 +68,14 @@ class QuestionnaireEditor extends Component {
         this.props.projectActions.fetchProject(projectId)
 
         this.props.questionnaireActions.fetchQuestionnaire(projectId, questionnaireId)
-          .then((questionnaire) => {
+          .then((items) => {
+            let questionnaire
+            for (const id in items) {
+              questionnaire = items[id]
+              break
+            }
             // TODO: Fix this, or decide how to make it better
-            var quest = questionnaire.response.entities.questionnaires[questionnaire.response.result]
-            this.props.actions.initializeEditor(quest)
+            this.props.actions.initializeEditor(questionnaire)
           })
       } else {
         this.props.actions.newQuestionnaire(projectId)
