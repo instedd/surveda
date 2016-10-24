@@ -11,7 +11,7 @@ export const SORT_SURVEYS = 'SORT_SURVEYS'
 export const fetchSurveys = (projectId) => (dispatch, getState) => {
   const state = getState()
 
-  // Don't fetch projects if they are already being fetched
+  // Don't fetch surveys if they are already being fetched
   // for that same project
   if (state.surveys.fetching && state.surveys.projectId === projectId) {
     return
