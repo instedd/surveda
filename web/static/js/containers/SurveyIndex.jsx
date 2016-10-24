@@ -63,7 +63,7 @@ class SurveyIndex extends Component {
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
           { surveys.map(survey => (
-            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.Id] || {}} key={survey.Id} />
+            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id] || {}} key={survey.id} />
           )) }
         </div>
         }
