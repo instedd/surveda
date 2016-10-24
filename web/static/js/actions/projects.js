@@ -16,8 +16,8 @@ export const fetchProjects = () => (dispatch, getState) => {
   }
 
   dispatch(startFetchingProjects())
-  api.fetchProjects()
-    .then(response => dispatch(receiveProjects(response.entities.projects)))
+  return api.fetchProjects()
+    .then(response => dispatch(receiveProjects(response.entities.projects || [])))
 }
 
 export const startFetchingProjects = () => ({

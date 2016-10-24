@@ -11,7 +11,6 @@ import CardTable from '../components/CardTable'
 import SortableHeader from '../components/SortableHeader'
 import UntitledIfEmpty from '../components/UntitledIfEmpty'
 import * as routes from '../routes'
-import values from 'lodash/values'
 import range from 'lodash/range'
 
 class ProjectIndex extends Component {
@@ -58,10 +57,10 @@ class ProjectIndex extends Component {
   }
 
   render() {
-    const { fetching, projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
+    const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, router } = this.props
 
-    if (fetching && !projects) {
+    if (!projects) {
       return (
         <div>
           <CardTable title='Loading projects...' highlight />
@@ -89,7 +88,7 @@ class ProjectIndex extends Component {
     return (
       <div>
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
-        { (Object.keys(projects).length === 0)
+        { (projects.length === 0)
           ? <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
           : <CardTable title={title} footer={footer} highlight>
             <thead>
@@ -121,7 +120,6 @@ class ProjectIndex extends Component {
 ProjectIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
-  fetching: PropTypes.bool.isRequired,
   sortBy: PropTypes.string,
   sortAsc: PropTypes.bool.isRequired,
   projects: PropTypes.array,
@@ -135,20 +133,20 @@ ProjectIndex.propTypes = {
 }
 
 const mapStateToProps = (state) => {
-  let projects = orderedProjects(state.projects.items || {}, state.projects.order || [])
-  const fetching = state.projects.fetching
+  let projects = orderedProjects(state.projects.items, state.projects.order)
   const sortBy = state.projects.sortBy
   const sortAsc = state.projects.sortAsc
-  const totalCount = projects.length
+  const totalCount = projects ? projects.length : 0
   const pageIndex = state.projects.page.index
   const pageSize = state.projects.page.size
-  projects = projects.slice(pageIndex, pageIndex + pageSize)
+  if (projects) {
+    projects = projects.slice(pageIndex, pageIndex + pageSize)
+  }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
   const hasPreviousPage = startIndex > 1
   const hasNextPage = endIndex < totalCount
   return {
-    fetching,
     sortBy,
     sortAsc,
     projects,
@@ -167,7 +165,11 @@ const mapDispatchToProps = (dispatch) => ({
 })
 
 const orderedProjects = (projects, order) => {
-  return order.map(id => projects[id])
+  if (projects && order) {
+    return order.map(id => projects[id])
+  } else {
+    return null
+  }
 }
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex))
