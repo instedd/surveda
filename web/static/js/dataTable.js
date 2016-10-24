@@ -8,8 +8,14 @@ export const itemsOrder = (items, sortBy, sortAsc) => {
       let x1 = p1[sortBy]
       let x2 = p2[sortBy]
 
-      if (typeof (x1) === 'string') x1 = x1.toLowerCase()
-      if (typeof (x2) === 'string') x2 = x2.toLowerCase()
+      if (typeof (x1) === 'string') {
+        x1 = x1.toLowerCase()
+        if (x2 === null) x2 = 'untitled'
+      }
+      if (typeof (x2) === 'string') {
+        x2 = x2.toLowerCase()
+        if (x1 === null) x1 = 'untitled'
+      }
 
       if (x1 < x2) {
         return sortAsc ? -1 : 1
