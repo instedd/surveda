@@ -11,7 +11,9 @@ class SurveyWizardCutoffStep extends Component {
   cutoffChange(e) {
     e.preventDefault()
     const { dispatch } = this.props
-    dispatch(actions.changeCutoff(e.target.value))
+    var onlyNumbers = e.target.value.replace(/[^0-9.]/g, '')
+
+    dispatch(actions.changeCutoff(onlyNumbers))
   }
 
   render() {
