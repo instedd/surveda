@@ -16,49 +16,52 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_QUESTIONNAIRES:
-      const items = state.projectId === action.projectId ? state.items : null
-      return {
-        ...state,
-        items,
-        fetching: true,
-        projectId: action.projectId,
-        sortBy: null,
-        sortAsc: true,
-        page: {
-          index: 0,
-          size: 5
-        }
-      }
-    case actions.CREATE_QUESTIONNAIRE:
-    case actions.UPDATE_QUESTIONNAIRE:
-      return {
-        ...state,
-        [action.id]: {
-          ...action.questionnaire
-        }
-      }
-    case actions.RECEIVE_QUESTIONNAIRES:
-      const questionnaires = action.questionnaires
+    case actions.FETCH_QUESTIONNAIRES: return fetchQuestionnaires(state, action)
+    case actions.CREATE_QUESTIONNAIRE: return createOrUpdateQuestionnaire(state, action)
+    case actions.UPDATE_QUESTIONNAIRE: return createOrUpdateQuestionnaire(state, action)
+    case actions.RECEIVE_QUESTIONNAIRES: return receiveQuestionnaires(state, action)
+    case actions.NEXT_QUESTIONNAIRES_PAGE: return nextPage(state)
+    case actions.PREVIOUS_QUESTIONNAIRES_PAGE: return previousPage(state)
+    case actions.SORT_QUESTIONNAIRES: return sortItems(state, action)
+    default: return state
+  }
+}
 
-      if (state.projectId !== action.projectId) {
-        return state
-      }
+const fetchQuestionnaires = (state, action) => {
+  const items = state.projectId === action.projectId ? state.items : null
+  return {
+    ...state,
+    items,
+    fetching: true,
+    projectId: action.projectId,
+    sortBy: null,
+    sortAsc: true,
+    page: {
+      index: 0,
+      size: 5
+    }
+  }
+}
 
-      let order = itemsOrder(questionnaires, state.sortBy, state.sortAsc)
-      return {
-        ...state,
-        fetching: false,
-        items: questionnaires,
-        order
-      }
-    case actions.NEXT_QUESTIONNAIRES_PAGE:
-      return nextPage(state)
-    case actions.PREVIOUS_QUESTIONNAIRES_PAGE:
-      return previousPage(state)
-    case actions.SORT_QUESTIONNAIRES:
-      return sortItems(state, action)
-    default:
-      return state
+const createOrUpdateQuestionnaire = (state, action) => ({
+  ...state,
+  [action.id]: {
+    ...action.questionnaire
+  }
+})
+
+const receiveQuestionnaires = (state, action) => {
+  const questionnaires = action.questionnaires
+
+  if (state.projectId !== action.projectId) {
+    return state
+  }
+
+  let order = itemsOrder(questionnaires, state.sortBy, state.sortAsc)
+  return {
+    ...state,
+    fetching: false,
+    items: questionnaires,
+    order
   }
 }
