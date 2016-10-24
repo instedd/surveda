@@ -84,7 +84,7 @@ const mapStateToProps = (state, ownProps) => ({
   project: state.projects[ownProps.params.projectId] || {},
   surveyId: ownProps.params.surveyId,
   channels: state.channels,
-  questionnaires: state.questionnaires,
+  questionnaires: state.questionnaires.items || {},
   respondents: state.respondents,
   survey: state.surveyEdit || {}
 })
