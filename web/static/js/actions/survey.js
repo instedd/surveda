@@ -50,12 +50,6 @@ export const shouldFetch = (state, projectId, id) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
-export const setSurvey = (response) => ({
-  type: SET_SURVEY,
-  id: response.result,
-  survey: response.entities.surveys[response.result]
-})
-
 export const changeCutoff = (cutoff) => ({
   type: CHANGE_CUTOFF,
   cutoff
