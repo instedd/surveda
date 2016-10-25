@@ -45,7 +45,7 @@ html, body {
 }
 
 
-main:not('main-welcome') {
+main:not(.main-welcome) {
   @include flexbox();
   flex: 1 0 auto;
   > div {
