@@ -133,7 +133,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
               <RespondentsChart completedByDate={cumulativeCount} />
             </div>
             <div className='card-status'>
-              <span className='card-title'>
+              <span className='card-title truncate' title={survey.name}>
                 <UntitledIfEmpty text={survey.name} />
               </span>
               <p className={color}>
