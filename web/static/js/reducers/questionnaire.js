@@ -47,9 +47,40 @@ const stepsReducer = (state, action) => {
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.DELETE_STEP: return deleteStep(state, action)
+    case actions.ADD_CHOICE: return addChoice(state, action)
+    case actions.DELETE_CHOICE: return deleteChoice(state, action)
+    case actions.CHANGE_CHOICE: return changeChoice(state, action)
   }
 
   return state
+}
+
+const addChoice = (state, action) => {
+  return updateChoices(state, action.stepId, choices => choices.push({
+    value: '',
+    responses: []
+  }))
+}
+
+const deleteChoice = (state, action) => {
+  return updateChoices(state, action.stepId, choices => choices.splice(action.index, 1))
+}
+
+const changeChoice = (state, action) => {
+  return updateChoices(state, action.stepId, (choices) => {
+    choices[action.choiceChange.index] = {
+      ...choices[action.choiceChange.index],
+      value: action.choiceChange.value,
+      responses: action.choiceChange.responses.split(',').map((r) => r.trim())
+    }
+    return choices
+  })
+}
+
+const updateChoices = (state, stepId, func) => {
+  changeStep(state, stepId, step => {
+    step.choices = func(step.choices.slice())
+  })
 }
 
 const deleteStep = (state, action) => {

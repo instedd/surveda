@@ -222,6 +222,58 @@ describe('questionnaire reducer', () => {
     expect(deletedStep).toEqual(null)
     expect(steps[0].title).toEqual('Do you smoke?')
   })
+
+  it('should add choice', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15')]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(3)
+    expect(step.choices[2].value).toEqual('')
+  })
+
+  it('should delete choice', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.deleteChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 1)]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(1)
+    expect(step.choices[0].value).toEqual('Yes')
+  })
+
+  it('should modify choice', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3')
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+    expect(step.choices.length).toEqual(2)
+    expect(step.choices[1]).toEqual({
+      value: 'Maybe',
+      responses: [
+        'M',
+        'MB',
+        '3'
+      ]
+    })
+  })
 })
 
 const questionnaire = {

@@ -11,6 +11,26 @@ export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
 export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
+export const ADD_CHOICE = 'QUESTIONNAIRE_EDITOR_ADD_CHOICE'
+export const DELETE_CHOICE = 'QUESTIONNAIRE_EDITOR_DELETE_CHOICE'
+export const CHANGE_CHOICE = 'QUESTIONNAIRE_EDITOR_CHANGE_CHOICE'
+
+export const addChoice = (stepId) => ({
+  type: ADD_CHOICE,
+  stepId
+})
+
+export const changeChoice = (stepId, index, value, responses) => ({
+  type: CHANGE_CHOICE,
+  choiceChange: { index, value, responses },
+  stepId
+})
+
+export const deleteChoice = (stepId, index) => ({
+  type: DELETE_CHOICE,
+  stepId,
+  index
+})
 
 export const deleteStep = (stepId) => ({
   type: DELETE_STEP,
