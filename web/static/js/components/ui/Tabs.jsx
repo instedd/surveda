@@ -1,6 +1,9 @@
 import React, { Component, PropTypes } from 'react'
 
-class Tabs extends Component {
+export class Tabs extends Component {
+  static propTypes = {
+    children: PropTypes.node
+  }
   componentDidMount() {
     $(this.refs.node).tabs()
   }
@@ -22,9 +25,3 @@ class Tabs extends Component {
     )
   }
 }
-
-Tabs.propTypes = {
-  children: PropTypes.node
-}
-
-export default Tabs

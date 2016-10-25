@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
 import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
+import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import { createSurvey } from '../../api'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty } from '../ui'
@@ -39,7 +40,7 @@ class SurveyIndex extends Component {
   newSurvey() {
     const { dispatch, projectId, router } = this.props
     createSurvey(projectId).then(response => {
-      dispatch(actions.setSurvey(response))
+      dispatch(surveyActions.receive(response))
       router.push(routes.editSurvey(projectId, response.result))
     })
   }

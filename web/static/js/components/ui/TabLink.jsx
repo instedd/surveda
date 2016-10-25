@@ -1,7 +1,7 @@
 import React from 'react'
 import { withRouter } from 'react-router'
 
-export default withRouter(props => {
+export const TabLink = withRouter(props => {
   const { children, to, router } = props
   const className = router.isActive(to) ? 'active' : ''
   const clickHandler = () => {

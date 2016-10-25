@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 
-class ConfirmationModal extends Component {
+export class ConfirmationModal extends Component {
   componentDidMount() {
     $(document).ready(function() {
       $('.modal-trigger').leanModal()
@@ -46,7 +46,5 @@ ConfirmationModal.propTypes = {
   confirmationText: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
   modalId: PropTypes.string.isRequired,
-  style: PropTypes.string.isRequired
+  style: PropTypes.object
 }
-
-export default ConfirmationModal

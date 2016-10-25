@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 
-const CollectionItem = ({ path, icon, text, completed, className }) => {
+export const CollectionItem = ({ path, icon, text, completed, className }) => {
   return (
     <li className={`collection-item ${completed ? 'completed' : ''} ${className || ''}`}>
       <a href={path}>
@@ -21,5 +21,3 @@ CollectionItem.propTypes = {
   completed: PropTypes.bool.isRequired,
   className: PropTypes.string
 }
-
-export default CollectionItem

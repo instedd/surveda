@@ -1,8 +1,8 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import * as surveyActions from '../../actions/survey'
-import * as actions from '../../actions/surveys'
+import * as actions from '../../actions/survey'
+import * as surveyActions from '../../actions/surveys'
 import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
@@ -27,12 +27,12 @@ class SurveyEdit extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId, router } = this.props
-    dispatch(surveyActions.initializeEditor())
+    dispatch(actions.initializeEditor())
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
-      dispatch(surveyActions.fetch(projectId, surveyId))
+      dispatch(actions.fetch(projectId, surveyId))
         .then((survey) => {
-          dispatch(surveyActions.initializeEditor(survey))
+          dispatch(actions.initializeEditor(survey))
           if (survey && survey.state === 'running') {
             router.replace(routes.survey(survey.projectId, survey.id))
           }
@@ -47,7 +47,7 @@ class SurveyEdit extends Component {
   launchSurvey() {
     const { dispatch, projectId, surveyId, router } = this.props
     launchSurvey(projectId, surveyId)
-        .then(survey => dispatch(actions.setSurvey(survey)))
+        .then(survey => dispatch(actions.receive(survey)))
         .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 

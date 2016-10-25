@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as projectActions from '../../actions/project'
-import * as surveyActions from '../../actions/surveys'
+import * as surveyActions from '../../actions/survey'
 import * as questionnaireActions from '../../actions/questionnaires'
 import Title from './Title'
 

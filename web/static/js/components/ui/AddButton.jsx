@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
 import { Tooltip } from '.'
 
-const AddButton = ({ text, linkPath, onClick, children }) => {
+export const AddButton = ({ text, linkPath, onClick, children }) => {
   const icon = <i className='material-icons'>add</i>
 
   let link
@@ -31,5 +31,3 @@ AddButton.propTypes = {
   onClick: PropTypes.func,
   children: PropTypes.node
 }
-
-export default AddButton

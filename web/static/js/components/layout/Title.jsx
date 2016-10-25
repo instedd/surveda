@@ -4,6 +4,7 @@ import { EditableTitleLabel } from '../ui'
 import merge from 'lodash/merge'
 import { updateSurvey, updateProject, updateQuestionnaire } from '../../api'
 import * as projectsAction from '../../actions/project'
+import * as surveyActions from '../../actions/survey'
 import * as surveysActions from '../../actions/surveys'
 import * as questionnairesActions from '../../actions/questionnaires'
 import * as questionnaireEditorActions from '../../actions/questionnaireEditor'
@@ -79,7 +80,7 @@ var handleSubmit = (oldObject, entity, inputValue, dispatch) => {
         break
       case 'survey':
         updateSurvey(newObject.projectId, newObject)
-            .then(updatedSurvey => dispatch(surveysActions.setSurvey(updatedSurvey)))
+            .then(updatedSurvey => dispatch(surveyActions.receive(updatedSurvey)))
             .catch((e) => dispatch(surveysActions.receiveSurveysError(e)))
         break
       case 'project':

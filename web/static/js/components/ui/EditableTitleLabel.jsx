@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { UntitledIfEmpty } from '.'
 
-class EditableTitleLabel extends Component {
+export class EditableTitleLabel extends Component {
   static propTypes = {
     onSubmit: React.PropTypes.func.isRequired,
     title: React.PropTypes.string,
@@ -70,5 +70,3 @@ class EditableTitleLabel extends Component {
     }
   }
 }
-
-export default EditableTitleLabel
