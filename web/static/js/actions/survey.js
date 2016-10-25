@@ -1,5 +1,4 @@
 import * as api from '../api'
-import isEqual from 'lodash/isEqual'
 
 export const CHANGE_CUTOFF = 'SURVEY_EDITOR_CHANGE_CUTOFF'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_EDITOR_CHANGE_QUESTIONNAIRE'
@@ -21,7 +20,7 @@ export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
       dispatch(receive(response.entities.surveys[response.result]))
     })
     .then(() => {
-      getState().survey.data
+      return getState().survey.data
     })
 }
 
@@ -47,7 +46,7 @@ export const receive = (survey) => ({
 })
 
 export const shouldFetch = (state, projectId, id) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
+  return !state.fetching || !(state.filter && (state.filter.projectId === projectId && state.filter.id === id))
 }
 
 export const changeCutoff = (cutoff) => ({

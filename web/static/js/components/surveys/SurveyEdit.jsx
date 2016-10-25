@@ -27,7 +27,6 @@ class SurveyEdit extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId, router } = this.props
-    dispatch(actions.initializeEditor())
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
       dispatch(actions.fetch(projectId, surveyId))
