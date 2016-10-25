@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
-import * as actions from '../actions/surveyEdit'
+import * as actions from '../actions/survey'
 
 class SurveyWizardChannelsStep extends Component {
   static propTypes = {

@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
-import * as actions from '../actions/surveyEdit'
+import * as actions from '../actions/survey'
 import { Link } from 'react-router'
 import * as routes from '../routes'
 

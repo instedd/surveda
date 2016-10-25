@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as projectAction from '../actions/project'
-import * as surveyActions from '../actions/surveys'
+import * as surveyActions from '../actions/survey'
 import * as questionnaireActions from '../actions/questionnaires'
 import Title from '../components/Title'
 
@@ -23,7 +23,7 @@ class TitleContainer extends Component {
     if (questionnaireId) {
       dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
     } else if (surveyId) {
-      dispatch(surveyActions.fetchSurveyIfNeeded(projectId, surveyId))
+      dispatch(surveyActions.fetch(projectId, surveyId))
     } else if (projectId) {
       dispatch(projectAction.fetchProject(projectId))
     }

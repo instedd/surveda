@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
 import ConfirmationModal from '../components/ConfirmationModal'
 import { uploadRespondents, removeRespondents } from '../api'
-import * as actions from '../actions/surveyEdit'
+import * as actions from '../actions/survey'
 import * as surveyActions from '../actions/surveys'
 import * as respondentsActions from '../actions/respondents'
 
@@ -11,7 +11,6 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
     respondents: PropTypes.object.isRequired,
-    respondentsCount: PropTypes.any.isRequired,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -21,7 +20,7 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.receiveRespondents(respondents))
         dispatch(actions.updateRespondentsCount(Object.keys(respondents).length))
-        dispatch(surveyActions.fetchSurvey(survey.projectId, survey.id))
+        dispatch(actions.fetch(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })
@@ -34,23 +33,22 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
-        dispatch(surveyActions.fetchSurvey(survey.projectId, survey.id))
+        dispatch(actions.fetch(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })
   }
 
   render() {
-    const { survey, respondentsCount, respondents } = this.props
-
+    const { survey, respondents } = this.props
     if (!survey) {
       return <div>Loading...</div>
     }
 
-    if (respondentsCount !== 0) {
+    if (survey.respondentsCount !== 0) {
       return (
         <RespondentsContainer>
-          <RespondentsList respondentsCount={respondentsCount}>
+          <RespondentsList respondentsCount={survey.respondentsCount}>
             {Object.keys(respondents).map((respondentId) =>
               <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
             )}
@@ -147,10 +145,4 @@ RespondentsContainer.propTypes = {
   children: PropTypes.node
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    respondentsCount: state.respondentsCount
-  }
-}
-
-export default connect(mapStateToProps)(SurveyWizardRespondentsStep)
+export default connect()(SurveyWizardRespondentsStep)

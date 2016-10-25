@@ -1,6 +1,63 @@
-import * as actions from '../actions/surveyEdit'
+import isEqual from 'lodash/isEqual'
+import * as actions from '../actions/survey'
 
-export default (state = {}, action) => {
+const initialState = {
+  fetching: false,
+  filter: null,
+  data: null
+}
+
+export default (state = initialState, action) => {
+  switch (action.type) {
+    case actions.FETCH: return fetch(state, action)
+    case actions.RECEIVE: return receive(state, action)
+    default: return {
+      ...state,
+      data: surveyReducer(state.data, action)
+    }
+  }
+}
+
+const receive = (state, action) => {
+  const survey = action.survey
+  const filter = state.filter
+
+  return do {
+    if (filter.projectId == survey.projectId && filter.id == survey.id) {
+      ({
+        ...state,
+        fetching: false,
+        data: survey
+      })
+    } else {
+      state
+    }
+  }
+}
+
+const fetch = (state, action) => {
+  const newFilter = {
+    projectId: action.projectId,
+    id: action.id
+  }
+
+  const newData = do {
+    if (isEqual(state.filter, newFilter)) {
+      state.data
+    } else {
+      initialState.data
+    }
+  }
+
+  return {
+    ...state,
+    fetching: true,
+    filter: newFilter,
+    data: newData
+  }
+}
+
+export const surveyReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
