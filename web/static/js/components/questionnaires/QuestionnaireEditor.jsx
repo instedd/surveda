@@ -9,7 +9,6 @@ import * as questionnaireActions from '../../actions/questionnaires'
 import * as actions from '../../actions/questionnaireEditor'
 import { questionnaireForServer } from '../../reducers/questionnaireEditor'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import * as routes from '../../routes'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -33,18 +32,16 @@ class QuestionnaireEditor extends Component {
 
   questionnaireSave(event) {
     event.preventDefault()
-    const { questionnaireEditor, router } = this.props
+    const { questionnaireEditor } = this.props
 
     const questionnaire = questionnaireForServer(questionnaireEditor)
 
     if (questionnaire.id == null) {
       createQuestionnaire(questionnaire.projectId, questionnaire)
         .then(questionnaire => this.props.questionnaireActions.createQuestionnaire(questionnaire))
-        .then(() => router.push(routes.questionnaires(questionnaire.projectId)))
     } else {
       updateQuestionnaire(questionnaire.projectId, questionnaire)
         .then(questionnaire => this.props.questionnaireActions.updateQuestionnaire(questionnaire))
-        .then(() => router.push(routes.questionnaires(questionnaire.projectId)))
     }
   }
 
@@ -121,6 +118,14 @@ class QuestionnaireEditor extends Component {
                 <option value='SMS'>SMS</option>
               </Input>
             </div>
+            <div className='row'>
+              <button
+                type='button'
+                className='btn waves-effect waves-light'
+                onClick={e => this.questionnaireSave(e)}>
+              Save
+              </button>
+            </div>
           </div>
           <div className='col s12 m7 offset-m1'>
             <QuestionnaireSteps steps={questionnaireEditor.steps} />
@@ -132,16 +137,6 @@ class QuestionnaireEditor extends Component {
                 <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
               </div>
             </div>
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col s12'>
-            <button
-              type='button'
-              className='btn waves-effect waves-light'
-              onClick={e => this.questionnaireSave(e)}>
-              Save
-            </button>
           </div>
         </div>
       </div>
