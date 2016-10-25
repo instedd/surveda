@@ -51,6 +51,7 @@ main:not(.main-welcome) {
   > div {
     flex: 1;
     padding-top: 90px;
+    padding-bottom: 80px;
   }
 }
 
@@ -137,6 +138,8 @@ header {
 
 
 footer {
+  position: relative;
+  margin-top: -40px;
 }
 
 
