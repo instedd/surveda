@@ -175,6 +175,12 @@ footer {
         }
       }
     }
+    table.responses-table {
+      input[type=text] {
+        margin-bottom: 0;
+        height: auto;
+      }
+    }
   }
 }
 
