@@ -27,13 +27,13 @@ class SurveyEdit extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId, router } = this.props
-    dispatch(surveyActions.initializeEditor({}))
+    dispatch(surveyActions.initializeEditor())
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
-      dispatch(surveyActions.fetch({projectId, id: surveyId}))
+      dispatch(surveyActions.fetch(projectId, surveyId))
         .then((survey) => {
           dispatch(surveyActions.initializeEditor(survey))
-          if (survey.state === 'running') {
+          if (survey && survey.state === 'running') {
             router.replace(routes.survey(survey.projectId, survey.id))
           }
         })

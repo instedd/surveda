@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 import expect from 'expect'
+import assert from 'assert'
 import each from 'lodash/each'
 import reducer, {surveyReducer} from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
@@ -23,6 +24,14 @@ describe('survey reducer', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.filter).toEqual(null)
     expect(initialState.data).toEqual(null)
+  })
+
+  it('should fetch', () => {
+    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 1, 1))
+    assert(actions.shouldFetch({fetching: true, filter: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 2, 2))
+    assert(actions.shouldFetch({fetching: false, filter: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, id: 1}}, 1, 1))
   })
 
   it('fetches a survey', () => {

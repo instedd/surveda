@@ -14,11 +14,15 @@ export const SET_SURVEY = 'SET_SURVEY'
 export const FETCH = 'FETCH'
 export const RECEIVE = 'RECEIVE'
 
-const fetchSurvey = ({projectId, id}) => (dispatch, getState) => {
+export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
   dispatch(fetching(projectId, id))
   return api.fetchSurvey(projectId, id)
-    .then(survey => dispatch(receive(survey)))
-    .then(() => getState().surveys[id])
+    .then(response => {
+      dispatch(receive(response.entities.surveys[response.result]))
+    })
+    .then(() => {
+      getState().survey.data
+    })
 }
 
 export const fetching = (projectId, id) => ({
@@ -28,13 +32,11 @@ export const fetching = (projectId, id) => ({
 })
 
 export const fetch = (projectId, id) => {
-  return fetchIfNeeded({ projectId, id }, fetchSurvey)
-}
-
-export const fetchIfNeeded = (filter, fetch) => {
   return (dispatch, getState) => {
-    if (shouldFetch(getState(), filter)) {
-      return dispatch(fetch(filter))
+    if (shouldFetch(getState().survey, projectId, id)) {
+      return dispatch(fetchSurvey(projectId, id))
+    } else {
+      return Promise.resolve(getState().survey.data)
     }
   }
 }
@@ -44,8 +46,8 @@ export const receive = (survey) => ({
   survey
 })
 
-const shouldFetch = (state, filter) => {
-  return isEqual(state.filter, filter) || state.fetching === false
+export const shouldFetch = (state, projectId, id) => {
+  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
 export const setSurvey = (response) => ({

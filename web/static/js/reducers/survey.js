@@ -20,13 +20,10 @@ export default (state = initialState, action) => {
 
 const receive = (state, action) => {
   const survey = action.survey
-  const dataFilter = {
-    projectId: survey.projectId,
-    id: survey.id
-  }
+  const filter = state.filter
 
   return do {
-    if (isEqual(state.filter, dataFilter)) {
+    if (filter.projectId == survey.projectId && filter.id == survey.id) {
       ({
         ...state,
         fetching: false,
