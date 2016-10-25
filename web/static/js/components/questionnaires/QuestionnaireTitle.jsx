@@ -25,7 +25,7 @@ class QuestionnaireTitle extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    questionnaire: state.questionnaireEditor.questionnaire
+    questionnaire: state.questionnaire.data
   }
 }
 
