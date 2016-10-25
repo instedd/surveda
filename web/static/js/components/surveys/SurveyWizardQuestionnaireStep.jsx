@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
+import { UntitledIfEmpty } from '../ui'
 
 class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
@@ -58,7 +59,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                     defaultChecked={this.props.survey.questionnaireId === questionnaireId}
                     onClick={e => this.questionnaireChange(e)}
                   />
-                  <label htmlFor={questionnaireId}>{ questionnaires[questionnaireId].name }</label>
+                  <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} /></label>
                 </p>
               </div>
             ))}
