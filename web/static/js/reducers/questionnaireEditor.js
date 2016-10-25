@@ -1,8 +1,5 @@
 import * as actions from '../actions/questionnaireEditor'
 import reduce from 'lodash/reduce'
-import toArray from 'lodash/toArray'
-import cloneDeep from 'lodash/cloneDeep'
-import uuid from 'node-uuid'
 
 const defaultState = {
   steps: {
@@ -19,51 +16,21 @@ export default (state = defaultState, action) => {
   }
 }
 
-export const questionnaireForServer = (questionnaireEditor) => {
-  let quiz = Object.assign({}, questionnaireEditor.questionnaire)
-  quiz['steps'] = toArray(questionnaireEditor.steps.items)
-
-  return quiz
-}
-
 const questionnaireReducer = (state, action) => {
   switch (action.type) {
-    case actions.CHANGE_QUESTIONNAIRE_MODES: return changeQuestionnaireModes(state, action)
     case actions.INITIALIZE_EDITOR: return initializeQuestionnaire(state, action)
-    case actions.NEW_QUESTIONNAIRE: return newQuestionnaire(state, action)
     default: return state
   }
 }
 
 const stepsReducer = (state, action) => {
   switch (action.type) {
-    case actions.NEW_QUESTIONNAIRE: return newQuestionnaireSteps(state, action)
-    case actions.SELECT_STEP: return selectStep(state, action)
-    case actions.DESELECT_STEP: return deselectStep(state, action)
-    case actions.ADD_STEP: return addStep(state, action)
-    case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
     case actions.INITIALIZE_EDITOR: return initializeQuestionnaireSteps(state, action)
-    case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
-    case actions.CHANGE_STEP_SMS_PROMPT: return changeStepSmsPrompt(state, action)
-    case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.CHANGE_CHOICE: return changeChoice(state, action)
     default: return state
   }
-}
-
-const changeStepStore = (state, action) => {
-  return changeStep(state, step => { step.store = action.newStore })
-}
-
-const changeStepSmsPrompt = (state, action) => {
-  return changeStep(state, step => {
-    step.prompt = {
-      ...state.items[state.current.id].prompt,
-      sms: action.newPrompt
-    }
-  })
 }
 
 const changeChoice = (state, action) => {
@@ -91,49 +58,6 @@ const updateChoices = (state, func) => {
   }
 }
 
-const stepTypeDisplay = (stepType) => {
-  switch (stepType) {
-    case 'multiple-choice':
-      return 'multiple choice'
-    case 'numeric':
-      return 'numeric'
-    default:
-      return 'question'
-  }
-}
-
-export const buildNewStep = (stepType) => ({
-  id: uuid.v4(),
-  type: stepType,
-  title: '',
-  store: '',
-  prompt: {
-    sms: ''
-  },
-  choices: []
-})
-
-const changeQuestionnaireModes = (state, action) => {
-  return {
-    ...state,
-    modes: action.newModes.split(',')
-  }
-}
-
-const changeStep = (state, func) => {
-  let newState = {
-    ...state,
-    items: {
-      ...state.items,
-      [state.current.id]: {
-        ...state.items[state.current.id]
-      }
-    }
-  }
-  func(newState.items[state.current.id])
-  return newState
-}
-
 const initializeQuestionnaire = (state, action) => {
   const q = action.questionnaire
   return {
@@ -158,47 +82,6 @@ const reduceStepsForEditor = (items, step) => {
   return items
 }
 
-const selectStep = (state, action) => {
-  return ({
-    ...state,
-    current: { id: action.stepId }
-  })
-}
-
-const deselectStep = (state, action) => {
-  return ({
-    ...state,
-    current: null
-  })
-}
-
-const addStep = (state, action) => {
-  const newStep = buildNewStep(action.stepType)
-
-  return {
-    ...state,
-    ids: state.ids.concat([newStep.id]),
-    items: {
-      ...state.items,
-      [newStep.id]: newStep
-    },
-    current: { id: newStep.id }
-  }
-}
-
-const deleteStep = (state, action) => {
-  let ids = state.ids.filter(id => id !== state.current.id)
-  let items = Object.assign({}, state.items)
-  delete items[state.current.id]
-
-  return {
-    ...state,
-    ids,
-    items,
-    current: null
-  }
-}
-
 const addChoice = (state, action) => {
   return updateChoices(state, choices => choices.push({
     value: '',
@@ -208,28 +91,4 @@ const addChoice = (state, action) => {
 
 const deleteChoice = (state, action) => {
   return updateChoices(state, choices => choices.splice(action.index, 1))
-}
-
-const newQuestionnaire = (state, action) => {
-  return {
-    ...state,
-    id: null,
-    name: '',
-    modes: ['SMS'],
-    projectId: action.projectId
-  }
-}
-
-const newQuestionnaireSteps = (state, action) => {
-  let steps = cloneDeep(defaultState.steps)
-  let defaultStep = buildNewStep('multiple-choice')
-  steps.ids.push(defaultStep.id)
-  steps.items[defaultStep.id] = defaultStep
-  steps.current = { id: defaultStep.id }
-
-  return steps
-}
-
-const changeStepTitle = (state, action) => {
-  return changeStep(state, step => { step.title = action.newTitle })
 }

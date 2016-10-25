@@ -6,7 +6,6 @@ import surveys from './surveys'
 import respondentsStats from './respondentsStats'
 import questionnaires from './questionnaires'
 import questionnaire from './questionnaire'
-import questionnaireEditor from './questionnaireEditor'
 import survey from './survey'
 import channels from './channels'
 import guisso from './guisso'
@@ -21,7 +20,6 @@ export default combineReducers({
   respondentsStats,
   questionnaire,
   questionnaires,
-  questionnaireEditor,
   survey,
   respondents,
   respondentsCount,

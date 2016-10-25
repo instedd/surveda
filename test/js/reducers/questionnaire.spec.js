@@ -1,7 +1,8 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import each from 'lodash/each'
-import reducer from '../../../web/static/js/reducers/questionnaire'
+import find from 'lodash/find'
+import reducer, { buildNewStep } from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -104,6 +105,123 @@ describe('questionnaire reducer', () => {
 
     expect(result.data.name).toEqual('Some other name')
   })
+
+  it('should change to a single mode', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeModes('IVR')
+    ])
+
+    expect(result.data.modes.length).toEqual(1)
+    expect(result.data.modes).toEqual(['IVR'])
+  })
+
+  it('should change to multiple modes', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeModes('SMS,IVR')
+    ])
+
+    /* Expectations on arrays must include a check for length
+    because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
+    expect(result.data.modes.length).toEqual(2)
+    expect(result.data.modes).toEqual(['SMS', 'IVR'])
+  })
+
+  it('should add step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.addStep('multiple-choice')
+    ])
+
+    const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+    expect(resultState.data.steps.length).toEqual(preState.data.steps.length + 1)
+    expect(newStep.title).toEqual(buildNewStep('multiple-choice').title)
+  })
+
+  it('should initialize for the questionnaire creation use case', () => {
+    const result = reducer(initialState, actions.newQuestionnaire(123))
+    const questionnaire = result.data
+
+    expect(questionnaire)
+    .toEqual({
+      id: null,
+      name: '',
+      modes: ['SMS'],
+      projectId: 123,
+      steps: []
+    })
+  })
+
+  it('should update step title', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.changeStepTitle('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New title')
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.title).toEqual('New title')
+  })
+
+  it('should update step prompt sms', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New prompt')]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.prompt.sms).toEqual('New prompt')
+  })
+
+  it('should update step store', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, [
+      actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New store')]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.store).toEqual('New store')
+  })
+
+  it('should delete step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const preSteps = preState.data.steps
+
+    const resultState = playActionsFromState(preState, [
+      actions.deleteStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    ])
+
+    const steps = resultState.data.steps
+
+    const deletedStep = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+
+    expect(steps.length).toEqual(preSteps.length - 1)
+    expect(deletedStep).toEqual(null)
+    expect(steps[0].title).toEqual('Do you smoke?')
+  })
 })
 
 const questionnaire = {
@@ -130,7 +248,10 @@ const questionnaire = {
             '1'
           ]
         }
-      ]
+      ],
+      'prompt': {
+        'sms': ''
+      }
     },
     {
       'type': 'multiple-choice',
@@ -154,7 +275,10 @@ const questionnaire = {
             '1'
           ]
         }
-      ]
+      ],
+      'prompt': {
+        'sms': ''
+      }
     }
   ],
   'projectId': 1,

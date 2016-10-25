@@ -1,5 +1,9 @@
+import filter from 'lodash/filter'
+import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
+import toInteger from 'lodash/toInteger'
 import * as actions from '../actions/questionnaire'
+import uuid from 'node-uuid'
 
 const defaultState = {
   fetching: false,
@@ -7,17 +11,115 @@ const defaultState = {
   data: null
 }
 
-export default (state = defaultState, action) => {
+export default (state, action) => {
+  if (state === undefined) {
+    return defaultState
+  }
+
   switch (action.type) {
     case actions.FETCH: return fetch(state, action)
     case actions.RECEIVE: return receive(state, action)
-    case actions.CHANGE_NAME:
-      return {
-        ...state,
-        data: changeName(state.data, action)
-      }
+    case actions.NEW: return newQuestionnaire(state, action)
   }
+
+  return {
+    ...state,
+    data: state.data == null ? null : dataReducer(state.data, action)
+  }
+}
+
+const dataReducer = (state, action) => {
+  switch (action.type) {
+    case actions.CHANGE_NAME: return changeName(state, action)
+    case actions.CHANGE_MODES: return changeModes(state, action)
+  }
+
+  return {
+    ...state,
+    steps: stepsReducer(state.steps, action)
+  }
+}
+
+const stepsReducer = (state, action) => {
+  switch (action.type) {
+    case actions.ADD_STEP: return addStep(state, action)
+    case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
+    case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
+    case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
+    case actions.DELETE_STEP: return deleteStep(state, action)
+  }
+
   return state
+}
+
+const deleteStep = (state, action) => {
+  return filter(state, s => s.id !== action.stepId)
+}
+
+const changeStep = (state, stepId, func) => {
+  let newState = state.slice()
+  const stepIndex = findIndex(newState, s => s.id === stepId)
+
+  func(newState[stepIndex])
+  return newState
+}
+
+const changeStepSmsPrompt = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    step.prompt.sms = action.newPrompt
+  })
+}
+
+const changeStepTitle = (state, action) => {
+  return changeStep(state, action.stepId, step => { step.title = action.newTitle })
+}
+
+const changeStepStore = (state, action) => {
+  return changeStep(state, action.stepId, step => { step.store = action.newStore })
+}
+
+const buildFilter = (projectId, questionnaireId) => ({
+  projectId: toInteger(projectId),
+  questionnaireId: questionnaireId == null ? null : toInteger(questionnaireId)
+})
+
+const newQuestionnaire = (state, action) => {
+  return {
+    ...state,
+    fetching: false,
+    filter: buildFilter(action.projectId, null),
+    data: {
+      id: null,
+      name: '',
+      modes: ['SMS'],
+      projectId: action.projectId,
+      steps: []
+    }
+  }
+}
+
+const addStep = (state, action) => {
+  const newState = state.slice()
+  newState.push(action.newStep)
+  return newState
+}
+
+export const buildNewStep = (stepType) => ({
+  id: uuid.v4(),
+  type: stepType,
+  title: '',
+  store: '',
+  prompt: {
+    sms: ''
+  },
+  choices: []
+})
+
+const changeModes = (state, action) => {
+  return {
+    ...state,
+    modes: action.newModes.split(',')
+  }
 }
 
 const changeName = (state, action) => {
@@ -29,10 +131,7 @@ const changeName = (state, action) => {
 
 const receive = (state, action) => {
   const questionnaire = action.questionnaire
-  const dataFilter = {
-    projectId: questionnaire.projectId,
-    questionnaireId: questionnaire.id
-  }
+  const dataFilter = buildFilter(questionnaire.projectId, questionnaire.id)
 
   if (isEqual(state.filter, dataFilter)) {
     return {
@@ -46,10 +145,7 @@ const receive = (state, action) => {
 }
 
 const fetch = (state, action) => {
-  const newFilter = {
-    projectId: action.projectId,
-    questionnaireId: action.questionnaireId
-  }
+  const newFilter = buildFilter(action.projectId, action.questionnaireId)
 
   let newData = null
 
