@@ -34,6 +34,43 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
+  defp next_step_by_skip_logic(flow, step, reply_value) do
+    skip_logic =
+      step
+      |> Map.get("choices")
+      |> Enum.find(fn choice -> choice["value"] == reply_value end)
+      |> Map.get("skip_logic")
+
+    case skip_logic do
+      nil ->
+        flow.current_step + 1
+      "end" ->
+        length(flow.questionnaire.steps)
+      next_id ->
+        next_step_index =
+          flow.questionnaire.steps
+          |> Enum.find_index(fn istep -> istep["id"] == next_id end)
+
+        if (!next_step_index || flow.current_step > next_step_index) do
+          raise "Skip logic: invalid step id."
+        end
+
+        next_step_index
+    end
+  end
+
+  defp advance_current_step(flow, step, reply_value) do
+    next_step =
+      cond do
+        step["type"] == "numeric" || !reply_value ->
+          flow.current_step + 1
+        :else ->
+          next_step_by_skip_logic(flow, step, reply_value)
+      end
+
+    %{flow | current_step: next_step}
+  end
+
   defp accept_reply(flow = %Flow{current_step: nil}, nil) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}}
@@ -47,7 +84,6 @@ defmodule Ask.Runtime.Flow do
     reply = reply |> clean_string
 
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
-    flow = %{flow | current_step: flow.current_step + 1}
 
     reply_value = case step["type"] do
                     "multiple-choice" ->
@@ -59,6 +95,8 @@ defmodule Ask.Runtime.Flow do
                     "numeric" ->
                       if (is_numeric(reply)), do: reply, else: nil
                   end
+
+    flow = flow |> advance_current_step(step, reply_value)
 
     case reply_value do
       nil ->
