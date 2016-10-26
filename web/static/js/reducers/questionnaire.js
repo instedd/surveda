@@ -56,33 +56,37 @@ const stepsReducer = (state, action) => {
 }
 
 const addChoice = (state, action) => {
-  return updateChoices(state, action.stepId, choices => {
-    choices.push({
-      value: '',
-      responses: []
-    })
-    return choices
+  return changeStep(state, action.stepId, (step) => {
+    step.choices = [
+      ...step.choices,
+      {
+        value: '',
+        responses: []
+      }
+    ]
   })
 }
 
 const deleteChoice = (state, action) => {
-  return updateChoices(state, action.stepId, choices => choices.splice(action.index, 1))
-}
-
-const changeChoice = (state, action) => {
-  return updateChoices(state, action.stepId, (choices) => {
-    choices[action.choiceChange.index] = {
-      ...choices[action.choiceChange.index],
-      value: action.choiceChange.value,
-      responses: action.choiceChange.responses.split(',').map((r) => r.trim())
-    }
-    return choices
+  return changeStep(state, action.stepId, (step) => {
+    step.choices = [
+      ...step.choices.slice(0, action.index),
+      ...step.choices.slice(action.index + 1)
+    ]
   })
 }
 
-const updateChoices = (state, stepId, func) => {
-  return changeStep(state, stepId, step => {
-    step.choices = func(step.choices.slice())
+const changeChoice = (state, action) => {
+  return changeStep(state, action.stepId, (step) => {
+    step.choices = [
+      ...step.choices.slice(0, action.choiceChange.index),
+      {
+        ...step.choices[action.choiceChange.index],
+        value: action.choiceChange.value,
+        responses: action.choiceChange.responses.split(',').map((r) => r.trim())
+      },
+      ...step.choices.slice(action.choiceChange.index + 1)
+    ]
   })
 }
 
