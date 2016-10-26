@@ -21,7 +21,7 @@ const Header = ({ tabs, logout, user, project }) => {
       <nav id='TopNav'>
         <div className='nav-wrapper'>
           <div className='row'>
-            <div className='col s5 m4'>
+            <div className='col s5 m6'>
               <ul>
                 <li>
                   <Link to={routes.projects} className=''> Projects </Link>
@@ -32,7 +32,7 @@ const Header = ({ tabs, logout, user, project }) => {
                 </li>
               </ul>
             </div>
-            <div className='col s8 m8'>
+            <div className='col s8 m6'>
               <ul className='right'>
                 <li>
                   <Dropdown text={user}>
