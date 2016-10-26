@@ -61,7 +61,7 @@ class SurveyWizardScheduleStep extends Component {
         </div>
         <div className='row'>
           {days.map((day) => (
-            <div className='col s1' key={day}>
+            <div className='col' key={day}>
               <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.scheduleDayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`} onClick={() =>
                 this.toggleDay(day)
               }>
