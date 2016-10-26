@@ -56,10 +56,13 @@ const stepsReducer = (state, action) => {
 }
 
 const addChoice = (state, action) => {
-  return updateChoices(state, action.stepId, choices => choices.push({
-    value: '',
-    responses: []
-  }))
+  return updateChoices(state, action.stepId, choices => {
+    choices.push({
+      value: '',
+      responses: []
+    })
+    return choices
+  })
 }
 
 const deleteChoice = (state, action) => {
@@ -78,7 +81,7 @@ const changeChoice = (state, action) => {
 }
 
 const updateChoices = (state, stepId, func) => {
-  changeStep(state, stepId, step => {
+  return changeStep(state, stepId, step => {
     step.choices = func(step.choices.slice())
   })
 }
@@ -130,9 +133,10 @@ const newQuestionnaire = (state, action) => {
 }
 
 const addStep = (state, action) => {
-  const newState = state.slice()
-  newState.push(action.newStep)
-  return newState
+  return [
+    ...state,
+    action.newStep
+  ]
 }
 
 export const buildNewStep = (stepType) => ({

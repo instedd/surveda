@@ -245,7 +245,7 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, [
-      actions.deleteChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 1)]
+      actions.deleteChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 0)]
     )
 
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
