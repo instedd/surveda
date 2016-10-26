@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 import expect from 'expect'
+import assert from 'assert'
 import each from 'lodash/each'
 import find from 'lodash/find'
 import reducer, { buildNewStep } from '../../../web/static/js/reducers/questionnaire'
@@ -33,6 +34,14 @@ describe('questionnaire reducer', () => {
     ])
     expect(state.fetching).toEqual(false)
     expect(state.data).toEqual(questionnaire)
+  })
+
+  it('should fetch', () => {
+    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, questionnaireId: 1}}, 1, 1))
+    assert(actions.shouldFetch({fetching: true, filter: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, questionnaireId: 1}}, 2, 2))
+    assert(actions.shouldFetch({fetching: false, filter: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, questionnaireId: 1}}, 1, 1))
   })
 
   it('fetches a questionnaire', () => {

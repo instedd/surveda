@@ -4,7 +4,6 @@ import { Input } from 'react-materialize'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
-import * as questionnairesActions from '../../actions/questionnaires'
 import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 
@@ -93,12 +92,7 @@ class QuestionnaireEditor extends Component {
     if (projectId) {
       if (questionnaireId) {
         this.props.projectActions.fetchProject(projectId)
-        this.props.questionnaireActions.fetch(projectId, questionnaireId)
-
-        this.props.questionnairesActions.fetchQuestionnaire(projectId, questionnaireId)
-          .then((questionnaire) => {
-            this.props.questionnaireActions.receive(questionnaire[0])
-          })
+        this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
       } else {
         this.props.questionnaireActions.newQuestionnaire(projectId)
       }
@@ -156,7 +150,6 @@ class QuestionnaireEditor extends Component {
 
 QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
-  questionnairesActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
   projectId: PropTypes.number,
@@ -172,8 +165,7 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
-  questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireEditor))
