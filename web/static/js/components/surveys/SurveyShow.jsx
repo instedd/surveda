@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import * as actions from '../../actions/surveys'
+import * as actions from '../../actions/survey'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import { UntitledIfEmpty } from '../ui'
