@@ -10,7 +10,6 @@ import QuestionnaireSteps from './QuestionnaireSteps'
 class QuestionnaireEditor extends Component {
   constructor(props) {
     super(props)
-
     this.state = this.internalState(null)
   }
 
@@ -18,17 +17,12 @@ class QuestionnaireEditor extends Component {
     this.setState(this.internalState(stepId))
   }
 
-  questionnaireNameSubmit(event) {
-    event.preventDefault()
-    this.props.questionnaireActions.changeName(event.target.value)
-  }
-
   deselectStep() {
     this.setState(this.internalState(null))
   }
 
-  questionnaireModesChange(event) {
-    this.props.questionnaireActions.changeModes(event.target.value)
+  toggleMode(event, mode) {
+    this.props.questionnaireActions.toggleMode(mode)
   }
 
   questionnaireSave(event) {
@@ -77,8 +71,8 @@ class QuestionnaireEditor extends Component {
     // I couldn't find a better way. Ideally this should be a sort of "callback"
     // to the addStep method, without involving additional component state handling
     // or explicit management via Redux reducers.
-    const questionnaireData = newProps.questionnaire.data
-    if (this.state.addingStep && questionnaireData != null && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
+    const questionnaireData = newProps.questionnaire
+    if (this.state.addingStep && questionnaireData && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
       const newStep = questionnaireData.steps[questionnaireData.steps.length - 1]
       if (newStep != null) {
         this.setState(this.internalState(newStep.id))
@@ -102,20 +96,42 @@ class QuestionnaireEditor extends Component {
   render() {
     const { questionnaire } = this.props
 
-    if (questionnaire.data == null) {
+    if (questionnaire == null) {
       return <div>Loading...</div>
     }
+
+    const sms = questionnaire.modes.indexOf('SMS') !== -1
+    const ivr = questionnaire.modes.indexOf('IVR') !== -1
 
     return (
       <div className='row'>
         <div className='row'>
           <div className='col s12 m4'>
             <div className='row'>
-              <Input s={12} type='select' label='Modes'
-                value={questionnaire.data.modes.join(',')}
-                onChange={e => this.questionnaireModesChange(e)}>
-                <option value='SMS'>SMS</option>
-              </Input>
+              <div className='col s6'>
+                SMS
+              </div>
+              <div className='col s6'>
+                <div className='switch'>
+                  <label>
+                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'SMS')} />
+                    <span className='lever' />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className='row'>
+              <div className='col s6'>
+                IVR
+              </div>
+              <div className='col s6'>
+                <div className='switch'>
+                  <label>
+                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'IVR')} />
+                    <span className='lever' />
+                  </label>
+                </div>
+              </div>
             </div>
             <div className='row'>
               <button
@@ -128,7 +144,7 @@ class QuestionnaireEditor extends Component {
           </div>
           <div className='col s12 m7 offset-m1'>
             <QuestionnaireSteps
-              steps={questionnaire.data.steps}
+              steps={questionnaire.steps}
               current={this.state.currentStep}
               onSelectStep={stepId => this.selectStep(stepId)}
               onDeselectStep={() => this.deselectStep()}
@@ -154,13 +170,13 @@ QuestionnaireEditor.propTypes = {
   router: PropTypes.object,
   projectId: PropTypes.number,
   questionnaireId: PropTypes.string,
-  questionnaire: PropTypes.object.isRequired
+  questionnaire: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   questionnaireId: ownProps.params.questionnaireId,
-  questionnaire: state.questionnaire
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({

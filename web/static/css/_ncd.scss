@@ -100,6 +100,9 @@ header {
         margin-left: 5px;
       }
     }
+    .dropdown-content > li >  a {
+      @extend .black-text;
+    }
   }
 }
 
@@ -176,6 +179,12 @@ footer {
         a {
           color: inherit;
         }
+      }
+    }
+    table.responses-table {
+      input[type=text] {
+        margin-bottom: 0;
+        height: auto;
       }
     }
   }
@@ -274,6 +283,10 @@ footer {
       }
     }
   }
+}
+
+.sidebar.pinned {
+  width: 24.9vw;
 }
 
 // ------- Forms --------------

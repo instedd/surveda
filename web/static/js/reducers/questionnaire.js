@@ -31,7 +31,7 @@ export default (state, action) => {
 const dataReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
-    case actions.CHANGE_MODES: return changeModes(state, action)
+    case actions.TOGGLE_MODE: return toggleMode(state, action)
   }
 
   return {
@@ -168,10 +168,17 @@ export const buildNewStep = (stepType) => ({
   choices: []
 })
 
-const changeModes = (state, action) => {
+const toggleMode = (state, action) => {
+  let modes = state.modes
+  if (modes.indexOf(action.mode) === -1) {
+    modes = modes.slice()
+    modes.push(action.mode)
+  } else {
+    modes = modes.filter(mode => mode !== action.mode)
+  }
   return {
     ...state,
-    modes: action.newModes.split(',')
+    modes
   }
 }
 

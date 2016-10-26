@@ -34,12 +34,12 @@ class StepMultipleChoiceEditor extends Component {
         <p><b>List the texts you want to store for each possible choice and define valid values by commas.</b></p>
         <Card>
           <div className='card-table'>
-            <table>
+            <table className='responses-table'>
               <thead>
                 <tr>
-                  <th>Response</th>
-                  <th>SMS</th>
-                  <th />
+                  <th style={{width: '45%'}}>Response</th>
+                  <th style={{width: '45%'}}>SMS</th>
+                  <th style={{width: '10%'}} />
                 </tr>
               </thead>
               <tbody>

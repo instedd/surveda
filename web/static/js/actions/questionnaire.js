@@ -5,7 +5,7 @@ export const NEW = 'QUESTIONNAIRE_NEW'
 export const FETCH = 'QUESTIONNAIRE_FETCH'
 export const RECEIVE = 'QUESTIONNAIRE_RECEIVE'
 export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
-export const CHANGE_MODES = 'QUESTIONNAIRE_CHANGE_MODES'
+export const TOGGLE_MODE = 'QUESTIONNAIRE_TOGGLE_MODE'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
@@ -101,9 +101,9 @@ export const changeName = (newName) => ({
   newName
 })
 
-export const changeModes = (newModes) => ({
-  type: CHANGE_MODES,
-  newModes
+export const toggleMode = (mode) => ({
+  type: TOGGLE_MODE,
+  mode
 })
 
 export const addStep = (stepType) => {

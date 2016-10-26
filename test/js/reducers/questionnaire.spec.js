@@ -116,28 +116,41 @@ describe('questionnaire reducer', () => {
     expect(result.data.name).toEqual('Some other name')
   })
 
-  it('should change to a single mode', () => {
+  it('should toggle mode', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.changeModes('IVR')
+      actions.toggleMode('IVR')
     ])
 
-    expect(result.data.modes.length).toEqual(1)
-    expect(result.data.modes).toEqual(['IVR'])
+    expect(result.data.modes.length).toEqual(2)
+    expect(result.data.modes).toEqual(['SMS', 'IVR'])
   })
 
-  it('should change to multiple modes', () => {
+  it('should toggle other mode', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.changeModes('SMS,IVR')
+      actions.toggleMode('SMS')
     ])
 
     /* Expectations on arrays must include a check for length
     because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
-    expect(result.data.modes.length).toEqual(2)
-    expect(result.data.modes).toEqual(['SMS', 'IVR'])
+    expect(result.data.modes.length).toEqual(0)
+  })
+
+  it('should toggle modes multiple times', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.toggleMode('SMS'),
+      actions.toggleMode('IVR')
+    ])
+
+    /* Expectations on arrays must include a check for length
+    because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
+    expect(result.data.modes.length).toEqual(1)
+    expect(result.data.modes).toEqual(['IVR'])
   })
 
   it('should add step', () => {
