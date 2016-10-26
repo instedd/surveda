@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import { EditableTitleLabel } from '../ui'
-import * as questionnaireEditorActions from '../../actions/questionnaireEditor'
+import * as questionnaireEditorActions from '../../actions/questionnaire'
 
 class QuestionnaireTitle extends Component {
   static propTypes = {
