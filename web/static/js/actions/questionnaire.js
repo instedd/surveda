@@ -115,12 +115,11 @@ export const addStep = (stepType) => {
 
 export const save = () => {
   return (dispatch, getState) => {
-    const questionnaire = getState().questionnaire
-
-    if (questionnaire.id == null) {
-      api.createQuestionnaire(questionnaire.projectId, questionnaire)
-    } else {
+    const questionnaire = getState().questionnaire.data
+    if (questionnaire.id) {
       api.updateQuestionnaire(questionnaire.projectId, questionnaire)
+    } else {
+      api.createQuestionnaire(questionnaire.projectId, questionnaire)
     }
   }
 }
