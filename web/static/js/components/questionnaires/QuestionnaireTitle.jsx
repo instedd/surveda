@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import { EditableTitleLabel } from '../ui'
-import * as questionnaireEditorActions from '../../actions/questionnaire'
+import * as questionnaireActions from '../../actions/questionnaire'
 
 class QuestionnaireTitle extends Component {
   static propTypes = {
@@ -12,7 +12,7 @@ class QuestionnaireTitle extends Component {
 
   handleSubmit(newName) {
     const { dispatch } = this.props
-    dispatch(questionnaireEditorActions.changeQuestionnaireName(newName))
+    dispatch(questionnaireActions.changeName(newName))
   }
 
   render() {
