@@ -61,7 +61,6 @@ export const surveyReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
-    case actions.INITIALIZE_EDITOR: return initializeEditor(state, action)
     case actions.TOGGLE_DAY: return toggleDay(state, action)
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
@@ -129,8 +128,4 @@ const updateRespondentsCount = (state, action) => {
     ...state,
     respondentsCount: action.respondentsCount
   }
-}
-
-const initializeEditor = (state, action) => {
-  return action.survey
 }

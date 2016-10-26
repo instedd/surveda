@@ -31,7 +31,6 @@ class SurveyEdit extends Component {
       projectActions.fetchProject(projectId)
       dispatch(actions.fetch(projectId, surveyId))
         .then((survey) => {
-          dispatch(actions.initializeEditor(survey))
           if (survey && survey.state === 'running') {
             router.replace(routes.survey(survey.projectId, survey.id))
           }
