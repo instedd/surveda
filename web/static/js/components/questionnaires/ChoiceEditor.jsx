@@ -33,34 +33,44 @@ class ChoiceEditor extends Component {
     return { response: choice.value, sms: choice.responses.join(', ') }
   }
 
-  enterEditMode(event) {
+  enterEditMode(event, focus) {
     event.preventDefault()
     this.setState({
       ...this.state,
-      editing: true
+      editing: true,
+      focus: focus
     })
   }
 
   exitEditMode() {
     const { onChoiceChange } = this.props
+    if (this.state.doNotClose) {
+      this.state.doNotClose = false
+    } else {
+      this.setState({
+        ...this.state,
+        editing: false
+      }, () => {
+        onChoiceChange(this.state.response, this.state.sms)
+      })
+    }
+  }
 
-    this.setState({
-      ...this.state,
-      editing: false
-    }, () => {
-      onChoiceChange(this.state.response, this.state.sms)
-    })
+  setDoNotClose() {
+    this.state.doNotClose = true
   }
 
   onKeyDown(event) {
     if (event.key === 'Enter') {
       event.preventDefault()
       this.exitEditMode()
+    } else if (event.key === 'Tab') {
+      this.setDoNotClose()
     }
   }
 
   render() {
-    const { onChoiceChange, onDelete } = this.props
+    const { onDelete } = this.props
     if (this.state.editing) {
       return (
         <tr>
@@ -69,8 +79,10 @@ class ChoiceEditor extends Component {
               type='text'
               placeholder='Response'
               value={this.state.response}
+              autoFocus={this.state.focus === 'response'}
               onChange={e => this.responseChange(e)}
-              onBlur={e => onChoiceChange(this.state.response, this.state.sms)}
+              onMouseDown={e => this.setDoNotClose()}
+              onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
           </td>
           <td>
@@ -78,21 +90,23 @@ class ChoiceEditor extends Component {
               type='text'
               placeholder='SMS'
               value={this.state.sms}
+              autoFocus={this.state.focus === 'sms'}
               onChange={e => this.smsChange(e)}
-              onBlur={e => onChoiceChange(this.state.response, this.state.sms)}
+              onMouseDown={e => this.setDoNotClose()}
+              onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
           </td>
           <td>
-            <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
+            <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
           </td>
         </tr>)
     } else {
       return (
-        <tr onClick={e => this.enterEditMode(e)} >
-          <td>
+        <tr>
+          <td onClick={e => this.enterEditMode(e, 'response')}>
             <UntitledIfEmpty text={this.state.response} emptyText='No response' />
           </td>
-          <td>
+          <td onClick={e => this.enterEditMode(e, 'sms')}>
             <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
           </td>
           <td>
