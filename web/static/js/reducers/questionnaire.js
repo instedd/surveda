@@ -64,6 +64,7 @@ const addChoice = (state, action) => {
         responses: []
       }
     ]
+    return step
   })
 }
 
@@ -73,6 +74,7 @@ const deleteChoice = (state, action) => {
       ...step.choices.slice(0, action.index),
       ...step.choices.slice(action.index + 1)
     ]
+    return step
   })
 }
 
@@ -87,6 +89,7 @@ const changeChoice = (state, action) => {
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
+    return step
   })
 }
 
@@ -95,25 +98,36 @@ const deleteStep = (state, action) => {
 }
 
 const changeStep = (state, stepId, func) => {
-  let newState = state.slice()
-  const stepIndex = findIndex(newState, s => s.id === stepId)
-
-  func(newState[stepIndex])
-  return newState
+  const stepIndex = findIndex(state, s => s.id === stepId)
+  return [
+    ...state.slice(0, stepIndex),
+    func({...state[stepIndex]}),
+    ...state.slice(stepIndex + 1)
+  ]
 }
 
 const changeStepSmsPrompt = (state, action) => {
   return changeStep(state, action.stepId, step => {
-    step.prompt.sms = action.newPrompt
+    step.prompt = {
+      ...step.prompt,
+      sms: action.newPrompt
+    }
+    return step
   })
 }
 
 const changeStepTitle = (state, action) => {
-  return changeStep(state, action.stepId, step => { step.title = action.newTitle })
+  return changeStep(state, action.stepId, step => {
+    step.title = action.newTitle
+    return step
+  })
 }
 
 const changeStepStore = (state, action) => {
-  return changeStep(state, action.stepId, step => { step.store = action.newStore })
+  return changeStep(state, action.stepId, step => {
+    step.store = action.newStore
+    return step
+  })
 }
 
 const buildFilter = (projectId, questionnaireId) => ({

@@ -3,6 +3,7 @@ import expect from 'expect'
 import assert from 'assert'
 import each from 'lodash/each'
 import find from 'lodash/find'
+import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { buildNewStep } from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
@@ -30,10 +31,10 @@ describe('questionnaire reducer', () => {
   it('receives a questionnaire', () => {
     const state = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
     expect(state.fetching).toEqual(false)
-    expect(state.data).toEqual(questionnaire())
+    expect(state.data).toEqual(questionnaire)
   })
 
   it('should fetch', () => {
@@ -63,7 +64,7 @@ describe('questionnaire reducer', () => {
   it('clears data when fetching a different questionnaire', () => {
     const state = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire()),
+      actions.receive(questionnaire),
       actions.fetch(2, 2)
     ])
 
@@ -81,21 +82,21 @@ describe('questionnaire reducer', () => {
   it('keeps old data when fetching new data for the same filter', () => {
     const state = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire()),
+      actions.receive(questionnaire),
       actions.fetch(1, 1)
     ])
 
     expect(state).toEqual({
       ...state,
       fetching: true,
-      data: questionnaire()
+      data: questionnaire
     })
   })
 
   it('ignores data received based on different filter', () => {
     const state = playActions([
       actions.fetch(2, 2),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     expect(state).toEqual({
@@ -108,7 +109,7 @@ describe('questionnaire reducer', () => {
   it('should update questionnaire with new name', () => {
     const result = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire()),
+      actions.receive(questionnaire),
       actions.changeName('Some other name')
     ])
 
@@ -118,7 +119,7 @@ describe('questionnaire reducer', () => {
   it('should change to a single mode', () => {
     const result = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire()),
+      actions.receive(questionnaire),
       actions.changeModes('IVR')
     ])
 
@@ -129,7 +130,7 @@ describe('questionnaire reducer', () => {
   it('should change to multiple modes', () => {
     const result = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire()),
+      actions.receive(questionnaire),
       actions.changeModes('SMS,IVR')
     ])
 
@@ -142,7 +143,7 @@ describe('questionnaire reducer', () => {
   it('should add step', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -172,7 +173,7 @@ describe('questionnaire reducer', () => {
   it('should update step title', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -186,7 +187,7 @@ describe('questionnaire reducer', () => {
   it('should update step prompt sms', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -200,7 +201,7 @@ describe('questionnaire reducer', () => {
   it('should update step store', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -214,7 +215,7 @@ describe('questionnaire reducer', () => {
   it('should delete step', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const preSteps = preState.data.steps
@@ -235,7 +236,7 @@ describe('questionnaire reducer', () => {
   it('should add choice', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -250,7 +251,7 @@ describe('questionnaire reducer', () => {
   it('should delete choice', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -265,7 +266,7 @@ describe('questionnaire reducer', () => {
   it('should modify choice', () => {
     const preState = playActions([
       actions.fetch(1, 1),
-      actions.receive(questionnaire())
+      actions.receive(questionnaire)
     ])
 
     const resultState = playActionsFromState(preState, [
@@ -285,7 +286,7 @@ describe('questionnaire reducer', () => {
   })
 })
 
-const questionnaire = () => ({
+const questionnaire = deepFreeze({
   'steps': [
     {
       'type': 'multiple-choice',
