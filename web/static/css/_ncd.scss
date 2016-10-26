@@ -100,6 +100,9 @@ header {
         margin-left: 5px;
       }
     }
+    .dropdown-content > li >  a {
+      @extend .black-text;
+    }
   }
 }
 
