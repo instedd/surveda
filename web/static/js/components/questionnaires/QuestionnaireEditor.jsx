@@ -26,8 +26,8 @@ class QuestionnaireEditor extends Component {
     this.props.actions.changeQuestionnaireName(event.target.value)
   }
 
-  questionnaireModesChange(event) {
-    this.props.actions.changeQuestionnaireModes(event.target.value)
+  toggleMode(event, mode) {
+    this.props.actions.toggleQuestionnaireMode(mode)
   }
 
   questionnaireSave(event) {
@@ -95,6 +95,8 @@ class QuestionnaireEditor extends Component {
     }
 
     const questionnaire = questionnaireEditor.questionnaire
+    const sms = questionnaire.modes.indexOf('SMS') != -1
+    const ivr = questionnaire.modes.indexOf('IVR') != -1
 
     return (
       <div className='row'>
@@ -112,11 +114,10 @@ class QuestionnaireEditor extends Component {
               <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
             </div>
             <div className='row'>
-              <Input s={12} type='select' label='Modes'
-                value={questionnaire.modes.join(',')}
-                onChange={e => this.questionnaireModesChange(e)}>
-                <option value='SMS'>SMS</option>
-              </Input>
+              <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${sms ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
+                onClick={e => this.toggleMode(e, 'SMS')}>SMS</button>
+              <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${ivr ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
+                onClick={e => this.toggleMode(e, 'IVR')}>IVR</button>
             </div>
             <div className='row'>
               <button

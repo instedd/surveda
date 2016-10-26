@@ -102,16 +102,6 @@ describe('questionnaireEditor reducer', () => {
     expect(result.name).toEqual('Some other name')
   })
 
-  it('should change to a single mode', () => {
-    const result = playActions([
-      actions.initializeEditor(questionnaire),
-      actions.changeQuestionnaireModes('IVR')
-    ]).questionnaire
-
-    expect(result.modes.length).toEqual(1)
-    expect(result.modes).toEqual(['IVR'])
-  })
-
   it('should select a step', () => {
     const result = playActions([
       actions.initializeEditor(questionnaire),
@@ -121,16 +111,38 @@ describe('questionnaireEditor reducer', () => {
     expect(result.steps.current.id).toEqual('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
   })
 
-  it('should change to multiple modes', () => {
+  it('should toggle mode', () => {
     const result = playActions([
       actions.initializeEditor(questionnaire),
-      actions.changeQuestionnaireModes('SMS,IVR')
+      actions.toggleQuestionnaireMode('IVR')
+    ]).questionnaire
+
+    expect(result.modes.length).toEqual(2)
+    expect(result.modes).toEqual(['SMS', 'IVR'])
+  })
+
+  it('should toggle other mode', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.toggleQuestionnaireMode('SMS')
     ]).questionnaire
 
     /* Expectations on arrays must include a check for length
     because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
-    expect(result.modes.length).toEqual(2)
-    expect(result.modes).toEqual(['SMS', 'IVR'])
+    expect(result.modes.length).toEqual(0)
+  })
+
+  it('should toggle modes multiple times', () => {
+    const result = playActions([
+      actions.initializeEditor(questionnaire),
+      actions.toggleQuestionnaireMode('SMS'),
+      actions.toggleQuestionnaireMode('IVR')
+    ]).questionnaire
+
+    /* Expectations on arrays must include a check for length
+    because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
+    expect(result.modes.length).toEqual(1)
+    expect(result.modes).toEqual(['IVR'])
   })
 
   it('should update step title', () => {

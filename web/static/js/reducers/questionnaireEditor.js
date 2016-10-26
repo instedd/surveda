@@ -28,7 +28,7 @@ export const questionnaireForServer = (questionnaireEditor) => {
 
 const questionnaireReducer = (state, action) => {
   switch (action.type) {
-    case actions.CHANGE_QUESTIONNAIRE_MODES: return changeQuestionnaireModes(state, action)
+    case actions.TOGGLE_QUESTIONNAIRE_MODE: return toggleQuestionnaireMode(state, action)
     case actions.INITIALIZE_EDITOR: return initializeQuestionnaire(state, action)
     case actions.NEW_QUESTIONNAIRE: return newQuestionnaire(state, action)
     case actions.CHANGE_QUESTIONNAIRE_NAME: return changeQuestionnaireName(state, action)
@@ -114,10 +114,17 @@ export const buildNewStep = (stepType) => ({
   choices: []
 })
 
-const changeQuestionnaireModes = (state, action) => {
+const toggleQuestionnaireMode = (state, action) => {
+  let modes = state.modes
+  if (modes.indexOf(action.mode) === -1) {
+    modes = modes.slice()
+    modes.push(action.mode)
+  } else {
+    modes = modes.filter(mode => mode !== action.mode)
+  }
   return {
     ...state,
-    modes: action.newModes.split(',')
+    modes
   }
 }
 
