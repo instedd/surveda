@@ -114,10 +114,30 @@ class QuestionnaireEditor extends Component {
               <label className='active' htmlFor='questionnaire_name'>Questionnaire Name</label>
             </div>
             <div className='row'>
-              <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${sms ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
-                onClick={e => this.toggleMode(e, 'SMS')}>SMS</button>
-              <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${ivr ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
-                onClick={e => this.toggleMode(e, 'IVR')}>IVR</button>
+              <div className='col s6'>
+                SMS
+              </div>
+              <div className='col s6'>
+                <div className='switch'>
+                  <label>
+                    <input type='checkbox' checked={sms} onClick={e => this.toggleMode(e, 'SMS')} />
+                    <span className='lever' />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className='row'>
+              <div className='col s6'>
+                IVR
+              </div>
+              <div className='col s6'>
+                <div className='switch'>
+                  <label>
+                    <input type='checkbox' checked={ivr} onClick={e => this.toggleMode(e, 'IVR')} />
+                    <span className='lever' />
+                  </label>
+                </div>
+              </div>
             </div>
             <div className='row'>
               <button
