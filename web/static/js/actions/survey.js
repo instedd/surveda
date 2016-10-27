@@ -12,7 +12,7 @@ export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
 
 export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
-  dispatch(fetching(projectId, id))
+  dispatch(fetch(projectId, id))
   return api.fetchSurvey(projectId, id)
     .then(response => {
       dispatch(receive(response.entities.surveys[response.result]))
@@ -22,19 +22,17 @@ export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
     })
 }
 
-export const fetching = (projectId, id) => ({
+export const fetch = (projectId, id) => ({
   type: FETCH,
   id,
   projectId
 })
 
-export const fetch = (projectId, id) => {
-  return (dispatch, getState) => {
-    if (shouldFetch(getState().survey, projectId, id)) {
-      return dispatch(fetchSurvey(projectId, id))
-    } else {
-      return Promise.resolve(getState().survey.data)
-    }
+export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState) => {
+  if (shouldFetch(getState().survey, projectId, id)) {
+    return dispatch(fetchSurvey(projectId, id))
+  } else {
+    return Promise.resolve(getState().survey.data)
   }
 }
 

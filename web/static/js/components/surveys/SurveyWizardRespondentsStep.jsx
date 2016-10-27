@@ -20,7 +20,7 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.receiveRespondents(respondents))
         dispatch(actions.updateRespondentsCount(Object.keys(respondents).length))
-        dispatch(actions.fetch(survey.projectId, survey.id))
+        dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })
@@ -33,7 +33,7 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
-        dispatch(actions.fetch(survey.projectId, survey.id))
+        dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })

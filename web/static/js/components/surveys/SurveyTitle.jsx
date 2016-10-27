@@ -17,7 +17,7 @@ class ProjectTitle extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
-    dispatch(surveyActions.fetch(projectId, surveyId))
+    dispatch(surveyActions.fetchSurveyIfNeeded(projectId, surveyId))
   }
 
   handleSubmit(newName) {
