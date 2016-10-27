@@ -71,20 +71,16 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <div className='input-field col s3'>
-            <Input type='select' label='From' defaultValue={defaultFrom} onChange={(value) => this.updateFrom(value)}>
-              {hours.map((hour) => (
-                <option value={hour.value} key={hour.value}>{hour.label}</option>
-              ))}
-            </Input>
-          </div>
-          <div className='input-field col s3'>
-            <Input type='select' label='To' defaultValue={defaultTo} onChange={(value) => this.updateTo(value)}>
-              {hours.map((hour) => (
-                <option value={hour.value} key={hour.value}>{hour.label}</option>
-              ))}
-            </Input>
-          </div>
+          <Input s={12} m={6} type='select' label='From' defaultValue={defaultFrom} onChange={(value) => this.updateFrom(value)}>
+            {hours.map((hour) => (
+              <option value={hour.value} key={hour.value}>{hour.label}</option>
+            ))}
+          </Input>
+          <Input s={12} m={6} type='select' label='To' defaultValue={defaultTo} onChange={(value) => this.updateTo(value)}>
+            {hours.map((hour) => (
+              <option value={hour.value} key={hour.value}>{hour.label}</option>
+            ))}
+          </Input>
         </div>
       </div>
     )
