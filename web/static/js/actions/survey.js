@@ -46,7 +46,8 @@ export const receive = (survey) => ({
 })
 
 export const shouldFetch = (state, projectId, id) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId === projectId && state.filter.id === id))
+  // This check must be done with == due to '1' vs 1 comparisons resulting in an unnecessary reload
+  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
 export const changeCutoff = (cutoff) => ({
