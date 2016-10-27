@@ -4,8 +4,8 @@ import * as guissoApi from '../guisso'
 import * as pigeon from '../pigeon'
 import { config } from '../config'
 
-export const RECEIVE_CHANNELS = "RECEIVE_CHANNELS"
-export const CREATE_CHANNEL = "CREATE_CHANNEL"
+export const RECEIVE_CHANNELS = 'RECEIVE_CHANNELS'
+export const CREATE_CHANNEL = 'CREATE_CHANNEL'
 
 export const fetchChannels = () => dispatch => {
   api.fetchChannels()
@@ -26,31 +26,39 @@ export const receiveChannels = (response) => ({
   response
 })
 
-export const createNuntiumChannel = () => dispatch => {
-  return Promise.all([
-    authorizeWithGuisso(dispatch, 'nuntium', config.nuntium),
-    pigeon.loadPigeonScript(config.nuntium.baseUrl)
-  ])
-    .then(([token, _]) => pigeon.addChannel(token.access_token))
-    .then(nuntiumChannel => {
-      if (nuntiumChannel === null) {
-        return Promise.reject('User cancelled')
-      }
-      dispatch(createChannel({
-        name: nuntiumChannel.name,
-        type: 'sms',
-        provider: 'nuntium',
-        settings: {
-          nuntiumChannel: nuntiumChannel.name
+export const createNuntiumChannel = (() => {
+  let references = {guissoSession: null}
+  return () => dispatch => {
+    if (references.guissoSession && references.guissoSession.isPopupOpen()) {
+      return Promise.resolve()
+    }
+    return Promise.all([
+      authorizeWithGuisso(dispatch, 'nuntium', config.nuntium, references),
+      pigeon.loadPigeonScript(config.nuntium.baseUrl)
+    ])
+      .then(([token, _]) => {
+        pigeon.addChannel(token.access_token)
+      })
+      .then(nuntiumChannel => {
+        if (nuntiumChannel === null) {
+          return Promise.reject('User cancelled')
         }
-      }))
-    }).catch((_) => _)
-}
+        dispatch(createChannel({
+          name: nuntiumChannel.name,
+          type: 'sms',
+          provider: 'nuntium',
+          settings: {
+            nuntiumChannel: nuntiumChannel.name
+          }
+        }))
+      }).catch((_) => _)
+  } })()
 
-const authorizeWithGuisso = (dispatch, app, appConfig) => {
+const authorizeWithGuisso = (dispatch, app, appConfig, references) => {
   const guissoSession = guissoApi.newSession(appConfig.guisso)
+  references.guissoSession = guissoSession
   return guissoSession.authorize('code', app)
-    .then( () => dispatch(guisso.obtainToken(guissoSession)))
+    .then(() => dispatch(guisso.obtainToken(guissoSession)))
     .then((token) => {
       guissoSession.close()
       return token

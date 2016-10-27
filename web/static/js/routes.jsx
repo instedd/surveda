@@ -1,43 +1,53 @@
 import React from 'react'
 import { Route, IndexRoute, IndexRedirect } from 'react-router'
-import App from './containers/App'
-import ProjectIndex from './containers/ProjectIndex'
-import SurveyEdit from './containers/SurveyEdit'
-import SurveyIndex from './containers/SurveyIndex'
-import SurveyShow from './containers/SurveyShow'
-import QuestionnaireIndex from './containers/QuestionnaireIndex'
-import QuestionnaireEditor from './components/questionnaire_editor/QuestionnaireEditor'
-import ChannelIndex from './containers/ChannelIndex'
-import ProjectTabs from './components/ProjectTabs'
-import SurveyTabs from './components/SurveyTabs'
-import SurveyRespondents from './components/SurveyRespondents'
+import App from './components/layout/App'
+import ProjectIndex from './components/projects/ProjectIndex'
+import SurveyEdit from './components/surveys/SurveyEdit'
+import SurveyIndex from './components/surveys/SurveyIndex'
+import SurveyShow from './components/surveys/SurveyShow'
+import QuestionnaireIndex from './components/questionnaires/QuestionnaireIndex'
+import QuestionnaireEditor from './components/questionnaires/QuestionnaireEditor'
+import ChannelIndex from './components/ChannelIndex'
+import ProjectTabs from './components/projects/ProjectTabs'
+import SurveyTabs from './components/surveys/SurveyTabs'
+import SurveyRespondents from './components/respondents/SurveyRespondents'
+import ProjectTitle from './components/projects/ProjectTitle'
+import SurveyTitle from './components/surveys/SurveyTitle'
+import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
 
 export default (
   <Route path='/' component={App}>
     <IndexRedirect to='projects' />
 
-    <Route path='/projects' name='My Projects'>
+    <Route path='/projects' title='My Projects'>
       <IndexRoute component={ProjectIndex} />
 
-      <Route path=':projectId' name='Project'>
+      <Route path=':projectId' title={ProjectTitle}>
         <IndexRedirect to='surveys' />
-        <Route path='surveys' components={{ body: SurveyIndex, tabs: ProjectTabs }} />
 
-        <Route path='surveys/:surveyId' components={{ body: SurveyShow, tabs: SurveyTabs }} />
-        <Route path='surveys/:surveyId/respondents' components={{ body: SurveyRespondents, tabs: SurveyTabs }} />
-        <Route path='surveys/:surveyId/edit' component={SurveyEdit} />
+        <Route path='surveys'>
+          <IndexRoute components={{ body: SurveyIndex, tabs: ProjectTabs }} />
+
+          <Route path=':surveyId' title={SurveyTitle}>
+            <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
+            <Route path='respondents' components={{ body: SurveyRespondents, tabs: SurveyTabs }} />
+            <Route path='edit' component={SurveyEdit} />
+          </Route>
+        </Route>
+
         <Route path='questionnaires' >
           <IndexRoute components={{ body: QuestionnaireIndex, tabs: ProjectTabs }} />
-          <Route path='new' component={QuestionnaireEditor} name='New Questionnaire' />
+          <Route path='new' component={QuestionnaireEditor} title={QuestionnaireTitle} />
           <Route path=':questionnaireId' >
             <IndexRedirect to='edit' />
           </Route>
-          <Route path=':questionnaireId/edit' component={QuestionnaireEditor} />
+          <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} />
         </Route>
+
       </Route>
     </Route>
 
-    <Route path='/channels' name='My Channels' >
+    <Route path='/channels' title='My Channels' >
       <IndexRoute component={ChannelIndex} />
     </Route>
   </Route>
