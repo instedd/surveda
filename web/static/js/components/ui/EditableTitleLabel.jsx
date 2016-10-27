@@ -48,7 +48,7 @@ export class EditableTitleLabel extends Component {
     const { title } = this.props
     if (!this.state.editing) {
       return (
-        <a className='page-title' onClick={this.handleClick}>
+        <a className='page-title truncate' onClick={this.handleClick}>
           <span><UntitledIfEmpty text={title} /></span>
           <i className='material-icons'>mode_edit</i>
         </a>
