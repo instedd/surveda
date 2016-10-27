@@ -66,8 +66,8 @@ export default class SurveyForm extends Component {
               <CollectionItem path='#respondents' icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
               <CollectionItem path='#channels' icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
               <CollectionItem path='#schedule' icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
-              <CollectionItem className='optional' path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
-              {/* <CollectionItem className='optional' path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
+              <CollectionItem path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
+              {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
             <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
             </ul>
             <div className='row'>

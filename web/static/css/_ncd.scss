@@ -262,15 +262,6 @@ footer {
         right: 10px;
       }
     }
-    &.optional {
-      .arrowright:after {
-        content: 'optional';
-        font-size: 80%;
-        text-transform: uppercase;
-        position: absolute;
-        margin-left: -90px;
-      }
-    }
     a.active {
       @extend .transparent;
       @extend .black-text;
