@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import assert from 'assert'
-import each from 'lodash/each'
+import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { buildNewStep } from '../../../web/static/js/reducers/questionnaire'
@@ -10,17 +10,7 @@ import * as actions from '../../../web/static/js/actions/questionnaire'
 describe('questionnaire reducer', () => {
   const initialState = reducer(undefined, {})
 
-  const playActions = (actions) => {
-    return playActionsFromState(initialState, actions)
-  }
-
-  const playActionsFromState = (state, actions) => {
-    let resultState = state
-    each(actions, (a) => {
-      resultState = reducer(resultState, a)
-    })
-    return resultState
-  }
+  const playActions = playActionsFromState(initialState, reducer)
 
   it('has a sane initial state', () => {
     expect(initialState.fetching).toEqual(false)
@@ -159,7 +149,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.addStep('multiple-choice')
     ])
 
@@ -189,7 +179,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.changeStepTitle('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New title')
     ])
 
@@ -203,7 +193,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New prompt')]
     )
 
@@ -217,7 +207,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New store')]
     )
 
@@ -233,7 +223,7 @@ describe('questionnaire reducer', () => {
 
     const preSteps = preState.data.steps
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.deleteStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     ])
 
@@ -252,7 +242,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15')]
     )
 
@@ -267,7 +257,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.deleteChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 1)]
     )
 
@@ -282,7 +272,7 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    const resultState = playActionsFromState(preState, [
+    const resultState = playActionsFromState(preState, reducer)([
       actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3')
     ])
 

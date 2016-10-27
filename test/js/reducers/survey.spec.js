@@ -1,24 +1,14 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import assert from 'assert'
-import each from 'lodash/each'
-import reducer, {surveyReducer} from '../../../web/static/js/reducers/survey'
+import { playActionsFromState } from '../spec_helper'
+import reducer, { surveyReducer } from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
 
-  const playActions = (actions) => {
-    return playActionsFromState(initialState, actions)
-  }
-
-  const playActionsFromState = (state, actions) => {
-    let resultState = state
-    each(actions, (a) => {
-      resultState = reducer(resultState, a)
-    })
-    return resultState
-  }
+  const playActions = playActionsFromState(initialState, reducer)
 
   it('has a sane initial state', () => {
     expect(initialState.fetching).toEqual(false)
