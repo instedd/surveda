@@ -20,7 +20,7 @@ export const fetchSurveys = (projectId) => (dispatch, getState) => {
 
   return api
     .fetchSurveys(projectId)
-    .then(response => dispatch(receiveSurveys(projectId, response.entities.surveys || [])))
+    .then(response => dispatch(receiveSurveys(projectId, response.entities.surveys || {})))
     .then(() => getState().surveys.items)
 }
 

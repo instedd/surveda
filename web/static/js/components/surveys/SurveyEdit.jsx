@@ -19,7 +19,7 @@ class SurveyEdit extends Component {
     surveyId: PropTypes.string.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
-    questionnaires: PropTypes.object.isRequired,
+    questionnaires: PropTypes.object,
     channels: PropTypes.object.isRequired,
     project: PropTypes.object.isRequired,
     respondents: PropTypes.object.isRequired

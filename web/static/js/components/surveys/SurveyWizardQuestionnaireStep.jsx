@@ -8,7 +8,7 @@ import { UntitledIfEmpty } from '../ui'
 class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    questionnaires: PropTypes.object.isRequired,
+    questionnaires: PropTypes.object,
     projectId: PropTypes.number.isRequired,
     dispatch: PropTypes.func.isRequired
   }
