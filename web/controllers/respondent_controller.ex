@@ -91,10 +91,40 @@ defmodule Ask.RespondentController do
     end)
   end
 
+  def render_respondents(conn, survey_id, rows) do
+    {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+    {integer_survey_id, _ } = Integer.parse survey_id
+
+    entries = rows
+      |> Enum.map(fn row ->
+        %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
+      end)
+
+    respondents_count = entries
+      |> Enum.chunk(1_000, 1_000, []) |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
+        {count, _ } = Repo.insert_all(Respondent, chunked_entries)
+        total_count + count
+      end)
+
+    respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
+
+    update_survey_state(survey_id, respondents_count)
+
+    conn
+      |> put_status(:created)
+      |> render("index.json", respondents: respondents |> Repo.preload(:responses), respondents_count: respondents_count)
+  end
+
   def render_unprocessable_entity(conn) do
     conn
       |> put_status(:unprocessable_entity)
       |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
+  end
+
+  def render_invalid(conn, invalid_entries) do
+    conn
+      |> put_status(:unprocessable_entity)
+      |> render("invalid_entries.json", %{invalid_entries: invalid_entries})
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
@@ -102,36 +132,23 @@ defmodule Ask.RespondentController do
     |> Repo.get!(project_id)
     |> authorize(conn)
 
-    {integer_survey_id, _ } = Integer.parse survey_id
-    {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
-
     if Path.extname(file.filename) == ".csv" do
-      entries =
+      rows =
         file.path
         |> File.read!
         |> csv_rows
         |> Enum.uniq
-        |> Enum.map(fn row ->
-          %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
-        end)
 
-      if Enum.any?(entries, fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end) do
-        render_unprocessable_entity(conn)
-      else
-        respondents_count = entries
-        |> Enum.chunk(1_000, 1_000, []) |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
-          {count, _ } = Repo.insert_all(Respondent, chunked_entries)
-          total_count + count
-        end)
+      indexed_rows = rows
+                     |> Enum.with_index
+                     |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
 
-        respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
+      invalid_entries = Enum.filter(indexed_rows, fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
 
-        update_survey_state(survey_id, respondents_count)
-
-        conn
-          |> put_status(:created)
-          |> render("index.json", respondents: respondents |> Repo.preload(:responses), respondents_count: respondents_count)
-        end
+      case invalid_entries do
+        [] -> render_respondents(conn, survey_id, rows)
+        _ -> render_invalid(conn, invalid_entries)
+      end
     else
       render_unprocessable_entity(conn)
     end

@@ -23,6 +23,10 @@ class SurveyWizardRespondentsStep extends Component {
         dispatch(actions.fetch(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
+      }, (e) => {
+        e.json().then((value) => {
+          console.log(value)
+        })
       })
   }
 
