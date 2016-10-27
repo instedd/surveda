@@ -50,6 +50,83 @@ defmodule Ask.DummySteps do
           "store" => "Perfect Number",
         }
       ]
+
+      @skip_logic [
+        %{
+          "id" => "aaa",
+          "type" => "multiple-choice",
+          "title" => "Do you smoke?",
+          "prompt" => %{
+            "sms" => "Do you smoke? Press 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS",
+          },
+          "store" => "Smokes",
+          "choices" => [
+            %{
+              "value" => "Yes",
+              "responses" => ["Yes", "Y", "1"],
+              "skip_logic" => "end"
+            },
+            %{
+              "value" => "No",
+              "responses" => ["No", "N", "2"],
+              "skip_logic" => nil
+            },
+            %{
+              "value" => "Maybe",
+              "responses" => ["Maybe", "M", "3"],
+            },
+            %{
+              "value" => "Sometimes",
+              "responses" => ["Sometimes", "S", "4"],
+              "skip_logic" => "ccc"
+            },
+            %{
+              "value" => "ALWAYS",
+              "responses" => ["Always", "A", "5"],
+              "skip_logic" => "undefined_id"
+            }
+          ]
+        },
+        %{
+          "id" => "bbb",
+          "type" => "multiple-choice",
+          "title" => "Do you exercise?",
+          "prompt" => %{
+            "sms" => "Do you exercise? Press 1 for YES, 2 for NO",
+          },
+          "store" => "Exercises",
+          "choices" => [
+            %{
+              "value" => "Yes",
+              "responses" => ["Yes", "Y", "1"],
+              "skip_logic" => "aaa"
+            },
+            %{
+              "value" => "No",
+              "responses" => ["No", "N", "1"]
+            }
+          ]
+        },
+        %{
+          "id" => "ccc",
+          "type" => "multiple-choice",
+          "title" => "Is this questionnaire refreshing?",
+          "prompt" => %{
+            "sms" => "Is this questionnaire refreshing? Press 1 for YES, 2 for NO, 3 for MAYBE",
+          },
+          "store" => "Refresh",
+          "choices" => [
+            %{
+              "value" => "Yes",
+              "responses" => ["Yes", "Y", "1"]
+            },
+            %{
+              "value" => "No",
+              "responses" => ["No", "N", "1"]
+            }
+          ]
+        }
+      ]
     end
   end
 end
