@@ -1,24 +1,27 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import * as actions from '../../actions/questionnaireEditor'
+import * as actions from '../../actions/questionnaire'
 import ChoiceEditor from './ChoiceEditor'
 import { Card } from '../ui'
 
 class StepMultipleChoiceEditor extends Component {
   addChoice(e) {
+    const { step, actions } = this.props
     e.preventDefault()
-    this.props.actions.addChoice()
+    actions.addChoice(step.id)
   }
 
   deleteChoice(e, index) {
+    const { step, actions } = this.props
     e.preventDefault()
-    this.props.actions.deleteChoice(index)
+    actions.deleteChoice(step.id, index)
   }
 
   changeChoice(index) {
+    const { step, actions } = this.props
     return (value, responses) => {
-      this.props.actions.changeChoice(index, value, responses)
+      actions.changeChoice(step.id, index, value, responses)
     }
   }
 

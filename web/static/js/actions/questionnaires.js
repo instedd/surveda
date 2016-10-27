@@ -26,28 +26,6 @@ export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
     .then(() => getState().questionnaires.items)
 }
 
-export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
-  dispatch(startFetchingQuestionnaires(projectId))
-  return api.fetchQuestionnaire(projectId, questionnaireId)
-    .then(response => {
-      const questionnaire = response.entities.questionnaires[response.result]
-      dispatch(receiveQuestionnaires(projectId, [questionnaire]))
-    })
-    .then(() => getState().questionnaires.items)
-}
-
-export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
-  return (dispatch, getState) => {
-    if (shouldFetchQuestionnaire(getState(), projectId, questionnaireId)) {
-      return dispatch(fetchQuestionnaire(projectId, questionnaireId))
-    }
-  }
-}
-
-const shouldFetchQuestionnaire = (state, projectId, questionnaireId) => {
-  return !(state.questionnaire && state.questionnaire.id === questionnaireId)
-}
-
 export const startFetchingQuestionnaires = (projectId) => ({
   type: FETCH_QUESTIONNAIRES,
   projectId

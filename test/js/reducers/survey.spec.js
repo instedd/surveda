@@ -36,7 +36,7 @@ describe('survey reducer', () => {
 
   it('fetches a survey', () => {
     const state = playActions([
-      actions.fetching(1, 1)
+      actions.fetch(1, 1)
     ])
 
     expect(state).toEqual({
@@ -52,7 +52,7 @@ describe('survey reducer', () => {
 
   it('receives a survey', () => {
     const state = playActions([
-      actions.fetching(1, 1),
+      actions.fetch(1, 1),
       actions.receive(survey)
     ])
     expect(state.fetching).toEqual(false)
@@ -61,9 +61,9 @@ describe('survey reducer', () => {
 
   it('clears data when fetching a different survey', () => {
     const state = playActions([
-      actions.fetching(1, 1),
+      actions.fetch(1, 1),
       actions.receive(survey),
-      actions.fetching(2, 2)
+      actions.fetch(2, 2)
     ])
 
     expect(state).toEqual({
@@ -79,9 +79,9 @@ describe('survey reducer', () => {
 
   it('keeps old data when fetching new data for the same filter', () => {
     const state = playActions([
-      actions.fetching(1, 1),
+      actions.fetch(1, 1),
       actions.receive(survey),
-      actions.fetching(1, 1)
+      actions.fetch(1, 1)
     ])
 
     expect(state).toEqual({
@@ -93,7 +93,7 @@ describe('survey reducer', () => {
 
   it('ignores data received based on different filter', () => {
     const state = playActions([
-      actions.fetching(2, 2),
+      actions.fetch(2, 2),
       actions.receive(survey)
     ])
 

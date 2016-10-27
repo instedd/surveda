@@ -3,31 +3,31 @@ import { bindActionCreators } from 'redux'
 import { Input } from 'react-materialize'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
-import { createQuestionnaire, updateQuestionnaire } from '../../api'
 import * as projectActions from '../../actions/project'
-import * as questionnaireActions from '../../actions/questionnaires'
-import * as actions from '../../actions/questionnaireEditor'
-import { questionnaireForServer } from '../../reducers/questionnaireEditor'
+import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 
 class QuestionnaireEditor extends Component {
+  constructor(props) {
+    super(props)
+    this.state = this.internalState(null)
+  }
+
+  selectStep(stepId) {
+    this.setState(this.internalState(stepId))
+  }
+
+  deselectStep() {
+    this.setState(this.internalState(null))
+  }
+
   toggleMode(event, mode) {
-    this.props.actions.toggleQuestionnaireMode(mode)
+    this.props.questionnaireActions.toggleMode(mode)
   }
 
   questionnaireSave(event) {
     event.preventDefault()
-    const { questionnaireEditor } = this.props
-
-    const questionnaire = questionnaireForServer(questionnaireEditor)
-
-    if (questionnaire.id == null) {
-      createQuestionnaire(questionnaire.projectId, questionnaire)
-        .then(questionnaire => this.props.questionnaireActions.createQuestionnaire(questionnaire))
-    } else {
-      updateQuestionnaire(questionnaire.projectId, questionnaire)
-        .then(questionnaire => this.props.questionnaireActions.updateQuestionnaire(questionnaire))
-    }
+    this.props.questionnaireActions.save(this.props.questionnaire)
   }
 
   questionnaireAddMultipleChoiceStep() {
@@ -39,7 +39,45 @@ class QuestionnaireEditor extends Component {
   }
 
   questionnaireAddStep(stepType) {
-    this.props.actions.addStep(stepType)
+    this.setState({
+      ...this.state,
+      addingStep: true
+    }, () => {
+      // Add the step then automatically expand it
+      this.props.questionnaireActions.addStep(stepType)
+    })
+  }
+
+  deleteStep() {
+    const currentStepId = this.state.currentStep
+
+    this.setState({
+      currentStep: null,
+      addingStep: false
+    }, () => {
+      this.props.questionnaireActions.deleteStep(currentStepId)
+    })
+  }
+
+  internalState(currentStep, addingStep = false) {
+    return {
+      currentStep,
+      addingStep
+    }
+  }
+
+  componentWillReceiveProps(newProps) {
+    // This feels a bit hacky, but it let's us expand the step we just created.
+    // I couldn't find a better way. Ideally this should be a sort of "callback"
+    // to the addStep method, without involving additional component state handling
+    // or explicit management via Redux reducers.
+    const questionnaireData = newProps.questionnaire
+    if (this.state.addingStep && questionnaireData && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
+      const newStep = questionnaireData.steps[questionnaireData.steps.length - 1]
+      if (newStep != null) {
+        this.setState(this.internalState(newStep.id))
+      }
+    }
   }
 
   componentWillMount() {
@@ -48,33 +86,22 @@ class QuestionnaireEditor extends Component {
     if (projectId) {
       if (questionnaireId) {
         this.props.projectActions.fetchProject(projectId)
-
-        this.props.questionnaireActions.fetchQuestionnaire(projectId, questionnaireId)
-          .then((items) => {
-            let questionnaire
-            for (const id in items) {
-              questionnaire = items[id]
-              break
-            }
-            // TODO: Fix this, or decide how to make it better
-            this.props.actions.initializeEditor(questionnaire)
-          })
+        this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
       } else {
-        this.props.actions.newQuestionnaire(projectId)
+        this.props.questionnaireActions.newQuestionnaire(projectId)
       }
     }
   }
 
   render() {
-    const { questionnaireEditor } = this.props
+    const { questionnaire } = this.props
 
-    if (!questionnaireEditor.questionnaire) {
+    if (questionnaire == null) {
       return <div>Loading...</div>
     }
 
-    const questionnaire = questionnaireEditor.questionnaire
-    const sms = questionnaire.modes.indexOf('SMS') != -1
-    const ivr = questionnaire.modes.indexOf('IVR') != -1
+    const sms = questionnaire.modes.indexOf('SMS') !== -1
+    const ivr = questionnaire.modes.indexOf('IVR') !== -1
 
     return (
       <div className='row'>
@@ -87,7 +114,7 @@ class QuestionnaireEditor extends Component {
               <div className='col s6'>
                 <div className='switch'>
                   <label>
-                    <input type='checkbox' checked={sms} onClick={e => this.toggleMode(e, 'SMS')} />
+                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'SMS')} />
                     <span className='lever' />
                   </label>
                 </div>
@@ -100,7 +127,7 @@ class QuestionnaireEditor extends Component {
               <div className='col s6'>
                 <div className='switch'>
                   <label>
-                    <input type='checkbox' checked={ivr} onClick={e => this.toggleMode(e, 'IVR')} />
+                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'IVR')} />
                     <span className='lever' />
                   </label>
                 </div>
@@ -116,7 +143,12 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           <div className='col s12 m7 offset-m1'>
-            <QuestionnaireSteps steps={questionnaireEditor.steps} />
+            <QuestionnaireSteps
+              steps={questionnaire.steps}
+              current={this.state.currentStep}
+              onSelectStep={stepId => this.selectStep(stepId)}
+              onDeselectStep={() => this.deselectStep()}
+              onDeleteStep={() => this.deleteStep()} />
             <div className='row'>
               <div className='col s12 m6 center-align'>
                 <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
@@ -133,23 +165,21 @@ class QuestionnaireEditor extends Component {
 }
 
 QuestionnaireEditor.propTypes = {
-  actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
   projectId: PropTypes.number,
   questionnaireId: PropTypes.string,
-  questionnaireEditor: PropTypes.object.isRequired
+  questionnaire: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   questionnaireId: ownProps.params.questionnaireId,
-  questionnaireEditor: state.questionnaireEditor
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch),
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })

@@ -34,6 +34,7 @@ services:
   brunch:
     image: node:6.3.1
     command: node_modules/brunch/bin/brunch watch
+    restart: always
     working_dir: /app
     stop_signal: SIGKILL
     volumes:

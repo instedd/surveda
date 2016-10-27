@@ -1,20 +1,18 @@
 import * as api from '../api'
 
-export const CHANGE_CUTOFF = 'SURVEY_EDITOR_CHANGE_CUTOFF'
-export const CHANGE_QUESTIONNAIRE = 'SURVEY_EDITOR_CHANGE_QUESTIONNAIRE'
-export const INITIALIZE_EDITOR = 'SURVEY_EDITOR_INITIALIZE_EDITOR'
-export const TOGGLE_DAY = 'SURVEY_EDITOR_TOGGLE_DAY'
-export const SET_SCHEDULE_TO = 'SET_SCHEDULE_TO'
-export const SET_SCHEDULE_FROM = 'SET_SCHEDULE_FROM'
-export const SELECT_CHANNELS = 'SELECT_CHANNELS'
-export const UPDATE_RESPONDENTS_COUNT = 'UPDATE_RESPONDENTS_COUNT'
-export const SET_STATE = 'SET_STATE'
-export const SET_SURVEY = 'SET_SURVEY'
-export const FETCH = 'FETCH'
-export const RECEIVE = 'RECEIVE'
+export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
+export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
+export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
+export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
+export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
+export const SELECT_CHANNELS = 'SURVEY_SELECT_CHANNELS'
+export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
+export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
+export const FETCH = 'SURVEY_FETCH'
+export const RECEIVE = 'SURVEY_RECEIVE'
 
 export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
-  dispatch(fetching(projectId, id))
+  dispatch(fetch(projectId, id))
   return api.fetchSurvey(projectId, id)
     .then(response => {
       dispatch(receive(response.entities.surveys[response.result]))
@@ -24,19 +22,17 @@ export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
     })
 }
 
-export const fetching = (projectId, id) => ({
+export const fetch = (projectId, id) => ({
   type: FETCH,
   id,
   projectId
 })
 
-export const fetch = (projectId, id) => {
-  return (dispatch, getState) => {
-    if (shouldFetch(getState().survey, projectId, id)) {
-      return dispatch(fetchSurvey(projectId, id))
-    } else {
-      return Promise.resolve(getState().survey.data)
-    }
+export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState) => {
+  if (shouldFetch(getState().survey, projectId, id)) {
+    return dispatch(fetchSurvey(projectId, id))
+  } else {
+    return Promise.resolve(getState().survey.data)
   }
 }
 
@@ -83,11 +79,6 @@ export const setScheduleTo = (hour) => ({
 export const changeQuestionnaire = (questionnaire) => ({
   type: CHANGE_QUESTIONNAIRE,
   questionnaire
-})
-
-export const initializeEditor = (survey) => ({
-  type: INITIALIZE_EDITOR,
-  survey
 })
 
 export const updateRespondentsCount = (respondentsCount) => ({
