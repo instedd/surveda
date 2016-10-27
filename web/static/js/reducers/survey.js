@@ -24,7 +24,7 @@ const receive = (state, action) => {
 
   return do {
     // This check must be done with == due to '1' vs 1 comparisons resulting in an unnecessary reload
-    if (filter.projectId == survey.projectId && filter.id == survey.id) {
+    if (filter && filter.projectId == survey.projectId && filter.id == survey.id) {
       ({
         ...state,
         fetching: false,

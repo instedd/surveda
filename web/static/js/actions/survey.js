@@ -11,6 +11,14 @@ export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
 export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
 
+export const createSurvey = (projectId) => (dispatch, getState) =>
+  api.createSurvey(projectId).then(response => {
+    const survey = response.result
+    dispatch(fetch(projectId, survey.id))
+    dispatch(receive(survey))
+    return survey
+  })
+
 export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
   return api.fetchSurvey(projectId, id)

@@ -59,6 +59,15 @@ describe('survey reducer', () => {
     expect(state.data).toEqual(survey)
   })
 
+  it('receiving a survey without an initial fetch should discard the survey', () => {
+    const state = playActions([
+      actions.receive(survey)
+    ])
+    expect(state.fetching).toEqual(false)
+    expect(state.filter).toEqual(null)
+    expect(state.data).toEqual(null)
+  })
+
   it('clears data when fetching a different survey', () => {
     const state = playActions([
       actions.fetch(1, 1),
