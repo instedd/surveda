@@ -121,10 +121,10 @@ defmodule Ask.RespondentController do
       |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
   end
 
-  def render_invalid(conn, invalid_entries) do
+  def render_invalid(conn, filename, invalid_entries) do
     conn
       |> put_status(:unprocessable_entity)
-      |> render("invalid_entries.json", %{invalid_entries: invalid_entries})
+      |> render("invalid_entries.json", %{invalid_entries: invalid_entries, filename: filename})
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
@@ -147,7 +147,7 @@ defmodule Ask.RespondentController do
 
       case invalid_entries do
         [] -> render_respondents(conn, survey_id, rows)
-        _ -> render_invalid(conn, invalid_entries)
+        _ -> render_invalid(conn, file.filename, invalid_entries)
       end
     else
       render_unprocessable_entity(conn)
