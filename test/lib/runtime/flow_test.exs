@@ -54,88 +54,50 @@ defmodule Ask.FlowTest do
     assert {:end, _} = step
   end
 
-  # skip logic
-  test "when skip_logic is end it ends the flow" do
-    quiz = build(:questionnaire, steps: @skip_logic)
+  def init_quiz_and_send_response response do
     {:ok, flow, _} =
-      quiz
+      build(:questionnaire, steps: @skip_logic)
       |> Flow.start
       |> Flow.step
+    result = flow
+      |> Flow.step(response)
+  end
 
-    result =
-      flow
-      |> Flow.step("Y")
+  # skip logic
+  test "when skip_logic is end it ends the flow" do
+    result = init_quiz_and_send_response("Y")
 
     assert {:end, _} = result
   end
 
   test "when skip_logic is null it continues with next step" do
-    quiz = build(:questionnaire, steps: @skip_logic)
-    {:ok, flow, _} =
-      quiz
-      |> Flow.start
-      |> Flow.step
-
-    result =
-      flow
-      |> Flow.step("N")
+    result = init_quiz_and_send_response("N")
 
     assert {:ok, _, _} = result
   end
 
   test "when skip_logic is not present continues with next step" do
-    quiz = build(:questionnaire, steps: @skip_logic)
-    {:ok, flow, _} =
-      quiz
-      |> Flow.start
-      |> Flow.step
-
-    result =
-      flow
-      |> Flow.step("M")
+    result = init_quiz_and_send_response("M")
 
     assert {:ok, _, _} = result
   end
 
-  test "when skip_log is a valid id jumps to the specified id " do
-    quiz = build(:questionnaire, steps: @skip_logic)
-    {:ok, flow, _} =
-      quiz
-      |> Flow.start
-      |> Flow.step
-
-    {:ok, flow, _} =
-      flow
-      |> Flow.step("S")
+  test "when skip_logic is a valid id jumps to the specified id" do
+    {:ok, flow, _} = init_quiz_and_send_response("S")
 
     assert flow.current_step == 2
   end
 
-  describe "when skip_log is an invalid id" do
+  describe "when skip_logic is an invalid id" do
 
     test "when it doesn't exist raises" do
-      quiz = build(:questionnaire, steps: @skip_logic)
-      {:ok, flow, _} =
-        quiz
-        |> Flow.start
-        |> Flow.step
-
       assert_raise RuntimeError, fn ->
-        flow
-        |> Flow.step("A")
+        init_quiz_and_send_response("A")
       end
     end
 
     test "when the step is previous raises" do
-      quiz = build(:questionnaire, steps: @skip_logic)
-      {:ok, flow, _} =
-        quiz
-        |> Flow.start
-        |> Flow.step
-
-      {:ok, flow, _} =
-        flow
-        |> Flow.step("M")
+      {:ok, flow, _} = init_quiz_and_send_response("M")
 
       assert_raise RuntimeError, fn ->
         flow
