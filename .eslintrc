@@ -6,7 +6,8 @@
     "d3": false
   },
   "rules": {
-    "space-before-function-paren": [2, "never"]
+    "space-before-function-paren": [2, "never"],
+    "eqeqeq": "off"
   },
   "env": {
     "browser": true
