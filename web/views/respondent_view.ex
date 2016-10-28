@@ -56,7 +56,7 @@ defmodule Ask.RespondentView do
 
   def render("invalid_entries.json", %{invalid_entries: entries, filename: filename}) do
     %{
-      invalid_entries: entries,
+      invalidEntries: entries,
       filename: filename
     }
   end

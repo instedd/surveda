@@ -6,6 +6,7 @@ export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const REMOVE_RESPONDENTS = 'REMOVE_RESPONDENTS'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
+export const INVALID_RESPONDENTS = 'INVALID_RESPONDENTS'
 
 export const fetchRespondents = (projectId, surveyId) => dispatch => {
   api.fetchRespondentsWithLimit(projectId, surveyId, '')
@@ -57,4 +58,9 @@ export const updateRespondent = (response) => ({
 export const receiveRespondentsError = (error) => ({
   type: RECEIVE_RESPONDENTS_ERROR,
   error
+})
+
+export const receiveInvalids = (invalidRespondents) => ({
+  type: INVALID_RESPONDENTS,
+  invalidRespondents: invalidRespondents
 })

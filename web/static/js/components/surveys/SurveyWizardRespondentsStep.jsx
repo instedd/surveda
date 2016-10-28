@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
-import { ConfirmationModal } from '../ui'
+import { ConfirmationModal, Card } from '../ui'
 import { uploadRespondents, removeRespondents } from '../../api'
 import * as actions from '../../actions/survey'
 import * as surveyActions from '../../actions/surveys'
@@ -25,7 +25,7 @@ class SurveyWizardRespondentsStep extends Component {
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       }, (e) => {
         e.json().then((value) => {
-          console.log(value)
+          dispatch(respondentsActions.receiveInvalids(value))
         })
       })
   }
@@ -43,8 +43,25 @@ class SurveyWizardRespondentsStep extends Component {
       })
   }
 
+  invalidRespondentsContent(data) {
+    if (data) {
+      const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
+      const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
+      const extraLinesCount = data.invalidEntries.length - lineNumbers.length
+      const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
+      return (
+        <div>
+          <div>Errors found at '{data.filename}', file was not imported</div>
+          <div>{invalidEntriesText} {lineNumbersText}</div>
+          <div>Please fix those errors and upload again.</div>
+        </div>
+      )
+    }
+  }
+
   render() {
     const { survey, respondents } = this.props
+    let invalidRespondentsCard = this.invalidRespondentsContent(respondents.invalidRespondents)
     if (!survey) {
       return <div>Loading...</div>
     }
@@ -64,6 +81,9 @@ class SurveyWizardRespondentsStep extends Component {
       return (
         <RespondentsContainer>
           <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+          <Card>
+            { invalidRespondentsCard }
+          </Card>
           <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').openModal()} />
         </RespondentsContainer>
       )

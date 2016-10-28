@@ -17,6 +17,11 @@ export default (state = {}, action) => {
       return state
     case actions.REMOVE_RESPONDENTS:
       return {}
+    case actions.INVALID_RESPONDENTS:
+      return {
+        ...state,
+        invalidRespondents: action.invalidRespondents
+      }
     default:
       return state
   }
