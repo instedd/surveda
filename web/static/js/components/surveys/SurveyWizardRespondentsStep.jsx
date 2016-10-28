@@ -35,7 +35,7 @@ class SurveyWizardRespondentsStep extends Component {
     event.preventDefault()
     removeRespondents(survey)
       .then(respondents => {
-        dispatch(respondentsActions.removeRespondents(respondents))
+        dispatch(respondentsActions.removeRespondents(respondents.items))
         dispatch(actions.updateRespondentsCount(0))
         dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
@@ -78,8 +78,8 @@ class SurveyWizardRespondentsStep extends Component {
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={survey.respondentsCount}>
-            {Object.keys(respondents).map((respondentId) =>
-              <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
+            {Object.keys(respondents.items).map((respondentId) =>
+              <PhoneNumberRow id={respondentId} phoneNumber={respondents.items[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
           <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} showCancel onConfirm={(event) => this.removeRespondents(event)} />
