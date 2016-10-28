@@ -9,7 +9,7 @@ import { updateProject } from '../../api'
 class ProjectTitle extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
-    projectId: PropTypes.string.isRequired,
+    projectId: PropTypes.any.isRequired,
     project: PropTypes.object
   }
 

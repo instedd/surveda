@@ -8,7 +8,7 @@ import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
 
 export default class SurveyForm extends Component {
   static propTypes = {
-    projectId: PropTypes.number.isRequired,
+    projectId: PropTypes.any.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     respondents: PropTypes.object,

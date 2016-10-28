@@ -167,8 +167,8 @@ QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
-  projectId: PropTypes.number,
-  questionnaireId: PropTypes.string,
+  projectId: PropTypes.any,
+  questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object
 }
 

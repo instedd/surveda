@@ -100,7 +100,7 @@ class QuestionnaireIndex extends Component {
 QuestionnaireIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
-  projectId: PropTypes.number,
+  projectId: PropTypes.any,
   questionnaires: PropTypes.array,
   sortBy: PropTypes.string,
   sortAsc: PropTypes.bool.isRequired,

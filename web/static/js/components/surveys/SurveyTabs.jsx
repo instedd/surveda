@@ -17,8 +17,8 @@ class SurveyTabs extends Component {
 }
 
 SurveyTabs.propTypes = {
-  projectId: PropTypes.number,
-  surveyId: PropTypes.number
+  projectId: PropTypes.any,
+  surveyId: PropTypes.any
 }
 
 const mapStateToProps = (state, ownProps) => ({

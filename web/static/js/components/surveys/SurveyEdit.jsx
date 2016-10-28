@@ -15,8 +15,8 @@ import * as routes from '../../routes'
 class SurveyEdit extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
-    projectId: PropTypes.number.isRequired,
-    surveyId: PropTypes.number.isRequired,
+    projectId: PropTypes.any.isRequired,
+    surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,

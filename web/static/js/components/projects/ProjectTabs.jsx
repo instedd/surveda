@@ -17,7 +17,7 @@ class ProjectTabs extends Component {
 }
 
 ProjectTabs.propTypes = {
-  projectId: PropTypes.number.isRequired
+  projectId: PropTypes.any.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({

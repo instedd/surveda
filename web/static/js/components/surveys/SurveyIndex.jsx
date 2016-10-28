@@ -16,7 +16,7 @@ class SurveyIndex extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     router: PropTypes.object,
-    projectId: PropTypes.number.isRequired,
+    projectId: PropTypes.any.isRequired,
     surveys: PropTypes.array,
     respondentsStats: PropTypes.object.isRequired
   }

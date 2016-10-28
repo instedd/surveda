@@ -124,8 +124,8 @@ class RespondentIndex extends Component {
 
 RespondentIndex.propTypes = {
   actions: PropTypes.object.isRequired,
-  projectId: PropTypes.number,
-  surveyId: PropTypes.number,
+  projectId: PropTypes.any,
+  surveyId: PropTypes.any,
   respondents: PropTypes.object,
   pageNumber: PropTypes.number.isRequired,
   pageSize: PropTypes.number.isRequired,
