@@ -26,19 +26,21 @@ class SurveyEdit extends Component {
   }
 
   componentWillMount() {
-    const { dispatch, projectId, surveyId, router } = this.props
+    const { dispatch, projectId, surveyId } = this.props
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
       dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
-        .then((survey) => {
-          if (survey && survey.state === 'running') {
-            router.replace(routes.survey(survey.projectId, survey.id))
-          }
-        })
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchChannels())
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
       dispatch(respondentsActions.fetchRespondents(projectId, surveyId, 5, 1))
+    }
+  }
+
+  componentDidUpdate() {
+    const { survey, router } = this.props
+    if (survey && survey.state === 'running') {
+      router.replace(routes.survey(survey.projectId, survey.id))
     }
   }
 
@@ -62,6 +64,7 @@ class SurveyEdit extends Component {
     if (Object.keys(survey).length === 0 || !respondents) {
       return <div>Loading...</div>
     }
+
     return (
       <div className='white'>
         { survey.state === 'ready'
