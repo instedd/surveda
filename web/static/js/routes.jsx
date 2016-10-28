@@ -10,7 +10,7 @@ import QuestionnaireEditor from './components/questionnaires/QuestionnaireEditor
 import ChannelIndex from './components/ChannelIndex'
 import ProjectTabs from './components/projects/ProjectTabs'
 import SurveyTabs from './components/surveys/SurveyTabs'
-import SurveyRespondents from './components/respondents/SurveyRespondents'
+import RespondentIndex from './components/respondents/RespondentIndex'
 import ProjectTitle from './components/projects/ProjectTitle'
 import SurveyTitle from './components/surveys/SurveyTitle'
 import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
@@ -30,7 +30,7 @@ export default (
 
           <Route path=':surveyId' title={SurveyTitle}>
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
-            <Route path='respondents' components={{ body: SurveyRespondents, tabs: SurveyTabs }} />
+            <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} />
           </Route>
         </Route>

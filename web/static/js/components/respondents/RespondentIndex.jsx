@@ -6,7 +6,7 @@ import range from 'lodash/range'
 import values from 'lodash/values'
 import { CardTable } from '../ui'
 
-class SurveyRespondents extends Component {
+class RespondentIndex extends Component {
   componentDidMount() {
     const { projectId, surveyId, pageSize } = this.props
     if (projectId && surveyId) {
@@ -126,7 +126,7 @@ class SurveyRespondents extends Component {
   }
 }
 
-SurveyRespondents.propTypes = {
+RespondentIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   projectId: PropTypes.number,
   surveyId: PropTypes.number,
@@ -166,4 +166,4 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(SurveyRespondents)
+export default connect(mapStateToProps, mapDispatchToProps)(RespondentIndex)
