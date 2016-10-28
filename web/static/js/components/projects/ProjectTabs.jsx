@@ -17,11 +17,11 @@ class ProjectTabs extends Component {
 }
 
 ProjectTabs.propTypes = {
-  projectId: PropTypes.number.isRequired
+  projectId: PropTypes.any.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: parseInt(ownProps.params.projectId)
+  projectId: ownProps.params.projectId
 })
 
 export default connect(mapStateToProps)(ProjectTabs)

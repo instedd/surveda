@@ -60,7 +60,7 @@ const respondentsCallback = (json, schema) => {
 const handleResponse = (response, callback) => {
   if (response.ok) {
     return callback()
-  } else if (response.status === 401 || response.status === 403) {
+  } else if (response.status == 401 || response.status == 403) {
     return Promise.reject(new Unauthorized(response.statusText))
   } else {
     return Promise.reject(response)
@@ -141,8 +141,8 @@ export const removeRespondents = (survey) => {
   return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`, respondentSchema)
 }
 
-export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}`, arrayOf(respondentSchema), {}, respondentsCallback)
+export const fetchRespondents = (projectId, surveyId, limit, page) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}&page=${page}`, arrayOf(respondentSchema), {}, respondentsCallback)
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {

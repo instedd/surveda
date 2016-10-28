@@ -8,19 +8,19 @@ import { UntitledIfEmpty } from '../ui'
 class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    questionnaires: PropTypes.object.isRequired,
-    projectId: PropTypes.number.isRequired,
+    questionnaires: PropTypes.object,
+    projectId: PropTypes.any.isRequired,
     dispatch: PropTypes.func.isRequired
   }
 
   questionnaireChange(e) {
     const { dispatch } = this.props
-    dispatch(actions.changeQuestionnaire(parseInt(e.target.value)))
+    dispatch(actions.changeQuestionnaire(e.target.value))
   }
 
   newQuestionnaireButton(projectId, questionnaires) {
     let buttonLabel = 'NEW QUESTIONNAIRE'
-    if (Object.keys(questionnaires).length === 0) {
+    if (Object.keys(questionnaires).length == 0) {
       buttonLabel = "You still haven't created any questionnaire. Click here to create one."
     }
 
@@ -56,7 +56,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                     name='questionnaire'
                     className='with-gap'
                     value={questionnaireId}
-                    defaultChecked={this.props.survey.questionnaireId === questionnaireId}
+                    defaultChecked={this.props.survey.questionnaireId == questionnaireId}
                     onClick={e => this.questionnaireChange(e)}
                   />
                   <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} /></label>

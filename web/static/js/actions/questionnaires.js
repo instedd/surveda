@@ -14,38 +14,16 @@ export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
 
   // Don't fetch questionnaires if they are already being fetched
   // for that same project
-  if (state.questionnaires.fetching && state.questionnaires.projectId === projectId) {
-    return
+  if (state.questionnaires.fetching && state.questionnaires.projectId == projectId) {
+    return Promise.resolve(getState().questionnaires.items)
   }
 
   dispatch(startFetchingQuestionnaires(projectId))
 
   return api
     .fetchQuestionnaires(projectId)
-    .then(response => dispatch(receiveQuestionnaires(projectId, response.entities.questionnaires || [])))
+    .then(response => dispatch(receiveQuestionnaires(projectId, response.entities.questionnaires || {})))
     .then(() => getState().questionnaires.items)
-}
-
-export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
-  dispatch(startFetchingQuestionnaires(projectId))
-  return api.fetchQuestionnaire(projectId, questionnaireId)
-    .then(response => {
-      const questionnaire = response.entities.questionnaires[response.result]
-      dispatch(receiveQuestionnaires(projectId, [questionnaire]))
-    })
-    .then(() => getState().questionnaires.items)
-}
-
-export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
-  return (dispatch, getState) => {
-    if (shouldFetchQuestionnaire(getState(), projectId, questionnaireId)) {
-      return dispatch(fetchQuestionnaire(projectId, questionnaireId))
-    }
-  }
-}
-
-const shouldFetchQuestionnaire = (state, projectId, questionnaireId) => {
-  return !(state.questionnaire && state.questionnaire.id === questionnaireId)
 }
 
 export const startFetchingQuestionnaires = (projectId) => ({

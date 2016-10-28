@@ -26,7 +26,7 @@ export default (state = initialState, action) => {
 }
 
 const fetchSurveys = (state, action) => {
-  const items = state.projectId === action.projectId ? state.items : null
+  const items = state.projectId == action.projectId ? state.items : null
   return {
     ...state,
     items,
@@ -44,7 +44,7 @@ const fetchSurveys = (state, action) => {
 const receiveSurveys = (state, action) => {
   const surveys = action.surveys
 
-  if (state.projectId !== action.projectId) {
+  if (state.projectId != action.projectId) {
     return state
   }
 

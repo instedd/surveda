@@ -1,24 +1,14 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import assert from 'assert'
-import each from 'lodash/each'
-import reducer, {surveyReducer} from '../../../web/static/js/reducers/survey'
+import { playActionsFromState } from '../spec_helper'
+import reducer, { surveyReducer } from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
 
-  const playActions = (actions) => {
-    return playActionsFromState(initialState, actions)
-  }
-
-  const playActionsFromState = (state, actions) => {
-    let resultState = state
-    each(actions, (a) => {
-      resultState = reducer(resultState, a)
-    })
-    return resultState
-  }
+  const playActions = playActionsFromState(initialState, reducer)
 
   it('has a sane initial state', () => {
     expect(initialState.fetching).toEqual(false)
@@ -36,7 +26,7 @@ describe('survey reducer', () => {
 
   it('fetches a survey', () => {
     const state = playActions([
-      actions.fetching(1, 1)
+      actions.fetch(1, 1)
     ])
 
     expect(state).toEqual({
@@ -52,18 +42,27 @@ describe('survey reducer', () => {
 
   it('receives a survey', () => {
     const state = playActions([
-      actions.fetching(1, 1),
+      actions.fetch(1, 1),
       actions.receive(survey)
     ])
     expect(state.fetching).toEqual(false)
     expect(state.data).toEqual(survey)
   })
 
+  it('receiving a survey without an initial fetch should discard the survey', () => {
+    const state = playActions([
+      actions.receive(survey)
+    ])
+    expect(state.fetching).toEqual(false)
+    expect(state.filter).toEqual(null)
+    expect(state.data).toEqual(null)
+  })
+
   it('clears data when fetching a different survey', () => {
     const state = playActions([
-      actions.fetching(1, 1),
+      actions.fetch(1, 1),
       actions.receive(survey),
-      actions.fetching(2, 2)
+      actions.fetch(2, 2)
     ])
 
     expect(state).toEqual({
@@ -79,9 +78,9 @@ describe('survey reducer', () => {
 
   it('keeps old data when fetching new data for the same filter', () => {
     const state = playActions([
-      actions.fetching(1, 1),
+      actions.fetch(1, 1),
       actions.receive(survey),
-      actions.fetching(1, 1)
+      actions.fetch(1, 1)
     ])
 
     expect(state).toEqual({
@@ -93,7 +92,7 @@ describe('survey reducer', () => {
 
   it('ignores data received based on different filter', () => {
     const state = playActions([
-      actions.fetching(2, 2),
+      actions.fetch(2, 2),
       actions.receive(survey)
     ])
 

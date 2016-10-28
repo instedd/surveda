@@ -3,14 +3,14 @@ import { Card } from '../ui'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
-const StepsList = ({steps}) => {
-  if (steps.length !== 0) {
+const StepsList = ({steps, onClick}) => {
+  if (steps.length != 0) {
     return (
       <div>
         { steps.map((step) => (
           <Card key={step.id} >
             <div className='card-content closed-step'>
-              <QuestionnaireClosedStep step={step} />
+              <QuestionnaireClosedStep step={step} onClick={stepId => onClick(stepId)} />
             </div>
           </Card>
         ))}
@@ -21,42 +21,43 @@ const StepsList = ({steps}) => {
   }
 }
 
-const QuestionnaireSteps = ({ steps }) => {
-  if (steps) {
-    if (!steps.current) {
-      // All collapsed
-      return <StepsList steps={steps.ids.map((id) => steps.items[id])} />
-    } else {
-      const itemIndex = steps.ids.findIndex(stepId => stepId === steps.current.id)
-
-      // Only one expanded
-      const stepsBefore = steps.ids.slice(0, itemIndex).map((id) => steps.items[id])
-      const currentStep = steps.items[steps.current.id]
-      const stepsAfter = steps.ids.slice(itemIndex + 1).map((id) => steps.items[id])
-
-      return (
-        <div>
-          <StepsList steps={stepsBefore} />
-          <StepEditor step={currentStep} />
-          <StepsList steps={stepsAfter} />
-        </div>
-      )
-    }
+const QuestionnaireSteps = ({ steps, current, onSelectStep, onDeselectStep, onDeleteStep }) => {
+  if (current == null) {
+    // All collapsed
+    return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
   } else {
+    const itemIndex = steps.findIndex(step => step.id == current)
+
+    // Only one expanded
+    const stepsBefore = steps.slice(0, itemIndex)
+    const currentStep = steps[itemIndex]
+    const stepsAfter = steps.slice(itemIndex + 1)
+
     return (
       <div>
-        Sorry! There are no steps here and there's no way to create them yet. It's a bit embarrasing, but the Ask team is working really hard on that feature. In the meantime, if you save this questionnaire we'll create two steps for you to play around.
+        <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
+        <StepEditor
+          step={currentStep}
+          onCollapse={() => onDeselectStep()}
+          onDelete={() => onDeleteStep()}
+          skip={stepsAfter} />
+        <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} />
       </div>
     )
   }
 }
 
 QuestionnaireSteps.propTypes = {
-  steps: PropTypes.object
+  steps: PropTypes.array.isRequired,
+  current: PropTypes.string,
+  onSelectStep: PropTypes.func.isRequired,
+  onDeselectStep: PropTypes.func.isRequired,
+  onDeleteStep: PropTypes.func.isRequired
 }
 
 StepsList.propTypes = {
-  steps: PropTypes.array
+  steps: PropTypes.array,
+  onClick: PropTypes.func
 }
 
 export default QuestionnaireSteps

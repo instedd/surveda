@@ -8,7 +8,7 @@ export const SortableHeader = ({ property, text, sortBy, sortAsc, onClick }) => 
   }
 
   let arrow
-  if (property === sortBy) {
+  if (property == sortBy) {
     if (sortAsc) {
       arrow = <i className='material-icons'>arrow_upward</i>
     } else {

@@ -15,7 +15,7 @@ class TitleContainer extends Component {
       }
     }
 
-    if (typeof title === 'function') {
+    if (typeof title == 'function') {
       const TitleClass = title
       return <Title><TitleClass /></Title>
     } else {

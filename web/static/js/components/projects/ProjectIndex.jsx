@@ -65,7 +65,7 @@ class ProjectIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount === 1) ? ' project' : ' projects'}`
+    const title = `${totalCount} ${(totalCount == 1) ? ' project' : ' projects'}`
     const footer = (
       <div className='right-align'>
         <ul className='pagination'>
@@ -85,7 +85,7 @@ class ProjectIndex extends Component {
     return (
       <div>
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
-        { (projects.length === 0)
+        { (projects.length == 0)
           ? <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
           : <CardTable title={title} footer={footer} highlight>
             <thead>
@@ -96,10 +96,10 @@ class ProjectIndex extends Component {
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={index}><td>&nbsp;</td></tr>
+                if (!project) return <tr key={-index}><td>&nbsp;</td></tr>
 
                 return (
-                  <tr key={index}>
+                  <tr key={project.id}>
                     <td onClick={() => router.push(routes.project(project.id))}>
                       <UntitledIfEmpty text={project.name} />
                     </td>

@@ -1,8 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import * as actions from '../../actions/questionnaireEditor'
 import { Card } from '../ui'
+import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 
@@ -19,7 +19,8 @@ class StepEditor extends Component {
 
   stepTitleSubmit(e) {
     e.preventDefault()
-    this.props.actions.changeStepTitle(e.target.value)
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepTitle(step.id, e.target.value)
   }
 
   stepPromptSmsChange(e) {
@@ -29,7 +30,19 @@ class StepEditor extends Component {
 
   stepPromptSmsSubmit(e) {
     e.preventDefault()
-    this.props.actions.changeStepPromptSms(e.target.value)
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptSms(step.id, e.target.value)
+  }
+
+  stepPromptIvrChange(e) {
+    e.preventDefault()
+    this.setState({stepPromptIvr: e.target.value})
+  }
+
+  stepPromptIvrSubmit(e) {
+    e.preventDefault()
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audio: 'tts'})
   }
 
   stepStoreChange(e) {
@@ -39,22 +52,14 @@ class StepEditor extends Component {
 
   stepStoreSubmit(e) {
     e.preventDefault()
-    this.props.actions.changeStepStore(e.target.value)
-  }
-
-  deselectStep(e) {
-    e.preventDefault()
-    this.props.actions.deselectStep()
-  }
-
-  editTitle(e) {
-    e.preventDefault()
-    this.props.actions.editTitle()
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepStore(step.id, e.target.value)
   }
 
   delete(e) {
     e.preventDefault()
-    this.props.actions.deleteStep()
+    const { onDelete } = this.props
+    onDelete()
   }
 
   componentWillReceiveProps(newProps) {
@@ -65,21 +70,47 @@ class StepEditor extends Component {
     const { step } = props
     return {
       stepTitle: step.title,
-      stepPromptSms: step.prompt.sms,
+      stepPromptSms: step.prompt.sms || '',
+      stepPromptIvr: (step.prompt.ivr || {}).text || '',
       stepStore: step.store || ''
     }
   }
 
   render() {
-    const { step } = this.props
+    const { step, onCollapse, questionnaire, skip } = this.props
 
     let editor
-    if (step.type === 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} />
-    } else if (step.type === 'numeric') {
+    if (step.type == 'multiple-choice') {
+      editor = <StepMultipleChoiceEditor step={step} skip={skip} />
+    } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
+    }
+
+    const sms = questionnaire.modes.indexOf('SMS') != -1
+    const ivr = questionnaire.modes.indexOf('IVR') != -1
+
+    let smsInput = null
+    if (sms) {
+      smsInput = <input
+        type='text'
+        placeholder='SMS message'
+        is length='140'
+        value={this.state.stepPromptSms}
+        onChange={e => this.stepPromptSmsChange(e)}
+        onBlur={e => this.stepPromptSmsSubmit(e)}
+        ref={ref => $(ref).characterCounter()} />
+    }
+
+    let ivrInput = null
+    if (ivr) {
+      ivrInput = <input
+        type='text'
+        placeholder='Voice message'
+        value={this.state.stepPromptIvr}
+        onChange={e => this.stepPromptIvrChange(e)}
+        onBlur={e => this.stepPromptIvrSubmit(e)} />
     }
 
     return (
@@ -94,10 +125,13 @@ class StepEditor extends Component {
               onChange={e => this.stepTitleChange(e)}
               onBlur={e => this.stepTitleSubmit(e)}
               className='editable-field'
-              autoFocus />
+               />
             <a href='#!'
               className='right collapse'
-              onClick={e => this.deselectStep(e)}>
+              onClick={e => {
+                e.preventDefault()
+                onCollapse()
+              }}>
               <i className='material-icons'>expand_less</i>
             </a>
           </li>
@@ -105,15 +139,8 @@ class StepEditor extends Component {
             <div className='row'>
               <div className='col s12 input-field'>
                 <h5>Question Prompt</h5>
-                <input
-                  type='text'
-                  placeholder='SMS message'
-                  is length='140'
-                  value={this.state.stepPromptSms}
-                  onChange={e => this.stepPromptSmsChange(e)}
-                  onBlur={e => this.stepPromptSmsSubmit(e)}
-                  ref={ref => $(ref).characterCounter()}
-                    />
+                {smsInput}
+                {ivrInput}
               </div>
             </div>
           </li>
@@ -155,12 +182,21 @@ class StepEditor extends Component {
 }
 
 StepEditor.propTypes = {
-  actions: PropTypes.object.isRequired,
-  step: PropTypes.object.isRequired
+  questionnaireActions: PropTypes.object.isRequired,
+  dispatch: PropTypes.func,
+  questionnaire: PropTypes.object.isRequired,
+  step: PropTypes.object.isRequired,
+  onCollapse: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  skip: PropTypes.array.isRequired
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+const mapStateToProps = (state, ownProps) => ({
+  questionnaire: state.questionnaire.data
 })
 
-export default connect(null, mapDispatchToProps)(StepEditor)
+const mapDispatchToProps = (dispatch) => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(StepEditor)

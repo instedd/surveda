@@ -17,10 +17,10 @@ class SurveyWizardRespondentsStep extends Component {
   handleSubmit(survey, files) {
     const { dispatch } = this.props
     uploadRespondents(survey, files)
-      .then(respondents => {
-        dispatch(respondentsActions.receiveRespondents(respondents))
-        dispatch(actions.updateRespondentsCount(Object.keys(respondents).length))
-        dispatch(actions.fetch(survey.projectId, survey.id))
+      .then(response => {
+        dispatch(respondentsActions.receiveRespondents(survey.id, 1, response.entities.respondents || {}, response.respondentsCount))
+        dispatch(actions.updateRespondentsCount(response.respondentsCount))
+        dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       }, (e) => {
@@ -37,7 +37,7 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
-        dispatch(actions.fetch(survey.projectId, survey.id))
+        dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
       })
@@ -74,7 +74,7 @@ class SurveyWizardRespondentsStep extends Component {
       return <div>Loading...</div>
     }
 
-    if (survey.respondentsCount !== 0) {
+    if (survey.respondentsCount != 0) {
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={survey.respondentsCount}>

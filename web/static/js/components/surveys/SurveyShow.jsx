@@ -20,21 +20,21 @@ class SurveyShow extends Component {
     targetValue: React.PropTypes.number
   }
 
-  componentDidMount() {
-    const { dispatch, projectId, surveyId, router } = this.props
-    if (projectId && surveyId) {
-      dispatch(actions.fetch(projectId, surveyId))
-        .then((survey) => {
-          if (survey.state === 'not_ready') {
-            router.replace(routes.editSurvey(projectId, survey.id))
-          }
-        })
-      dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+  componentWillMount() {
+    const { dispatch, projectId, surveyId } = this.props
+    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
+    dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+  }
+
+  componentDidUpdate() {
+    const { survey, router } = this.props
+    if (survey && survey.state == 'not_ready') {
+      router.replace(routes.editSurvey(survey.projectId, survey.id))
     }
   }
 
   respondentsFraction(completedByDate, targetValue) {
-    const reached = completedByDate.length === 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
+    const reached = completedByDate.length == 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
     return reached + '/' + targetValue
   }
 
@@ -106,10 +106,10 @@ const mapStateToProps = (state, ownProps) => {
   }
 
   return ({
-    projectId: parseInt(ownProps.params.projectId),
-    project: state.projects[ownProps.params.projectId] || {},
+    projectId: ownProps.params.projectId,
+    project: state.project.data,
     surveyId: ownProps.params.surveyId,
-    survey: state.surveys[ownProps.params.surveyId] || {},
+    survey: state.survey.data,
     respondentsStats: respondentsStats,
     completedByDate: completedRespondentsByDate,
     targetValue: targetValue

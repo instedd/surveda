@@ -8,7 +8,7 @@ import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
 
 export default class SurveyForm extends Component {
   static propTypes = {
-    projectId: PropTypes.number.isRequired,
+    projectId: PropTypes.any.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     respondents: PropTypes.object,
@@ -45,7 +45,7 @@ export default class SurveyForm extends Component {
       )
 
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
-    const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item === true }).length
+    const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item == true }).length
     const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
     return (
@@ -66,20 +66,20 @@ export default class SurveyForm extends Component {
               <CollectionItem path='#respondents' icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
               <CollectionItem path='#channels' icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
               <CollectionItem path='#schedule' icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
-              <CollectionItem className='optional' path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
-              {/* <CollectionItem className='optional' path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
+              <CollectionItem path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
+              {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
             <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
             </ul>
             <div className='row'>
               <div className='col s12'>
-                <button type='button' className='btn waves-effect waves-light' onClick={onSubmit}>
+                <button type='button' className='btn waves-effect waves-light btn-wizard' onClick={onSubmit}>
                 Save
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div className='col s12 m7 offset-m1'>
+        <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} />
           </div>

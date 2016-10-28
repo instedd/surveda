@@ -53,4 +53,58 @@ defmodule Ask.FlowTest do
     step = flow |> Flow.step("99")
     assert {:end, _} = step
   end
+
+  def init_quiz_and_send_response response do
+    {:ok, flow, _} =
+      build(:questionnaire, steps: @skip_logic)
+      |> Flow.start
+      |> Flow.step
+    result = flow
+      |> Flow.step(response)
+  end
+
+  # skip logic
+  test "when skip_logic is end it ends the flow" do
+    result = init_quiz_and_send_response("Y")
+
+    assert {:end, _} = result
+  end
+
+  test "when skip_logic is null it continues with next step" do
+    result = init_quiz_and_send_response("N")
+
+    assert {:ok, _, _} = result
+  end
+
+  test "when skip_logic is not present continues with next step" do
+    result = init_quiz_and_send_response("M")
+
+    assert {:ok, _, _} = result
+  end
+
+  test "when skip_logic is a valid id jumps to the specified id" do
+    {:ok, flow, _} = init_quiz_and_send_response("S")
+
+    assert flow.current_step == 2
+  end
+
+  describe "when skip_logic is an invalid id" do
+
+    test "when it doesn't exist raises" do
+      assert_raise RuntimeError, fn ->
+        init_quiz_and_send_response("A")
+      end
+    end
+
+    test "when the step is previous raises" do
+      {:ok, flow, _} = init_quiz_and_send_response("M")
+
+      assert_raise RuntimeError, fn ->
+        flow
+        |> Flow.step("Y")
+      end
+    end
+
+  end
+
 end

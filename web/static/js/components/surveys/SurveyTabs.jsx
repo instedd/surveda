@@ -17,13 +17,13 @@ class SurveyTabs extends Component {
 }
 
 SurveyTabs.propTypes = {
-  projectId: PropTypes.number,
-  surveyId: PropTypes.number
+  projectId: PropTypes.any,
+  surveyId: PropTypes.any
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: parseInt(ownProps.params.projectId),
-  surveyId: parseInt(ownProps.params.surveyId)
+  projectId: ownProps.params.projectId,
+  surveyId: ownProps.params.surveyId
 })
 
 export default connect(mapStateToProps)(SurveyTabs)

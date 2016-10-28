@@ -12,7 +12,7 @@ export const fetchSurveys = (projectId) => (dispatch, getState) => {
 
   // Don't fetch surveys if they are already being fetched
   // for that same project
-  if (state.surveys.fetching && state.surveys.projectId === projectId) {
+  if (state.surveys.fetching && state.surveys.projectId == projectId) {
     return
   }
 
@@ -20,7 +20,7 @@ export const fetchSurveys = (projectId) => (dispatch, getState) => {
 
   return api
     .fetchSurveys(projectId)
-    .then(response => dispatch(receiveSurveys(projectId, response.entities.surveys || [])))
+    .then(response => dispatch(receiveSurveys(projectId, response.entities.surveys || {})))
     .then(() => getState().surveys.items)
 }
 

@@ -5,7 +5,6 @@ import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
-import { createSurvey } from '../../api'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty } from '../ui'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
@@ -17,7 +16,7 @@ class SurveyIndex extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     router: PropTypes.object,
-    projectId: PropTypes.number.isRequired,
+    projectId: PropTypes.any.isRequired,
     surveys: PropTypes.array,
     respondentsStats: PropTypes.object.isRequired
   }
@@ -39,10 +38,9 @@ class SurveyIndex extends Component {
 
   newSurvey() {
     const { dispatch, projectId, router } = this.props
-    createSurvey(projectId).then(response => {
-      dispatch(surveyActions.receive(response))
-      router.push(routes.editSurvey(projectId, response.result))
-    })
+    dispatch(surveyActions.createSurvey(projectId)).then(survey =>
+      router.push(routes.editSurvey(projectId, survey))
+    )
   }
 
   render() {
@@ -57,7 +55,7 @@ class SurveyIndex extends Component {
     return (
       <div>
         <AddButton text='Add survey' onClick={() => this.newSurvey()} />
-        { surveys.length === 0
+        { surveys.length == 0
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
           { surveys.map(survey => (
@@ -77,7 +75,7 @@ const mapStateToProps = (state, ownProps) => {
     surveys = values(surveys)
   }
   return {
-    projectId: parseInt(ownProps.params.projectId),
+    projectId: ownProps.params.projectId,
     surveys,
     channels: state.channels,
     respondentsStats: state.respondentsStats
@@ -94,7 +92,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
     const data = completedByDate.completedByDate.respondentsByDate
     const target = completedByDate.completedByDate.targetValue
     cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
-    if (survey.state === 'running' || survey.state === 'completed') {
+    if (survey.state == 'running' || survey.state == 'completed') {
       reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
     }
   }

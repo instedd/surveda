@@ -16,12 +16,12 @@ class ChannelIndex extends Component {
 
   render() {
     const { channels } = this.props
-    const title = `${Object.keys(channels).length} ${(Object.keys(channels).length === 1) ? ' channel' : ' channels'}`
+    const title = `${Object.keys(channels).length} ${(Object.keys(channels).length == 1) ? ' channel' : ' channels'}`
 
     return (
       <div>
         <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
-        { (Object.keys(channels).length === 0)
+        { (Object.keys(channels).length == 0)
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         : (
           <CardTable title={title} highlight>
