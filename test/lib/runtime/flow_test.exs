@@ -59,8 +59,7 @@ defmodule Ask.FlowTest do
       build(:questionnaire, steps: @skip_logic)
       |> Flow.start
       |> Flow.step
-    result = flow
-      |> Flow.step(response)
+    flow |> Flow.step(response)
   end
 
   # skip logic
