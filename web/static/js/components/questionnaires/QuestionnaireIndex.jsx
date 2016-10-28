@@ -85,7 +85,7 @@ class QuestionnaireIndex extends Component {
         <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
         { (questionnaires.length == 0)
           ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
-        : <CardTable title={title} footer={footer} highlight>
+        : <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
           <thead>
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
