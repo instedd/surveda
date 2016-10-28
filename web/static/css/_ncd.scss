@@ -281,6 +281,9 @@ footer {
   width: 24.9vw;
 }
 
+
+
+
 // ------- Forms --------------
 
 .dropfile {
@@ -430,4 +433,78 @@ label {
   color: $primary-color;
 }
 
+
+
+
+
+// ------- Media breakpoints adjustments -----------
+
+
+@media all and (max-width: 600px) {
+
+  .wrapper > * > * {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .btn-wizard {
+    @include transition(none);
+    position: absolute;
+    margin-top: 2rem;
+  }
+
+  .sidebar.pinned {
+    width: 100%;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+
+    .collection.wizard {
+      margin: 0;
+      border-radius: 0;
+      border: none;
+    }
+
+    .collection-header {
+      padding: 2px 20px;
+
+      h5 {
+        font-size: 1.2rem;
+        margin: 0.1rem 0;
+      }
+      p {
+        font-size: 13px;
+        margin: 0.2rem 0 0.4rem;
+      }
+    }
+
+    .collection-item {
+      opacity: 1;
+      padding: 0;
+      margin: 0;
+
+      a {
+        overflow: hidden;
+        height: 0;
+        padding: 0;
+
+        &.active {
+          height: 38px;
+          padding: 6px 35px 6px 20px;
+        }
+      }
+    }
+    .btn-wizard {
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: 100%;
+      margin-top: 0;
+    }
+  }
+  #questionnaire {
+    margin-top: 6.5rem;
+  }
+
+}
 

@@ -72,14 +72,14 @@ export default class SurveyForm extends Component {
             </ul>
             <div className='row'>
               <div className='col s12'>
-                <button type='button' className='btn waves-effect waves-light' onClick={onSubmit}>
+                <button type='button' className='btn waves-effect waves-light btn-wizard' onClick={onSubmit}>
                 Save
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div className='col s12 m7 offset-m1'>
+        <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} />
           </div>
