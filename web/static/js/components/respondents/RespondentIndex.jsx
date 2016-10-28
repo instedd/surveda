@@ -41,9 +41,9 @@ class RespondentIndex extends Component {
     const respondentsList = values(respondents)
 
     function generateResponsesDictionaryFor(rs) {
-      Object.keys(rs).forEach((respondentId, _) =>
+      Object.keys(rs).forEach((respondentId, _) => {
         rs[respondentId].responses = responsesDictionaryFrom(rs[respondentId].responses)
-      )
+      })
       return rs
     }
 
@@ -59,10 +59,6 @@ class RespondentIndex extends Component {
       let fieldNames = Object.keys(rs).map((key) => (rs[key].responses))
       fieldNames = fieldNames.map((response) => Object.keys(response))
       return [].concat.apply([], fieldNames)
-    }
-
-    function respondentKeys(rs) {
-      return Object.keys(rs)
     }
 
     function hasResponded(rs, respondentId, fieldName) {
