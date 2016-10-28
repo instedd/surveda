@@ -20,12 +20,12 @@
               <ul class="right hide-on-med-and-down">
                 <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
                 <li><a href='/login' class="btn-flat btn-large">Login</a></li>
-                <li><a href="#.html" class="btn-flat btn-large outlined">Sign up for free</a></li>
+                <li><a href="/register" class="btn-flat btn-large outlined">Sign up for free</a></li>
               </ul>
               <ul class="side-nav" id="mobile-demo">
                 <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
                 <li><a href='/login' class="btn-flat btn-large">Login</a></li>
-                <li><a href="#.html" class="btn-flat btn-large outlined">Sign up for free</a></li>
+                <li><a href="/register" class="btn-flat btn-large outlined">Sign up for free</a></li>
               </ul>
             </div>
           </nav>
