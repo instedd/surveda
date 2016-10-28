@@ -30,7 +30,7 @@ class ChoiceEditor extends Component {
 
   stateFromProps(props) {
     const { choice } = props
-    return { response: choice.value, sms: choice.responses.join(', ') }
+    return { response: choice.value, sms: choice.responses.sms.join(', ') }
   }
 
   enterEditMode(event, focus) {
@@ -78,7 +78,7 @@ class ChoiceEditor extends Component {
             <input
               type='text'
               placeholder='Response'
-              value={this.state.response}
+              value={this.state.response.sms}
               autoFocus={this.state.focus === 'response'}
               onChange={e => this.responseChange(e)}
               onMouseDown={e => this.setDoNotClose()}

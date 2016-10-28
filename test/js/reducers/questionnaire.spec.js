@@ -294,76 +294,86 @@ describe('questionnaire reducer', () => {
     expect(step.choices.length).toEqual(2)
     expect(step.choices[1]).toEqual({
       value: 'Maybe',
-      responses: [
-        'M',
-        'MB',
-        '3'
-      ]
+      responses: {
+        sms: [
+          'M',
+          'MB',
+          '3'
+        ]
+      }
     })
   })
 })
 
 const questionnaire = deepFreeze({
-  'steps': [
+  steps: [
     {
-      'type': 'multiple-choice',
-      'title': 'Do you smoke?',
-      'store': 'Smokes',
-      'id': '17141bea-a81c-4227-bdda-f5f69188b0e7',
-      'choices': [
+      type: 'multiple-choice',
+      title: 'Do you smoke?',
+      store: 'Smokes',
+      id: '17141bea-a81c-4227-bdda-f5f69188b0e7',
+      choices: [
         {
-          'value': 'Yes',
-          'responses': [
-            'Yes',
-            'Y',
-            '1'
-          ]
+          value: 'Yes',
+          responses: {
+            sms: [
+              'Yes',
+              'Y',
+              '1'
+            ]
+          }
         },
         {
-          'value': 'No',
-          'responses': [
-            'No',
-            'N',
-            '1'
-          ]
+          value: 'No',
+          responses: {
+            sms: [
+              'No',
+              'N',
+              '1'
+            ]
+          }
         }
       ],
-      'prompt': {
-        'sms': ''
+      prompt: {
+        sms: ''
       }
     },
     {
-      'type': 'multiple-choice',
-      'title': 'Do you exercise?',
-      'store': 'Exercises',
-      'id': 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
-      'choices': [
+      type: 'multiple-choice',
+      title: 'Do you exercise?',
+      store: 'Exercises',
+      id: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+      choices: [
         {
-          'value': 'Yes',
-          'responses': [
-            'Yes',
-            'Y',
-            '1'
-          ]
+          value: 'Yes',
+          responses: {
+            sms: [
+              'Yes',
+              'Y',
+              '1'
+            ]
+          }
         },
         {
-          'value': 'No',
-          'responses': [
-            'No',
-            'N',
-            '1'
-          ]
+          value: 'No',
+          responses: {
+            sms: [
+              'No',
+              'N',
+              '1'
+            ]
+          }
         }
       ],
-      'prompt': {
-        'sms': ''
+      prompt: {
+        sms: ''
       }
     }
   ],
-  'projectId': 1,
-  'name': 'Foo',
-  'modes': [
+  projectId: 1,
+  name: 'Foo',
+  modes: [
     'SMS'
   ],
-  'id': 1
+  id: 1
 })
