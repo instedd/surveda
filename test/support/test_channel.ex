@@ -1,19 +1,23 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid]
+  defstruct [:pid, :push]
 
-  def new do
-    %Ask.TestChannel{pid: self()}
+  def new(push \\ true)
+
+  def new(push) when is_atom(push) do
+    %Ask.TestChannel{pid: self(), push: push}
   end
 
   def new(channel) do
     pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
-    %Ask.TestChannel{pid: pid}
+    push = channel.settings["push"] |> String.to_atom
+    %Ask.TestChannel{pid: pid, push: push}
   end
 
   def settings(channel) do
     encoded_pid = channel.pid |> :erlang.term_to_binary |> Base.encode64
-    %{"pid" => encoded_pid}
+    encoded_push = channel.push |> Atom.to_string
+    %{"pid" => encoded_pid, "push" => encoded_push}
   end
 
   def oauth2_authorize(_code, _redirect_uri, _callback_uri) do
@@ -36,6 +40,14 @@ defmodule Ask.TestChannel do
 end
 
 defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
+  def setup(channel, phone_number) do
+    send channel.pid, [:setup, channel, phone_number]
+  end
+
+  def can_push_question?(channel) do
+    channel.push
+  end
+
   def ask(channel, phone_number, prompts) do
     send channel.pid, [:ask, channel, phone_number, prompts]
   end

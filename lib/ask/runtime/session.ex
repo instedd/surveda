@@ -4,12 +4,24 @@ defmodule Ask.Runtime.Session do
   defstruct [:channel, :flow, :respondent]
 
   def start(questionnaire, respondent, channel) do
+    runtime_channel = Ask.Channel.runtime_channel(channel)
     flow = Flow.start(questionnaire)
-    case flow |> Flow.step do
-      {:end, _} -> :end
-      {:ok, flow, %{prompts: [prompt]}} ->
-        runtime_channel = Ask.Channel.runtime_channel(channel)
-        runtime_channel |> Channel.ask(respondent.phone_number, [prompt])
+    runtime_channel |> Channel.setup(respondent)
+
+    case runtime_channel |> Channel.can_push_question? do
+      true ->
+        case flow |> Flow.step do
+          {:end, _} -> :end
+          {:ok, flow, %{prompts: [prompt]}} ->
+            runtime_channel |> Channel.ask(respondent.phone_number, [prompt])
+            %Ask.Runtime.Session{
+              channel: channel,
+              flow: flow,
+              respondent: respondent
+            }
+        end
+
+      false ->
         %Ask.Runtime.Session{
           channel: channel,
           flow: flow,
