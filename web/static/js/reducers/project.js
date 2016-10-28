@@ -19,7 +19,7 @@ export default (state = initialState, action) => {
 
 const fetchProject = (state, action) => {
   // Keep old data while reloading the same project
-  const newData = state.projectId === action.projectId ? state.data : null
+  const newData = state.projectId == action.projectId ? state.data : null
   return {
     ...state,
     fetching: true,
@@ -30,7 +30,7 @@ const fetchProject = (state, action) => {
 
 const receiveProject = (state, action) => {
   // Ignore if receiving a project that's not the last requested one
-  if (state.projectId !== action.project.id) {
+  if (state.projectId != action.project.id) {
     return state
   }
 

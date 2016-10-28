@@ -43,7 +43,7 @@ class QuestionnaireIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount === 1) ? ' questionnaire' : ' questionnaires'}`
+    const title = `${totalCount} ${(totalCount == 1) ? ' questionnaire' : ' questionnaires'}`
     const footer = (
       <div className='right-align'>
         <ul className='pagination'>
@@ -63,7 +63,7 @@ class QuestionnaireIndex extends Component {
     return (
       <div>
         <AddButton text='Add questionnaire' linkPath={routes.newQuestionnaire(projectId)} />
-        { (questionnaires.length === 0)
+        { (questionnaires.length == 0)
           ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
         : <CardTable title={title} footer={footer} highlight>
           <thead>
@@ -128,7 +128,7 @@ const mapStateToProps = (state, ownProps) => {
   const hasPreviousPage = startIndex > 1
   const hasNextPage = endIndex < totalCount
   return {
-    projectId: parseInt(ownProps.params.projectId),
+    projectId: ownProps.params.projectId,
     sortBy,
     sortAsc,
     questionnaires,

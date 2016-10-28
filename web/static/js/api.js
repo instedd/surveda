@@ -60,7 +60,7 @@ const respondentsCallback = (json, schema) => {
 const handleResponse = (response, callback) => {
   if (response.ok) {
     return callback()
-  } else if (response.status === 401 || response.status === 403) {
+  } else if (response.status == 401 || response.status == 403) {
     return Promise.reject(new Unauthorized(response.statusText))
   } else {
     return Promise.reject(response.statusText)

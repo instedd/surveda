@@ -22,7 +22,7 @@ class ProjectTitle extends Component {
 
   handleSubmit(newName) {
     const { dispatch, survey } = this.props
-    if (survey.name === newName) return
+    if (survey.name == newName) return
     const newSurvey = merge({}, survey, {name: newName})
 
     updateSurvey(newSurvey.projectId, newSurvey)

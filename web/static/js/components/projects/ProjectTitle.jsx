@@ -20,7 +20,7 @@ class ProjectTitle extends Component {
 
   handleSubmit(newName) {
     const { dispatch, project } = this.props
-    if (project.name === newName) return
+    if (project.name == newName) return
     const newProject = merge({}, project, {name: newName})
 
     dispatch(projectActions.updateProject(newProject)) // Optimistic update

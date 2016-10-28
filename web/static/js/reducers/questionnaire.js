@@ -12,7 +12,7 @@ const defaultState = {
 }
 
 export default (state, action) => {
-  if (state === undefined) {
+  if (state == undefined) {
     return defaultState
   }
 
@@ -95,11 +95,11 @@ const changeChoice = (state, action) => {
 }
 
 const deleteStep = (state, action) => {
-  return filter(state, s => s.id !== action.stepId)
+  return filter(state, s => s.id != action.stepId)
 }
 
 const changeStep = (state, stepId, func) => {
-  const stepIndex = findIndex(state, s => s.id === stepId)
+  const stepIndex = findIndex(state, s => s.id == stepId)
   return [
     ...state.slice(0, stepIndex),
     func({...state[stepIndex]}),
@@ -181,11 +181,11 @@ export const buildNewStep = (stepType) => ({
 
 const toggleMode = (state, action) => {
   let modes = state.modes
-  if (modes.indexOf(action.mode) === -1) {
+  if (modes.indexOf(action.mode) == -1) {
     modes = modes.slice()
     modes.push(action.mode)
   } else {
-    modes = modes.filter(mode => mode !== action.mode)
+    modes = modes.filter(mode => mode != action.mode)
   }
   return {
     ...state,

@@ -25,7 +25,7 @@ export default (state = initialState, action) => {
 }
 
 const fetchRespondents = (state, action) => {
-  const items = state.surveyId === action.surveyId ? state.items : null
+  const items = state.surveyId == action.surveyId ? state.items : null
   return {
     ...state,
     items,
@@ -48,7 +48,7 @@ const createOrUpdateRespondent = (state, action) => ({
 })
 
 const receiveRespondents = (state, action) => {
-  if (state.surveyId !== action.surveyId || state.page.number !== action.page) {
+  if (state.surveyId != action.surveyId || state.page.number != action.page) {
     return state
   }
 

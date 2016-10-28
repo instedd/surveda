@@ -71,7 +71,7 @@ class RespondentIndex extends Component {
 
     const { startIndex, endIndex, hasPreviousPage, hasNextPage, pageSize } = this.props
 
-    const title = `${totalCount} ${(totalCount === 1) ? ' respondent' : ' respondents'}`
+    const title = `${totalCount} ${(totalCount == 1) ? ' respondent' : ' respondents'}`
     const footer = (
       <div className='right-align'>
         <ul className='pagination'>
@@ -145,8 +145,8 @@ const mapStateToProps = (state, ownProps) => {
   const hasPreviousPage = state.respondents.page.number > 1
   const hasNextPage = endIndex < totalCount
   return {
-    projectId: parseInt(ownProps.params.projectId),
-    surveyId: parseInt(ownProps.params.surveyId),
+    projectId: ownProps.params.projectId,
+    surveyId: ownProps.params.surveyId,
     respondents: state.respondents.items,
     pageNumber,
     pageSize,

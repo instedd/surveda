@@ -45,7 +45,7 @@ export default class SurveyForm extends Component {
       )
 
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
-    const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item === true }).length
+    const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item == true }).length
     const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
     return (

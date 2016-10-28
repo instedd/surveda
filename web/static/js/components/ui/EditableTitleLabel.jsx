@@ -37,9 +37,9 @@ export class EditableTitleLabel extends Component {
   }
 
   onKeyDown(event) {
-    if (event.key === 'Enter') {
+    if (event.key == 'Enter') {
       this.endAndSubmit()
-    } else if (event.key === 'Escape') {
+    } else if (event.key == 'Escape') {
       this.endEdit()
     }
   }

@@ -99,8 +99,8 @@ class QuestionnaireEditor extends Component {
       return <div>Loading...</div>
     }
 
-    const sms = questionnaire.modes.indexOf('SMS') !== -1
-    const ivr = questionnaire.modes.indexOf('IVR') !== -1
+    const sms = questionnaire.modes.indexOf('SMS') != -1
+    const ivr = questionnaire.modes.indexOf('IVR') != -1
 
     return (
       <div className='row'>
@@ -173,7 +173,7 @@ QuestionnaireEditor.propTypes = {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: parseInt(ownProps.params.projectId),
+  projectId: ownProps.params.projectId,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data
 })

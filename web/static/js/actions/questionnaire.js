@@ -49,7 +49,7 @@ export const receive = (questionnaire) => ({
 })
 
 export const shouldFetch = (state, projectId, questionnaireId) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId === projectId && state.filter.questionnaireId === questionnaireId))
+  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.questionnaireId == questionnaireId))
 }
 
 export const addChoice = (stepId) => ({

@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 
 const Title = ({ children }) => {
   const renderChildren = () => {
-    if (typeof children === 'string') {
+    if (typeof children == 'string') {
       return <a className='page-title'>{children}</a>
     } else {
       return children

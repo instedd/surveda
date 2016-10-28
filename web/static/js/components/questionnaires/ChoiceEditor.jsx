@@ -61,10 +61,10 @@ class ChoiceEditor extends Component {
   }
 
   onKeyDown(event) {
-    if (event.key === 'Enter') {
+    if (event.key == 'Enter') {
       event.preventDefault()
       this.exitEditMode()
-    } else if (event.key === 'Tab') {
+    } else if (event.key == 'Tab') {
       this.setDoNotClose()
     }
   }
@@ -79,7 +79,7 @@ class ChoiceEditor extends Component {
               type='text'
               placeholder='Response'
               value={this.state.response}
-              autoFocus={this.state.focus === 'response'}
+              autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onMouseDown={e => this.setDoNotClose()}
               onBlur={e => this.exitEditMode()}
@@ -90,7 +90,7 @@ class ChoiceEditor extends Component {
               type='text'
               placeholder='SMS'
               value={this.state.sms}
-              autoFocus={this.state.focus === 'sms'}
+              autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e)}
               onMouseDown={e => this.setDoNotClose()}
               onBlur={e => this.exitEditMode()}

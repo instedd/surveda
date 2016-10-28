@@ -7,12 +7,10 @@ export const UPDATE_PROJECT = 'UPDATE_PROJECT'
 export const CLEAR_PROJECT = 'CLEAR_PROJECT'
 
 export const fetchProject = (projectId) => (dispatch, getState) => {
-  projectId = parseInt(projectId)
-
   const state = getState()
 
   // Don't fetch same project twice
-  if (state.project.fetching && state.project.projectId === projectId) {
+  if (state.project.fetching && state.project.projectId == projectId) {
     return
   }
 

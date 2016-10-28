@@ -28,13 +28,13 @@ class SurveyShow extends Component {
 
   componentDidUpdate() {
     const { survey, router } = this.props
-    if (survey && survey.state === 'not_ready') {
+    if (survey && survey.state == 'not_ready') {
       router.replace(routes.editSurvey(survey.projectId, survey.id))
     }
   }
 
   respondentsFraction(completedByDate, targetValue) {
-    const reached = completedByDate.length === 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
+    const reached = completedByDate.length == 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
     return reached + '/' + targetValue
   }
 
@@ -106,7 +106,7 @@ const mapStateToProps = (state, ownProps) => {
   }
 
   return ({
-    projectId: parseInt(ownProps.params.projectId),
+    projectId: ownProps.params.projectId,
     project: state.project.data,
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,

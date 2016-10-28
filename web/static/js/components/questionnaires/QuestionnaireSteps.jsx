@@ -4,7 +4,7 @@ import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 
 const StepsList = ({steps, onClick}) => {
-  if (steps.length !== 0) {
+  if (steps.length != 0) {
     return (
       <div>
         { steps.map((step) => (
@@ -26,7 +26,7 @@ const QuestionnaireSteps = ({ steps, current, onSelectStep, onDeselectStep, onDe
     // All collapsed
     return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
   } else {
-    const itemIndex = steps.findIndex(step => step.id === current)
+    const itemIndex = steps.findIndex(step => step.id == current)
 
     // Only one expanded
     const stepsBefore = steps.slice(0, itemIndex)

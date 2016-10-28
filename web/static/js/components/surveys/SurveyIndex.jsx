@@ -55,7 +55,7 @@ class SurveyIndex extends Component {
     return (
       <div>
         <AddButton text='Add survey' onClick={() => this.newSurvey()} />
-        { surveys.length === 0
+        { surveys.length == 0
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
           { surveys.map(survey => (
@@ -75,7 +75,7 @@ const mapStateToProps = (state, ownProps) => {
     surveys = values(surveys)
   }
   return {
-    projectId: parseInt(ownProps.params.projectId),
+    projectId: ownProps.params.projectId,
     surveys,
     channels: state.channels,
     respondentsStats: state.respondentsStats
@@ -92,7 +92,7 @@ const SurveyCard = ({ survey, completedByDate }) => {
     const data = completedByDate.completedByDate.respondentsByDate
     const target = completedByDate.completedByDate.targetValue
     cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
-    if (survey.state === 'running' || survey.state === 'completed') {
+    if (survey.state == 'running' || survey.state == 'completed') {
       reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
     }
   }

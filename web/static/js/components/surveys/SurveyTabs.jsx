@@ -22,8 +22,8 @@ SurveyTabs.propTypes = {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: parseInt(ownProps.params.projectId),
-  surveyId: parseInt(ownProps.params.surveyId)
+  projectId: ownProps.params.projectId,
+  surveyId: ownProps.params.surveyId
 })
 
 export default connect(mapStateToProps)(SurveyTabs)
