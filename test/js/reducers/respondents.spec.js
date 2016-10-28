@@ -7,12 +7,12 @@ describe('respondents reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, surveyId: null, items: null, sortBy: null, sortAsc: true, page: {number: 1, size: 10, totalCount: 0}})
+    expect(initialState).toEqual({fetching: false, surveyId: null, items: null, sortBy: null, sortAsc: true, page: {number: 1, size: 5, totalCount: 0}})
   })
 
   it('should start fetching respondents', () => {
     const surveyId = 200
-    const result = reducer(initialState, actions.startFetchingRespondents(surveyId))
+    const result = reducer(initialState, actions.startFetchingRespondents(surveyId, 1))
     expect(result.fetching).toEqual(true)
     expect(result.surveyId).toEqual(surveyId)
     expect(result.page.number).toEqual(1)
@@ -21,7 +21,7 @@ describe('respondents reducer', () => {
   it('should receive respondents', () => {
     const surveyId = 200
     const respondents = {1: {id: 1}}
-    const r1 = reducer(initialState, actions.startFetchingRespondents(surveyId))
+    const r1 = reducer(initialState, actions.startFetchingRespondents(surveyId, 1))
     const result = reducer(r1, actions.receiveRespondents(surveyId, 1, respondents, 123))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(respondents)
