@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
-import { Input } from 'react-materialize'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'

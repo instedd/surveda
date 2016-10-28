@@ -34,6 +34,17 @@ class StepEditor extends Component {
     this.props.questionnaireActions.changeStepPromptSms(step.id, e.target.value)
   }
 
+  stepPromptIvrChange(e) {
+    e.preventDefault()
+    this.setState({stepPromptIvr: e.target.value})
+  }
+
+  stepPromptIvrSubmit(e) {
+    e.preventDefault()
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audio: 'tts'})
+  }
+
   stepStoreChange(e) {
     e.preventDefault()
     this.setState({stepStore: e.target.value})
@@ -59,13 +70,14 @@ class StepEditor extends Component {
     const { step } = props
     return {
       stepTitle: step.title,
-      stepPromptSms: step.prompt.sms,
+      stepPromptSms: step.prompt.sms || '',
+      stepPromptIvr: (step.prompt.ivr || {}).text || '',
       stepStore: step.store || ''
     }
   }
 
   render() {
-    const { step, onCollapse } = this.props
+    const { step, onCollapse, questionnaire } = this.props
 
     let editor
     if (step.type === 'multiple-choice') {
@@ -74,6 +86,31 @@ class StepEditor extends Component {
       editor = <StepNumericEditor step={step} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
+    }
+
+    const sms = questionnaire.modes.indexOf('SMS') !== -1
+    const ivr = questionnaire.modes.indexOf('IVR') !== -1
+
+    let smsInput = null
+    if (sms) {
+      smsInput = <input
+        type='text'
+        placeholder='SMS message'
+        is length='140'
+        value={this.state.stepPromptSms}
+        onChange={e => this.stepPromptSmsChange(e)}
+        onBlur={e => this.stepPromptSmsSubmit(e)}
+        ref={ref => $(ref).characterCounter()} />
+    }
+
+    let ivrInput = null
+    if (ivr) {
+      ivrInput = <input
+        type='text'
+        placeholder='Voice message'
+        value={this.state.stepPromptIvr}
+        onChange={e => this.stepPromptIvrChange(e)}
+        onBlur={e => this.stepPromptIvrSubmit(e)} />
     }
 
     return (
@@ -102,14 +139,8 @@ class StepEditor extends Component {
             <div className='row'>
               <div className='col s12 input-field'>
                 <h5>Question Prompt</h5>
-                <input
-                  type='text'
-                  placeholder='SMS message'
-                  is length='140'
-                  value={this.state.stepPromptSms}
-                  onChange={e => this.stepPromptSmsChange(e)}
-                  onBlur={e => this.stepPromptSmsSubmit(e)}
-                  ref={ref => $(ref).characterCounter()} />
+                {smsInput}
+                {ivrInput}
               </div>
             </div>
           </li>
@@ -153,13 +184,18 @@ class StepEditor extends Component {
 StepEditor.propTypes = {
   questionnaireActions: PropTypes.object.isRequired,
   dispatch: PropTypes.func,
+  questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
   onCollapse: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired
 }
 
+const mapStateToProps = (state, ownProps) => ({
+  questionnaire: state.questionnaire.data
+})
+
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepEditor)
+export default connect(mapStateToProps, mapDispatchToProps)(StepEditor)

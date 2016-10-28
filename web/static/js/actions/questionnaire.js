@@ -10,6 +10,7 @@ export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
+export const CHANGE_STEP_PROMPT_IVR = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_IVR'
 export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
 export const ADD_CHOICE = 'QUESTIONNAIRE_EDITOR_ADD_CHOICE'
 export const DELETE_CHOICE = 'QUESTIONNAIRE_EDITOR_DELETE_CHOICE'
@@ -81,6 +82,12 @@ export const changeStepStore = (stepId, newStore) => ({
 
 export const changeStepPromptSms = (stepId, newPrompt) => ({
   type: CHANGE_STEP_PROMPT_SMS,
+  stepId,
+  newPrompt
+})
+
+export const changeStepPromptIvr = (stepId, newPrompt) => ({
+  type: CHANGE_STEP_PROMPT_IVR,
   stepId,
   newPrompt
 })

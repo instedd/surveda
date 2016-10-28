@@ -45,6 +45,7 @@ const stepsReducer = (state, action) => {
     case actions.ADD_STEP: return addStep(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
+    case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
@@ -111,6 +112,16 @@ const changeStepSmsPrompt = (state, action) => {
     step.prompt = {
       ...step.prompt,
       sms: action.newPrompt
+    }
+    return step
+  })
+}
+
+const changeStepIvrPrompt = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    step.prompt = {
+      ...step.prompt,
+      ivr: action.newPrompt
     }
     return step
   })

@@ -201,6 +201,20 @@ describe('questionnaire reducer', () => {
     expect(step.prompt.sms).toEqual('New prompt')
   })
 
+  it('should update step prompt ivr', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: 'New prompt', audio: 'tts'})]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.prompt.ivr).toEqual({text: 'New prompt', audio: 'tts'})
+  })
+
   it('should update step store', () => {
     const preState = playActions([
       actions.fetch(1, 1),
