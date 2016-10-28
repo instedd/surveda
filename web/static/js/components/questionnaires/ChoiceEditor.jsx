@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { UntitledIfEmpty } from '../ui'
+import { Input } from 'react-materialize'
 
 class ChoiceEditor extends Component {
   constructor(props) {
@@ -30,7 +31,7 @@ class ChoiceEditor extends Component {
 
   stateFromProps(props) {
     const { choice } = props
-    return { response: choice.value, sms: choice.responses.join(', ') }
+    return { response: choice.value, sms: choice.responses.join(', '), skipLogic: choice.skipLogic }
   }
 
   enterEditMode(event, focus) {
@@ -51,7 +52,7 @@ class ChoiceEditor extends Component {
         ...this.state,
         editing: false
       }, () => {
-        onChoiceChange(this.state.response, this.state.sms)
+        onChoiceChange(this.state.response, this.state.sms, this.state.skipLogic)
       })
     }
   }
@@ -69,8 +70,31 @@ class ChoiceEditor extends Component {
     }
   }
 
+  skipLogicChange(event) {
+    const { onChoiceChange } = this.props
+    this.setState({
+      ...this.state,
+      skipLogic: event.target.value == '' ? null : event.target.value
+    })
+    onChoiceChange(this.state.response, this.state.sms, this.state.skipLogic)
+  }
+
   render() {
-    const { onDelete } = this.props
+    const { onDelete, skipOptions } = this.props
+
+    let skipLogicInput = <td>
+      <Input s={12} type='select'
+        onChange={e => this.skipLogicChange(e)}
+        defaultValue={this.state.skipLogic}
+        >
+        { skipOptions.map((option) =>
+          <option key={option.id} id={option.id} name={option.title} value={option.id}>
+            {option.title}
+          </option>
+              )}
+      </Input>
+    </td>
+
     if (this.state.editing) {
       return (
         <tr>
@@ -96,6 +120,7 @@ class ChoiceEditor extends Component {
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
           </td>
+          {skipLogicInput}
           <td>
             <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
           </td>
@@ -109,6 +134,7 @@ class ChoiceEditor extends Component {
           <td onClick={e => this.enterEditMode(e, 'sms')}>
             <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
           </td>
+          {skipLogicInput}
           <td>
             <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
           </td>
@@ -121,7 +147,8 @@ class ChoiceEditor extends Component {
 ChoiceEditor.propTypes = {
   onDelete: PropTypes.func,
   onChoiceChange: PropTypes.func,
-  choice: PropTypes.object
+  choice: PropTypes.object,
+  skipOptions: PropTypes.array
 }
 
 export default ChoiceEditor

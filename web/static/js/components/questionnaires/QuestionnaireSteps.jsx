@@ -39,7 +39,8 @@ const QuestionnaireSteps = ({ steps, current, onSelectStep, onDeselectStep, onDe
         <StepEditor
           step={currentStep}
           onCollapse={() => onDeselectStep()}
-          onDelete={() => onDeleteStep()} />
+          onDelete={() => onDeleteStep()}
+          skip={stepsAfter} />
         <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} />
       </div>
     )

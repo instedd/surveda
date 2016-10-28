@@ -57,9 +57,9 @@ export const addChoice = (stepId) => ({
   stepId
 })
 
-export const changeChoice = (stepId, index, value, responses) => ({
+export const changeChoice = (stepId, index, response, smsValues, skipLogic) => ({
   type: CHANGE_CHOICE,
-  choiceChange: { index, value, responses },
+  choiceChange: { index, response, smsValues, skipLogic },
   stepId
 })
 

@@ -62,7 +62,8 @@ const addChoice = (state, action) => {
       ...step.choices,
       {
         value: '',
-        responses: []
+        responses: [],
+        skipLogic: null
       }
     ]
     return step
@@ -85,8 +86,9 @@ const changeChoice = (state, action) => {
       ...step.choices.slice(0, action.choiceChange.index),
       {
         ...step.choices[action.choiceChange.index],
-        value: action.choiceChange.value,
-        responses: action.choiceChange.responses.split(',').map((r) => r.trim())
+        value: action.choiceChange.response,
+        responses: action.choiceChange.smsValues.split(',').map((r) => r.trim()),
+        skipLogic: action.choiceChange.skipLogic
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]

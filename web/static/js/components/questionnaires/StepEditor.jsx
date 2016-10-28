@@ -77,11 +77,11 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire } = this.props
+    const { step, onCollapse, questionnaire, skip } = this.props
 
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} />
+      editor = <StepMultipleChoiceEditor step={step} skip={skip} />
     } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} />
     } else {
@@ -187,7 +187,8 @@ StepEditor.propTypes = {
   questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
   onCollapse: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired
+  onDelete: PropTypes.func.isRequired,
+  skip: PropTypes.array.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({

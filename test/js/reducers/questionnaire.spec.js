@@ -287,7 +287,7 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, reducer)([
-      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3')
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'end')
     ])
 
     const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
@@ -298,7 +298,8 @@ describe('questionnaire reducer', () => {
         'M',
         'MB',
         '3'
-      ]
+      ],
+      skipLogic: 'end'
     })
   })
 })
@@ -317,7 +318,8 @@ const questionnaire = deepFreeze({
             'Yes',
             'Y',
             '1'
-          ]
+          ],
+          skipLogic: null
         },
         {
           'value': 'No',
@@ -325,7 +327,8 @@ const questionnaire = deepFreeze({
             'No',
             'N',
             '1'
-          ]
+          ],
+          skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
         }
       ],
       'prompt': {
