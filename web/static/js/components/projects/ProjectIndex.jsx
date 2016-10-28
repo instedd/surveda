@@ -96,10 +96,10 @@ class ProjectIndex extends Component {
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={index}><td>&nbsp;</td></tr>
+                if (!project) return <tr key={-index}><td>&nbsp;</td></tr>
 
                 return (
-                  <tr key={index}>
+                  <tr key={project.id}>
                     <td onClick={() => router.push(routes.project(project.id))}>
                       <UntitledIfEmpty text={project.name} />
                     </td>
