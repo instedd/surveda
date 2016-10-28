@@ -43,6 +43,11 @@ class SurveyWizardRespondentsStep extends Component {
       })
   }
 
+  clearInvalids() {
+    const { dispatch } = this.props
+    dispatch(respondentsActions.clearInvalids())
+  }
+
   invalidRespondentsContent(data) {
     if (data) {
       const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
@@ -50,10 +55,13 @@ class SurveyWizardRespondentsStep extends Component {
       const extraLinesCount = data.invalidEntries.length - lineNumbers.length
       const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
       return (
-        <div>
+        <div className='csv-errors'>
           <div>Errors found at '{data.filename}', file was not imported</div>
           <div>{invalidEntriesText} {lineNumbersText}</div>
           <div>Please fix those errors and upload again.</div>
+          <a className='' href='#' onClick={() => this.clearInvalids()}>
+            UNDERSTOOD
+          </a>
         </div>
       )
     }

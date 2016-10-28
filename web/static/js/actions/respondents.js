@@ -7,6 +7,7 @@ export const REMOVE_RESPONDENTS = 'REMOVE_RESPONDENTS'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 export const INVALID_RESPONDENTS = 'INVALID_RESPONDENTS'
+export const CLEAR_INVALIDS = 'CLEAR_INVALIDS'
 
 export const fetchRespondents = (projectId, surveyId) => dispatch => {
   api.fetchRespondentsWithLimit(projectId, surveyId, '')
@@ -63,4 +64,8 @@ export const receiveRespondentsError = (error) => ({
 export const receiveInvalids = (invalidRespondents) => ({
   type: INVALID_RESPONDENTS,
   invalidRespondents: invalidRespondents
+})
+
+export const clearInvalids = () => ({
+  type: CLEAR_INVALIDS
 })

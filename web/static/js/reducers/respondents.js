@@ -22,6 +22,10 @@ export default (state = {}, action) => {
         ...state,
         invalidRespondents: action.invalidRespondents
       }
+    case actions.CLEAR_INVALIDS:
+      const newState = Object.assign({}, state)
+      delete newState.invalidRespondents
+      return newState
     default:
       return state
   }
