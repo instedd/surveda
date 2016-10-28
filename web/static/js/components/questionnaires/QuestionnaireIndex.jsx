@@ -3,6 +3,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import range from 'lodash/range'
+import { createQuestionnaire } from '../../api'
 import { orderedItems } from '../../dataTable'
 import * as actions from '../../actions/questionnaires'
 import * as projectActions from '../../actions/project'
@@ -11,6 +12,8 @@ import * as routes from '../../routes'
 
 class QuestionnaireIndex extends Component {
   componentDidMount() {
+    this.creatingQuestionnaire = false
+
     const { projectId } = this.props
     // Fetch project for title
     this.props.projectActions.fetchProject(projectId)
@@ -29,6 +32,23 @@ class QuestionnaireIndex extends Component {
 
   sortBy(property) {
     this.props.actions.sortQuestionnairesBy(property)
+  }
+
+  newQuestionnaire(e) {
+    e.preventDefault()
+
+    // Prevent multiple clicks to create multiple questionnaires
+    if (this.creatingQuestionnaire) return
+    this.creatingQuestionnaire = true
+
+    const { router, projectId } = this.props
+
+    createQuestionnaire(projectId, {name: '', modes: ['SMS'], steps: []})
+        .then(response => {
+          const questionnaire = response.entities.questionnaires[response.result]
+          this.creatingQuestionnaire = false
+          router.push(routes.questionnaire(projectId, questionnaire.id))
+        })
   }
 
   render() {
@@ -62,7 +82,7 @@ class QuestionnaireIndex extends Component {
 
     return (
       <div>
-        <AddButton text='Add questionnaire' linkPath={routes.newQuestionnaire(projectId)} />
+        <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
         { (questionnaires.length == 0)
           ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
         : <CardTable title={title} footer={footer} highlight>

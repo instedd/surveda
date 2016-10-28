@@ -120,6 +120,10 @@ export const addStep = (stepType) => {
   })
 }
 
+export const updateQuestionnaire = (questionnaire) => dispatch => {
+  return dispatch(receive(questionnaire))
+}
+
 export const save = () => {
   return (dispatch, getState) => {
     const questionnaire = getState().questionnaire.data
