@@ -12,7 +12,7 @@ const defaultState = {
 }
 
 export default (state, action) => {
-  if (state === undefined) {
+  if (state == undefined) {
     return defaultState
   }
 
@@ -64,7 +64,8 @@ const addChoice = (state, action) => {
         value: '',
         responses: {
           sms: []
-        }
+        },
+        skipLogic: null
       }
     ]
     return step
@@ -87,10 +88,11 @@ const changeChoice = (state, action) => {
       ...step.choices.slice(0, action.choiceChange.index),
       {
         ...step.choices[action.choiceChange.index],
-        value: action.choiceChange.value,
+        value: action.choiceChange.response,
         responses: {
           sms: splitValues(action.choiceChange.smsValues)
-        }
+        },
+        skipLogic: action.choiceChange.skipLogic
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
@@ -103,11 +105,11 @@ const splitValues = (values) => {
 }
 
 const deleteStep = (state, action) => {
-  return filter(state, s => s.id !== action.stepId)
+  return filter(state, s => s.id != action.stepId)
 }
 
 const changeStep = (state, stepId, func) => {
-  const stepIndex = findIndex(state, s => s.id === stepId)
+  const stepIndex = findIndex(state, s => s.id == stepId)
   return [
     ...state.slice(0, stepIndex),
     func({...state[stepIndex]}),
@@ -189,11 +191,11 @@ export const buildNewStep = (stepType) => ({
 
 const toggleMode = (state, action) => {
   let modes = state.modes
-  if (modes.indexOf(action.mode) === -1) {
+  if (modes.indexOf(action.mode) == -1) {
     modes = modes.slice()
     modes.push(action.mode)
   } else {
-    modes = modes.filter(mode => mode !== action.mode)
+    modes = modes.filter(mode => mode != action.mode)
   }
   return {
     ...state,

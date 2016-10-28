@@ -12,7 +12,7 @@ export const fetchSurveys = (projectId) => (dispatch, getState) => {
 
   // Don't fetch surveys if they are already being fetched
   // for that same project
-  if (state.surveys.fetching && state.surveys.projectId === projectId) {
+  if (state.surveys.fetching && state.surveys.projectId == projectId) {
     return
   }
 

@@ -20,14 +20,20 @@ class StepMultipleChoiceEditor extends Component {
 
   changeChoice(index) {
     const { step, actions } = this.props
-    return (value, responses) => {
-      actions.changeChoice(step.id, index, value, responses)
+    return (response, smsValues, skipLogic) => {
+      actions.changeChoice(step.id, index, response, smsValues, skipLogic)
     }
   }
 
   render() {
-    const { step } = this.props
+    const { step, skip } = this.props
     const { choices } = step
+
+    let skipOptions = skip.slice()
+
+    skipOptions.unshift({id: 'end', title: 'End survey'})
+    skipOptions.unshift({id: '', title: 'Next question'})
+
     return (
       <div>
         <h5>Responses</h5>
@@ -37,8 +43,9 @@ class StepMultipleChoiceEditor extends Component {
             <table className='responses-table'>
               <thead>
                 <tr>
-                  <th style={{width: '45%'}}>Response</th>
-                  <th style={{width: '45%'}}>SMS</th>
+                  <th style={{width: '30%'}}>Response</th>
+                  <th style={{width: '30%'}}>SMS</th>
+                  <th style={{width: '30%'}}>Skip logic</th>
                   <th style={{width: '10%'}} />
                 </tr>
               </thead>
@@ -49,6 +56,7 @@ class StepMultipleChoiceEditor extends Component {
                     choice={choice}
                     onDelete={(e) => this.deleteChoice(e, index)}
                     onChoiceChange={this.changeChoice(index)}
+                    skipOptions={skipOptions}
                       />
                   )}
               </tbody>
@@ -65,7 +73,8 @@ class StepMultipleChoiceEditor extends Component {
 
 StepMultipleChoiceEditor.propTypes = {
   actions: PropTypes.object.isRequired,
-  step: PropTypes.object.isRequired
+  step: PropTypes.object.isRequired,
+  skip: PropTypes.array
 }
 
 const mapDispatchToProps = (dispatch) => ({

@@ -3,6 +3,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import range from 'lodash/range'
+import { createQuestionnaire } from '../../api'
 import { orderedItems } from '../../dataTable'
 import * as actions from '../../actions/questionnaires'
 import * as projectActions from '../../actions/project'
@@ -11,6 +12,8 @@ import * as routes from '../../routes'
 
 class QuestionnaireIndex extends Component {
   componentDidMount() {
+    this.creatingQuestionnaire = false
+
     const { projectId } = this.props
     // Fetch project for title
     this.props.projectActions.fetchProject(projectId)
@@ -31,6 +34,23 @@ class QuestionnaireIndex extends Component {
     this.props.actions.sortQuestionnairesBy(property)
   }
 
+  newQuestionnaire(e) {
+    e.preventDefault()
+
+    // Prevent multiple clicks to create multiple questionnaires
+    if (this.creatingQuestionnaire) return
+    this.creatingQuestionnaire = true
+
+    const { router, projectId } = this.props
+
+    createQuestionnaire(projectId, {name: '', modes: ['SMS'], steps: []})
+        .then(response => {
+          const questionnaire = response.entities.questionnaires[response.result]
+          this.creatingQuestionnaire = false
+          router.push(routes.questionnaire(projectId, questionnaire.id))
+        })
+  }
+
   render() {
     const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, projectId, router } = this.props
@@ -43,7 +63,7 @@ class QuestionnaireIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount === 1) ? ' questionnaire' : ' questionnaires'}`
+    const title = `${totalCount} ${(totalCount == 1) ? ' questionnaire' : ' questionnaires'}`
     const footer = (
       <div className='right-align'>
         <ul className='pagination'>
@@ -62,10 +82,10 @@ class QuestionnaireIndex extends Component {
 
     return (
       <div>
-        <AddButton text='Add questionnaire' linkPath={routes.newQuestionnaire(projectId)} />
-        { (questionnaires.length === 0)
+        <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
+        { (questionnaires.length == 0)
           ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
-        : <CardTable title={title} footer={footer} highlight>
+        : <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
           <thead>
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
@@ -100,7 +120,7 @@ class QuestionnaireIndex extends Component {
 QuestionnaireIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
-  projectId: PropTypes.number,
+  projectId: PropTypes.any,
   questionnaires: PropTypes.array,
   sortBy: PropTypes.string,
   sortAsc: PropTypes.bool.isRequired,
@@ -128,7 +148,7 @@ const mapStateToProps = (state, ownProps) => {
   const hasPreviousPage = startIndex > 1
   const hasNextPage = endIndex < totalCount
   return {
-    projectId: parseInt(ownProps.params.projectId),
+    projectId: ownProps.params.projectId,
     sortBy,
     sortAsc,
     questionnaires,

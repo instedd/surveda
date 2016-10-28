@@ -14,7 +14,7 @@ export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
 
   // Don't fetch questionnaires if they are already being fetched
   // for that same project
-  if (state.questionnaires.fetching && state.questionnaires.projectId === projectId) {
+  if (state.questionnaires.fetching && state.questionnaires.projectId == projectId) {
     return Promise.resolve(getState().questionnaires.items)
   }
 

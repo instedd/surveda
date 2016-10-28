@@ -10,8 +10,8 @@ import { updateSurvey } from '../../api'
 class ProjectTitle extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
-    projectId: PropTypes.string.isRequired,
-    surveyId: PropTypes.string.isRequired,
+    projectId: PropTypes.any.isRequired,
+    surveyId: PropTypes.any.isRequired,
     survey: PropTypes.object
   }
 
@@ -22,7 +22,7 @@ class ProjectTitle extends Component {
 
   handleSubmit(newName) {
     const { dispatch, survey } = this.props
-    if (survey.name === newName) return
+    if (survey.name == newName) return
     const newSurvey = merge({}, survey, {name: newName})
 
     updateSurvey(newSurvey.projectId, newSurvey)

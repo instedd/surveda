@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 
-export const CardTable = ({ title, children, footer, highlight }) => (
+export const CardTable = ({ title, children, footer, highlight, style }) => (
   <div className='row'>
     <div className='col s12'>
       <div className='card'>
@@ -8,7 +8,7 @@ export const CardTable = ({ title, children, footer, highlight }) => (
           { title }
         </div>
         <div className='card-table'>
-          <table className={`${highlight ? 'highlight' : ''}`}>
+          <table className={`${highlight ? 'highlight' : ''}`} style={style}>
             { children }
           </table>
           { footer }
@@ -22,5 +22,6 @@ CardTable.propTypes = {
   title: PropTypes.string.isRequired,
   highlight: PropTypes.bool,
   children: PropTypes.node,
-  footer: PropTypes.object
+  footer: PropTypes.object,
+  style: PropTypes.object
 }

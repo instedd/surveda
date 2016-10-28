@@ -49,7 +49,7 @@ export const receive = (questionnaire) => ({
 })
 
 export const shouldFetch = (state, projectId, questionnaireId) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId === projectId && state.filter.questionnaireId === questionnaireId))
+  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.questionnaireId == questionnaireId))
 }
 
 export const addChoice = (stepId) => ({
@@ -57,9 +57,9 @@ export const addChoice = (stepId) => ({
   stepId
 })
 
-export const changeChoice = (stepId, index, value, smsValues) => ({
+export const changeChoice = (stepId, index, response, smsValues, skipLogic) => ({
   type: CHANGE_CHOICE,
-  choiceChange: { index, value, smsValues },
+  choiceChange: { index, response, smsValues, skipLogic },
   stepId
 })
 
@@ -118,6 +118,10 @@ export const addStep = (stepType) => {
     type: ADD_STEP,
     newStep: buildNewStep(stepType)
   })
+}
+
+export const updateQuestionnaire = (questionnaire) => dispatch => {
+  return dispatch(receive(questionnaire))
 }
 
 export const save = () => {

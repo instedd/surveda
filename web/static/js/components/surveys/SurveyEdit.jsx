@@ -15,8 +15,8 @@ import * as routes from '../../routes'
 class SurveyEdit extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
-    projectId: PropTypes.number.isRequired,
-    surveyId: PropTypes.number.isRequired,
+    projectId: PropTypes.any.isRequired,
+    surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
@@ -30,6 +30,11 @@ class SurveyEdit extends Component {
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
       dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
+        .then((survey) => {
+          if (survey && survey.state == 'running') {
+            router.replace(routes.survey(survey.projectId, survey.id))
+          }
+        })
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchChannels())
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
@@ -61,13 +66,13 @@ class SurveyEdit extends Component {
   render() {
     const { survey, projectId, questionnaires, dispatch, channels, respondents } = this.props
 
-    if (Object.keys(survey).length === 0 || !respondents) {
+    if (Object.keys(survey).length == 0 || !respondents) {
       return <div>Loading...</div>
     }
 
     return (
       <div className='white'>
-        { survey.state === 'ready'
+        { survey.state == 'ready'
           ? <Tooltip text='Launch survey'>
             <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.launchSurvey()}>
               <i className='material-icons'>play_arrow</i>
@@ -82,9 +87,9 @@ class SurveyEdit extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: parseInt(ownProps.params.projectId),
+  projectId: ownProps.params.projectId,
   project: state.projects[ownProps.params.projectId] || {},
-  surveyId: parseInt(ownProps.params.surveyId),
+  surveyId: ownProps.params.surveyId,
   channels: state.channels,
   questionnaires: state.questionnaires.items || {},
   respondents: state.respondents.items,

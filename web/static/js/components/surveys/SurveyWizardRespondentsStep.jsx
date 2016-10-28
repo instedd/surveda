@@ -45,7 +45,7 @@ class SurveyWizardRespondentsStep extends Component {
       return <div>Loading...</div>
     }
 
-    if (survey.respondentsCount !== 0) {
+    if (survey.respondentsCount != 0) {
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={survey.respondentsCount}>

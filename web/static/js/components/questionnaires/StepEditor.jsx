@@ -77,19 +77,19 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire } = this.props
+    const { step, onCollapse, questionnaire, skip } = this.props
 
     let editor
-    if (step.type === 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} />
-    } else if (step.type === 'numeric') {
+    if (step.type == 'multiple-choice') {
+      editor = <StepMultipleChoiceEditor step={step} skip={skip} />
+    } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }
 
-    const sms = questionnaire.modes.indexOf('SMS') !== -1
-    const ivr = questionnaire.modes.indexOf('IVR') !== -1
+    const sms = questionnaire.modes.indexOf('SMS') != -1
+    const ivr = questionnaire.modes.indexOf('IVR') != -1
 
     let smsInput = null
     if (sms) {
@@ -125,7 +125,7 @@ class StepEditor extends Component {
               onChange={e => this.stepTitleChange(e)}
               onBlur={e => this.stepTitleSubmit(e)}
               className='editable-field'
-              autoFocus />
+               />
             <a href='#!'
               className='right collapse'
               onClick={e => {
@@ -187,7 +187,8 @@ StepEditor.propTypes = {
   questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
   onCollapse: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired
+  onDelete: PropTypes.func.isRequired,
+  skip: PropTypes.array.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({

@@ -67,7 +67,7 @@ export const editQuestionnaire = (projectId, questionnaireId) => `${questionnair
 export const channels = '/channels'
 
 export const showOrEditSurvey = (s) => {
-  if (s.state === 'not_ready' || s.state === 'ready') {
+  if (s.state == 'not_ready' || s.state == 'ready') {
     return editSurvey(s.projectId, s.id)
   } else {
     return survey(s.projectId, s.id)

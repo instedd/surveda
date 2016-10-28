@@ -40,7 +40,7 @@ export const createNuntiumChannel = (() => {
         pigeon.addChannel(token.access_token)
       })
       .then(nuntiumChannel => {
-        if (nuntiumChannel === null) {
+        if (nuntiumChannel == null) {
           return Promise.reject('User cancelled')
         }
         dispatch(createChannel({
