@@ -35,7 +35,7 @@ class SurveyWizardRespondentsStep extends Component {
     event.preventDefault()
     removeRespondents(survey)
       .then(respondents => {
-        dispatch(respondentsActions.removeRespondents(respondents.items))
+        dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
         dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
@@ -68,7 +68,7 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    const { survey, respondents } = this.props
+    let { survey, respondents } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(respondents.invalidRespondents)
     if (!survey) {
       return <div>Loading...</div>
@@ -78,7 +78,7 @@ class SurveyWizardRespondentsStep extends Component {
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={survey.respondentsCount}>
-            {Object.keys(respondents.items).map((respondentId) =>
+            {Object.keys(respondents.items || {}).map((respondentId) =>
               <PhoneNumberRow id={respondentId} phoneNumber={respondents.items[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
