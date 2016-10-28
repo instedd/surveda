@@ -125,7 +125,7 @@ class StepEditor extends Component {
               onChange={e => this.stepTitleChange(e)}
               onBlur={e => this.stepTitleSubmit(e)}
               className='editable-field'
-              autoFocus />
+               />
             <a href='#!'
               className='right collapse'
               onClick={e => {
