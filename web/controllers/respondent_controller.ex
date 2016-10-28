@@ -7,6 +7,7 @@ defmodule Ask.RespondentController do
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
+    page = Map.get(params, "page", "")
 
     Project
     |> Repo.get!(project_id)
@@ -21,6 +22,7 @@ defmodule Ask.RespondentController do
 
     respondents = respondents
     |> conditional_limit(limit)
+    |> conditional_page(limit, page)
     |> Repo.all
 
     respondents = mask_phone_numbers(respondents)
@@ -32,6 +34,23 @@ defmodule Ask.RespondentController do
     case limit do
       "" -> query
       number -> query |> limit(^number)
+    end
+  end
+
+  def conditional_page query, limit, page do
+    limit_number = case limit do
+      "" -> 10
+      _ ->
+        {limit_value, _} = Integer.parse(limit)
+        limit_value
+    end
+
+    case page do
+      "" -> query
+      _ ->
+        {page_number, _} = Integer.parse(page)
+        offset = limit_number * (page_number - 1)
+        query |> offset(^offset)
     end
   end
 

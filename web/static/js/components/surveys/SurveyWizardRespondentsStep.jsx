@@ -17,9 +17,9 @@ class SurveyWizardRespondentsStep extends Component {
   handleSubmit(survey, files) {
     const { dispatch } = this.props
     uploadRespondents(survey, files)
-      .then(respondents => {
-        dispatch(respondentsActions.receiveRespondents(respondents))
-        dispatch(actions.updateRespondentsCount(Object.keys(respondents).length))
+      .then(response => {
+        dispatch(respondentsActions.receiveRespondents(survey.id, 1, response.entities.respondents || {}, response.respondentsCount))
+        dispatch(actions.updateRespondentsCount(response.respondentsCount))
         dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))

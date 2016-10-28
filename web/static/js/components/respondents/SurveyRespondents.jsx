@@ -1,26 +1,44 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import * as respondentsActions from '../../actions/respondents'
+import * as actions from '../../actions/respondents'
+import range from 'lodash/range'
+import values from 'lodash/values'
 import { CardTable } from '../ui'
 
 class SurveyRespondents extends Component {
   componentDidMount() {
-    const { projectId, surveyId } = this.props
+    const { projectId, surveyId, pageSize } = this.props
     if (projectId && surveyId) {
-      this.props.respondentsActions.fetchRespondents(projectId, surveyId)
+      this.props.actions.fetchRespondents(projectId, surveyId, pageSize, 1)
     }
   }
 
+  nextPage(e) {
+    e.preventDefault()
+
+    const { projectId, surveyId, pageNumber, pageSize } = this.props
+    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber + 1)
+  }
+
+  previousPage(e) {
+    e.preventDefault()
+
+    const { projectId, surveyId, pageNumber, pageSize } = this.props
+    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber - 1)
+  }
+
   render() {
+    if (!this.props.respondents) {
+      return <div>Loading...</div>
+    }
+
+    const { totalCount } = this.props
+
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
     const respondents = generateResponsesDictionaryFor($.extend(true, {}, this.props.respondents))
-    const title = parseInt(Object.keys(respondents).length, 10) + ' Respondents'
-
-    if (Object.keys(respondents).length === 0) {
-      return <div>Loading...</div>
-    }
+    const respondentsList = values(respondents)
 
     function generateResponsesDictionaryFor(rs) {
       Object.keys(rs).forEach((respondentId, _) =>
@@ -55,8 +73,27 @@ class SurveyRespondents extends Component {
       return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
     }
 
+    const { startIndex, endIndex, hasPreviousPage, hasNextPage, pageSize } = this.props
+
+    const title = `${totalCount} ${(totalCount === 1) ? ' respondent' : ' respondents'}`
+    const footer = (
+      <div className='right-align'>
+        <ul className='pagination'>
+          <li><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
+          { hasPreviousPage
+            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
+            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
+          }
+          { hasNextPage
+            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
+            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
+          }
+        </ul>
+      </div>
+    )
+
     return (
-      <CardTable title={title}>
+      <CardTable title={title} footer={footer}>
         <thead>
           <tr>
             <th>Phone number</th>
@@ -67,17 +104,22 @@ class SurveyRespondents extends Component {
           </tr>
         </thead>
         <tbody>
-          {respondentKeys(respondents).map(respondentId =>
-            <tr key={respondentId}>
-              <td> {respondents[respondentId].phoneNumber}</td>
-              {allFieldNames(respondents).map(function(field) {
-                return <td key={parseInt(respondentId, 10) + field}>{responseOf(respondents, respondentId, field)}</td>
-              })}
-              <td>
-                {respondents[respondentId].date ? new Date(respondents[respondentId].date).toUTCString() : '-'}
-              </td>
-            </tr>
-          )}
+          { range(0, pageSize).map(index => {
+            const respondent = respondentsList[index]
+            if (!respondent) return <tr key={-index}><td colSpan='2'>&nbsp;</td></tr>
+
+            return (
+              <tr key={respondent.id}>
+                <td> {respondent.phoneNumber}</td>
+                {allFieldNames(respondents).map(function(field) {
+                  return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
+                })}
+                <td>
+                  {respondent.date ? new Date(respondent.date).toUTCString() : '-'}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </CardTable>
     )
@@ -85,22 +127,43 @@ class SurveyRespondents extends Component {
 }
 
 SurveyRespondents.propTypes = {
-  respondentsActions: PropTypes.object.isRequired,
+  actions: PropTypes.object.isRequired,
   projectId: PropTypes.number,
   surveyId: PropTypes.number,
-  respondents: PropTypes.object
+  respondents: PropTypes.object,
+  pageNumber: PropTypes.number.isRequired,
+  pageSize: PropTypes.number.isRequired,
+  startIndex: PropTypes.number.isRequired,
+  endIndex: PropTypes.number.isRequired,
+  totalCount: PropTypes.number.isRequired,
+  hasPreviousPage: PropTypes.bool.isRequired,
+  hasNextPage: PropTypes.bool.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => {
+  const pageNumber = state.respondents.page.number
+  const pageSize = state.respondents.page.size
+  const totalCount = state.respondents.page.totalCount
+  const startIndex = (pageNumber - 1) * state.respondents.page.size + 1
+  const endIndex = Math.min(startIndex + state.respondents.page.size - 1, totalCount)
+  const hasPreviousPage = state.respondents.page.number > 1
+  const hasNextPage = endIndex < totalCount
   return {
     projectId: parseInt(ownProps.params.projectId),
     surveyId: parseInt(ownProps.params.surveyId),
-    respondents: state.respondents
+    respondents: state.respondents.items,
+    pageNumber,
+    pageSize,
+    startIndex,
+    endIndex,
+    totalCount,
+    hasPreviousPage,
+    hasNextPage
   }
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  respondentsActions: bindActionCreators(respondentsActions, dispatch)
+  actions: bindActionCreators(actions, dispatch)
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(SurveyRespondents)

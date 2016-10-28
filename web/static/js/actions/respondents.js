@@ -1,25 +1,17 @@
 import * as api from '../api'
 
 export const RECEIVE_RESPONDENTS = 'RECEIVE_RESPONDENTS'
+export const FETCH_RESPONDENTS = 'FETCH_RESPONDENTS'
 export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const REMOVE_RESPONDENTS = 'REMOVE_RESPONDENTS'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 
-export const fetchRespondents = (projectId, surveyId) => dispatch => {
-  api.fetchRespondentsWithLimit(projectId, surveyId, '')
-    .then(respondents => dispatch(receiveRespondents(respondents)))
-}
-
-export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => dispatch => {
-  api.fetchRespondentsWithLimit(projectId, surveyId, limit)
-    .then(respondents => dispatch(receiveRespondents(respondents)))
-}
-
-export const fetchRespondent = (projectId, respondentId) => dispatch => {
-  api.fetchRespondent(projectId, respondentId)
-    .then(respondent => dispatch(receiveRespondents(respondent)))
+export const fetchRespondents = (projectId, surveyId, limit, page = 1) => dispatch => {
+  dispatch(startFetchingRespondents(surveyId, page))
+  api.fetchRespondents(projectId, surveyId, limit, page)
+    .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount)))
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
@@ -32,9 +24,12 @@ export const receiveRespondentsStats = (response) => ({
   response
 })
 
-export const receiveRespondents = (response) => ({
+export const receiveRespondents = (surveyId, page, respondents, respondentsCount) => ({
   type: RECEIVE_RESPONDENTS,
-  response
+  surveyId,
+  page,
+  respondents,
+  respondentsCount
 })
 
 export const removeRespondents = (response) => ({
@@ -57,4 +52,10 @@ export const updateRespondent = (response) => ({
 export const receiveRespondentsError = (error) => ({
   type: RECEIVE_RESPONDENTS_ERROR,
   error
+})
+
+export const startFetchingRespondents = (surveyId, page) => ({
+  type: FETCH_RESPONDENTS,
+  surveyId,
+  page
 })

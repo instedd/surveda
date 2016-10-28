@@ -16,13 +16,13 @@ class SurveyEdit extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     projectId: PropTypes.number.isRequired,
-    surveyId: PropTypes.string.isRequired,
+    surveyId: PropTypes.number.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     channels: PropTypes.object.isRequired,
     project: PropTypes.object.isRequired,
-    respondents: PropTypes.object.isRequired
+    respondents: PropTypes.object
   }
 
   componentWillMount() {
@@ -38,7 +38,7 @@ class SurveyEdit extends Component {
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchChannels())
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
-      dispatch(respondentsActions.fetchRespondentsWithLimit(projectId, surveyId, 5))
+      dispatch(respondentsActions.fetchRespondents(projectId, surveyId, 5, 1))
     }
   }
 
@@ -58,7 +58,8 @@ class SurveyEdit extends Component {
 
   render() {
     const { survey, projectId, questionnaires, dispatch, channels, respondents } = this.props
-    if (Object.keys(survey).length === 0) {
+
+    if (Object.keys(survey).length === 0 || !respondents) {
       return <div>Loading...</div>
     }
     return (
@@ -80,10 +81,10 @@ class SurveyEdit extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   project: state.projects[ownProps.params.projectId] || {},
-  surveyId: ownProps.params.surveyId,
+  surveyId: parseInt(ownProps.params.surveyId),
   channels: state.channels,
   questionnaires: state.questionnaires.items || {},
-  respondents: state.respondents,
+  respondents: state.respondents.items,
   survey: state.survey.data || {}
 })
 

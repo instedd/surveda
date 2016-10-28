@@ -141,8 +141,8 @@ export const removeRespondents = (survey) => {
   return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`, respondentSchema)
 }
 
-export const fetchRespondentsWithLimit = (projectId, surveyId, limit) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}`, arrayOf(respondentSchema), {}, respondentsCallback)
+export const fetchRespondents = (projectId, surveyId, limit, page) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}&page=${page}`, arrayOf(respondentSchema), {}, respondentsCallback)
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
