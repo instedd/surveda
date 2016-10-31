@@ -26,7 +26,8 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_path(conn, :index)
       user_project_map = %{"id"      => user_project.id,
                           "user_id" => user_project.user_id,
-                          "name"    => user_project.name}
+                          "name"    => user_project.name,
+                          "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at)}
       assert json_response(conn, 200)["data"] == [user_project_map]
     end
 
@@ -39,7 +40,8 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "user_id" => project.user_id,
-        "name" => project.name}
+        "name" => project.name,
+        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at)}
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
