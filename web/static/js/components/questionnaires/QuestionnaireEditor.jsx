@@ -29,11 +29,13 @@ class QuestionnaireEditor extends Component {
     this.props.questionnaireActions.save(this.props.questionnaire)
   }
 
-  questionnaireAddMultipleChoiceStep() {
+  questionnaireAddMultipleChoiceStep(e) {
+    e.preventDefault()
     this.questionnaireAddStep('multiple-choice')
   }
 
-  questionnaireAddNumericStep() {
+  questionnaireAddNumericStep(e) {
+    e.preventDefault()
     this.questionnaireAddStep('numeric')
   }
 
@@ -150,10 +152,10 @@ class QuestionnaireEditor extends Component {
               onDeleteStep={() => this.deleteStep()} />
             <div className='row'>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddMultipleChoiceStep(e)}>Add multiple-choice step</a>
               </div>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddNumericStep(e)}>Add numeric step</a>
               </div>
             </div>
           </div>
