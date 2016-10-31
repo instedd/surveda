@@ -79,17 +79,17 @@ class StepEditor extends Component {
   render() {
     const { step, onCollapse, questionnaire, skip } = this.props
 
+    const sms = questionnaire.modes.indexOf('SMS') != -1
+    const ivr = questionnaire.modes.indexOf('IVR') != -1
+
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} skip={skip} />
+      editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} />
     } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }
-
-    const sms = questionnaire.modes.indexOf('SMS') != -1
-    const ivr = questionnaire.modes.indexOf('IVR') != -1
 
     let smsInput = null
     if (sms) {

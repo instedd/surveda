@@ -24,6 +24,14 @@ class ChoiceEditor extends Component {
     })
   }
 
+  ivrChange(event) {
+    event.preventDefault()
+    this.setState({
+      ...this.state,
+      ivr: event.target.value
+    })
+  }
+
   componentWillReceiveProps(newProps) {
     let newState = this.stateFromProps(newProps)
     this.setState(Object.assign({}, newState, { editing: this.state.editing }))
@@ -31,7 +39,12 @@ class ChoiceEditor extends Component {
 
   stateFromProps(props) {
     const { choice } = props
-    return { response: choice.value, sms: choice.responses.sms.join(', '), skipLogic: choice.skipLogic }
+    return {
+      response: choice.value,
+      sms: choice.responses.sms.join(', '),
+      ivr: choice.responses.ivr.join(', '),
+      skipLogic: choice.skipLogic
+    }
   }
 
   enterEditMode(event, focus) {
@@ -52,7 +65,7 @@ class ChoiceEditor extends Component {
         ...this.state,
         editing: false
       }, () => {
-        onChoiceChange(this.state.response, this.state.sms, this.state.skipLogic)
+        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic)
       })
     }
   }
@@ -80,7 +93,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, skipOptions } = this.props
+    const { onDelete, skipOptions, sms, ivr } = this.props
 
     let skipLogicInput = <td>
       <Input s={12} type='select'
@@ -109,7 +122,8 @@ class ChoiceEditor extends Component {
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
           </td>
-          <td>
+          { sms
+          ? <td>
             <input
               type='text'
               placeholder='SMS'
@@ -119,7 +133,21 @@ class ChoiceEditor extends Component {
               onMouseDown={e => this.setDoNotClose()}
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
-          </td>
+          </td> : null
+          }
+          { ivr
+          ? <td>
+            <input
+              type='text'
+              placeholder='IVR'
+              value={this.state.ivr}
+              autoFocus={this.state.focus == 'ivr'}
+              onChange={e => this.ivrChange(e)}
+              onMouseDown={e => this.setDoNotClose()}
+              onBlur={e => this.exitEditMode()}
+              onKeyDown={e => this.onKeyDown(e)} />
+          </td> : null
+          }
           {skipLogicInput}
           <td>
             <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
@@ -131,9 +159,16 @@ class ChoiceEditor extends Component {
           <td onClick={e => this.enterEditMode(e, 'response')}>
             <UntitledIfEmpty text={this.state.response} emptyText='No response' />
           </td>
-          <td onClick={e => this.enterEditMode(e, 'sms')}>
+          { sms
+          ? <td onClick={e => this.enterEditMode(e, 'sms')}>
             <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
-          </td>
+          </td> : null
+          }
+          { ivr
+          ? <td onClick={e => this.enterEditMode(e, 'ivr')}>
+            <UntitledIfEmpty text={this.state.ivr} emptyText='No IVR' />
+          </td> : null
+          }
           {skipLogicInput}
           <td>
             <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
@@ -148,7 +183,9 @@ ChoiceEditor.propTypes = {
   onDelete: PropTypes.func,
   onChoiceChange: PropTypes.func,
   choice: PropTypes.object,
-  skipOptions: PropTypes.array
+  skipOptions: PropTypes.array,
+  sms: PropTypes.bool,
+  ivr: PropTypes.bool
 }
 
 export default ChoiceEditor

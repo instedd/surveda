@@ -26,7 +26,7 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { step, skip } = this.props
+    const { step, skip, sms, ivr } = this.props
     const { choices } = step
 
     let skipOptions = skip.slice()
@@ -43,10 +43,17 @@ class StepMultipleChoiceEditor extends Component {
             <table className='responses-table'>
               <thead>
                 <tr>
-                  <th style={{width: '30%'}}>Response</th>
-                  <th style={{width: '30%'}}>SMS</th>
+                  <th style={{width: '25%'}}>Response</th>
+                  { sms
+                  ? <th style={{width: '20%'}}>SMS</th>
+                  : null
+                  }
+                  { ivr
+                  ? <th style={{width: '20%'}}>IVR</th>
+                  : null
+                  }
                   <th style={{width: '30%'}}>Skip logic</th>
-                  <th style={{width: '10%'}} />
+                  <th style={{width: '5%'}} />
                 </tr>
               </thead>
               <tbody>
@@ -57,6 +64,8 @@ class StepMultipleChoiceEditor extends Component {
                     onDelete={(e) => this.deleteChoice(e, index)}
                     onChoiceChange={this.changeChoice(index)}
                     skipOptions={skipOptions}
+                    sms={sms}
+                    ivr={ivr}
                       />
                   )}
               </tbody>
@@ -74,7 +83,9 @@ class StepMultipleChoiceEditor extends Component {
 StepMultipleChoiceEditor.propTypes = {
   actions: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
-  skip: PropTypes.array
+  skip: PropTypes.array,
+  sms: PropTypes.bool,
+  ivr: PropTypes.bool
 }
 
 const mapDispatchToProps = (dispatch) => ({

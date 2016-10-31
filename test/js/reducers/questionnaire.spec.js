@@ -167,7 +167,7 @@ describe('questionnaire reducer', () => {
     .toEqual({
       id: null,
       name: '',
-      modes: ['SMS'],
+      modes: ['SMS', 'IVR'],
       projectId: 123,
       steps: []
     })
@@ -263,6 +263,7 @@ describe('questionnaire reducer', () => {
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.choices.length).toEqual(3)
     expect(step.choices[2].value).toEqual('')
+    expect(step.choices[2].responses).toEqual({sms: [], ivr: []})
   })
 
   it('should delete choice', () => {
@@ -287,7 +288,7 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, reducer)([
-      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'end')
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end')
     ])
 
     const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
@@ -299,6 +300,9 @@ describe('questionnaire reducer', () => {
           'M',
           'MB',
           '3'
+        ],
+        ivr: [
+          'May'
         ]
       },
       skipLogic: 'end'
@@ -321,6 +325,9 @@ const questionnaire = deepFreeze({
               'Yes',
               'Y',
               '1'
+            ],
+            ivr: [
+              'Yes'
             ]
           },
           skipLogic: null
@@ -332,6 +339,9 @@ const questionnaire = deepFreeze({
               'No',
               'N',
               '1'
+            ],
+            ivr: [
+              'No'
             ]
           },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
@@ -354,6 +364,9 @@ const questionnaire = deepFreeze({
               'Yes',
               'Y',
               '1'
+            ],
+            ivr: [
+              'Yes'
             ]
           }
         },
@@ -364,6 +377,9 @@ const questionnaire = deepFreeze({
               'No',
               'N',
               '1'
+            ],
+            ivr: [
+              'No'
             ]
           }
         }
