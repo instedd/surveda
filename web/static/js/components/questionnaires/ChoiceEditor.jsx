@@ -89,7 +89,7 @@ class ChoiceEditor extends Component {
       ...this.state,
       skipLogic: event.target.value == '' ? null : event.target.value
     })
-    onChoiceChange(this.state.response, this.state.sms, this.state.skipLogic)
+    onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic)
   }
 
   render() {
