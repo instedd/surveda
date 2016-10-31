@@ -18,4 +18,10 @@ defmodule Ask.Project do
     struct
     |> cast(params, [:name])
   end
+
+  def touch!(project) do
+    project
+    |> Ask.Project.changeset
+    |> Ask.Repo.update!(force: true)
+  end
 end

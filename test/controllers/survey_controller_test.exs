@@ -1,7 +1,7 @@
 defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Survey
+  alias Ask.{Survey, Project}
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
 
@@ -115,6 +115,14 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "updates project updated_at when survey is created", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, user: user, updated_at: datetime)
+      post conn, project_survey_path(conn, :create, project.id)
+
+      project = Project |> Repo.get(project.id)
+      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
   end
 
   describe "update" do
@@ -228,6 +236,15 @@ defmodule Ask.SurveyControllerTest do
       assert json_response(conn, 422)["errors"] != %{cutoff: "must be greater than 0"}
     end
 
+    test "updates project updated_at when survey is updated", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, user: user, updated_at: datetime)
+      survey = insert(:survey, project: project)
+      put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{name: "New name"}
+
+      project = Project |> Repo.get(project.id)
+      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
   end
 
   describe "delete" do
@@ -244,6 +261,16 @@ defmodule Ask.SurveyControllerTest do
       assert_error_sent :forbidden, fn ->
         delete conn, project_survey_path(conn, :delete, survey.project, survey)
       end
+    end
+
+    test "updates project updated_at when survey is deleted", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, user: user, updated_at: datetime)
+      survey = insert(:survey, project: project)
+      delete conn, project_survey_path(conn, :delete, survey.project, survey)
+
+      project = Project |> Repo.get(project.id)
+      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
     end
   end
 
@@ -403,11 +430,22 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
-  test "launch survey", %{conn: conn} do
-    survey = insert(:survey)
+  test "launch survey", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project)
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
+  end
+
+  test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
+    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+    project = insert(:project, user: user, updated_at: datetime)
+    survey = insert(:survey, project: project)
+    post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+
+    project = Project |> Repo.get(project.id)
+    assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
 
   ### Auxiliar functions ###

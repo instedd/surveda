@@ -111,7 +111,7 @@ defmodule Ask.RespondentController do
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
 
@@ -137,6 +137,7 @@ defmodule Ask.RespondentController do
       respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
 
       update_survey_state(survey_id, respondents_count)
+      project |> Project.touch!
 
       conn
         |> put_status(:created)
@@ -149,7 +150,7 @@ defmodule Ask.RespondentController do
   end
 
   def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
 
@@ -157,6 +158,7 @@ defmodule Ask.RespondentController do
     |> Repo.delete_all
 
     update_survey_state(survey_id, 0)
+    project |> Project.touch!
 
     conn
       |> put_status(:ok)

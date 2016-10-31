@@ -15,14 +15,17 @@ defmodule Ask.QuestionnaireController do
   end
 
   def create(conn, %{"project_id" => project_id, "questionnaire" => params}) do
-    changeset = Project
+    project = Project
     |> Repo.get!(project_id)
+
+    changeset = project
     |> authorize(conn)
     |> build_assoc(:questionnaires)
     |> Questionnaire.changeset(params)
 
     case Repo.insert(changeset) do
       {:ok, questionnaire} ->
+        project |> Project.touch!
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
@@ -45,8 +48,10 @@ defmodule Ask.QuestionnaireController do
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "questionnaire" => params}) do
-    changeset = Project
+    project = Project
     |> Repo.get!(project_id)
+
+    changeset = project
     |> authorize(conn)
     |> assoc(:questionnaires)
     |> Repo.get!(id)
@@ -54,6 +59,7 @@ defmodule Ask.QuestionnaireController do
 
     case Repo.update(changeset) do
       {:ok, questionnaire} ->
+        project |> Project.touch!
         render(conn, "show.json", questionnaire: questionnaire)
       {:error, changeset} ->
         conn
@@ -63,8 +69,10 @@ defmodule Ask.QuestionnaireController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
+
+    project
     |> authorize(conn)
     |> assoc(:questionnaires)
     |> Repo.get!(id)
@@ -72,6 +80,7 @@ defmodule Ask.QuestionnaireController do
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!
 
+    project |> Project.touch!
     send_resp(conn, :no_content, "")
   end
 end
