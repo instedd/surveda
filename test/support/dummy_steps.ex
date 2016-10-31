@@ -13,11 +13,11 @@ defmodule Ask.DummySteps do
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => ["Yes", "Y", "1"]
+              "responses" => %{"sms" => ["Yes", "Y", "1"]}
             },
             %{
               "value" => "No",
-              "responses" => ["No", "N", "1"]
+              "responses" => %{"sms" => ["No", "N", "1"]}
             }
           ]
         },
@@ -32,11 +32,11 @@ defmodule Ask.DummySteps do
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => ["Yes", "Y", "1"]
+              "responses" => %{"sms" => ["Yes", "Y", "1"]}
             },
             %{
               "value" => "No",
-              "responses" => ["No", "N", "1"]
+              "responses" => %{"sms" => ["No", "N", "1"]}
             }
           ]
         },
@@ -63,26 +63,26 @@ defmodule Ask.DummySteps do
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => ["Yes", "Y", "1"],
+              "responses" => %{"sms" => ["Yes", "Y", "1"]},
               "skip_logic" => "end"
             },
             %{
               "value" => "No",
-              "responses" => ["No", "N", "2"],
+              "responses" => %{"sms" => ["No", "N", "2"]},
               "skip_logic" => nil
             },
             %{
               "value" => "Maybe",
-              "responses" => ["Maybe", "M", "3"],
+              "responses" => %{"sms" => ["Maybe", "M", "3"]},
             },
             %{
               "value" => "Sometimes",
-              "responses" => ["Sometimes", "S", "4"],
+              "responses" => %{"sms" => ["Sometimes", "S", "4"]},
               "skip_logic" => "ccc"
             },
             %{
               "value" => "ALWAYS",
-              "responses" => ["Always", "A", "5"],
+              "responses" => %{"sms" => ["Always", "A", "5"]},
               "skip_logic" => "undefined_id"
             }
           ]
@@ -98,12 +98,12 @@ defmodule Ask.DummySteps do
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => ["Yes", "Y", "1"],
+              "responses" => %{"sms" => ["Yes", "Y", "1"]},
               "skip_logic" => "aaa"
             },
             %{
               "value" => "No",
-              "responses" => ["No", "N", "1"]
+              "responses" => %{"sms" => ["No", "N", "1"]}
             }
           ]
         },
@@ -118,11 +118,11 @@ defmodule Ask.DummySteps do
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => ["Yes", "Y", "1"]
+              "responses" => %{"sms" => ["Yes", "Y", "1"]}
             },
             %{
               "value" => "No",
-              "responses" => ["No", "N", "1"]
+              "responses" => %{"sms" => ["No", "N", "1"]}
             }
           ]
         }

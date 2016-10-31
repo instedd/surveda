@@ -31,7 +31,7 @@ class ChoiceEditor extends Component {
 
   stateFromProps(props) {
     const { choice } = props
-    return { response: choice.value, sms: choice.responses.join(', '), skipLogic: choice.skipLogic }
+    return { response: choice.value, sms: choice.responses.sms.join(', '), skipLogic: choice.skipLogic }
   }
 
   enterEditMode(event, focus) {
