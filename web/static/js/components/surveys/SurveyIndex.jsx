@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component, PureComponent, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
 import values from 'lodash/values'
@@ -59,7 +59,7 @@ class SurveyIndex extends Component {
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
           { surveys.map(survey => (
-            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id] || {}} key={survey.id} />
+            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} key={survey.id} />
           )) }
         </div>
         }
@@ -84,67 +84,70 @@ const mapStateToProps = (state, ownProps) => {
 
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
-const SurveyCard = ({ survey, completedByDate }) => {
-  let cumulativeCount = []
-  let reached = 0
+class SurveyCard extends PureComponent {
+  static propTypes = {
+    completedByDate: React.PropTypes.object.isRequired,
+    survey: React.PropTypes.object.isRequired
+  }
 
-  if (survey && completedByDate.completedByDate) {
-    const data = completedByDate.completedByDate.respondentsByDate
-    const target = completedByDate.completedByDate.targetValue
-    cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
-    if (survey.state == 'running' || survey.state == 'completed') {
-      reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
+  render() {
+    const { survey, completedByDate } = this.props
+    let cumulativeCount = []
+    let reached = 0
+
+    if (survey && completedByDate && completedByDate.completedByDate) {
+      const data = completedByDate.completedByDate.respondentsByDate
+      const target = completedByDate.completedByDate.targetValue
+      cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
+      if (survey.state == 'running' || survey.state == 'completed') {
+        reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
+      }
     }
-  }
 
-  let icon = 'mode_edit'
-  let color = 'black-text'
-  let text = 'Editing'
-  switch (survey.state) {
-    case 'running':
-      icon = 'play_arrow'
-      color = 'green-text'
-      text = 'Running'
-      break
-    case 'ready':
-      icon = 'play_circle_outline'
-      color = 'black-text'
-      text = 'Ready to launch'
-      break
-    case 'completed':
-      icon = 'done'
-      color = 'black-text'
-      text = 'Completed'
-      break
+    let icon = 'mode_edit'
+    let color = 'black-text'
+    let text = 'Editing'
+    switch (survey.state) {
+      case 'running':
+        icon = 'play_arrow'
+        color = 'green-text'
+        text = 'Running'
+        break
+      case 'ready':
+        icon = 'play_circle_outline'
+        color = 'black-text'
+        text = 'Ready to launch'
+        break
+      case 'completed':
+        icon = 'done'
+        color = 'black-text'
+        text = 'Completed'
+        break
+    }
+    return (
+      <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
+        <div className='col s12 m6 l4'>
+          <Card>
+            <div className='card-content'>
+              <div className='grey-text'>
+                { reached + '% of target completed' }
+              </div>
+              <div className='card-chart'>
+                <RespondentsChart completedByDate={cumulativeCount} />
+              </div>
+              <div className='card-status'>
+                <span className='card-title truncate' title={survey.name}>
+                  <UntitledIfEmpty text={survey.name} />
+                </span>
+                <p className={color}>
+                  <i className='material-icons'>{icon}</i>
+                  { text }
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </Link>
+    )
   }
-  return (
-    <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
-      <div className='col s12 m6 l4'>
-        <Card>
-          <div className='card-content'>
-            <div className='grey-text'>
-              { reached + '% of target completed' }
-            </div>
-            <div className='card-chart'>
-              <RespondentsChart completedByDate={cumulativeCount} />
-            </div>
-            <div className='card-status'>
-              <span className='card-title truncate' title={survey.name}>
-                <UntitledIfEmpty text={survey.name} />
-              </span>
-              <p className={color}>
-                <i className='material-icons'>{icon}</i>
-                { text }
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </Link>
-  )
-}
-
-SurveyCard.propTypes = {
-  completedByDate: React.PropTypes.object.isRequired,
-  survey: React.PropTypes.object.isRequired
 }
