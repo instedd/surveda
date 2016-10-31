@@ -102,7 +102,7 @@ class ChoiceEditor extends Component {
             <input
               type='text'
               placeholder='Response'
-              value={this.state.response.sms}
+              value={this.state.response}
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onMouseDown={e => this.setDoNotClose()}
