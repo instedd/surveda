@@ -72,16 +72,21 @@ header {
   .logo {
     display: inline-block;
     vertical-align: top;
-    text-align: center;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.102);
-    width: 60px;
-    height: 60px;
+    // width: 60px;
+    // height: 60px;
     padding-top: 3px;
     margin-right: 25px;
     margin-left: -85px;
     + a.breadcrumb:before {
       display: none;
+    }
+    svg {
+      .st0{fill:#FF5722;}
+      .st1{fill:#FFC107;}
+      .st2{fill:#FFA000;}
+      .st3{fill:#4CAF50;}
+      .st4{fill:#555555;}
+
     }
   }
 }
