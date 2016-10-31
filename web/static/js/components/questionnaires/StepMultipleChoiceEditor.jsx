@@ -20,8 +20,8 @@ class StepMultipleChoiceEditor extends Component {
 
   changeChoice(index) {
     const { step, actions } = this.props
-    return (response, smsValues, skipLogic) => {
-      actions.changeChoice(step.id, index, response, smsValues, skipLogic)
+    return (response, smsValues, ivrValues, skipLogic) => {
+      actions.changeChoice(step.id, index, response, smsValues, ivrValues, skipLogic)
     }
   }
 
