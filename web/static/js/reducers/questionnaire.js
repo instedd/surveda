@@ -63,7 +63,8 @@ const addChoice = (state, action) => {
       {
         value: '',
         responses: {
-          sms: []
+          sms: [],
+          ivr: []
         },
         skipLogic: null
       }
@@ -90,7 +91,8 @@ const changeChoice = (state, action) => {
         ...step.choices[action.choiceChange.index],
         value: action.choiceChange.response,
         responses: {
-          sms: splitValues(action.choiceChange.smsValues)
+          sms: splitValues(action.choiceChange.smsValues),
+          ivr: splitValues(action.choiceChange.ivrValues)
         },
         skipLogic: action.choiceChange.skipLogic
       },
@@ -164,7 +166,7 @@ const newQuestionnaire = (state, action) => {
     data: {
       id: null,
       name: '',
-      modes: ['SMS'],
+      modes: ['SMS', 'IVR'],
       projectId: action.projectId,
       steps: []
     }
@@ -184,7 +186,8 @@ export const buildNewStep = (stepType) => ({
   title: '',
   store: '',
   prompt: {
-    sms: ''
+    sms: '',
+    ivr: ''
   },
   choices: []
 })

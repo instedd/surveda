@@ -43,7 +43,7 @@ class QuestionnaireIndex extends Component {
 
     const { router, projectId } = this.props
 
-    createQuestionnaire(projectId, {name: '', modes: ['SMS'], steps: []})
+    createQuestionnaire(projectId, {name: '', modes: ['SMS', 'IVR'], steps: []})
         .then(response => {
           const questionnaire = response.entities.questionnaires[response.result]
           this.creatingQuestionnaire = false

@@ -107,7 +107,7 @@ class QuestionnaireEditor extends Component {
     return (
       <div className='row'>
         <div className='row'>
-          <div className='col s12 m4'>
+          <div className='col s12 m3'>
             <div className='row'>
               <div className='col s6'>
                 SMS
@@ -143,7 +143,7 @@ class QuestionnaireEditor extends Component {
               </button>
             </div>
           </div>
-          <div className='col s12 m7 offset-m1'>
+          <div className='col s12 m8 offset-m1'>
             <QuestionnaireSteps
               steps={questionnaire.steps}
               current={this.state.currentStep}
