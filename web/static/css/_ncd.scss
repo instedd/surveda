@@ -453,6 +453,18 @@ label {
     padding-right: 5px;
   }
 
+  header {
+    .logo {
+      margin-left: 5px;
+    }
+    #MainNav a.page-title {
+      max-width: 60vw;
+    }
+    input#questionnaire_name {
+      max-width: 60vw;
+    }
+  }
+
   .btn-wizard {
     @include transition(none);
     position: absolute;
