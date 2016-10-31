@@ -101,8 +101,8 @@ class ChoiceEditor extends Component {
         defaultValue={this.state.skipLogic}
         >
         { skipOptions.map((option) =>
-          <option key={option.id} id={option.id} name={option.title} value={option.id}>
-            {option.title}
+          <option key={option.id} id={option.id} name={option.title} value={option.id} >
+            {option.title == '' ? 'Untitled' : option.title }
           </option>
               )}
       </Input>
