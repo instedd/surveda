@@ -15,9 +15,9 @@ defmodule Ask.Repo.Migrations.UpdateMultipleChoiceResponsesInQuestionnaireSteps 
                 step["choices"] |> Enum.map(fn choice ->
                   sms = choice["responses"]
                   responses = if sms do
-                                %{"sms" => sms, "ivr" => ""}
+                                %{"sms" => sms, "ivr" => []}
                               else
-                                %{"sms" => "", "ivr" => ""}
+                                %{"sms" => [], "ivr" => []}
                               end
 
                   choice |> Map.put("responses", responses)
