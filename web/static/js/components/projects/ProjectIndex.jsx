@@ -92,18 +92,22 @@ class ProjectIndex extends Component {
             <thead>
               <tr>
                 <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
                 <SortableHeader text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={-index}><td colSpan='2'>&nbsp;</td></tr>
+                if (!project) return <tr key={-index}><td colSpan='3'>&nbsp;</td></tr>
 
                 return (
                   <tr key={project.id}>
                     <td onClick={() => router.push(routes.project(project.id))}>
                       <UntitledIfEmpty text={project.name} />
+                    </td>
+                    <td>
+                      {project.runningSurveys}
                     </td>
                     <td>
                       <FormattedDate

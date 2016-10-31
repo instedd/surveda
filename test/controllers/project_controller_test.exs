@@ -27,8 +27,40 @@ defmodule Ask.ProjectControllerTest do
       user_project_map = %{"id"      => user_project.id,
                           "user_id" => user_project.user_id,
                           "name"    => user_project.name,
+                          "runningSurveys" => 0,
                           "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at)}
       assert json_response(conn, 200)["data"] == [user_project_map]
+    end
+
+    test "shows running survey count", %{conn: conn, user: user} do
+      project1 = insert(:project, user: user)
+      insert(:survey, project: project1, state: "running")
+      insert(:survey, project: project1, state: "running")
+      insert(:survey, project: project1, state: "pending")
+
+      project2 = insert(:project, user: user)
+      insert(:survey, project: project2, state: "running")
+      insert(:survey, project: project2, state: "pending")
+
+      project3 = insert(:project, user: user)
+
+      conn = get conn, project_path(conn, :index)
+      project_map_1 = %{"id"      => project1.id,
+                          "user_id" => project1.user_id,
+                          "name"    => project1.name,
+                          "runningSurveys" => 2,
+                          "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at)}
+      project_map_2 = %{"id"      => project2.id,
+                          "user_id" => project2.user_id,
+                          "name"    => project2.name,
+                          "runningSurveys" => 1,
+                          "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at)}
+      project_map_3 = %{"id"      => project3.id,
+                          "user_id" => project3.user_id,
+                          "name"    => project3.name,
+                          "runningSurveys" => 0,
+                          "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at)}
+      assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
     end
 
   end

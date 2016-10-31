@@ -1,7 +1,7 @@
 defmodule Ask.ProjectController do
   use Ask.Web, :api_controller
 
-  alias Ask.Project
+  alias Ask.{Project, Survey}
 
   def index(conn, _params) do
     projects = conn
@@ -9,7 +9,13 @@ defmodule Ask.ProjectController do
     |> assoc(:projects)
     |> Repo.all
 
-    render(conn, "index.json", projects: projects)
+    running_surveys_by_project = Repo.all(from p in Project,
+      join: s in Survey,
+      select: {p.id, count(s.id)},
+      where: s.project_id == p.id and s.state == "running",
+      group_by: p.id) |> Enum.into(%{})
+
+    render(conn, "index.json", projects: projects, running_surveys_by_project: running_surveys_by_project)
   end
 
   def create(conn, %{"project" => project_params}) do
