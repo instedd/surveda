@@ -28,7 +28,8 @@ config :ask, Nuntium,
 
 config :ask, :channel,
   providers: %{
-    "nuntium" => Ask.Runtime.NuntiumChannel
+    "nuntium" => Ask.Runtime.NuntiumChannel,
+    "verboice" => Ask.Runtime.VerboiceChannel
   }
 
 # Configures Elixir's Logger

@@ -13,9 +13,23 @@ defmodule Ask.SessionTest do
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
     session = Session.start(quiz, respondent, channel)
-
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Press 1 for YES, 2 for NO"]]
     assert %Session{} = session
+
+    assert_receive [:setup, ^test_channel, ^respondent]
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Press 1 for YES, 2 for NO"]]
+  end
+
+  test "start with channel without push" do
+    quiz = build(:questionnaire, steps: @dummy_steps)
+    respondent = build(:respondent)
+    test_channel = TestChannel.new(false)
+    channel = build(:channel, settings: test_channel |> TestChannel.settings)
+
+    session = Session.start(quiz, respondent, channel)
+    assert %Session{} = session
+
+    assert_receive [:setup, ^test_channel, ^respondent]
+    refute_receive _
   end
 
   test "step" do

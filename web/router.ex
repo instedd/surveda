@@ -43,6 +43,7 @@ defmodule Ask.Router do
   end
 
   get "/callbacks/:provider", Ask.CallbackController, :callback
+  post "/callbacks/:provider", Ask.CallbackController, :callback
 
   get "/landing", Ask.LandingController, :index
 
