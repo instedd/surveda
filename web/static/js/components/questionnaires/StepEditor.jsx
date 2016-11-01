@@ -103,7 +103,7 @@ class StepEditor extends Component {
             onChange={e => this.stepPromptSmsChange(e)}
             onBlur={e => this.stepPromptSmsSubmit(e)}
             ref={ref => $(ref).characterCounter()} />
-          <label htmlFor='step_editor_sms_prompt'>SMS message</label>
+          <label htmlFor='step_editor_sms_prompt' className="active">SMS message</label>
         </div>
       </div>
     }
@@ -111,12 +111,15 @@ class StepEditor extends Component {
     let ivrInput = null
     if (ivr) {
       ivrInput = <div className='row'>
-        <input
-          type='text'
-          placeholder='Voice message'
-          value={this.state.stepPromptIvr}
-          onChange={e => this.stepPromptIvrChange(e)}
-          onBlur={e => this.stepPromptIvrSubmit(e)} />
+        <div className='col input-field s12'>
+          <input
+            id='step_editor_voice_message'
+            type='text'
+            value={this.state.stepPromptIvr}
+            onChange={e => this.stepPromptIvrChange(e)}
+            onBlur={e => this.stepPromptIvrSubmit(e)} />
+          <label htmlFor='step_editor_voice_message' className="active">Voice message</label>
+        </div>
       </div>
     }
 
