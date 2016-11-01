@@ -3,7 +3,7 @@ defmodule Ask.SurveyTest do
 
   alias Ask.Survey
 
-  @valid_attrs %{name: "some content"}
+  @valid_attrs %{name: "some content", schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00")}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
