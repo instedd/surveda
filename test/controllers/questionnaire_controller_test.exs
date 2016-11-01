@@ -2,7 +2,7 @@ defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
 
   alias Ask.{Project, Questionnaire}
-  @valid_attrs %{name: "some content", modes: ["SMS", "IVR"], steps: []}
+  @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -59,7 +59,7 @@ defmodule Ask.QuestionnaireControllerTest do
       assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
         "name" => questionnaire.name,
         "project_id" => questionnaire.project_id,
-        "modes" => ["SMS", "IVR"],
+        "modes" => ["sms", "ivr"],
         "steps" => [],
       }
     end

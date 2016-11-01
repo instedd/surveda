@@ -166,7 +166,7 @@ const newQuestionnaire = (state, action) => {
     data: {
       id: null,
       name: '',
-      modes: ['SMS', 'IVR'],
+      modes: ['sms', 'ivr'],
       projectId: action.projectId,
       steps: []
     }

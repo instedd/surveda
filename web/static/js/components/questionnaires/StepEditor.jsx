@@ -79,8 +79,8 @@ class StepEditor extends Component {
   render() {
     const { step, onCollapse, questionnaire, skip } = this.props
 
-    const sms = questionnaire.modes.indexOf('SMS') != -1
-    const ivr = questionnaire.modes.indexOf('IVR') != -1
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let editor
     if (step.type == 'multiple-choice') {
@@ -94,14 +94,17 @@ class StepEditor extends Component {
     let smsInput = null
     if (sms) {
       smsInput = <div className='row'>
-        <input
-          type='text'
-          placeholder='SMS message'
-          is length='140'
-          value={this.state.stepPromptSms}
-          onChange={e => this.stepPromptSmsChange(e)}
-          onBlur={e => this.stepPromptSmsSubmit(e)}
-          ref={ref => $(ref).characterCounter()} />
+        <div className='col input-field s12'>
+          <input
+            id='step_editor_sms_prompt'
+            type='text'
+            is length='140'
+            value={this.state.stepPromptSms}
+            onChange={e => this.stepPromptSmsChange(e)}
+            onBlur={e => this.stepPromptSmsSubmit(e)}
+            ref={ref => $(ref).characterCounter()} />
+          <label htmlFor='step_editor_sms_prompt'>SMS message</label>
+        </div>
       </div>
     }
 
@@ -141,7 +144,7 @@ class StepEditor extends Component {
           </li>
           <li className='collection-item'>
             <div className='row'>
-              <div className='col s12 input-field'>
+              <div className='col s12'>
                 <h5>Question Prompt</h5>
                 {smsInput}
                 {ivrInput}

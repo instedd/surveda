@@ -110,18 +110,18 @@ describe('questionnaire reducer', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('IVR')
+      actions.toggleMode('ivr')
     ])
 
     expect(result.data.modes.length).toEqual(2)
-    expect(result.data.modes).toEqual(['SMS', 'IVR'])
+    expect(result.data.modes).toEqual(['sms', 'ivr'])
   })
 
   it('should toggle other mode', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('SMS')
+      actions.toggleMode('sms')
     ])
 
     /* Expectations on arrays must include a check for length
@@ -133,14 +133,14 @@ describe('questionnaire reducer', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('SMS'),
-      actions.toggleMode('IVR')
+      actions.toggleMode('sms'),
+      actions.toggleMode('ivr')
     ])
 
     /* Expectations on arrays must include a check for length
     because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
     expect(result.data.modes.length).toEqual(1)
-    expect(result.data.modes).toEqual(['IVR'])
+    expect(result.data.modes).toEqual(['ivr'])
   })
 
   it('should add step', () => {
@@ -167,7 +167,7 @@ describe('questionnaire reducer', () => {
     .toEqual({
       id: null,
       name: '',
-      modes: ['SMS', 'IVR'],
+      modes: ['sms', 'ivr'],
       projectId: 123,
       steps: []
     })
@@ -392,7 +392,7 @@ const questionnaire = deepFreeze({
   projectId: 1,
   name: 'Foo',
   modes: [
-    'SMS'
+    'sms'
   ],
   id: 1
 })

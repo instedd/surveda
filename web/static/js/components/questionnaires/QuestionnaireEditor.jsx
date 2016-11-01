@@ -101,8 +101,8 @@ class QuestionnaireEditor extends Component {
       return <div>Loading...</div>
     }
 
-    const sms = questionnaire.modes.indexOf('SMS') != -1
-    const ivr = questionnaire.modes.indexOf('IVR') != -1
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     return (
       <div className='row'>
@@ -115,7 +115,7 @@ class QuestionnaireEditor extends Component {
               <div className='col s6'>
                 <div className='switch'>
                   <label>
-                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'SMS')} />
+                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
                     <span className='lever' />
                   </label>
                 </div>
@@ -128,7 +128,7 @@ class QuestionnaireEditor extends Component {
               <div className='col s6'>
                 <div className='switch'>
                   <label>
-                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'IVR')} />
+                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
                     <span className='lever' />
                   </label>
                 </div>

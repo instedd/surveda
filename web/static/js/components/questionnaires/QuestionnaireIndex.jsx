@@ -43,7 +43,7 @@ class QuestionnaireIndex extends Component {
 
     const { router, projectId } = this.props
 
-    createQuestionnaire(projectId, {name: '', modes: ['SMS', 'IVR'], steps: []})
+    createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: []})
         .then(response => {
           const questionnaire = response.entities.questionnaires[response.result]
           this.creatingQuestionnaire = false
@@ -103,7 +103,7 @@ class QuestionnaireIndex extends Component {
                     <UntitledIfEmpty text={questionnaire.name} />
                   </td>
                   <td>
-                    { (questionnaire.modes || []).join(', ') }
+                    { (questionnaire.modes || []).join(', ').toUpperCase() }
                   </td>
                 </tr>
                 )
