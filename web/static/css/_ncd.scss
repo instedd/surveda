@@ -174,8 +174,15 @@ footer {
       th {
         @extend .grey-text, .lighten-2;
         padding: 25px;
+        white-space: nowrap;
          a {
           color: inherit;
+        }
+        &.sortable {
+          i {
+            vertical-align: middle;
+            margin-right: 9px;
+          }
         }
       }
 
@@ -184,6 +191,9 @@ footer {
         padding: 25px;
         a {
           color: inherit;
+        }
+        &.project-name {
+          word-break: break-all;
         }
       }
     }
@@ -197,6 +207,20 @@ footer {
       }
       .select-dropdown {
         border-bottom: none;
+      }
+    }
+    .card-action {
+      ul {
+        margin: 0;
+        li {
+          @extend .grey-text;
+          line-height: 2;
+          a {
+            @extend .black-text;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        }
       }
     }
   }
