@@ -47,6 +47,7 @@ const stepsReducer = (state, action) => {
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action)
+    case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
@@ -160,7 +161,25 @@ const changeStepIvrPrompt = (state, action) => {
     ...step,
     prompt: {
       ...step.prompt,
-      ivr: action.newPrompt
+      ivr: {
+        ...step.prompt.ivr,
+        text: action.newPrompt.text,
+        audioSource: action.newPrompt.audioSource
+      }
+    }
+  }))
+}
+
+const changeStepIvrAudioId = (state, action) => {
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    prompt: {
+      ...step.prompt,
+      ivr: {
+        ...step.prompt.ivr,
+        audioId: action.newId,
+        audioSource: 'upload'
+      }
     }
   }))
 }

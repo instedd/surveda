@@ -1,11 +1,22 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { EditableTitleLabel, Card, Dropdown, DropdownItem } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 import classNames from 'classnames/bind'
+import Dropzone from 'react-dropzone'
+import { createAudio } from '../../api.js'
+
+const AudioDropzone = ({ onDrop, onDropRejected }) => {
+  return (
+    <Dropzone className='dropfile audio' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
+      <div className='drop-icon' />
+      <div className='drop-text audio' />
+    </Dropzone>
+  )
+}
 
 class StepEditor extends Component {
   constructor(props) {
@@ -47,7 +58,7 @@ class StepEditor extends Component {
   stepPromptIvrSubmit(e) {
     e.preventDefault()
     const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audio: 'tts'})
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
   }
 
   stepStoreChange(e) {
@@ -77,9 +88,25 @@ class StepEditor extends Component {
       stepTitle: step.title,
       stepType: step.type,
       stepPromptSms: step.prompt.sms || '',
-      stepPromptIvr: (step.prompt.ivr || {}).text || '',
-      stepStore: step.store || ''
+      stepPromptIvr: (step.prompt.ivr.text || {}).text || '',
+      stepStore: step.store || '',
+      audioId: step.prompt.ivr.audioId,
+      audioSrc: (step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : '')
     }
+  }
+
+  handleFileUpload(files) {
+    const { step } = this.props
+    createAudio(files)
+      .then(response => {
+        console.log(response)
+        this.setState({audioSrc: `/api/v1/audios/${response.result}`}, () => {
+            console.log('veamos el state: ', this.state)
+            // $('audio')[0].load()
+            this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
+            $('audio')[0].load()
+        })
+      })
   }
 
   render() {
@@ -116,7 +143,7 @@ class StepEditor extends Component {
 
     let ivrInput = null
     if (ivr) {
-      ivrInput = <div className='row'>
+      let ivrTextInput = <div className='row'>
         <div className='col input-field s12'>
           <input
             id='step_editor_voice_message'
@@ -126,6 +153,22 @@ class StepEditor extends Component {
             onBlur={e => this.stepPromptIvrSubmit(e)} />
           <label htmlFor='step_editor_voice_message' className={classNames({'active': this.state.stepPromptIvr})}>Voice message</label>
         </div>
+      </div>
+
+      let ivrFileInput = <div>
+        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        <div>
+          <i className='material-icons'>file_upload</i> Upload a file
+        </div>
+        <audio controls>
+          <source src={this.state.audioSrc} type='audio/mpeg' />
+        </audio>
+        <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').openModal()} />
+      </div>
+
+      ivrInput = <div>
+        {ivrTextInput}
+        {ivrFileInput}
       </div>
     }
 

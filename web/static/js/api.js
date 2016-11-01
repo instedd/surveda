@@ -9,6 +9,7 @@ const respondentSchema = new Schema('respondents')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
+const audioSchema = new Schema('audios')
 
 export class Unauthorized {
   constructor(response) {
@@ -85,6 +86,11 @@ const apiPostJSON = (url, schema, body) => {
   return apiPutOrPostJSON(url, schema, 'POST', body)
 }
 
+// TODO: WHY?
+const apiPostFile = (url, schema, formData) => {
+  return apiFetchJSON(url, schema, {method: 'POST', body: formData})
+}
+
 const apiPutJSON = (url, schema, body) => {
   return apiPutOrPostJSON(url, schema, 'PUT', body)
 }
@@ -123,6 +129,12 @@ export const createProject = (project) => {
 
 export const createSurvey = (projectId) => {
   return apiPostJSON(`projects/${projectId}/surveys`, surveySchema)
+}
+
+export const createAudio = (files) => {
+  let formData = new FormData()
+  formData.append('file', files[0])
+  return apiPostFile('audios', audioSchema, formData)
 }
 
 export const uploadRespondents = (survey, files) => {
