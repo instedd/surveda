@@ -41,4 +41,10 @@ defmodule Ask.SurveyView do
       id: channel.id
     }
   end
+
+  def render("timezones.json", %{timezones: timezones}) do
+    %{
+      timezones: timezones
+    }
+  end
 end

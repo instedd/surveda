@@ -448,6 +448,13 @@ defmodule Ask.SurveyControllerTest do
     assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
 
+  describe "timezones" do
+    test "returns Timex timezones", %{conn: conn} do
+      conn = get conn, timezones_path(conn, :timezones)
+      assert json_response(conn, 200)["timezones"] == Timex.timezones
+    end
+  end
+
   ### Auxiliar functions ###
 
   def prepare_for_state_update(user) do

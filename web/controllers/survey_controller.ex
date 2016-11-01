@@ -132,4 +132,9 @@ defmodule Ask.SurveyController do
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
+
+  def timezones(conn, _) do
+    timezones = Timex.timezones
+    render(conn, "timezones.json", timezones: timezones)
+  end
 end
