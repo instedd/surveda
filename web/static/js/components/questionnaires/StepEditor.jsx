@@ -93,24 +93,28 @@ class StepEditor extends Component {
 
     let smsInput = null
     if (sms) {
-      smsInput = <input
-        type='text'
-        placeholder='SMS message'
-        is length='140'
-        value={this.state.stepPromptSms}
-        onChange={e => this.stepPromptSmsChange(e)}
-        onBlur={e => this.stepPromptSmsSubmit(e)}
-        ref={ref => $(ref).characterCounter()} />
+      smsInput = <div className='row'>
+        <input
+          type='text'
+          placeholder='SMS message'
+          is length='140'
+          value={this.state.stepPromptSms}
+          onChange={e => this.stepPromptSmsChange(e)}
+          onBlur={e => this.stepPromptSmsSubmit(e)}
+          ref={ref => $(ref).characterCounter()} />
+      </div>
     }
 
     let ivrInput = null
     if (ivr) {
-      ivrInput = <input
-        type='text'
-        placeholder='Voice message'
-        value={this.state.stepPromptIvr}
-        onChange={e => this.stepPromptIvrChange(e)}
-        onBlur={e => this.stepPromptIvrSubmit(e)} />
+      ivrInput = <div className='row'>
+        <input
+          type='text'
+          placeholder='Voice message'
+          value={this.state.stepPromptIvr}
+          onChange={e => this.stepPromptIvrChange(e)}
+          onBlur={e => this.stepPromptIvrSubmit(e)} />
+      </div>
     }
 
     return (
