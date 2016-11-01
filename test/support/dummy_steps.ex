@@ -7,17 +7,21 @@ defmodule Ask.DummySteps do
           "type" => "multiple-choice",
           "title" => "Do you smoke?",
           "prompt" => %{
-            "sms" => "Do you smoke? Press 1 for YES, 2 for NO",
+            "sms" => "Do you smoke? Reply 1 for YES, 2 for NO",
+            "ivr" => %{
+              "text" => "Do you smoke? Press 8 for YES, 9 for NO",
+              "audio" => "tts"
+            }
           },
           "store" => "Smokes",
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"]}
+              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["8"]}
             },
             %{
               "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "1"]}
+              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["9"]}
             }
           ]
         },
@@ -26,17 +30,21 @@ defmodule Ask.DummySteps do
           "type" => "multiple-choice",
           "title" => "Do you exercise?",
           "prompt" => %{
-            "sms" => "Do you exercise? Press 1 for YES, 2 for NO",
+            "sms" => "Do you exercise? Reply 1 for YES, 2 for NO",
+            "ivr" => %{
+              "text" => "Do you exercise? Press 1 for YES, 2 for NO",
+              "audio" => "tts"
+            }
           },
           "store" => "Exercises",
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"]}
+              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]}
             },
             %{
               "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "1"]}
+              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]}
             }
           ]
         },
@@ -57,32 +65,32 @@ defmodule Ask.DummySteps do
           "type" => "multiple-choice",
           "title" => "Do you smoke?",
           "prompt" => %{
-            "sms" => "Do you smoke? Press 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS",
+            "sms" => "Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS",
           },
           "store" => "Smokes",
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"]},
+              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]},
               "skip_logic" => "end"
             },
             %{
               "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "2"]},
+              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]},
               "skip_logic" => nil
             },
             %{
               "value" => "Maybe",
-              "responses" => %{"sms" => ["Maybe", "M", "3"]},
+              "responses" => %{"sms" => ["Maybe", "M", "3"], "ivr" => ["3"]},
             },
             %{
               "value" => "Sometimes",
-              "responses" => %{"sms" => ["Sometimes", "S", "4"]},
+              "responses" => %{"sms" => ["Sometimes", "S", "4"], "ivr" => ["4"]},
               "skip_logic" => "ccc"
             },
             %{
               "value" => "ALWAYS",
-              "responses" => %{"sms" => ["Always", "A", "5"]},
+              "responses" => %{"sms" => ["Always", "A", "5"], "ivr" => ["5"]},
               "skip_logic" => "undefined_id"
             }
           ]
@@ -92,18 +100,18 @@ defmodule Ask.DummySteps do
           "type" => "multiple-choice",
           "title" => "Do you exercise?",
           "prompt" => %{
-            "sms" => "Do you exercise? Press 1 for YES, 2 for NO",
+            "sms" => "Do you exercise? Reply 1 for YES, 2 for NO",
           },
           "store" => "Exercises",
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"]},
+              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]},
               "skip_logic" => "aaa"
             },
             %{
               "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "1"]}
+              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]}
             }
           ]
         },
@@ -112,17 +120,17 @@ defmodule Ask.DummySteps do
           "type" => "multiple-choice",
           "title" => "Is this questionnaire refreshing?",
           "prompt" => %{
-            "sms" => "Is this questionnaire refreshing? Press 1 for YES, 2 for NO, 3 for MAYBE",
+            "sms" => "Is this questionnaire refreshing? Reply 1 for YES, 2 for NO, 3 for MAYBE",
           },
           "store" => "Refresh",
           "choices" => [
             %{
               "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"]}
+              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]}
             },
             %{
               "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "1"]}
+              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]}
             }
           ]
         }

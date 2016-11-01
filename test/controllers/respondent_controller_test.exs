@@ -179,7 +179,7 @@ defmodule Ask.RespondentControllerTest do
     project = insert(:project, user: user)
 
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: ["sms"])
     channel = insert(:channel, name: "test")
 
     add_channel_to(survey, channel)

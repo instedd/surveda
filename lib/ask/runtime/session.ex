@@ -5,7 +5,7 @@ defmodule Ask.Runtime.Session do
 
   def start(questionnaire, respondent, channel) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
-    flow = Flow.start(questionnaire)
+    flow = Flow.start(questionnaire, channel.type)
     runtime_channel |> Channel.setup(respondent)
 
     case runtime_channel |> Channel.can_push_question? do

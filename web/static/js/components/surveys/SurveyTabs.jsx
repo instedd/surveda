@@ -8,9 +8,9 @@ class SurveyTabs extends Component {
     const { projectId, surveyId } = this.props
 
     return (
-      <Tabs>
-        <TabLink to={routes.survey(projectId, surveyId)}>Overview</TabLink>
-        <TabLink to={routes.surveyRespondents(projectId, surveyId)}>Respondents</TabLink>
+      <Tabs id='survey_tabs'>
+        <TabLink tabId='survey_tabs' to={routes.survey(projectId, surveyId)}>Overview</TabLink>
+        <TabLink tabId='survey_tabs' to={routes.surveyRespondents(projectId, surveyId)}>Respondents</TabLink>
       </Tabs>
     )
   }

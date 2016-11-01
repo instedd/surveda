@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.Flow do
-  defstruct current_step: nil, questionnaire: nil
+  defstruct current_step: nil, questionnaire: nil, mode: nil
   alias Ask.{Repo, Questionnaire}
   alias __MODULE__
 
@@ -7,8 +7,8 @@ defmodule Ask.Runtime.Flow do
     defstruct stores: [], prompts: []
   end
 
-  def start(quiz) do
-    %Flow{questionnaire: quiz}
+  def start(quiz, mode) do
+    %Flow{questionnaire: quiz, mode: mode}
   end
 
   def step(flow, reply \\ nil) do
@@ -18,12 +18,12 @@ defmodule Ask.Runtime.Flow do
   end
 
   def dump(flow) do
-    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id}
+    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode}
   end
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: state["current_step"]}
+    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"]}
   end
 
   defp is_numeric(str) do
@@ -89,7 +89,7 @@ defmodule Ask.Runtime.Flow do
                     "multiple-choice" ->
                       choice = step["choices"]
                       |> Enum.find(fn choice ->
-                        choice["responses"]["sms"] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+                        choice["responses"][flow.mode] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
                       end)
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
@@ -112,7 +112,7 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [step["prompt"]["sms"]]}}
+        {:ok, flow, %{state | prompts: [step["prompt"][flow.mode]]}}
     end
   end
 
