@@ -1,5 +1,4 @@
 import * as api from '../api'
-import { buildNewStep } from '../reducers/questionnaire'
 
 export const NEW = 'QUESTIONNAIRE_NEW'
 export const FETCH = 'QUESTIONNAIRE_FETCH'
@@ -9,12 +8,13 @@ export const TOGGLE_MODE = 'QUESTIONNAIRE_TOGGLE_MODE'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
+export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
 export const CHANGE_STEP_PROMPT_IVR = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_IVR'
 export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
-export const ADD_CHOICE = 'QUESTIONNAIRE_EDITOR_ADD_CHOICE'
-export const DELETE_CHOICE = 'QUESTIONNAIRE_EDITOR_DELETE_CHOICE'
-export const CHANGE_CHOICE = 'QUESTIONNAIRE_EDITOR_CHANGE_CHOICE'
+export const ADD_CHOICE = 'QUESTIONNAIRE_ADD_CHOICE'
+export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
+export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
 
 export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
   dispatch(fetch(projectId, questionnaireId))
@@ -98,6 +98,16 @@ export const changeStepTitle = (stepId, newTitle) => ({
   newTitle
 })
 
+export const changeStepType = (stepId, stepType) => ({
+  type: CHANGE_STEP_TYPE,
+  stepId,
+  stepType
+})
+
+export const addStep = () => ({
+  type: ADD_STEP
+})
+
 export const newQuestionnaire = (projectId) => ({
   type: NEW,
   projectId
@@ -112,13 +122,6 @@ export const toggleMode = (mode) => ({
   type: TOGGLE_MODE,
   mode
 })
-
-export const addStep = (stepType) => {
-  return ({
-    type: ADD_STEP,
-    newStep: buildNewStep(stepType)
-  })
-}
 
 export const updateQuestionnaire = (questionnaire) => dispatch => {
   return dispatch(receive(questionnaire))

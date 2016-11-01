@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
 import TitleContainer from './TitleContainer'
-import {UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
+import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
 
 const Header = ({ tabs, logout, user, project }) => {
@@ -35,8 +35,7 @@ const Header = ({ tabs, logout, user, project }) => {
             <div className='col s8 m6'>
               <ul className='right'>
                 <li>
-                  <Dropdown text={user}>
-                    {/* <DropdownItem><Link to='#'>Settings</Link></DropdownItem> */}
+                  <Dropdown label={user}>
                     <DropdownDivider />
                     <DropdownItem>
                       <a onClick={logout}>Logout</a>
