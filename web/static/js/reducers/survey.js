@@ -1,4 +1,3 @@
-import isEqual from 'lodash/isEqual'
 import * as actions from '../actions/survey'
 
 const initialState = {
@@ -65,6 +64,7 @@ export const surveyReducer = (state, action) => {
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
     case actions.SELECT_CHANNELS: return selectChannels(state, action)
+    case actions.SELECT_MODE: return selectMode(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
     default: return state
@@ -113,6 +113,13 @@ const selectChannels = (state, action) => {
   return {
     ...state,
     channels: action.channels
+  }
+}
+
+const selectMode = (state, action) => {
+  return {
+    ...state,
+    mode: action.mode
   }
 }
 

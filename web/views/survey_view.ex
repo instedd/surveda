@@ -12,6 +12,7 @@ defmodule Ask.SurveyView do
   def render("survey.json", %{survey: survey}) do
     %{id: survey.id,
       name: survey.name,
+      mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
       questionnaire_id: survey.questionnaire_id,
@@ -23,6 +24,7 @@ defmodule Ask.SurveyView do
   def render("survey_detail.json", %{survey: survey}) do
     %{id: survey.id,
       name: survey.name,
+      mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
       questionnaire_id: survey.questionnaire_id,
