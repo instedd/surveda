@@ -41,6 +41,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :show, project, survey)
       assert json_response(conn, 200)["data"] == %{"id" => survey.id,
         "name" => survey.name,
+        "mode" => survey.mode,
         "project_id" => survey.project_id,
         "questionnaire_id" => nil,
         "channels" => [],
@@ -63,6 +64,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :show, project, survey)
       assert json_response(conn, 200)["data"] == %{"id" => survey.id,
         "name" => survey.name,
+        "mode" => survey.mode,
         "project_id" => survey.project_id,
         "questionnaire_id" => nil,
         "channels" => [%{
@@ -173,6 +175,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"] == %{
         "id" => survey.id,
+        "mode" => survey.mode,
         "name" => survey.name,
         "project_id" => survey.project_id,
         "questionnaire_id" => nil,
