@@ -26,12 +26,17 @@ export default class SurveyForm extends Component {
     })
   }
 
+  allModesHaveAChannel(modes, channels, allChannels) {
+    const selectedTypes = channels.map(id => allChannels[id].type)
+    return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
+  }
+
   render() {
     const { survey, projectId, questionnaires, onSubmit, channels, respondents } = this.props
 
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
-    const channelStepCompleted = survey.mode != null && survey.channels && survey.channels.length > 0
+    const channelStepCompleted = survey.mode != null && survey.channels && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
     const cutoffStepCompleted = survey.cutoff != null
     const scheduleStepCompleted =
       survey.scheduleDayOfWeek != null && (

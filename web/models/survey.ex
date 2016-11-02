@@ -45,7 +45,9 @@ defmodule Ask.Survey do
     schedule_completed = Enum.reduce(values, fn (x, acc) -> acc || x end)
 
     channels = get_field(changeset, :channels)
-    ready = questionnaire_id && respondents_count && respondents_count > 0 && length(channels) > 0 && schedule_completed && mode
+    ready = questionnaire_id && respondents_count && respondents_count > 0
+      && length(channels) > 0 && schedule_completed && mode
+      && Enum.all?(mode, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
 
     cond do
       state == "not_ready" && ready ->
