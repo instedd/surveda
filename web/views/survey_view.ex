@@ -44,9 +44,4 @@ defmodule Ask.SurveyView do
     }
   end
 
-  def render("timezones.json", %{timezones: timezones}) do
-    %{
-      timezones: timezones
-    }
-  end
 end

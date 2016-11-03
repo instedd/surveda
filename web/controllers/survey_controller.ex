@@ -133,8 +133,4 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def timezones(conn, _) do
-    timezones = Timex.timezones
-    render(conn, "timezones.json", timezones: timezones)
-  end
 end
