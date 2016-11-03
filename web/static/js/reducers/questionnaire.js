@@ -84,6 +84,11 @@ const deleteChoice = (state, action) => {
 }
 
 const changeChoice = (state, action) => {
+  let smsValues = action.choiceChange.smsValues
+  let ivrValues = action.choiceChange.ivrValues
+  if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
+    [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response)
+  }
   return changeStep(state, action.stepId, (step) => {
     step.choices = [
       ...step.choices.slice(0, action.choiceChange.index),
@@ -91,8 +96,8 @@ const changeChoice = (state, action) => {
         ...step.choices[action.choiceChange.index],
         value: action.choiceChange.response,
         responses: {
-          sms: splitValues(action.choiceChange.smsValues),
-          ivr: splitValues(action.choiceChange.ivrValues)
+          sms: splitValues(smsValues),
+          ivr: splitValues(ivrValues)
         },
         skipLogic: action.choiceChange.skipLogic
       },
@@ -100,6 +105,26 @@ const changeChoice = (state, action) => {
     ]
     return step
   })
+}
+
+const autoComplete = (state, value) => {
+  let setted = false
+
+  let smsValues = ''
+  let ivrValues = ''
+
+  state.forEach((step) => {
+    if (!setted) {
+      step.choices.forEach((choice) => {
+        if (choice.value == value && !setted) {
+          setted = true
+          smsValues = choice.responses.sms.join(',')
+          ivrValues = choice.responses.ivr.join(',')
+        }
+      })
+    }
+  })
+  return [smsValues, ivrValues]
 }
 
 const splitValues = (values) => {
