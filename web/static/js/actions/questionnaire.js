@@ -57,9 +57,9 @@ export const addChoice = (stepId) => ({
   stepId
 })
 
-export const changeChoice = (stepId, index, response, smsValues, ivrValues, skipLogic) => ({
+export const changeChoice = (stepId, index, response, smsValues, ivrValues, skipLogic, autoComplete = false) => ({
   type: CHANGE_CHOICE,
-  choiceChange: { index, response, smsValues, ivrValues, skipLogic },
+  choiceChange: { index, response, smsValues, ivrValues, skipLogic, autoComplete },
   stepId
 })
 

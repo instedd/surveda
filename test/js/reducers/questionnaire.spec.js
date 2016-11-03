@@ -308,6 +308,92 @@ describe('questionnaire reducer', () => {
       skipLogic: 'end'
     })
   })
+
+  it('should autocomplete choice options when parameter is true', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', 'some-id', true)
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(3)
+    expect(step.choices[2]).toEqual({
+      value: 'Maybe',
+      responses: {
+        sms: [
+          'M',
+          'MB',
+          '3'
+        ],
+        ivr: [
+          'May'
+        ]
+      },
+      skipLogic: 'some-id'
+    })
+  })
+
+  it('should not autocomplete choice options when not asked to', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', 'some-other-id', false)
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(3)
+    expect(step.choices[2]).toEqual({
+      value: 'Maybe',
+      responses: {
+        sms: [
+          ''
+        ],
+        ivr: [
+          ''
+        ]
+      },
+      skipLogic: 'some-other-id'
+    })
+  })
+
+  it('should not autocomplete choice options when there are options already set', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'Perhaps', '', 'some-other-id', true)
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(3)
+    expect(step.choices[2]).toEqual({
+      value: 'Maybe',
+      responses: {
+        sms: [
+          'Perhaps'
+        ],
+        ivr: [
+          ''
+        ]
+      },
+      skipLogic: 'some-other-id'
+    })
+  })
 })
 
 const questionnaire = deepFreeze({
