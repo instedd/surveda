@@ -11,6 +11,7 @@ import channels from './channels'
 import guisso from './guisso'
 import respondents from './respondents'
 import respondentsCount from './respondentsCount'
+import timezones from './timezones'
 
 export default combineReducers({
   routing,
@@ -24,5 +25,6 @@ export default combineReducers({
   respondents,
   respondentsCount,
   channels,
-  guisso
+  guisso,
+  timezones
 })
