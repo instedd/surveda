@@ -6,28 +6,26 @@
 
 .tabs {
   background-color: transparent;
+  height: 55px;
   .tab {
-
+    height: 100%;
     a {
       @extend .grey-text;
       font-size: .9rem;
-      padding: 0 5px;
+      padding: 0 25px;
       &:hover {
         @extend .white-text;
         background-color: transparent;
       }
-    }
-    &.active {
-      background-color: transparent;
-      a {
+      &.active {
         @extend .white-text;
+        background-color: transparent;
       }
     }
-
   }
   .indicator {
     @extend .green;
-    height: 6px;
+    height: 4px;
   }
 }
 
