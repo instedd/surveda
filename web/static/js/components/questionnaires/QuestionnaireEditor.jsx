@@ -29,11 +29,13 @@ class QuestionnaireEditor extends Component {
     this.props.questionnaireActions.save(this.props.questionnaire)
   }
 
-  questionnaireAddMultipleChoiceStep() {
+  questionnaireAddMultipleChoiceStep(e) {
+    e.preventDefault()
     this.questionnaireAddStep('multiple-choice')
   }
 
-  questionnaireAddNumericStep() {
+  questionnaireAddNumericStep(e) {
+    e.preventDefault()
     this.questionnaireAddStep('numeric')
   }
 
@@ -99,13 +101,13 @@ class QuestionnaireEditor extends Component {
       return <div>Loading...</div>
     }
 
-    const sms = questionnaire.modes.indexOf('SMS') != -1
-    const ivr = questionnaire.modes.indexOf('IVR') != -1
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     return (
       <div className='row'>
         <div className='row'>
-          <div className='col s12 m4'>
+          <div className='col s12 m3'>
             <div className='row'>
               <div className='col s6'>
                 SMS
@@ -113,7 +115,7 @@ class QuestionnaireEditor extends Component {
               <div className='col s6'>
                 <div className='switch'>
                   <label>
-                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'SMS')} />
+                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
                     <span className='lever' />
                   </label>
                 </div>
@@ -126,7 +128,7 @@ class QuestionnaireEditor extends Component {
               <div className='col s6'>
                 <div className='switch'>
                   <label>
-                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'IVR')} />
+                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
                     <span className='lever' />
                   </label>
                 </div>
@@ -141,7 +143,7 @@ class QuestionnaireEditor extends Component {
               </button>
             </div>
           </div>
-          <div className='col s12 m7 offset-m1'>
+          <div className='col s12 m8 offset-m1'>
             <QuestionnaireSteps
               steps={questionnaire.steps}
               current={this.state.currentStep}
@@ -150,10 +152,10 @@ class QuestionnaireEditor extends Component {
               onDeleteStep={() => this.deleteStep()} />
             <div className='row'>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddMultipleChoiceStep()}>Add multiple-choice step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddMultipleChoiceStep(e)}>Add multiple-choice step</a>
               </div>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={() => this.questionnaireAddNumericStep()}>Add numeric step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddNumericStep(e)}>Add numeric step</a>
               </div>
             </div>
           </div>

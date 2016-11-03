@@ -139,7 +139,7 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = Broker.start_link
     broker |> send(:poll)
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Press 1 for YES, 2 for NO"]]
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -148,7 +148,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
 
     reply = Broker.sync_step(respondent, "Yes")
-    assert reply == {:prompt, "Do you exercise? Press 1 for YES, 2 for NO"}
+    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, "Yes")

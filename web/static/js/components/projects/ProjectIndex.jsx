@@ -9,6 +9,7 @@ import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty } from
 import * as routes from '../../routes'
 import range from 'lodash/range'
 import { orderedItems } from '../../dataTable'
+import { FormattedDate } from 'react-intl'
 
 class ProjectIndex extends Component {
   componentWillMount() {
@@ -67,9 +68,9 @@ class ProjectIndex extends Component {
 
     const title = `${totalCount} ${(totalCount == 1) ? ' project' : ' projects'}`
     const footer = (
-      <div className='right-align'>
+      <div className='card-action right-align'>
         <ul className='pagination'>
-          <li><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
+          <li className='grey-text'>{startIndex}-{endIndex} of {totalCount}</li>
           { hasPreviousPage
             ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
             : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
@@ -88,20 +89,35 @@ class ProjectIndex extends Component {
         { (projects.length == 0)
           ? <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
           : <CardTable title={title} footer={footer} highlight>
+            <col width="60%" />
+            <col width="20%" />
+            <col width="20%" />
             <thead>
               <tr>
                 <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className="right-align" text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className="right-align" text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={-index}><td>&nbsp;</td></tr>
+                if (!project) return <tr key={-index}><td colSpan='3'>&nbsp;</td></tr>
 
                 return (
                   <tr key={project.id}>
-                    <td onClick={() => router.push(routes.project(project.id))}>
+                    <td className="project-name" onClick={() => router.push(routes.project(project.id))}>
                       <UntitledIfEmpty text={project.name} />
+                    </td>
+                    <td className="right-align">
+                      {project.runningSurveys}
+                    </td>
+                    <td className="right-align">
+                      <FormattedDate
+                        value={Date.parse(project.updatedAt)}
+                        day='numeric'
+                        month='short'
+                        year='numeric' />
                     </td>
                   </tr>
                 ) })

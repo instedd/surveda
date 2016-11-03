@@ -79,6 +79,9 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
+    def setup(_channel, _respondent), do: :ok
+    def can_push_question?(_), do: true
+
     def ask(channel, phone_number, prompts) do
       nuntium_config = Application.get_env(:ask, Nuntium)
       messages = prompts |> Enum.map(fn prompt ->

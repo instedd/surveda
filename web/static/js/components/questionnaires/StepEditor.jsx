@@ -79,38 +79,48 @@ class StepEditor extends Component {
   render() {
     const { step, onCollapse, questionnaire, skip } = this.props
 
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
+
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} skip={skip} />
+      editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} />
     } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }
 
-    const sms = questionnaire.modes.indexOf('SMS') != -1
-    const ivr = questionnaire.modes.indexOf('IVR') != -1
-
     let smsInput = null
     if (sms) {
-      smsInput = <input
-        type='text'
-        placeholder='SMS message'
-        is length='140'
-        value={this.state.stepPromptSms}
-        onChange={e => this.stepPromptSmsChange(e)}
-        onBlur={e => this.stepPromptSmsSubmit(e)}
-        ref={ref => $(ref).characterCounter()} />
+      smsInput = <div className='row'>
+        <div className='col input-field s12'>
+          <input
+            id='step_editor_sms_prompt'
+            type='text'
+            is length='140'
+            value={this.state.stepPromptSms}
+            onChange={e => this.stepPromptSmsChange(e)}
+            onBlur={e => this.stepPromptSmsSubmit(e)}
+            ref={ref => $(ref).characterCounter()} />
+          <label htmlFor='step_editor_sms_prompt' className="active">SMS message</label>
+        </div>
+      </div>
     }
 
     let ivrInput = null
     if (ivr) {
-      ivrInput = <input
-        type='text'
-        placeholder='Voice message'
-        value={this.state.stepPromptIvr}
-        onChange={e => this.stepPromptIvrChange(e)}
-        onBlur={e => this.stepPromptIvrSubmit(e)} />
+      ivrInput = <div className='row'>
+        <div className='col input-field s12'>
+          <input
+            id='step_editor_voice_message'
+            type='text'
+            value={this.state.stepPromptIvr}
+            onChange={e => this.stepPromptIvrChange(e)}
+            onBlur={e => this.stepPromptIvrSubmit(e)} />
+          <label htmlFor='step_editor_voice_message' className="active">Voice message</label>
+        </div>
+      </div>
     }
 
     return (
@@ -137,7 +147,7 @@ class StepEditor extends Component {
           </li>
           <li className='collection-item'>
             <div className='row'>
-              <div className='col s12 input-field'>
+              <div className='col s12'>
                 <h5>Question Prompt</h5>
                 {smsInput}
                 {ivrInput}

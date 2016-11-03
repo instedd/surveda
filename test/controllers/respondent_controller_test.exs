@@ -2,7 +2,7 @@ defmodule Ask.RespondentControllerTest do
 
   use Ask.ConnCase
 
-  alias Ask.Respondent
+  alias Ask.{Project, Respondent}
 
   @valid_attrs %{phone_number: "some content"}
   @invalid_attrs %{}
@@ -202,8 +202,9 @@ defmodule Ask.RespondentControllerTest do
 
   test "updates survey state if the respondents CSV upload is the only remaining step on the survey wizard", %{conn: conn, user: user} do
     project = insert(:project, user: user)
+
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: ["sms"])
     channel = insert(:channel, name: "test")
 
     add_channel_to(survey, channel)
@@ -217,6 +218,18 @@ defmodule Ask.RespondentControllerTest do
     new_survey = Repo.get(Ask.Survey, survey.id)
 
     assert new_survey.state == "ready"
+  end
+
+  test "updates project updated_at when uploading CSV", %{conn: conn, user: user}  do
+    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+    project = insert(:project, user: user, updated_at: datetime)
+    survey = insert(:survey, project: project)
+
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+    post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+
+    project = Project |> Repo.get(project.id)
+    assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
 
   test "deletes all the respondents from a survey", %{conn: conn, user: user} do
@@ -240,6 +253,17 @@ defmodule Ask.RespondentControllerTest do
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 0
+  end
+
+  test "updates project updated_at when deleting", %{conn: conn, user: user}  do
+    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+    project = insert(:project, user: user, updated_at: datetime)
+    survey = insert(:survey, project: project)
+
+    delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
+
+    project = Project |> Repo.get(project.id)
+    assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
 
   test "forbids the deleteion of all the respondents from a survey if the project is from another user", %{conn: conn} do

@@ -110,18 +110,18 @@ describe('questionnaire reducer', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('IVR')
+      actions.toggleMode('ivr')
     ])
 
     expect(result.data.modes.length).toEqual(2)
-    expect(result.data.modes).toEqual(['SMS', 'IVR'])
+    expect(result.data.modes).toEqual(['sms', 'ivr'])
   })
 
   it('should toggle other mode', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('SMS')
+      actions.toggleMode('sms')
     ])
 
     /* Expectations on arrays must include a check for length
@@ -133,14 +133,14 @@ describe('questionnaire reducer', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('SMS'),
-      actions.toggleMode('IVR')
+      actions.toggleMode('sms'),
+      actions.toggleMode('ivr')
     ])
 
     /* Expectations on arrays must include a check for length
     because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
     expect(result.data.modes.length).toEqual(1)
-    expect(result.data.modes).toEqual(['IVR'])
+    expect(result.data.modes).toEqual(['ivr'])
   })
 
   it('should add step', () => {
@@ -167,7 +167,7 @@ describe('questionnaire reducer', () => {
     .toEqual({
       id: null,
       name: '',
-      modes: ['SMS'],
+      modes: ['sms', 'ivr'],
       projectId: 123,
       steps: []
     })
@@ -263,6 +263,7 @@ describe('questionnaire reducer', () => {
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.choices.length).toEqual(3)
     expect(step.choices[2].value).toEqual('')
+    expect(step.choices[2].responses).toEqual({sms: [], ivr: []})
   })
 
   it('should delete choice', () => {
@@ -287,86 +288,111 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, reducer)([
-      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'end')
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end')
     ])
 
     const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
     expect(step.choices.length).toEqual(2)
     expect(step.choices[1]).toEqual({
       value: 'Maybe',
-      responses: [
-        'M',
-        'MB',
-        '3'
-      ],
+      responses: {
+        sms: [
+          'M',
+          'MB',
+          '3'
+        ],
+        ivr: [
+          'May'
+        ]
+      },
       skipLogic: 'end'
     })
   })
 })
 
 const questionnaire = deepFreeze({
-  'steps': [
+  steps: [
     {
-      'type': 'multiple-choice',
-      'title': 'Do you smoke?',
-      'store': 'Smokes',
-      'id': '17141bea-a81c-4227-bdda-f5f69188b0e7',
-      'choices': [
+      type: 'multiple-choice',
+      title: 'Do you smoke?',
+      store: 'Smokes',
+      id: '17141bea-a81c-4227-bdda-f5f69188b0e7',
+      choices: [
         {
-          'value': 'Yes',
-          'responses': [
-            'Yes',
-            'Y',
-            '1'
-          ],
+          value: 'Yes',
+          responses: {
+            sms: [
+              'Yes',
+              'Y',
+              '1'
+            ],
+            ivr: [
+              'Yes'
+            ]
+          },
           skipLogic: null
         },
         {
-          'value': 'No',
-          'responses': [
-            'No',
-            'N',
-            '1'
-          ],
+          value: 'No',
+          responses: {
+            sms: [
+              'No',
+              'N',
+              '1'
+            ],
+            ivr: [
+              'No'
+            ]
+          },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
         }
       ],
-      'prompt': {
-        'sms': ''
+      prompt: {
+        sms: ''
       }
     },
     {
-      'type': 'multiple-choice',
-      'title': 'Do you exercise?',
-      'store': 'Exercises',
-      'id': 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
-      'choices': [
+      type: 'multiple-choice',
+      title: 'Do you exercise?',
+      store: 'Exercises',
+      id: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+      choices: [
         {
-          'value': 'Yes',
-          'responses': [
-            'Yes',
-            'Y',
-            '1'
-          ]
+          value: 'Yes',
+          responses: {
+            sms: [
+              'Yes',
+              'Y',
+              '1'
+            ],
+            ivr: [
+              'Yes'
+            ]
+          }
         },
         {
-          'value': 'No',
-          'responses': [
-            'No',
-            'N',
-            '1'
-          ]
+          value: 'No',
+          responses: {
+            sms: [
+              'No',
+              'N',
+              '1'
+            ],
+            ivr: [
+              'No'
+            ]
+          }
         }
       ],
-      'prompt': {
-        'sms': ''
+      prompt: {
+        sms: ''
       }
     }
   ],
-  'projectId': 1,
-  'name': 'Foo',
-  'modes': [
-    'SMS'
+  projectId: 1,
+  name: 'Foo',
+  modes: [
+    'sms'
   ],
-  'id': 1
+  id: 1
 })

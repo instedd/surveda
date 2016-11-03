@@ -5,8 +5,8 @@ const initialState = {
   fetching: false,
   items: null,
   order: null,
-  sortBy: null,
-  sortAsc: true,
+  sortBy: 'updatedAt',
+  sortAsc: false,
   page: {
     index: 0,
     size: 5

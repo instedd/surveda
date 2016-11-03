@@ -1,8 +1,8 @@
 defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Questionnaire
-  @valid_attrs %{name: "some content", modes: ["SMS", "IVR"], steps: []}
+  alias Ask.{Project, Questionnaire}
+  @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
   @invalid_attrs %{}
 
   setup %{conn: conn} do
@@ -59,7 +59,7 @@ defmodule Ask.QuestionnaireControllerTest do
       assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
         "name" => questionnaire.name,
         "project_id" => questionnaire.project_id,
-        "modes" => ["SMS", "IVR"],
+        "modes" => ["sms", "ivr"],
         "steps" => [],
       }
     end
@@ -98,6 +98,15 @@ defmodule Ask.QuestionnaireControllerTest do
         post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
       end
     end
+
+    test "updates project updated_at when questionnaire is created", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, user: user, updated_at: datetime)
+      post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
+
+      project = Project |> Repo.get(project.id)
+      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
   end
 
   describe "update:" do
@@ -115,6 +124,16 @@ defmodule Ask.QuestionnaireControllerTest do
         put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @invalid_attrs
       end
     end
+
+    test "updates project updated_at when questionnaire is updated", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, user: user, updated_at: datetime)
+      questionnaire = insert(:questionnaire, project: project)
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @valid_attrs
+
+      project = Project |> Repo.get(project.id)
+      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
   end
 
   describe "delete:" do
@@ -131,6 +150,16 @@ defmodule Ask.QuestionnaireControllerTest do
       assert_error_sent :forbidden, fn ->
         delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, questionnaire)
       end
+    end
+
+    test "updates project updated_at when questionnaire is deleted", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, user: user, updated_at: datetime)
+      questionnaire = insert(:questionnaire, project: project)
+      delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
+
+      project = Project |> Repo.get(project.id)
+      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
     end
   end
 end

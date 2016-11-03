@@ -36,9 +36,7 @@ export const createNuntiumChannel = (() => {
       authorizeWithGuisso(dispatch, 'nuntium', config.nuntium, references),
       pigeon.loadPigeonScript(config.nuntium.baseUrl)
     ])
-      .then(([token, _]) => {
-        pigeon.addChannel(token.access_token)
-      })
+      .then(([token, _]) => pigeon.addChannel(token.access_token))
       .then(nuntiumChannel => {
         if (nuntiumChannel == null) {
           return Promise.reject('User cancelled')

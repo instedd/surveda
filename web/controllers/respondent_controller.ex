@@ -110,7 +110,7 @@ defmodule Ask.RespondentController do
     end)
   end
 
-  def render_respondents(conn, survey_id, rows) do
+  def render_respondents(conn, survey_id, rows, project) do
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
     {integer_survey_id, _ } = Integer.parse survey_id
 
@@ -120,7 +120,8 @@ defmodule Ask.RespondentController do
       end)
 
     respondents_count = entries
-      |> Enum.chunk(1_000, 1_000, []) |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
+    |> Enum.chunk(1_000, 1_000, [])
+    |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
         {count, _ } = Repo.insert_all(Respondent, chunked_entries)
         total_count + count
       end)
@@ -128,6 +129,7 @@ defmodule Ask.RespondentController do
     respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
 
     update_survey_state(survey_id, respondents_count)
+    project |> Project.touch!
 
     conn
       |> put_status(:created)
@@ -147,7 +149,7 @@ defmodule Ask.RespondentController do
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
 
@@ -158,14 +160,13 @@ defmodule Ask.RespondentController do
         |> csv_rows
         |> Enum.uniq
 
-      indexed_rows = rows
-                     |> Enum.with_index
-                     |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-
-      invalid_entries = Enum.filter(indexed_rows, fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
+      invalid_entries = rows
+      |> Enum.with_index
+      |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
+      |> Enum.filter(fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
 
       case invalid_entries do
-        [] -> render_respondents(conn, survey_id, rows)
+        [] -> render_respondents(conn, survey_id, rows, project)
         _ -> render_invalid(conn, file.filename, invalid_entries)
       end
     else
@@ -174,7 +175,7 @@ defmodule Ask.RespondentController do
   end
 
   def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
 
@@ -182,6 +183,7 @@ defmodule Ask.RespondentController do
     |> Repo.delete_all
 
     update_survey_state(survey_id, 0)
+    project |> Project.touch!
 
     conn
       |> put_status(:ok)

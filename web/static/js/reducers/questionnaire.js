@@ -62,7 +62,10 @@ const addChoice = (state, action) => {
       ...step.choices,
       {
         value: '',
-        responses: [],
+        responses: {
+          sms: [],
+          ivr: []
+        },
         skipLogic: null
       }
     ]
@@ -87,13 +90,20 @@ const changeChoice = (state, action) => {
       {
         ...step.choices[action.choiceChange.index],
         value: action.choiceChange.response,
-        responses: action.choiceChange.smsValues.split(',').map((r) => r.trim()),
+        responses: {
+          sms: splitValues(action.choiceChange.smsValues),
+          ivr: splitValues(action.choiceChange.ivrValues)
+        },
         skipLogic: action.choiceChange.skipLogic
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
     return step
   })
+}
+
+const splitValues = (values) => {
+  return values.split(',').map((r) => r.trim())
 }
 
 const deleteStep = (state, action) => {
@@ -156,7 +166,7 @@ const newQuestionnaire = (state, action) => {
     data: {
       id: null,
       name: '',
-      modes: ['SMS'],
+      modes: ['sms', 'ivr'],
       projectId: action.projectId,
       steps: []
     }
@@ -176,7 +186,8 @@ export const buildNewStep = (stepType) => ({
   title: '',
   store: '',
   prompt: {
-    sms: ''
+    sms: '',
+    ivr: ''
   },
   choices: []
 })

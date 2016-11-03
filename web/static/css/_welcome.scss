@@ -18,6 +18,14 @@ body.welcome {
     padding-bottom: 20px;
 
     nav {
+      .brand-logo svg {
+        .st0{fill:#FF5722;}
+        .st1{fill:#FFC107;}
+        .st2{fill:#FFA000;}
+        .st3{fill:#4CAF50;}
+        .st4{opacity:0.1;}
+        .st5{fill:#555555;}
+      }
       li {
         background: none !important;
         a {

@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 
-export const SortableHeader = ({ property, text, sortBy, sortAsc, onClick }) => {
+export const SortableHeader = ({ property, text, sortBy, sortAsc, onClick, className }) => {
   const clickHandler = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -19,7 +19,7 @@ export const SortableHeader = ({ property, text, sortBy, sortAsc, onClick }) => 
   }
 
   return (
-    <th>
+    <th className={`sortable ${className || ''}`}>
       {arrow}
       <a href='#!' onClick={clickHandler}>{text}</a>
     </th>
@@ -31,5 +31,6 @@ SortableHeader.propTypes = {
   text: PropTypes.string.isRequired,
   sortBy: PropTypes.string,
   sortAsc: PropTypes.bool,
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
+  className: PropTypes.string
 }

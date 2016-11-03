@@ -17,14 +17,20 @@ defmodule Ask.SurveyController do
   end
 
   def create(conn, %{"project_id" => project_id}) do
-    changeset = Project
+    project = Project
     |> Repo.get!(project_id)
+
+    changeset = project
     |> authorize(conn)
     |> build_assoc(:surveys)
-    |> Survey.changeset(%{project_id: project_id, name: ""})
+    |> Survey.changeset(%{project_id: project_id, name: "",
+                          schedule_start_time: Ecto.Time.cast!("09:00:00"),
+                          schedule_end_time: Ecto.Time.cast!("18:00:00")
+                        })
 
     case Repo.insert(changeset) do
       {:ok, survey} ->
+        project |> Project.touch!
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
@@ -49,8 +55,10 @@ defmodule Ask.SurveyController do
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
-    changeset = Project
+    project = Project
     |> Repo.get!(project_id)
+
+    changeset = project
     |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(id)
@@ -62,6 +70,7 @@ defmodule Ask.SurveyController do
 
     case Repo.update(changeset) do
       {:ok, survey} ->
+        project |> Project.touch!
         render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
@@ -89,8 +98,10 @@ defmodule Ask.SurveyController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
+
+    project
     |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(id)
@@ -98,14 +109,22 @@ defmodule Ask.SurveyController do
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!
 
+    project |> Project.touch!
+
     send_resp(conn, :no_content, "")
   end
 
   def launch(conn, %{"survey_id" => id}) do
     survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
+
+    project = Project
+    |> Repo.get!(survey.project_id)
+    |> authorize(conn)
+
     changeset = Survey.changeset(survey, %{"state": "running"})
     case Repo.update(changeset) do
       {:ok, survey} ->
+        project |> Project.touch!
         render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
