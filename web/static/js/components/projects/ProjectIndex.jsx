@@ -89,9 +89,11 @@ class ProjectIndex extends Component {
         { (projects.length == 0)
           ? <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
           : <CardTable title={title} footer={footer} highlight>
-            <col width="60%" />
-            <col width="20%" />
-            <col width="20%" />
+              <colgroup>
+                <col width="60%" />
+                <col width="20%" />
+                <col width="20%" />
+              </colgroup>
             <thead>
               <tr>
                 <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />

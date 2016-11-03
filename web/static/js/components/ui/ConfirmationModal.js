@@ -3,7 +3,7 @@ import React, { Component, PropTypes } from 'react'
 export class ConfirmationModal extends Component {
   componentDidMount() {
     $(document).ready(function() {
-      $('.modal-trigger').leanModal()
+      $('.modal-trigger').modal()
     })
   }
 
