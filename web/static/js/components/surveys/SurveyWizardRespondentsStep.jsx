@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
-import { ConfirmationModal } from '../ui'
+import { ConfirmationModal, Card } from '../ui'
 import { uploadRespondents, removeRespondents } from '../../api'
 import * as actions from '../../actions/survey'
 import * as surveyActions from '../../actions/surveys'
@@ -23,6 +23,10 @@ class SurveyWizardRespondentsStep extends Component {
         dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
           .then(survey => dispatch(actions.setState(survey.state)))
           .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
+      }, (e) => {
+        e.json().then((value) => {
+          dispatch(respondentsActions.receiveInvalids(value))
+        })
       })
   }
 
@@ -39,8 +43,33 @@ class SurveyWizardRespondentsStep extends Component {
       })
   }
 
+  clearInvalids() {
+    const { dispatch } = this.props
+    dispatch(respondentsActions.clearInvalids())
+  }
+
+  invalidRespondentsContent(data) {
+    if (data) {
+      const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
+      const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
+      const extraLinesCount = data.invalidEntries.length - lineNumbers.length
+      const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
+      return (
+        <div className='csv-errors'>
+          <div>Errors found at '{data.filename}', file was not imported</div>
+          <div>{invalidEntriesText} {lineNumbersText}</div>
+          <div>Please fix those errors and upload again.</div>
+          <a className='' href='#' onClick={() => this.clearInvalids()}>
+            UNDERSTOOD
+          </a>
+        </div>
+      )
+    }
+  }
+
   render() {
-    const { survey, respondents } = this.props
+    let { survey, respondents } = this.props
+    let invalidRespondentsCard = this.invalidRespondentsContent(respondents.invalidRespondents)
     if (!survey) {
       return <div>Loading...</div>
     }
@@ -49,8 +78,8 @@ class SurveyWizardRespondentsStep extends Component {
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={survey.respondentsCount}>
-            {Object.keys(respondents).map((respondentId) =>
-              <PhoneNumberRow id={respondentId} phoneNumber={respondents[respondentId].phoneNumber} key={respondentId} />
+            {Object.keys(respondents.items || {}).map((respondentId) =>
+              <PhoneNumberRow id={respondentId} phoneNumber={respondents.items[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
           <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} showCancel onConfirm={(event) => this.removeRespondents(event)} />
@@ -60,6 +89,9 @@ class SurveyWizardRespondentsStep extends Component {
       return (
         <RespondentsContainer>
           <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+          <Card>
+            { invalidRespondentsCard }
+          </Card>
           <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').openModal()} />
         </RespondentsContainer>
       )

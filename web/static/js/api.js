@@ -63,7 +63,7 @@ const handleResponse = (response, callback) => {
   } else if (response.status == 401 || response.status == 403) {
     return Promise.reject(new Unauthorized(response.statusText))
   } else {
-    return Promise.reject(response.statusText)
+    return Promise.reject(response)
   }
 }
 

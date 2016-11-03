@@ -20,6 +20,8 @@ export default (state = initialState, action) => {
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
     case actions.REMOVE_RESPONDENTS: return removeRespondents(state, action)
+    case actions.INVALID_RESPONDENTS: return receiveInvalids(state, action)
+    case actions.CLEAR_INVALIDS: return clearInvalids(state, action)
     default: return state
   }
 }
@@ -72,3 +74,14 @@ const removeRespondents = (state, action) => ({
     totalCount: 0
   }
 })
+
+const receiveInvalids = (state, action) => ({
+  ...state,
+  invalidRespondents: action.invalidRespondents
+})
+
+const clearInvalids = (state, action) => {
+  const newState = Object.assign({}, state)
+  delete newState.invalidRespondents
+  return newState
+}
