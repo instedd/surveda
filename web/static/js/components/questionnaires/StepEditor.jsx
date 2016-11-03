@@ -5,6 +5,7 @@ import { Card } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
+import classNames from 'classnames/bind'
 
 class StepEditor extends Component {
   constructor(props) {
@@ -103,7 +104,7 @@ class StepEditor extends Component {
             onChange={e => this.stepPromptSmsChange(e)}
             onBlur={e => this.stepPromptSmsSubmit(e)}
             ref={ref => $(ref).characterCounter()} />
-          <label htmlFor='step_editor_sms_prompt' className="active">SMS message</label>
+          <label htmlFor='step_editor_sms_prompt' className={classNames({'active': this.state.stepPromptSms != ''})}>SMS message</label>
         </div>
       </div>
     }
@@ -118,7 +119,7 @@ class StepEditor extends Component {
             value={this.state.stepPromptIvr}
             onChange={e => this.stepPromptIvrChange(e)}
             onBlur={e => this.stepPromptIvrSubmit(e)} />
-          <label htmlFor='step_editor_voice_message' className="active">Voice message</label>
+          <label htmlFor='step_editor_voice_message' className={classNames({'active': this.state.stepPromptIvr})}>Voice message</label>
         </div>
       </div>
     }
