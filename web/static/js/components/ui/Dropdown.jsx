@@ -9,7 +9,7 @@ export class Dropdown extends Component {
   }
 
   componentDidMount() {
-    $('.dropdown-button').dropdown()
+    $(this.refs.node).dropdown()
   }
 
   render() {
@@ -21,7 +21,7 @@ export class Dropdown extends Component {
 
     return (
       <span>
-        <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin='true' data-activates={dropdownId} data-constrainwidth={constrainWidth}>
+        <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin='true' data-activates={dropdownId} data-constrainwidth={constrainWidth} ref='node'>
           {label}
           <i className='material-icons right'>{icon}</i>
         </a>
