@@ -13,6 +13,6 @@ describe('respondents reducer', () => {
       'Africa/Asmara']
     }
     const result = reducer({}, actions.receiveTimezones(data))
-    expect(result.timezones).toEqual(data.timezones)
+    expect(result.items).toEqual(data.timezones)
   })
 })

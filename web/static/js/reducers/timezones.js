@@ -1,11 +1,23 @@
 import * as actions from '../actions/timezones'
 
-export default (state = {}, action) => {
+const initialState = {
+  fetching: false,
+  items: null
+}
+
+export default (state = initialState, action) => {
   switch (action.type) {
     case actions.RECEIVE_TIMEZONES: {
       return {
         ...state,
-        timezones: action.timezones
+        fetching: false,
+        items: action.timezones
+      }
+    }
+    case actions.FETCH_TIMEZONES: {
+      return {
+        ...state,
+        fetching: true
       }
     }
     default: return state
