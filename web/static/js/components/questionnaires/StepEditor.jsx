@@ -150,10 +150,10 @@ class StepEditor extends Component {
             <div className='row'>
               <div className='col s12'>
                 <h5>Question Prompt</h5>
-                {smsInput}
-                {ivrInput}
               </div>
             </div>
+            {smsInput}
+            {ivrInput}
           </li>
           <li className='collection-item'>
             <div className='row'>
