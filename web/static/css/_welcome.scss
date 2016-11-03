@@ -18,6 +18,8 @@ body.welcome {
     padding-bottom: 20px;
 
     nav {
+      @extend .z-depth-0;
+      background: none;
       .brand-logo svg {
         .st0{fill:#FF5722;}
         .st1{fill:#FFC107;}
