@@ -35,17 +35,17 @@ class QuestionnaireEditor extends Component {
   }
 
   questionnaireAddNumericStep(e) {
-    e.preventDefault()
     this.questionnaireAddStep('numeric')
   }
 
-  questionnaireAddStep(stepType) {
+  questionnaireAddStep(e) {
+    e.preventDefault()
     this.setState({
       ...this.state,
       addingStep: true
     }, () => {
       // Add the step then automatically expand it
-      this.props.questionnaireActions.addStep(stepType)
+      this.props.questionnaireActions.addStep()
     })
   }
 
@@ -152,10 +152,7 @@ class QuestionnaireEditor extends Component {
               onDeleteStep={() => this.deleteStep()} />
             <div className='row'>
               <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddMultipleChoiceStep(e)}>Add multiple-choice step</a>
-              </div>
-              <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddNumericStep(e)}>Add numeric step</a>
+                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
               </div>
             </div>
           </div>

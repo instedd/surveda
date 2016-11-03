@@ -316,9 +316,6 @@ footer {
   width: 24.9vw;
 }
 
-
-
-
 // ------- Forms --------------
 
 .dropfile {
@@ -405,6 +402,18 @@ footer {
       }
     }
   }
+}
+
+.collection.collection-card {
+  overflow: visible;
+}
+
+.collection .dropdown-content li a, .collection .dropdown-button {
+  @extend .grey-text
+}
+
+.collection .dropdown-content li .row {
+  margin-bottom: 0
 }
 
 .collection-item.header {
@@ -590,4 +599,3 @@ label {
   }
 
 }
-

@@ -4,7 +4,7 @@ import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
-import reducer, { buildNewStep } from '../../../web/static/js/reducers/questionnaire'
+import reducer from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -150,13 +150,33 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, reducer)([
-      actions.addStep('multiple-choice')
+      actions.addStep()
     ])
 
     const newStep = resultState.data.steps[resultState.data.steps.length - 1]
 
     expect(resultState.data.steps.length).toEqual(preState.data.steps.length + 1)
-    expect(newStep.title).toEqual(buildNewStep('multiple-choice').title)
+    expect(newStep.type).toEqual('multiple-choice')
+  })
+
+  it('should change step type', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeStepType('17141bea-a81c-4227-bdda-f5f69188b0e7', 'numeric')
+    ])
+
+    const resultStep = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+
+    expect(resultState.data.steps.length).toEqual(preState.data.steps.length)
+    expect(resultStep.type).toEqual('numeric')
+    expect(resultStep.title).toEqual('Do you smoke?')
+    expect(resultStep.store).toEqual('Smokes')
+    expect(resultStep.choices).toEqual([])
+    expect(resultStep.prompt).toEqual({ sms: '' })
   })
 
   it('should initialize for the questionnaire creation use case', () => {
@@ -183,6 +203,7 @@ describe('questionnaire reducer', () => {
       actions.changeStepTitle('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New title')
     ])
 
+    expect(resultState.data.steps.length).toEqual(preState.data.steps.length)
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.title).toEqual('New title')
   })
