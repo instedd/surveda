@@ -136,7 +136,7 @@ class StepEditor extends Component {
             <div className='row'>
               <div className='col s12 m2'>
                 <div className='left'>
-                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons'>dialpad</i>} constrainWidth={false}>
+                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('multiple-choice')}>
                         <div className='row'>
@@ -156,7 +156,7 @@ class StepEditor extends Component {
                       <a onClick={e => this.changeStepType('numeric')}>
                         <div className='row'>
                           <div className='col s2'>
-                            <i className='material-icons'>dialpad</i>
+                            <i className='material-icons sharp'>#</i>
                           </div>
                           <div className='col s8'>
                             Numeric
