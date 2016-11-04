@@ -24,11 +24,6 @@ class QuestionnaireEditor extends Component {
     this.props.questionnaireActions.toggleMode(mode)
   }
 
-  questionnaireSave(event) {
-    event.preventDefault()
-    this.props.questionnaireActions.save(this.props.questionnaire)
-  }
-
   questionnaireAddMultipleChoiceStep(e) {
     e.preventDefault()
     this.questionnaireAddStep('multiple-choice')
@@ -133,14 +128,6 @@ class QuestionnaireEditor extends Component {
                   </label>
                 </div>
               </div>
-            </div>
-            <div className='row'>
-              <button
-                type='button'
-                className='btn waves-effect waves-light'
-                onClick={e => this.questionnaireSave(e)}>
-              Save
-              </button>
             </div>
           </div>
           <div className='col s12 m8 offset-m1'>
