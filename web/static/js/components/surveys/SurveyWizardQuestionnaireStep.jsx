@@ -1,7 +1,8 @@
 import React, { PropTypes, Component } from 'react'
+import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
-import { Link } from 'react-router'
+import * as questionnaireActions from '../../actions/questionnaire'
 import * as routes from '../../routes'
 import { UntitledIfEmpty } from '../ui'
 
@@ -10,12 +11,29 @@ class SurveyWizardQuestionnaireStep extends Component {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     projectId: PropTypes.any.isRequired,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    router: PropTypes.object
   }
 
   questionnaireChange(e) {
     const { dispatch } = this.props
     dispatch(actions.changeQuestionnaire(e.target.value))
+  }
+
+  createQuestionnaire(e) {
+    e.preventDefault()
+
+    // Prevent multiple clicks to create multiple questionnaires
+    if (this.creatingQuestionnaire) return
+    this.creatingQuestionnaire = true
+
+    const { router, projectId, dispatch } = this.props
+
+    dispatch(questionnaireActions.createQuestionnaire(projectId))
+    .then(questionnaire => {
+      this.creatingQuestionnaire = false
+      router.push(routes.questionnaire(projectId, questionnaire.id))
+    })
   }
 
   newQuestionnaireButton(projectId, questionnaires) {
@@ -26,9 +44,9 @@ class SurveyWizardQuestionnaireStep extends Component {
 
     return (
       <div className='col s12'>
-        <Link className='waves-effect waves-teal btn-flat btn-flat-link' to={routes.newQuestionnaire(projectId)}>
+        <a className='waves-effect waves-teal btn-flat btn-flat-link' href='#' onClick={e => this.createQuestionnaire(e)}>
           {buttonLabel}
-        </Link>
+        </a>
       </div>
     )
   }
@@ -71,4 +89,4 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 }
 
-export default connect()(SurveyWizardQuestionnaireStep)
+export default withRouter(connect()(SurveyWizardQuestionnaireStep))

@@ -142,3 +142,12 @@ export const save = () => (dispatch, getState) => {
   const questionnaire = getState().questionnaire.data
   api.updateQuestionnaire(questionnaire.projectId, questionnaire)
 }
+
+export const createQuestionnaire = (projectId) => (dispatch) =>
+  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: []})
+  .then(response => {
+    const questionnaire = response.entities.questionnaires[response.result]
+    dispatch(fetch(projectId, questionnaire.id))
+    dispatch(receive(questionnaire))
+    return questionnaire
+  })
