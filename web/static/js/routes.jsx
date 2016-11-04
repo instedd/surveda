@@ -37,7 +37,6 @@ export default (
 
         <Route path='questionnaires' >
           <IndexRoute components={{ body: QuestionnaireIndex, tabs: ProjectTabs }} />
-          <Route path='new' component={QuestionnaireEditor} title={QuestionnaireTitle} />
           <Route path=':questionnaireId' >
             <IndexRedirect to='edit' />
           </Route>
