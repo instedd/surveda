@@ -52,7 +52,8 @@ defmodule Ask.SurveyControllerTest do
           "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
         },
         "schedule_start_time" => nil,
-        "schedule_end_time" => nil
+        "schedule_end_time" => nil,
+        "timezone" => nil
       }
     end
 
@@ -78,7 +79,8 @@ defmodule Ask.SurveyControllerTest do
           "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
         },
         "schedule_start_time" => nil,
-        "schedule_end_time" => nil
+        "schedule_end_time" => nil,
+        "timezone" => nil
       }
     end
 
@@ -169,7 +171,7 @@ defmodule Ask.SurveyControllerTest do
       channel = insert(:channel, user: user)
       channel2 = insert(:channel, user: user)
       project = insert(:project, user: user)
-      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
+      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
       insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [channel2.id]}
 
@@ -190,7 +192,8 @@ defmodule Ask.SurveyControllerTest do
           "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
         },
         "schedule_start_time" => "09:00:00",
-        "schedule_end_time" => "18:00:00"
+        "schedule_end_time" => "18:00:00",
+        "timezone" => "Etc/UTC"
       }
     end
 

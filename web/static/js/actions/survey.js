@@ -11,6 +11,7 @@ export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
 export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
+export const SET_TIMEZONE = 'SET_TIMEZONE'
 
 export const createSurvey = (projectId) => (dispatch, getState) =>
   api.createSurvey(projectId).then(response => {
@@ -97,4 +98,9 @@ export const changeQuestionnaire = (questionnaire) => ({
 export const updateRespondentsCount = (respondentsCount) => ({
   type: UPDATE_RESPONDENTS_COUNT,
   respondentsCount
+})
+
+export const setTimezone = (timezone) => ({
+  type: SET_TIMEZONE,
+  timezone
 })

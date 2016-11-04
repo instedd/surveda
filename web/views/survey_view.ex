@@ -33,7 +33,8 @@ defmodule Ask.SurveyView do
       respondents_count: survey.respondents_count,
       schedule_day_of_week: survey.schedule_day_of_week,
       schedule_start_time: survey.schedule_start_time,
-      schedule_end_time: survey.schedule_end_time
+      schedule_end_time: survey.schedule_end_time,
+      timezone: survey.timezone
     }
   end
 

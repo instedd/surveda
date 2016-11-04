@@ -21,6 +21,11 @@ class SurveyWizardScheduleStep extends Component {
     dispatch(actions.setScheduleTo(event.target.value))
   }
 
+  updateTimezone(event) {
+    const { dispatch } = this.props
+    dispatch(actions.setTimezone(event.target.value))
+  }
+
   toggleDay(day) {
     const { dispatch } = this.props
     dispatch(actions.toggleDay(day))
@@ -52,7 +57,8 @@ class SurveyWizardScheduleStep extends Component {
     // Survey might be loaded without details
     let defaultFrom = (survey && survey.scheduleStartTime) ? survey.scheduleStartTime : '09:00:00'
     let defaultTo = (survey && survey.scheduleEndTime) ? survey.scheduleEndTime : '18:00:00'
-    
+    let defaultTimezone = (survey && survey.timezone) ? survey.timezone : 'Etc/UTC'
+
     if (!survey || !survey.scheduleDayOfWeek) {
       return <div>Loading...</div>
     }
@@ -97,7 +103,7 @@ class SurveyWizardScheduleStep extends Component {
           </Input>
         </div>
         <div className='row'>
-          <Input s={12} m={6} type='select' label='Timezones' onChange={(value) => console.log(value)}>
+          <Input s={12} m={6} type='select' label='Timezones' defaultValue={defaultTimezone} onChange={(value) => this.updateTimezone(value)}>
             {timezones.items.map((tz) => (
               <option value={tz} key={tz}>{tz}</option>
             ))}

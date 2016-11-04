@@ -67,6 +67,7 @@ export const surveyReducer = (state, action) => {
     case actions.SELECT_MODE: return selectMode(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
+    case actions.SET_TIMEZONE: return setTimezone(state, action)
     default: return state
   }
 }
@@ -127,6 +128,13 @@ const setScheduleTo = (state, action) => {
   return {
     ...state,
     scheduleEndTime: action.hour
+  }
+}
+
+const setTimezone = (state, action) => {
+  return {
+    ...state,
+    timezone: action.timezone
   }
 }
 
