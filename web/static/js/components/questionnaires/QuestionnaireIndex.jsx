@@ -107,7 +107,7 @@ class QuestionnaireIndex extends Component {
                 </tr>
                 )
             }
-              )}
+            )}
           </tbody>
         </CardTable>
         }

@@ -79,13 +79,9 @@ class QuestionnaireEditor extends Component {
   componentWillMount() {
     const { projectId, questionnaireId } = this.props
 
-    if (projectId) {
-      if (questionnaireId) {
-        this.props.projectActions.fetchProject(projectId)
-        this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
-      } else {
-        this.props.questionnaireActions.newQuestionnaire(projectId)
-      }
+    if (projectId && questionnaireId) {
+      this.props.projectActions.fetchProject(projectId)
+      this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
     }
   }
 

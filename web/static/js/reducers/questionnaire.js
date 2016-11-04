@@ -192,21 +192,6 @@ const buildFilter = (projectId, questionnaireId) => ({
   questionnaireId: questionnaireId == null ? null : toInteger(questionnaireId)
 })
 
-const newQuestionnaire = (state, action) => {
-  return {
-    ...state,
-    fetching: false,
-    filter: buildFilter(action.projectId, null),
-    data: {
-      id: null,
-      name: '',
-      modes: ['sms', 'ivr'],
-      projectId: action.projectId,
-      steps: []
-    }
-  }
-}
-
 const addStep = (state, action) => {
   return [
     ...state,

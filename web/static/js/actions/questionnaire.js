@@ -123,11 +123,6 @@ export const addStep = () => ({
   type: ADD_STEP
 })
 
-export const newQuestionnaire = (projectId) => ({
-  type: NEW,
-  projectId
-})
-
 export const changeName = (newName) => ({
   type: CHANGE_NAME,
   newName
