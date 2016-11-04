@@ -64,7 +64,6 @@ export class EditableTitleLabel extends Component {
         <input
           onClick={this.clickAfuera}
           type='text'
-          id='questionnaire_name'
           ref={node => { this.inputRef = node }}
           autoFocus
           maxLength='255'

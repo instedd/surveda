@@ -408,14 +408,6 @@ footer {
   overflow: visible;
 }
 
-.collection .dropdown-content li a, .collection .dropdown-button {
-  @extend .grey-text
-}
-
-.collection .dropdown-content li .row {
-  margin-bottom: 0
-}
-
 .collection-item.header {
   padding: 20px;
   .material-icons.prefix {
@@ -433,6 +425,25 @@ footer {
   .collapse {
     @extend .grey-text, .lighten-2;
     margin-top: 1rem;
+  }
+  .dropdown-content li a, .dropdown-button {
+    @extend .grey-text
+  }
+  .row , input {
+    margin-bottom: 0;
+  }
+  a.page-title {
+    font-size: 20px;
+    @extend .black-text;
+    max-width: 95%;
+    display: inline-block;
+    i {
+      @extend .grey-text, .lighten-2;
+      font-size: 24px;
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 15px;
+    }
   }
 }
 

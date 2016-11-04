@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Card, Dropdown, DropdownItem } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
@@ -18,10 +18,9 @@ class StepEditor extends Component {
     this.setState({stepTitle: e.target.value})
   }
 
-  stepTitleSubmit(e) {
-    e.preventDefault()
+  stepTitleSubmit(value) {
     const { step } = this.props
-    this.props.questionnaireActions.changeStepTitle(step.id, e.target.value)
+    this.props.questionnaireActions.changeStepTitle(step.id, value)
   }
 
   changeStepType(type) {
@@ -171,18 +170,12 @@ class StepEditor extends Component {
                   </Dropdown>
                 </div>
               </div>
-              <div className='col s12 m10'>
-                <i className='material-icons'>mode_edit</i>
-                <input
-                  placeholder='Untitled question'
-                  type='text'
-                  value={this.state.stepTitle}
-                  onChange={e => this.stepTitleChange(e)}
-                  onBlur={e => this.stepTitleSubmit(e)}
-                  className='editable-field'
-               />
+              <div className='col s11 m9'>
+                <EditableTitleLabel title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
+              </div>
+              <div className='col s1 m1'>
                 <a href='#!'
-                  className='right collapse'
+                  className='collapse'
                   onClick={e => {
                     e.preventDefault()
                     onCollapse()
