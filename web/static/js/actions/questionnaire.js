@@ -138,10 +138,6 @@ export const toggleMode = (mode) => ({
   mode
 })
 
-export const updateQuestionnaire = (questionnaire) => dispatch => {
-  return dispatch(receive(questionnaire))
-}
-
 export const save = () => (dispatch, getState) => {
   const questionnaire = getState().questionnaire.data
   api.updateQuestionnaire(questionnaire.projectId, questionnaire)
