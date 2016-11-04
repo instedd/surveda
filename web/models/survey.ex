@@ -12,6 +12,7 @@ defmodule Ask.Survey do
     field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
     field :schedule_start_time, Ecto.Time
     field :schedule_end_time, Ecto.Time
+    field :timezone, :string
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
