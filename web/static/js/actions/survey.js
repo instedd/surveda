@@ -2,6 +2,7 @@ import * as api from '../api'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
+export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
@@ -14,6 +15,7 @@ export const RECEIVE = 'SURVEY_RECEIVE'
 
 export const AUTOSAVE = [
   CHANGE_CUTOFF,
+  CHANGE_NAME,
   CHANGE_QUESTIONNAIRE,
   TOGGLE_DAY,
   SET_SCHEDULE_TO,
@@ -22,6 +24,7 @@ export const AUTOSAVE = [
   SELECT_MODE,
   UPDATE_RESPONDENTS_COUNT
 ]
+
 export const createSurvey = (projectId) => (dispatch, getState) =>
   api.createSurvey(projectId).then(response => {
     const survey = response.result
@@ -77,6 +80,11 @@ export const toggleDay = (day) => ({
 export const setState = (state) => ({
   type: SET_STATE,
   state
+})
+
+export const changeName = (newName) => ({
+  type: CHANGE_NAME,
+  newName
 })
 
 export const setScheduleFrom = (hour) => ({
