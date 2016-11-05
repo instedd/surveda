@@ -3,9 +3,9 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import range from 'lodash/range'
-import { createQuestionnaire } from '../../api'
 import { orderedItems } from '../../dataTable'
 import * as actions from '../../actions/questionnaires'
+import * as questionnaireActions from '../../actions/questionnaire'
 import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty } from '../ui'
 import * as routes from '../../routes'
@@ -41,14 +41,13 @@ class QuestionnaireIndex extends Component {
     if (this.creatingQuestionnaire) return
     this.creatingQuestionnaire = true
 
-    const { router, projectId } = this.props
+    const { router, projectId, questionnaireActions } = this.props
 
-    createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: []})
-        .then(response => {
-          const questionnaire = response.entities.questionnaires[response.result]
-          this.creatingQuestionnaire = false
-          router.push(routes.questionnaire(projectId, questionnaire.id))
-        })
+    questionnaireActions.createQuestionnaire(projectId)
+      .then(questionnaire => {
+        this.creatingQuestionnaire = false
+        router.push(routes.questionnaire(projectId, questionnaire.id))
+      })
   }
 
   render() {
@@ -84,7 +83,7 @@ class QuestionnaireIndex extends Component {
       <div>
         <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
         { (questionnaires.length == 0)
-          ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' linkPath={routes.newQuestionnaire(projectId)} />
+          ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' onClick={e => this.newQuestionnaire(e)} />
         : <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
           <thead>
             <tr>
@@ -108,7 +107,7 @@ class QuestionnaireIndex extends Component {
                 </tr>
                 )
             }
-              )}
+            )}
           </tbody>
         </CardTable>
         }
@@ -120,6 +119,7 @@ class QuestionnaireIndex extends Component {
 QuestionnaireIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
+  questionnaireActions: PropTypes.object.isRequired,
   projectId: PropTypes.any,
   questionnaires: PropTypes.array,
   sortBy: PropTypes.string,
@@ -163,7 +163,8 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
-  projectActions: bindActionCreators(projectActions, dispatch)
+  projectActions: bindActionCreators(projectActions, dispatch),
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireIndex))

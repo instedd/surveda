@@ -2,6 +2,7 @@ import * as api from '../api'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
+export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
@@ -11,6 +12,18 @@ export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
 export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
+
+export const AUTOSAVE = [
+  CHANGE_CUTOFF,
+  CHANGE_NAME,
+  CHANGE_QUESTIONNAIRE,
+  TOGGLE_DAY,
+  SET_SCHEDULE_TO,
+  SET_SCHEDULE_FROM,
+  SELECT_CHANNELS,
+  SELECT_MODE,
+  UPDATE_RESPONDENTS_COUNT
+]
 
 export const createSurvey = (projectId) => (dispatch, getState) =>
   api.createSurvey(projectId).then(response => {
@@ -69,6 +82,11 @@ export const setState = (state) => ({
   state
 })
 
+export const changeName = (newName) => ({
+  type: CHANGE_NAME,
+  newName
+})
+
 export const setScheduleFrom = (hour) => ({
   type: SET_SCHEDULE_FROM,
   hour
@@ -98,3 +116,9 @@ export const updateRespondentsCount = (respondentsCount) => ({
   type: UPDATE_RESPONDENTS_COUNT,
   respondentsCount
 })
+
+export const save = () => (dispatch, getState) => {
+  const survey = getState().survey.data
+  api.updateSurvey(survey.projectId, survey)
+    .then(response => dispatch(setState(response.entities.surveys[response.result].state)))
+}

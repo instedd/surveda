@@ -179,20 +179,6 @@ describe('questionnaire reducer', () => {
     expect(resultStep.prompt).toEqual({ sms: '' })
   })
 
-  it('should initialize for the questionnaire creation use case', () => {
-    const result = reducer(initialState, actions.newQuestionnaire(123))
-    const questionnaire = result.data
-
-    expect(questionnaire)
-    .toEqual({
-      id: null,
-      name: '',
-      modes: ['sms', 'ivr'],
-      projectId: 123,
-      steps: []
-    })
-  })
-
   it('should update step title', () => {
     const preState = playActions([
       actions.fetch(1, 1),

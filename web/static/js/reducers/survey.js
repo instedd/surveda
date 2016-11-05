@@ -58,6 +58,7 @@ const fetch = (state, action) => {
 
 export const surveyReducer = (state, action) => {
   switch (action.type) {
+    case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
     case actions.TOGGLE_DAY: return toggleDay(state, action)
@@ -68,6 +69,13 @@ export const surveyReducer = (state, action) => {
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
     default: return state
+  }
+}
+
+const changeName = (state, action) => {
+  return {
+    ...state,
+    name: action.newName
   }
 }
 

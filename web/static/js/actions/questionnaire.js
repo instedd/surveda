@@ -16,6 +16,21 @@ export const ADD_CHOICE = 'QUESTIONNAIRE_ADD_CHOICE'
 export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
 
+export const AUTOSAVE = [
+  CHANGE_NAME,
+  TOGGLE_MODE,
+  ADD_STEP,
+  DELETE_STEP,
+  CHANGE_STEP_TITLE,
+  CHANGE_STEP_TYPE,
+  CHANGE_STEP_PROMPT_SMS,
+  CHANGE_STEP_PROMPT_IVR,
+  CHANGE_STEP_STORE,
+  ADD_CHOICE,
+  DELETE_CHOICE,
+  CHANGE_CHOICE
+]
+
 export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
   dispatch(fetch(projectId, questionnaireId))
   return api.fetchQuestionnaire(projectId, questionnaireId)
@@ -108,11 +123,6 @@ export const addStep = () => ({
   type: ADD_STEP
 })
 
-export const newQuestionnaire = (projectId) => ({
-  type: NEW,
-  projectId
-})
-
 export const changeName = (newName) => ({
   type: CHANGE_NAME,
   newName
@@ -123,17 +133,16 @@ export const toggleMode = (mode) => ({
   mode
 })
 
-export const updateQuestionnaire = (questionnaire) => dispatch => {
-  return dispatch(receive(questionnaire))
+export const save = () => (dispatch, getState) => {
+  const questionnaire = getState().questionnaire.data
+  api.updateQuestionnaire(questionnaire.projectId, questionnaire)
 }
 
-export const save = () => {
-  return (dispatch, getState) => {
-    const questionnaire = getState().questionnaire.data
-    if (questionnaire.id) {
-      api.updateQuestionnaire(questionnaire.projectId, questionnaire)
-    } else {
-      api.createQuestionnaire(questionnaire.projectId, questionnaire)
-    }
-  }
-}
+export const createQuestionnaire = (projectId) => (dispatch) =>
+  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: []})
+  .then(response => {
+    const questionnaire = response.entities.questionnaires[response.result]
+    dispatch(fetch(projectId, questionnaire.id))
+    dispatch(receive(questionnaire))
+    return questionnaire
+  })
