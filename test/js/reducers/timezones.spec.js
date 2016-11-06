@@ -15,4 +15,9 @@ describe('respondents reducer', () => {
     const result = reducer({}, actions.receiveTimezones(data))
     expect(result.items).toEqual(data.timezones)
   })
+
+  it('should start fetching timezones', () => {
+    const result = reducer({fecthing: false}, actions.startFetchingTimezones())
+    expect(result.fetching)
+  })
 })
