@@ -19,7 +19,6 @@ export default (state, action) => {
   switch (action.type) {
     case actions.FETCH: return fetch(state, action)
     case actions.RECEIVE: return receive(state, action)
-    case actions.NEW: return newQuestionnaire(state, action)
   }
 
   return {

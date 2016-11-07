@@ -1,6 +1,5 @@
 import * as api from '../api'
 
-export const NEW = 'QUESTIONNAIRE_NEW'
 export const FETCH = 'QUESTIONNAIRE_FETCH'
 export const RECEIVE = 'QUESTIONNAIRE_RECEIVE'
 export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
