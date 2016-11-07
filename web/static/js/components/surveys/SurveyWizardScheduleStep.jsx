@@ -9,7 +9,7 @@ class SurveyWizardScheduleStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
-    timezones: PropTypes.array
+    timezones: PropTypes.object
   }
 
   updateFrom(event) {
