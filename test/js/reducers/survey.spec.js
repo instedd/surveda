@@ -2,8 +2,9 @@
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
-import reducer, { dataReducer } from '../../../web/static/js/reducers/survey'
+import reducer from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
+import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
@@ -14,6 +15,8 @@ describe('survey reducer', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.filter).toEqual(null)
     expect(initialState.data).toEqual(null)
+    expect(initialState.lastUpdatedAt).toEqual(null)
+    expect(initialState.dirty).toEqual(false)
   })
 
   it('should fetch', () => {
@@ -104,9 +107,37 @@ describe('survey reducer', () => {
     })
   })
 
+  it('should be marked as dirty if something changed', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed')
+    ])
+    expect(state).toEqual({
+      ...state,
+      dirty: true
+    })
+  })
+
+  it('shouldn\'t be marked as dirty if something changed in a different reducer', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      questionnaireActions.changeName('foo')
+    ])
+    expect(state).toEqual({
+      ...state,
+      dirty: false
+    })
+  })
+
   it('should toggle a single day preserving the others', () => {
-    const result = dataReducer(survey, actions.toggleDay('wed'))
-    expect(result.scheduleDayOfWeek)
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed')
+    ])
+    expect(state.data.scheduleDayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 })

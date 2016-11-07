@@ -3,6 +3,8 @@ import toInteger from 'lodash/toInteger'
 
 const initialState = {
   fetching: false,
+  dirty: false,
+  lastUpdatedAt: null,
   filter: null,
   data: null
 }
@@ -16,9 +18,23 @@ export default (actions, dataReducer, filterProvider = defaultFilterProvider) =>
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
     case actions.RECEIVE: return receive(state, action, filterProvider)
-    default: return {
-      ...state,
-      data: state.data == null ? null : dataReducer(state.data, action)
+    default: return data(state, action, dataReducer)
+  }
+}
+
+const data = (state, action, dataReducer) => {
+  const newData = state.data == null ? null : dataReducer(state.data, action)
+
+  return do {
+    if (newData !== state.data) {
+      ({
+        ...state,
+        dirty: true,
+        lastUpdatedAt: Date.now(),
+        data: newData
+      })
+    } else {
+      state
     }
   }
 }

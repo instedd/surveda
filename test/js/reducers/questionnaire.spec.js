@@ -16,6 +16,8 @@ describe('questionnaire reducer', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.filter).toEqual(null)
     expect(initialState.data).toEqual(null)
+    expect(initialState.lastUpdatedAt).toEqual(null)
+    expect(initialState.dirty).toEqual(false)
   })
 
   it('receives a questionnaire', () => {
@@ -93,6 +95,21 @@ describe('questionnaire reducer', () => {
       ...state,
       fetching: true,
       data: null
+    })
+  })
+
+  it('updating questionnaire should mark it as dirty', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name')
+    ])
+
+    expect(state.data.name).toEqual('Some other name')
+
+    expect(state).toEqual({
+      ...state,
+      dirty: true
     })
   })
 
