@@ -12,18 +12,8 @@ export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
 export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
-
-export const AUTOSAVE = [
-  CHANGE_CUTOFF,
-  CHANGE_NAME,
-  CHANGE_QUESTIONNAIRE,
-  TOGGLE_DAY,
-  SET_SCHEDULE_TO,
-  SET_SCHEDULE_FROM,
-  SELECT_CHANNELS,
-  SELECT_MODE,
-  UPDATE_RESPONDENTS_COUNT
-]
+export const SAVING = 'SURVEY_SAVING'
+export const SAVED = 'SURVEY_SAVED'
 
 export const createSurvey = (projectId) => (dispatch, getState) =>
   api.createSurvey(projectId).then(response => {
@@ -117,8 +107,20 @@ export const updateRespondentsCount = (respondentsCount) => ({
   respondentsCount
 })
 
+export const saving = () => ({
+  type: SAVING
+})
+
+export const saved = (survey) => ({
+  type: SAVED,
+  data: survey
+})
+
 export const save = () => (dispatch, getState) => {
   const survey = getState().survey.data
+  dispatch(saving())
   api.updateSurvey(survey.projectId, survey)
-    .then(response => dispatch(setState(response.entities.surveys[response.result].state)))
+    .then(response => {
+      return dispatch(saved(response.entities.surveys[response.result]))
+    })
 }

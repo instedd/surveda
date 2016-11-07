@@ -6,7 +6,8 @@ const initialState = {
   dirty: false,
   lastUpdatedAt: null,
   filter: null,
-  data: null
+  data: null,
+  saving: false
 }
 
 const defaultFilterProvider = (data) => ({
@@ -18,6 +19,8 @@ export default (actions, dataReducer, filterProvider = defaultFilterProvider) =>
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
     case actions.RECEIVE: return receive(state, action, filterProvider)
+    case actions.SAVING: return saving(state, action, filterProvider)
+    case actions.SAVED: return saved(state, action, filterProvider)
     default: return data(state, action, dataReducer)
   }
 }
@@ -68,5 +71,21 @@ const fetch = (state, action, filterProvider) => {
     fetching: true,
     filter: newFilter,
     data: newData
+  }
+}
+
+const saved = (state, action, filterProvider) => {
+  return {
+    ...state,
+    saving: false,
+    data: action.data
+  }
+}
+
+const saving = (state, action, filterProvider) => {
+  return {
+    ...state,
+    dirty: false,
+    saving: true
   }
 }

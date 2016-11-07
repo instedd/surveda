@@ -18,6 +18,7 @@ describe('questionnaire reducer', () => {
     expect(initialState.data).toEqual(null)
     expect(initialState.lastUpdatedAt).toEqual(null)
     expect(initialState.dirty).toEqual(false)
+    expect(initialState.saving).toEqual(false)
   })
 
   it('receives a questionnaire', () => {
@@ -110,6 +111,37 @@ describe('questionnaire reducer', () => {
     expect(state).toEqual({
       ...state,
       dirty: true
+    })
+  })
+
+  it('should be marked saving when saving', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name'),
+      actions.saving()
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      dirty: false,
+      saving: true
+    })
+  })
+
+  it('should be marked clean and saved when saved', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name'),
+      actions.saving(),
+      actions.saved()
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      saving: false,
+      dirty: false
     })
   })
 

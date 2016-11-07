@@ -14,21 +14,8 @@ export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
 export const ADD_CHOICE = 'QUESTIONNAIRE_ADD_CHOICE'
 export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
-
-export const AUTOSAVE = [
-  CHANGE_NAME,
-  TOGGLE_MODE,
-  ADD_STEP,
-  DELETE_STEP,
-  CHANGE_STEP_TITLE,
-  CHANGE_STEP_TYPE,
-  CHANGE_STEP_PROMPT_SMS,
-  CHANGE_STEP_PROMPT_IVR,
-  CHANGE_STEP_STORE,
-  ADD_CHOICE,
-  DELETE_CHOICE,
-  CHANGE_CHOICE
-]
+export const SAVING = 'QUESTIONNAIRE_SAVING'
+export const SAVED = 'QUESTIONNAIRE_SAVED'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -132,9 +119,19 @@ export const toggleMode = (mode) => ({
   mode
 })
 
+export const saving = () => ({
+  type: SAVING
+})
+
+export const saved = (questionnaire) => ({
+  type: SAVED,
+  data: questionnaire
+})
+
 export const save = () => (dispatch, getState) => {
   const questionnaire = getState().questionnaire.data
-  api.updateQuestionnaire(questionnaire.projectId, questionnaire)
+  dispatch(saving())
+  api.updateQuestionnaire(questionnaire.projectId, questionnaire).then((response) => dispatch(saved(response.entities.questionnaires[response.result])))
 }
 
 export const createQuestionnaire = (projectId) => (dispatch) =>

@@ -1,17 +1,17 @@
 import * as questionnaireActions from '../actions/questionnaire'
 import * as surveyActions from '../actions/survey'
-import includes from 'lodash/includes'
 
 export default store => next => action => {
-  if (includes(questionnaireActions.AUTOSAVE, action.type)) {
-    next(action)
+  const result = next(action)
+  const state = store.getState()
+
+  if (state.questionnaire.dirty) {
     return store.dispatch(questionnaireActions.save())
   }
 
-  if (includes(surveyActions.AUTOSAVE, action.type)) {
-    next(action)
+  if (state.survey.dirty) {
     return store.dispatch(surveyActions.save())
   }
 
-  return next(action)
+  return result
 }
