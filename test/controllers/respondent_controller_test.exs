@@ -86,7 +86,8 @@ defmodule Ask.RespondentControllerTest do
             "count" => 3
           }
         ],
-        "target_value" => 10
+        "total_respondents" => 15,
+        "cutoff" => 10
       }
     }
   end
@@ -108,7 +109,8 @@ defmodule Ask.RespondentControllerTest do
       },
       "completed_by_date" => %{
         "respondents_by_date" => [],
-        "target_value" => 5
+        "cutoff" => nil,
+        "total_respondents" => 5
       }
     }
   end
