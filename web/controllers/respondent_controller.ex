@@ -105,8 +105,11 @@ defmodule Ask.RespondentController do
     csv_string
     |> String.split(delimiter)
     |> Enum.filter(fn r ->
-      length = r |> String.trim |> String.length
+      length = r |> String.trim |> String.split(",") |> Enum.at(0) |> String.length
       length != 0
+    end)
+    |> Enum.map(fn r ->
+      r |> String.trim |> String.split(",") |> Enum.at(0)
     end)
   end
 
