@@ -331,7 +331,8 @@ defmodule Ask.SurveyControllerTest do
 
       channel2 = insert(:channel, user: user, type: "ivr")
 
-      changeset = survey
+
+      survey
       |> Repo.preload([:channels])
       |> Ecto.Changeset.change
       |> put_assoc(:channels, [channel, channel2])
