@@ -8,7 +8,8 @@ import React, { PropTypes, Component } from 'react'
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    timezones: PropTypes.array
   }
 
   updateFrom(event) {
@@ -36,6 +37,19 @@ class SurveyWizardScheduleStep extends Component {
     dispatch(fetchTimezones())
   }
 
+  formatTimezone(tz) {
+    const split = tz.split('/')
+    let res = split[0]
+    if (split.length == 2) {
+      res = split.join(' - ')
+    } else {
+      if (split.length == 3) {
+        res = res + ' - ' + split[2] + ', ' + split[1]
+      }
+    }
+    return res
+  }
+
   render() {
     const { survey, timezones } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
@@ -57,7 +71,7 @@ class SurveyWizardScheduleStep extends Component {
     // Survey might be loaded without details
     let defaultFrom = (survey && survey.scheduleStartTime) ? survey.scheduleStartTime : '09:00:00'
     let defaultTo = (survey && survey.scheduleEndTime) ? survey.scheduleEndTime : '18:00:00'
-    let defaultTimezone = (survey && survey.timezone) ? survey.timezone : 'Etc/UTC'
+    let defaultTimezone = (survey && survey.timezone) ? survey.timezone : (Intl.DateTimeFormat().resolvedOptions().timeZone)
 
     if (!survey || !survey.scheduleDayOfWeek) {
       return <div>Loading...</div>
@@ -105,7 +119,7 @@ class SurveyWizardScheduleStep extends Component {
         <div className='row'>
           <Input s={12} m={6} type='select' label='Timezones' defaultValue={defaultTimezone} onChange={(value) => this.updateTimezone(value)}>
             {timezones.items.map((tz) => (
-              <option value={tz} key={tz}>{tz}</option>
+              <option value={tz} key={tz}>{this.formatTimezone(tz)}</option>
             ))}
           </Input>
         </div>
