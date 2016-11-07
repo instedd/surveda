@@ -311,6 +311,43 @@ defmodule Ask.SurveyControllerTest do
       assert new_survey.state == "ready"
     end
 
+    test "updates state when selecting mode, missing channel", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
+      add_channel_to(survey, channel)
+      add_respondent_to survey
+
+      attrs = %{mode: ["sms", "ivr"]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+
+    test "updates state when selecting mode, all channels", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
+      add_respondent_to survey
+
+      channel2 = insert(:channel, user: user, type: "ivr")
+
+      changeset = survey
+      |> Repo.preload([:channels])
+      |> Ecto.Changeset.change
+      |> put_assoc(:channels, [channel, channel2])
+      |> Repo.update
+
+      attrs = %{mode: ["sms", "ivr"]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "ready"
+    end
+
     test "updates state when adding cutoff", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 

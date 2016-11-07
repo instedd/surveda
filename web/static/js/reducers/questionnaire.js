@@ -44,6 +44,7 @@ const stepsReducer = (state, action) => {
   switch (action.type) {
     case actions.ADD_STEP: return addStep(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
+    case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
@@ -57,8 +58,9 @@ const stepsReducer = (state, action) => {
 }
 
 const addChoice = (state, action) => {
-  return changeStep(state, action.stepId, (step) => {
-    step.choices = [
+  return changeStep(state, action.stepId, (step) => ({
+    ...step,
+    choices: [
       ...step.choices,
       {
         value: '',
@@ -69,37 +71,61 @@ const addChoice = (state, action) => {
         skipLogic: null
       }
     ]
-    return step
-  })
+  }))
 }
 
 const deleteChoice = (state, action) => {
-  return changeStep(state, action.stepId, (step) => {
-    step.choices = [
+  return changeStep(state, action.stepId, (step) => ({
+    ...step,
+    choices: [
       ...step.choices.slice(0, action.index),
       ...step.choices.slice(action.index + 1)
     ]
-    return step
-  })
+  }))
 }
 
 const changeChoice = (state, action) => {
-  return changeStep(state, action.stepId, (step) => {
-    step.choices = [
+  let smsValues = action.choiceChange.smsValues
+  let ivrValues = action.choiceChange.ivrValues
+  if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
+    [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response)
+  }
+  return changeStep(state, action.stepId, (step) => ({
+    ...step,
+    choices: [
       ...step.choices.slice(0, action.choiceChange.index),
       {
         ...step.choices[action.choiceChange.index],
         value: action.choiceChange.response,
         responses: {
-          sms: splitValues(action.choiceChange.smsValues),
-          ivr: splitValues(action.choiceChange.ivrValues)
+          sms: splitValues(smsValues),
+          ivr: splitValues(ivrValues)
         },
         skipLogic: action.choiceChange.skipLogic
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
-    return step
+  }))
+}
+
+const autoComplete = (state, value) => {
+  let setted = false
+
+  let smsValues = ''
+  let ivrValues = ''
+
+  state.forEach((step) => {
+    if (!setted) {
+      step.choices.forEach((choice) => {
+        if (choice.value == value && !setted) {
+          setted = true
+          smsValues = choice.responses.sms.join(',')
+          ivrValues = choice.responses.ivr.join(',')
+        }
+      })
+    }
   })
+  return [smsValues, ivrValues]
 }
 
 const splitValues = (values) => {
@@ -114,43 +140,51 @@ const changeStep = (state, stepId, func) => {
   const stepIndex = findIndex(state, s => s.id == stepId)
   return [
     ...state.slice(0, stepIndex),
-    func({...state[stepIndex]}),
+    func(state[stepIndex]),
     ...state.slice(stepIndex + 1)
   ]
 }
 
 const changeStepSmsPrompt = (state, action) => {
-  return changeStep(state, action.stepId, step => {
-    step.prompt = {
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    prompt: {
       ...step.prompt,
       sms: action.newPrompt
     }
-    return step
-  })
+  }))
 }
 
 const changeStepIvrPrompt = (state, action) => {
-  return changeStep(state, action.stepId, step => {
-    step.prompt = {
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    prompt: {
       ...step.prompt,
       ivr: action.newPrompt
     }
-    return step
-  })
+  }))
 }
 
 const changeStepTitle = (state, action) => {
-  return changeStep(state, action.stepId, step => {
-    step.title = action.newTitle
-    return step
-  })
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    title: action.newTitle
+  }))
+}
+
+const changeStepType = (state, action) => {
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    type: action.stepType,
+    choices: []
+  }))
 }
 
 const changeStepStore = (state, action) => {
-  return changeStep(state, action.stepId, step => {
-    step.store = action.newStore
-    return step
-  })
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    store: action.newStore
+  }))
 }
 
 const buildFilter = (projectId, questionnaireId) => ({
@@ -176,13 +210,13 @@ const newQuestionnaire = (state, action) => {
 const addStep = (state, action) => {
   return [
     ...state,
-    action.newStep
+    newStep()
   ]
 }
 
-export const buildNewStep = (stepType) => ({
+const newStep = () => ({
   id: uuid.v4(),
-  type: stepType,
+  type: 'multiple-choice',
   title: '',
   store: '',
   prompt: {

@@ -2,36 +2,36 @@
 // NCD class styles
 
 
-
 // ---------materialize reset classes ---------------
 
 .tabs {
   background-color: transparent;
+  height: 55px;
   .tab {
-
+    height: 100%;
     a {
       @extend .grey-text;
       font-size: .9rem;
-      padding: 0 5px;
+      padding: 0 25px;
       &:hover {
         @extend .white-text;
         background-color: transparent;
       }
-    }
-    &.active {
-      background-color: transparent;
-      a {
+      &.active {
         @extend .white-text;
+        background-color: transparent;
       }
     }
-
   }
   .indicator {
     @extend .green;
-    height: 6px;
+    height: 4px;
   }
 }
 
+table.highlight > tbody > tr:hover {
+  cursor: pointer;
+}
 
 // --------- NCD classes ---------------
 
@@ -174,8 +174,15 @@ footer {
       th {
         @extend .grey-text, .lighten-2;
         padding: 25px;
+        white-space: nowrap;
          a {
           color: inherit;
+        }
+        &.sortable {
+          i {
+            vertical-align: middle;
+            margin-right: 9px;
+          }
         }
       }
 
@@ -184,6 +191,9 @@ footer {
         padding: 25px;
         a {
           color: inherit;
+        }
+        &.project-name {
+          word-break: break-all;
         }
       }
     }
@@ -197,6 +207,20 @@ footer {
       }
       .select-dropdown {
         border-bottom: none;
+      }
+    }
+    .card-action {
+      ul {
+        margin: 0;
+        li {
+          @extend .grey-text;
+          line-height: 2;
+          a {
+            @extend .black-text;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        }
       }
     }
   }
@@ -292,9 +316,6 @@ footer {
   width: 24.9vw;
 }
 
-
-
-
 // ------- Forms --------------
 
 .dropfile {
@@ -383,6 +404,10 @@ footer {
   }
 }
 
+.collection.collection-card {
+  overflow: visible;
+}
+
 .collection-item.header {
   padding: 20px;
   .material-icons.prefix {
@@ -400,6 +425,25 @@ footer {
   .collapse {
     @extend .grey-text, .lighten-2;
     margin-top: 1rem;
+  }
+  .dropdown-content li a, .dropdown-button {
+    @extend .grey-text
+  }
+  .row , input {
+    margin-bottom: 0;
+  }
+  a.page-title {
+    font-size: 20px;
+    @extend .black-text;
+    max-width: 95%;
+    display: inline-block;
+    i {
+      @extend .grey-text, .lighten-2;
+      font-size: 24px;
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 15px;
+    }
   }
 }
 
@@ -444,6 +488,42 @@ label {
   color: $primary-color;
 }
 
+
+
+
+// ------- Respondent Chart SVG classes -----------
+
+.line {
+  fill: none;
+  stroke: #4caf50;
+  stroke-width: 2.0px;
+}
+
+.axis line, .axis path{
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.0;
+  opacity: 0.25;
+}
+
+.axis > path{
+  stroke: none;
+}
+
+.y.axis g:first-child text{
+  fill: none;
+}
+
+.x.axis .tick line{
+  stroke: none;
+}
+
+.axis text {
+  text-transform: uppercase;
+  dominant-baseline:text-after-edge;
+  font-size: 12px;
+  opacity: 0.25;
+}
 
 
 
@@ -530,4 +610,3 @@ label {
   }
 
 }
-

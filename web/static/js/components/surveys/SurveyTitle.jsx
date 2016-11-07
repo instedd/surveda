@@ -7,7 +7,7 @@ import * as surveyActions from '../../actions/survey'
 import * as surveysActions from '../../actions/surveys'
 import { updateSurvey } from '../../api'
 
-class ProjectTitle extends Component {
+class SurveyTitle extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.any.isRequired,
@@ -46,4 +46,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(ProjectTitle))
+export default withRouter(connect(mapStateToProps)(SurveyTitle))

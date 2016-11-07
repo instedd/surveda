@@ -1,10 +1,11 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Card } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
+import classNames from 'classnames/bind'
 
 class StepEditor extends Component {
   constructor(props) {
@@ -17,10 +18,14 @@ class StepEditor extends Component {
     this.setState({stepTitle: e.target.value})
   }
 
-  stepTitleSubmit(e) {
-    e.preventDefault()
+  stepTitleSubmit(value) {
     const { step } = this.props
-    this.props.questionnaireActions.changeStepTitle(step.id, e.target.value)
+    this.props.questionnaireActions.changeStepTitle(step.id, value)
+  }
+
+  changeStepType(type) {
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepType(step.id, type)
   }
 
   stepPromptSmsChange(e) {
@@ -70,6 +75,7 @@ class StepEditor extends Component {
     const { step } = props
     return {
       stepTitle: step.title,
+      stepType: step.type,
       stepPromptSms: step.prompt.sms || '',
       stepPromptIvr: (step.prompt.ivr || {}).text || '',
       stepStore: step.store || ''
@@ -103,7 +109,7 @@ class StepEditor extends Component {
             onChange={e => this.stepPromptSmsChange(e)}
             onBlur={e => this.stepPromptSmsSubmit(e)}
             ref={ref => $(ref).characterCounter()} />
-          <label htmlFor='step_editor_sms_prompt'>SMS message</label>
+          <label htmlFor='step_editor_sms_prompt' className={classNames({'active': this.state.stepPromptSms != ''})}>SMS message</label>
         </div>
       </div>
     }
@@ -111,45 +117,82 @@ class StepEditor extends Component {
     let ivrInput = null
     if (ivr) {
       ivrInput = <div className='row'>
-        <input
-          type='text'
-          placeholder='Voice message'
-          value={this.state.stepPromptIvr}
-          onChange={e => this.stepPromptIvrChange(e)}
-          onBlur={e => this.stepPromptIvrSubmit(e)} />
+        <div className='col input-field s12'>
+          <input
+            id='step_editor_voice_message'
+            type='text'
+            value={this.state.stepPromptIvr}
+            onChange={e => this.stepPromptIvrChange(e)}
+            onBlur={e => this.stepPromptIvrSubmit(e)} />
+          <label htmlFor='step_editor_voice_message' className={classNames({'active': this.state.stepPromptIvr})}>Voice message</label>
+        </div>
       </div>
     }
 
     return (
       <Card key={step.id}>
-        <ul className='collection'>
+        <ul className='collection collection-card'>
           <li className='collection-item input-field header'>
-            <i className='material-icons prefix'>mode_edit</i>
-            <input
-              placeholder='Untitled question'
-              type='text'
-              value={this.state.stepTitle}
-              onChange={e => this.stepTitleChange(e)}
-              onBlur={e => this.stepTitleSubmit(e)}
-              className='editable-field'
-               />
-            <a href='#!'
-              className='right collapse'
-              onClick={e => {
-                e.preventDefault()
-                onCollapse()
-              }}>
-              <i className='material-icons'>expand_less</i>
-            </a>
+            <div className='row'>
+              <div className='col s12 m2'>
+                <div className='left'>
+                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
+                    <DropdownItem>
+                      <a onClick={e => this.changeStepType('multiple-choice')}>
+                        <div className='row'>
+                          <div className='col s2'>
+                            <i className='material-icons'>list</i>
+                          </div>
+                          <div className='col s8'>
+                            Multiple choice
+                          </div>
+                          <div className='col s2'>
+                            {this.state.stepType == 'multiple-choice' ? <i className='material-icons'>done</i> : ''}
+                          </div>
+                        </div>
+                      </a>
+                    </DropdownItem>
+                    <DropdownItem>
+                      <a onClick={e => this.changeStepType('numeric')}>
+                        <div className='row'>
+                          <div className='col s2'>
+                            <i className='material-icons sharp'>#</i>
+                          </div>
+                          <div className='col s8'>
+                            Numeric
+                          </div>
+                          <div className='col s2'>
+                            {this.state.stepType == 'numeric' ? <i className='material-icons'>done</i> : ''}
+                          </div>
+                        </div>
+                      </a>
+                    </DropdownItem>
+                  </Dropdown>
+                </div>
+              </div>
+              <div className='col s11 m9'>
+                <EditableTitleLabel title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
+              </div>
+              <div className='col s1 m1'>
+                <a href='#!'
+                  className='collapse'
+                  onClick={e => {
+                    e.preventDefault()
+                    onCollapse()
+                  }}>
+                  <i className='material-icons'>expand_less</i>
+                </a>
+              </div>
+            </div>
           </li>
           <li className='collection-item'>
             <div className='row'>
               <div className='col s12'>
                 <h5>Question Prompt</h5>
-                {smsInput}
-                {ivrInput}
               </div>
             </div>
+            {smsInput}
+            {ivrInput}
           </li>
           <li className='collection-item'>
             <div className='row'>

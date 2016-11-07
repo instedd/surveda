@@ -5,7 +5,7 @@ import { Input } from 'react-materialize'
 class ChoiceEditor extends Component {
   constructor(props) {
     super(props)
-    this.state = Object.assign({}, this.stateFromProps(props), { editing: false })
+    this.state = Object.assign({}, this.stateFromProps(props), { editing: false, doNotClose: false })
   }
 
   responseChange(event) {
@@ -56,22 +56,32 @@ class ChoiceEditor extends Component {
     })
   }
 
-  exitEditMode() {
+  exitEditMode(autoComplete = false) {
     const { onChoiceChange } = this.props
     if (this.state.doNotClose) {
       this.state.doNotClose = false
+      if (autoComplete) {
+        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic, true)
+      }
     } else {
       this.setState({
         ...this.state,
         editing: false
       }, () => {
-        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic)
+        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic, autoComplete)
       })
     }
   }
 
-  setDoNotClose() {
-    this.state.doNotClose = true
+  autoComplete(event) {
+    this.exitEditMode(true)
+  }
+
+  setDoNotClose(focus) {
+    if (this.state.focus != focus) {
+      this.state.doNotClose = true
+      this.state.focus = focus
+    }
   }
 
   onKeyDown(event) {
@@ -104,46 +114,43 @@ class ChoiceEditor extends Component {
           <option key={option.id} id={option.id} name={option.title} value={option.id} >
             {option.title == '' ? 'Untitled' : option.title }
           </option>
-              )}
+        )}
       </Input>
     </td>
 
     if (this.state.editing) {
       return (
         <tr>
-          <td>
+          <td onMouseDown={e => this.setDoNotClose('response')}>
             <input
               type='text'
               placeholder='Response'
               value={this.state.response}
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
-              onMouseDown={e => this.setDoNotClose()}
-              onBlur={e => this.exitEditMode()}
+              onBlur={e => this.autoComplete(e)}
               onKeyDown={e => this.onKeyDown(e)} />
           </td>
           { sms
-          ? <td>
+          ? <td onMouseDown={e => this.setDoNotClose('sms')}>
             <input
               type='text'
               placeholder='SMS'
               value={this.state.sms}
               autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e)}
-              onMouseDown={e => this.setDoNotClose()}
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
           </td> : null
           }
           { ivr
-          ? <td>
+          ? <td onMouseDown={e => this.setDoNotClose('ivr')}>
             <input
               type='text'
               placeholder='IVR'
               value={this.state.ivr}
               autoFocus={this.state.focus == 'ivr'}
               onChange={e => this.ivrChange(e)}
-              onMouseDown={e => this.setDoNotClose()}
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e)} />
           </td> : null
