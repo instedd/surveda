@@ -2,7 +2,7 @@
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
-import reducer, { surveyReducer } from '../../../web/static/js/reducers/survey'
+import reducer, { dataReducer } from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
 
 describe('survey reducer', () => {
@@ -105,7 +105,7 @@ describe('survey reducer', () => {
   })
 
   it('should toggle a single day preserving the others', () => {
-    const result = surveyReducer(survey, actions.toggleDay('wed'))
+    const result = dataReducer(survey, actions.toggleDay('wed'))
     expect(result.scheduleDayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })

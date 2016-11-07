@@ -30,9 +30,9 @@ export const AUTOSAVE = [
   CHANGE_CHOICE
 ]
 
-export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
-  dispatch(fetch(projectId, questionnaireId))
-  return api.fetchQuestionnaire(projectId, questionnaireId)
+export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
+  dispatch(fetch(projectId, id))
+  return api.fetchQuestionnaire(projectId, id)
     .then(response => {
       dispatch(receive(response.entities.questionnaires[response.result]))
     })
@@ -41,16 +41,16 @@ export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, get
     })
 }
 
-export const fetch = (projectId, questionnaireId) => ({
+export const fetch = (projectId, id) => ({
   type: FETCH,
   projectId,
-  questionnaireId
+  id
 })
 
-export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
+export const fetchQuestionnaireIfNeeded = (projectId, id) => {
   return (dispatch, getState) => {
-    if (shouldFetch(getState().questionnaire, projectId, questionnaireId)) {
-      return dispatch(fetchQuestionnaire(projectId, questionnaireId))
+    if (shouldFetch(getState().questionnaire, projectId, id)) {
+      return dispatch(fetchQuestionnaire(projectId, id))
     } else {
       return Promise.resolve(getState().questionnaire.data)
     }
@@ -59,11 +59,11 @@ export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
 
 export const receive = (questionnaire) => ({
   type: RECEIVE,
-  questionnaire
+  data: questionnaire
 })
 
-export const shouldFetch = (state, projectId, questionnaireId) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.questionnaireId == questionnaireId))
+export const shouldFetch = (state, projectId, id) => {
+  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
 export const addChoice = (stepId) => ({

@@ -28,11 +28,11 @@ describe('questionnaire reducer', () => {
   })
 
   it('should fetch', () => {
-    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, questionnaireId: 1}}, 1, 1))
+    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 1, 1))
     assert(actions.shouldFetch({fetching: true, filter: null}, 1, 1))
-    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, questionnaireId: 1}}, 2, 2))
+    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 2, 2))
     assert(actions.shouldFetch({fetching: false, filter: null}, 1, 1))
-    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, questionnaireId: 1}}, 1, 1))
+    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, id: 1}}, 1, 1))
   })
 
   it('fetches a questionnaire', () => {
@@ -45,7 +45,7 @@ describe('questionnaire reducer', () => {
       fetching: true,
       filter: {
         projectId: 1,
-        questionnaireId: 1
+        id: 1
       },
       data: null
     })
@@ -63,7 +63,7 @@ describe('questionnaire reducer', () => {
       fetching: true,
       filter: {
         projectId: 2,
-        questionnaireId: 2
+        id: 2
       },
       data: null
     })

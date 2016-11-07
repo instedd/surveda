@@ -1,41 +1,18 @@
 import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
-import isEqual from 'lodash/isEqual'
-import toInteger from 'lodash/toInteger'
+
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
-
-const defaultState = {
-  fetching: false,
-  filter: null,
-  data: null
-}
-
-export default (state, action) => {
-  if (state == undefined) {
-    return defaultState
-  }
-
-  switch (action.type) {
-    case actions.FETCH: return fetch(state, action)
-    case actions.RECEIVE: return receive(state, action)
-  }
-
-  return {
-    ...state,
-    data: state.data == null ? null : dataReducer(state.data, action)
-  }
-}
+import fetchReducer from './fetch'
 
 const dataReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.TOGGLE_MODE: return toggleMode(state, action)
-  }
-
-  return {
-    ...state,
-    steps: stepsReducer(state.steps, action)
+    default: return {
+      ...state,
+      steps: stepsReducer(state.steps, action)
+    }
   }
 }
 
@@ -186,11 +163,6 @@ const changeStepStore = (state, action) => {
   }))
 }
 
-const buildFilter = (projectId, questionnaireId) => ({
-  projectId: toInteger(projectId),
-  questionnaireId: questionnaireId == null ? null : toInteger(questionnaireId)
-})
-
 const addStep = (state, action) => {
   return [
     ...state,
@@ -231,34 +203,4 @@ const changeName = (state, action) => {
   }
 }
 
-const receive = (state, action) => {
-  const questionnaire = action.questionnaire
-  const dataFilter = buildFilter(questionnaire.projectId, questionnaire.id)
-
-  if (isEqual(state.filter, dataFilter)) {
-    return {
-      ...state,
-      fetching: false,
-      data: questionnaire
-    }
-  }
-
-  return state
-}
-
-const fetch = (state, action) => {
-  const newFilter = buildFilter(action.projectId, action.questionnaireId)
-
-  let newData = null
-
-  if (isEqual(state.filter, newFilter)) {
-    newData = state.data
-  }
-
-  return {
-    ...state,
-    fetching: true,
-    filter: newFilter,
-    data: newData
-  }
-}
+export default fetchReducer(actions, dataReducer)

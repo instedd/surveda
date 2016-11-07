@@ -60,7 +60,7 @@ export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState) => {
 
 export const receive = (survey) => ({
   type: RECEIVE,
-  survey
+  data: survey
 })
 
 export const shouldFetch = (state, projectId, id) => {
