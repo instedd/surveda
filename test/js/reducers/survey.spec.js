@@ -142,16 +142,15 @@ describe('survey reducer', () => {
       actions.receive(survey),
       actions.toggleDay('wed'),
       actions.saving(),
-      actions.saved()
+      actions.saved(survey)
     ])
 
     expect(state).toEqual({
       ...state,
       saving: false,
-      dirty: false
+      dirty: false,
+      data: survey
     })
-    expect(state.data.scheduleDayOfWeek)
-    .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
   it('shouldn\'t be marked as dirty if something changed in a different reducer', () => {
