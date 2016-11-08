@@ -148,9 +148,10 @@ describe('survey reducer', () => {
     expect(state).toEqual({
       ...state,
       saving: false,
-      dirty: false,
-      data: survey
+      dirty: false
     })
+    expect(state.data.scheduleDayOfWeek)
+    .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
   it('shouldn\'t be marked as dirty if something changed in a different reducer', () => {

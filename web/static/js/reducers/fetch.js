@@ -20,7 +20,7 @@ export default (actions, dataReducer, filterProvider = defaultFilterProvider) =>
     case actions.FETCH: return fetch(state, action, filterProvider)
     case actions.RECEIVE: return receive(state, action, filterProvider)
     case actions.SAVING: return saving(state, action, filterProvider)
-    case actions.SAVED: return saved(state, action, filterProvider)
+    case actions.SAVED: return saved(state, action, filterProvider, dataReducer)
     default: return data(state, action, dataReducer)
   }
 }
@@ -74,11 +74,12 @@ const fetch = (state, action, filterProvider) => {
   }
 }
 
-const saved = (state, action, filterProvider) => {
+const saved = (state, action, filterProvider, dataReducer) => {
+  const newData = action.data == null ? null : dataReducer(state.data, action)
   return {
     ...state,
     saving: false,
-    data: action.data
+    data: newData
   }
 }
 

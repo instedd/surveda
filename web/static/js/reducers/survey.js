@@ -13,6 +13,7 @@ export const dataReducer = (state, action) => {
     case actions.SELECT_MODE: return selectMode(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
+    case actions.SAVE: return save(state, action)
     default: return state
   }
 }
@@ -35,6 +36,13 @@ const setState = (state, action) => {
   return {
     ...state,
     state: action.state
+  }
+}
+
+const save = (state, action) => {
+  return {
+    ...state,
+    state: action.data.state
   }
 }
 
