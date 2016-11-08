@@ -130,7 +130,7 @@
                 </ul>
               </div>
               <div class="col m2 offset-m1 s12">
-                <p class="center-align">Version 2.17.1</p>
+                <p class="center-align">Version: <%= Application.get_env(:ask, :version) %> </p>
               </div>
             </div>
         </footer>
