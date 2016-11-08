@@ -18,7 +18,8 @@ defmodule Ask.Factory do
   def survey_factory do
     %Ask.Survey{
       project: build(:project),
-      name: sequence(:survey, &"Survey #{&1}")
+      name: sequence(:survey, &"Survey #{&1}"),
+      timezone: "UTC"
     }
   end
 

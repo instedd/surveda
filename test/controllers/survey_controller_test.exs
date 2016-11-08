@@ -53,7 +53,7 @@ defmodule Ask.SurveyControllerTest do
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
-        "timezone" => nil
+        "timezone" => "UTC"
       }
     end
 
@@ -80,7 +80,7 @@ defmodule Ask.SurveyControllerTest do
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
-        "timezone" => nil
+        "timezone" => "UTC"
       }
     end
 
@@ -132,7 +132,7 @@ defmodule Ask.SurveyControllerTest do
   describe "update" do
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
       project = insert(:project, user: user)
-      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
       assert Repo.get_by(Survey, @valid_attrs)
@@ -141,7 +141,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates schedule when data is valid", %{conn: conn, user: user} do
       [project, questionnaire, _] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
 
       attrs = %{schedule_day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -151,7 +151,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates cutoff when channels are included in params", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -171,7 +171,7 @@ defmodule Ask.SurveyControllerTest do
       channel = insert(:channel, user: user)
       channel2 = insert(:channel, user: user)
       project = insert(:project, user: user)
-      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [channel2.id]}
 
@@ -193,7 +193,7 @@ defmodule Ask.SurveyControllerTest do
         },
         "schedule_start_time" => "09:00:00",
         "schedule_end_time" => "18:00:00",
-        "timezone" => "Etc/UTC"
+        "timezone" => "UTC"
       }
     end
 
@@ -207,7 +207,7 @@ defmodule Ask.SurveyControllerTest do
     test "fails if the schedule from is greater or equal to the to", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       survey = insert(:survey, project: project)
-      attrs = Map.merge(@valid_attrs, %{schedule_start_time: "02:00:00", schedule_end_time: "01:00:00", timezone: "Etc/UTC"})
+      attrs = Map.merge(@valid_attrs, %{schedule_start_time: "02:00:00", schedule_end_time: "01:00:00"})
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -215,7 +215,7 @@ defmodule Ask.SurveyControllerTest do
     test "schedule to and from are saved successfully", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       survey = insert(:survey, project: project)
-      attrs = Map.merge(@valid_attrs, %{schedule_start_time: "01:00:00", schedule_end_time: "02:00:00", timezone: "Etc/UTC"})
+      attrs = Map.merge(@valid_attrs, %{schedule_start_time: "01:00:00", schedule_end_time: "02:00:00"})
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)
       created_survey = Repo.get_by(Survey, %{project_id: project.id})
@@ -245,7 +245,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates project updated_at when survey is updated", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = insert(:project, user: user, updated_at: datetime, )
-      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{name: "New name"}
 
       project = Project |> Repo.get(project.id)
@@ -284,7 +284,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding questionnaire", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"], timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -299,7 +299,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when selecting mode", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -314,7 +314,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when selecting mode, missing channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -329,7 +329,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when selecting mode, all channels", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_respondent_to survey
 
       channel2 = insert(:channel, user: user, type: "ivr")
@@ -351,7 +351,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding cutoff", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"], timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -366,7 +366,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"], timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -381,7 +381,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding a day in schedule", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"], timezone: "Etc/UTC ")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), mode: ["sms"])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -396,7 +396,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when removing schedule", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -411,7 +411,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when removing channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_respondent_to survey
       add_channel_to(survey, channel)
 
@@ -428,7 +428,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when removing questionnaire", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_respondent_to survey
       add_channel_to(survey, channel)
 
@@ -445,7 +445,7 @@ defmodule Ask.SurveyControllerTest do
     test "does not update state when adding cutoff if missing questionnaire", %{conn: conn, user: user} do
       [project, _, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       assert survey.state == "not_ready"
       add_channel_to(survey, channel)
       add_respondent_to survey
@@ -461,7 +461,7 @@ defmodule Ask.SurveyControllerTest do
     test "does not update state when adding cutoff if missing respondents", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       assert survey.state == "not_ready"
       add_channel_to(survey, channel)
 
@@ -476,7 +476,7 @@ defmodule Ask.SurveyControllerTest do
     test "does not update state when adding questionnaire if missing channel", %{conn: conn, user: user} do
       [project, questionnaire, _] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
       add_respondent_to survey
 
       attrs = %{questionnaire_id: questionnaire.id}
@@ -490,7 +490,7 @@ defmodule Ask.SurveyControllerTest do
 
   test "launch survey", %{conn: conn, user: user} do
     project = insert(:project, user: user)
-    survey = insert(:survey, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), project: project, timezone: "Etc/UTC")
+    survey = insert(:survey, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), project: project)
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
@@ -499,7 +499,7 @@ defmodule Ask.SurveyControllerTest do
   test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
     project = insert(:project, user: user, updated_at: datetime)
-    survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), timezone: "Etc/UTC")
+    survey = insert(:survey, project: project, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"))
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     project = Project |> Repo.get(project.id)
