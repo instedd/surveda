@@ -26,7 +26,7 @@ defmodule Ask.SurveyController do
     |> Survey.changeset(%{project_id: project_id, name: "",
                           schedule_start_time: Ecto.Time.cast!("09:00:00"),
                           schedule_end_time: Ecto.Time.cast!("18:00:00"),
-                          timezone: "Etc/UTC"
+                          timezone: "UTC"
                         })
 
     case Repo.insert(changeset) do

@@ -25,10 +25,6 @@ defmodule Ask.Runtime.Broker do
     {:ok, nil}
   end
 
-  def convert_timezone(s, now) do
-    Timex.Timezone.convert(now, s.timezone)
-  end
-
   def handle_info(:poll, state, now \\ Timex.now) do
     ischedule = today_schedule()
 
@@ -39,7 +35,7 @@ defmodule Ask.Runtime.Broker do
                   && s.schedule_end_time >= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
                end)
             |> Enum.each(&poll_survey(&1))
-            
+
     {:noreply, state}
   end
 

@@ -1,5 +1,4 @@
 import * as actions from '../../actions/survey'
-// import { fetchTimezones } from '../../api'
 import { fetchTimezones } from '../../actions/timezones'
 import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
