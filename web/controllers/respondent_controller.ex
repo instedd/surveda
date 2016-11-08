@@ -72,7 +72,7 @@ defmodule Ask.RespondentController do
       group_by: fragment("DATE(completed_at)"),
       select: {fragment("DATE(completed_at)"), count("*")})
 
-    target_value = survey.cutoff || length(survey.respondents)
+    total_respondents = length(survey.respondents)
 
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
@@ -83,7 +83,8 @@ defmodule Ask.RespondentController do
       respondents_by_state: %{pending: pending, completed: completed, active: active, failed: failed },
       completed_by_date: %{
         respondents_by_date: respondents_by_date,
-        target_value: target_value
+        cutoff: survey.cutoff,
+        total_respondents: total_respondents
       }
     }
     render(conn, "stats.json", stats: stats)
@@ -105,8 +106,11 @@ defmodule Ask.RespondentController do
     csv_string
     |> String.split(delimiter)
     |> Enum.filter(fn r ->
-      length = r |> String.trim |> String.length
+      length = r |> String.trim |> String.split(",") |> Enum.at(0) |> String.length
       length != 0
+    end)
+    |> Enum.map(fn r ->
+      r |> String.trim |> String.split(",") |> Enum.at(0)
     end)
   end
 

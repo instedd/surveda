@@ -34,14 +34,15 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: %{id: id, respondents_by_state: respondents_by_state, completed_by_date: %{respondents_by_date: respondents_by_date, target_value: target_value}}}) do
+  def render("stats.json", %{stats: %{id: id, respondents_by_state: respondents_by_state, completed_by_date: %{respondents_by_date: respondents_by_date, cutoff: cutoff, total_respondents: total_respondents}}}) do
     %{
       data: %{
         id: id,
         respondents_by_state: respondents_by_state,
         completed_by_date: %{
           respondents_by_date: render_many(respondents_by_date, Ask.RespondentView, "completed_by_date.json", as: :completed),
-          target_value: target_value
+          cutoff: cutoff,
+          total_respondents: total_respondents
         }
       }
     }
