@@ -109,6 +109,11 @@ describe('survey reducer', () => {
     expect(result.scheduleDayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
+
+  it('should set timezone', () => {
+    const result = surveyReducer({}, actions.setTimezone('America/Cayenne'))
+    expect(result.timezone).toEqual('America/Cayenne')
+  })
 })
 
 const survey = {

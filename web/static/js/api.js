@@ -184,3 +184,11 @@ export const logout = () => {
     credentials: 'same-origin'
   }).then(() => window.location.reload())
 }
+
+export const fetchTimezones = () => {
+  return apiFetchJSONWithCallback(`timezones`, null, {}, (json, schema) => {
+    return () => {
+      return json
+    }
+  })
+}

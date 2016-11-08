@@ -201,7 +201,7 @@ defmodule Ask.BrokerTest do
     ten_oclock = Timex.shift(now, hours: (10-now.hour), minutes: -now.minute)
     eleven_oclock = Timex.add(ten_oclock, Timex.Duration.from_hours(1))
     twelve_oclock = Timex.add(eleven_oclock, Timex.Duration.from_hours(1))
-    {:ok, mock_now} = Ecto.Time.cast(ten_oclock)
+    mock_now = ten_oclock
     {:ok, start_time} = Ecto.Time.cast(eleven_oclock)
     {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
     attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
@@ -220,7 +220,7 @@ defmodule Ask.BrokerTest do
     twelve_oclock = Timex.add(eleven_oclock, Timex.Duration.from_hours(1))
     {:ok, start_time} = Ecto.Time.cast(ten_oclock)
     {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
-    {:ok, mock_now} = Ecto.Time.cast(twelve_oclock)
+    mock_now = twelve_oclock
     attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
     survey = insert(:survey, Map.merge(@always_schedule, attrs))
 
@@ -228,6 +228,38 @@ defmodule Ask.BrokerTest do
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
+  end
+
+  test "doesn't poll surveys with an end time schedule smaller than the current hour considering timezone" do
+    ten_oclock = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    eleven_oclock = Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}")
+    twelve_oclock = Timex.parse!("2016-01-01T12:00:00Z", "{ISO:Extended}")
+    {:ok, start_time} = Ecto.Time.cast(ten_oclock)
+    mock_now = eleven_oclock
+    {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
+    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running", timezone: "Asia/Shanghai"}
+    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
+  test "does poll surveys with an end time schedule higher than the current hour considering timezone" do
+    ten_oclock = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    twelve_oclock = Timex.parse!("2016-01-01T12:00:00Z", "{ISO:Extended}")
+    two_oclock_pm = Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}")
+    {:ok, start_time} = Ecto.Time.cast(ten_oclock)
+    mock_now = two_oclock_pm
+    {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
+    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running", timezone: "America/Buenos_Aires"}
+    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "completed"
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps) do

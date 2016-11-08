@@ -30,6 +30,7 @@ defmodule Ask.Router do
     pipe_through :api
 
     scope "/v1" do
+      get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/launch", SurveyController, :launch

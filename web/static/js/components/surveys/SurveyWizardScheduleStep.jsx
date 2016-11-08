@@ -1,4 +1,5 @@
 import * as actions from '../../actions/survey'
+import { fetchTimezones } from '../../actions/timezones'
 import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
 import React, { PropTypes, Component } from 'react'
@@ -6,7 +7,8 @@ import React, { PropTypes, Component } from 'react'
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    timezones: PropTypes.object
   }
 
   updateFrom(event) {
@@ -19,13 +21,36 @@ class SurveyWizardScheduleStep extends Component {
     dispatch(actions.setScheduleTo(event.target.value))
   }
 
+  updateTimezone(event) {
+    const { dispatch } = this.props
+    dispatch(actions.setTimezone(event.target.value))
+  }
+
   toggleDay(day) {
     const { dispatch } = this.props
     dispatch(actions.toggleDay(day))
   }
 
+  componentDidMount() {
+    const { dispatch } = this.props
+    dispatch(fetchTimezones())
+  }
+
+  formatTimezone(tz) {
+    const split = tz.split('/')
+    let res = split[0]
+    if (split.length == 2) {
+      res = split.join(' - ')
+    } else {
+      if (split.length == 3) {
+        res = res + ' - ' + split[2] + ', ' + split[1]
+      }
+    }
+    return res
+  }
+
   render() {
-    const { survey } = this.props
+    const { survey, timezones } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
     const hours = [
       {label: '12:00 AM', value: '00:00:00'}, {label: '01:00 AM', value: '01:00:00'},
@@ -45,8 +70,16 @@ class SurveyWizardScheduleStep extends Component {
     // Survey might be loaded without details
     let defaultFrom = (survey && survey.scheduleStartTime) ? survey.scheduleStartTime : '09:00:00'
     let defaultTo = (survey && survey.scheduleEndTime) ? survey.scheduleEndTime : '18:00:00'
+    let defaultTimezone = (survey && survey.timezone) ? survey.timezone : (Intl.DateTimeFormat().resolvedOptions().timeZone)
+
     if (!survey || !survey.scheduleDayOfWeek) {
       return <div>Loading...</div>
+    }
+
+    if (!timezones || !timezones.items) {
+      return (
+        <div>Loading timezones...</div>
+      )
     }
 
     return (
@@ -82,9 +115,20 @@ class SurveyWizardScheduleStep extends Component {
             ))}
           </Input>
         </div>
+        <div className='row'>
+          <Input s={12} m={6} type='select' label='Timezones' defaultValue={defaultTimezone} onChange={(value) => this.updateTimezone(value)}>
+            {timezones.items.map((tz) => (
+              <option value={tz} key={tz}>{this.formatTimezone(tz)}</option>
+            ))}
+          </Input>
+        </div>
       </div>
     )
   }
 }
 
-export default connect()(SurveyWizardScheduleStep)
+const mapStateToProps = (state, ownProps) => ({
+  timezones: state.timezones
+})
+
+export default connect(mapStateToProps)(SurveyWizardScheduleStep)
