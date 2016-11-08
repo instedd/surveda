@@ -1,7 +1,6 @@
 defmodule Ask.Runtime.Broker do
   use GenServer
   use Timex
-  use Bitwise
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Survey, Respondent}
@@ -33,13 +32,14 @@ defmodule Ask.Runtime.Broker do
   def handle_info(:poll, state, now \\ Timex.now) do
     ischedule = today_schedule()
 
-    surveys = Survey |> Repo.all |> Enum.filter(fn s -> s.state == "running"
-                            && (elem(Ask.DayOfWeek.dump(s.schedule_day_of_week), 1) &&& ischedule) == ischedule
-                            && s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
-                            && s.schedule_end_time >= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
-                          end)
+    surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^ischedule, ^ischedule))
 
-    surveys |> Enum.each(&poll_survey(&1))
+    surveys |> Enum.filter( fn s ->
+                  s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
+                  && s.schedule_end_time >= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
+               end)
+            |> Enum.each(&poll_survey(&1))
+            
     {:noreply, state}
   end
 
