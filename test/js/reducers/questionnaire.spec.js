@@ -326,7 +326,12 @@ describe('questionnaire reducer', () => {
           'May'
         ]
       },
-      skipLogic: 'end'
+      skipLogic: 'end',
+      'errors': {
+        'responses': {
+          'ivr': true
+        }
+      }
     })
   })
 
@@ -356,7 +361,12 @@ describe('questionnaire reducer', () => {
           'May'
         ]
       },
-      skipLogic: 'some-id'
+      skipLogic: 'some-id',
+      'errors': {
+        'responses': {
+          'ivr': true
+        }
+      }
     })
   })
 
@@ -384,7 +394,12 @@ describe('questionnaire reducer', () => {
           ''
         ]
       },
-      skipLogic: 'some-other-id'
+      skipLogic: 'some-other-id',
+      'errors': {
+        'responses': {
+          'ivr': false
+        }
+      }
     })
   })
 
@@ -397,7 +412,7 @@ describe('questionnaire reducer', () => {
     const resultState = playActionsFromState(preState, reducer)([
       actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
       actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
-      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'Perhaps', '', 'some-other-id', true)
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'Perhaps', '2, 3', 'some-other-id', true)
     ])
 
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
@@ -409,10 +424,52 @@ describe('questionnaire reducer', () => {
           'Perhaps'
         ],
         ivr: [
-          ''
+          '2',
+          '3'
         ]
       },
-      skipLogic: 'some-other-id'
+      skipLogic: 'some-other-id',
+      'errors': {
+        'responses': {
+          'ivr': false
+        }
+      }
+    })
+  })
+
+  it('should validate IVR options to be numeric or hash', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '3, b, #, 22', 'some-other-id', false)
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(3)
+    expect(step.choices[2]).toEqual({
+      value: 'Maybe',
+      responses: {
+        sms: [
+          ''
+        ],
+        ivr: [
+          '3',
+          'b',
+          '#',
+          '22'
+        ]
+      },
+      skipLogic: 'some-other-id',
+      'errors': {
+        'responses': {
+          'ivr': true
+        }
+      }
     })
   })
 })
