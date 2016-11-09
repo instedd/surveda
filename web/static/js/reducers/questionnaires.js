@@ -17,8 +17,6 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case actions.FETCH_QUESTIONNAIRES: return fetchQuestionnaires(state, action)
-    case actions.CREATE_QUESTIONNAIRE: return createOrUpdateQuestionnaire(state, action)
-    case actions.UPDATE_QUESTIONNAIRE: return createOrUpdateQuestionnaire(state, action)
     case actions.RECEIVE_QUESTIONNAIRES: return receiveQuestionnaires(state, action)
     case actions.NEXT_QUESTIONNAIRES_PAGE: return nextPage(state)
     case actions.PREVIOUS_QUESTIONNAIRES_PAGE: return previousPage(state)
@@ -42,13 +40,6 @@ const fetchQuestionnaires = (state, action) => {
     }
   }
 }
-
-const createOrUpdateQuestionnaire = (state, action) => ({
-  ...state,
-  [action.id]: {
-    ...action.questionnaire
-  }
-})
 
 const receiveQuestionnaires = (state, action) => {
   const questionnaires = action.questionnaires
