@@ -1,63 +1,9 @@
 import * as actions from '../actions/survey'
+import fetchReducer from './fetch'
 
-const initialState = {
-  fetching: false,
-  filter: null,
-  data: null
-}
-
-export default (state = initialState, action) => {
+export const dataReducer = (state, action) => {
   switch (action.type) {
-    case actions.FETCH: return fetch(state, action)
-    case actions.RECEIVE: return receive(state, action)
-    default: return {
-      ...state,
-      data: surveyReducer(state.data, action)
-    }
-  }
-}
-
-const receive = (state, action) => {
-  const survey = action.survey
-  const filter = state.filter
-
-  return do {
-    if (filter && filter.projectId == survey.projectId && filter.id == survey.id) {
-      ({
-        ...state,
-        fetching: false,
-        data: survey
-      })
-    } else {
-      state
-    }
-  }
-}
-
-const fetch = (state, action) => {
-  const newFilter = {
-    projectId: action.projectId,
-    id: action.id
-  }
-
-  const newData = do {
-    if (state.filter && state.filter.projectId == newFilter.projectId && state.filter.id == newFilter.id) {
-      state.data
-    } else {
-      initialState.data
-    }
-  }
-
-  return {
-    ...state,
-    fetching: true,
-    filter: newFilter,
-    data: newData
-  }
-}
-
-export const surveyReducer = (state, action) => {
-  switch (action.type) {
+    case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
     case actions.TOGGLE_DAY: return toggleDay(state, action)
@@ -70,7 +16,15 @@ export const surveyReducer = (state, action) => {
     case actions.SET_TIMEZONE: return setTimezone(state, action)
     case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
+    case actions.SAVE: return save(state, action)
     default: return state
+  }
+}
+
+const changeName = (state, action) => {
+  return {
+    ...state,
+    name: action.newName
   }
 }
 
@@ -85,6 +39,13 @@ const setState = (state, action) => {
   return {
     ...state,
     state: action.state
+  }
+}
+
+const save = (state, action) => {
+  return {
+    ...state,
+    state: action.data.state
   }
 }
 
@@ -160,3 +121,5 @@ const changeIvrRetryConfiguration = (state, action) => {
     ivrRetryConfiguration: action.ivrRetryConfiguration
   }
 }
+
+export default fetchReducer(actions, dataReducer)

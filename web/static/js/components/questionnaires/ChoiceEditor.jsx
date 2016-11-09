@@ -43,7 +43,8 @@ class ChoiceEditor extends Component {
       response: choice.value,
       sms: choice.responses.sms.join(', '),
       ivr: choice.responses.ivr.join(', '),
-      skipLogic: choice.skipLogic
+      skipLogic: choice.skipLogic,
+      errors: choice.errors
     }
   }
 
@@ -172,7 +173,7 @@ class ChoiceEditor extends Component {
           </td> : null
           }
           { ivr
-          ? <td onClick={e => this.enterEditMode(e, 'ivr')}>
+          ? <td onClick={e => this.enterEditMode(e, 'ivr')} className={this.state.errors && this.state.errors.responses.ivr ? 'basic-error' : ''}>
             <UntitledIfEmpty text={this.state.ivr} emptyText='No IVR' />
           </td> : null
           }

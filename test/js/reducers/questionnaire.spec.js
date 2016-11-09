@@ -16,6 +16,8 @@ describe('questionnaire reducer', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.filter).toEqual(null)
     expect(initialState.data).toEqual(null)
+    expect(initialState.dirty).toEqual(false)
+    expect(initialState.saving).toEqual(false)
   })
 
   it('receives a questionnaire', () => {
@@ -28,11 +30,11 @@ describe('questionnaire reducer', () => {
   })
 
   it('should fetch', () => {
-    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, questionnaireId: 1}}, 1, 1))
+    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 1, 1))
     assert(actions.shouldFetch({fetching: true, filter: null}, 1, 1))
-    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, questionnaireId: 1}}, 2, 2))
+    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 2, 2))
     assert(actions.shouldFetch({fetching: false, filter: null}, 1, 1))
-    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, questionnaireId: 1}}, 1, 1))
+    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, id: 1}}, 1, 1))
   })
 
   it('fetches a questionnaire', () => {
@@ -45,7 +47,7 @@ describe('questionnaire reducer', () => {
       fetching: true,
       filter: {
         projectId: 1,
-        questionnaireId: 1
+        id: 1
       },
       data: null
     })
@@ -63,7 +65,7 @@ describe('questionnaire reducer', () => {
       fetching: true,
       filter: {
         projectId: 2,
-        questionnaireId: 2
+        id: 2
       },
       data: null
     })
@@ -93,6 +95,52 @@ describe('questionnaire reducer', () => {
       ...state,
       fetching: true,
       data: null
+    })
+  })
+
+  it('updating questionnaire should mark it as dirty', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name')
+    ])
+
+    expect(state.data.name).toEqual('Some other name')
+
+    expect(state).toEqual({
+      ...state,
+      dirty: true
+    })
+  })
+
+  it('should be marked saving when saving', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name'),
+      actions.saving()
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      dirty: false,
+      saving: true
+    })
+  })
+
+  it('should be marked clean and saved when saved', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.changeName('Some other name'),
+      actions.saving(),
+      actions.saved()
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      saving: false,
+      dirty: false
     })
   })
 
@@ -177,20 +225,6 @@ describe('questionnaire reducer', () => {
     expect(resultStep.store).toEqual('Smokes')
     expect(resultStep.choices).toEqual([])
     expect(resultStep.prompt).toEqual({ sms: '' })
-  })
-
-  it('should initialize for the questionnaire creation use case', () => {
-    const result = reducer(initialState, actions.newQuestionnaire(123))
-    const questionnaire = result.data
-
-    expect(questionnaire)
-    .toEqual({
-      id: null,
-      name: '',
-      modes: ['sms', 'ivr'],
-      projectId: 123,
-      steps: []
-    })
   })
 
   it('should update step title', () => {
@@ -326,7 +360,12 @@ describe('questionnaire reducer', () => {
           'May'
         ]
       },
-      skipLogic: 'end'
+      skipLogic: 'end',
+      'errors': {
+        'responses': {
+          'ivr': true
+        }
+      }
     })
   })
 
@@ -356,7 +395,12 @@ describe('questionnaire reducer', () => {
           'May'
         ]
       },
-      skipLogic: 'some-id'
+      skipLogic: 'some-id',
+      'errors': {
+        'responses': {
+          'ivr': true
+        }
+      }
     })
   })
 
@@ -384,7 +428,12 @@ describe('questionnaire reducer', () => {
           ''
         ]
       },
-      skipLogic: 'some-other-id'
+      skipLogic: 'some-other-id',
+      'errors': {
+        'responses': {
+          'ivr': false
+        }
+      }
     })
   })
 
@@ -397,7 +446,7 @@ describe('questionnaire reducer', () => {
     const resultState = playActionsFromState(preState, reducer)([
       actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
       actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
-      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'Perhaps', '', 'some-other-id', true)
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'Perhaps', '2, 3', 'some-other-id', true)
     ])
 
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
@@ -409,10 +458,52 @@ describe('questionnaire reducer', () => {
           'Perhaps'
         ],
         ivr: [
-          ''
+          '2',
+          '3'
         ]
       },
-      skipLogic: 'some-other-id'
+      skipLogic: 'some-other-id',
+      'errors': {
+        'responses': {
+          'ivr': false
+        }
+      }
+    })
+  })
+
+  it('should validate IVR options to be numeric or hash', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '3, b, #, 22', 'some-other-id', false)
+    ])
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.choices.length).toEqual(3)
+    expect(step.choices[2]).toEqual({
+      value: 'Maybe',
+      responses: {
+        sms: [
+          ''
+        ],
+        ivr: [
+          '3',
+          'b',
+          '#',
+          '22'
+        ]
+      },
+      skipLogic: 'some-other-id',
+      'errors': {
+        'responses': {
+          'ivr': true
+        }
+      }
     })
   })
 })

@@ -1,42 +1,18 @@
 import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
-import isEqual from 'lodash/isEqual'
-import toInteger from 'lodash/toInteger'
+
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
-
-const defaultState = {
-  fetching: false,
-  filter: null,
-  data: null
-}
-
-export default (state, action) => {
-  if (state == undefined) {
-    return defaultState
-  }
-
-  switch (action.type) {
-    case actions.FETCH: return fetch(state, action)
-    case actions.RECEIVE: return receive(state, action)
-    case actions.NEW: return newQuestionnaire(state, action)
-  }
-
-  return {
-    ...state,
-    data: state.data == null ? null : dataReducer(state.data, action)
-  }
-}
+import fetchReducer from './fetch'
 
 const dataReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.TOGGLE_MODE: return toggleMode(state, action)
-  }
-
-  return {
-    ...state,
-    steps: stepsReducer(state.steps, action)
+    default: return {
+      ...state,
+      steps: stepsReducer(state.steps, action)
+    }
   }
 }
 
@@ -90,6 +66,7 @@ const changeChoice = (state, action) => {
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
     [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response)
   }
+  let ivrArrayValues = splitValues(ivrValues)
   return changeStep(state, action.stepId, (step) => ({
     ...step,
     choices: [
@@ -99,13 +76,24 @@ const changeChoice = (state, action) => {
         value: action.choiceChange.response,
         responses: {
           sms: splitValues(smsValues),
-          ivr: splitValues(ivrValues)
+          ivr: ivrArrayValues
         },
-        skipLogic: action.choiceChange.skipLogic
+        skipLogic: action.choiceChange.skipLogic,
+        errors: {responses: {ivr: validateAllowedValues(ivrArrayValues, '^[0-9#*]*$')}}
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
   }))
+}
+
+const validateAllowedValues = (arrayValue, allowedValues) => {
+  if (arrayValue != undefined) {
+    return arrayValue.some((value) => {
+      return !value.match(allowedValues)
+    })
+  } else {
+    return false
+  }
 }
 
 const autoComplete = (state, value) => {
@@ -187,26 +175,6 @@ const changeStepStore = (state, action) => {
   }))
 }
 
-const buildFilter = (projectId, questionnaireId) => ({
-  projectId: toInteger(projectId),
-  questionnaireId: questionnaireId == null ? null : toInteger(questionnaireId)
-})
-
-const newQuestionnaire = (state, action) => {
-  return {
-    ...state,
-    fetching: false,
-    filter: buildFilter(action.projectId, null),
-    data: {
-      id: null,
-      name: '',
-      modes: ['sms', 'ivr'],
-      projectId: action.projectId,
-      steps: []
-    }
-  }
-}
-
 const addStep = (state, action) => {
   return [
     ...state,
@@ -247,34 +215,4 @@ const changeName = (state, action) => {
   }
 }
 
-const receive = (state, action) => {
-  const questionnaire = action.questionnaire
-  const dataFilter = buildFilter(questionnaire.projectId, questionnaire.id)
-
-  if (isEqual(state.filter, dataFilter)) {
-    return {
-      ...state,
-      fetching: false,
-      data: questionnaire
-    }
-  }
-
-  return state
-}
-
-const fetch = (state, action) => {
-  const newFilter = buildFilter(action.projectId, action.questionnaireId)
-
-  let newData = null
-
-  if (isEqual(state.filter, newFilter)) {
-    newData = state.data
-  }
-
-  return {
-    ...state,
-    fetching: true,
-    filter: newFilter,
-    data: newData
-  }
-}
+export default fetchReducer(actions, dataReducer)

@@ -2,8 +2,6 @@ import * as api from '../api'
 
 export const RECEIVE_QUESTIONNAIRES = 'RECEIVE_QUESTIONNAIRES'
 export const FETCH_QUESTIONNAIRES = 'FETCH_QUESTIONNAIRES'
-export const CREATE_QUESTIONNAIRE = 'CREATE_QUESTIONNAIRE'
-export const UPDATE_QUESTIONNAIRE = 'UPDATE_QUESTIONNAIRE'
 export const RECEIVE_QUESTIONNAIRES_ERROR = 'RECEIVE_QUESTIONNAIRES_ERROR'
 export const NEXT_QUESTIONNAIRES_PAGE = 'NEXT_QUESTIONNAIRES_PAGE'
 export const PREVIOUS_QUESTIONNAIRES_PAGE = 'PREVIOUS_QUESTIONNAIRES_PAGE'
@@ -35,18 +33,6 @@ export const receiveQuestionnaires = (projectId, questionnaires) => ({
   type: RECEIVE_QUESTIONNAIRES,
   projectId,
   questionnaires
-})
-
-export const createQuestionnaire = (response) => ({
-  type: CREATE_QUESTIONNAIRE,
-  id: response.result,
-  questionnaire: response.entities.questionnaires[response.result]
-})
-
-export const updateQuestionnaire = (response) => ({
-  type: UPDATE_QUESTIONNAIRE,
-  id: response.result,
-  questionnaire: response.entities.questionnaires[response.result]
 })
 
 export const receiveQuestionnairesError = (error) => ({
