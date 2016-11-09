@@ -5,11 +5,11 @@ export default store => next => action => {
   const result = next(action)
   const state = store.getState()
 
-  if (state.questionnaire.dirty) {
+  if (state.questionnaire.dirty && !state.questionnaire.saving) {
     return store.dispatch(questionnaireActions.save())
   }
 
-  if (state.survey.dirty) {
+  if (state.survey.dirty && !state.survey.saving) {
     return store.dispatch(surveyActions.save())
   }
 
