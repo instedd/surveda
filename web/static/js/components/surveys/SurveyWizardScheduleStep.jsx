@@ -62,6 +62,18 @@ class SurveyWizardScheduleStep extends Component {
     }
   }
 
+  retryConfigurationFlow(mode, retriesValue) {
+    const values = retriesValue.split(' ')
+    return (
+      <ul>
+        <li key={mode}> - Initial contact </li>
+        {values.map((v) =>
+          <li key={mode + v}> - {v}</li>
+        )}
+      </ul>
+    )
+  }
+
   retryConfigurationInfo(survey) {
     const modes = survey.mode
     if (modes) {
@@ -77,6 +89,10 @@ class SurveyWizardScheduleStep extends Component {
                   value={defaultValue || ''}
                   onChange={e => this.retryConfigurationChanged(mode, e)} />
                 <label className='active' htmlFor='completed-results'>{mode} re-contact attempts</label>
+                <div>
+                  Enter delays like 5m 2h / 1d to express time units and slash to switch mode
+                </div>
+                {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
             </div>
           )
