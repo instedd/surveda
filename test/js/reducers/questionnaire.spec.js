@@ -16,7 +16,6 @@ describe('questionnaire reducer', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.filter).toEqual(null)
     expect(initialState.data).toEqual(null)
-    expect(initialState.lastUpdatedAt).toEqual(null)
     expect(initialState.dirty).toEqual(false)
     expect(initialState.saving).toEqual(false)
   })

@@ -4,7 +4,6 @@ import toInteger from 'lodash/toInteger'
 const initialState = {
   fetching: false,
   dirty: false,
-  lastUpdatedAt: null,
   filter: null,
   data: null,
   saving: false
@@ -33,7 +32,6 @@ const data = (state, action, dataReducer) => {
       ({
         ...state,
         dirty: true,
-        lastUpdatedAt: Date.now(),
         data: newData
       })
     } else {
