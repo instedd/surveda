@@ -114,6 +114,16 @@ describe('survey reducer', () => {
     const result = surveyReducer({}, actions.setTimezone('America/Cayenne'))
     expect(result.timezone).toEqual('America/Cayenne')
   })
+
+  it('should change sms retry configuration property', () => {
+    const result = surveyReducer({}, actions.changeSmsRetryConfiguration('15h 1d'))
+    expect(result.smsRetryConfiguration).toEqual('15h 1d')
+  })
+
+  it('should change ivr retry configuration property', () => {
+    const result = surveyReducer({}, actions.changeIvrRetryConfiguration('15h 1d'))
+    expect(result.ivrRetryConfiguration).toEqual('15h 1d')
+  })
 })
 
 const survey = {

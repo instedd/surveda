@@ -49,6 +49,42 @@ class SurveyWizardScheduleStep extends Component {
     return res
   }
 
+  retryConfigurationChanged(mode, e) {
+    e.preventDefault(e)
+    const { dispatch } = this.props
+    const value = e.target.value
+    if (mode == 'sms') {
+      dispatch(actions.changeSmsRetryConfiguration(value))
+    } else {
+      if (mode == 'ivr') {
+        dispatch(actions.changeIvrRetryConfiguration(value))
+      }
+    }
+  }
+
+  retryConfigurationInfo(survey) {
+    const modes = survey.mode
+    if (modes) {
+      return (
+        modes.map((mode) => {
+          const defaultValue = (mode === 'sms') ? survey.smsRetryConfiguration : survey.ivrRetryConfiguration
+          return (
+            <div className='row' key={mode}>
+              <div className='input-field col s12'>
+                <input
+                  id='completed-results'
+                  type='text'
+                  value={defaultValue || ''}
+                  onChange={e => this.retryConfigurationChanged(mode, e)} />
+                <label className='active' htmlFor='completed-results'>{mode} re-contact attempts</label>
+              </div>
+            </div>
+          )
+        })
+      )
+    }
+  }
+
   render() {
     const { survey, timezones } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
@@ -122,6 +158,9 @@ class SurveyWizardScheduleStep extends Component {
             ))}
           </Input>
         </div>
+        {
+          this.retryConfigurationInfo(survey)
+        }
       </div>
     )
   }
