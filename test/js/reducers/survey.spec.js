@@ -153,6 +153,24 @@ describe('survey reducer', () => {
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
+  it('should be marked dirty if there were a change in the middle', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed'),
+      actions.saving(),
+      actions.toggleDay('wed'),
+      actions.saved(survey)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      saving: false,
+      dirty: true
+    })
+    expect(state.data).toEqual(survey)
+  })
+
   it('shouldn\'t be marked as dirty if something changed in a different reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
