@@ -49,6 +49,14 @@ class SurveyWizardScheduleStep extends Component {
     return res
   }
 
+  replaceTimeUnits(value) {
+    let formattedValue = value
+    formattedValue = formattedValue.replace('m', ' minutes')
+    formattedValue = formattedValue.replace('h', ' hours')
+    formattedValue = formattedValue.replace('d', ' days')
+    return formattedValue
+  }
+
   retryConfigurationChanged(mode, e) {
     e.preventDefault(e)
     const { dispatch } = this.props
@@ -66,9 +74,9 @@ class SurveyWizardScheduleStep extends Component {
     const values = retriesValue.split(' ')
     return (
       <ul>
-        <li key={mode}> - Initial contact </li>
-        {values.map((v) =>
-          <li key={mode + v}> - {v}</li>
+        <li> - Initial contact </li>
+        {values.map((v, i) =>
+          <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
         )}
       </ul>
     )
