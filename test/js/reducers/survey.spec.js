@@ -175,6 +175,15 @@ describe('survey reducer', () => {
     expect(state.data.scheduleDayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
+
+  it('should set timezone', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setTimezone('America/Cayenne')
+    ])
+    expect(result.data.timezone).toEqual('America/Cayenne')
+  })
 })
 
 const survey = {

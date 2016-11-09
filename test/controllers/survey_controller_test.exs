@@ -52,7 +52,8 @@ defmodule Ask.SurveyControllerTest do
           "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
         },
         "schedule_start_time" => nil,
-        "schedule_end_time" => nil
+        "schedule_end_time" => nil,
+        "timezone" => "UTC"
       }
     end
 
@@ -78,7 +79,8 @@ defmodule Ask.SurveyControllerTest do
           "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
         },
         "schedule_start_time" => nil,
-        "schedule_end_time" => nil
+        "schedule_end_time" => nil,
+        "timezone" => "UTC"
       }
     end
 
@@ -190,7 +192,8 @@ defmodule Ask.SurveyControllerTest do
           "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
         },
         "schedule_start_time" => "09:00:00",
-        "schedule_end_time" => "18:00:00"
+        "schedule_end_time" => "18:00:00",
+        "timezone" => "UTC"
       }
     end
 
@@ -331,7 +334,7 @@ defmodule Ask.SurveyControllerTest do
 
       channel2 = insert(:channel, user: user, type: "ivr")
 
-      changeset = survey
+      survey
       |> Repo.preload([:channels])
       |> Ecto.Changeset.change
       |> put_assoc(:channels, [channel, channel2])

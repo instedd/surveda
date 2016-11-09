@@ -14,6 +14,7 @@ export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
 export const SAVING = 'SURVEY_SAVING'
 export const SAVED = 'SURVEY_SAVED'
+export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
 
 export const createSurvey = (projectId) => (dispatch, getState) =>
   api.createSurvey(projectId).then(response => {
@@ -105,6 +106,11 @@ export const changeQuestionnaire = (questionnaire) => ({
 export const updateRespondentsCount = (respondentsCount) => ({
   type: UPDATE_RESPONDENTS_COUNT,
   respondentsCount
+})
+
+export const setTimezone = (timezone) => ({
+  type: SET_TIMEZONE,
+  timezone
 })
 
 export const saving = () => ({

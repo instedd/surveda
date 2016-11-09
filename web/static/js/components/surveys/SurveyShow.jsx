@@ -17,7 +17,8 @@ class SurveyShow extends Component {
     survey: React.PropTypes.object,
     respondentsStats: React.PropTypes.object,
     completedByDate: React.PropTypes.array,
-    targetValue: React.PropTypes.number
+    target: React.PropTypes.number,
+    totalRespondents: React.PropTypes.number
   }
 
   componentWillMount() {
@@ -39,8 +40,8 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, completedByDate, targetValue } = this.props
-    const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, targetValue)
+    const { survey, respondentsStats, completedByDate, target, totalRespondents } = this.props
+    const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
     if (!survey || !completedByDate) {
       return <p>Loading...</p>
@@ -77,14 +78,14 @@ class SurveyShow extends Component {
             </div>
           </div>
           <div>
-            { RespondentsChartCount.respondentsReachedPercentage(completedByDate, targetValue) + '% of target completed' }
+            { RespondentsChartCount.respondentsReachedPercentage(completedByDate, target) + '% of target completed' }
           </div>
           <div className='col s12 m4'>
             <RespondentsChart completedByDate={cumulativeCount} />
             <div>
               Respondents contacted
             </div>
-            { this.respondentsFraction(completedByDate, targetValue) }
+            { this.respondentsFraction(completedByDate, totalRespondents) }
           </div>
         </div>
       </div>
@@ -97,12 +98,15 @@ const mapStateToProps = (state, ownProps) => {
 
   let respondentsStats = {}
   let completedRespondentsByDate = []
-  let targetValue = 1
+  // Default values
+  let target = 1
+  let totalRespondents = 1
 
   if (respondentsStatsRoot) {
     respondentsStats = respondentsStatsRoot.respondentsByState
     completedRespondentsByDate = respondentsStatsRoot.completedByDate.respondentsByDate
-    targetValue = respondentsStatsRoot.completedByDate.targetValue
+    target = respondentsStatsRoot.completedByDate.cutoff || respondentsStatsRoot.completedByDate.totalRespondents
+    totalRespondents = respondentsStatsRoot.completedByDate.totalRespondents
   }
 
   return ({
@@ -112,7 +116,8 @@ const mapStateToProps = (state, ownProps) => {
     survey: state.survey.data,
     respondentsStats: respondentsStats,
     completedByDate: completedRespondentsByDate,
-    targetValue: targetValue
+    target: target,
+    totalRespondents: totalRespondents
   })
 }
 

@@ -25,7 +25,8 @@ defmodule Ask.SurveyController do
     |> build_assoc(:surveys)
     |> Survey.changeset(%{project_id: project_id, name: "",
                           schedule_start_time: Ecto.Time.cast!("09:00:00"),
-                          schedule_end_time: Ecto.Time.cast!("18:00:00")
+                          schedule_end_time: Ecto.Time.cast!("18:00:00"),
+                          timezone: "UTC"
                         })
 
     case Repo.insert(changeset) do
@@ -132,4 +133,5 @@ defmodule Ask.SurveyController do
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
+
 end
