@@ -66,6 +66,7 @@ const changeChoice = (state, action) => {
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
     [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response)
   }
+  let ivrArrayValues = splitValues(ivrValues)
   return changeStep(state, action.stepId, (step) => ({
     ...step,
     choices: [
@@ -75,13 +76,24 @@ const changeChoice = (state, action) => {
         value: action.choiceChange.response,
         responses: {
           sms: splitValues(smsValues),
-          ivr: splitValues(ivrValues)
+          ivr: ivrArrayValues
         },
-        skipLogic: action.choiceChange.skipLogic
+        skipLogic: action.choiceChange.skipLogic,
+        errors: {responses: {ivr: validateAllowedValues(ivrArrayValues, '^[0-9#*]*$')}}
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
   }))
+}
+
+const validateAllowedValues = (arrayValue, allowedValues) => {
+  if (arrayValue != undefined) {
+    return arrayValue.some((value) => {
+      return !value.match(allowedValues)
+    })
+  } else {
+    return false
+  }
 }
 
 const autoComplete = (state, value) => {
