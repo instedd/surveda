@@ -1,16 +1,9 @@
-import * as questionnaireActions from '../actions/questionnaire'
-import * as surveyActions from '../actions/survey'
-
-export default store => next => action => {
+export default (storeProvider, actions) => store => next => action => {
   const result = next(action)
-  const state = store.getState()
+  const state = storeProvider(store.getState())
 
-  if (state.questionnaire.dirty && !state.questionnaire.saving) {
-    return store.dispatch(questionnaireActions.save())
-  }
-
-  if (state.survey.dirty && !state.survey.saving) {
-    return store.dispatch(surveyActions.save())
+  if (state.dirty && !state.saving) {
+    return store.dispatch(actions.save())
   }
 
   return result
