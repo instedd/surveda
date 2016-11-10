@@ -3,6 +3,8 @@ defmodule Ask.Runtime.Session do
   alias Ask.Repo
   defstruct [:channel, :flow, :respondent]
 
+  @timeout 10
+
   def start(questionnaire, respondent, channel) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
     flow = Flow.start(questionnaire, channel.type)
@@ -14,20 +16,24 @@ defmodule Ask.Runtime.Session do
           {:end, _} -> :end
           {:ok, flow, %{prompts: [prompt]}} ->
             runtime_channel |> Channel.ask(respondent.phone_number, [prompt])
-            %Ask.Runtime.Session{
+            {%Ask.Runtime.Session{
               channel: channel,
               flow: flow,
               respondent: respondent
-            }
+            }, @timeout}
         end
 
       false ->
-        %Ask.Runtime.Session{
+        {%Ask.Runtime.Session{
           channel: channel,
           flow: flow,
           respondent: respondent
-        }
+        }, @timeout}
     end
+  end
+
+  def timeout(_session) do
+    :failed
   end
 
   def sync_step(session, reply) do
@@ -38,7 +44,7 @@ defmodule Ask.Runtime.Session do
 
       {:ok, flow, %{prompts: [prompt], stores: stores}} ->
         store_responses(session.respondent, stores)
-        {:ok, %{session | flow: flow}, {:prompt, prompt}}
+        {:ok, %{session | flow: flow}, {:prompt, prompt}, @timeout}
     end
   end
 

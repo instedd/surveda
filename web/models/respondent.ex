@@ -5,6 +5,7 @@ defmodule Ask.Respondent do
     field :phone_number, :string
     field :state, :string, default: "pending" # pending, active, completed, failed
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
+    field :timeout_at, Timex.Ecto.DateTime
     field :session, Ask.Ecto.Type.JSON
     belongs_to :survey, Ask.Survey
     has_many :responses, Ask.Response
@@ -17,7 +18,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :completed_at])
+    |> cast(params, [:phone_number, :state, :session, :completed_at, :timeout_at])
     |> validate_required([:phone_number, :state])
   end
 

@@ -92,7 +92,7 @@ class SurveyWizardRespondentsStep extends Component {
           <Card>
             { invalidRespondentsCard }
           </Card>
-          <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').openModal()} />
+          <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
         </RespondentsContainer>
       )
     }
