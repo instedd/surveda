@@ -1,6 +1,5 @@
 import * as api from '../api'
 
-export const NEW = 'QUESTIONNAIRE_NEW'
 export const FETCH = 'QUESTIONNAIRE_FETCH'
 export const RECEIVE = 'QUESTIONNAIRE_RECEIVE'
 export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
@@ -16,10 +15,12 @@ export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
 export const ADD_CHOICE = 'QUESTIONNAIRE_ADD_CHOICE'
 export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
+export const SAVING = 'QUESTIONNAIRE_SAVING'
+export const SAVED = 'QUESTIONNAIRE_SAVED'
 
-export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, getState) => {
-  dispatch(fetch(projectId, questionnaireId))
-  return api.fetchQuestionnaire(projectId, questionnaireId)
+export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
+  dispatch(fetch(projectId, id))
+  return api.fetchQuestionnaire(projectId, id)
     .then(response => {
       dispatch(receive(response.entities.questionnaires[response.result]))
     })
@@ -28,16 +29,16 @@ export const fetchQuestionnaire = (projectId, questionnaireId) => (dispatch, get
     })
 }
 
-export const fetch = (projectId, questionnaireId) => ({
+export const fetch = (projectId, id) => ({
   type: FETCH,
   projectId,
-  questionnaireId
+  id
 })
 
-export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
+export const fetchQuestionnaireIfNeeded = (projectId, id) => {
   return (dispatch, getState) => {
-    if (shouldFetch(getState().questionnaire, projectId, questionnaireId)) {
-      return dispatch(fetchQuestionnaire(projectId, questionnaireId))
+    if (shouldFetch(getState().questionnaire, projectId, id)) {
+      return dispatch(fetchQuestionnaire(projectId, id))
     } else {
       return Promise.resolve(getState().questionnaire.data)
     }
@@ -46,11 +47,11 @@ export const fetchQuestionnaireIfNeeded = (projectId, questionnaireId) => {
 
 export const receive = (questionnaire) => ({
   type: RECEIVE,
-  questionnaire
+  data: questionnaire
 })
 
-export const shouldFetch = (state, projectId, questionnaireId) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.questionnaireId == questionnaireId))
+export const shouldFetch = (state, projectId, id) => {
+  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
 export const addChoice = (stepId) => ({
@@ -116,11 +117,6 @@ export const addStep = () => ({
   type: ADD_STEP
 })
 
-export const newQuestionnaire = (projectId) => ({
-  type: NEW,
-  projectId
-})
-
 export const changeName = (newName) => ({
   type: CHANGE_NAME,
   newName
@@ -131,17 +127,26 @@ export const toggleMode = (mode) => ({
   mode
 })
 
-export const updateQuestionnaire = (questionnaire) => dispatch => {
-  return dispatch(receive(questionnaire))
+export const saving = () => ({
+  type: SAVING
+})
+
+export const saved = (questionnaire) => ({
+  type: SAVED,
+  data: questionnaire
+})
+
+export const save = () => (dispatch, getState) => {
+  const questionnaire = getState().questionnaire.data
+  dispatch(saving())
+  api.updateQuestionnaire(questionnaire.projectId, questionnaire).then((response) => dispatch(saved(response.entities.questionnaires[response.result])))
 }
 
-export const save = () => {
-  return (dispatch, getState) => {
-    const questionnaire = getState().questionnaire.data
-    if (questionnaire.id) {
-      api.updateQuestionnaire(questionnaire.projectId, questionnaire)
-    } else {
-      api.createQuestionnaire(questionnaire.projectId, questionnaire)
-    }
-  }
-}
+export const createQuestionnaire = (projectId) => (dispatch) =>
+  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: []})
+  .then(response => {
+    const questionnaire = response.entities.questionnaires[response.result]
+    dispatch(fetch(projectId, questionnaire.id))
+    dispatch(receive(questionnaire))
+    return questionnaire
+  })

@@ -2,6 +2,7 @@ import * as api from '../api'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
+export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
@@ -11,6 +12,8 @@ export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
 export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
+export const SAVING = 'SURVEY_SAVING'
+export const SAVED = 'SURVEY_SAVED'
 export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
 
 export const createSurvey = (projectId) => (dispatch, getState) =>
@@ -48,7 +51,7 @@ export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState) => {
 
 export const receive = (survey) => ({
   type: RECEIVE,
-  survey
+  data: survey
 })
 
 export const shouldFetch = (state, projectId, id) => {
@@ -68,6 +71,11 @@ export const toggleDay = (day) => ({
 export const setState = (state) => ({
   type: SET_STATE,
   state
+})
+
+export const changeName = (newName) => ({
+  type: CHANGE_NAME,
+  newName
 })
 
 export const setScheduleFrom = (hour) => ({
@@ -104,3 +112,21 @@ export const setTimezone = (timezone) => ({
   type: SET_TIMEZONE,
   timezone
 })
+
+export const saving = () => ({
+  type: SAVING
+})
+
+export const saved = (survey) => ({
+  type: SAVED,
+  data: survey
+})
+
+export const save = () => (dispatch, getState) => {
+  const survey = getState().survey.data
+  dispatch(saving())
+  api.updateSurvey(survey.projectId, survey)
+    .then(response => {
+      return dispatch(saved(response.entities.surveys[response.result]))
+    })
+}

@@ -2,8 +2,9 @@
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
-import reducer, { surveyReducer } from '../../../web/static/js/reducers/survey'
+import reducer from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
+import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
@@ -14,6 +15,8 @@ describe('survey reducer', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.filter).toEqual(null)
     expect(initialState.data).toEqual(null)
+    expect(initialState.dirty).toEqual(false)
+    expect(initialState.saving).toEqual(false)
   })
 
   it('should fetch', () => {
@@ -104,15 +107,99 @@ describe('survey reducer', () => {
     })
   })
 
+  it('should be marked as dirty if something changed', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed')
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      dirty: true
+    })
+  })
+
+  it('should be marked saving when saving', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed'),
+      actions.saving()
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      dirty: false,
+      saving: true
+    })
+  })
+
+  it('should be marked clean and saved when saved', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed'),
+      actions.saving(),
+      actions.saved(survey)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      saving: false,
+      dirty: false
+    })
+    expect(state.data.scheduleDayOfWeek)
+    .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
+  })
+
+  it('should be marked dirty if there were a change in the middle', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed'),
+      actions.saving(),
+      actions.toggleDay('wed'),
+      actions.saved(survey)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      saving: false,
+      dirty: true
+    })
+    expect(state.data).toEqual(survey)
+  })
+
+  it('shouldn\'t be marked as dirty if something changed in a different reducer', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      questionnaireActions.changeName('foo')
+    ])
+    expect(state).toEqual({
+      ...state,
+      dirty: false
+    })
+  })
+
   it('should toggle a single day preserving the others', () => {
-    const result = surveyReducer(survey, actions.toggleDay('wed'))
-    expect(result.scheduleDayOfWeek)
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed')
+    ])
+    expect(state.data.scheduleDayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
   it('should set timezone', () => {
-    const result = surveyReducer({}, actions.setTimezone('America/Cayenne'))
-    expect(result.timezone).toEqual('America/Cayenne')
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setTimezone('America/Cayenne')
+    ])
+    expect(result.data.timezone).toEqual('America/Cayenne')
   })
 })
 

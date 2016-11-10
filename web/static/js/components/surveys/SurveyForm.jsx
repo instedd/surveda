@@ -12,8 +12,7 @@ export default class SurveyForm extends Component {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     respondents: PropTypes.object,
-    channels: PropTypes.object,
-    onSubmit: PropTypes.func.isRequired
+    channels: PropTypes.object
   }
 
   componentDidMount() {
@@ -32,7 +31,7 @@ export default class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, onSubmit, channels, respondents } = this.props
+    const { survey, projectId, questionnaires, channels, respondents } = this.props
 
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
@@ -75,13 +74,6 @@ export default class SurveyForm extends Component {
               {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
             <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
             </ul>
-            <div className='row'>
-              <div className='col s12'>
-                <button type='button' className='btn waves-effect waves-light btn-wizard' onClick={onSubmit}>
-                Save
-                </button>
-              </div>
-            </div>
           </div>
         </div>
         <div className='col s12 m7 offset-m1 wizard-content'>

@@ -2,7 +2,6 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
-import * as surveyActions from '../../actions/surveys'
 import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
@@ -51,13 +50,6 @@ class SurveyEdit extends Component {
         .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 
-  onSubmit(e) {
-    const { dispatch, survey } = this.props
-    updateSurvey(survey.projectId, survey)
-      .then(response => dispatch(actions.setState(response.entities.surveys[response.result].state)))
-      .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
-  }
-
   render() {
     const { survey, projectId, questionnaires, dispatch, channels, respondents } = this.props
 
@@ -75,7 +67,7 @@ class SurveyEdit extends Component {
           </Tooltip>
           : ''
         }
-        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} onSubmit={(e) => this.onSubmit(e)} dispatch={dispatch} />
+        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} />
       </div>
     )
   }

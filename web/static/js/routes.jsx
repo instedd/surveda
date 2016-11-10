@@ -37,7 +37,6 @@ export default (
 
         <Route path='questionnaires' >
           <IndexRoute components={{ body: QuestionnaireIndex, tabs: ProjectTabs }} />
-          <Route path='new' component={QuestionnaireEditor} title={QuestionnaireTitle} />
           <Route path=':questionnaireId' >
             <IndexRedirect to='edit' />
           </Route>
@@ -61,7 +60,6 @@ export const survey = (projectId, surveyId) => `${surveys(projectId)}/${surveyId
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
 export const editSurvey = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
 export const questionnaires = (projectId) => `${project(projectId)}/questionnaires`
-export const newQuestionnaire = (projectId) => `${questionnaires(projectId)}/new`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaires(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const channels = '/channels'
