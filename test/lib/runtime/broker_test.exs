@@ -54,6 +54,29 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
+    assert updated_respondent.timeout_at in interval
+  end
+
+  test "mark the respondent as failed after timeout" do
+    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Second poll, this time it should timeout
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "completed"
   end
 
   test "marks the survey as completed when the cutoff is reached" do
@@ -198,16 +221,15 @@ defmodule Ask.BrokerTest do
 
   test "doesn't poll surveys with a start time schedule greater than the current hour" do
     now = Timex.now
-    ten_oclock = Timex.shift(now, hours: (10-now.hour), minutes: -now.minute)
-    eleven_oclock = Timex.add(ten_oclock, Timex.Duration.from_hours(1))
-    twelve_oclock = Timex.add(eleven_oclock, Timex.Duration.from_hours(1))
-    mock_now = ten_oclock
+    ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)
+    eleven_oclock = Timex.shift(ten_oclock, hours: 1)
+    twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
     {:ok, start_time} = Ecto.Time.cast(eleven_oclock)
     {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
     attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
     survey = insert(:survey, Map.merge(@always_schedule, attrs))
 
-    Broker.handle_info(:poll, nil, mock_now)
+    Broker.handle_info(:poll, nil, ten_oclock)
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -215,16 +237,15 @@ defmodule Ask.BrokerTest do
 
   test "doesn't poll surveys with an end time schedule smaller than the current hour" do
     now = Timex.now
-    ten_oclock = Timex.shift(now, hours: (10-now.hour), minutes: -now.minute)
-    eleven_oclock = Timex.add(ten_oclock, Timex.Duration.from_hours(1))
-    twelve_oclock = Timex.add(eleven_oclock, Timex.Duration.from_hours(1))
+    ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)
+    eleven_oclock = Timex.shift(ten_oclock, hours: 1)
+    twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
     {:ok, start_time} = Ecto.Time.cast(ten_oclock)
     {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
-    mock_now = twelve_oclock
     attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
     survey = insert(:survey, Map.merge(@always_schedule, attrs))
 
-    Broker.handle_info(:poll, nil, mock_now)
+    Broker.handle_info(:poll, nil, twelve_oclock)
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"

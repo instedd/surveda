@@ -49,6 +49,70 @@ class SurveyWizardScheduleStep extends Component {
     return res
   }
 
+  replaceTimeUnits(value) {
+    let formattedValue = value
+    formattedValue = formattedValue.replace('m', ' minutes')
+    formattedValue = formattedValue.replace('h', ' hours')
+    formattedValue = formattedValue.replace('d', ' days')
+    return formattedValue
+  }
+
+  retryConfigurationChanged(mode, e) {
+    e.preventDefault(e)
+    const { dispatch } = this.props
+    const value = e.target.value.replace(/[^0-9hdm\s]/g, '').trim()
+    e.target.value = value
+    if (mode == 'sms') {
+      dispatch(actions.changeSmsRetryConfiguration(value))
+    } else {
+      if (mode == 'ivr') {
+        dispatch(actions.changeIvrRetryConfiguration(value))
+      }
+    }
+  }
+
+  retryConfigurationFlow(mode, retriesValue) {
+    if (retriesValue) {
+      const values = retriesValue.split(' ')
+      return (
+        <ul>
+          <li> - Initial contact </li>
+          {values.map((v, i) =>
+            <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
+          )}
+        </ul>
+      )
+    }
+  }
+
+  retryConfigurationInfo(survey) {
+    const modes = survey.mode
+    if (modes) {
+      return (
+        modes.map((mode) => {
+          const defaultValue = (mode === 'sms') ? survey.smsRetryConfiguration : survey.ivrRetryConfiguration
+          return (
+            <div className='row' key={mode}>
+              <div className='input-field col s12'>
+                <input
+                  id='completed-results'
+                  type='text'
+                  defaultValue={defaultValue}
+                  onBlur={e => this.retryConfigurationChanged(mode, e)}
+                  />
+                <label className='active' htmlFor='completed-results'>{mode} re-contact attempts</label>
+                <div>
+                  Enter delays like 5m 2h to express time units
+                </div>
+                {this.retryConfigurationFlow(mode, defaultValue)}
+              </div>
+            </div>
+          )
+        })
+      )
+    }
+  }
+
   render() {
     const { survey, timezones } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
@@ -122,6 +186,9 @@ class SurveyWizardScheduleStep extends Component {
             ))}
           </Input>
         </div>
+        {
+          this.retryConfigurationInfo(survey)
+        }
       </div>
     )
   }

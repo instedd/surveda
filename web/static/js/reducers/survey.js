@@ -14,6 +14,8 @@ export const dataReducer = (state, action) => {
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
     case actions.SET_TIMEZONE: return setTimezone(state, action)
+    case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
+    case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
     case actions.SAVE: return save(state, action)
     default: return state
   }
@@ -103,6 +105,20 @@ const updateRespondentsCount = (state, action) => {
   return {
     ...state,
     respondentsCount: action.respondentsCount
+  }
+}
+
+const changeSmsRetryConfiguration = (state, action) => {
+  return {
+    ...state,
+    smsRetryConfiguration: action.smsRetryConfiguration
+  }
+}
+
+const changeIvrRetryConfiguration = (state, action) => {
+  return {
+    ...state,
+    ivrRetryConfiguration: action.ivrRetryConfiguration
   }
 }
 
