@@ -13,6 +13,7 @@ defmodule Ask.Survey do
     field :schedule_start_time, Ecto.Time
     field :schedule_end_time, Ecto.Time
     field :timezone, :string
+    field :started_at, Ecto.DateTime
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
@@ -28,7 +29,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone])
+    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :started_at])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to

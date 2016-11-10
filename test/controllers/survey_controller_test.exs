@@ -53,7 +53,8 @@ defmodule Ask.SurveyControllerTest do
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
-        "timezone" => "UTC"
+        "timezone" => "UTC",
+        "started_at" => nil
       }
     end
 
@@ -80,7 +81,8 @@ defmodule Ask.SurveyControllerTest do
         },
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
-        "timezone" => "UTC"
+        "timezone" => "UTC",
+        "started_at" => nil
       }
     end
 
@@ -193,7 +195,8 @@ defmodule Ask.SurveyControllerTest do
         },
         "schedule_start_time" => "09:00:00",
         "schedule_end_time" => "18:00:00",
-        "timezone" => "UTC"
+        "timezone" => "UTC",
+        "started_at" => nil
       }
     end
 
