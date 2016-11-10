@@ -72,7 +72,7 @@ class SurveyWizardChannelsStep extends Component {
   render() {
     const { survey, channels } = this.props
 
-    if (!survey || !channels) {
+    if (!survey || !Object.keys(channels).length != 0) {
       return <div>Loading...</div>
     }
 
