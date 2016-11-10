@@ -16,7 +16,7 @@ defmodule Ask.Audio do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:data, :filename])
+    |> cast(params, [:uuid, :filename, :data])
     |> validate_change(:filename, &validate_file_type/2)
     |> validate_change(:data, &validate_size/2)
   end

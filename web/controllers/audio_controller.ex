@@ -7,8 +7,9 @@ defmodule Ask.AudioController do
     {:ok, file_content} = File.read(file_upload.path)
     new_audio =
       %{
-        data: file_content,
-        filename: file_upload.filename
+        uuid: Ecto.UUID.generate,
+        filename: file_upload.filename,
+        data: file_content
       }
     changeset = Audio.changeset(%Audio{}, new_audio)
 
@@ -16,7 +17,7 @@ defmodule Ask.AudioController do
       {:ok, audio} ->
         conn
         |> put_status(:created)
-        |> render("show.json", audio: %{id: audio.id})
+        |> render("show.json", audio: %{id: audio.uuid})
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -24,8 +25,8 @@ defmodule Ask.AudioController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    audio = Repo.get!(Audio, id)
+  def show(conn, %{"id" => uuid}) do
+    audio = Repo.get_by!(Audio, uuid: uuid)
 
     conn
     |> put_resp_content_type("audio/mpeg")
