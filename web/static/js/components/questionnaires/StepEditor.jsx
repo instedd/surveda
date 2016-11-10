@@ -99,12 +99,9 @@ class StepEditor extends Component {
     const { step } = this.props
     createAudio(files)
       .then(response => {
-        console.log(response)
         this.setState({audioSrc: `/api/v1/audios/${response.result}`}, () => {
-            console.log('veamos el state: ', this.state)
-            // $('audio')[0].load()
-            this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
-            $('audio')[0].load()
+          this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
+          $('audio')[0].load()
         })
       })
   }
@@ -163,7 +160,7 @@ class StepEditor extends Component {
         <audio controls>
           <source src={this.state.audioSrc} type='audio/mpeg' />
         </audio>
-        <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').openModal()} />
+        <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
       </div>
 
       ivrInput = <div>
