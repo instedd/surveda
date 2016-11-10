@@ -9,9 +9,21 @@ const dataReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.TOGGLE_MODE: return toggleMode(state, action)
-    default: return {
-      ...state,
-      steps: stepsReducer(state.steps, action)
+    default: return steps(state, action)
+  }
+}
+
+const steps = (state, action) => {
+  const newSteps = state.steps == null ? null : stepsReducer(state.steps, action)
+
+  return do {
+    if (newSteps !== state.steps) {
+      ({
+        ...state,
+        steps: newSteps
+      })
+    } else {
+      state
     }
   }
 }
