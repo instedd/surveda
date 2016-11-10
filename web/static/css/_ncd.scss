@@ -354,8 +354,15 @@ footer {
     width: 70%;
     top: 50%;
     margin: 0 15%;
-    &:before {
+    &.csv:before {
       content: 'Drop your CSV file here, or click to browse';
+      text-align: center;
+      position: absolute;
+      width: 100%;
+      text-align: center;
+    }
+    &.audio:before {
+      content: 'Drop your Audio file here, or click to browse';
       text-align: center;
       position: absolute;
       width: 100%;
@@ -379,6 +386,10 @@ footer {
       content: 'Invalid file type';
     }
   }
+}
+
+.dropfile.audio {
+    height: 60px;
 }
 
 .select-wrapper {
