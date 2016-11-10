@@ -60,7 +60,8 @@ class SurveyWizardScheduleStep extends Component {
   retryConfigurationChanged(mode, e) {
     e.preventDefault(e)
     const { dispatch } = this.props
-    const value = e.target.value
+    const value = e.target.value.replace(/[^0-9hdm\s]/g, '').trim()
+    e.target.value = value
     if (mode == 'sms') {
       dispatch(actions.changeSmsRetryConfiguration(value))
     } else {
@@ -71,15 +72,17 @@ class SurveyWizardScheduleStep extends Component {
   }
 
   retryConfigurationFlow(mode, retriesValue) {
-    const values = retriesValue.split(' ')
-    return (
-      <ul>
-        <li> - Initial contact </li>
-        {values.map((v, i) =>
-          <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
-        )}
-      </ul>
-    )
+    if (retriesValue) {
+      const values = retriesValue.split(' ')
+      return (
+        <ul>
+          <li> - Initial contact </li>
+          {values.map((v, i) =>
+            <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
+          )}
+        </ul>
+      )
+    }
   }
 
   retryConfigurationInfo(survey) {
@@ -94,11 +97,12 @@ class SurveyWizardScheduleStep extends Component {
                 <input
                   id='completed-results'
                   type='text'
-                  value={defaultValue || ''}
-                  onChange={e => this.retryConfigurationChanged(mode, e)} />
+                  defaultValue={defaultValue}
+                  onBlur={e => this.retryConfigurationChanged(mode, e)}
+                  />
                 <label className='active' htmlFor='completed-results'>{mode} re-contact attempts</label>
                 <div>
-                  Enter delays like 5m 2h / 1d to express time units and slash to switch mode
+                  Enter delays like 5m 2h to express time units
                 </div>
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
