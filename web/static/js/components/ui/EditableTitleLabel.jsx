@@ -62,7 +62,6 @@ export class EditableTitleLabel extends Component {
     } else {
       return (
         <input
-          onClick={this.clickAfuera}
           type='text'
           ref={node => { this.inputRef = node }}
           autoFocus
