@@ -29,6 +29,12 @@ defmodule Ask.FlowTest do
     assert prompts == [%{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio" => "tts"}]
   end
 
+  test "retry step" do
+    {:ok, flow, _prompts} = Flow.start(@quiz, "sms") |> Flow.step
+    {:ok, %Flow{}, %{prompts: prompts}} = flow |> Flow.retry
+    assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+  end
+
   test "fail if a response is given to a flow that was never executed" do
     assert_raise RuntimeError, ~r/Flow was not expecting any reply/, fn ->
       Flow.start(@quiz, "sms") |> Flow.step("Y")

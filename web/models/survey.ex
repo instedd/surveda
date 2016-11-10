@@ -74,4 +74,31 @@ defmodule Ask.Survey do
     end
   end
 
+  def retries_configuration(survey, mode) do
+    retries = case mode do
+      "sms" -> survey.sms_retry_configuration
+      "ivr" -> survey.ivr_retry_configuration
+      _ -> nil
+    end
+
+    parse_retries(retries)
+  end
+
+  defp parse_retries(nil), do: []
+
+  defp parse_retries(retries) do
+    retries
+    |> String.split
+    |> Enum.map(&parse_retry_item(&1))
+  end
+
+  defp parse_retry_item(value) do
+    {value, type} = Integer.parse(value)
+    case type do
+      "m" -> value
+      "h" -> value * 60
+      "d" -> value * 60 * 24
+      _ -> value
+    end
+  end
 end

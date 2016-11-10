@@ -17,6 +17,10 @@ defmodule Ask.Runtime.Flow do
     |> eval
   end
 
+  def retry(flow) do
+    {flow, %Reply{}} |> eval
+  end
+
   def dump(flow) do
     %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode}
   end

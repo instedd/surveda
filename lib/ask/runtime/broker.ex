@@ -81,28 +81,25 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
 
     case Session.timeout(session) do
+      {session, timeout} ->
+        update_respondent(respondent, {:ok, session, timeout})
+
       :failed ->
-        respondent
-        |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil})
-        |> Repo.update
+        update_respondent(respondent, :failed)
     end
   end
 
   defp start(survey, respondent) do
     survey = Repo.preload(survey, [:questionnaire, :channels])
     channel = hd(survey.channels)
+    retries = Survey.retries_configuration(survey, channel.type)
 
-    case Session.start(survey.questionnaire, respondent, channel) do
+    case Session.start(survey.questionnaire, respondent, channel, retries) do
       :end ->
-        respondent
-        |> Respondent.changeset(%{state: "completed", session: nil, timeout_at: nil})
-        |> Repo.update
+        update_respondent(respondent, :end)
 
       {session, timeout} ->
-        timeout_at = Timex.shift(Timex.now, minutes: timeout)
-        respondent
-        |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
-        |> Repo.update
+        update_respondent(respondent, {:ok, session, timeout})
     end
   end
 
@@ -111,20 +108,32 @@ defmodule Ask.Runtime.Broker do
 
     case Session.sync_step(session, reply) do
       {:ok, session, step, timeout} ->
-        timeout_at = Timex.shift(Timex.now, minutes: timeout)
-        respondent
-        |> Respondent.changeset(%{session: Session.dump(session), timeout_at: timeout_at})
-        |> Repo.update
-
+        update_respondent(respondent, {:ok, session, timeout})
         step
 
       :end ->
-        respondent
-        |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
-        |> Repo.update
-
+        update_respondent(respondent, :end)
         :end
     end
+  end
+
+  defp update_respondent(respondent, :end) do
+    respondent
+    |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
+    |> Repo.update
+  end
+
+  defp update_respondent(respondent, :failed) do
+    respondent
+    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil})
+    |> Repo.update
+  end
+
+  defp update_respondent(respondent, {:ok, session, timeout}) do
+    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    respondent
+    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
+    |> Repo.update
   end
 
   defp today_schedule do
