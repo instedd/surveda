@@ -1,14 +1,20 @@
 import * as actions from '../../actions/survey'
-import { fetchTimezones } from '../../actions/timezones'
 import { connect } from 'react-redux'
-import { Input } from 'react-materialize'
 import React, { PropTypes, Component } from 'react'
+import TimezoneDropdown from '../timezones/TimezoneDropdown'
+import TimeDropdown from '../ui/TimeDropdown'
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired,
-    timezones: PropTypes.object
+    dispatch: PropTypes.func.isRequired
+  }
+
+  constructor(props) {
+    super(props)
+    this.updateTimezone = this.updateTimezone.bind(this)
+    this.updateFrom = this.updateFrom.bind(this)
+    this.updateTo = this.updateTo.bind(this)
   }
 
   updateFrom(event) {
@@ -29,24 +35,6 @@ class SurveyWizardScheduleStep extends Component {
   toggleDay(day) {
     const { dispatch } = this.props
     dispatch(actions.toggleDay(day))
-  }
-
-  componentDidMount() {
-    const { dispatch } = this.props
-    dispatch(fetchTimezones())
-  }
-
-  formatTimezone(tz) {
-    const split = tz.split('/')
-    let res = split[0]
-    if (split.length == 2) {
-      res = split.join(' - ')
-    } else {
-      if (split.length == 3) {
-        res = res + ' - ' + split[2] + ', ' + split[1]
-      }
-    }
-    return res
   }
 
   replaceTimeUnits(value) {
@@ -114,36 +102,15 @@ class SurveyWizardScheduleStep extends Component {
   }
 
   render() {
-    const { survey, timezones } = this.props
+    const { survey } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-    const hours = [
-      {label: '12:00 AM', value: '00:00:00'}, {label: '01:00 AM', value: '01:00:00'},
-      {label: '02:00 AM', value: '02:00:00'}, {label: '03:00 AM', value: '03:00:00'},
-      {label: '04:00 AM', value: '04:00:00'}, {label: '05:00 AM', value: '05:00:00'},
-      {label: '06:00 AM', value: '06:00:00'}, {label: '07:00 AM', value: '07:00:00'},
-      {label: '08:00 AM', value: '08:00:00'}, {label: '09:00 AM', value: '09:00:00'},
-      {label: '10:00 AM', value: '10:00:00'}, {label: '11:00 AM', value: '11:00:00'},
-      {label: '12:00 PM', value: '12:00:00'}, {label: '01:00 PM', value: '13:00:00'},
-      {label: '02:00 PM', value: '14:00:00'}, {label: '03:00 PM', value: '15:00:00'},
-      {label: '04:00 PM', value: '16:00:00'}, {label: '05:00 PM', value: '17:00:00'},
-      {label: '06:00 PM', value: '18:00:00'}, {label: '07:00 PM', value: '19:00:00'},
-      {label: '08:00 PM', value: '20:00:00'}, {label: '09:00 PM', value: '21:00:00'},
-      {label: '10:00 PM', value: '22:00:00'}, {label: '11:00 PM', value: '23:00:00'}
-    ]
 
     // Survey might be loaded without details
     let defaultFrom = (survey && survey.scheduleStartTime) ? survey.scheduleStartTime : '09:00:00'
     let defaultTo = (survey && survey.scheduleEndTime) ? survey.scheduleEndTime : '18:00:00'
-    let defaultTimezone = (survey && survey.timezone) ? survey.timezone : (Intl.DateTimeFormat().resolvedOptions().timeZone)
 
     if (!survey || !survey.scheduleDayOfWeek) {
       return <div>Loading...</div>
-    }
-
-    if (!timezones || !timezones.items) {
-      return (
-        <div>Loading timezones...</div>
-      )
     }
 
     return (
@@ -168,23 +135,11 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <Input s={12} m={6} type='select' label='From' defaultValue={defaultFrom} onChange={(value) => this.updateFrom(value)}>
-            {hours.map((hour) => (
-              <option value={hour.value} key={hour.value}>{hour.label}</option>
-            ))}
-          </Input>
-          <Input s={12} m={6} type='select' label='To' defaultValue={defaultTo} onChange={(value) => this.updateTo(value)}>
-            {hours.map((hour) => (
-              <option value={hour.value} key={hour.value}>{hour.label}</option>
-            ))}
-          </Input>
+          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} />
         </div>
         <div className='row'>
-          <Input s={12} m={6} type='select' label='Timezones' defaultValue={defaultTimezone} onChange={(value) => this.updateTimezone(value)}>
-            {timezones.items.map((tz) => (
-              <option value={tz} key={tz}>{this.formatTimezone(tz)}</option>
-            ))}
-          </Input>
+          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
         </div>
         {
           this.retryConfigurationInfo(survey)
