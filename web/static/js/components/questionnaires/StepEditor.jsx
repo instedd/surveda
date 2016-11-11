@@ -82,15 +82,21 @@ class StepEditor extends Component {
     this.setState(this.stateFromProps(newProps))
   }
 
+  changeIvrMode(e, mode) {
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: this.state.stepPromptIvr, audioSource: mode})
+  }
+
   stateFromProps(props) {
     const { step } = props
     return {
       stepTitle: step.title,
       stepType: step.type,
       stepPromptSms: step.prompt.sms || '',
-      stepPromptIvr: (step.prompt.ivr.text || {}).text || '',
+      stepPromptIvr: (step.prompt.ivr || {}).text || '',
       stepStore: step.store || '',
       audioId: step.prompt.ivr.audioId,
+      audioSource: step.prompt.ivr.audioSource,
       audioSrc: (step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : ''),
       audioErrors: ''
     }
@@ -165,12 +171,47 @@ class StepEditor extends Component {
         <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
         <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
         <div>
-          <i className='material-icons'>file_upload</i> Upload a file
+          <Dropdown label={this.state.audioSource == 'tts' ? <p><i className='material-icons'>record_voice_overtext_fields</i> Text to speech</p> : <p><i className='material-icons'>file_upload</i> Upload a file</p>} constrainWidth={false} dataBelowOrigin={false}>
+            <DropdownItem>
+              <a onClick={e => this.changeIvrMode(e, 'tts')}>
+                <div className='row'>
+                  <div className='col s2'>
+                    <i className='material-icons'>record_voice_overtext_fields</i>
+                  </div>
+                  <div className='col s8'>
+                    Text to speech
+                  </div>
+                  <div className='col s2'>
+                    {this.state.audioSource == 'tts' ? <i className='material-icons'>done</i> : ''}
+                  </div>
+                </div>
+              </a>
+            </DropdownItem>
+            <DropdownItem>
+              <a onClick={e => this.changeIvrMode(e, 'upload')}>
+                <div className='row'>
+                  <div className='col s2'>
+                    <i className='material-icons'>file_upload</i>
+                  </div>
+                  <div className='col s8'>
+                    Upload a file
+                  </div>
+                  <div className='col s2'>
+                    {this.state.audioSource == 'upload' ? <i className='material-icons'>done</i> : ''}
+                  </div>
+                </div>
+              </a>
+            </DropdownItem>
+          </Dropdown>
         </div>
-        <audio controls>
-          <source src={this.state.audioSrc} type='audio/mpeg' />
-        </audio>
-        <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+        {(this.state.audioSource == 'upload')
+        ? <div>
+          <audio controls>
+            <source src={this.state.audioSrc} type='audio/mpeg' />
+          </audio>
+          <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+        </div>
+        : ''}
       </div>
 
       ivrInput = <div>
