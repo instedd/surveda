@@ -95,12 +95,12 @@ class SurveyWizardScheduleStep extends Component {
             <div className='row' key={mode}>
               <div className='input-field col s12'>
                 <input
-                  id='completed-results'
+                  id='recontact-attempts'
                   type='text'
                   defaultValue={defaultValue}
                   onBlur={e => this.retryConfigurationChanged(mode, e)}
                   />
-                <label className='active' htmlFor='completed-results'>{mode} re-contact attempts</label>
+                <label className='active' htmlFor='recontact-attempts'>{mode} re-contact attempts</label>
                 <div>
                   Enter delays like 5m 2h to express time units
                 </div>
