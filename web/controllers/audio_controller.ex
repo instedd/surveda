@@ -33,5 +33,4 @@ defmodule Ask.AudioController do
     |> put_resp_header("content-disposition", "attachment; filename=#{audio.filename}")
     |> send_resp(200, audio.data)
   end
-
 end

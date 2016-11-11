@@ -91,7 +91,8 @@ class StepEditor extends Component {
       stepPromptIvr: (step.prompt.ivr.text || {}).text || '',
       stepStore: step.store || '',
       audioId: step.prompt.ivr.audioId,
-      audioSrc: (step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : '')
+      audioSrc: (step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : ''),
+      audioErrors: ''
     }
   }
 
@@ -103,6 +104,14 @@ class StepEditor extends Component {
           this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
           $('audio')[0].load()
         })
+      })
+      .catch((e) => {
+        e.json()
+         .then((response) => {
+           let errors = response.errors.data.join(' ')
+           this.setState({audioErrors: errors})
+           $('#unprocessableEntity').modal('open')
+         })
       })
   }
 
@@ -154,6 +163,7 @@ class StepEditor extends Component {
 
       let ivrFileInput = <div>
         <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
         <div>
           <i className='material-icons'>file_upload</i> Upload a file
         </div>

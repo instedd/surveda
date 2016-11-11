@@ -39,11 +39,10 @@ const apiFetchJSON = (url, schema, options) => {
 
 const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
   return apiFetch(url, options)
-    .then(response => response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    return handleResponse(response, responseCallback(json, schema)
-    )
-  })
+      .then(response => response.json().then(json => ({ json, response })))
+      .then(({ json, response }) => {
+        return handleResponse(response, responseCallback(json, schema))
+      })
 }
 
 const commonCallback = (json, schema) => {
@@ -84,11 +83,6 @@ const apiPutOrPostJSON = (url, schema, verb, body) => {
 
 const apiPostJSON = (url, schema, body) => {
   return apiPutOrPostJSON(url, schema, 'POST', body)
-}
-
-// TODO: WHY?
-const apiPostFile = (url, schema, formData) => {
-  return apiFetchJSON(url, schema, {method: 'POST', body: formData})
 }
 
 const apiPutJSON = (url, schema, body) => {
@@ -134,7 +128,9 @@ export const createSurvey = (projectId) => {
 export const createAudio = (files) => {
   let formData = new FormData()
   formData.append('file', files[0])
-  return apiPostFile('audios', audioSchema, formData)
+  let request = {method: 'POST', body: formData}
+
+  return apiFetchJSON('audios', audioSchema, request)
 }
 
 export const uploadRespondents = (survey, files) => {
