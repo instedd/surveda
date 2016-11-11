@@ -17,16 +17,15 @@ class TimezoneDropdown extends PureComponent {
   }
 
   formatTimezone(tz) {
-    const split = tz.split('/')
-    let res = split[0]
-    if (split.length == 2) {
-      res = split.join(' - ')
-    } else {
-      if (split.length == 3) {
-        res = res + ' - ' + split[2] + ', ' + split[1]
-      }
+    const split = tz.replace('_', ' ').split('/')
+    switch (split.length) {
+      case 2:
+        return `${split[0]} - ${split[1]}`
+      case 3:
+        return `${split[0]} - ${split[2]}, ${split[1]}`
+      default:
+        return split[0]
     }
-    return res
   }
 
   render() {
