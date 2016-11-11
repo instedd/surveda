@@ -26,8 +26,8 @@ defmodule Ask.Runtime.VerboiceChannel do
 
       _ ->
         case Broker.sync_step(respondent, params["Digits"]) do
-          {:prompt, prompt} ->
-            "<Response><Gather action=\"#{callback_url(respondent)}\"><Say>#{prompt}</Say></Gather></Response>"
+          {:prompt, %{"audio" => "tts", "text" => text}} ->
+            "<Response><Gather action=\"#{callback_url(respondent)}\"><Say>#{text}</Say></Gather></Response>"
           :end ->
             "<Response><Hangup/></Response>"
         end

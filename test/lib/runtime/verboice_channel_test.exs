@@ -27,8 +27,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, nil} ->
-        {:prompt, "Do you exercise?"}
+        {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")}
     end})
+
     conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id})
     assert response(conn, 200) =~ "<Say>Do you exercise?</Say>"
   end
@@ -37,7 +38,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, "8"} ->
-        {:prompt, "Do you exercise?"}
+        {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")}
     end})
     conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => "8"})
     assert response(conn, 200) =~ "<Say>Do you exercise?</Say>"
