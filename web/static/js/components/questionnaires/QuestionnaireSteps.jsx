@@ -6,15 +6,17 @@ import StepEditor from './StepEditor'
 const StepsList = ({steps, onClick}) => {
   if (steps.length != 0) {
     return (
-      <div>
+      <ul className="collapsible">
         { steps.map((step) => (
-          <Card key={step.id} >
-            <div className='card-content closed-step'>
-              <QuestionnaireClosedStep step={step} onClick={stepId => onClick(stepId)} />
-            </div>
-          </Card>
+          <li>
+            <Card key={step.id} >
+              <div className='card-content closed-step'>
+                <QuestionnaireClosedStep step={step} onClick={stepId => onClick(stepId)} />
+              </div>
+            </Card>
+          </li>
         ))}
-      </div>
+      </ul>
     )
   } else {
     return null

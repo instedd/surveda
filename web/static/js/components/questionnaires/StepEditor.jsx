@@ -174,9 +174,9 @@ class StepEditor extends Component {
         <ul className='collection collection-card'>
           <li className='collection-item input-field header'>
             <div className='row'>
-              <div className='col s12 m2'>
+              <div className='col s12'>
                 <div className='left'>
-                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
+                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>#</i>} constrainWidth={false} dataBelowOrigin={false}>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('multiple-choice')}>
                         <div className='row'>
@@ -209,13 +209,9 @@ class StepEditor extends Component {
                     </DropdownItem>
                   </Dropdown>
                 </div>
-              </div>
-              <div className='col s11 m9'>
-                <EditableTitleLabel title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
-              </div>
-              <div className='col s1 m1'>
+                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
                 <a href='#!'
-                  className='collapse'
+                  className='collapse right'
                   onClick={e => {
                     e.preventDefault()
                     onCollapse()

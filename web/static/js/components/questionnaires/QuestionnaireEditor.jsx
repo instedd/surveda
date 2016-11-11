@@ -97,46 +97,51 @@ class QuestionnaireEditor extends Component {
 
     return (
       <div className='row'>
-        <div className='row'>
-          <div className='col s12 m3'>
-            <div className='row'>
-              <div className='col s6'>
-                SMS
-              </div>
-              <div className='col s6'>
-                <div className='switch'>
-                  <label>
-                    <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
-                    <span className='lever' />
-                  </label>
-                </div>
-              </div>
+        <div className='col s12 m3 questionnaire-modes'>
+          <div className='row'>
+            <div className='col s12'>
+              <p className='grey-text'>Modes</p>
             </div>
-            <div className='row'>
-              <div className='col s6'>
-                IVR
-              </div>
-              <div className='col s6'>
-                <div className='switch'>
-                  <label>
-                    <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
-                    <span className='lever' />
-                  </label>
-                </div>
+          </div>
+          <div className='row'>
+            <div className='col s9 m9'>
+              <i className='material-icons v-middle'>sms</i>
+              <span>SMS</span>
+            </div>
+            <div className='col s3 m3'>
+              <div className='switch'>
+                <label>
+                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
+                  <span className='lever' />
+                </label>
               </div>
             </div>
           </div>
-          <div className='col s12 m8 offset-m1'>
-            <QuestionnaireSteps
-              steps={questionnaire.steps}
-              current={this.state.currentStep}
-              onSelectStep={stepId => this.selectStep(stepId)}
-              onDeselectStep={() => this.deselectStep()}
-              onDeleteStep={() => this.deleteStep()} />
-            <div className='row'>
-              <div className='col s12 m6 center-align'>
-                <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
+          <div className='row'>
+            <div className='col s9 m9'>
+              <i className='material-icons v-middle'>phone</i>
+              <span>Phone call</span>
+            </div>
+            <div className='col s3 m3'>
+              <div className='switch'>
+                <label>
+                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
+                  <span className='lever' />
+                </label>
               </div>
+            </div>
+          </div>
+        </div>
+        <div className='col s12 m8 offset-m1'>
+          <QuestionnaireSteps
+            steps={questionnaire.steps}
+            current={this.state.currentStep}
+            onSelectStep={stepId => this.selectStep(stepId)}
+            onDeselectStep={() => this.deselectStep()}
+            onDeleteStep={() => this.deleteStep()} />
+          <div className='row'>
+            <div className='col s12'>
+              <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
           </div>
         </div>
