@@ -54,7 +54,7 @@ defmodule Ask.SurveyControllerTest do
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
         "timezone" => "UTC",
-        "started_at" => nil
+        "started_at" => ""
       }
     end
 
@@ -82,7 +82,7 @@ defmodule Ask.SurveyControllerTest do
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
         "timezone" => "UTC",
-        "started_at" => nil
+        "started_at" => ""
       }
     end
 
@@ -196,7 +196,7 @@ defmodule Ask.SurveyControllerTest do
         "schedule_start_time" => "09:00:00",
         "schedule_end_time" => "18:00:00",
         "timezone" => "UTC",
-        "started_at" => nil
+        "started_at" => ""
       }
     end
 
@@ -499,14 +499,14 @@ defmodule Ask.SurveyControllerTest do
     assert Repo.get(Survey, survey.id).state == "running"
   end
 
-  # test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
-  #   now = Timex.now
-  #   project = insert(:project, user: user)
-  #   survey = insert(:survey, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), project: project)
-  #   post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
-  #   started_at = Repo.get(Survey, survey.id).started_at
-  #   assert (Timex.between?(started_at, Timex.shift(now, seconds: -3), Timex.shift(now, seconds: 3)))
-  # end
+  test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
+    now = Timex.now
+    project = insert(:project, user: user)
+    survey = insert(:survey, schedule_start_time: Ecto.Time.cast!("09:00:00"), schedule_end_time: Ecto.Time.cast!("18:00:00"), project: project)
+    post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    started_at = Repo.get(Survey, survey.id).started_at
+    assert (Timex.between?(started_at, Timex.shift(now, seconds: -3), Timex.shift(now, seconds: 3)))
+  end
 
   test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
