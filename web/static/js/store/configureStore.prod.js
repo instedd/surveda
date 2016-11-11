@@ -5,9 +5,8 @@ import rootReducer from '../reducers'
 import autosave from './autosave'
 import * as questionnaireActions from '../actions/questionnaire'
 import * as surveyActions from '../actions/survey'
-import createLogger from 'redux-logger'
 
-export default function configureStore(preState, enhancers = [], middlewares = []) {
+export default function configureStore(preState, middlewares = [], enhancers = []) {
   return createStore(
     rootReducer,
     preState,
@@ -15,7 +14,6 @@ export default function configureStore(preState, enhancers = [], middlewares = [
       applyMiddleware(
         thunkMiddleware,
         routerMiddleware(),
-        createLogger(),
         autosave((store) => store.questionnaire, questionnaireActions),
         autosave((store) => store.survey, surveyActions),
         ...middlewares),
