@@ -496,10 +496,16 @@ label {
 
 // ------- Respondent Chart SVG classes -----------
 
-.line {
+.line.respondentsData {
   fill: none;
   stroke: #4caf50;
   stroke-width: 2.0px;
+}
+
+.line.backgroundData {
+  fill: none;
+  stroke: #000;
+  stroke-width: 0.5px;
 }
 
 .axis line, .axis path{
