@@ -26,7 +26,7 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode)" do
     step = Flow.start(@quiz, "ivr") |> Flow.step()
     assert {:ok, %Flow{}, %{prompts: prompts}} = step
-    assert prompts == [%{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio" => "tts"}]
+    assert prompts == [%{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}]
   end
 
   test "retry step" do
@@ -54,7 +54,7 @@ defmodule Ask.FlowTest do
     step = flow |> Flow.step("8")
     assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
     assert stores == %{"Smokes" => "Yes"}
-    assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio" => "tts"}]
+    assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
   end
 
   test "next step with store, case insensitive, strip space" do

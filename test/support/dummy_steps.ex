@@ -42,11 +42,11 @@ defmodule Ask.StepBuilder do
   def sms_prompt(prompt) do
     prompt
   end
-  
+
   def tts_prompt(text) do
     %{
       "text" => text,
-      "audio" => "tts"
+      "audio_source" => "tts"
     }
   end
 
@@ -77,7 +77,7 @@ defmodule Ask.DummySteps do
           prompt: prompt(
             sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
             ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-          ), 
+          ),
           store: "Smokes",
           choices: [
             choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["8"]),
