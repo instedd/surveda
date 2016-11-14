@@ -15,6 +15,8 @@ export const RECEIVE = 'SURVEY_RECEIVE'
 export const SAVING = 'SURVEY_SAVING'
 export const SAVED = 'SURVEY_SAVED'
 export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
+export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
+export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
 
 export const createSurvey = (projectId) => (dispatch, getState) =>
   api.createSurvey(projectId).then(response => {
@@ -111,6 +113,16 @@ export const updateRespondentsCount = (respondentsCount) => ({
 export const setTimezone = (timezone) => ({
   type: SET_TIMEZONE,
   timezone
+})
+
+export const changeSmsRetryConfiguration = (smsRetryConfiguration) => ({
+  type: CHANGE_SMS_RETRY_CONFIGURATION,
+  smsRetryConfiguration
+})
+
+export const changeIvrRetryConfiguration = (ivrRetryConfiguration) => ({
+  type: CHANGE_IVR_RETRY_CONFIGURATION,
+  ivrRetryConfiguration
 })
 
 export const saving = () => ({

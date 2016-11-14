@@ -201,6 +201,24 @@ describe('survey reducer', () => {
     ])
     expect(result.data.timezone).toEqual('America/Cayenne')
   })
+
+  it('should change sms retry configuration property', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeSmsRetryConfiguration('15h 1d')
+    ])
+    expect(state.data.smsRetryConfiguration).toEqual('15h 1d')
+  })
+
+  it('should change ivr retry configuration property', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeIvrRetryConfiguration('15h 1d')
+    ])
+    expect(state.data.ivrRetryConfiguration).toEqual('15h 1d')
+  })
 })
 
 const survey = {

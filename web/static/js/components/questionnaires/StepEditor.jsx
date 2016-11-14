@@ -1,11 +1,22 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { EditableTitleLabel, Card, Dropdown, DropdownItem } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 import classNames from 'classnames/bind'
+import Dropzone from 'react-dropzone'
+import { createAudio } from '../../api.js'
+
+const AudioDropzone = ({ onDrop, onDropRejected }) => {
+  return (
+    <Dropzone className='dropfile audio' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
+      <div className='drop-icon' />
+      <div className='drop-text audio' />
+    </Dropzone>
+  )
+}
 
 class StepEditor extends Component {
   constructor(props) {
@@ -47,7 +58,7 @@ class StepEditor extends Component {
   stepPromptIvrSubmit(e) {
     e.preventDefault()
     const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audio: 'tts'})
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
   }
 
   stepStoreChange(e) {
@@ -71,6 +82,11 @@ class StepEditor extends Component {
     this.setState(this.stateFromProps(newProps))
   }
 
+  changeIvrMode(e, mode) {
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: this.state.stepPromptIvr, audioSource: mode})
+  }
+
   stateFromProps(props) {
     const { step } = props
     return {
@@ -78,8 +94,31 @@ class StepEditor extends Component {
       stepType: step.type,
       stepPromptSms: step.prompt.sms || '',
       stepPromptIvr: (step.prompt.ivr || {}).text || '',
-      stepStore: step.store || ''
+      stepStore: step.store || '',
+      audioId: step.prompt.ivr.audioId,
+      audioSource: step.prompt.ivr.audioSource,
+      audioSrc: (step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : ''),
+      audioErrors: ''
     }
+  }
+
+  handleFileUpload(files) {
+    const { step } = this.props
+    createAudio(files)
+      .then(response => {
+        this.setState({audioSrc: `/api/v1/audios/${response.result}`}, () => {
+          this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
+          $('audio')[0].load()
+        })
+      })
+      .catch((e) => {
+        e.json()
+         .then((response) => {
+           let errors = response.errors.data.join(' ')
+           this.setState({audioErrors: errors})
+           $('#unprocessableEntity').modal('open')
+         })
+      })
   }
 
   render() {
@@ -116,7 +155,7 @@ class StepEditor extends Component {
 
     let ivrInput = null
     if (ivr) {
-      ivrInput = <div className='row'>
+      let ivrTextInput = <div className='row'>
         <div className='col input-field s12'>
           <input
             id='step_editor_voice_message'
@@ -127,6 +166,58 @@ class StepEditor extends Component {
           <label htmlFor='step_editor_voice_message' className={classNames({'active': this.state.stepPromptIvr})}>Voice message</label>
         </div>
       </div>
+
+      let ivrFileInput = <div>
+        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        <div>
+          <Dropdown label={this.state.audioSource == 'tts' ? <p><i className='material-icons'>record_voice_overtext_fields</i> Text to speech</p> : <p><i className='material-icons'>file_upload</i> Upload a file</p>} constrainWidth={false} dataBelowOrigin={false}>
+            <DropdownItem>
+              <a onClick={e => this.changeIvrMode(e, 'tts')}>
+                <div className='row'>
+                  <div className='col s2'>
+                    <i className='material-icons'>record_voice_overtext_fields</i>
+                  </div>
+                  <div className='col s8'>
+                    Text to speech
+                  </div>
+                  <div className='col s2'>
+                    {this.state.audioSource == 'tts' ? <i className='material-icons'>done</i> : ''}
+                  </div>
+                </div>
+              </a>
+            </DropdownItem>
+            <DropdownItem>
+              <a onClick={e => this.changeIvrMode(e, 'upload')}>
+                <div className='row'>
+                  <div className='col s2'>
+                    <i className='material-icons'>file_upload</i>
+                  </div>
+                  <div className='col s8'>
+                    Upload a file
+                  </div>
+                  <div className='col s2'>
+                    {this.state.audioSource == 'upload' ? <i className='material-icons'>done</i> : ''}
+                  </div>
+                </div>
+              </a>
+            </DropdownItem>
+          </Dropdown>
+        </div>
+        {(this.state.audioSource == 'upload')
+        ? <div>
+          <audio controls>
+            <source src={this.state.audioSrc} type='audio/mpeg' />
+          </audio>
+          <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+        </div>
+        : ''}
+      </div>
+
+      ivrInput = <div>
+        {ivrTextInput}
+        {ivrFileInput}
+      </div>
     }
 
     return (
@@ -134,9 +225,9 @@ class StepEditor extends Component {
         <ul className='collection collection-card'>
           <li className='collection-item input-field header'>
             <div className='row'>
-              <div className='col s12 m2'>
+              <div className='col s12'>
                 <div className='left'>
-                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
+                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>#</i>} constrainWidth={false} dataBelowOrigin={false}>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('multiple-choice')}>
                         <div className='row'>
@@ -169,13 +260,9 @@ class StepEditor extends Component {
                     </DropdownItem>
                   </Dropdown>
                 </div>
-              </div>
-              <div className='col s11 m9'>
-                <EditableTitleLabel title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
-              </div>
-              <div className='col s1 m1'>
+                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
                 <a href='#!'
-                  className='collapse'
+                  className='collapse right'
                   onClick={e => {
                     e.preventDefault()
                     onCollapse()

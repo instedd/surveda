@@ -11,6 +11,7 @@ class QuestionnaireClosedStep extends Component {
         event.preventDefault()
         onClick(step.id)
       }}>
+        {step.type == 'multiple-choice' ? <i className='material-icons left'>list</i> : <i className='material-icons sharp left'>#</i>}
         <UntitledIfEmpty text={step.title} emptyText='Untitled question' />
         <i className='material-icons right grey-text'>expand_more</i>
       </a>

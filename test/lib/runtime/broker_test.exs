@@ -60,16 +60,55 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.timeout_at in interval
   end
 
-  test "mark the respondent as failed after timeout" do
-    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+  test "retry respondent (SMS mode)" do
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
-    # Second poll, this time it should timeout
+    # Second poll, retry the question
+    Broker.handle_info(:poll, nil)
+    refute_received [:setup, _, _]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Third poll, this time it should fail
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "completed"
+  end
+
+  test "retry respondent (IVR mode)" do
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Second poll, retry the question
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Third poll, this time it should fail
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -283,9 +322,9 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
-  def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps) do
-    test_channel = TestChannel.new
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings)
+  def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
+    test_channel = TestChannel.new(mode == "sms")
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
     quiz = insert(:questionnaire, steps: steps)
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz})) |> Repo.preload([:channels])
     channel_changeset = Ecto.Changeset.change(channel)

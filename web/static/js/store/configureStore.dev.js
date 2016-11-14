@@ -1,6 +1,6 @@
-import DevTools from '../components/DevTools'
 import prodStore from './configureStore.prod'
+import createLogger from 'redux-logger'
 
 export default function configureStore(preloadedState) {
-  return prodStore(preloadedState, [DevTools.instrument()])
+  return prodStore(preloadedState, [createLogger()])
 }

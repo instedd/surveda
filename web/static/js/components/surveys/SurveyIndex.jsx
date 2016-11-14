@@ -9,6 +9,7 @@ import { AddButton, Card, EmptyPage, UntitledIfEmpty } from '../ui'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
+import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
 
@@ -104,26 +105,6 @@ class SurveyCard extends PureComponent {
       }
     }
 
-    let icon = 'mode_edit'
-    let color = 'black-text'
-    let text = 'Editing'
-    switch (survey.state) {
-      case 'running':
-        icon = 'play_arrow'
-        color = 'green-text'
-        text = 'Running'
-        break
-      case 'ready':
-        icon = 'play_circle_outline'
-        color = 'black-text'
-        text = 'Ready to launch'
-        break
-      case 'completed':
-        icon = 'done'
-        color = 'black-text'
-        text = 'Completed'
-        break
-    }
     return (
       <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
         <div className='col s12 m6 l4'>
@@ -139,10 +120,7 @@ class SurveyCard extends PureComponent {
                 <span className='card-title truncate' title={survey.name}>
                   <UntitledIfEmpty text={survey.name} />
                 </span>
-                <p className={color}>
-                  <i className='material-icons'>{icon}</i>
-                  { text }
-                </p>
+                <SurveyStatus survey={survey} />
               </div>
             </div>
           </Card>

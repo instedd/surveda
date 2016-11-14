@@ -14,6 +14,8 @@ defmodule Ask.Survey do
     field :schedule_end_time, Ecto.Time
     field :timezone, :string
     field :started_at, Timex.Ecto.DateTime
+    field :sms_retry_configuration, :string
+    field :ivr_retry_configuration, :string
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
@@ -29,7 +31,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :started_at])
+    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
@@ -73,4 +75,31 @@ defmodule Ask.Survey do
     end
   end
 
+  def retries_configuration(survey, mode) do
+    retries = case mode do
+      "sms" -> survey.sms_retry_configuration
+      "ivr" -> survey.ivr_retry_configuration
+      _ -> nil
+    end
+
+    parse_retries(retries)
+  end
+
+  defp parse_retries(nil), do: []
+
+  defp parse_retries(retries) do
+    retries
+    |> String.split
+    |> Enum.map(&parse_retry_item(&1))
+  end
+
+  defp parse_retry_item(value) do
+    {value, type} = Integer.parse(value)
+    case type do
+      "m" -> value
+      "h" -> value * 60
+      "d" -> value * 60 * 24
+      _ -> value
+    end
+  end
 end

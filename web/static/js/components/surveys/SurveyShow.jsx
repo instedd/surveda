@@ -2,8 +2,10 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
+import * as questionnaireActions from '../../actions/questionnaire'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
+import SurveyStatus from './SurveyStatus'
 import { UntitledIfEmpty } from '../ui'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
@@ -12,9 +14,10 @@ class SurveyShow extends Component {
   static propTypes = {
     dispatch: React.PropTypes.func,
     router: React.PropTypes.object,
-    projectId: React.PropTypes.number.isRequired,
+    projectId: React.PropTypes.string.isRequired,
     surveyId: React.PropTypes.string.isRequired,
     survey: React.PropTypes.object,
+    questionnaire: React.PropTypes.object,
     respondentsStats: React.PropTypes.object,
     completedByDate: React.PropTypes.array,
     target: React.PropTypes.number,
@@ -23,7 +26,9 @@ class SurveyShow extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
-    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
+    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey =>
+      dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, survey.questionnaireId))
+    )
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
   }
 
@@ -40,10 +45,10 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, completedByDate, target, totalRespondents } = this.props
+    const { survey, respondentsStats, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
-    if (!survey || !completedByDate) {
+    if (!survey || !completedByDate || !questionnaire) {
       return <p>Loading...</p>
     }
 
@@ -51,9 +56,17 @@ class SurveyShow extends Component {
       <div>
         <div className='row'>
           <div className='col s12 m8'>
+            <h4>
+              {questionnaire.name}
+            </h4>
+            <SurveyStatus survey={survey} />
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12 m8'>
             <div className='card'>
               <div className='card-table-title'>
-                <UntitledIfEmpty text={survey.name} />
+                Dispositions
               </div>
               <div className='card-table'>
                 <table>
@@ -114,6 +127,7 @@ const mapStateToProps = (state, ownProps) => {
     project: state.project.data,
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,
+    questionnaire: state.questionnaire.data,
     respondentsStats: respondentsStats,
     completedByDate: completedRespondentsByDate,
     target: target,

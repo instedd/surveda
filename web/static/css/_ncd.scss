@@ -250,14 +250,14 @@ footer {
       p {
         margin-top: 10px;
       }
-      i {
-        vertical-align: top;
-        margin-right: 10px;
-      }
     }
   }
 }
 
+i.survey-status {
+  vertical-align: top;
+  margin-right: 10px;
+}
 
 // ------- Left Wizard ----------
 
@@ -319,6 +319,53 @@ footer {
   width: 24.9vw;
 }
 
+
+// ------- Questionnaires ----------
+
+.questionnaire-modes {
+  i {
+    margin-right: 10px;
+  }
+}
+
+.collapsible {
+  @include transition(all ease-in-out .25s);
+  li {
+    border-bottom: 1px solid color("grey", "lighten-2");
+    .card {
+      @extend .z-depth-0;
+      margin: 0;
+      border-radius: 0;
+      .card-content.closed-step {
+        padding: 0;
+        a {
+          @extend .black-text;
+          @extend .clearfix;
+          font-size: 20px;
+          display: block;
+          padding: 25px 20px;
+          span {
+            @extend .truncate;
+            width: 85%;
+            float: left;
+          }
+        }
+      }
+    }
+    &:first-child .card {
+      border-radius: 3px 3px 0 0;
+    }
+    &:last-child {
+      border-bottom: none;
+      .card {
+        border-radius: 0 0 3px 3px;
+      }
+    }
+  }
+}
+
+
+
 // ------- Forms --------------
 
 .dropfile {
@@ -354,8 +401,15 @@ footer {
     width: 70%;
     top: 50%;
     margin: 0 15%;
-    &:before {
+    &.csv:before {
       content: 'Drop your CSV file here, or click to browse';
+      text-align: center;
+      position: absolute;
+      width: 100%;
+      text-align: center;
+    }
+    &.audio:before {
+      content: 'Drop your Audio file here, or click to browse';
       text-align: center;
       position: absolute;
       width: 100%;
@@ -379,6 +433,10 @@ footer {
       content: 'Invalid file type';
     }
   }
+}
+
+.dropfile.audio {
+    height: 60px;
 }
 
 .select-wrapper {
@@ -412,22 +470,21 @@ footer {
 }
 
 .collection-item.header {
-  padding: 20px;
+  padding: 20px 15px;
   .material-icons.prefix {
     @extend .grey-text, .lighten-2;
     font-size: 1.6rem;
     top: 1.8rem;
   }
-  input[type=text].editable-field {
+  input[type=text] {
     font-size: 20px;
     border-bottom: none;
     width: 85%;
-    margin-left: 2.4rem;
     margin-bottom: 0;
   }
   .collapse {
     @extend .grey-text, .lighten-2;
-    margin-top: 1rem;
+    margin-right: -10px;
   }
   .dropdown-content li a, .dropdown-button {
     @extend .grey-text
@@ -438,8 +495,8 @@ footer {
   a.page-title {
     font-size: 20px;
     @extend .black-text;
-    max-width: 95%;
-    display: inline-block;
+    max-width: 80%;
+    float: left;
     i {
       @extend .grey-text, .lighten-2;
       font-size: 24px;
@@ -454,25 +511,21 @@ footer {
   @extend .grey-text, .lighten-2;
 }
 
-.closed-step {
-  a {
-    @extend .black-text;
-    @extend .clearfix;
-    font-size: 20px;
-    display: block;
-    padding: 10px 0;
-    span {
-      width: 85%;
-      float: left;
-    }
-  }
-}
+
 
 
 // ------- helper classes -----------
 
 .mtop {
   margin-top: -8rem;
+}
+
+.v-middle {
+  vertical-align: middle;
+}
+
+.no-padd {
+  padding: 0;
 }
 
 .empty_page {

@@ -15,4 +15,14 @@ defmodule Ask.SurveyTest do
     changeset = Survey.changeset(%Survey{}, @invalid_attrs)
     refute changeset.valid?
   end
+
+  test "default retries configuration" do
+    survey = %Survey{}
+    assert [] = Survey.retries_configuration(survey, "sms")
+  end
+
+  test "parse retries configuration" do
+    survey = %Survey{sms_retry_configuration: "5m 2h 3d"}
+    assert [5, 120, 4320] = Survey.retries_configuration(survey, "sms")
+  end
 end

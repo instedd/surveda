@@ -40,6 +40,7 @@ defmodule Ask.Router do
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
       end
       resources "/channels", ChannelController, except: [:new, :edit]
+      resources "/audios", AudioController, only: [:create, :show]
     end
   end
 

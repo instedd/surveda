@@ -12,11 +12,6 @@ class SurveyTitle extends Component {
     survey: PropTypes.object
   }
 
-  componentWillMount() {
-    const { dispatch, projectId, surveyId } = this.props
-    dispatch(surveyActions.fetchSurveyIfNeeded(projectId, surveyId))
-  }
-
   handleSubmit(newName) {
     const { dispatch, survey } = this.props
     if (survey.name == newName) return

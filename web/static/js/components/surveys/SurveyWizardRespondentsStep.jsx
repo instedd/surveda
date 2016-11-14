@@ -103,7 +103,7 @@ const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
   return (
     <Dropzone className='dropfile' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} accept='text/csv' onDropRejected={onDropRejected} >
       <div className='drop-icon' />
-      <div className='drop-text' />
+      <div className='drop-text csv' />
     </Dropzone>
   )
 }

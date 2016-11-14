@@ -54,7 +54,9 @@ defmodule Ask.SurveyControllerTest do
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
         "timezone" => "UTC",
-        "started_at" => ""
+        "started_at" => "",
+        "ivr_retry_configuration" => nil,
+        "sms_retry_configuration" => nil
       }
     end
 
@@ -82,7 +84,9 @@ defmodule Ask.SurveyControllerTest do
         "schedule_start_time" => nil,
         "schedule_end_time" => nil,
         "timezone" => "UTC",
-        "started_at" => ""
+        "started_at" => "",
+        "ivr_retry_configuration" => nil,
+        "sms_retry_configuration" => nil
       }
     end
 
@@ -196,7 +200,9 @@ defmodule Ask.SurveyControllerTest do
         "schedule_start_time" => "09:00:00",
         "schedule_end_time" => "18:00:00",
         "timezone" => "UTC",
-        "started_at" => ""
+        "started_at" => "",
+        "ivr_retry_configuration" => nil,
+        "sms_retry_configuration" => nil
       }
     end
 

@@ -9,6 +9,7 @@ const respondentSchema = new Schema('respondents')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
+const audioSchema = new Schema('audios')
 
 export class Unauthorized {
   constructor(response) {
@@ -38,11 +39,10 @@ const apiFetchJSON = (url, schema, options) => {
 
 const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
   return apiFetch(url, options)
-    .then(response => response.json().then(json => ({ json, response }))
-  ).then(({ json, response }) => {
-    return handleResponse(response, responseCallback(json, schema)
-    )
-  })
+      .then(response => response.json().then(json => ({ json, response })))
+      .then(({ json, response }) => {
+        return handleResponse(response, responseCallback(json, schema))
+      })
 }
 
 const commonCallback = (json, schema) => {
@@ -123,6 +123,14 @@ export const createProject = (project) => {
 
 export const createSurvey = (projectId) => {
   return apiPostJSON(`projects/${projectId}/surveys`, surveySchema)
+}
+
+export const createAudio = (files) => {
+  let formData = new FormData()
+  formData.append('file', files[0])
+  let request = {method: 'POST', body: formData}
+
+  return apiFetchJSON('audios', audioSchema, request)
 }
 
 export const uploadRespondents = (survey, files) => {

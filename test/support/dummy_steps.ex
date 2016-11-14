@@ -1,139 +1,150 @@
+defmodule Ask.StepBuilder do
+  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices) do
+    %{
+      "id" => id,
+      "type" => "multiple-choice",
+      "title" => title,
+      "prompt" => prompt,
+      "store" => store,
+      "choices" => choices
+    }
+  end
+
+  def numeric_step(id: id, title: title, prompt: prompt, store: store) do
+    %{
+      "id" => id,
+      "type" => "numeric",
+      "title" => title,
+      "prompt" => prompt,
+      "store" => store,
+    }
+  end
+
+  def prompt(sms: sms) do
+    %{
+      "sms" => sms
+    }
+  end
+
+  def prompt(ivr: ivr) do
+    %{
+      "ivr" => ivr
+    }
+  end
+
+  def prompt(sms: sms, ivr: ivr) do
+    %{
+      "sms" => sms,
+      "ivr" => ivr
+    }
+  end
+
+  def sms_prompt(prompt) do
+    prompt
+  end
+  
+  def tts_prompt(text) do
+    %{
+      "text" => text,
+      "audio" => "tts"
+    }
+  end
+
+  def choice(value: value, sms: sms, ivr: ivr) do
+    %{
+      "value" => value,
+      "responses" => %{"sms" => sms, "ivr" => ivr}
+    }
+  end
+
+  def choice(value: value, sms: sms, ivr: ivr, skip_logic: skip_logic) do
+    %{
+      "value" => value,
+      "responses" => %{"sms" => sms, "ivr" => ivr},
+      "skip_logic" => skip_logic
+    }
+  end
+end
+
 defmodule Ask.DummySteps do
+  import Ask.StepBuilder
   defmacro __using__(_) do
     quote do
       @dummy_steps [
-        %{
-          "id" => "17141bea-a81c-4227-bdda-f5f69188b0e7",
-          "type" => "multiple-choice",
-          "title" => "Do you smoke?",
-          "prompt" => %{
-            "sms" => "Do you smoke? Reply 1 for YES, 2 for NO",
-            "ivr" => %{
-              "text" => "Do you smoke? Press 8 for YES, 9 for NO",
-              "audio" => "tts"
-            }
-          },
-          "store" => "Smokes",
-          "choices" => [
-            %{
-              "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["8"]}
-            },
-            %{
-              "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["9"]}
-            }
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ), 
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["8"]),
+            choice(value: "No", sms: ["No", "N", "2"], ivr: ["9"])
           ]
-        },
-        %{
-          "id" => "b6588daa-cd81-40b1-8cac-ff2e72a15c15",
-          "type" => "multiple-choice",
-          "title" => "Do you exercise?",
-          "prompt" => %{
-            "sms" => "Do you exercise? Reply 1 for YES, 2 for NO",
-            "ivr" => %{
-              "text" => "Do you exercise? Press 1 for YES, 2 for NO",
-              "audio" => "tts"
-            }
-          },
-          "store" => "Exercises",
-          "choices" => [
-            %{
-              "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]}
-            },
-            %{
-              "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]}
-            }
+        ),
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you exercise",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"]),
+            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
           ]
-        },
-        %{
-          "id" => "c6588daa-cd81-40b1-8cac-ff2e72a15c15",
-          "type" => "numeric",
-          "title" => "Which is the second perfect number?",
-          "prompt" => %{
-            "sms" => "Which is the second perfect number??"
-          },
-          "store" => "Perfect Number",
-        }
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
+          store: "Perfect Number"
+        )
       ]
 
       @skip_logic [
-        %{
-          "id" => "aaa",
-          "type" => "multiple-choice",
-          "title" => "Do you smoke?",
-          "prompt" => %{
-            "sms" => "Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS",
-          },
-          "store" => "Smokes",
-          "choices" => [
-            %{
-              "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]},
-              "skip_logic" => "end"
-            },
-            %{
-              "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]},
-              "skip_logic" => nil
-            },
-            %{
-              "value" => "Maybe",
-              "responses" => %{"sms" => ["Maybe", "M", "3"], "ivr" => ["3"]},
-            },
-            %{
-              "value" => "Sometimes",
-              "responses" => %{"sms" => ["Sometimes", "S", "4"], "ivr" => ["4"]},
-              "skip_logic" => "ccc"
-            },
-            %{
-              "value" => "ALWAYS",
-              "responses" => %{"sms" => ["Always", "A", "5"], "ivr" => ["5"]},
-              "skip_logic" => "undefined_id"
-            }
+        multiple_choice_step(
+          id: "aaa",
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS")
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"], skip_logic: "end"),
+            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"], skip_logic: nil),
+            choice(value: "Maybe", sms: ["Maybe", "M", "3"], ivr: ["3"]),
+            choice(value: "Sometimes", sms: ["Sometimes", "S", "4"], ivr: ["4"], skip_logic: "ccc"),
+            choice(value: "ALWAYS", sms: ["Always", "A", "5"], ivr: ["5"], skip_logic: "undefined_id")
           ]
-        },
-        %{
-          "id" => "bbb",
-          "type" => "multiple-choice",
-          "title" => "Do you exercise?",
-          "prompt" => %{
-            "sms" => "Do you exercise? Reply 1 for YES, 2 for NO",
-          },
-          "store" => "Exercises",
-          "choices" => [
-            %{
-              "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]},
-              "skip_logic" => "aaa"
-            },
-            %{
-              "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]}
-            }
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"], skip_logic: "aaa"),
+            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
           ]
-        },
-        %{
-          "id" => "ccc",
-          "type" => "multiple-choice",
-          "title" => "Is this questionnaire refreshing?",
-          "prompt" => %{
-            "sms" => "Is this questionnaire refreshing? Reply 1 for YES, 2 for NO, 3 for MAYBE",
-          },
-          "store" => "Refresh",
-          "choices" => [
-            %{
-              "value" => "Yes",
-              "responses" => %{"sms" => ["Yes", "Y", "1"], "ivr" => ["1"]}
-            },
-            %{
-              "value" => "No",
-              "responses" => %{"sms" => ["No", "N", "2"], "ivr" => ["2"]}
-            }
+        ),
+        multiple_choice_step(
+          id: "ccc",
+          title: "Is this questionnaire refreshing?",
+          prompt: prompt(
+            sms: sms_prompt("Is this questionnaire refreshing? Reply 1 for YES, 2 for NO, 3 for MAYBE")
+          ),
+          store: "Refresh",
+          choices: [
+            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"]),
+            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
           ]
-        }
+        )
       ]
     end
   end
