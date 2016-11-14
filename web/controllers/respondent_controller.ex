@@ -103,6 +103,14 @@ defmodule Ask.RespondentController do
       |> Enum.filter(fn {index, _} -> index != -1 end)
       |> Enum.sort
 
+    # If we didn't find a delimiter it probably means
+    # there's just a single line in the file.
+    # In that case any delimiter, like "\n", is good.
+    delimiter = case delimiter do
+      -1 -> "\n"
+      _  -> delimiter
+    end
+
     csv_string
     |> String.split(delimiter)
     |> Enum.filter(fn r ->
