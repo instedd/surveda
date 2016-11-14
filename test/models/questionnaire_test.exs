@@ -11,6 +11,16 @@ defmodule Ask.QuestionnaireTest do
     assert changeset.valid?
   end
 
+  test "strips empty strings from mode list" do
+    project = insert(:project)
+    attrs = %{project_id: project.id, name: "some content", modes: [], steps: []}
+    changeset = Questionnaire.changeset(%Questionnaire{}, attrs)
+    model = changeset |> Repo.insert!
+    id = model.id
+    model = Repo.one(from m in Questionnaire, where: m.id == ^id)
+    assert model.modes == []
+  end
+
   test "changeset with invalid attributes" do
     changeset = Questionnaire.changeset(%Questionnaire{}, @invalid_attrs)
     refute changeset.valid?

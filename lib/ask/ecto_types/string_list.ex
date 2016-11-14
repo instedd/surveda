@@ -11,7 +11,7 @@ defmodule Ask.Ecto.Type.StringList do
   def cast(list) when is_list(list), do: {:ok, list}
   def cast(_), do: :error
 
-  def load(string) when is_binary(string), do: {:ok, String.split(string, ",")}
+  def load(string) when is_binary(string), do: {:ok, String.split(string, ",", trim: true)}
 
   def dump(list) when is_list(list), do: {:ok, Enum.join(list, ",")}
   def dump(_), do: :error
