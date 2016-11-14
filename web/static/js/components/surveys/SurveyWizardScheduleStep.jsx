@@ -88,7 +88,7 @@ class SurveyWizardScheduleStep extends Component {
                   defaultValue={defaultValue}
                   onBlur={e => this.retryConfigurationChanged(mode, e)}
                   />
-                <label className='active' htmlFor='recontact-attempts'>{mode} re-contact attempts</label>
+                <label className='active' htmlFor='recontact-attempts'>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
                 <div>
                   Enter delays like 5m 2h to express time units
                 </div>
