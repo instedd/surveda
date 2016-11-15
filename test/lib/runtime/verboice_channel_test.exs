@@ -54,6 +54,17 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     assert response(conn, 200) == "<Response><Hangup/></Response>"
   end
 
+  test "callback with audio", %{conn: conn, respondent: respondent} do
+    respondent_id = respondent.id
+    GenServer.cast(Broker.server_ref, {:expects, fn
+      {:sync_step, %Respondent{id: ^respondent_id}, nil} ->
+        { :prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?") }
+    end})
+
+    conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id})
+    assert response(conn, 200) =~ "<Play>http://app.ask.dev/audio/foo</Play>"
+  end
+
   test "callback respondent not found", %{conn: conn} do
     conn = VerboiceChannel.callback(conn, %{"respondent" => 0})
     assert response(conn, 200) == "<Response><Hangup/></Response>"
