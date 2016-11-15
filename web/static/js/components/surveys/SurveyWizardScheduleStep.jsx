@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import TimezoneDropdown from '../timezones/TimezoneDropdown'
 import TimeDropdown from '../ui/TimeDropdown'
+import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
@@ -35,70 +36,6 @@ class SurveyWizardScheduleStep extends Component {
   toggleDay(day) {
     const { dispatch } = this.props
     dispatch(actions.toggleDay(day))
-  }
-
-  replaceTimeUnits(value) {
-    let formattedValue = value
-    formattedValue = formattedValue.replace('m', ' minutes')
-    formattedValue = formattedValue.replace('h', ' hours')
-    formattedValue = formattedValue.replace('d', ' days')
-    return formattedValue
-  }
-
-  retryConfigurationChanged(mode, e) {
-    e.preventDefault(e)
-    const { dispatch } = this.props
-    const value = e.target.value.replace(/[^0-9hdm\s]/g, '').trim()
-    e.target.value = value
-    if (mode == 'sms') {
-      dispatch(actions.changeSmsRetryConfiguration(value))
-    } else {
-      if (mode == 'ivr') {
-        dispatch(actions.changeIvrRetryConfiguration(value))
-      }
-    }
-  }
-
-  retryConfigurationFlow(mode, retriesValue) {
-    if (retriesValue) {
-      const values = retriesValue.split(' ')
-      return (
-        <ul>
-          <li> - Initial contact </li>
-          {values.map((v, i) =>
-            <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
-          )}
-        </ul>
-      )
-    }
-  }
-
-  retryConfigurationInfo(survey) {
-    const modes = survey.mode
-    if (modes) {
-      return (
-        modes.map((mode) => {
-          const defaultValue = (mode === 'sms') ? survey.smsRetryConfiguration : survey.ivrRetryConfiguration
-          return (
-            <div className='row' key={mode}>
-              <div className='input-field col s12'>
-                <input
-                  id='recontact-attempts'
-                  type='text'
-                  defaultValue={defaultValue}
-                  onBlur={e => this.retryConfigurationChanged(mode, e)}
-                  />
-                <label className='active' htmlFor='recontact-attempts'>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
-                <div>
-                  Enter delays like 5m 2h to express time units
-                </div>
-                {this.retryConfigurationFlow(mode, defaultValue)}
-              </div>
-            </div>
-          )
-        })
-      )
-    }
   }
 
   render() {
@@ -141,9 +78,7 @@ class SurveyWizardScheduleStep extends Component {
         <div className='row'>
           <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
         </div>
-        {
-          this.retryConfigurationInfo(survey)
-        }
+        <SurveyWizardRetryAttempts />
       </div>
     )
   }
