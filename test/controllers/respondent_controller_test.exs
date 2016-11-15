@@ -58,8 +58,9 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "lists stats for a given survey", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = insert(:project, user: user)
-    survey = insert(:survey, project: project, cutoff: 10)
+    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     insert_list(10, :respondent, survey: survey, state: "pending")
     insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
     insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
@@ -67,29 +68,44 @@ defmodule Ask.RespondentControllerTest do
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
-    assert json_response(conn, 200)["data"] == %{
-      "id" => survey.id,
-      "respondents_by_state" => %{
-        "pending" => 10,
-        "completed" => 5,
-        "active" => 0,
-        "failed" => 0
-      },
-      "completed_by_date" => %{
-        "respondents_by_date" => [
-          %{
-            "date" => "2016-01-01",
-            "count" => 2
-          },
-          %{
-            "date" => "2016-01-02",
-            "count" => 3
-          }
-        ],
-        "total_respondents" => 15,
-        "cutoff" => 10
-      }
-    }
+    assert json_response(conn, 200)["data"]["id"] == survey.id
+    assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
+                                                    "pending" => 10,
+                                                    "completed" => 5,
+                                                    "active" => 0,
+                                                    "failed" => 0
+                                                  }
+    assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 0)["count"] == 2
+    assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 1)["count"] == 3
+    assert json_response(conn, 200)["data"]["completed_by_date"]["total_respondents"] == 15
+    assert json_response(conn, 200)["data"]["completed_by_date"]["cutoff"] == 10
+  end
+
+  test "first value of respondents by date corresponds to started_at date", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
+    insert_list(10, :respondent, survey: survey, state: "pending")
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+
+    assert (List.first(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"])["date"]) == "2016-01-01"
+  end
+
+  test "fills dates when any respondent completed the survey with 0's", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = insert(:project, user: user)
+    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
+    insert_list(10, :respondent, survey: survey, state: "pending")
+    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-03T10:00:00Z", "{ISO:Extended}"))
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    date_with_no_respondents = Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 1)
+
+    assert date_with_no_respondents["date"] == "2016-01-02"
+    assert date_with_no_respondents["count"] == 0
   end
 
   test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do

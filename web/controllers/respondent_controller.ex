@@ -54,6 +54,12 @@ defmodule Ask.RespondentController do
     end
   end
 
+  def responded_on(datetime, by_date) do
+    { date, _ } = datetime
+    value = Enum.find(by_date, fn x -> elem(x, 0) == date end)
+    if (value), do: value, else: {date, 0}
+  end
+
   def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
     survey = Project
     |> Repo.get!(project_id)
@@ -67,12 +73,14 @@ defmodule Ask.RespondentController do
       group_by: :state,
       select: {r.state, count("*")}) |> Enum.into(%{})
 
-    respondents_by_date = Repo.all(
+    by_date = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
       group_by: fragment("DATE(completed_at)"),
       select: {fragment("DATE(completed_at)"), count("*")})
 
     total_respondents = length(survey.respondents)
+    range = Timex.Interval.new(from: survey.started_at, until: Timex.now)
+    respondents_by_date = Enum.map(range, fn datetime -> responded_on(Timex.to_erl(datetime), by_date) end)
 
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0

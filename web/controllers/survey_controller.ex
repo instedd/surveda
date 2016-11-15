@@ -126,7 +126,7 @@ defmodule Ask.SurveyController do
     |> Repo.get!(survey.project_id)
     |> authorize(conn)
 
-    changeset = Survey.changeset(survey, %{"state": "running"})
+    changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
     case Repo.update(changeset) do
       {:ok, survey} ->
         project |> Project.touch!
