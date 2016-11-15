@@ -95,9 +95,9 @@ class StepEditor extends Component {
       stepPromptSms: step.prompt.sms || '',
       stepPromptIvr: (step.prompt.ivr || {}).text || '',
       stepStore: step.store || '',
-      audioId: step.prompt.ivr.audioId,
-      audioSource: step.prompt.ivr.audioSource,
-      audioSrc: (step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : ''),
+      audioId: (step.prompt.ivr || {}).audioId,
+      audioSource: (step.prompt.ivr || {}).audioSource || 'tts',
+      audioSrc: (step.prompt.ivr && step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : ''),
       audioErrors: ''
     }
   }
