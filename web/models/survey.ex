@@ -91,15 +91,19 @@ defmodule Ask.Survey do
     retries
     |> String.split
     |> Enum.map(&parse_retry_item(&1))
+    |> Enum.reject(fn x -> x == 0 end)
   end
 
   defp parse_retry_item(value) do
-    {value, type} = Integer.parse(value)
-    case type do
-      "m" -> value
-      "h" -> value * 60
-      "d" -> value * 60 * 24
-      _ -> value
+    case Integer.parse(value) do
+      :error -> 0
+      {value, type} ->
+        case type do
+          "m" -> value
+          "h" -> value * 60
+          "d" -> value * 60 * 24
+          _ -> 0
+        end
     end
   end
 end

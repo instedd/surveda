@@ -25,4 +25,9 @@ defmodule Ask.SurveyTest do
     survey = %Survey{sms_retry_configuration: "5m 2h 3d"}
     assert [5, 120, 4320] = Survey.retries_configuration(survey, "sms")
   end
+
+  test "handle invalid retries configuration" do
+    survey = %Survey{sms_retry_configuration: "5m foo . 2 1h"}
+    assert [5, 60] = Survey.retries_configuration(survey, "sms")
+  end
 end
