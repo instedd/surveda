@@ -153,6 +153,18 @@ describe('survey reducer', () => {
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
+  it('should update state when saved', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleDay('wed'),
+      actions.saving(),
+      actions.saved({...survey, state: 'foo'})
+    ])
+
+    expect(state.data.state).toEqual('foo')
+  })
+
   it('should be marked dirty if there were a change in the middle', () => {
     const state = playActions([
       actions.fetch(1, 1),

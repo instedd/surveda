@@ -4,7 +4,8 @@ use Mix.Config
 # you can enable the server option below.
 config :ask, Ask.Endpoint,
   http: [port: 4001],
-  server: false
+  server: false,
+  url: [host: "app.ask.dev", port: 80]
 
 # Print only warnings and errors during test
 config :logger, level: :warn

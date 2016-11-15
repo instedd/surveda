@@ -47,4 +47,9 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://456", "body" => "yes"})
     assert json_response(conn, 200) == []
   end
+
+  test "sanitize phone number" do
+    num = NuntiumChannel.sanitize_phone_number("+ (549) 11 1234 5627")
+    assert num == "+5491112345627"
+  end
 end

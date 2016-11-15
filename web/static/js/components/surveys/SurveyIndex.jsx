@@ -40,7 +40,7 @@ class SurveyIndex extends Component {
   newSurvey() {
     const { dispatch, projectId, router } = this.props
     dispatch(surveyActions.createSurvey(projectId)).then(survey =>
-      router.push(routes.editSurvey(projectId, survey))
+      router.push(routes.surveyEdit(projectId, survey))
     )
   }
 

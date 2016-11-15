@@ -26,13 +26,26 @@ class RespondentsChart extends Component {
   }
 
   setData(completedByDate) {
+    let initialDate
+    let nextThreeMonths
+    let lastDate
+    if (!completedByDate || completedByDate.length < 1) {
+      initialDate = new Date(Date.now())
+      lastDate = new Date(Date.now())
+      lastDate.setDate(lastDate.getDate() + 90)
+    } else {
+      initialDate = new Date(Date.parse(completedByDate[0].date))
+      nextThreeMonths = new Date(Date.parse(completedByDate[0].date))
+      nextThreeMonths.setDate(nextThreeMonths.getDate() + 90)
+      lastDate = new Date(Math.max(Date.parse(completedByDate[completedByDate.length - 1].date), nextThreeMonths))
+    }
     const formatDate = function(date) { return new Date(Date.parse(date)) }
     this.data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } });
-    (this._x).domain(d3.extent(this.data, function(d) { return d.date }))
+    (this._x).domain([initialDate, lastDate])
 
     this.xaxis = d3.svg.axis()
                         .scale(this._x)
-                        .ticks(4)
+                        .ticks(3)
 
     const _x = this._x
     const _y = this._y
@@ -40,12 +53,22 @@ class RespondentsChart extends Component {
                         .x(function(d) { return _x(d.date) })
                         .y(function(d) { return _y(d.count) })
 
-    this.XAxis.call(this.xaxis)
+    this.backgroundData = [{date: initialDate, count: 0}, {date: lastDate, count: 100}]
+
+    this.XAxis.call(this.xaxis
+        .ticks(3)
+        .tickFormat(d3.time.format('%b')))
         .selectAll('text')
         .attr('dy', 7)
+        .attr('x', 10)
 
     this.path.datum(this.data)
-        .attr('class', 'line')
+        .attr('class', 'line respondentsData')
+        .attr('d', this.line)
+
+    this.backgroundPath.datum(this.backgroundData)
+        .attr('class', 'line backgroundData')
+        .style('stroke-dasharray', '2,2')
         .attr('d', this.line)
   }
 
@@ -64,6 +87,9 @@ class RespondentsChart extends Component {
     this.path = this.container.append('path')
                           .attr('class', 'line')
 
+    this.backgroundPath = this.container.append('path')
+                                    .attr('class', 'line')
+
     this._x = d3.time.scale()
     this._y = d3.scale.linear().domain([0, 100])
 
@@ -74,7 +100,6 @@ class RespondentsChart extends Component {
                         .orient('right')
     this.xaxis = d3.svg.axis()
                         .scale(this._x)
-                        .ticks(4)
 
     const _x = this._x
     const _y = this._y

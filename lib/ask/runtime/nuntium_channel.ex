@@ -78,6 +78,10 @@ defmodule Ask.Runtime.NuntiumChannel do
     Phoenix.Controller.json(conn, reply)
   end
 
+  def sanitize_phone_number(text) do
+    ~r/[^\+\d]/ |> Regex.replace(text, "")
+  end
+
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
     def setup(_channel, _respondent), do: :ok
     def can_push_question?(_), do: true

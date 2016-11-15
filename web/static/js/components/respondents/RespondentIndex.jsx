@@ -88,12 +88,14 @@ class RespondentIndex extends Component {
       </div>
     )
 
+    const respondentsFieldName = allFieldNames(respondents)
+
     return (
       <CardTable title={title} footer={footer}>
         <thead>
           <tr>
             <th>Phone number</th>
-            {allFieldNames(respondents).map(field =>
+            {respondentsFieldName.map(field =>
               <th key={field}>{field}</th>
             )}
             <th>Date</th>
@@ -102,12 +104,12 @@ class RespondentIndex extends Component {
         <tbody>
           { range(0, pageSize).map(index => {
             const respondent = respondentsList[index]
-            if (!respondent) return <tr key={-index}><td colSpan='2'>&nbsp;</td></tr>
+            if (!respondent) return <tr key={-index}><td colSpan={respondentsFieldName.length + 2}>&nbsp;</td></tr>
 
             return (
               <tr key={respondent.id}>
                 <td> {respondent.phoneNumber}</td>
-                {allFieldNames(respondents).map(function(field) {
+                {respondentsFieldName.map(function(field) {
                   return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
                 })}
                 <td>

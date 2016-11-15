@@ -4,7 +4,6 @@ import Dropzone from 'react-dropzone'
 import { ConfirmationModal, Card } from '../ui'
 import { uploadRespondents, removeRespondents } from '../../api'
 import * as actions from '../../actions/survey'
-import * as surveyActions from '../../actions/surveys'
 import * as respondentsActions from '../../actions/respondents'
 
 class SurveyWizardRespondentsStep extends Component {
@@ -20,9 +19,7 @@ class SurveyWizardRespondentsStep extends Component {
       .then(response => {
         dispatch(respondentsActions.receiveRespondents(survey.id, 1, response.entities.respondents || {}, response.respondentsCount))
         dispatch(actions.updateRespondentsCount(response.respondentsCount))
-        dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
-          .then(survey => dispatch(actions.setState(survey.state)))
-          .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
+        dispatch(actions.save())
       }, (e) => {
         e.json().then((value) => {
           dispatch(respondentsActions.receiveInvalids(value))
@@ -37,9 +34,7 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
-        dispatch(actions.fetchSurveyIfNeeded(survey.projectId, survey.id))
-          .then(survey => dispatch(actions.setState(survey.state)))
-          .catch((e) => dispatch(surveyActions.receiveSurveysError(e)))
+        dispatch(actions.save())
       })
   }
 

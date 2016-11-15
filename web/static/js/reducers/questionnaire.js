@@ -220,7 +220,10 @@ const newStep = () => ({
   store: '',
   prompt: {
     sms: '',
-    ivr: ''
+    ivr: {
+      text: '',
+      audioSource: 'tts'
+    }
   },
   choices: []
 })

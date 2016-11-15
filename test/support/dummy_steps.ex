@@ -50,6 +50,14 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def audio_prompt(uuid: uuid, text: text) do
+    %{
+      "text" => text,
+      "audio_id" => uuid,
+      "audio_source" => "upload"
+    }
+  end
+
   def choice(value: value, sms: sms, ivr: ivr) do
     %{
       "value" => value,

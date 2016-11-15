@@ -35,7 +35,7 @@ class SurveyShow extends Component {
   componentDidUpdate() {
     const { survey, router } = this.props
     if (survey && survey.state == 'not_ready') {
-      router.replace(routes.editSurvey(survey.projectId, survey.id))
+      router.replace(routes.surveyEdit(survey.projectId, survey.id))
     }
   }
 

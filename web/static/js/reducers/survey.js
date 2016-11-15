@@ -16,7 +16,7 @@ export const dataReducer = (state, action) => {
     case actions.SET_TIMEZONE: return setTimezone(state, action)
     case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
-    case actions.SAVE: return save(state, action)
+    case actions.SAVED: return saved(state, action)
     default: return state
   }
 }
@@ -42,7 +42,7 @@ const setState = (state, action) => {
   }
 }
 
-const save = (state, action) => {
+const saved = (state, action) => {
   return {
     ...state,
     state: action.data.state
