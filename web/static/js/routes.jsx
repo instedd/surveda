@@ -55,18 +55,18 @@ export default (
 export const root = '/'
 export const projects = '/projects'
 export const project = (id) => `${projects}/${id}`
-export const surveys = (projectId) => `${project(projectId)}/surveys`
-export const survey = (projectId, surveyId) => `${surveys(projectId)}/${surveyId}`
+export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
+export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
-export const editSurvey = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
-export const questionnaires = (projectId) => `${project(projectId)}/questionnaires`
-export const questionnaire = (projectId, questionnaireId) => `${questionnaires(projectId)}/${questionnaireId}`
+export const surveyEdit = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
+export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
+export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const channels = '/channels'
 
 export const showOrEditSurvey = (s) => {
   if (s.state == 'not_ready' || s.state == 'ready') {
-    return editSurvey(s.projectId, s.id)
+    return surveyEdit(s.projectId, s.id)
   } else {
     return survey(s.projectId, s.id)
   }

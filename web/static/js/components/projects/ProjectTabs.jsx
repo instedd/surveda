@@ -9,8 +9,8 @@ class ProjectTabs extends Component {
 
     return (
       <Tabs id='project_tabs'>
-        <TabLink tabId='project_tabs' to={routes.surveys(projectId)}>Surveys</TabLink>
-        <TabLink tabId='project_tabs' to={routes.questionnaires(projectId)}>Questionnaires</TabLink>
+        <TabLink tabId='project_tabs' to={routes.surveyIndex(projectId)}>Surveys</TabLink>
+        <TabLink tabId='project_tabs' to={routes.questionnaireIndex(projectId)}>Questionnaires</TabLink>
       </Tabs>
     )
   }
