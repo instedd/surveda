@@ -4,6 +4,7 @@ defmodule Ask.SessionTest do
   import Ask.Factory
   alias Ask.Runtime.Session
   alias Ask.TestChannel
+  alias Ask.Runtime.Flow
 
   setup do
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -57,6 +58,25 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     assert :failed = Session.timeout(session)
+  end
+
+  test "switch to fallback after last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    fallback_channel = build(:channel, settings: TestChannel.new(false) |> TestChannel.settings)
+
+    phone_number = respondent.phone_number
+
+    {session, 10} = Session.start(quiz, respondent, channel, [], fallback_channel, [5])
+    assert_receive [:setup, ^test_channel, ^respondent]
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    expected_session = %Session{
+      channel: fallback_channel,
+      retries: [],
+      fallback: nil,
+      flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}      
+    }
+
+    assert {expected_session, 5} = Session.timeout(session)
   end
 
   test "uses retry configuration", %{quiz: quiz, respondent: respondent, channel: channel} do
