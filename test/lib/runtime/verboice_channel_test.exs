@@ -21,8 +21,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     GenServer.start_link(BrokerStub, [], name: Broker.server_ref)
     respondent = insert(:respondent, phone_number: "123", state: "active")
     {
-      :ok, 
-      conn: conn, 
+      :ok,
+      conn: conn,
       respondent: respondent,
       tts_step: {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},
       # Triple of "digits", step spec, and expected TwiML output
@@ -39,10 +39,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   test "callbacks", %{conn: conn, respondent: respondent, twiml_map: twiml_map} do
     respondent_id = respondent.id
 
-    Enum.each(twiml_map, fn 
-      {digits, step, twiml} -> 
+    Enum.each(twiml_map, fn
+      {digits, step, twiml} ->
         GenServer.cast(Broker.server_ref, {:expects, fn
-          {:sync_step, %Respondent{id: ^respondent_id}, digits} -> step
+          {:sync_step, %Respondent{id: ^respondent_id}, ^digits} -> step
         end})
 
         conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits})
