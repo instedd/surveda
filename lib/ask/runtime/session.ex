@@ -28,10 +28,10 @@ defmodule Ask.Runtime.Session do
       _ ->
         session = %Session{
           channel: channel,
-          retries: retries, 
-          fallback: channel_tuple(fallback_channel, fallback_retries), 
-          flow: flow, 
-          respondent: respondent        
+          retries: retries,
+          fallback: channel_tuple(fallback_channel, fallback_retries),
+          flow: flow,
+          respondent: respondent
         }
         {session, current_timeout(session)}
     end
@@ -43,9 +43,9 @@ defmodule Ask.Runtime.Session do
   defp channel
 
   def timeout(session) do
-    # Process retries. If there are no more retries, mark session as failed.    
+    # Process retries. If there are no more retries, mark session as failed.
     case session.retries do
-      [] -> 
+      [] ->
         case session.fallback do
           nil -> :failed
           _ -> switch_to_fallback(session)
@@ -53,8 +53,8 @@ defmodule Ask.Runtime.Session do
       [_ | retries] ->
         runtime_channel = Ask.Channel.runtime_channel(session.channel)
 
-        # Right now this actually means: 
-        # If we can push a question, it is Nuntium. 
+        # Right now this actually means:
+        # If we can push a question, it is Nuntium.
         # If we can't push a question, it is Verboice (so we need to schedule
         # a call and wait for the callback to actually execute a step).
         case runtime_channel |> Channel.can_push_question? do
@@ -89,16 +89,30 @@ defmodule Ask.Runtime.Session do
       channel_id: session.channel.id,
       flow: session.flow |> Flow.dump,
       respondent_id: session.respondent.id,
-      retries: session.retries
+      retries: session.retries,
+      fallback_channel_id: fallback_channel_id(session.fallback),
+      fallback_retries: fallback_retries(session.fallback)
     }
   end
+
+  defp fallback_channel(nil), do: nil
+  defp fallback_channel(id) do
+    Repo.get(Ask.Channel, id)
+  end
+
+  defp fallback_channel_id(nil), do: nil
+  defp fallback_channel_id({channel, _}), do: channel.id
+
+  defp fallback_retries(nil), do: nil
+  defp fallback_retries({_, retries}), do: retries
 
   def load(state) do
     %Session{
       channel: Repo.get(Ask.Channel, state["channel_id"]),
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
-      retries: state["retries"]
+      retries: state["retries"],
+      fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"])
     }
   end
 
