@@ -122,7 +122,22 @@ export const createProject = (project) => {
 }
 
 export const createSurvey = (projectId) => {
-  return apiPostJSON(`projects/${projectId}/surveys`, surveySchema)
+  const timezone = getTimezone()
+  let data
+  if (timezone) {
+    data = {survey: {timezone}}
+  } else {
+    data = null
+  }
+  return apiPostJSON(`projects/${projectId}/surveys`, surveySchema, data)
+}
+
+const getTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch (ex) {
+    return null
+  }
 }
 
 export const createAudio = (files) => {

@@ -16,18 +16,21 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create(conn, %{"project_id" => project_id}) do
+  def create(conn, %{"project_id" => project_id, "survey" => survey_params}) do
     project = Project
     |> Repo.get!(project_id)
+
+    props = %{"project_id" => project_id,
+              "name" => "",
+              "schedule_start_time" => Ecto.Time.cast!("09:00:00"),
+              "schedule_end_time" => Ecto.Time.cast!("18:00:00"),
+              "timezone" => "UTC"}
+    props = Map.merge(props, survey_params)
 
     changeset = project
     |> authorize(conn)
     |> build_assoc(:surveys)
-    |> Survey.changeset(%{project_id: project_id, name: "",
-                          schedule_start_time: Ecto.Time.cast!("09:00:00"),
-                          schedule_end_time: Ecto.Time.cast!("18:00:00"),
-                          timezone: "UTC"
-                        })
+    |> Survey.changeset(props)
 
     case Repo.insert(changeset) do
       {:ok, survey} ->
