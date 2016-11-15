@@ -30,9 +30,12 @@ class StepMultipleChoiceEditor extends Component {
     const { choices } = step
 
     let skipOptions = skip.slice()
+    let skipOptionsLength = skipOptions.length
 
     skipOptions.unshift({id: 'end', title: 'End survey'})
-    skipOptions.unshift({id: '', title: 'Next question'})
+    if (skipOptionsLength != 0) {
+      skipOptions.unshift({id: '', title: 'Next question'})
+    }
 
     return (
       <div>
