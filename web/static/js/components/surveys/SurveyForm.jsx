@@ -36,7 +36,7 @@ export default class SurveyForm extends Component {
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
     const channelStepCompleted = survey.mode != null && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
-    const cutoffStepCompleted = survey.cutoff != null
+    const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const scheduleStepCompleted =
       survey.scheduleDayOfWeek != null && (
         survey.scheduleDayOfWeek.sun ||
