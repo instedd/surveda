@@ -64,7 +64,7 @@ class QuestionnaireIndex extends Component {
 
     const title = `${totalCount} ${(totalCount == 1) ? ' questionnaire' : ' questionnaires'}`
     const footer = (
-      <div className='right-align'>
+      <div className='card-action right-align'>
         <ul className='pagination'>
           <li><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
           { hasPreviousPage
