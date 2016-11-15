@@ -85,10 +85,10 @@ class ChoiceEditor extends Component {
     }
   }
 
-  onKeyDown(event) {
+  onKeyDown(event, autoComplete = false) {
     if (event.key == 'Enter') {
       event.preventDefault()
-      this.exitEditMode()
+      this.exitEditMode(autoComplete)
     } else if (event.key == 'Tab') {
       this.setDoNotClose()
     }
@@ -130,7 +130,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onBlur={e => this.autoComplete(e)}
-              onKeyDown={e => this.onKeyDown(e)} />
+              onKeyDown={e => this.onKeyDown(e, true)} />
           </td>
           { sms
           ? <td onMouseDown={e => this.setDoNotClose('sms')}>
