@@ -145,6 +145,7 @@ defmodule Ask.RespondentControllerTest do
     assert length(all) == 14
     assert Enum.at(all, 0).survey_id == survey.id
     assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
+    assert Enum.at(all, 0).sanitized_phone_number == "5491142342343"
   end
 
   test "uploads CSV file with phone numbers ignoring additional columns", %{conn: conn, user: user} do

@@ -56,9 +56,11 @@ defmodule Ask.Factory do
   end
 
   def respondent_factory do
+    phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
     %Ask.Respondent{
       survey: build(:survey),
-      phone_number: Integer.to_string(:rand.uniform(1000000000)),
+      phone_number: phone_number,
+      sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number),
       state: "pending"
     }
   end

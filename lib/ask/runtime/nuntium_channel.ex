@@ -59,7 +59,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     %URI{host: phone_number} = URI.parse(from)
 
     respondent = Repo.one(from r in Respondent,
-      where: r.phone_number == ^phone_number and r.state == "active",
+      where: r.sanitized_phone_number == ^phone_number and r.state == "active",
       order_by: [desc: r.updated_at],
       limit: 1)
 
@@ -76,10 +76,6 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
 
     Phoenix.Controller.json(conn, reply)
-  end
-
-  def sanitize_phone_number(text) do
-    ~r/[^\+\d]/ |> Regex.replace(text, "")
   end
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do

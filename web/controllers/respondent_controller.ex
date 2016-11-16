@@ -136,7 +136,7 @@ defmodule Ask.RespondentController do
 
     entries = rows
       |> Enum.map(fn row ->
-        %{phone_number: row, survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
+        %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
       end)
 
     respondents_count = entries
