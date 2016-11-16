@@ -364,7 +364,64 @@ i.survey-status {
   }
 }
 
-
+.sms-attempts {
+  li {
+    display: inline-block;
+    vertical-align: text-top;
+    margin-right: 15px;
+    position: relative;
+    span {
+      @extend .grey-text, .lighten-2;
+      font-size: 12px;
+      display: inline-block;
+      padding: 0 15px 0 12px;
+      vertical-align: bottom;
+      border-top: 1px solid color('grey', 'lighten-2');
+      position: relative;
+      &:after {
+        content: 'keyboard_arrow_right';
+        font-family: 'Material Icons';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 11px;
+        line-height: 1.158;
+        letter-spacing: normal;
+        text-transform: none;
+        text-rendering: optimizeLegibility;
+        font-feature-settings: 'liga';
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        opacity: 0.4;
+      }
+    }
+    &:after {
+      @extend .black-text;
+      content: 'phone';
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      text-rendering: optimizeLegibility;
+      font-feature-settings: 'liga';
+      margin-left: 10px;
+    }
+    &:first-child {
+      i {
+        margin-right: 10px;
+      }
+      &:after {
+        display: none;
+      }
+    }
+    &:last-child:after {
+      content: 'sms';
+    }
+  }
+}
 
 // ------- Forms --------------
 
@@ -511,7 +568,9 @@ i.survey-status {
   @extend .grey-text, .lighten-2;
 }
 
-
+.input-field.inline {
+  min-width: 250px;
+}
 
 
 // ------- helper classes -----------
@@ -543,7 +602,13 @@ i.survey-status {
 label {
   color: $primary-color;
 }
-
+.small-text-bellow {
+  @extend .grey-text, .lighten-2;
+  font-size: 14px;
+  margin-top: -18px;
+  margin-bottom: 22px;
+  display: block;
+}
 
 
 

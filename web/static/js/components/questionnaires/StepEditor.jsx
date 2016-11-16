@@ -290,16 +290,16 @@ class StepEditor extends Component {
           </li>
           <li className='collection-item'>
             <div className='row'>
-              <div className='col s4'>
-                <p>Save this response as:</p>
-              </div>
-              <div className='col s8'>
-                <input
-                  type='text'
-                  value={this.state.stepStore}
-                  onChange={e => this.stepStoreChange(e)}
-                  onBlur={e => this.stepStoreSubmit(e)}
-                  />
+              <div className='col s12'>
+                Save this response as:
+                <div className='input-field inline'>
+                  <input
+                    type='text'
+                    value={this.state.stepStore}
+                    onChange={e => this.stepStoreChange(e)}
+                    onBlur={e => this.stepStoreSubmit(e)}
+                    />
+                </div>
               </div>
             </div>
           </li>

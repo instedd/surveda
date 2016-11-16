@@ -63,10 +63,10 @@ class SurveyWizardScheduleStep extends Component {
     if (retriesValue) {
       const values = retriesValue.split(' ')
       return (
-        <ul>
-          <li> - Initial contact </li>
+        <ul className='sms-attempts'>
+          <li className='black-text'><i className='material-icons v-middle '>phone</i>first contact </li>
           {values.map((v, i) =>
-            <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
+            <li key={mode + v + i}><span>{this.replaceTimeUnits(v)}</span></li>
           )}
         </ul>
       )
@@ -89,9 +89,9 @@ class SurveyWizardScheduleStep extends Component {
                   onBlur={e => this.retryConfigurationChanged(mode, e)}
                   />
                 <label className='active' htmlFor='recontact-attempts'>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
-                <div>
+                <span className='small-text-bellow'>
                   Enter delays like 5m 2h to express time units
-                </div>
+                </span>
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
             </div>
