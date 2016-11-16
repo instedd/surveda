@@ -60,23 +60,32 @@ defmodule Ask.SessionTest do
     assert :failed = Session.timeout(session)
   end
 
+  # Primary SMS fallbacks to IVR
   test "switch to fallback after last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    fallback_channel = build(:channel, settings: TestChannel.new(false) |> TestChannel.settings)
+    fallback_channel = build(:channel, settings: TestChannel.new(false) |> TestChannel.settings, type: "ivr")
+    fallback_retries = [5]
 
     phone_number = respondent.phone_number
 
-    {session, 10} = Session.start(quiz, respondent, channel, [], fallback_channel, [5])
+    {session, 10} = Session.start(quiz, respondent, channel, [], fallback_channel, fallback_retries)
     assert_receive [:setup, ^test_channel, ^respondent]
     assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
       channel: fallback_channel,
-      retries: [],
+      retries: fallback_retries,
       fallback: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}      
     }
 
-    assert {expected_session, 5} = Session.timeout(session)
+    {result, 5} = Session.timeout(session)
+    
+    assert result.channel == expected_session.channel 
+    assert result.retries == expected_session.retries
+    assert result.fallback == expected_session.fallback
+    assert result.flow.questionnaire == expected_session.flow.questionnaire
+    assert result.flow.mode == expected_session.flow.mode
+    assert result.flow.current_step == expected_session.flow.current_step
   end
 
   test "uses retry configuration", %{quiz: quiz, respondent: respondent, channel: channel} do

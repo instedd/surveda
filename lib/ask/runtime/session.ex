@@ -6,8 +6,12 @@ defmodule Ask.Runtime.Session do
   @timeout 10
 
   def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
-    runtime_channel = Ask.Channel.runtime_channel(channel)
     flow = Flow.start(questionnaire, channel.type)
+    start_with_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries)
+  end
+
+  defp start_with_flow(flow, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
+    runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent)
 
     flow = case runtime_channel |> Channel.can_push_question? do
@@ -70,7 +74,10 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp switch_to_fallback(session), do: session
+  defp switch_to_fallback(session) do
+    {fallback_channel, fallback_retries} = session.fallback
+    start_with_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries)
+  end
 
   def sync_step(session, reply) do
     case Flow.step(session.flow, reply) do
