@@ -7,10 +7,10 @@ defmodule Ask.Runtime.Session do
 
   def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
     flow = Flow.start(questionnaire, channel.type)
-    start_with_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries)
+    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries)
   end
 
-  defp start_with_flow(flow, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
+  defp run_flow(flow, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent)
 
@@ -44,23 +44,24 @@ defmodule Ask.Runtime.Session do
   defp channel_tuple(nil, _), do: nil
   defp channel_tuple(channel, retries), do: {channel, retries}
 
-  defp channel
-
   def timeout(session) do
     # Process retries. If there are no more retries, mark session as failed.
     case session.retries do
       [] ->
         case session.fallback do
+          # We ran out of retries, and there is no fallback specified
           nil -> :failed
+          # If there is a fallback specified, switch session to use it
           _ -> switch_to_fallback(session)
         end
+      # Let's try again
       [_ | retries] ->
         runtime_channel = Ask.Channel.runtime_channel(session.channel)
 
         # Right now this actually means:
         # If we can push a question, it is Nuntium.
         # If we can't push a question, it is Verboice (so we need to schedule
-        # a call and wait for the callback to actually execute a step).
+        # a call and wait for the callback to actually execute a step, thus "push").
         case runtime_channel |> Channel.can_push_question? do
           true ->
             {:ok, _flow, %{prompts: prompts}} = Flow.retry(session.flow)
@@ -69,6 +70,7 @@ defmodule Ask.Runtime.Session do
           false ->
             runtime_channel |> Channel.setup(session.respondent)
         end
+        # The new session will timeout as defined by hd(retries)
         session = %{session | retries: retries}
         {session, current_timeout(session)}
     end
@@ -76,7 +78,7 @@ defmodule Ask.Runtime.Session do
 
   defp switch_to_fallback(session) do
     {fallback_channel, fallback_retries} = session.fallback
-    start_with_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries)
+    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries)
   end
 
   def sync_step(session, reply) do

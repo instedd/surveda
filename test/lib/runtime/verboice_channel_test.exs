@@ -42,7 +42,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     Enum.each(twiml_map, fn 
       {digits, step, twiml} -> 
         GenServer.cast(Broker.server_ref, {:expects, fn
-          {:sync_step, %Respondent{id: ^respondent_id}, digits} -> step
+          {:sync_step, %Respondent{id: ^respondent_id}, _} -> step
         end})
 
         conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits})

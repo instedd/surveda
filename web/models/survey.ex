@@ -85,6 +85,24 @@ defmodule Ask.Survey do
     parse_retries(retries)
   end
 
+  def primary_channel(survey) do
+    case survey.mode do
+      [mode | _] -> channel(survey, mode)
+      _ -> nil
+    end
+  end
+
+  def fallback_channel(survey) do
+    case survey.mode do
+      [_, mode] -> channel(survey, mode)
+      _ -> nil
+    end
+  end
+
+  defp channel(survey, mode) do
+    survey.channels |> Enum.find(fn c -> c.type == mode end)
+  end
+
   defp parse_retries(nil), do: []
 
   defp parse_retries(retries) do
