@@ -81,7 +81,7 @@ class SurveyWizardScheduleStep extends Component {
           const defaultValue = (mode === 'sms') ? survey.smsRetryConfiguration : survey.ivrRetryConfiguration
           return (
             <div className='row' key={mode}>
-              <div className='input-field col s12'>
+              <div className='input-field col s8'>
                 <input
                   id='recontact-attempts'
                   type='text'
@@ -135,11 +135,11 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} />
+          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
         </div>
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
+          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} />
         </div>
         {
           this.retryConfigurationInfo(survey)
