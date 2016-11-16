@@ -79,7 +79,6 @@ defmodule Ask.AudioControllerTest do
     test "returns a validation error if the file is of an invalid type", %{conn: conn} do
       file = %Plug.Upload{path: "test/fixtures/invalid_audio.csv", filename: "test1.csv"}
       conn = post conn, audio_path(conn, :create), file: file
-      json_response(conn, 201)[""]
 
       assert Enum.at(json_response(conn, 422)["errors"]["filename"], 0) == "Invalid file type. Allowed types are MPEG and WAV."
     end
@@ -89,19 +88,15 @@ defmodule Ask.AudioControllerTest do
   describe "show" do
 
     test "when the UUID exists it returns 200", %{conn: conn} do
-      file = %Plug.Upload{path: "test/fixtures/audio.mp3", filename: "test1.mp3"}
-      conn = post conn, audio_path(conn, :create), file: file
-      audio_uuid = json_response(conn, 201)["data"]["id"]
-      conn = get conn, audio_path(conn, :show, audio_uuid)
+      audio = insert(:audio)
+      conn = get conn, audio_path(conn, :show, audio.uuid)
 
       assert conn.status == 200
     end
 
     test "when the UUID exists it returns the file", %{conn: conn} do
-      file = %Plug.Upload{path: "test/fixtures/audio.mp3", filename: "test1.mp3"}
-      conn = post conn, audio_path(conn, :create), file: file
-      audio_uuid = json_response(conn, 201)["data"]["id"]
-      conn = get conn, audio_path(conn, :show, audio_uuid)
+      audio = insert(:audio)
+      conn = get conn, audio_path(conn, :show, audio.uuid)
 
       assert conn.resp_body == File.read!("test/fixtures/audio.mp3")
     end

@@ -1,6 +1,14 @@
 defmodule Ask.Factory do
   use ExMachina.Ecto, repo: Ask.Repo
 
+  def audio_factory do
+    %Ask.Audio{
+      uuid: Ecto.UUID.generate,
+      filename: "test_audio.mp3",
+      data: File.read!("test/fixtures/audio.mp3")
+    }
+  end
+
   def user_factory do
     %Ask.User{
       email: sequence(:email, &"email-#{&1}@example.com"),
