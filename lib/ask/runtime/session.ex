@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Session do
   alias Ask.Repo
   defstruct [:channel, :fallback, :flow, :respondent, :retries]
 
-  @timeout 5
+  @timeout 10
 
   def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
     flow = Flow.start(questionnaire, channel.type)

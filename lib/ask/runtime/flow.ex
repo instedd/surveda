@@ -80,10 +80,6 @@ defmodule Ask.Runtime.Flow do
     {flow, %Reply{}}
   end
 
-  defp accept_reply(flow, nil) do
-    {flow, %Reply{}}
-  end
-
   defp accept_reply(%Flow{current_step: nil}, _) do
     raise "Flow was not expecting any reply"
   end
