@@ -154,8 +154,11 @@ class StepEditor extends Component {
     }
 
     let ivrInput = null
+    let ivrTextInput = null
+    let ivrFileInput = null
+
     if (ivr) {
-      let ivrTextInput = <div className='row'>
+      ivrTextInput = <div className='row'>
         <div className='col input-field s12'>
           <input
             id='step_editor_voice_message'
@@ -167,45 +170,29 @@ class StepEditor extends Component {
         </div>
       </div>
 
-      let ivrFileInput = <div>
+      ivrFileInput = <div className='row audio-section'>
         <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
         <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-        <div>
-          <Dropdown label={this.state.audioSource == 'tts' ? <p><i className='material-icons'>record_voice_overtext_fields</i> Text to speech</p> : <p><i className='material-icons'>file_upload</i> Upload a file</p>} constrainWidth={false} dataBelowOrigin={false}>
+        <div className='audio-dropdown'>
+          <Dropdown className='step-mode underlined' label={this.state.audioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
             <DropdownItem>
               <a onClick={e => this.changeIvrMode(e, 'tts')}>
-                <div className='row'>
-                  <div className='col s2'>
-                    <i className='material-icons'>record_voice_overtext_fields</i>
-                  </div>
-                  <div className='col s8'>
-                    Text to speech
-                  </div>
-                  <div className='col s2'>
-                    {this.state.audioSource == 'tts' ? <i className='material-icons'>done</i> : ''}
-                  </div>
-                </div>
+                <i className='material-icons left'>record_voice_over</i>
+                Text to speech
+                {this.state.audioSource == 'tts' ? <i className='material-icons right'>done</i> : ''}
               </a>
             </DropdownItem>
             <DropdownItem>
               <a onClick={e => this.changeIvrMode(e, 'upload')}>
-                <div className='row'>
-                  <div className='col s2'>
-                    <i className='material-icons'>file_upload</i>
-                  </div>
-                  <div className='col s8'>
-                    Upload a file
-                  </div>
-                  <div className='col s2'>
-                    {this.state.audioSource == 'upload' ? <i className='material-icons'>done</i> : ''}
-                  </div>
-                </div>
+                <i className='material-icons left'>file_upload</i>
+                Upload a file
+                {this.state.audioSource == 'upload' ? <i className='material-icons right'>done</i> : ''}
               </a>
             </DropdownItem>
           </Dropdown>
         </div>
         {(this.state.audioSource == 'upload')
-        ? <div>
+        ? <div className='upload-audio'>
           <audio controls>
             <source src={this.state.audioSrc} type='audio/mpeg' />
           </audio>
@@ -214,7 +201,7 @@ class StepEditor extends Component {
         : ''}
       </div>
 
-      ivrInput = <div>
+      ivrInput = <div className='row'>
         {ivrTextInput}
         {ivrFileInput}
       </div>
@@ -227,7 +214,7 @@ class StepEditor extends Component {
             <div className='row'>
               <div className='col s12'>
                 <div className='left'>
-                  <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>#</i>} constrainWidth={false} dataBelowOrigin={false}>
+                  <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('multiple-choice')}>
                         <i className='material-icons left'>list</i>
@@ -237,7 +224,7 @@ class StepEditor extends Component {
                     </DropdownItem>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('numeric')}>
-                        <i className='material-icons left sharp'>#</i>
+                        <i className='material-icons left sharp'>dialpad</i>
                         Numeric
                         {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
                       </a>
@@ -263,7 +250,8 @@ class StepEditor extends Component {
               </div>
             </div>
             {smsInput}
-            {ivrInput}
+            {ivrTextInput}
+            {ivrFileInput}
           </li>
           <li className='collection-item'>
             <div className='row'>

@@ -329,6 +329,7 @@ i.survey-status {
 }
 
 .step-mode {
+  position: relative;
 
   .dropdown-button {
     @extend .black-text;
@@ -340,13 +341,26 @@ i.survey-status {
   .dropdown-content.active {
     @extend .z-depth-4;
     border-radius: 4px;
-    top: 8px !important;
-    left: 8px !important;
+    top: -20px !important;
+    left: -8px !important;
     min-width: 220px;
     i {
       min-width: 22px;
       &.right {
         @extend .black-text;
+      }
+    }
+    > li > a {
+      @extend .black-text;
+    }
+  }
+  &.underlined {
+    border-bottom: 1px solid color('grey','lighten-2');
+    display: inline-block;
+    padding-bottom: 5px;
+    span {
+      i {
+        vertical-align: text-bottom;
       }
     }
   }
@@ -503,6 +517,24 @@ i.survey-status {
   }
 }
 
+.audio-section {
+  position: relative;
+  .audio-dropdown {
+    display: inline-block;
+    width: 25%;
+    min-width: 145px;
+  }
+  .upload-audio {
+    padding-top: 20px;
+  }
+  audio {
+    position: absolute;
+    right: 5px;
+    top: 0px;
+    width: 74%;
+  }
+}
+
 // ------- Forms --------------
 
 .dropfile {
@@ -570,11 +602,23 @@ i.survey-status {
       content: 'Invalid file type';
     }
   }
+  &.audio {
+    height: 80px;
+    .drop-icon {
+      top: 10px;
+      &:before {
+        font-size: 30px;
+      }
+    }
+    .drop-text {
+      font-size: 90%;
+      width: 90%;
+      margin: 0 5%;
+    }
+
+  }
 }
 
-.dropfile.audio {
-    height: 60px;
-}
 
 .select-wrapper {
   .caret {
@@ -703,6 +747,16 @@ label {
 // ------- Media breakpoints adjustments -----------
 
 
+
+@media all and (max-width: 998px) {
+  .audio-section audio {
+    width: 55%;
+  }
+  .dropfile.audio .drop-text {
+    font-size: 78%;
+  }
+}
+
 @media all and (max-width: 600px) {
 
   .wrapper > * > * {
@@ -780,5 +834,8 @@ label {
   #questionnaire {
     margin-top: 6.5rem;
   }
-
+  .audio-section audio {
+    position: relative;
+    width: 100%;
+  }
 }
