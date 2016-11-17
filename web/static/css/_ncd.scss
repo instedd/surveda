@@ -328,6 +328,25 @@ i.survey-status {
   }
 }
 
+.step-mode {
+
+  .dropdown-button {
+    @extend .black-text;
+  }
+  i.right {
+    margin: 0;
+  }
+  .dropdown-content.active {
+    @extend .z-depth-2;
+    top: 8px !important;
+    left: 8px !important;
+    min-width: 220px;
+    i {
+      min-width: 22px;
+    }
+  }
+}
+
 .collapsible {
   @include transition(all ease-in-out .25s);
   li {
@@ -363,6 +382,50 @@ i.survey-status {
     }
   }
 }
+
+.collection-item.header {
+  padding: 25px 15px 25px 9px;
+  height: 80px;
+  .material-icons.prefix {
+    @extend .grey-text, .lighten-2;
+    font-size: 1.6rem;
+    top: 1.8rem;
+  }
+  input[type=text] {
+    font-size: 20px;
+    border-bottom: none;
+    width: 78%;
+    margin-bottom: 0px;
+    margin-top: -10px;
+    margin-left: 15px;
+  }
+  .collapse {
+    @extend .grey-text, .lighten-2;
+    margin-right: -10px;
+  }
+  .dropdown-content li a, .dropdown-button {
+    color: color('grey', 'base');
+  }
+  .row , input {
+    margin-bottom: 0;
+  }
+  a.page-title {
+    @extend .black-text;
+    font-size: 20px;
+    line-height: 1.35;
+    max-width: 80%;
+    margin-left: 15px;
+    float: left;
+    i {
+      @extend .grey-text, .lighten-2;
+      font-size: 24px;
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 15px;
+    }
+  }
+}
+
 
 .sms-attempts {
   li {
@@ -526,43 +589,7 @@ i.survey-status {
   overflow: visible;
 }
 
-.collection-item.header {
-  padding: 20px 15px;
-  .material-icons.prefix {
-    @extend .grey-text, .lighten-2;
-    font-size: 1.6rem;
-    top: 1.8rem;
-  }
-  input[type=text] {
-    font-size: 20px;
-    border-bottom: none;
-    width: 85%;
-    margin-bottom: 0;
-  }
-  .collapse {
-    @extend .grey-text, .lighten-2;
-    margin-right: -10px;
-  }
-  .dropdown-content li a, .dropdown-button {
-    @extend .grey-text
-  }
-  .row , input {
-    margin-bottom: 0;
-  }
-  a.page-title {
-    font-size: 20px;
-    @extend .black-text;
-    max-width: 80%;
-    float: left;
-    i {
-      @extend .grey-text, .lighten-2;
-      font-size: 24px;
-      display: inline-block;
-      vertical-align: top;
-      margin-left: 15px;
-    }
-  }
-}
+
 
 .character-counter {
   @extend .grey-text, .lighten-2;
