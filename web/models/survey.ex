@@ -6,7 +6,7 @@ defmodule Ask.Survey do
   schema "surveys" do
     field :name, :string
     field :mode, Ask.Ecto.Type.JSON
-    field :state, :string, default: "not_ready" # not_ready, ready, pending, completed
+    field :state, :string, default: "not_ready" # not_ready, ready, pending, active, completed
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
     field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
@@ -83,6 +83,24 @@ defmodule Ask.Survey do
     end
 
     parse_retries(retries)
+  end
+
+  def primary_channel(survey) do
+    case survey.mode do
+      [mode | _] -> channel(survey, mode)
+      _ -> nil
+    end
+  end
+
+  def fallback_channel(survey) do
+    case survey.mode do
+      [_, mode] -> channel(survey, mode)
+      _ -> nil
+    end
+  end
+
+  defp channel(survey, mode) do
+    survey.channels |> Enum.find(fn c -> c.type == mode end)
   end
 
   defp parse_retries(nil), do: []

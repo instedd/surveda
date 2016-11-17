@@ -118,6 +118,85 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
+  test "fallback respondent (SMS => IVR)" do
+    test_channel = TestChannel.new(true)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+
+    test_fallback_channel = TestChannel.new(false)
+    fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "ivr")
+
+    quiz = insert(:questionnaire, steps: @dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz, mode: ["sms", "ivr"]})) |> Repo.preload([:channels])
+
+    channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
+
+    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update
+    respondent = insert(:respondent, survey: survey)
+    phone_number = respondent.sanitized_phone_number
+
+    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
+    survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Second poll, retry the question
+    Broker.handle_info(:poll, nil)
+    refute_received [:setup, _, _]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Third poll, this time fallback to IVR channel
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+  end
+
+  test "fallback respondent (IVR => SMS)" do
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "ivr")
+
+    test_fallback_channel = TestChannel.new(true)
+    fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "sms")
+
+    quiz = insert(:questionnaire, steps: @dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz, mode: ["ivr", "sms"]})) |> Repo.preload([:channels])
+
+    channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
+
+    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update
+    respondent = insert(:respondent, survey: survey)
+    phone_number = respondent.sanitized_phone_number
+
+    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
+    survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Second poll, retry the question
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Third poll, this time fallback to SMS channel
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+    assert_received [:ask, ^test_fallback_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+  end
+
   test "marks the survey as completed when the cutoff is reached" do
     [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, 20)
@@ -326,7 +405,7 @@ defmodule Ask.BrokerTest do
     test_channel = TestChannel.new(mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
     quiz = insert(:questionnaire, steps: steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz})) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz, mode: [mode]})) |> Repo.preload([:channels])
     channel_changeset = Ecto.Changeset.change(channel)
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
     respondent = insert(:respondent, survey: survey)

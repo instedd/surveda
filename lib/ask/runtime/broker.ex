@@ -91,10 +91,16 @@ defmodule Ask.Runtime.Broker do
 
   defp start(survey, respondent) do
     survey = Repo.preload(survey, [:questionnaire, :channels])
-    channel = hd(survey.channels)
-    retries = Survey.retries_configuration(survey, channel.type)
+    primary_channel = Survey.primary_channel(survey)
+    fallback_channel = Survey.fallback_channel(survey)
 
-    case Session.start(survey.questionnaire, respondent, channel, retries) do
+    retries = Survey.retries_configuration(survey, primary_channel.type)
+    fallback_retries = case fallback_channel do
+      nil -> []
+      _ -> Survey.retries_configuration(survey, fallback_channel.type)
+    end
+
+    case Session.start(survey.questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries) do
       :end ->
         update_respondent(respondent, :end)
 
