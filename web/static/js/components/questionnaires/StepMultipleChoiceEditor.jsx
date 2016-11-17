@@ -52,7 +52,7 @@ class StepMultipleChoiceEditor extends Component {
                   : null
                   }
                   { ivr
-                  ? <th style={{width: '20%'}}>IVR</th>
+                  ? <th style={{width: '20%'}}>Phone call</th>
                   : null
                   }
                   <th style={{width: '30%'}}>Skip logic</th>

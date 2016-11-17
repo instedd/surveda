@@ -19,7 +19,7 @@ defmodule Ask.Runtime.Session do
         case flow |> Flow.step do
           {:end, _} -> :end
           {:ok, flow, %{prompts: [prompt]}} ->
-            runtime_channel |> Channel.ask(respondent.phone_number, [prompt])
+            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, [prompt])
             flow
         end
 
@@ -65,7 +65,7 @@ defmodule Ask.Runtime.Session do
         case runtime_channel |> Channel.can_push_question? do
           true ->
             {:ok, _flow, %{prompts: prompts}} = Flow.retry(session.flow)
-            runtime_channel |> Channel.ask(session.respondent.phone_number, prompts)
+            runtime_channel |> Channel.ask(session.respondent.sanitized_phone_number, prompts)
 
           false ->
             runtime_channel |> Channel.setup(session.respondent)

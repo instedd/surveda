@@ -28,7 +28,7 @@ class SurveyWizardCutoffStep extends Component {
           </div>
         </div>
         <div className='row'>
-          <div className='input-field col s12'>
+          <div className='input-field col s2'>
             <input
               id='completed-results'
               type='text'

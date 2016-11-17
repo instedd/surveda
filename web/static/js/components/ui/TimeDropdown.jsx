@@ -26,7 +26,7 @@ class TimeDropdown extends PureComponent {
     ]
 
     return (
-      <Input s={12} m={6} type='select' label={label} defaultValue={defaultValue} onChange={onChange}>
+      <Input s={12} m={3} type='select' label={label} defaultValue={defaultValue} onChange={onChange}>
         {hours.map((hour) => (
           <option value={hour.value} key={hour.value}>{hour.label}</option>
         ))}

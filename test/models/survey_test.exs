@@ -27,6 +27,11 @@ defmodule Ask.SurveyTest do
     assert [5, 120, 4320] = Survey.retries_configuration(survey, "sms")
   end
 
+  test "handle invalid retries configuration" do
+    survey = %Survey{sms_retry_configuration: "5m foo . 2 1h"}
+    assert [5, 60] = Survey.retries_configuration(survey, "sms")
+  end
+
   test "primary SMS and no fallback channel" do
     survey = %Survey{mode: ["sms"], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 

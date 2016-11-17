@@ -59,7 +59,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     %URI{host: phone_number} = URI.parse(from)
 
     respondent = Repo.one(from r in Respondent,
-      where: r.phone_number == ^phone_number and r.state == "active",
+      where: r.sanitized_phone_number == ^phone_number and r.state == "active",
       order_by: [desc: r.updated_at],
       limit: 1)
 

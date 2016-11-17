@@ -66,7 +66,7 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
     assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
@@ -96,14 +96,14 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
@@ -132,14 +132,14 @@ defmodule Ask.BrokerTest do
 
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update
     respondent = insert(:respondent, survey: survey)
-    phone_number = respondent.phone_number
+    phone_number = respondent.sanitized_phone_number
 
     survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
     survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
     assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
@@ -155,7 +155,7 @@ defmodule Ask.BrokerTest do
 
     # Third poll, this time fallback to IVR channel
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_fallback_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}]
   end
 
   test "fallback respondent (IVR => SMS)" do
@@ -172,28 +172,28 @@ defmodule Ask.BrokerTest do
 
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update
     respondent = insert(:respondent, survey: survey)
-    phone_number = respondent.phone_number
+    phone_number = respondent.sanitized_phone_number
 
     survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
     survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time fallback to SMS channel
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_fallback_channel, %Respondent{phone_number: ^phone_number}]
+    assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}]
     assert_received [:ask, ^test_fallback_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
   end
 
@@ -409,7 +409,7 @@ defmodule Ask.BrokerTest do
     channel_changeset = Ecto.Changeset.change(channel)
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
     respondent = insert(:respondent, survey: survey)
-    phone_number = respondent.phone_number
+    phone_number = respondent.sanitized_phone_number
 
     [survey, test_channel, respondent, phone_number]
   end

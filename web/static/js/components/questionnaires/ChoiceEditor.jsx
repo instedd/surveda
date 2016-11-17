@@ -136,7 +136,7 @@ class ChoiceEditor extends Component {
           ? <td onMouseDown={e => this.setDoNotClose('sms')}>
             <input
               type='text'
-              placeholder='SMS'
+              placeholder='Valid entries'
               value={this.state.sms}
               autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e)}
@@ -148,7 +148,7 @@ class ChoiceEditor extends Component {
           ? <td onMouseDown={e => this.setDoNotClose('ivr')}>
             <input
               type='text'
-              placeholder='IVR'
+              placeholder='Valid entries'
               value={this.state.ivr}
               autoFocus={this.state.focus == 'ivr'}
               onChange={e => this.ivrChange(e)}
