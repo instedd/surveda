@@ -41,7 +41,14 @@ defmodule Ask.Audio do
     else
       [data: "The file is too big, please do not exceed 16MB."]
     end
+  end
 
+  def mime_type(%Ask.Audio{filename: filename}) do
+    case Path.extname(filename) do
+      ".wav" -> "audio/wav"
+      ".mp3" -> "audio/mpeg3"
+      _ -> "application/octet-stream"
+    end
   end
 
 end
