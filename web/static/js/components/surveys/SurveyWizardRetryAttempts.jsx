@@ -85,13 +85,13 @@ class SurveyWizardRetryAttempts extends Component {
             <div className='row' key={mode}>
               <div className='input-field col s12'>
                 <input
-                  id='recontact-attempts'
+                  id={`recontact-attempts${mode}`}
                   type='text'
                   defaultValue={defaultValue}
                   onChange={e => this.editingRetryConfiguration(mode, e)}
                   onBlur={e => this.retryConfigurationChanged(mode, e)}
                   />
-                <label className='active' htmlFor='recontact-attempts'>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
+                <label className='active' htmlFor={`recontact-attempts${mode}`}>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
                 <span className='small-text-bellow'>
                   Enter delays like 5m 2h to express time units
                 </span>
