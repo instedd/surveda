@@ -227,35 +227,19 @@ class StepEditor extends Component {
             <div className='row'>
               <div className='col s12'>
                 <div className='left'>
-                  <Dropdown label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>#</i>} constrainWidth={false} dataBelowOrigin={false}>
+                  <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>#</i>} constrainWidth={false} dataBelowOrigin={false}>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('multiple-choice')}>
-                        <div className='row'>
-                          <div className='col s2'>
-                            <i className='material-icons'>list</i>
-                          </div>
-                          <div className='col s8'>
-                            Multiple choice
-                          </div>
-                          <div className='col s2'>
-                            {this.state.stepType == 'multiple-choice' ? <i className='material-icons'>done</i> : ''}
-                          </div>
-                        </div>
+                        <i className='material-icons left'>list</i>
+                        Multiple choice
+                        {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
                       </a>
                     </DropdownItem>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('numeric')}>
-                        <div className='row'>
-                          <div className='col s2'>
-                            <i className='material-icons sharp'>#</i>
-                          </div>
-                          <div className='col s8'>
-                            Numeric
-                          </div>
-                          <div className='col s2'>
-                            {this.state.stepType == 'numeric' ? <i className='material-icons'>done</i> : ''}
-                          </div>
-                        </div>
+                        <i className='material-icons left sharp'>#</i>
+                        Numeric
+                        {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
                       </a>
                     </DropdownItem>
                   </Dropdown>

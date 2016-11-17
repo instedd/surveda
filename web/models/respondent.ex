@@ -24,7 +24,7 @@ defmodule Ask.Respondent do
   end
 
   def sanitize_phone_number(text) do
-    ~r/[^\+\d]/ |> Regex.replace(text, "")
+    ~r/[^\d]/ |> Regex.replace(text, "")
   end
 
   def mask_phone_number(phone_number) do
