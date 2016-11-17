@@ -33,11 +33,22 @@ class SurveyWizardRetryAttempts extends Component {
       let values = retriesValue.split(' ')
       values = values.filter((v) => v)
       values = values.filter((v) => /^\d+[mhd]$/.test(v))
+      let cssClass, icon
+      switch (mode) {
+        case 'sms':
+          cssClass = 'sms-attempts'
+          icon = <i className='material-icons v-middle '>sms</i>
+          break
+        case 'ivr':
+          cssClass = 'ivr-attempts'
+          icon = <i className='material-icons v-middle '>phone</i>
+          break
+      }
       return (
-        <ul>
-          <li> - Initial contact </li>
+        <ul className={cssClass}>
+          <li className='black-text'>{icon}Initial contact </li>
           {values.map((v, i) =>
-            <li key={mode + v + i}> - {this.replaceTimeUnits(v)}</li>
+            <li key={mode + v + i}><span>{this.replaceTimeUnits(v)}</span></li>
           )}
         </ul>
       )
@@ -81,9 +92,9 @@ class SurveyWizardRetryAttempts extends Component {
                   onBlur={e => this.retryConfigurationChanged(mode, e)}
                   />
                 <label className='active' htmlFor='recontact-attempts'>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
-                <div>
+                <span className='small-text-bellow'>
                   Enter delays like 5m 2h to express time units
-                </div>
+                </span>
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
             </div>

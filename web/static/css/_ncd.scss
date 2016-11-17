@@ -432,7 +432,7 @@ i.survey-status {
 }
 
 
-.sms-attempts {
+.sms-attempts, .ivr-attempts {
   li {
     display: inline-block;
     vertical-align: text-top;
@@ -465,7 +465,6 @@ i.survey-status {
     }
     &:after {
       @extend .black-text;
-      content: 'phone';
       font-family: 'Material Icons';
       font-weight: normal;
       font-style: normal;
@@ -485,8 +484,21 @@ i.survey-status {
         display: none;
       }
     }
-    &:last-child:after {
+  }
+}
+
+.sms-attempts {
+  li {
+    &:after {
       content: 'sms';
+    }
+  }
+}
+
+.ivr-attempts {
+  li {
+    &:after {
+      content: 'phone';
     }
   }
 }
@@ -634,6 +646,7 @@ i.survey-status {
 label {
   color: $primary-color;
 }
+
 .small-text-bellow {
   @extend .grey-text, .lighten-2;
   font-size: 14px;
