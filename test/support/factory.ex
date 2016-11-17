@@ -1,6 +1,14 @@
 defmodule Ask.Factory do
   use ExMachina.Ecto, repo: Ask.Repo
 
+  def audio_factory do
+    %Ask.Audio{
+      uuid: Ecto.UUID.generate,
+      filename: "test_audio.mp3",
+      data: File.read!("test/fixtures/audio.mp3")
+    }
+  end
+
   def user_factory do
     %Ask.User{
       email: sequence(:email, &"email-#{&1}@example.com"),
@@ -48,9 +56,11 @@ defmodule Ask.Factory do
   end
 
   def respondent_factory do
+    phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
     %Ask.Respondent{
       survey: build(:survey),
-      phone_number: Integer.to_string(:rand.uniform(1000000000)),
+      phone_number: phone_number,
+      sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number),
       state: "pending"
     }
   end

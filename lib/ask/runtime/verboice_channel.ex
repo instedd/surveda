@@ -57,7 +57,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
     def setup(channel, respondent) do
       channel.client
-      |> Verboice.Client.call(address: respondent.phone_number,
+      |> Verboice.Client.call(address: respondent.sanitized_phone_number,
                               channel: channel.channel_name,
                               callback_url: VerboiceChannel.callback_url(respondent))
     end

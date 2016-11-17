@@ -72,11 +72,11 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} />
+          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
         </div>
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
+          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} />
         </div>
         <SurveyWizardRetryAttempts />
       </div>

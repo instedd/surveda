@@ -19,7 +19,7 @@ export default (
   <Route path='/' component={App}>
     <IndexRedirect to='projects' />
 
-    <Route path='/projects' title='My Projects'>
+    <Route path='/projects' title='Projects'>
       <IndexRoute component={ProjectIndex} />
 
       <Route path=':projectId' title={ProjectTitle}>
@@ -46,7 +46,7 @@ export default (
       </Route>
     </Route>
 
-    <Route path='/channels' title='My Channels' >
+    <Route path='/channels' title='Channels' >
       <IndexRoute component={ChannelIndex} />
     </Route>
   </Route>

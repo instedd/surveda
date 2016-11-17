@@ -14,7 +14,7 @@ defmodule Ask.SessionTest do
   end
 
   test "start", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    phone_number = respondent.phone_number
+    phone_number = respondent.sanitized_phone_number
 
     {session, timeout} = Session.start(quiz, respondent, channel)
     assert %Session{} = session
@@ -37,7 +37,7 @@ defmodule Ask.SessionTest do
   end
 
   test "retry question", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    phone_number = respondent.phone_number
+    phone_number = respondent.sanitized_phone_number
 
     assert {session, 5} = Session.start(quiz, respondent, channel, [5])
     assert_receive [:setup, ^test_channel, ^respondent]
@@ -50,7 +50,7 @@ defmodule Ask.SessionTest do
   end
 
   test "last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    phone_number = respondent.phone_number
+    phone_number = respondent.sanitized_phone_number
 
     {session, 10} = Session.start(quiz, respondent, channel)
     assert_receive [:setup, ^test_channel, ^respondent]

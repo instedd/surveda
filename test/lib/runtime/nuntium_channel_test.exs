@@ -19,7 +19,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: Broker.server_ref)
-    respondent = insert(:respondent, phone_number: "123", state: "active")
+    respondent = insert(:respondent, phone_number: "123 456", sanitized_phone_number: "123456", state: "active")
     {:ok, conn: conn, respondent: respondent}
   end
 
@@ -29,8 +29,8 @@ defmodule Ask.Runtime.NuntiumChannelTest do
       {:sync_step, %Respondent{id: ^respondent_id}, "yes"} ->
         {:prompt, "Do you exercise?"}
     end})
-    conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123", "body" => "yes"})
-    assert json_response(conn, 200) == [%{"to" => "sms://123", "body" => "Do you exercise?"}]
+    conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
+    assert json_response(conn, 200) == [%{"to" => "sms://123456", "body" => "Do you exercise?"}]
   end
 
   test "callback with :end", %{conn: conn, respondent: respondent} do
@@ -46,10 +46,5 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   test "callback respondent not found", %{conn: conn} do
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://456", "body" => "yes"})
     assert json_response(conn, 200) == []
-  end
-
-  test "sanitize phone number" do
-    num = NuntiumChannel.sanitize_phone_number("+ (549) 11 1234 5627")
-    assert num == "+5491112345627"
   end
 end
