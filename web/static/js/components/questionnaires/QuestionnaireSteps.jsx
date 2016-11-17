@@ -8,8 +8,8 @@ const StepsList = ({steps, onClick}) => {
     return (
       <ul className="collapsible">
         { steps.map((step) => (
-          <li>
-            <Card key={step.id} >
+          <li key={step.id}>
+            <Card>
               <div className='card-content closed-step'>
                 <QuestionnaireClosedStep step={step} onClick={stepId => onClick(stepId)} />
               </div>
