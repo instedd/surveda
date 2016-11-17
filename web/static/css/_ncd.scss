@@ -338,7 +338,8 @@ i.survey-status {
     margin: 0;
   }
   .dropdown-content.active {
-    @extend .z-depth-2;
+    @extend .z-depth-4;
+    border-radius: 4px;
     top: 8px !important;
     left: 8px !important;
     min-width: 220px;
