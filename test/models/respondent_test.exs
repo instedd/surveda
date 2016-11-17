@@ -18,6 +18,6 @@ defmodule Ask.RespondentTest do
 
   test "sanitize phone number" do
     num = Respondent.sanitize_phone_number("+ (549) 11 1234 5627")
-    assert num == "+5491112345627"
+    assert num == "5491112345627"
   end
 end
