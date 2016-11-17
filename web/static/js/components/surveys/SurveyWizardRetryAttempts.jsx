@@ -3,17 +3,13 @@ import React, { PropTypes, Component } from 'react'
 import * as actions from '../../actions/survey'
 
 class SurveyWizardRetryAttempts extends Component {
-  static propTypes = {
-  }
-
   componentDidMount() {
     const { survey } = this.props
     this.setState({smsRetryConfiguration: survey.data.smsRetryConfiguration, ivrRetryConfiguration: survey.data.ivrRetryConfiguration})
   }
 
   editingRetryConfiguration(mode, e) {
-    const value = e.target.value.replace(/[^0-9hdm\s]/g, '')
-    e.target.value = value
+    const value = e.target.value
     switch (mode) {
       case 'sms':
         this.setState({smsRetryConfiguration: value})
