@@ -291,7 +291,7 @@ class StepEditor extends Component {
           <li className='collection-item'>
             <div className='row'>
               <div className='col s12'>
-                Save this response as:
+                Variable name:
                 <div className='input-field inline'>
                   <input
                     type='text'
