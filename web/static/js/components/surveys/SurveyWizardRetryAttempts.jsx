@@ -14,19 +14,18 @@ class SurveyWizardRetryAttempts extends Component {
   editingRetryConfiguration(mode, e) {
     const value = e.target.value.replace(/[^0-9hdm\s]/g, '')
     e.target.value = value
-    if (mode == "sms") {
-      this.setState({smsRetryConfiguration: value})
-    } else {
-      if (mode == "ivr") {
+    switch (mode) {
+      case 'sms':
+        this.setState({smsRetryConfiguration: value})
+        break
+      case 'ivr':
         this.setState({ivrRetryConfiguration: value})
-      }
+        break
     }
   }
 
   replaceTimeUnits(value) {
     let formattedValue = value
-    // /^[\s]+$/.test("    ")
-    // /\d+[mhd]/
     formattedValue = formattedValue.replace('m', ' minutes')
     formattedValue = formattedValue.replace('h', ' hours')
     formattedValue = formattedValue.replace('d', ' days')
@@ -36,7 +35,7 @@ class SurveyWizardRetryAttempts extends Component {
   retryConfigurationFlow(mode, retriesValue) {
     if (retriesValue) {
       let values = retriesValue.split(' ')
-      values = values.filter((v) => v )
+      values = values.filter((v) => v)
       values = values.filter((v) => /^\d+[mhd]$/.test(v))
       return (
         <ul>
@@ -52,12 +51,13 @@ class SurveyWizardRetryAttempts extends Component {
   retryConfigurationChanged(mode, e) {
     const { dispatch } = this.props
     e.preventDefault(e)
-    if (mode == 'sms') {
-      dispatch(actions.changeSmsRetryConfiguration(this.state.smsRetryConfiguration))
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        dispatch(actions.changeSmsRetryConfiguration(this.state.smsRetryConfiguration))
+        break
+      case 'ivr':
         dispatch(actions.changeIvrRetryConfiguration(this.state.ivrRetryConfiguration))
-      }
+        break
     }
   }
 
@@ -106,5 +106,10 @@ class SurveyWizardRetryAttempts extends Component {
 const mapStateToProps = (state, ownProps) => ({
   survey: state.survey
 })
+
+SurveyWizardRetryAttempts.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  survey: PropTypes.object
+}
 
 export default connect(mapStateToProps)(SurveyWizardRetryAttempts)
