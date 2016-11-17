@@ -334,6 +334,7 @@ i.survey-status {
     @extend .black-text;
   }
   i.right {
+    @extend .grey-text, .lighten-1;
     margin: 0;
   }
   .dropdown-content.active {
@@ -343,6 +344,9 @@ i.survey-status {
     min-width: 220px;
     i {
       min-width: 22px;
+      &.right {
+        @extend .black-text;
+      }
     }
   }
 }
@@ -404,7 +408,7 @@ i.survey-status {
     margin-right: -10px;
   }
   .dropdown-content li a, .dropdown-button {
-    color: color('grey', 'base');
+    @extend .black-text;
   }
   .row , input {
     margin-bottom: 0;
