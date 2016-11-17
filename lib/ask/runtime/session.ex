@@ -10,7 +10,7 @@ defmodule Ask.Runtime.Session do
     run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries)
   end
 
-  defp run_flow(flow, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
+  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent)
 
