@@ -10,7 +10,7 @@ defmodule Ask.Runtime.Session do
     run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries)
   end
 
-  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries) do
+  defp run_flow(flow, respondent, channel, retries, fallback_channel \\ nil, fallback_retries \\ []) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent)
 
@@ -78,7 +78,7 @@ defmodule Ask.Runtime.Session do
 
   defp switch_to_fallback(session) do
     {fallback_channel, fallback_retries} = session.fallback
-    start(session.flow.questionnaire, session.respondent, fallback_channel, fallback_retries)
+    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries)
   end
 
   def sync_step(session, reply) do

@@ -84,6 +84,10 @@ defmodule Ask.Runtime.Flow do
     raise "Flow was not expecting any reply"
   end
 
+  defp accept_reply(flow, nil) do
+    {flow, %Reply{}}
+  end
+
   defp accept_reply(flow, reply) do
     reply = reply |> clean_string
 
