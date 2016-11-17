@@ -75,12 +75,12 @@ defmodule Ask.SessionTest do
       channel: fallback_channel,
       retries: fallback_retries,
       fallback: nil,
-      flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}      
+      flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: nil}      
     }
 
     {result, 5} = Session.timeout(session)
-    
-    assert result.channel == expected_session.channel 
+
+    assert result.channel == expected_session.channel
     assert result.retries == expected_session.retries
     assert result.fallback == expected_session.fallback
     assert result.flow.questionnaire == expected_session.flow.questionnaire

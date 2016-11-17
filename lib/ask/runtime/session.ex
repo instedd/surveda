@@ -78,7 +78,7 @@ defmodule Ask.Runtime.Session do
 
   defp switch_to_fallback(session) do
     {fallback_channel, fallback_retries} = session.fallback
-    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries)
+    start(session.flow.questionnaire, session.respondent, fallback_channel, fallback_retries)
   end
 
   def sync_step(session, reply) do
