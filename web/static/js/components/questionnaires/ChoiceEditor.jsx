@@ -85,12 +85,12 @@ class ChoiceEditor extends Component {
     }
   }
 
-  onKeyDown(event, autoComplete = false) {
+  onKeyDown(event, focus, autoComplete = false) {
     if (event.key == 'Enter') {
       event.preventDefault()
       this.exitEditMode(autoComplete)
     } else if (event.key == 'Tab') {
-      this.setDoNotClose()
+      this.setDoNotClose(focus)
     }
   }
 
@@ -130,7 +130,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onBlur={e => this.autoComplete(e)}
-              onKeyDown={e => this.onKeyDown(e, true)} />
+              onKeyDown={e => this.onKeyDown(e, 'sms', true)} />
           </td>
           { sms
           ? <td onMouseDown={e => this.setDoNotClose('sms')}>
@@ -141,7 +141,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e)}
               onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e)} />
+              onKeyDown={e => this.onKeyDown(e, 'ivr')} />
           </td> : null
           }
           { ivr
@@ -153,7 +153,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'ivr'}
               onChange={e => this.ivrChange(e)}
               onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e)} />
+              onKeyDown={e => this.onKeyDown(e, 'ivr')} />
           </td> : null
           }
           {skipLogicInput}
