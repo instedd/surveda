@@ -6,8 +6,9 @@
 
 .tabs {
   background-color: transparent;
-  height: 55px;
+  height: 45px;
   .tab {
+    line-height: 35px;
     height: 100%;
     a {
       @extend .grey-text;
@@ -114,7 +115,7 @@ header {
 #MainNav {
   height: auto;
   padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.3rem;
 
   .col {
     height: 66px;
