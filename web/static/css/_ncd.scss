@@ -327,6 +327,15 @@ i.survey-status {
   i {
     margin-right: 10px;
   }
+  .mode-label {
+    @extend .truncate;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .switch.right {
+    @include transform(scale(0.85));
+    margin-right: -20px;
+  }
 }
 
 .step-mode {
@@ -750,13 +759,25 @@ label {
 
 
 @media all and (max-width: 998px) {
+  .wrapper > main > * {
+    padding-left: 3%;
+    padding-right: 3%;
+  }
   .audio-section audio {
     width: 55%;
   }
   .dropfile.audio .drop-text {
     font-size: 78%;
   }
+
 }
+
+@media all and (max-width: 821px) and (min-width: 601px) {
+  .mode-label {
+    display: none !important;
+  }
+}
+
 
 @media all and (max-width: 600px) {
 
