@@ -5,6 +5,8 @@ defmodule Ask.Questionnaire do
     field :name, :string
     field :modes, Ask.Ecto.Type.StringList
     field :steps, Ask.Ecto.Type.JSON
+    field :languages, Ask.Ecto.Type.JSON
+    field :default_language, :string
     belongs_to :project, Ask.Project
 
     timestamps()
@@ -15,7 +17,7 @@ defmodule Ask.Questionnaire do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :name, :modes, :steps])
+    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language])
     |> validate_required([:project_id, :modes, :steps])
     |> foreign_key_constraint(:project_id)
   end
