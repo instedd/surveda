@@ -86,6 +86,14 @@ defmodule Ask.QuestionnaireControllerTest do
       assert Repo.get_by(Questionnaire, @valid_attrs)
     end
 
+    test "creates with default languages and default_language", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
+      questionnaire = Questionnaire |> Ask.Repo.get(json_response(conn, 201)["data"]["id"])
+      assert questionnaire.languages == ["en"]
+      assert questionnaire.default_language == "en"
+    end
+
     test "does not create resource and renders errors when data is invalid", %{conn: conn, user: user} do
       project = insert(:project, user: user)
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @invalid_attrs

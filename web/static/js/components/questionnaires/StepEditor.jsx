@@ -153,7 +153,6 @@ class StepEditor extends Component {
       </div>
     }
 
-    let ivrInput = null
     let ivrTextInput = null
     let ivrFileInput = null
 
@@ -199,11 +198,6 @@ class StepEditor extends Component {
           <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
         </div>
         : ''}
-      </div>
-
-      ivrInput = <div className='row'>
-        {ivrTextInput}
-        {ivrFileInput}
       </div>
     }
 

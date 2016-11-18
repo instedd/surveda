@@ -18,6 +18,10 @@ defmodule Ask.QuestionnaireController do
     project = Project
     |> Repo.get!(project_id)
 
+    params = params
+    |> Map.put("languages", ["en"])
+    |> Map.put("default_language", "en")
+
     changeset = project
     |> authorize(conn)
     |> build_assoc(:questionnaires)
