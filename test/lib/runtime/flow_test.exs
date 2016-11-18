@@ -37,13 +37,13 @@ defmodule Ask.FlowTest do
 
   test "fail if a response is given to a flow that was never executed" do
     assert_raise RuntimeError, ~r/Flow was not expecting any reply/, fn ->
-      Flow.start(@quiz, "sms") |> Flow.step("Y")
+      Flow.start(@quiz, "sms") |> Flow.step(Flow.Message.reply("Y"))
     end
   end
 
   test "next step with store" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
-    step = flow |> Flow.step("Y")
+    step = flow |> Flow.step(Flow.Message.reply("Y"))
     assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
     assert stores == %{"Smokes" => "Yes"}
     assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
@@ -51,7 +51,7 @@ defmodule Ask.FlowTest do
 
   test "next step (ivr mode)" do
     {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
-    step = flow |> Flow.step("8")
+    step = flow |> Flow.step(Flow.Message.reply("8"))
     assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
     assert stores == %{"Smokes" => "Yes"}
     assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
@@ -59,7 +59,7 @@ defmodule Ask.FlowTest do
 
   test "next step with store, case insensitive, strip space" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
-    step = flow |> Flow.step(" y ")
+    step = flow |> Flow.step(Flow.Message.reply(" y "))
     assert {:ok, %Flow{}, %{stores: stores, prompts: prompts}} = step
     assert stores == %{"Smokes" => "Yes"}
     assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
@@ -68,9 +68,9 @@ defmodule Ask.FlowTest do
   test "last step" do
     flow = Flow.start(@quiz, "sms")
     {:ok, flow, _} = flow |> Flow.step()
-    {:ok, flow, _} = flow |> Flow.step("Y")
-    {:ok, flow, _} = flow |> Flow.step("N")
-    step = flow |> Flow.step("99")
+    {:ok, flow, _} = flow |> Flow.step(Flow.Message.reply("Y"))
+    {:ok, flow, _} = flow |> Flow.step(Flow.Message.reply("N"))
+    step = flow |> Flow.step(Flow.Message.reply("99"))
     assert {:end, _} = step
   end
 
@@ -79,7 +79,7 @@ defmodule Ask.FlowTest do
       build(:questionnaire, steps: @skip_logic)
       |> Flow.start("sms")
       |> Flow.step
-    flow |> Flow.step(response)
+    flow |> Flow.step(Flow.Message.reply(response))
   end
 
   # skip logic
@@ -120,7 +120,7 @@ defmodule Ask.FlowTest do
 
       assert_raise RuntimeError, fn ->
         flow
-        |> Flow.step("Y")
+        |> Flow.step(Flow.Message.reply("Y"))
       end
     end
 
