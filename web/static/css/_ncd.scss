@@ -271,8 +271,11 @@ i.survey-status {
   @extend .z-depth-1;
   border-radius: 5px;
   .collection-header {
-    @extend .grey, .lighten-3;
+    @extend .grey, .lighten-4;
     position: relative;
+    p {
+      @extend .grey-text
+    }
     .progress {
       @extend .grey, .lighten-2;
       position: absolute;
@@ -289,7 +292,6 @@ i.survey-status {
   .collection-item {
     padding: 0 !important;
     border: none;
-    opacity: .5;
     > a {
       @extend .truncate;
       @extend .black-text;
@@ -301,18 +303,19 @@ i.survey-status {
         margin-right: 15px;
       }
       .arrowright {
+        @extend .grey-text;
         position: absolute;
         right: 10px;
       }
     }
     a.active {
-      @extend .transparent;
+      @extend .grey.lighten-3;
       @extend .black-text;
-      font-weight: 700;
-      opacity: 1;
+    }
+    a:hover {
+      @extend .grey.lighten-4;
     }
     &.completed {
-      opacity: 1;
       a, a.active {
         @extend .green-text;
       }
