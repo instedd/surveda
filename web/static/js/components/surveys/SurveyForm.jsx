@@ -16,13 +16,9 @@ export default class SurveyForm extends Component {
   }
 
   componentDidMount() {
-    $(document).ready(function() {
-      $('.scrollspy').scrollSpy()
-      const sidebar = $('.sidebar')
-      if (sidebar.offset()) {
-        $('.sidebar').pushpin({ top: sidebar.offset().top })
-      }
-    })
+    $('.scrollspy').scrollSpy()
+    const sidebar = $(this.refs.sidebar)
+    sidebar.pushpin({ top: sidebar.offset().top, offset: 60 })
   }
 
   allModesHaveAChannel(modes, channels, allChannels) {
@@ -55,7 +51,7 @@ export default class SurveyForm extends Component {
     return (
       <div className='row'>
         <div className='col s12 m4'>
-          <div className='sidebar'>
+          <div className='sidebar' ref='sidebar'>
             <ul className='collection with-header wizard'>
               <li className='collection-header'>
                 <h5>Progress <span className='right'>{percentage}</span></h5>

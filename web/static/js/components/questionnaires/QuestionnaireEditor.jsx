@@ -97,19 +97,17 @@ class QuestionnaireEditor extends Component {
 
     return (
       <div className='row'>
-        <div className='col s12 m3 l2 questionnaire-modes'>
+        <div className='col s12 m3 questionnaire-modes'>
           <div className='row'>
             <div className='col s12'>
               <p className='grey-text'>Modes</p>
             </div>
           </div>
           <div className='row'>
-            <div className='col s6 m9'>
-              <i className='material-icons v-middle'>sms</i>
-              <span>SMS</span>
-            </div>
-            <div className='col s6 m3'>
-              <div className='switch'>
+            <div className='col s12'>
+              <i className='material-icons v-middle left'>sms</i>
+              <span className='mode-label'>SMS</span>
+              <div className='switch right'>
                 <label>
                   <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
                   <span className='lever' />
@@ -118,12 +116,10 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           <div className='row'>
-            <div className='col s6 m9'>
-              <i className='material-icons v-middle'>phone</i>
-              <span>Phone call</span>
-            </div>
-            <div className='col s6 m3'>
-              <div className='switch'>
+            <div className='col s12'>
+              <i className='material-icons v-middle left'>phone</i>
+              <span className='mode-label'>Phone call</span>
+              <div className='switch right'>
                 <label>
                   <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
                   <span className='lever' />
@@ -132,7 +128,7 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
         </div>
-        <div className='col s12 m8 offset-m1 l9 offset-l1'>
+        <div className='col s12 m8 offset-m1'>
           <QuestionnaireSteps
             steps={questionnaire.steps}
             current={this.state.currentStep}

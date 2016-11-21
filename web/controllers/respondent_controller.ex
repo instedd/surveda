@@ -85,10 +85,18 @@ defmodule Ask.RespondentController do
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0
+    stalled = by_state["stalled"] || 0
     failed = by_state["failed"] || 0
+
     stats = %{
       id: survey.id,
-      respondents_by_state: %{pending: pending, completed: completed, active: active, failed: failed },
+      respondents_by_state: %{
+        pending: respondent_by_state(pending, total_respondents),
+        completed: respondent_by_state(completed, total_respondents),
+        active: respondent_by_state(active, total_respondents),
+        stalled: respondent_by_state(stalled, total_respondents),
+        failed: respondent_by_state(failed, total_respondents)
+      },
       completed_by_date: %{
         respondents_by_date: respondents_by_date,
         cutoff: survey.cutoff,
@@ -96,6 +104,15 @@ defmodule Ask.RespondentController do
       }
     }
     render(conn, "stats.json", stats: stats)
+  end
+
+  defp respondent_by_state(count, total_respondents) do
+    percent = case total_respondents do
+      0 -> 0
+      _ -> count / (total_respondents / 100)
+    end
+
+    %{count: count, percent: percent}
   end
 
   defp csv_rows(csv_string) do

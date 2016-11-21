@@ -1,11 +1,14 @@
 import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import * as actions from '../../actions/survey'
+import { InputWithLabel } from '../ui'
 
 class SurveyWizardRetryAttempts extends Component {
   componentDidMount() {
     const { survey } = this.props
-    this.setState({smsRetryConfiguration: survey.data.smsRetryConfiguration, ivrRetryConfiguration: survey.data.ivrRetryConfiguration})
+    if (survey.data) {
+      this.setState({smsRetryConfiguration: survey.data.smsRetryConfiguration, ivrRetryConfiguration: survey.data.ivrRetryConfiguration})
+    }
   }
 
   editingRetryConfiguration(mode, e) {
@@ -84,14 +87,13 @@ class SurveyWizardRetryAttempts extends Component {
           return (
             <div className='row' key={mode}>
               <div className='input-field col s12'>
-                <input
-                  id={`recontact-attempts${mode}`}
-                  type='text'
-                  defaultValue={defaultValue}
-                  onChange={e => this.editingRetryConfiguration(mode, e)}
-                  onBlur={e => this.retryConfigurationChanged(mode, e)}
-                  />
-                <label className='active' htmlFor={`recontact-attempts${mode}`}>{mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts</label>
+                <InputWithLabel id={`recontact-attempts${mode}`} value={defaultValue || ''} label={`${mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts`} >
+                  <input
+                    type='text'
+                    onChange={e => this.editingRetryConfiguration(mode, e)}
+                    onBlur={e => this.retryConfigurationChanged(mode, e)}
+                    />
+                </InputWithLabel>
                 <span className='small-text-bellow'>
                   Enter delays like 5m 2h to express time units
                 </span>

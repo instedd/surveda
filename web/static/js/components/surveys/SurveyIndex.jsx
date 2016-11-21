@@ -22,7 +22,7 @@ class SurveyIndex extends Component {
     respondentsStats: PropTypes.object.isRequired
   }
 
-  componentDidMount() {
+  componentWillMount() {
     const { dispatch, projectId } = this.props
 
     // Fetch project for title
@@ -87,8 +87,8 @@ export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 class SurveyCard extends PureComponent {
   static propTypes = {
-    completedByDate: React.PropTypes.object.isRequired,
-    survey: React.PropTypes.object.isRequired
+    completedByDate: React.PropTypes.object,
+    survey: React.PropTypes.object
   }
 
   render() {
