@@ -43,6 +43,28 @@ class SurveyShow extends Component {
     return reached + '/' + targetValue
   }
 
+  iconForMode(mode) {
+    let icon = null
+    if (mode == 'sms') {
+      icon = 'sms'
+    } else {
+      icon = 'phone'
+    }
+
+    return icon
+  }
+
+  labelForMode(mode) {
+    let label = null
+    if (mode == 'sms') {
+      label = 'SMS'
+    } else {
+      label = 'IVR'
+    }
+
+    return label
+  }
+
   render() {
     const { survey, respondentsStats, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
@@ -54,8 +76,8 @@ class SurveyShow extends Component {
     let primaryMode = <div className='mode'>
       <span className='type'>Primary Mode</span>
       <div>
-        <i className='material-icons'>{survey.mode[0] == 'sms' ? 'sms' : 'phone'}</i>
-        <span className='mode-label name'>{survey.mode[0] == 'sms' ? 'SMS' : 'IVR'}</span>
+        <i className='material-icons'>{this.iconForMode(survey.mode[0])}</i>
+        <span className='mode-label name'>{this.labelForMode(survey.mode[0])}</span>
       </div>
     </div>
 
@@ -64,8 +86,8 @@ class SurveyShow extends Component {
       fallbackMode = <div className='mode'>
         <span className='type'>Fallback Mode</span>
         <div>
-          <i className='material-icons'>{survey.mode[1] == 'sms' ? 'sms' : 'phone'}</i>
-          <span className='mode-label name'>{survey.mode[1] == 'sms' ? 'SMS' : 'IVR'}</span>
+          <i className='material-icons'>{this.iconForMode(survey.mode[1])}</i>
+          <span className='mode-label name'>{this.labelForMode(survey.mode[0])}</span>
         </div>
       </div>
     }
