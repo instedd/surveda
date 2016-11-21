@@ -50,14 +50,18 @@ class SurveyWizardRespondentsStep extends Component {
       const extraLinesCount = data.invalidEntries.length - lineNumbers.length
       const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
       return (
-        <div className='csv-errors'>
-          <div>Errors found at '{data.filename}', file was not imported</div>
-          <div>{invalidEntriesText} {lineNumbersText}</div>
-          <div>Please fix those errors and upload again.</div>
-          <a className='' href='#' onClick={() => this.clearInvalids()}>
-            UNDERSTOOD
-          </a>
-        </div>
+        <Card>
+          <div className='card-content card-error'>
+            <div><b>Errors found at '{data.filename}', file was not imported</b></div>
+            <div>{invalidEntriesText} {lineNumbersText}</div>
+            <div>Please fix those errors and upload again.</div>
+          </div>
+          <div className='card-action right-align'>
+            <a className='blue-text' href='#' onClick={() => this.clearInvalids()}>
+              UNDERSTOOD
+            </a>
+          </div>
+        </Card>
       )
     }
   }
@@ -84,9 +88,7 @@ class SurveyWizardRespondentsStep extends Component {
       return (
         <RespondentsContainer>
           <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-          <Card>
-            { invalidRespondentsCard }
-          </Card>
+          { invalidRespondentsCard }
           <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
         </RespondentsContainer>
       )

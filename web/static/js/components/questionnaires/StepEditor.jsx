@@ -1,11 +1,10 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, InputWithLabel } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
-import classNames from 'classnames/bind'
 import Dropzone from 'react-dropzone'
 import { createAudio } from '../../api.js'
 
@@ -140,15 +139,14 @@ class StepEditor extends Component {
     if (sms) {
       smsInput = <div className='row'>
         <div className='col input-field s12'>
-          <input
-            id='step_editor_sms_prompt'
-            type='text'
-            is length='140'
-            value={this.state.stepPromptSms}
-            onChange={e => this.stepPromptSmsChange(e)}
-            onBlur={e => this.stepPromptSmsSubmit(e)}
-            ref={ref => $(ref).characterCounter()} />
-          <label htmlFor='step_editor_sms_prompt' className={classNames({'active': this.state.stepPromptSms != ''})}>SMS message</label>
+          <InputWithLabel id='step_editor_sms_prompt' value={this.state.stepPromptSms} label='SMS message' >
+            <input
+              type='text'
+              is length='140'
+              onChange={e => this.stepPromptSmsChange(e)}
+              onBlur={e => this.stepPromptSmsSubmit(e)}
+              ref={ref => $(ref).characterCounter()} />
+          </InputWithLabel>
         </div>
       </div>
     }
@@ -159,13 +157,12 @@ class StepEditor extends Component {
     if (ivr) {
       ivrTextInput = <div className='row'>
         <div className='col input-field s12'>
-          <input
-            id='step_editor_voice_message'
-            type='text'
-            value={this.state.stepPromptIvr}
-            onChange={e => this.stepPromptIvrChange(e)}
-            onBlur={e => this.stepPromptIvrSubmit(e)} />
-          <label htmlFor='step_editor_voice_message' className={classNames({'active': this.state.stepPromptIvr})}>Voice message</label>
+          <InputWithLabel id='step_editor_voice_message' value={this.state.stepPromptIvr} label='Voice message' >
+            <input
+              type='text'
+              onChange={e => this.stepPromptIvrChange(e)}
+              onBlur={e => this.stepPromptIvrSubmit(e)} />
+          </InputWithLabel>
         </div>
       </div>
 

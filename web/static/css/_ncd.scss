@@ -233,7 +233,9 @@ footer {
     }
   }
 }
-
+.card-error {
+  @extend .red-text, .darken-1;
+}
 // ------- Survey Card  ----------
 
 .survey-card .card {
@@ -404,7 +406,7 @@ i.survey-status {
           padding: 25px 20px;
           span {
             @extend .truncate;
-            width: 85%;
+            width: 83%;
             float: left;
           }
         }
@@ -539,6 +541,7 @@ i.survey-status {
 
 .audio-section {
   position: relative;
+  padding-left: 10px;
   .audio-dropdown {
     display: inline-block;
     width: 25%;
@@ -779,7 +782,9 @@ label {
   .dropfile.audio .drop-text {
     font-size: 78%;
   }
-
+  .collapsible li .card .card-content.closed-step a span {
+    width: 75%;
+  }
 }
 
 @media all and (max-width: 821px) and (min-width: 601px) {
@@ -870,4 +875,20 @@ label {
     position: relative;
     width: 100%;
   }
+}
+
+.survey-modes {
+    .type {
+        font-size: 12px;
+        color: gray;
+    }
+
+    .mode {
+        margin-top: 15px;
+
+        .name {
+            margin-left: 10px;
+            vertical-align: top;
+        }
+    }
 }
