@@ -43,6 +43,40 @@ class SurveyShow extends Component {
     return reached + '/' + targetValue
   }
 
+  iconForMode(mode) {
+    let icon = null
+    if (mode == 'sms') {
+      icon = 'sms'
+    } else {
+      icon = 'phone'
+    }
+
+    return icon
+  }
+
+  labelForMode(mode) {
+    let label = null
+    if (mode == 'sms') {
+      label = 'SMS'
+    } else {
+      label = 'IVR'
+    }
+
+    return label
+  }
+
+  modeFor(type, mode) {
+    return (
+      <div className='mode'>
+        <span className='type'>{type} Mode</span>
+        <div>
+          <i className='material-icons'>{this.iconForMode(mode)}</i>
+          <span className='mode-label name'>{this.labelForMode(mode)}</span>
+        </div>
+      </div>
+    )
+  }
+
   render() {
     const { survey, respondentsStats, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
@@ -50,6 +84,17 @@ class SurveyShow extends Component {
     if (!survey || !completedByDate || !questionnaire) {
       return <p>Loading...</p>
     }
+
+    let primaryMode = this.modeFor('Primary', survey.mode[0])
+    let fallbackMode = null
+    if (survey.mode.length > 1) {
+      fallbackMode = this.modeFor('Fallback', survey.mode[1])
+    }
+
+    let modes = <div className='survey-modes col s12 m4'>
+      {primaryMode}
+      {fallbackMode}
+    </div>
 
     return (
       <div>
@@ -117,6 +162,7 @@ class SurveyShow extends Component {
             </div>
             { this.respondentsFraction(completedByDate, totalRespondents) }
           </div>
+          {modes}
         </div>
       </div>
     )
