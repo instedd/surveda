@@ -65,6 +65,18 @@ class SurveyShow extends Component {
     return label
   }
 
+  modeFor(type, mode) {
+    return (
+      <div className='mode'>
+        <span className='type'>{type} Mode</span>
+        <div>
+          <i className='material-icons'>{this.iconForMode(mode)}</i>
+          <span className='mode-label name'>{this.labelForMode(mode)}</span>
+        </div>
+      </div>
+    )
+  }
+
   render() {
     const { survey, respondentsStats, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
@@ -73,23 +85,10 @@ class SurveyShow extends Component {
       return <p>Loading...</p>
     }
 
-    let primaryMode = <div className='mode'>
-      <span className='type'>Primary Mode</span>
-      <div>
-        <i className='material-icons'>{this.iconForMode(survey.mode[0])}</i>
-        <span className='mode-label name'>{this.labelForMode(survey.mode[0])}</span>
-      </div>
-    </div>
-
+    let primaryMode = this.modeFor('Primary', survey.mode[0])
     let fallbackMode = null
     if (survey.mode.length > 1) {
-      fallbackMode = <div className='mode'>
-        <span className='type'>Fallback Mode</span>
-        <div>
-          <i className='material-icons'>{this.iconForMode(survey.mode[1])}</i>
-          <span className='mode-label name'>{this.labelForMode(survey.mode[0])}</span>
-        </div>
-      </div>
+      fallbackMode = this.modeFor('Fallback', survey.mode[1])
     }
 
     let modes = <div className='survey-modes col s12 m4'>
