@@ -6,7 +6,6 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
-import { UntitledIfEmpty } from '../ui'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
 
@@ -72,18 +71,36 @@ class SurveyShow extends Component {
                 <table>
                   <thead>
                     <tr>
-                      <th>Pending</th>
-                      <th>Active</th>
-                      <th>Completed</th>
-                      <th>Failed</th>
+                      <th>Status</th>
+                      <th>Quantity</th>
+                      <th>Percent</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td>{ respondentsStats.pending }</td>
-                      <td>{ respondentsStats.active }</td>
-                      <td>{ respondentsStats.completed }</td>
-                      <td>{ respondentsStats.failed }</td>
+                      <td>Pending</td>
+                      <td>{ respondentsStats.pending.count }</td>
+                      <td>{ respondentsStats.pending.percent }%</td>
+                    </tr>
+                    <tr>
+                      <td>Active</td>
+                      <td>{ respondentsStats.active.count }</td>
+                      <td>{ respondentsStats.active.percent }%</td>
+                    </tr>
+                    <tr>
+                      <td>Completed</td>
+                      <td>{ respondentsStats.completed.count }</td>
+                      <td>{ respondentsStats.completed.percent }%</td>
+                    </tr>
+                    <tr>
+                      <td>Stalled</td>
+                      <td>{ respondentsStats.stalled.count }</td>
+                      <td>{ respondentsStats.stalled.percent }%</td>
+                    </tr>
+                    <tr>
+                      <td>Failed</td>
+                      <td>{ respondentsStats.failed.count }</td>
+                      <td>{ respondentsStats.failed.percent }%</td>
                     </tr>
                   </tbody>
                 </table>

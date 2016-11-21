@@ -70,11 +70,12 @@ defmodule Ask.RespondentControllerTest do
 
     assert json_response(conn, 200)["data"]["id"] == survey.id
     assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
-                                                    "pending" => 10,
-                                                    "completed" => 5,
-                                                    "active" => 0,
-                                                    "failed" => 0
-                                                  }
+      "pending" => %{"count" => 10, "percent" => 66.66666666666667},
+      "active" => %{"count" => 0, "percent" => 0.0},
+      "completed" => %{"count" => 5, "percent" => 33.333333333333336},
+      "failed" => %{"count" => 0, "percent" => 0.0},
+      "stalled" => %{"count" => 0, "percent" => 0.0}
+    }
     assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 0)["date"] == "2016-01-01"
     assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 0)["count"] == 2
     assert Enum.at(json_response(conn, 200)["data"]["completed_by_date"]["respondents_by_date"], 1)["date"] == "2016-01-02"
@@ -118,10 +119,11 @@ defmodule Ask.RespondentControllerTest do
     assert json_response(conn, 200)["data"] == %{
       "id" => survey.id,
       "respondents_by_state" => %{
-        "pending" => 5,
-        "completed" => 0,
-        "active" => 0,
-        "failed" => 0
+        "pending" => %{"count" => 5, "percent" => 100.0},
+        "completed" => %{"count" => 0, "percent" => 0.0},
+        "active" => %{"count" => 0, "percent" => 0.0},
+        "failed" => %{"count" => 0, "percent" => 0.0},
+        "stalled" => %{"count" => 0, "percent" => 0.0}
       },
       "completed_by_date" => %{
         "respondents_by_date" => [],

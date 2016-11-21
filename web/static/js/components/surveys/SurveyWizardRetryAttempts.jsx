@@ -5,7 +5,9 @@ import * as actions from '../../actions/survey'
 class SurveyWizardRetryAttempts extends Component {
   componentDidMount() {
     const { survey } = this.props
-    this.setState({smsRetryConfiguration: survey.data.smsRetryConfiguration, ivrRetryConfiguration: survey.data.ivrRetryConfiguration})
+    if (survey.data) {
+      this.setState({smsRetryConfiguration: survey.data.smsRetryConfiguration, ivrRetryConfiguration: survey.data.ivrRetryConfiguration})
+    }
   }
 
   editingRetryConfiguration(mode, e) {

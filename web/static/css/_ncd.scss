@@ -34,6 +34,10 @@ table.highlight > tbody > tr:hover {
   cursor: pointer;
 }
 
+nav {
+  box-shadow: none;
+}
+
 // --------- NCD classes ---------------
 
 
@@ -267,8 +271,11 @@ i.survey-status {
   @extend .z-depth-1;
   border-radius: 5px;
   .collection-header {
-    @extend .grey, .lighten-3;
+    @extend .grey, .lighten-4;
     position: relative;
+    p {
+      @extend .grey-text
+    }
     .progress {
       @extend .grey, .lighten-2;
       position: absolute;
@@ -285,7 +292,6 @@ i.survey-status {
   .collection-item {
     padding: 0 !important;
     border: none;
-    opacity: .5;
     > a {
       @extend .truncate;
       @extend .black-text;
@@ -297,18 +303,19 @@ i.survey-status {
         margin-right: 15px;
       }
       .arrowright {
+        @extend .grey-text;
         position: absolute;
         right: 10px;
       }
     }
     a.active {
-      @extend .transparent;
+      @extend .grey.lighten-3;
       @extend .black-text;
-      font-weight: 700;
-      opacity: 1;
+    }
+    a:hover {
+      @extend .grey.lighten-4;
     }
     &.completed {
-      opacity: 1;
       a, a.active {
         @extend .green-text;
       }
@@ -318,6 +325,9 @@ i.survey-status {
 
 .sidebar.pinned {
   width: 24.9vw;
+  .wizard {
+    margin-top: 0px;
+  }
 }
 
 
@@ -326,6 +336,15 @@ i.survey-status {
 .questionnaire-modes {
   i {
     margin-right: 10px;
+  }
+  .mode-label {
+    @extend .truncate;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .switch.right {
+    @include transform(scale(0.85));
+    margin-right: -20px;
   }
 }
 
@@ -750,13 +769,25 @@ label {
 
 
 @media all and (max-width: 998px) {
+  .wrapper > main > * {
+    padding-left: 3%;
+    padding-right: 3%;
+  }
   .audio-section audio {
     width: 55%;
   }
   .dropfile.audio .drop-text {
     font-size: 78%;
   }
+
 }
+
+@media all and (max-width: 821px) and (min-width: 601px) {
+  .mode-label {
+    display: none !important;
+  }
+}
+
 
 @media all and (max-width: 600px) {
 
