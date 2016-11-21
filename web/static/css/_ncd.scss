@@ -233,7 +233,9 @@ footer {
     }
   }
 }
-
+.card-error {
+  @extend .red-text, .darken-1;
+}
 // ------- Survey Card  ----------
 
 .survey-card .card {
