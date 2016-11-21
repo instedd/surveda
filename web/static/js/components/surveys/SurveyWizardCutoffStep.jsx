@@ -1,6 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
+import { InputWithLabel } from '../ui'
 
 class SurveyWizardCutoffStep extends Component {
   static propTypes = {
@@ -29,12 +30,12 @@ class SurveyWizardCutoffStep extends Component {
         </div>
         <div className='row'>
           <div className='input-field col s6 l4'>
-            <input
-              id='completed-results'
-              type='text'
-              value={this.props.survey.cutoff || ''}
-              onChange={e => this.cutoffChange(e)} />
-            <label className='active' htmlFor='completed-results'>Completed results</label>
+            <InputWithLabel id='completed-results' value={this.props.survey.cutoff || ''} label='Completed results' >
+              <input
+                type='text'
+                onChange={e => this.cutoffChange(e)}
+                />
+            </InputWithLabel>
           </div>
         </div>
       </div>
