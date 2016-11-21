@@ -871,3 +871,19 @@ label {
     width: 100%;
   }
 }
+
+.survey-modes {
+    .type {
+        font-size: 12px;
+        color: gray;
+    }
+
+    .mode {
+        margin-top: 15px;
+
+        .name {
+            margin-left: 10px;
+            vertical-align: top;
+        }
+    }
+}

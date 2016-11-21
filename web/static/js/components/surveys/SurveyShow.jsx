@@ -51,6 +51,30 @@ class SurveyShow extends Component {
       return <p>Loading...</p>
     }
 
+    let primaryMode = <div className='mode'>
+      <span className='type'>Primary Mode</span>
+      <div>
+        <i className='material-icons'>{survey.mode[0] == 'sms' ? 'sms' : 'phone'}</i>
+        <span className='mode-label name'>{survey.mode[0] == 'sms' ? 'SMS' : 'IVR'}</span>
+      </div>
+    </div>
+
+    let fallbackMode = null
+    if (survey.mode.length > 1) {
+      fallbackMode = <div className='mode'>
+        <span className='type'>Fallback Mode</span>
+        <div>
+          <i className='material-icons'>{survey.mode[1] == 'sms' ? 'sms' : 'phone'}</i>
+          <span className='mode-label name'>{survey.mode[1] == 'sms' ? 'SMS' : 'IVR'}</span>
+        </div>
+      </div>
+    }
+
+    let modes = <div className='survey-modes col s12 m4'>
+      {primaryMode}
+      {fallbackMode}
+    </div>
+
     return (
       <div>
         <div className='row'>
@@ -117,6 +141,7 @@ class SurveyShow extends Component {
             </div>
             { this.respondentsFraction(completedByDate, totalRespondents) }
           </div>
+          {modes}
         </div>
       </div>
     )
