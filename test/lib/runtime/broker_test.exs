@@ -2,7 +2,7 @@ defmodule Ask.BrokerTest do
   use Ask.ModelCase
   use Ask.DummySteps
   use Timex
-  alias Ask.Runtime.Broker
+  alias Ask.Runtime.{Broker, Flow}
   alias Ask.{Repo, Survey, Respondent, TestChannel}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
@@ -80,14 +80,75 @@ defmodule Ask.BrokerTest do
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
-    # Third poll, this time it should fail
+    # Third poll, this time it should stall
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "failed"
+    assert respondent.state == "stalled"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
+  test "respondent answers after stalled with active survey" do
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # This time it should stall
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "stalled"
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
+    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+    assert survey.state == "running"
+    assert respondent.state == "active"
+    assert hd(respondent.responses).value == "Yes"
+  end
+
+  test "respondent answers after stalled with completed survey" do
+    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    second_respondent = insert(:respondent, survey: survey)
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+    respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
+    assert respondent.state == "active"
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
+    second_respondent = Repo.get(Respondent, second_respondent.id) |> Repo.preload(:responses)
+    assert respondent.state == "stalled"
+    assert second_respondent.state == "active"
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    Repo.update(second_respondent |> change |> Respondent.changeset(%{state: "completed"}))
+
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "completed"
+    respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
+    assert respondent.state == "failed"
   end
 
   test "retry respondent (IVR mode)" do
@@ -134,7 +195,7 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey)
     phone_number = respondent.sanitized_phone_number
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
+    survey |> Survey.changeset(%{sms_retry_configuration: "1m 50m"}) |> Repo.update
     survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
 
     # First poll, activate the respondent
@@ -175,7 +236,7 @@ defmodule Ask.BrokerTest do
     phone_number = respondent.sanitized_phone_number
 
     survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
-    survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
+    survey |> Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
@@ -288,15 +349,15 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, "Yes")
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
     assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, "Yes")
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
     assert reply == {:prompt, "Which is the second perfect number??"}
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, "99")
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
     assert reply == :end
 
     now = Timex.now

@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   alias Ask.{Repo, Respondent}
-  alias Ask.Runtime.Broker
+  alias Ask.Runtime.{Broker, Flow}
   alias Ask.Router.Helpers
   import Plug.Conn
   @behaviour Ask.Runtime.ChannelProvider
@@ -26,13 +26,18 @@ defmodule Ask.Runtime.VerboiceChannel do
         "<Response><Hangup/></Response>"
 
       _ ->
-        case Broker.sync_step(respondent, params["Digits"]) do
+        response = case params["Digits"] do
+          nil -> Flow.Message.answer()
+          digits -> Flow.Message.reply(digits)
+        end
+
+        case Broker.sync_step(respondent, response) do
           {:prompt, %{"audio_source" => "tts", "text" => text}} ->
             "<Response><Gather action=\"#{callback_url(respondent)}\"><Say>#{text}</Say></Gather></Response>"
           {:prompt, %{"audio_source" => "upload", "audio_id" => audio_id}} ->
             "<Response><Gather action=\"#{callback_url(respondent)}\"><Play>#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}</Play></Gather></Response>"
           :end ->
-            "<Response><Hangup/></Response>"          
+            "<Response><Hangup/></Response>"
         end
     end
 

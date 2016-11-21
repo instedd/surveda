@@ -55,17 +55,34 @@ defmodule Ask.Runtime.Broker do
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0
+    stalled = by_state["stalled"] || 0
 
     cond do
-      active == 0 && (pending == 0 || survey.cutoff <= completed)->
-        Repo.update Survey.changeset(survey, %{state: "completed"})
-      survey.cutoff && survey.cutoff > 0 && survey.cutoff - completed < @batch_size && active < @batch_size && pending > 0 ->
+      active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed) ->
+        complete(survey)
+
+      survey.cutoff
+      && survey.cutoff > 0
+      && survey.cutoff - completed < @batch_size
+      && active < @batch_size
+      && pending > 0 ->
         start_some(survey, survey.cutoff - completed - active)
+
       active < @batch_size && pending > 0 ->
         start_some(survey, @batch_size - active)
 
       true -> :ok
     end
+  end
+
+  defp complete(survey) do
+    Repo.update Survey.changeset(survey, %{state: "completed"})
+    set_stalled_respondents_as_failed(survey)
+  end
+
+  defp set_stalled_respondents_as_failed(survey) do
+    from(r in assoc(survey, :respondents), where: r.state == "stalled")
+    |> Repo.update_all(set: [state: "failed"])
   end
 
   defp start_some(survey, count) do
@@ -81,11 +98,12 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
 
     case Session.timeout(session) do
-      {session, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout})
-
+      {:stalled, session} ->
+        update_respondent(respondent, {:stalled, session})
       :failed ->
         update_respondent(respondent, :failed)
+      {session, timeout} ->
+        update_respondent(respondent, {:ok, session, timeout})
     end
   end
 
@@ -126,6 +144,12 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, :end) do
     respondent
     |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
+    |> Repo.update
+  end
+
+  defp update_respondent(respondent, {:stalled, session}) do
+    respondent
+    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
     |> Repo.update
   end
 

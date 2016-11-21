@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  alias Ask.Runtime.{Broker, NuntiumChannel}
+  alias Ask.Runtime.{Broker, NuntiumChannel, Flow}
   alias Ask.{Repo, Respondent}
   import Ecto.Query
   defstruct [:oauth_token, :name, :settings]
@@ -59,7 +59,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     %URI{host: phone_number} = URI.parse(from)
 
     respondent = Repo.one(from r in Respondent,
-      where: r.sanitized_phone_number == ^phone_number and r.state == "active",
+      where: r.sanitized_phone_number == ^phone_number and (r.state == "active" or r.state == "stalled"),
       order_by: [desc: r.updated_at],
       limit: 1)
 
@@ -67,7 +67,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       nil ->
         []
       _ ->
-        case Broker.sync_step(respondent, body) do
+        case Broker.sync_step(respondent, Flow.Message.reply(body)) do
           {:prompt, prompt} ->
             [%{"to": from, "body": prompt}]
           :end ->

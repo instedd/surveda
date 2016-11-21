@@ -11,7 +11,7 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, mode: mode}
   end
 
-  def step(flow, reply \\ nil) do
+  def step(flow, reply \\ :answer) do
     flow
     |> accept_reply(reply)
     |> eval
@@ -75,7 +75,7 @@ defmodule Ask.Runtime.Flow do
     %{flow | current_step: next_step}
   end
 
-  defp accept_reply(flow = %Flow{current_step: nil}, nil) do
+  defp accept_reply(flow = %Flow{current_step: nil}, :answer) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}}
   end
@@ -84,11 +84,11 @@ defmodule Ask.Runtime.Flow do
     raise "Flow was not expecting any reply"
   end
 
-  defp accept_reply(flow, nil) do
+  defp accept_reply(flow, :answer) do
     {flow, %Reply{}}
   end
 
-  defp accept_reply(flow, reply) do
+  defp accept_reply(flow, {:reply, reply}) do
     reply = reply |> clean_string
 
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
@@ -126,5 +126,16 @@ defmodule Ask.Runtime.Flow do
 
   defp clean_string(string) do
     string |> String.trim |> String.downcase
+  end
+
+end
+
+defmodule Ask.Runtime.Flow.Message do
+  def reply(response) do
+    {:reply, response}
+  end
+
+  def answer do
+    :answer
   end
 end
