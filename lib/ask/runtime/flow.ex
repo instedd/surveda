@@ -11,7 +11,7 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, mode: mode}
   end
 
-  def step(flow, reply \\ nil) do
+  def step(flow, reply \\ :answer) do
     flow
     |> accept_reply(reply)
     |> eval
@@ -75,7 +75,7 @@ defmodule Ask.Runtime.Flow do
     %{flow | current_step: next_step}
   end
 
-  defp accept_reply(flow = %Flow{current_step: nil}, nil) do
+  defp accept_reply(flow = %Flow{current_step: nil}, :answer) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}}
   end
