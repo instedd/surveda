@@ -84,6 +84,7 @@ class SurveyWizardRetryAttempts extends Component {
       const modeRetryConfiguration = (
         modes.map((mode) => {
           const defaultValue = (mode === 'sms') ? this.state.smsRetryConfiguration : this.state.ivrRetryConfiguration
+          const invalid = (mode === 'sms') ? !!survey.errors.smsRetryConfiguration : survey.errors.ivrRetryConfiguration
           return (
             <div className='row' key={mode}>
               <div className='input-field col s12'>
@@ -92,6 +93,7 @@ class SurveyWizardRetryAttempts extends Component {
                     type='text'
                     onChange={e => this.editingRetryConfiguration(mode, e)}
                     onBlur={e => this.retryConfigurationChanged(mode, e)}
+                    className={invalid ? 'invalid' : ''}
                     />
                 </InputWithLabel>
                 <span className='small-text-bellow'>
