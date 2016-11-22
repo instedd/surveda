@@ -650,11 +650,11 @@ i.survey-status {
     position: relative;
     width: 25px;
     &:after {
-      content: 'keyboard_arrow_down';
+      content: 'arrow_drop_down';
       font-family: 'Material Icons';
-      @extend .black-text;
+      @extend .grey-text;
       font-size: 20px;
-      line-height: 1;
+      line-height: .4;
       position: absolute;
       top: 0;
       right: 0;
