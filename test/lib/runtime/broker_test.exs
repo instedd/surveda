@@ -279,7 +279,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    assert_respondents_by_state(survey, 7, 9)
+    assert_respondents_by_state(survey, 10, 6)
 
     Repo.all(from r in Respondent, where: r.state == "active")
     |> Enum.map(fn respondent ->
@@ -288,7 +288,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    assert_respondents_by_state(survey, 0, 9)
+    assert_respondents_by_state(survey, 0, 6)
 
     survey = Repo.get(Survey, survey.id)
 
