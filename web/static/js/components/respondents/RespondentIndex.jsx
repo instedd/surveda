@@ -4,7 +4,8 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
 import range from 'lodash/range'
 import values from 'lodash/values'
-import { CardTable } from '../ui'
+import { CardTable, Tooltip } from '../ui'
+import * as routes from '../../routes'
 
 class RespondentIndex extends Component {
   componentDidMount() {
@@ -26,6 +27,11 @@ class RespondentIndex extends Component {
 
     const { projectId, surveyId, pageNumber, pageSize } = this.props
     this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber - 1)
+  }
+
+  downloadCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsCSV(projectId, surveyId)
   }
 
   render() {
@@ -91,35 +97,42 @@ class RespondentIndex extends Component {
     const respondentsFieldName = allFieldNames(respondents)
 
     return (
-      <CardTable title={title} footer={footer}>
-        <thead>
-          <tr>
-            <th>Phone number</th>
-            {respondentsFieldName.map(field =>
-              <th key={field}>{field}</th>
+      <div className='white'>
+        <Tooltip text='Download CSV'>
+          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.downloadCSV()}>
+            <i className='material-icons'>get_app</i>
+          </a>
+        </Tooltip>
+        <CardTable title={title} footer={footer}>
+          <thead>
+            <tr>
+              <th>Phone number</th>
+              {respondentsFieldName.map(field =>
+                <th key={field}>{field}</th>
             )}
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          { range(0, pageSize).map(index => {
-            const respondent = respondentsList[index]
-            if (!respondent) return <tr key={-index}><td colSpan={respondentsFieldName.length + 2}>&nbsp;</td></tr>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            { range(0, pageSize).map(index => {
+              const respondent = respondentsList[index]
+              if (!respondent) return <tr key={-index}><td colSpan={respondentsFieldName.length + 2}>&nbsp;</td></tr>
 
-            return (
-              <tr key={respondent.id}>
-                <td> {respondent.phoneNumber}</td>
-                {respondentsFieldName.map(function(field) {
-                  return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
-                })}
-                <td>
-                  {respondent.date ? new Date(respondent.date).toUTCString() : '-'}
-                </td>
-              </tr>
+              return (
+                <tr key={respondent.id}>
+                  <td> {respondent.phoneNumber}</td>
+                  {respondentsFieldName.map(function(field) {
+                    return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
+                  })}
+                  <td>
+                    {respondent.date ? new Date(respondent.date).toUTCString() : '-'}
+                  </td>
+                </tr>
             )
-          })}
-        </tbody>
-      </CardTable>
+            })}
+          </tbody>
+        </CardTable>
+      </div>
     )
   }
 }

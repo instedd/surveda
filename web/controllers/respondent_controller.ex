@@ -227,6 +227,60 @@ defmodule Ask.RespondentController do
       |> render("empty.json", respondent: [])
   end
 
+  def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+
+    respondents = Survey
+    |> Repo.get!(survey_id)
+    |> assoc(:respondents)
+    |> preload(:responses)
+    |> Repo.all
+
+    # We first need to get all unique field names in all responses
+    all_responses = respondents
+    |> Enum.flat_map(&(&1.responses))
+
+    all_fields = all_responses
+    |> Enum.map(&(&1.field_name))
+    |> Enum.uniq
+    |> Enum.reject(fn field_name -> String.length(field_name) == 0 end)
+
+    # Now we can start builiding a CSV row for each respondent
+    csv_rows = respondents |> Enum.map(fn respondent ->
+      row = [respondent.id]
+
+      # We traverse all fields and see if there's a response for this respondent
+      row = all_fields |> Enum.reduce(row, fn field_name, acc ->
+        response = respondent.responses
+        |> Enum.filter(fn response -> response.field_name == field_name end)
+        case response do
+          [resp] -> acc ++ [resp.value]
+          _ -> acc ++ [""]
+        end
+      end)
+      row = row ++ [(respondent.updated_at || respondent.created_at) |> Timex.format!("%Y-%m-%d %H:%M:%S GMT", :strftime)]
+    end)
+
+    # Add header
+    csv_rows = csv_rows
+    |> List.insert_at(0, ["Respondent ID"] ++ all_fields ++ ["Date"])
+
+    # Convert to CSV string
+    csv = csv_rows
+    |> CSV.encode
+    |> Enum.to_list
+    |> to_string
+
+    filename = Timex.now |> Timex.format!("respondents_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+
+    conn
+      |> put_resp_content_type("text/csv")
+      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+      |> send_resp(200, csv)
+  end
+
   def update_survey_state(survey_id, respondents_count) do
     survey = Repo.get!(Survey, survey_id)
     survey = Map.merge(survey, %{respondents_count: respondents_count})
