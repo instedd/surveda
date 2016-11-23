@@ -506,6 +506,19 @@ describe('questionnaire reducer', () => {
       }
     })
   })
+
+  it('should add language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('French')
+    ])
+
+    console.log(resultState)
+  })
 })
 
 const questionnaire = deepFreeze({

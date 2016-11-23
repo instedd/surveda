@@ -17,6 +17,7 @@ export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
 export const SAVING = 'QUESTIONNAIRE_SAVING'
 export const SAVED = 'QUESTIONNAIRE_SAVED'
+export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -134,6 +135,11 @@ export const saving = () => ({
 export const saved = (questionnaire) => ({
   type: SAVED,
   data: questionnaire
+})
+
+export const addLanguage = (language) => ({
+  type: ADD_LANGUAGE,
+  language
 })
 
 export const save = () => (dispatch, getState) => {

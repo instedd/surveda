@@ -61,6 +61,8 @@ defmodule Ask.QuestionnaireControllerTest do
         "project_id" => questionnaire.project_id,
         "modes" => ["sms", "ivr"],
         "steps" => [],
+        "default_language" => "en",
+        "languages" => []
       }
     end
 
