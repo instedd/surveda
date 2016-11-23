@@ -27,8 +27,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       tts_step: {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},
       # Triple of "digits", step spec, and expected TwiML output
       twiml_map: [
-        {nil, {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},                      "<Say>Do you exercise?</Say>"},
-        {"8", {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},                      "<Say>Do you exercise?</Say>"},
+        {nil, {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},"<Say>Do you exercise?</Say>"},
+        {"8", {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},"<Say>Do you exercise?</Say>"},
+        {nil, {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},"<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather></Response>"},
+        {nil, {:prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")},"<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather></Response>"},
         {nil, :end,                                                                           "<Response><Hangup/></Response>"},
         {nil, {:prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")}, "<Play>http://app.ask.dev/audio/foo</Play>"},
         {"8", {:prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")}, "<Play>http://app.ask.dev/audio/foo</Play>"},
