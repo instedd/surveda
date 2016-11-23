@@ -6,7 +6,7 @@ import StepEditor from './StepEditor'
 const StepsList = ({steps, onClick}) => {
   if (steps.length != 0) {
     return (
-      <ul className="collapsible">
+      <ul className='collapsible'>
         { steps.map((step) => (
           <li key={step.id}>
             <Card>
@@ -40,6 +40,7 @@ const QuestionnaireSteps = ({ steps, current, onSelectStep, onDeselectStep, onDe
         <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
         <StepEditor
           step={currentStep}
+          errorPath={`steps[${itemIndex}]`}
           onCollapse={() => onDeselectStep()}
           onDelete={() => onDeleteStep()}
           skip={stepsAfter} />

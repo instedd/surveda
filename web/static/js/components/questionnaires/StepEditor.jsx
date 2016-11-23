@@ -121,7 +121,10 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, skip } = this.props
+    const { step, onCollapse, questionnaire, errors, errorPath, skip } = this.props
+
+    const hasErrors = Object.keys(errors).length != 0
+    console.log(hasErrors)
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -222,7 +225,9 @@ class StepEditor extends Component {
                     </DropdownItem>
                   </Dropdown>
                 </div>
-                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} onSubmit={(value) => { this.stepTitleSubmit(value) }} />
+                <span className={classNames({'red-text': hasErrors})}>
+                  <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
+                </span>
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -285,14 +290,17 @@ StepEditor.propTypes = {
   questionnaireActions: PropTypes.object.isRequired,
   dispatch: PropTypes.func,
   questionnaire: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
+  errorPath: PropTypes.string.isRequired,
   onCollapse: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   skip: PropTypes.array.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
+  errors: state.questionnaire.errors
 })
 
 const mapDispatchToProps = (dispatch) => ({

@@ -161,15 +161,16 @@ describe('questionnaire reducer', () => {
       actions.toggleMode('ivr')
     ])
 
-    expect(result.data.modes.length).toEqual(2)
-    expect(result.data.modes).toEqual(['sms', 'ivr'])
+    expect(result.data.modes.length).toEqual(1)
+    expect(result.data.modes).toEqual(['sms'])
   })
 
   it('should toggle other mode', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.toggleMode('sms')
+      actions.toggleMode('sms'),
+      actions.toggleMode('ivr')
     ])
 
     /* Expectations on arrays must include a check for length
@@ -181,14 +182,15 @@ describe('questionnaire reducer', () => {
     const result = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
+      actions.toggleMode('ivr'),
       actions.toggleMode('sms'),
-      actions.toggleMode('ivr')
+      actions.toggleMode('sms')
     ])
 
     /* Expectations on arrays must include a check for length
     because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
     expect(result.data.modes.length).toEqual(1)
-    expect(result.data.modes).toEqual(['ivr'])
+    expect(result.data.modes).toEqual(['sms'])
   })
 
   it('should add step', () => {
@@ -224,7 +226,7 @@ describe('questionnaire reducer', () => {
     expect(resultStep.title).toEqual('Do you smoke?')
     expect(resultStep.store).toEqual('Smokes')
     expect(resultStep.choices).toEqual([])
-    expect(resultStep.prompt).toEqual({ sms: '' })
+    expect(resultStep.prompt).toEqual({ sms: 'Do you smoke?' })
   })
 
   it('should update step title', () => {
@@ -360,12 +362,12 @@ describe('questionnaire reducer', () => {
           'May'
         ]
       },
-      skipLogic: 'end',
-      'errors': {
-        'responses': {
-          'ivr': true
-        }
-      }
+      skipLogic: 'end'
+      // 'errors': {
+      //   'responses': {
+      //     'ivr': true
+      //   }
+      // }
     })
   })
 
@@ -395,12 +397,7 @@ describe('questionnaire reducer', () => {
           'May'
         ]
       },
-      skipLogic: 'some-id',
-      'errors': {
-        'responses': {
-          'ivr': true
-        }
-      }
+      skipLogic: 'some-id'
     })
   })
 
@@ -421,19 +418,10 @@ describe('questionnaire reducer', () => {
     expect(step.choices[2]).toEqual({
       value: 'Maybe',
       responses: {
-        sms: [
-          ''
-        ],
-        ivr: [
-          ''
-        ]
+        sms: [],
+        ivr: []
       },
-      skipLogic: 'some-other-id',
-      'errors': {
-        'responses': {
-          'ivr': false
-        }
-      }
+      skipLogic: 'some-other-id'
     })
   })
 
@@ -462,48 +450,181 @@ describe('questionnaire reducer', () => {
           '3'
         ]
       },
-      skipLogic: 'some-other-id',
-      'errors': {
-        'responses': {
-          'ivr': false
-        }
-      }
+      skipLogic: 'some-other-id'
     })
   })
 
-  it('should validate IVR options to be numeric or hash', () => {
-    const preState = playActions([
-      actions.fetch(1, 1),
-      actions.receive(questionnaire)
-    ])
+  describe('validations', () => {
+    it('should validate SMS message must not be blank if "SMS" mode is on', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
 
-    const resultState = playActionsFromState(preState, reducer)([
-      actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
-      actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
-      actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '3, b, #, 22', 'some-other-id', false)
-    ])
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
+      ])
 
-    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
-    expect(step.choices.length).toEqual(3)
-    expect(step.choices[2]).toEqual({
-      value: 'Maybe',
-      responses: {
-        sms: [
-          ''
-        ],
-        ivr: [
-          '3',
-          'b',
-          '#',
-          '22'
-        ]
-      },
-      skipLogic: 'some-other-id',
-      'errors': {
-        'responses': {
-          'ivr': true
-        }
-      }
+      expect(resultState.errors).toEqual({
+        'steps[0].prompt.sms': ['SMS prompt must not be blank']
+      })
+    })
+
+    it('should validate voice message must not be blank if "Phone call" mode is on', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeStepPromptIvr('17141bea-a81c-4227-bdda-f5f69188b0e7', {text: '', audioSource: 'tts'})
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].prompt.ivr.text': ['Voice prompt must not be blank']
+      })
+    })
+
+    it('should validate there must be at least two responses', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0),
+        actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices': ['Must have at least two responses']
+      })
+    })
+
+    it("should validate a response's response must not be blank", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '', 'a', '1', null)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[0].value': ['Response must not be blank']
+      })
+    })
+
+    it("should validate a response's SMS must not be blank if SMS mode is on", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', '', '1', null)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[0].sms': ['SMS must not be blank']
+      })
+    })
+
+    it("should validate a response's Phone call must not be blank if Voice mode is on", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b', '', null)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[0].ivr': ['"Phone call" must not be blank']
+      })
+    })
+
+    it("should validate a response's Phone call must only consist of digits or # or *", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+        actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+        actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'A', '3, b, #, 22', 'some-other-id', false)
+      ])
+
+      const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      expect(step.choices.length).toEqual(3)
+      expect(step.choices[2]).toEqual({
+        value: 'Maybe',
+        responses: {
+          sms: ['A'],
+          ivr: [
+            '3',
+            'b',
+            '#',
+            '22'
+          ]
+        },
+        skipLogic: 'some-other-id'
+      })
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[1].ivr': [ '"Phone call" must only consist of single digits, "#" or "*"' ],
+        'steps[1].choices[2].ivr': [ '"Phone call" must only consist of single digits, "#" or "*"' ]
+      })
+    })
+
+    it("should validate a response's 'response' can't appear more than once in a same step", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'dup', 'b', '1', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'dup', 'c', '2', null)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[1].value': ['Value already used in a previous response']
+      })
+    })
+
+    it("should validate a response's SMS value must not overlap other SMS values", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b, c', '1', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'd, c', '2', null)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[1].sms': ['Value "c" already used in a previous response']
+      })
+    })
+
+    it("should validate a response's IVR value must not overlap other SMS values", () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1, 2', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '3, 2', null)
+      ])
+
+      expect(resultState.errors).toEqual({
+        'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+      })
     })
   })
 })
@@ -525,7 +646,7 @@ const questionnaire = deepFreeze({
               '1'
             ],
             ivr: [
-              'Yes'
+              '1'
             ]
           },
           skipLogic: null
@@ -536,17 +657,17 @@ const questionnaire = deepFreeze({
             sms: [
               'No',
               'N',
-              '1'
+              '2'
             ],
             ivr: [
-              'No'
+              '2'
             ]
           },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
         }
       ],
       prompt: {
-        sms: ''
+        sms: 'Do you smoke?'
       }
     },
     {
@@ -564,7 +685,7 @@ const questionnaire = deepFreeze({
               '1'
             ],
             ivr: [
-              'Yes'
+              '1'
             ]
           }
         },
@@ -574,23 +695,23 @@ const questionnaire = deepFreeze({
             sms: [
               'No',
               'N',
-              '1'
+              '2'
             ],
             ivr: [
-              'No'
+              '2'
             ]
           }
         }
       ],
       prompt: {
-        sms: ''
+        sms: 'Do you exercise?'
       }
     }
   ],
   projectId: 1,
   name: 'Foo',
   modes: [
-    'sms'
+    'sms', 'ivr'
   ],
   id: 1
 })
