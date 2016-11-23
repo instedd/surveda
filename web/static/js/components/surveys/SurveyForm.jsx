@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import { connect } from 'react-redux'
 import { CollectionItem } from '../ui'
 import SurveyWizardQuestionnaireStep from './SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
@@ -6,13 +7,14 @@ import SurveyWizardChannelsStep from './SurveyWizardChannelsStep'
 import SurveyWizardScheduleStep from './SurveyWizardScheduleStep'
 import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
 
-export default class SurveyForm extends Component {
+class SurveyForm extends Component {
   static propTypes = {
     projectId: PropTypes.any.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     respondents: PropTypes.object,
-    channels: PropTypes.object
+    channels: PropTypes.object,
+    errors: PropTypes.object
   }
 
   componentDidMount() {
@@ -27,12 +29,12 @@ export default class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondents } = this.props
-
+    const { survey, projectId, questionnaires, channels, respondents, errors } = this.props
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
     const channelStepCompleted = survey.mode != null && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
+    const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration)
     const scheduleStepCompleted =
       survey.scheduleDayOfWeek != null && (
         survey.scheduleDayOfWeek.sun ||
@@ -42,7 +44,7 @@ export default class SurveyForm extends Component {
         survey.scheduleDayOfWeek.thu ||
         survey.scheduleDayOfWeek.fri ||
         survey.scheduleDayOfWeek.sat
-      )
+      ) && validRetryConfiguration
 
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
     const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item == true }).length
@@ -93,3 +95,9 @@ export default class SurveyForm extends Component {
     )
   }
 }
+
+const mapStateToProps = (state, ownProps) => ({
+  errors: state.survey.errors
+})
+
+export default connect(mapStateToProps)(SurveyForm)

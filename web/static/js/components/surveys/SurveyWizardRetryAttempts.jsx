@@ -71,6 +71,36 @@ class SurveyWizardRetryAttempts extends Component {
     }
   }
 
+  defaultValue(mode) {
+    if (mode == 'sms') {
+      return this.state.smsRetryConfiguration
+    } else {
+      if (mode == 'ivr') {
+        return this.state.ivrRetryConfiguration
+      }
+    }
+  }
+
+  invalid(mode, errors) {
+    if (mode == 'sms') {
+      return !!errors.smsRetryConfiguration
+    } else {
+      if (mode == 'ivr') {
+        return !!errors.ivrRetryConfiguration
+      }
+    }
+  }
+
+  errorText(mode, errors) {
+    if (mode == 'sms') {
+      return errors.smsRetryConfiguration
+    } else {
+      if (mode == 'ivr') {
+        return errors.ivrRetryConfiguration
+      }
+    }
+  }
+
   render() {
     const { survey } = this.props
     if (!survey || !this.state) {
@@ -83,8 +113,8 @@ class SurveyWizardRetryAttempts extends Component {
     } else {
       const modeRetryConfiguration = (
         modes.map((mode) => {
-          const defaultValue = (mode === 'sms') ? this.state.smsRetryConfiguration : this.state.ivrRetryConfiguration
-          const invalid = (mode === 'sms') ? !!survey.errors.smsRetryConfiguration : survey.errors.ivrRetryConfiguration
+          const defaultValue = this.defaultValue(mode)
+          const invalid = this.invalid(mode, survey.errors)
           return (
             <div className='row' key={mode}>
               <div className='input-field col s12'>
@@ -99,6 +129,7 @@ class SurveyWizardRetryAttempts extends Component {
                 <span className='small-text-bellow'>
                   Enter delays like 5m 2h to express time units
                 </span>
+                { invalid ? <span>{this.errorText(mode, survey.errors)}</span> : '' }
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
             </div>
