@@ -359,6 +359,33 @@ defmodule Ask.RespondentControllerTest do
     assert new_survey.state == "not_ready"
   end
 
+  test "download csv", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready", schedule_day_of_week: completed_schedule)
+    respondent_1 = insert(:respondent, survey: survey)
+    insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
+    respondent_2 = insert(:respondent, survey: survey)
+    insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
+
+    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id)
+    csv = response(conn, 200)
+
+    [line1, line2, line3, _] = csv |> String.split("\r\n")
+    assert line1 == "Respondent ID,Smoke,Drink,Date"
+
+    [line_2_id, line_2_smoke, line_2_drink, _] = line2 |> String.split(",")
+    assert line_2_id == respondent_1.id |> to_string
+    assert line_2_smoke == "Yes"
+    assert line_2_drink == "No"
+
+    [line_3_id, line_3_smoke, line_3_drink, _] = line3 |> String.split(",")
+    assert line_3_id == respondent_2.id |> to_string
+    assert line_3_smoke == "No"
+    assert line_3_drink == ""
+  end
+
   def completed_schedule do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end

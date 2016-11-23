@@ -36,6 +36,7 @@ defmodule Ask.Router do
           post "/launch", SurveyController, :launch
           resources "/respondents", RespondentController, only: [:create, :index, :delete]
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
+          get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
       end
