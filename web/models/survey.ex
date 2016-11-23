@@ -50,7 +50,7 @@ defmodule Ask.Survey do
 
     channels = get_field(changeset, :channels)
     ready = questionnaire_id && respondents_count && respondents_count > 0
-      && length(channels) > 0 && schedule_completed && mode
+      && length(channels) > 0 && schedule_completed && mode && validate_retry_attempts_configuration(changeset)
       && Enum.all?(mode, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
 
     cond do
@@ -73,6 +73,18 @@ defmodule Ask.Survey do
       true ->
         changeset
     end
+  end
+
+  def validate_retry_attempts_configuration(changeset) do
+    sms_retry_configuration = get_field(changeset, :sms_retry_configuration)
+    ivr_retry_configuration = get_field(changeset, :ivr_retry_configuration)
+    valid = valid_retry_configuration?(sms_retry_configuration) && valid_retry_configuration?(ivr_retry_configuration)
+    valid
+  end
+
+  def valid_retry_configuration?(retry_configuration) do
+    valid = !retry_configuration || Enum.all?(String.split(retry_configuration), fn s -> Regex.match?(~r/^\d+[mdh]$/, s) end)
+    valid
   end
 
   def retries_configuration(survey, mode) do

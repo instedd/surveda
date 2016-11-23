@@ -21,6 +21,32 @@ export const dataReducer = (state, action) => {
   }
 }
 
+const validateReducer = (reducer) => {
+  return (state, action) => {
+    const newState = reducer(state, action)
+    validate(newState)
+    return newState
+  }
+}
+
+const validate = (state) => {
+  if (!state.data) return
+  state.errors = {}
+  validateRetry(state, 'smsRetryConfiguration')
+  validateRetry(state, 'ivrRetryConfiguration')
+}
+
+const validateRetry = (state, key) => {
+  const retriesValue = state.data[key]
+  if (!retriesValue) return
+  let values = retriesValue.split(' ')
+  values = values.filter((v) => v)
+  const invalid = values.some((v) => !/^\d+[mhd]$/.test(v))
+  if (invalid) {
+    state.errors[key] = 'Re-contact configuration is invalid'
+  }
+}
+
 const changeName = (state, action) => {
   return {
     ...state,
@@ -122,4 +148,4 @@ const changeIvrRetryConfiguration = (state, action) => {
   }
 }
 
-export default fetchReducer(actions, dataReducer)
+export default validateReducer(fetchReducer(actions, dataReducer))

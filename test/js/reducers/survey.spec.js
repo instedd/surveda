@@ -231,6 +231,35 @@ describe('survey reducer', () => {
     ])
     expect(state.data.ivrRetryConfiguration).toEqual('15h 1d')
   })
+
+  it('should not add sms retry attempts errors if configuration is invalid', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeSmsRetryConfiguration('12j')
+    ])
+    expect(state.errors.smsRetryConfiguration).toEqual('Re-contact configuration is invalid')
+  })
+
+  it('should not add ivr retry attempts errors if configuration is invalid', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeIvrRetryConfiguration('12j')
+    ])
+    expect(state.errors.ivrRetryConfiguration).toEqual('Re-contact configuration is invalid')
+  })
+
+  it('should not add retries errors if both sms and ivr configurations are valid', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeIvrRetryConfiguration('2h 5d'),
+      actions.changeIvrRetryConfiguration('3m 1h')
+    ])
+    expect(!state.errors.smsRetryConfiguration)
+    expect(!state.errors.ivrRetryConfiguration)
+  })
 })
 
 const survey = {
