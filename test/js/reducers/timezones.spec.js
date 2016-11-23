@@ -3,7 +3,7 @@ import expect from 'expect'
 import reducer from '../../../web/static/js/reducers/timezones'
 import * as actions from '../../../web/static/js/actions/timezones'
 
-describe('respondents reducer', () => {
+describe('timezones reducer', () => {
   it('should receive timezones', () => {
     const data = { timezones: [
       'Africa/Abidjan',
