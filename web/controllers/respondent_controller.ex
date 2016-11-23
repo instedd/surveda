@@ -1,9 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.Project
-  alias Ask.Survey
-  alias Ask.Respondent
+  alias Ask.{Project, Survey, Respondent, Response}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -239,36 +237,41 @@ defmodule Ask.RespondentController do
     |> Repo.all
 
     # We first need to get all unique field names in all responses
-    all_responses = respondents
-    |> Enum.flat_map(&(&1.responses))
+    all_fields = Repo.all(from resp in Response,
+      join: r in Respondent,
+      where: resp.respondent_id == r.id and
+             r.survey_id == ^survey_id and
+             resp.field_name != "",
+      select: resp.field_name,
+      distinct: true)
 
-    all_fields = all_responses
-    |> Enum.map(&(&1.field_name))
-    |> Enum.uniq
-    |> Enum.reject(fn field_name -> String.length(field_name) == 0 end)
+    # Now traverse each respondent and create a row for it
+    csv_rows = from(
+      r in Respondent,
+      where: r.survey_id == ^survey_id)
+    |> preload(:responses)
+    |> Repo.stream
+    |> Stream.map(fn respondent ->
+        row = [respondent.id]
 
-    # Now we can start builiding a CSV row for each respondent
-    csv_rows = respondents |> Enum.map(fn respondent ->
-      row = [respondent.id]
-
-      # We traverse all fields and see if there's a response for this respondent
-      row = all_fields |> Enum.reduce(row, fn field_name, acc ->
-        response = respondent.responses
-        |> Enum.filter(fn response -> response.field_name == field_name end)
-        case response do
-          [resp] -> acc ++ [resp.value]
-          _ -> acc ++ [""]
-        end
-      end)
-      row = row ++ [(respondent.updated_at || respondent.created_at) |> Timex.format!("%Y-%m-%d %H:%M:%S GMT", :strftime)]
+        # We traverse all fields and see if there's a response for this respondent
+        row = all_fields |> Enum.reduce(row, fn field_name, acc ->
+          response = respondent.responses
+          |> Enum.filter(fn response -> response.field_name == field_name end)
+          case response do
+            [resp] -> acc ++ [resp.value]
+            _ -> acc ++ [""]
+          end
+        end)
+        row ++ [(respondent.updated_at || respondent.created_at) |> Timex.format!("%Y-%m-%d %H:%M:%S GMT", :strftime)]
     end)
 
-    # Add header
-    csv_rows = csv_rows
-    |> List.insert_at(0, ["Respondent ID"] ++ all_fields ++ ["Date"])
+    # Add header to csv_rows
+    header = ["Respondent ID"] ++ all_fields ++ ["Date"]
+    rows = Stream.concat([[header], csv_rows])
 
-    # Convert to CSV string
-    csv = csv_rows
+    # # Convert to CSV string
+    csv = rows
     |> CSV.encode
     |> Enum.to_list
     |> to_string

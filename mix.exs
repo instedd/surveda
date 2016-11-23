@@ -48,7 +48,8 @@ defmodule Ask.Mixfile do
       {:timex, "~> 3.0"},
       {:timex_ecto, "~> 3.0"},
       {:sentry, "~> 1.0"},
-      {:hackney, "~> 1.0"}
+      {:hackney, "~> 1.0"},
+      {:tributary, "~> 0.2.1"},
    ]
   end
 
