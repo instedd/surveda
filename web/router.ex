@@ -43,6 +43,7 @@ defmodule Ask.Router do
       end
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]
+      resources "/authorizations", OAuthClientController, only: [:index, :delete]
     end
   end
 
@@ -55,7 +56,6 @@ defmodule Ask.Router do
   scope "/", Ask do
     pipe_through :browser
 
-    resources "/oauth_client", OAuthClientController, only: [:index, :delete]
     get "/oauth_client/callback", OAuthClientController, :callback
     get "/*path", PageController, :index
   end

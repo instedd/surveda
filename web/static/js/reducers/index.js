@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux'
 import { routerReducer as routing } from 'react-router-redux'
+import authorizations from './authorizations'
 import projects from './projects'
 import project from './project'
 import surveys from './surveys'
@@ -16,6 +17,7 @@ import respondentsCount from './respondentsCount'
 import timezones from './timezones'
 
 export default combineReducers({
+  authorizations,
   routing,
   project,
   projects,

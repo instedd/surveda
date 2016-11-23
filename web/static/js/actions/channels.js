@@ -50,7 +50,8 @@ export const createNuntiumChannel = (() => {
           }
         }))
       }).catch((_) => _)
-  } })()
+  }
+})()
 
 const authorizeWithGuisso = (dispatch, app, appConfig, references) => {
   const guissoSession = guissoApi.newSession(appConfig.guisso)

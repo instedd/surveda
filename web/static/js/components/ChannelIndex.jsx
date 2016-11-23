@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../actions/channels'
+import * as authActions from '../actions/authorizations'
 import { AddButton, EmptyPage, CardTable } from './ui'
 
 class ChannelIndex extends Component {
@@ -11,16 +12,48 @@ class ChannelIndex extends Component {
 
   addChannel(event) {
     event.preventDefault()
-    this.props.actions.createNuntiumChannel()
+    this.props.authActions.fetchAuthorizations()
+    $(this.refs.popup).modal('open')
+  }
+
+  toggleProvider(provider) {
+    this.props.authActions.toggleAuthorization(provider)
   }
 
   render() {
-    const { channels } = this.props
+    const { channels, authorizations } = this.props
     const title = `${Object.keys(channels).length} ${(Object.keys(channels).length == 1) ? ' channel' : ' channels'}`
+
+    const providerSwitch = (provider) => {
+      const disabled = authorizations.fetching
+      const checked = authorizations.items && authorizations.items.includes(provider)
+      return <div className='switch'>
+        <label>
+          <input type='checkbox' disabled={disabled} checked={checked} onClick={() => this.toggleProvider(provider)} />
+          <span className='lever' />
+        </label>
+      </div>
+    }
 
     return (
       <div>
         <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
+        <div className='modal' ref='popup'>
+          <ul className='collection with-header'>
+            <li className='collection-header'>
+              <h5>Create a channel</h5>
+              <p>Ask will sync available channels from these providers after user authorization</p>
+            </li>
+            <li className='collection-item'>
+              <h5>Verboice</h5>
+              {providerSwitch('verboice')}
+            </li>
+            <li className='collection-item'>
+              <h5>Nuntium</h5>
+              {providerSwitch('nuntium')}
+            </li>
+          </ul>
+        </div>
         { (Object.keys(channels).length == 0)
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         : (
@@ -47,15 +80,19 @@ class ChannelIndex extends Component {
 
 ChannelIndex.propTypes = {
   actions: PropTypes.object.isRequired,
-  channels: PropTypes.object
+  authActions: PropTypes.object.isRequired,
+  channels: PropTypes.object,
+  authorizations: PropTypes.object
 }
 
 const mapStateToProps = (state) => ({
-  channels: state.channels
+  channels: state.channels,
+  authorizations: state.authorizations
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+  actions: bindActionCreators(actions, dispatch),
+  authActions: bindActionCreators(authActions, dispatch)
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChannelIndex)

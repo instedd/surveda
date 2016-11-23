@@ -225,3 +225,7 @@ export const fetchTimezones = () => {
     }
   })
 }
+
+export const fetchAuthorizations = () => {
+  return apiFetchJSONWithCallback(`authorizations`, null, {}, (json, _) => () => json)
+}
