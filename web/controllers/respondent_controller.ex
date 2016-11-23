@@ -7,11 +7,10 @@ defmodule Ask.RespondentController do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
 
-    Project
+    respondents = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
-
-    respondents = Survey
+    |> assoc(:surveys)
     |> Repo.get!(survey_id)
     |> assoc(:respondents)
     |> preload(:responses)
@@ -214,6 +213,11 @@ defmodule Ask.RespondentController do
     |> Repo.get!(project_id)
     |> authorize(conn)
 
+    # Check that the survey is in the project
+    project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
     from(r in Respondent, where: r.survey_id == ^survey_id)
     |> Repo.delete_all
 
@@ -226,9 +230,14 @@ defmodule Ask.RespondentController do
   end
 
   def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    Project
+    project = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
+
+    # Check that the survey is in the project
+    project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
 
     # We first need to get all unique field names in all responses
     all_fields = Repo.all(from resp in Response,
