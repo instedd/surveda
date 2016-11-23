@@ -230,12 +230,6 @@ defmodule Ask.RespondentController do
     |> Repo.get!(project_id)
     |> authorize(conn)
 
-    respondents = Survey
-    |> Repo.get!(survey_id)
-    |> assoc(:respondents)
-    |> preload(:responses)
-    |> Repo.all
-
     # We first need to get all unique field names in all responses
     all_fields = Repo.all(from resp in Response,
       join: r in Respondent,
