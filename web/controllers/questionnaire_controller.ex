@@ -3,6 +3,9 @@ defmodule Ask.QuestionnaireController do
 
   alias Ask.Questionnaire
   alias Ask.Project
+  alias Ask.JsonSchema
+
+  plug :validate_params when action in [:create, :update]
 
   def index(conn, %{"project_id" => project_id}) do
     questionnaires = Project
@@ -14,9 +17,11 @@ defmodule Ask.QuestionnaireController do
     render(conn, "index.json", questionnaires: questionnaires)
   end
 
-  def create(conn, %{"project_id" => project_id, "questionnaire" => params}) do
+  def create(conn, %{"project_id" => project_id}) do
     project = Project
     |> Repo.get!(project_id)
+
+    params = conn.assigns[:questionnaire]
 
     params = params
     |> Map.put("languages", ["en"])
@@ -51,9 +56,11 @@ defmodule Ask.QuestionnaireController do
     render(conn, "show.json", questionnaire: questionnaire)
   end
 
-  def update(conn, %{"project_id" => project_id, "id" => id, "questionnaire" => params}) do
+  def update(conn, %{"project_id" => project_id, "id" => id}) do
     project = Project
     |> Repo.get!(project_id)
+
+    params = conn.assigns[:questionnaire]
 
     changeset = project
     |> authorize(conn)
@@ -86,5 +93,16 @@ defmodule Ask.QuestionnaireController do
 
     project |> Project.touch!
     send_resp(conn, :no_content, "")
+  end
+
+  defp validate_params(conn, _params) do
+    questionnaire = conn.params["questionnaire"]
+    case JsonSchema.validate(questionnaire, :questionnaire) do
+      [] ->
+        conn |> assign(:questionnaire, questionnaire)
+      errors ->
+        json_errors = errors |> JsonSchema.errors_to_json
+        conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
+    end
   end
 end

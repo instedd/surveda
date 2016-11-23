@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Ask JSON Schemas",
+
+  "definitions": {
+    "questionnaire": {
+      "type": "object",
+      "properties": {
+        "steps": { "$ref": "#/definitions/steps"}
+      },
+      "required": ["steps"]
+    },
+
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/step"
+      }
+    },
+
+    "step": {
+      "properties": {
+        "id": {"type": "string"},
+        "type": { "enum": ["multiple-choice", "numeric"] },
+        "title": {"type": "string"},
+        "prompt": { "$ref": "#/definitions/prompt"},
+        "store": { "type": "string" },
+        "choices": { "$ref": "#/definitions/choices" }
+      },
+      "required": ["id", "type", "title", "prompt", "store"]
+    },
+
+    "choices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/choice"
+      }
+    },
+
+    "choice": {
+      "properties": {
+        "value": {"type": "string"},
+        "responses": {"$ref": "#/definitions/responses"}
+      },
+      "required": ["responses", "value"]
+    },
+
+    "responses": {
+      "type": "object",
+      "properties": {
+        "ivr": {"type": "array"},
+        "sms": {"type": "array"}
+      }
+    },
+
+    "prompt": {
+      "type": "object",
+      "properties": {
+        "sms": { "type": "string" },
+        "ivr": { "$ref": "#/definitions/ivr"}
+      }
+    },
+
+    "ivr": {
+      "type": "object",
+      "properties": {
+        "text": {"type": "string"},
+        "audio_source": {"enum": ["tts", "upload"]},
+        "audio_id": {"type": "string"}
+      },
+      "required": ["text", "audio_source"]
+    }
+  }
+}

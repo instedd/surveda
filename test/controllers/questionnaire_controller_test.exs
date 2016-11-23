@@ -1,11 +1,13 @@
 defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
 
-  alias Ask.{Project, Questionnaire}
+  alias Ask.{Project, Questionnaire, JsonSchema}
   @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
-  @invalid_attrs %{}
+  @invalid_attrs %{steps: []}
 
   setup %{conn: conn} do
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+
     user = insert(:user)
     conn = conn
       |> put_private(:test_user, user)
