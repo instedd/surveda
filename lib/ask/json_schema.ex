@@ -12,8 +12,9 @@ defmodule Ask.JsonSchema do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  def init(_) do
-    schema = File.read!(Application.app_dir(:ask) <> "/priv/schema.json")
+  def init([]), do: init(["schema.json"])
+  def init([schema_path]) do
+    schema = File.read!(Application.app_dir(:ask) <> "/priv/" <> schema_path)
              |> Poison.decode!
              |> ExJsonSchema.Schema.resolve
     {:ok, schema}
@@ -24,8 +25,8 @@ defmodule Ask.JsonSchema do
     {:reply, errors, schema}
   end
 
-  def validate(object, type) do
-    GenServer.call(@server_ref, {:validate, object, type})
+  def validate(object, type, server \\ @server_ref) do
+    GenServer.call(server, {:validate, object, type})
   end
 
   def errors_to_json(errors) do

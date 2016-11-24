@@ -6,11 +6,6 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
   @shortdoc """
   Validates that questionnaires the DB conform to the current schema.json definition.
   """
-
-  defp validate(quiz) do
-    {quiz.id, quiz.steps |> JsonSchema.validate(:steps)}
-  end
-
   defp inspect_result({_, []}), do: []
   defp inspect_result({id, validation_result}) do
     Mix.shell.info "######################################################"
@@ -18,12 +13,19 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
     validation_result |> inspect |> Mix.shell.info
   end
 
-  def run(_args) do
+  def run([]), do: run(["schema.json"])
+  def run([schema_path]) do
     Mix.Task.run "app.start"
+
+    GenServer.start_link(JsonSchema, [schema_path], name: CustomJsonSchema)
+
+    validate = fn(quiz) -> {quiz.id, quiz.steps |> JsonSchema.validate(:steps, CustomJsonSchema)} end
 
     Questionnaire
     |> Repo.all
-    |> Enum.map(&validate/1)
+    |> Enum.map(validate)
     |> Enum.each(&inspect_result/1)
+
+    Agent.stop(CustomJsonSchema)
   end
 end
