@@ -26,7 +26,6 @@ const saving = (state, action) => {
 }
 
 const receive = (state, action) => {
-  console.log('pasando por el receive: ', action)
   return {
     ...state,
     updatedAt: action.data.updatedAt,

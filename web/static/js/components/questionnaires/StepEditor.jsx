@@ -124,7 +124,6 @@ class StepEditor extends Component {
     const { step, onCollapse, questionnaire, errors, errorPath, skip } = this.props
 
     const hasErrors = Object.keys(errors).length != 0
-    console.log(hasErrors)
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
