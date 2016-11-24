@@ -9,6 +9,7 @@ const dataReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.TOGGLE_MODE: return toggleMode(state, action)
+    case actions.ADD_LANGUAGE: return addLanguage(state, action)
     default: return steps(state, action)
   }
 }
@@ -246,6 +247,13 @@ const changeName = (state, action) => {
   return {
     ...state,
     name: action.newName
+  }
+}
+
+const addLanguage = (state, action) => {
+  return {
+    ...state,
+    languages: [...state.languages, action.language]
   }
 }
 

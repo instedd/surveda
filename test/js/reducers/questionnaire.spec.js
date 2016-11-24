@@ -514,10 +514,11 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, reducer)([
-      actions.addLanguage('French')
+      actions.addLanguage('fr')
     ])
 
-    console.log(resultState)
+    const languages = resultState.data.languages
+    expect(languages).toInclude('fr')
   })
 })
 
@@ -605,5 +606,7 @@ const questionnaire = deepFreeze({
   modes: [
     'sms'
   ],
-  id: 1
+  id: 1,
+  defaultLanguage: 'en',
+  languages: ['en']
 })
