@@ -1,4 +1,6 @@
 import * as api from '../api'
+import * as guissoApi from '../guisso'
+import { config } from '../config'
 
 export const FETCH_AUTHORIZATIONS = 'FETCH_AUTHORIZATIONS'
 export const RECEIVE_AUTHORIZATIONS = 'RECEIVE_AUTHORIZATIONS'
@@ -48,9 +50,18 @@ export const toggleAuthorization = (provider) => (dispatch, getState) => {
   if (currentValue) {
     // Turn off
     dispatch(deleteAuthorization(provider))
-    // api.deleteAuthorization(provider)
+    api.deleteAuthorization(provider)
+      .catch((e) => {
+        dispatch(addAuthorization(provider))
+      })
   } else {
     // Turn on
     dispatch(addAuthorization(provider))
+    const guissoSession = guissoApi.newSession(config.nuntium.guisso)
+    return guissoSession.authorize('code', provider)
+      .then(() => guissoSession.close())
+      .catch(() => {
+        dispatch(deleteAuthorization(provider))
+      })
   }
 }

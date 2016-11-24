@@ -95,8 +95,8 @@ const apiPutJSON = (url, schema, body) => {
   return apiPutOrPostJSON(url, schema, 'PUT', body)
 }
 
-const apiDelete = (url, schema) => {
-  return apiPutOrPostJSON(url, schema, 'DELETE', null)
+const apiDelete = (url) => {
+  return apiFetch(url, {method: 'DELETE' })
 }
 
 export const fetchProjects = () => {
@@ -167,7 +167,7 @@ export const uploadRespondents = (survey, files) => {
 }
 
 export const removeRespondents = (survey) => {
-  return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`, respondentSchema)
+  return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`)
 }
 
 export const fetchRespondents = (projectId, surveyId, limit, page) => {
@@ -228,4 +228,8 @@ export const fetchTimezones = () => {
 
 export const fetchAuthorizations = () => {
   return apiFetchJSONWithCallback(`authorizations`, null, {}, (json, _) => () => json)
+}
+
+export const deleteAuthorization = (provider) => {
+  return apiDelete(`authorizations/${provider}`)
 }

@@ -4,7 +4,7 @@
   "scripts": {
     "deploy": "brunch build --production",
     "watch": "brunch watch --stdin",
-    "test": "mocha --compilers js:babel-register test/js/**/*.js"
+    "test": "mocha --compilers js:babel-register -r jsdom-global/register test/js/**/*.js"
   },
   "dependencies": {
     "babel-preset-stage-0": "^6.5.0",
@@ -50,6 +50,7 @@
     "isomorphic-fetch": "^2.2.1",
     "javascript-brunch": "^2.0.0",
     "jsdom": "^9.8.3",
+    "jsdom-global": "^2.1.0",
     "lodash": "^4.0.0",
     "mocha": "^3.1.0",
     "node-uuid": "^1.4.7",
