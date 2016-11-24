@@ -10,8 +10,6 @@ defmodule Ask.JsonSchema do
 
   def start_link do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
-    IO.puts "STARTING JSON SCHEMA WORKER"
-    IO.inspect @server_ref
   end
 
   def init(_) do
