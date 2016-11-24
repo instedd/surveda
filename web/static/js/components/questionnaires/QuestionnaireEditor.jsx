@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
+import {InputWithAutocomplete} from '../ui/InputWithAutocomplete'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -97,6 +98,7 @@ class QuestionnaireEditor extends Component {
 
     return (
       <div className='row'>
+        <InputWithAutocomplete />
         <div className='col s12 m3 questionnaire-modes'>
           <div className='row'>
             <div className='col s12'>
