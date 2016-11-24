@@ -36,10 +36,16 @@ class GuissoSession {
         '&redirect_uri=' + escape(window.location.origin + '/oauth_client/callback')
 
       const popup = this.showPopup(authorizeUrl)
+      const watchdog = window.setInterval(() => {
+        if (popup.closed) {
+          reject()
+        }
+      }, 100)
       const listener = function(event) {
         if (event.source == popup) {
           window.removeEventListener('message', listener)
           const token = queryString.parse(event.data)
+          window.clearInterval(watchdog)
           resolve(token)
         }
       }
