@@ -27,6 +27,7 @@
         "store": { "type": "string" },
         "choices": { "$ref": "#/definitions/choices" }
       },
+      "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
     },
 
@@ -40,9 +41,11 @@
     "choice": {
       "properties": {
         "value": {"type": "string"},
-        "responses": {"$ref": "#/definitions/responses"}
+        "responses": {"$ref": "#/definitions/responses"},
+        "skip_logic": {"type": ["string", "null"]}
       },
-      "required": ["responses", "value"]
+      "additionalProperties": false,
+      "required": ["responses", "value", "skip_logic"]
     },
 
     "responses": {

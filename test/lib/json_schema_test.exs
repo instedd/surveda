@@ -212,24 +212,49 @@ defmodule Ask.StepsValidatorTest do
   end
 
   test "choice" do
-    ~s({"value": "Yes"}) |> invalid_choice("Choice requires responses")
-    ~s({"responses": {}}) |> invalid_choice("Choice requires value")
+    ~s({
+      "value": "Yes",
+      "skip_logic": ""
+    })
+    |> invalid_choice("Choice requires responses")
+
+    ~s({
+      "responses": {},
+      "skip_logic": ""
+    })
+    |> invalid_choice("Choice requires value")
 
     ~s({
       "value": {},
-      "responses": {}
+      "responses": {},
+      "skip_logic": ""
     })
     |> invalid_choice("Choice value is a string")
 
     ~s({
       "value": "Yes",
-      "responses": ""
+      "responses": "",
+      "skip_logic": ""
     })
     |> invalid_choice("Choice responses is an object")
 
     ~s({
       "value": "Yes",
       "responses": {}
+    })
+    |> invalid_choice("Choice requires skip_logic")
+
+    ~s({
+      "value": "Yes",
+      "responses": {},
+      "skip_logic": ""
+    })
+    |> valid_choice
+
+    ~s({
+      "value": "Yes",
+      "responses": {},
+      "skip_logic": null
     })
     |> valid_choice
   end
