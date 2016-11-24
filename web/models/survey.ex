@@ -16,9 +16,11 @@ defmodule Ask.Survey do
     field :started_at, Timex.Ecto.DateTime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
+    field :quota_vars, Ask.Ecto.Type.JSON, default: []
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
+    has_many :quota_buckets, Ask.QuotaBucket
 
     belongs_to :project, Ask.Project
     belongs_to :questionnaire, Ask.Questionnaire

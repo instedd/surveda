@@ -57,7 +57,11 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
-        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
+        "quotas" => %{
+          "vars" => [],
+          "buckets" => []
+        }
       }
     end
 
@@ -88,7 +92,66 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
-        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
+        "quotas" => %{
+          "vars" => [],
+          "buckets" => []
+        }
+      }
+    end
+
+    test "shows chosen resource with buckets", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      survey = insert(:survey, project: project, quota_vars: ["gender", "smokes"])
+      insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "no"}, quota: 10, count: 3)
+      insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "yes"}, quota: 20)
+      insert(:quota_bucket, survey: survey, condition: %{gender: "female", smokes: "no"}, quota: 30, count: 1)
+      insert(:quota_bucket, survey: survey, condition: %{gender: "female", smokes: "yes"}, quota: 40)
+      conn = get conn, project_survey_path(conn, :show, project, survey)
+      assert json_response(conn, 200)["data"] == %{"id" => survey.id,
+        "name" => survey.name,
+        "mode" => survey.mode,
+        "project_id" => survey.project_id,
+        "questionnaire_id" => nil,
+        "channels" => [],
+        "cutoff" => nil,
+        "state" => "not_ready",
+        "respondents_count" => 0,
+        "schedule_day_of_week" => %{
+          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+        },
+        "schedule_start_time" => nil,
+        "schedule_end_time" => nil,
+        "timezone" => "UTC",
+        "started_at" => "",
+        "ivr_retry_configuration" => nil,
+        "sms_retry_configuration" => nil,
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
+        "quotas" => %{
+          "vars" => ["gender", "smokes"],
+          "buckets" => [
+            %{
+              "condition" => %{"gender" => "male", "smokes" => "no"},
+              "quota" => 10,
+              "count" => 3
+            },
+            %{
+              "condition" => %{"gender" => "male", "smokes" => "yes"},
+              "quota" => 20,
+              "count" => 0
+            },
+            %{
+              "condition" => %{"gender" => "female", "smokes" => "no"},
+              "quota" => 30,
+              "count" => 1
+            },
+            %{
+              "condition" => %{"gender" => "female", "smokes" => "yes"},
+              "quota" => 40,
+              "count" => 0
+            },
+          ]
+        }
       }
     end
 
@@ -113,12 +176,6 @@ defmodule Ask.SurveyControllerTest do
       assert json_response(conn, 201)["data"]["id"]
       assert Repo.get_by(Survey, %{project_id: project.id})
     end
-
-    # test "does not create resource and renders errors when data is invalid", %{conn: conn, user: user} do
-    #   project = insert(:project, user: user)
-    #   conn = post conn, project_survey_path(conn, :create, project.id), survey: @invalid_attrs
-    #   assert json_response(conn, 422)["errors"] != %{}
-    # end
 
     test "forbids creation of survey for a project that belongs to another user", %{conn: conn} do
       project = insert(:project)
@@ -205,7 +262,11 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
-        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
+        "quotas" => %{
+          "vars" => [],
+          "buckets" => []
+        }
       }
     end
 
@@ -559,8 +620,6 @@ defmodule Ask.SurveyControllerTest do
     project = Project |> Repo.get(project.id)
     assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
-
-  ### Auxiliar functions ###
 
   def prepare_for_state_update(user) do
     project = insert(:project, user: user)

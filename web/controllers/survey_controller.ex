@@ -39,7 +39,7 @@ defmodule Ask.SurveyController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey |> Repo.preload([:channels]))
+        |> render("show.json", survey: survey |> Repo.preload([:channels]) |> Repo.preload([:quota_buckets]))
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -54,6 +54,7 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:channels])
+    |> Repo.preload([:quota_buckets])
     |> with_respondents_count
 
     render(conn, "show.json", survey: survey)
@@ -68,6 +69,7 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:channels])
+    |> Repo.preload([:quota_buckets])
     |> with_respondents_count
     |> Survey.changeset(survey_params)
     |> update_channels(survey_params)
@@ -120,7 +122,7 @@ defmodule Ask.SurveyController do
   end
 
   def launch(conn, %{"survey_id" => id}) do
-    survey = Repo.get!(Survey, id) |> Repo.preload([:channels])
+    survey = Repo.get!(Survey, id) |> Repo.preload([:channels]) |> Repo.preload([:quota_buckets])
 
     project = Project
     |> Repo.get!(survey.project_id)

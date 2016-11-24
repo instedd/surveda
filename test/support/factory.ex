@@ -32,6 +32,14 @@ defmodule Ask.Factory do
     }
   end
 
+  def quota_bucket_factory do
+    %Ask.QuotaBucket{
+      survey: build(:survey),
+      condition: %{foo: "bar"},
+      quota: :rand.uniform(100)
+    }
+  end
+
   def questionnaire_factory do
     %Ask.Questionnaire{
       project: build(:project),
