@@ -520,6 +520,19 @@ describe('questionnaire reducer', () => {
     const languages = resultState.data.languages
     expect(languages).toInclude('fr')
   })
+
+  it('should set default language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.setDefaultLanguage('fr')
+    ])
+
+    expect(resultState.data.defaultLanguage).toEqual('fr')
+  })
 })
 
 const questionnaire = deepFreeze({

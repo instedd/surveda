@@ -18,6 +18,7 @@ export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
 export const SAVING = 'QUESTIONNAIRE_SAVING'
 export const SAVED = 'QUESTIONNAIRE_SAVED'
 export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
+export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -139,6 +140,11 @@ export const saved = (questionnaire) => ({
 
 export const addLanguage = (language) => ({
   type: ADD_LANGUAGE,
+  language
+})
+
+export const setDefaultLanguage = (language) => ({
+  type: SET_DEFAULT_LANGUAGE,
   language
 })
 
