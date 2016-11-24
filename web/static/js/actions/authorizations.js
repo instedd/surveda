@@ -57,7 +57,7 @@ export const toggleAuthorization = (provider) => (dispatch, getState) => {
   } else {
     // Turn on
     dispatch(addAuthorization(provider))
-    const guissoSession = guissoApi.newSession(config.nuntium.guisso)
+    const guissoSession = guissoApi.newSession(config[provider].guisso)
     return guissoSession.authorize('code', provider)
       .then(() => guissoSession.close())
       .catch(() => {
