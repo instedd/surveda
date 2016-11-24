@@ -13,6 +13,7 @@ defmodule Ask.QuestionnaireView do
     %{id: questionnaire.id,
       name: questionnaire.name,
       modes: questionnaire.modes,
+      updated_at: questionnaire.updated_at,
       project_id: questionnaire.project_id,
       steps: questionnaire.steps}
   end
