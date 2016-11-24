@@ -15,8 +15,39 @@ defmodule Ask.Runtime.VerboiceChannel do
     %VerboiceChannel{client: Verboice.Client.new(url, username, password), channel_name: channel_name}
   end
 
-  def oauth2_authorize(_code, _redirect_uri, _callback_url), do: throw(:not_implemented)
-  def oauth2_refresh(_access_token), do: throw(:not_implemented)
+  def oauth2_authorize(code, redirect_uri, _callback_url) do
+    verboice_config = Application.get_env(:ask, Verboice)
+    guisso_config = verboice_config[:guisso]
+
+    client = OAuth2.Client.new([
+      client_id: guisso_config[:client_id],
+      redirect_uri: redirect_uri,
+      token_url: "#{guisso_config[:base_url]}/oauth2/token",
+    ])
+
+    client = OAuth2.Client.get_token!(client,
+      code: code,
+      client_secret: guisso_config[:client_secret],
+      token_type: "bearer")
+
+    client.token
+  end
+
+  def oauth2_refresh(access_token) do
+    verboice_config = Application.get_env(:ask, Verboice)
+    guisso_config = verboice_config[:guisso]
+
+    client = OAuth2.Client.new([
+      token: access_token,
+      client_id: guisso_config[:client_id],
+      token_url: "#{guisso_config[:base_url]}/oauth2/token",
+    ])
+
+    client = OAuth2.Client.refresh_token!(client,
+      client_secret: guisso_config[:client_secret])
+
+    client.token
+  end
 
   def gather(respondent, prompt) do
     "<Gather action=\"#{callback_url(respondent)}\">#{say_or_play(prompt)}</Gather>"
