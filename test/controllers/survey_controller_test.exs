@@ -56,7 +56,8 @@ defmodule Ask.SurveyControllerTest do
         "timezone" => "UTC",
         "started_at" => "",
         "ivr_retry_configuration" => nil,
-        "sms_retry_configuration" => nil
+        "sms_retry_configuration" => nil,
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)
       }
     end
 
@@ -86,7 +87,8 @@ defmodule Ask.SurveyControllerTest do
         "timezone" => "UTC",
         "started_at" => "",
         "ivr_retry_configuration" => nil,
-        "sms_retry_configuration" => nil
+        "sms_retry_configuration" => nil,
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)
       }
     end
 
@@ -202,7 +204,8 @@ defmodule Ask.SurveyControllerTest do
         "timezone" => "UTC",
         "started_at" => "",
         "ivr_retry_configuration" => nil,
-        "sms_retry_configuration" => nil
+        "sms_retry_configuration" => nil,
+        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)
       }
     end
 

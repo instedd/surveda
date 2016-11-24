@@ -61,6 +61,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "project_id" => questionnaire.project_id,
         "modes" => ["sms", "ivr"],
         "steps" => [],
+        "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at)
       }
     end
 
