@@ -8,7 +8,7 @@ const Header = ({ tabs, logout, user, project }) => {
   let projectLink
   if (project) {
     projectLink = (
-      <li>
+      <li className='breadcrumb-item'>
         <Link to={routes.project(project.id)} className=''>
           <UntitledIfEmpty text={project.name} />
         </Link>
@@ -21,22 +21,23 @@ const Header = ({ tabs, logout, user, project }) => {
       <nav id='TopNav'>
         <div className='nav-wrapper'>
           <div className='row'>
-            <div className='col s5 m6'>
-              <ul>
+            <div className='col s12'>
+              <ul className='breadcrumb-top'>
                 <li>
                   <Link to={routes.projects} className=''> Projects </Link>
                 </li>
                 { projectLink }
-                <li>
-                  <Link to={routes.channels} className=''> Channels </Link>
+                <li className='channels-tab'>
+                  <Link to={routes.channels}> Channels </Link>
                 </li>
               </ul>
-            </div>
-            <div className='col s8 m6'>
-              <ul className='right'>
+              <ul className='right user-menu'>
                 <li>
-                  <Dropdown label={user}>
+                  <Dropdown label={<div><span className="user-email">{user}</span><i className="material-icons user-icon">person</i></div>}>
                     <DropdownDivider />
+                    <DropdownItem className='user-email-dropdown'>
+                      <span>{user}</span>
+                    </DropdownItem>
                     <DropdownItem>
                       <a onClick={logout}>Logout</a>
                     </DropdownItem>

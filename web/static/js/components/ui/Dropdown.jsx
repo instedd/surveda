@@ -35,8 +35,8 @@ export class Dropdown extends Component {
   }
 }
 
-export const DropdownItem = ({children}) => (
-  <li>{children}</li>
+export const DropdownItem = ({children, className}) => (
+  <li className={className}>{children}</li>
 )
 
 DropdownItem.propTypes = {
