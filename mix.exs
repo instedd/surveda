@@ -50,6 +50,7 @@ defmodule Ask.Mixfile do
       {:sentry, "~> 1.0"},
       {:hackney, "~> 1.0"},
       {:tributary, "~> 0.2.1"},
+      {:ex_json_schema, "~> 0.5.2"}
    ]
   end
 
