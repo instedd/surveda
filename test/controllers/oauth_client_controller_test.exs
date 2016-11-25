@@ -18,6 +18,12 @@ defmodule Ask.OAuthHelperControllerTest do
     assert %OAuth2.AccessToken{} = OAuth2.AccessToken.new(token.access_token)
   end
 
+  test "channels are synchronized after authorization", %{conn: conn, user: user} do
+    get conn, o_auth_client_path(conn, :callback, %{code: "1234", state: "test"})
+    channels = user |> assoc(:channels) |> Repo.all
+    assert 1 = length(channels)
+  end
+
   test "list user authorizations", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "provider1")
     insert(:oauth_token, user: user, provider: "provider2")
@@ -36,5 +42,14 @@ defmodule Ask.OAuthHelperControllerTest do
 
     tokens = user |> assoc(:oauth_tokens) |> Repo.all
     assert [p2.id] == tokens |> Enum.map(fn t -> t.id end)
+  end
+
+  test "delete channels when an authorization is deleted", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "provider")
+    channel = insert(:channel, user: user, provider: "provider")
+
+    delete conn, o_auth_client_path(conn, :delete, "provider")
+
+    refute Ask.Channel |> Repo.get(channel.id)
   end
 end

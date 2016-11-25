@@ -12,11 +12,17 @@ defmodule Ask.OAuthClientController do
   end
 
   def delete(conn, %{"id" => provider}) do
-    conn
-    |> get_current_user
+    user = get_current_user(conn)
+
+    user
     |> assoc(:oauth_tokens)
     |> Repo.get_by!(provider: provider)
     |> Repo.delete!
+
+    user
+    |> assoc(:channels)
+    |> where([c], c.provider == ^provider)
+    |> Repo.delete_all
 
     send_resp(conn, :no_content, "")
   end
@@ -33,6 +39,8 @@ defmodule Ask.OAuthClientController do
       |> build_assoc(:oauth_tokens, provider: provider_name)
       |> Ask.OAuthToken.from_access_token(access_token)
       |> Repo.insert!
+
+      provider.sync_channels(user.id)
     end
 
     render conn, "callback.html"

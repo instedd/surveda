@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
-  alias Ask.{Repo, Respondent}
+  use Ask.Web, :model
+  alias Ask.{Repo, Respondent, Channel}
   alias Ask.Runtime.{Broker, Flow}
   alias Ask.Router.Helpers
   import Plug.Conn
@@ -59,6 +60,42 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   def say_or_play(%{"audio_source" => "tts", "text" => text}) do
     "<Say>#{text}</Say>"
+  end
+
+  def sync_channels(user_id) do
+    verboice_config = Application.get_env(:ask, Verboice)
+    oauth_token = Ask.OAuthTokenServer.get_token "verboice", user_id
+    client = Verboice.Client.new(verboice_config[:base_url], oauth_token)
+
+    case client |> Verboice.Client.get_channels do
+      {:ok, channel_names} ->
+        sync_channels(user_id, channel_names)
+
+      _ -> :error
+    end
+  end
+
+  def sync_channels(user_id, channel_names) do
+    user = Ask.User |> Repo.get!(user_id)
+    channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
+
+    channels |> Enum.each(fn channel ->
+      exists = channel_names |> Enum.any?(fn name -> channel.settings["verboice_channel"] == name end)
+      if !exists do
+        channel |> Repo.delete
+      end
+    end)
+
+
+    channel_names |> Enum.each(fn name ->
+      exists = channels |> Enum.any?(fn channel -> channel.settings["verboice_channel"] == name end)
+      if !exists do
+        user
+        |> Ecto.build_assoc(:channels)
+        |> Channel.changeset(%{name: name, type: "ivr", provider: "verboice", settings: %{"verboice_channel" => name}})
+        |> Repo.insert
+      end
+    end)
   end
 
   def callback(conn, params = %{"respondent" => respondent_id}) do

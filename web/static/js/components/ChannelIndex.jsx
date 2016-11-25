@@ -61,12 +61,14 @@ class ChannelIndex extends Component {
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Provider</th>
               </tr>
             </thead>
             <tbody>
               { Object.keys(channels).map(id =>
                 <tr key={id}>
                   <td>{channels[id].name}</td>
+                  <td>{channels[id].provider}</td>
                 </tr>
               )}
             </tbody>

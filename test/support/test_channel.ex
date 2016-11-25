@@ -28,6 +28,14 @@ defmodule Ask.TestChannel do
     random_access_token
   end
 
+  def sync_channels(user_id) do
+    user = Ask.User |> Ask.Repo.get(user_id)
+    user
+    |> Ecto.build_assoc(:channels)
+    |> Ask.Channel.changeset(%{name: "test", provider: "test", type: "ivr", settings: %{}})
+    |> Ask.Repo.insert!
+  end
+
   def callback(_conn, _params) do
   end
 

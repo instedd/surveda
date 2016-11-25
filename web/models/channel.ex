@@ -7,6 +7,7 @@ defmodule Ask.Channel do
     field :provider, :string
     field :settings, :map
     belongs_to :user, Ask.User
+    has_many :survey_channels, Ask.SurveyChannel, on_delete: :delete_all
 
     timestamps()
   end
