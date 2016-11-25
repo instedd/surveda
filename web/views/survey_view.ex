@@ -39,7 +39,11 @@ defmodule Ask.SurveyView do
       started_at: started_at,
       updated_at: survey.updated_at,
       sms_retry_configuration: survey.sms_retry_configuration,
-      ivr_retry_configuration: survey.ivr_retry_configuration
+      ivr_retry_configuration: survey.ivr_retry_configuration,
+      quotas: %{
+        buckets: render_many(survey.quota_buckets, Ask.SurveyView, "survey_bucket.json", as: :bucket),
+        vars: survey.quota_vars
+      }
     }
   end
 
@@ -50,4 +54,11 @@ defmodule Ask.SurveyView do
     }
   end
 
+  def render("survey_bucket.json", %{bucket: bucket}) do
+    %{
+      "condition" => bucket.condition,
+      "quota" => bucket.quota,
+      "count" => bucket.count
+    }
+  end
 end
