@@ -40,9 +40,10 @@ class LanguagesList extends Component {
     otherLangugages =  otherLangugages.map((lang) =>
         <div>
           <span onClick={this.removeLanguage(lang[0])}> (x) </span>
-          <span onClick={this.defaultLanguageSelected(lang[0])}>
+          <span>
               {this.translateLangCode(lang[0])}
           </span>
+          <span onClick={this.defaultLanguageSelected(lang[0])}> (set default) </span>
         </div>
       )
 
@@ -53,6 +54,7 @@ class LanguagesList extends Component {
         <div>
           {this.translateLangCode(questionnaire.defaultLanguage)}
         </div>
+        <br />
       </div>
         <div>
           <div>

@@ -14,7 +14,6 @@ class AddLanguage extends Component {
   }
 
   render() {
-    const { questionnaire } = this.props
     return (
       <div className='row'>
         <div className='col s12'>
@@ -31,6 +30,7 @@ class AddLanguage extends Component {
   }
 
   componentDidMount() {
+    const { questionnaire } = this.props
     const thisContext = this
     const languageAdded = this.languageAdded
     const languageInput = this.refs.languageInput
@@ -53,6 +53,8 @@ class AddLanguage extends Component {
         getData: function(value, callback) {
           const iso6393 = require('iso-639-3')
           const languagesOptions = iso6393.map((lang) => ({'id': idForLanguange(lang), 'text': lang.name}))
+          // Next step: Don't show options that have been already selected
+          // languagesOptions = languagesOptions.filter((lang) => questionnaire.languages.indexOf(lang.id) == -1 && questionnaire.defaultLanguage !== lang)
           const matchingOptions = languagesOptions.filter((lang) => matchesLanguage(value.toLowerCase(), lang))
           callback(value, matchingOptions)
         }
@@ -62,7 +64,7 @@ class AddLanguage extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire
+  questionnaire: state.questionnaire.data
 })
 
 export default connect(mapStateToProps)(AddLanguage)
