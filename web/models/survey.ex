@@ -17,10 +17,11 @@ defmodule Ask.Survey do
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
     field :quota_vars, Ask.Ecto.Type.JSON, default: []
+    field :quotas, Ask.Ecto.Type.JSON, virtual: true
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
-    has_many :quota_buckets, Ask.QuotaBucket
+    has_many :quota_buckets, Ask.QuotaBucket, on_replace: :delete
 
     belongs_to :project, Ask.Project
     belongs_to :questionnaire, Ask.Questionnaire
@@ -33,11 +34,23 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at])
+    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
     |> validate_number(:cutoff, greater_than: 0, less_than: @max_int)
+    |> translate_quotas
+  end
+
+  defp translate_quotas(changeset) do
+    if quotas = get_field(changeset, :quotas) do
+      delete_change(changeset, :quotas)
+      |> change(quota_vars: quotas["vars"])
+      |> put_assoc(:quota_buckets, Ask.QuotaBucket.build_changeset(changeset.data, quotas["buckets"]))
+      |> cast_assoc(:quota_buckets)
+    else
+      changeset
+    end
   end
 
   def update_state(changeset) do

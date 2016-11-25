@@ -12,6 +12,12 @@ defmodule Ask.QuotaBucket do
     timestamps()
   end
 
+  def build_changeset(survey, params) do
+    Enum.map(params, fn param ->
+      changeset(build_assoc(survey, :quota_buckets, param), param)
+    end)
+  end
+
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:condition, :survey_id, :quota, :count])
