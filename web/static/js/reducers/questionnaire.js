@@ -253,9 +253,13 @@ const changeName = (state, action) => {
 }
 
 const addLanguage = (state, action) => {
-  return {
-    ...state,
-    languages: [...state.languages, action.language]
+  if (state.languages.indexOf(action.language) == -1) {
+    return {
+      ...state,
+      languages: [...state.languages, action.language]
+    }
+  } else {
+    return state
   }
 }
 
