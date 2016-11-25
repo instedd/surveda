@@ -61,7 +61,8 @@
       "properties": {
         "sms": { "type": "string" },
         "ivr": { "$ref": "#/definitions/ivr"}
-      }
+      },
+      "additionalProperties": false
     },
 
     "ivr": {
@@ -71,6 +72,7 @@
         "audio_source": {"enum": ["tts", "upload"]},
         "audio_id": {"type": "string"}
       },
+      "additionalProperties": false,
       "required": ["text", "audio_source"]
     }
   }

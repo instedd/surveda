@@ -50,18 +50,30 @@
 
     "responses": {
       "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/lang_responses" }
+    },
+
+    "lang_responses": {
+      "type": "object",
       "properties": {
         "ivr": {"type": "array"},
         "sms": {"type": "array"}
-      }
+      },
+      "additionalProperties": false
     },
 
     "prompt": {
       "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/lang_prompt"}
+    },
+
+    "lang_prompt": {
+      "type": "object",
       "properties": {
         "sms": { "type": "string" },
         "ivr": { "$ref": "#/definitions/ivr"}
-      }
+      },
+      "additionalProperties": false
     },
 
     "ivr": {
@@ -71,6 +83,7 @@
         "audio_source": {"enum": ["tts", "upload"]},
         "audio_id": {"type": "string"}
       },
+      "additionalProperties": false,
       "required": ["text", "audio_source"]
     }
   }

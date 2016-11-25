@@ -37,6 +37,9 @@ defmodule Ask.StepsValidatorTest do
   defp valid_prompt(json), do: valid_thing(json, :prompt)
   defp invalid_prompt(json, case_desc), do: invalid_thing(json, :prompt, case_desc)
 
+  defp valid_lang_prompt(json), do: valid_thing(json, :lang_prompt)
+  defp invalid_lang_prompt(json, case_desc), do: invalid_thing(json, :lang_prompt, case_desc)
+
   defp valid_ivr(json), do: valid_thing(json, :ivr)
   defp invalid_ivr(json, case_desc), do: invalid_thing(json, :ivr, case_desc)
 
@@ -45,6 +48,9 @@ defmodule Ask.StepsValidatorTest do
 
   defp valid_responses(json), do: valid_thing(json, :responses)
   defp invalid_responses(json, case_desc), do: invalid_thing(json, :responses, case_desc)
+
+  defp valid_lang_responses(json), do: valid_thing(json, :lang_responses)
+  defp invalid_lang_responses(json, case_desc), do: invalid_thing(json, :lang_responses, case_desc)
 
   test "questionnaire" do
     ~s({})
@@ -154,11 +160,24 @@ defmodule Ask.StepsValidatorTest do
   end
 
   test "prompt" do
-    ~s("") |> invalid_prompt("Prompt must be an object")
-    ~s({ "sms": {} }) |> invalid_prompt("Prompt sms must be a string")
-    ~s({ "ivr": "" }) |> invalid_prompt("Prompt ivr must be an object")
+    ~s({
+      "en": {
+        "foo": "bar"
+      }
+    }) |> invalid_prompt("Prompt must have a lang prompt structure")
 
-    ~s({ "sms": "Do you smoke? Reply YES or NO" }) |> valid_prompt
+    ~s({
+      "en": {},
+      "fr": {}
+    }) |> valid_prompt
+  end
+
+  test "lang prompt" do
+    ~s("") |> invalid_lang_prompt("Prompt must be an object")
+    ~s({ "sms": {} }) |> invalid_lang_prompt("Prompt sms must be a string")
+    ~s({ "ivr": "" }) |> invalid_lang_prompt("Prompt ivr must be an object")
+
+    ~s({ "sms": "Do you smoke? Reply YES or NO" }) |> valid_lang_prompt
 
     ~s({
       "ivr": {
@@ -166,7 +185,7 @@ defmodule Ask.StepsValidatorTest do
         "audio_source": "tts"
       }
     })
-    |> valid_prompt
+    |> valid_lang_prompt
 
     ~s({
       "sms": "Do you smoke? Reply YES or NO",
@@ -175,7 +194,7 @@ defmodule Ask.StepsValidatorTest do
         "audio_source": "tts"
       }
     })
-    |> valid_prompt
+    |> valid_lang_prompt
   end
 
   test "ivr prompt" do
@@ -261,19 +280,32 @@ defmodule Ask.StepsValidatorTest do
 
   test "responses" do
     ~s({
+      "en": {
+        "foo": "bar"
+      }
+    }) |> invalid_responses("Responses must have lang_responses structure")
+
+    ~s({
+      "en": {},
+      "fr": {}
+    }) |> valid_responses
+  end
+
+  test "lang_responses" do
+    ~s({
       "ivr": {},
       "sms": []
     })
-    |> invalid_responses("Responses ivr must be an array")
+    |> invalid_lang_responses("Responses ivr must be an array")
 
     ~s({
       "ivr": [],
       "sms": {}
     })
-    |> invalid_responses("Responses sms must be an array")
+    |> invalid_lang_responses("Responses sms must be an array")
 
-    ~s({"sms": []}) |> valid_responses
-    ~s({"ivr": []}) |> valid_responses
-    ~s({"ivr": ["1"], "sms": ["Y"]}) |> valid_responses
+    ~s({"sms": []}) |> valid_lang_responses
+    ~s({"ivr": []}) |> valid_lang_responses
+    ~s({"ivr": ["1"], "sms": ["Y"]}) |> valid_lang_responses
   end
 end
