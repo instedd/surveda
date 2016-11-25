@@ -314,7 +314,7 @@ defmodule Ask.RespondentController do
             _ -> acc ++ [""]
           end
         end)
-        row ++ [(respondent.updated_at || respondent.created_at) |> Timex.format!("%Y-%m-%d %H:%M:%S GMT", :strftime)]
+        [(respondent.updated_at || respondent.created_at) |> Timex.format!("%Y-%m-%d %H:%M:%S GMT", :strftime)]
     end)
 
     # Add header to csv_rows
