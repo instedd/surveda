@@ -98,9 +98,10 @@ header {
 
 #TopNav {
   border-bottom: 1px solid color("shades", "black");
+  min-width: 395px;
 
-  .col > ul {
-    &:not(.right) {
+  ul {
+    &.breadcrumb-top {
       margin-left: -15px;
     }
     a {
@@ -109,9 +110,70 @@ header {
         font-size: 1.6rem;
         margin-left: 5px;
       }
+      &:hover {
+        @extend .transparent;
+        @extend .white-text;
+      }
     }
     .dropdown-content > li >  a {
       @extend .black-text;
+    }
+    .user-icon {
+      display: none;
+    }
+    .user-email-dropdown {
+      border-bottom: 1px solid color("grey", "lighten-1");
+      cursor: default;
+      display: none;
+      span {
+        @extend .grey-text, .lighten-2;
+      }
+      &:hover {
+        @extend .transparent;
+      }
+    }
+    &.user-menu a {
+      max-height: 64px;
+       > div {
+        display: inline;
+      }
+    }
+  }
+
+  .breadcrumb-top {
+    > li {
+      position: relative;
+      a {
+        @extend .truncate;
+        max-width: 180px;
+      }
+      &.breadcrumb-item:before {
+        content: 'chevron_right';
+        font-family: 'Material Icons';
+        font-weight: 300;
+        font-style: normal;
+        font-size: 15px;
+        line-height: 1.158;
+        letter-spacing: normal;
+        text-transform: none;
+        text-rendering: optimizeLegibility;
+        font-feature-settings: 'liga';
+        color: color("grey", "darken-4");
+        position: absolute;
+        left: -.5rem;
+        top: 38%;
+      }
+      &.channels-tab a {
+        &:before {
+          content: '';
+          @extend .grey, .darken-4;
+          left: 0px;
+          top: 20px;
+          width: 1px;
+          height: 25px;
+          position: absolute;
+        }
+      }
     }
   }
 }
@@ -776,6 +838,17 @@ label {
     padding-left: 3%;
     padding-right: 3%;
   }
+  #TopNav {
+    padding-right: 3%;
+    .col > ul .user-icon,
+    .col > ul .user-email-dropdown {
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      width: auto !important;
+    }
+  }
   .audio-section audio {
     width: 55%;
   }
@@ -784,6 +857,9 @@ label {
   }
   .collapsible li .card .card-content.closed-step a span {
     width: 75%;
+  }
+  .user-email {
+    display: none;
   }
 }
 
@@ -811,6 +887,11 @@ label {
     input#questionnaire_name {
       max-width: 60vw;
     }
+    #TopNav {
+      .user-menu a {
+        max-height: 56px;
+      }
+    }
   }
 
   .btn-wizard {
@@ -823,7 +904,7 @@ label {
     width: 100%;
     z-index: 1000;
     left: 0;
-    top: 0;
+    top: 0px !important;
 
     .collection.wizard {
       margin: 0;

@@ -37,6 +37,7 @@ defmodule Ask.SurveyView do
       schedule_end_time: survey.schedule_end_time,
       timezone: survey.timezone,
       started_at: started_at,
+      updated_at: survey.updated_at,
       sms_retry_configuration: survey.sms_retry_configuration,
       ivr_retry_configuration: survey.ivr_retry_configuration
     }

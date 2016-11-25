@@ -18,6 +18,14 @@ defmodule Ask.Runtime.VerboiceChannel do
   def oauth2_authorize(_code, _redirect_uri, _callback_url), do: throw(:not_implemented)
   def oauth2_refresh(_access_token), do: throw(:not_implemented)
 
+  def gather(respondent, %{"audio_source" => "upload", "audio_id" => audio_id}) do
+    "<Gather action=\"#{callback_url(respondent)}\"><Play>#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}</Play></Gather>"
+  end
+
+  def gather(respondent, %{"audio_source" => "tts", "text" => text}) do
+    "<Gather action=\"#{callback_url(respondent)}\"><Say>#{text}</Say></Gather>"
+  end
+
   def callback(conn, params = %{"respondent" => respondent_id}) do
     respondent = Respondent |> Repo.get(respondent_id)
 
@@ -32,10 +40,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         end
 
         case Broker.sync_step(respondent, response) do
-          {:prompt, %{"audio_source" => "tts", "text" => text}} ->
-            "<Response><Gather action=\"#{callback_url(respondent)}\"><Say>#{text}</Say></Gather></Response>"
-          {:prompt, %{"audio_source" => "upload", "audio_id" => audio_id}} ->
-            "<Response><Gather action=\"#{callback_url(respondent)}\"><Play>#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}</Play></Gather></Response>"
+          {:prompt, prompt} ->
+            "<Response>#{gather(respondent, prompt)}#{gather(respondent, prompt)}#{gather(respondent, prompt)}</Response>"
           :end ->
             "<Response><Hangup/></Response>"
         end

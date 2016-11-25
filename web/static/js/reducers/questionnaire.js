@@ -94,22 +94,11 @@ const changeChoice = (state, action) => {
           sms: splitValues(smsValues),
           ivr: ivrArrayValues
         },
-        skipLogic: action.choiceChange.skipLogic,
-        errors: {responses: {ivr: validateAllowedValues(ivrArrayValues, '^[0-9#*]*$')}}
+        skipLogic: action.choiceChange.skipLogic
       },
       ...step.choices.slice(action.choiceChange.index + 1)
     ]
   }))
-}
-
-const validateAllowedValues = (arrayValue, allowedValues) => {
-  if (arrayValue != undefined) {
-    return arrayValue.some((value) => {
-      return !value.match(allowedValues)
-    })
-  } else {
-    return false
-  }
 }
 
 const autoComplete = (state, value) => {
@@ -133,7 +122,7 @@ const autoComplete = (state, value) => {
 }
 
 const splitValues = (values) => {
-  return values.split(',').map((r) => r.trim())
+  return values.split(',').map((r) => r.trim()).filter(r => r.length != 0)
 }
 
 const deleteStep = (state, action) => {
@@ -283,4 +272,107 @@ const setDefaultLanguage = (state, action) => {
   }
 }
 
-export default fetchReducer(actions, dataReducer)
+const validateReducer = (reducer) => {
+  return (state, action) => {
+    const newState = reducer(state, action)
+    validate(newState)
+    return newState
+  }
+}
+
+const validate = (state) => {
+  if (!state.data) return
+
+  state.errors = {}
+  const context = {
+    sms: state.data.modes.indexOf('sms') != -1,
+    ivr: state.data.modes.indexOf('ivr') != -1,
+    errors: state.errors
+  }
+
+  validateSteps('steps', state.data.steps, context)
+}
+
+const validateSteps = (path, steps, context) => {
+  for (let i = 0; i < steps.length; i++) {
+    validateStep(`${path}[${i}]`, steps[i], context)
+  }
+}
+
+const validateStep = (path, step, context) => {
+  if (context.sms && isBlank(step.prompt.sms)) {
+    addError(context, `${path}.prompt.sms`, 'SMS prompt must not be blank')
+  }
+
+  if (context.ivr && step.prompt.ivr && step.prompt.ivr.audioSource == 'tts' && isBlank(step.prompt.ivr.text)) {
+    addError(context, `${path}.prompt.ivr.text`, 'Voice prompt must not be blank')
+  }
+
+  if (step.type == 'multiple-choice') {
+    validateChoices(`${path}.choices`, step.choices, context)
+  }
+}
+
+const validateChoices = (path, choices, context) => {
+  if (choices.length < 2) {
+    addError(context, path, 'Must have at least two responses')
+  }
+
+  for (let i = 0; i < choices.length; i++) {
+    validateChoice(`${path}[${i}]`, choices[i], context)
+  }
+
+  const values = []
+  let sms = []
+  let ivr = []
+  for (let i = 0; i < choices.length; i++) {
+    let choice = choices[i]
+    if (values.includes(choice.value)) {
+      addError(context, `${path}[${i}].value`, 'Value already used in a previous response')
+    }
+    for (let choiceSms of choice.responses.sms) {
+      if (sms.includes(choiceSms)) {
+        addError(context, `${path}[${i}].sms`, `Value "${choiceSms}" already used in a previous response`)
+      }
+    }
+    for (let choiceIvr of choice.responses.ivr) {
+      if (ivr.includes(choiceIvr)) {
+        addError(context, `${path}[${i}].ivr`, `Value "${choiceIvr}" already used in a previous response`)
+      }
+    }
+    values.push(choice.value)
+    sms.push(...choice.responses.sms)
+    ivr.push(...choice.responses.ivr)
+  }
+}
+
+const validateChoice = (path, choice, context) => {
+  if (isBlank(choice.value)) {
+    addError(context, `${path}.value`, 'Response must not be blank')
+  }
+
+  if (context.sms && choice.responses.sms.length == 0) {
+    addError(context, `${path}.sms`, 'SMS must not be blank')
+  }
+
+  if (context.ivr) {
+    if (choice.responses.ivr.length == 0) {
+      addError(context, `${path}.ivr`, '"Phone call" must not be blank')
+    }
+
+    if (choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
+      addError(context, `${path}.ivr`, '"Phone call" must only consist of single digits, "#" or "*"')
+    }
+  }
+}
+
+const addError = (context, path, error) => {
+  context.errors[path] = context.errors[path] || []
+  context.errors[path].push(error)
+}
+
+const isBlank = (value) => {
+  return !value || value.trim().length == 0
+}
+
+export default validateReducer(fetchReducer(actions, dataReducer))

@@ -62,7 +62,8 @@ defmodule Ask.QuestionnaireControllerTest do
         "modes" => ["sms", "ivr"],
         "steps" => [],
         "default_language" => "en",
-        "languages" => []
+        "languages" => [],
+        "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at)
       }
     end
 
