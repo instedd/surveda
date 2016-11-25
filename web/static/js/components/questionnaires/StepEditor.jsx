@@ -53,6 +53,11 @@ type State = {
   audioUri: string,
 };
 
+AudioDropzone.propTypes = {
+  onDrop: PropTypes.func.isRequired,
+  onDropRejected: PropTypes.func.isRequired
+}
+
 class StepEditor extends Component {
   props: Props
   state: State
