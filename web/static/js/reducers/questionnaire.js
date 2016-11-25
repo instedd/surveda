@@ -10,6 +10,7 @@ const dataReducer = (state, action) => {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.TOGGLE_MODE: return toggleMode(state, action)
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
+    case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
     default: return steps(state, action)
   }
@@ -255,6 +256,19 @@ const addLanguage = (state, action) => {
   return {
     ...state,
     languages: [...state.languages, action.language]
+  }
+}
+
+const removeLanguage = (state, action) => {
+  const indexToDelete = state.languages.indexOf(action.language)
+  if (indexToDelete != -1) {
+    const newLanguages = [...state.languages.slice(0, indexToDelete), ...state.languages.slice(indexToDelete + 1)]
+    return {
+      ...state,
+      languages: newLanguages
+    }
+  } else {
+    return state
   }
 }
 

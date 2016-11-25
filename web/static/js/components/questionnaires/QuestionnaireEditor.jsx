@@ -6,6 +6,7 @@ import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguageSelection from '../questionnaires/AddLanguage'
+import LanguagesList from '../questionnaires/LanguagesList'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -86,12 +87,6 @@ class QuestionnaireEditor extends Component {
     }
   }
 
-  defaultLanguageSelected(lang) {
-    return (e) => {
-      console.log(lang)
-    }
-  }
-
   render() {
     const { questionnaire } = this.props
 
@@ -134,11 +129,7 @@ class QuestionnaireEditor extends Component {
               </div>
             </div>
           </div>
-          { questionnaire.languages.map((lang) =>
-            <div onClick={this.defaultLanguageSelected(lang)}>
-              {lang}
-            </div>
-          )}
+          <LanguagesList />
           <div className='row'>
             <div className='col s12'>
               <LanguageSelection />

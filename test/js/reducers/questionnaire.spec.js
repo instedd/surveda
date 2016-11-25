@@ -521,6 +521,24 @@ describe('questionnaire reducer', () => {
     expect(languages).toInclude('fr')
   })
 
+  it('should remove language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const state = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr')
+    ])
+
+    const resultState = playActionsFromState(state, reducer)([
+      actions.removeLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages).toNotInclude('fr')
+  })
+
   it('should set default language', () => {
     const preState = playActions([
       actions.fetch(1, 1),
