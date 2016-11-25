@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import {InputWithAutocomplete} from '../ui/InputWithAutocomplete'
+import LanguageSelection from '../ui/LanguageSelection'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -98,7 +98,6 @@ class QuestionnaireEditor extends Component {
 
     return (
       <div className='row'>
-        <InputWithAutocomplete />
         <div className='col s12 m3 questionnaire-modes'>
           <div className='row'>
             <div className='col s12'>
@@ -127,6 +126,11 @@ class QuestionnaireEditor extends Component {
                   <span className='lever' />
                 </label>
               </div>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <LanguageSelection />
             </div>
           </div>
         </div>
