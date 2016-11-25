@@ -5,7 +5,7 @@ import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import LanguageSelection from '../ui/LanguageSelection'
+import LanguageSelection from '../questionnaires/AddLanguage'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -86,6 +86,12 @@ class QuestionnaireEditor extends Component {
     }
   }
 
+  defaultLanguageSelected(lang) {
+    return (e) => {
+      console.log(lang)
+    }
+  }
+
   render() {
     const { questionnaire } = this.props
 
@@ -128,6 +134,11 @@ class QuestionnaireEditor extends Component {
               </div>
             </div>
           </div>
+          { questionnaire.languages.map((lang) =>
+            <div onClick={this.defaultLanguageSelected(lang)}>
+              {lang}
+            </div>
+          )}
           <div className='row'>
             <div className='col s12'>
               <LanguageSelection />

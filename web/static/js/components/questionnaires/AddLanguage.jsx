@@ -3,13 +3,14 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import 'materialize-autocomplete'
 
-class LanguageSelection extends Component {
+class AddLanguage extends Component {
 
   languageAdded(context) {
-    return( (language) => {
+    return (language) => {
       const { dispatch } = context.props
       dispatch(actions.addLanguage(language.id))
-    })
+      $(context.refs.languageInput).val('')
+    }
   }
 
   render() {
@@ -19,9 +20,9 @@ class LanguageSelection extends Component {
         <div className='col s12'>
           <div className='row'>
             <div className='input-field col s12'>
-              <input type='text' ref='languageInput' id='singleInput' data-activates='singleDropdown' data-beloworigin='true' autocomplete='off' />
-              <ul style={{background: '#bbb'}} ref='languagesDropdown' id='singleDropdown' />
-              <label htmlFor='singleInput'>Autocomplete</label>
+              <input type='text' ref='languageInput' id='languageInput' autocomplete='off' />
+              <ul style={{background: '#bbb'}} ref='languagesDropdown' id='languageInput' />
+              <label htmlFor='singleInput'>Add language</label>
             </div>
           </div>
         </div>
@@ -64,4 +65,4 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaire: state.questionnaire
 })
 
-export default connect(mapStateToProps)(LanguageSelection)
+export default connect(mapStateToProps)(AddLanguage)
