@@ -34,11 +34,14 @@ class LanguagesList extends Component {
       return <div>Loading...</div>
     }
 
-    const list =  questionnaire.languages.map((lang) =>
+    let otherLangugages =  questionnaire.languages.filter((lang) => lang !== questionnaire.defaultLanguage)
+    otherLangugages =  otherLangugages.map((lang) => [lang, this.translateLangCode(lang)])
+    otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
+    otherLangugages =  otherLangugages.map((lang) =>
         <div>
-          <span onClick={this.removeLanguage(lang)}> (x) </span>
-          <span onClick={this.defaultLanguageSelected(lang)}>
-              {this.translateLangCode(lang)}
+          <span onClick={this.removeLanguage(lang[0])}> (x) </span>
+          <span onClick={this.defaultLanguageSelected(lang[0])}>
+              {this.translateLangCode(lang[0])}
           </span>
         </div>
       )
@@ -55,7 +58,7 @@ class LanguagesList extends Component {
           <div>
             Other languages:
           </div>
-          {list}
+          {otherLangugages}
         </div>
       </div>
     )
