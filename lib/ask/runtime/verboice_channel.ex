@@ -9,11 +9,9 @@ defmodule Ask.Runtime.VerboiceChannel do
   defstruct [:client, :channel_name]
 
   def new(channel) do
-    url = channel.settings["url"]
-    username = channel.settings["username"]
-    password = channel.settings["password"]
-    channel_name = channel.settings["channel"]
-    %VerboiceChannel{client: Verboice.Client.new(url, username, password), channel_name: channel_name}
+    channel_name = channel.settings["verboice_channel"]
+    client = create_client(channel.user_id)
+    %VerboiceChannel{client: client, channel_name: channel_name}
   end
 
   def oauth2_authorize(code, redirect_uri, _callback_url) do
@@ -62,10 +60,14 @@ defmodule Ask.Runtime.VerboiceChannel do
     "<Say>#{text}</Say>"
   end
 
-  def sync_channels(user_id) do
+  defp create_client(user_id) do
     verboice_config = Application.get_env(:ask, Verboice)
     oauth_token = Ask.OAuthTokenServer.get_token "verboice", user_id
-    client = Verboice.Client.new(verboice_config[:base_url], oauth_token)
+    Verboice.Client.new(verboice_config[:base_url], oauth_token)
+  end
+
+  def sync_channels(user_id) do
+    client = create_client(user_id)
 
     case client |> Verboice.Client.get_channels do
       {:ok, channel_names} ->
