@@ -52,4 +52,16 @@ defmodule Ask.OAuthHelperControllerTest do
 
     refute Ask.Channel |> Repo.get(channel.id)
   end
+
+  test "delete channel even if it's being used by a survey", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "provider")
+    channel = insert(:channel, user: user, provider: "provider")
+    survey = insert(:survey)
+    insert(:survey_channel, survey: survey, channel: channel)
+
+    delete conn, o_auth_client_path(conn, :delete, "provider")
+
+    refute Ask.Channel |> Repo.get(channel.id)
+    assert [] = Ask.SurveyChannel |> Repo.all
+  end
 end

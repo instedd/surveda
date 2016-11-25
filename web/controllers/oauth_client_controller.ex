@@ -22,7 +22,8 @@ defmodule Ask.OAuthClientController do
     user
     |> assoc(:channels)
     |> where([c], c.provider == ^provider)
-    |> Repo.delete_all
+    |> Repo.all
+    |> Enum.each(&Repo.delete(&1))
 
     send_resp(conn, :no_content, "")
   end
