@@ -29,7 +29,7 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
     step
     |> add_store
     |> replace_audio_with_audio_source
-    |> add_skip_logic
+    |> upgrade_choices
   end
 
   def add_store(step) do
@@ -39,19 +39,34 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
     end
   end
 
-  def add_skip_logic(step) do
+
+  def upgrade_choices(step) do
     case Kernel.get_in(step, ["choices"]) do
       [] -> step
       choices ->
-        new_choices = Enum.map(choices, &add_skip_logic_to_choice/1)
+        new_choices = Enum.map(choices, fn(choice) ->
+          choice
+          |> add_skip_logic
+          |> remove_errors
+        end)
+
         Kernel.put_in(step, ["choices"], new_choices)
     end
   end
 
-  def add_skip_logic_to_choice(choice) do
+  def add_skip_logic(choice) do
     case Kernel.get_in(choice, ["skip_logic"]) do
       nil -> Kernel.put_in(choice, ["skip_logic"], nil)
       _skip_logic -> choice
+    end
+  end
+
+  def remove_errors(choice) do
+    case Kernel.get_in(choice, ["errors"]) do
+      nil -> choice
+      _errors ->
+        {errors, new_choice} = Kernel.pop_in(choice, ["errors"])
+        new_choice
     end
   end
 
