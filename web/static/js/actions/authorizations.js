@@ -1,5 +1,6 @@
 import * as api from '../api'
 import * as guissoApi from '../guisso'
+import * as channelActions from './channels'
 import { config } from '../config'
 
 export const FETCH_AUTHORIZATIONS = 'FETCH_AUTHORIZATIONS'
@@ -51,6 +52,7 @@ export const toggleAuthorization = (provider) => (dispatch, getState) => {
     // Turn off
     dispatch(deleteAuthorization(provider))
     api.deleteAuthorization(provider)
+      .then(() => { dispatch(channelActions.fetchChannels()) })
       .catch((e) => {
         dispatch(addAuthorization(provider))
       })
@@ -60,6 +62,7 @@ export const toggleAuthorization = (provider) => (dispatch, getState) => {
     const guissoSession = guissoApi.newSession(config[provider].guisso)
     return guissoSession.authorize('code', provider)
       .then(() => guissoSession.close())
+      .then(() => { dispatch(channelActions.fetchChannels()) })
       .catch(() => {
         dispatch(deleteAuthorization(provider))
       })
