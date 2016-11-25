@@ -185,7 +185,7 @@ class StepEditor extends Component {
     if (step.type == 'multiple-choice') {
       editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
     } else if (step.type == 'numeric') {
-      editor = <StepNumericEditor step={step} />
+      editor = <StepNumericEditor step={step} skip={skip} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }

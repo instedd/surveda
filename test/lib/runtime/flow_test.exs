@@ -104,7 +104,30 @@ defmodule Ask.FlowTest do
   test "when skip_logic is a valid id jumps to the specified id" do
     {:ok, flow, _} = init_quiz_and_send_response("S")
 
-    assert flow.current_step == 2
+    assert flow.current_step == 3
+  end
+
+  describe "numeric steps" do
+    test "when value is in a middle range it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("50"))
+
+      assert {:end, _} = result
+    end
+
+    test "when value is in the first range and it has no min value it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("-10"))
+
+      assert {:end, _} = result
+    end
+
+    test "when value is in the last range and it has no max value it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("999"))
+
+      assert {:end, _} = result
+    end
   end
 
   describe "when skip_logic is an invalid id" do
