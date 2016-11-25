@@ -2,6 +2,7 @@ import * as actions from '../../actions/questionnaire'
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import 'materialize-autocomplete'
+import iso6393 from 'iso-639-3'
 
 class LanguagesList extends Component {
 
@@ -14,7 +15,6 @@ class LanguagesList extends Component {
   }
 
   translateLangCode(code) {
-    const iso6393 = require('iso-639-3')
     const language = iso6393.find((lang) => lang.iso6391 == code || lang.iso6393 == code)
     return language.name
   }
