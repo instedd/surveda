@@ -627,6 +627,66 @@ describe('questionnaire reducer', () => {
       })
     })
   })
+
+  it('should add language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages).toInclude('fr')
+  })
+
+  it('should not add language if it was already added', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr'),
+      actions.addLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages.reduce((acum, lang) => (lang == 'fr') ? acum + 1 : acum, 0)).toEqual(1)
+  })
+
+  it('should remove language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const state = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr')
+    ])
+
+    const resultState = playActionsFromState(state, reducer)([
+      actions.removeLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages).toNotInclude('fr')
+  })
+
+  it('should set default language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.setDefaultLanguage('fr')
+    ])
+
+    expect(resultState.data.defaultLanguage).toEqual('fr')
+  })
 })
 
 const questionnaire = deepFreeze({
@@ -713,5 +773,7 @@ const questionnaire = deepFreeze({
   modes: [
     'sms', 'ivr'
   ],
-  id: 1
+  id: 1,
+  defaultLanguage: 'en',
+  languages: ['en']
 })

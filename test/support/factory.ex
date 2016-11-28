@@ -48,6 +48,8 @@ defmodule Ask.Factory do
       name: sequence(:questionnaire, &"Questionnaire #{&1}"),
       modes: ["sms", "ivr"],
       steps: [],
+      default_language: "en",
+      languages: []
     }
   end
 
