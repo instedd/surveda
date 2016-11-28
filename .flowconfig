@@ -1,0 +1,7 @@
+[ignore]
+<PROJECT_ROOT>/node_modules/react-timeago
+[include]
+[libs]
+web/static/js/decls/
+[options]
+munge_underscores=true
