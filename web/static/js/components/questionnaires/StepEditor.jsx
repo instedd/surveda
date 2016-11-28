@@ -7,6 +7,7 @@ import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 import Dropzone from 'react-dropzone'
 import { createAudio } from '../../api.js'
+import classNames from 'classnames/bind'
 
 const AudioDropzone = ({ onDrop, onDropRejected }) => {
   return (
