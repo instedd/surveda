@@ -19,7 +19,7 @@ export const CardTable = ({ title, children, footer, highlight, style }) => (
 )
 
 CardTable.propTypes = {
-  title: PropTypes.string.isRequired,
+  title: PropTypes.node.isRequired,
   highlight: PropTypes.bool,
   children: PropTypes.node,
   footer: PropTypes.object,

@@ -233,3 +233,7 @@ export const fetchAuthorizations = () => {
 export const deleteAuthorization = (provider) => {
   return apiDelete(`authorizations/${provider}`)
 }
+
+export const synchronizeChannels = () => {
+  return apiFetch(`authorizations/synchronize`)
+}

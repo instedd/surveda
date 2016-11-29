@@ -64,4 +64,15 @@ defmodule Ask.OAuthHelperControllerTest do
     refute Ask.Channel |> Repo.get(channel.id)
     assert [] = Ask.SurveyChannel |> Repo.all
   end
+
+  test "synchronize channels", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "test")
+    get conn, o_auth_client_path(conn, :synchronize)
+
+    channels = user
+    |> assoc(:channels)
+    |> Repo.all
+
+    assert 1 = channels |> Enum.count
+  end
 end

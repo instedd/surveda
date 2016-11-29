@@ -44,6 +44,7 @@ defmodule Ask.Router do
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]
       resources "/authorizations", OAuthClientController, only: [:index, :delete]
+      get "/authorizations/synchronize", OAuthClientController, :synchronize
     end
   end
 

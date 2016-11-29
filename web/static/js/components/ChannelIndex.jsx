@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import * as actions from '../actions/channels'
 import * as authActions from '../actions/authorizations'
 import { AddButton, EmptyPage, CardTable } from './ui'
+import { Preloader } from 'react-materialize'
 
 class ChannelIndex extends Component {
   componentDidMount() {
@@ -20,6 +21,10 @@ class ChannelIndex extends Component {
     this.props.authActions.toggleAuthorization(provider)
   }
 
+  synchronizeChannels() {
+    this.props.authActions.synchronizeChannels()
+  }
+
   render() {
     const { channels, authorizations } = this.props
     const title = `${Object.keys(channels).length} ${(Object.keys(channels).length == 1) ? ' channel' : ' channels'}`
@@ -34,6 +39,22 @@ class ChannelIndex extends Component {
         </label>
       </div>
     }
+
+    const syncButton = do {
+      if (authorizations.synchronizing) {
+        <Preloader size='small' />
+      } else {
+        <a href='#' className='black-text' onClick={() => this.synchronizeChannels()}>
+          <i className='material-icons container-rotate'>refresh</i>
+        </a>
+      }
+    }
+
+    const tableTitle =
+      <span>
+        { title }
+        <span className='right'>{ syncButton }</span>
+      </span>
 
     return (
       <div>
@@ -57,7 +78,7 @@ class ChannelIndex extends Component {
         { (Object.keys(channels).length == 0)
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         : (
-          <CardTable title={title} highlight>
+          <CardTable title={tableTitle} highlight>
             <thead>
               <tr>
                 <th>Name</th>

@@ -28,6 +28,20 @@ defmodule Ask.OAuthClientController do
     send_resp(conn, :no_content, "")
   end
 
+  def synchronize(conn, _params) do
+    user = get_current_user(conn)
+
+    user
+    |> assoc(:oauth_tokens)
+    |> Repo.all
+    |> Enum.each(fn token ->
+      provider = Ask.Channel.provider(token.provider)
+      provider.sync_channels(user.id)
+    end)
+
+    send_resp(conn, :no_content, "")
+  end
+
   def callback(conn, %{"code" => code, "state" => provider_name}) do
     user = get_current_user(conn)
     token = user |> assoc(:oauth_tokens) |> Repo.get_by(provider: provider_name)

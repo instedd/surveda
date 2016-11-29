@@ -9,6 +9,7 @@ describe('authorizations reducer', () => {
   it('has a sane initial state', () => {
     expect(initialState.fetching).toEqual(false)
     expect(initialState.items).toEqual(null)
+    expect(initialState.synchronizing).toEqual(false)
   })
 
   it('starts fetching', () => {
@@ -45,5 +46,15 @@ describe('authorizations reducer', () => {
     const auths = ['provider_a', 'provider_b']
     const result = reducer({fetching: false, items: auths}, actions.addAuthorization('provider_b'))
     expect(result.items).toEqual(['provider_a', 'provider_b'])
+  })
+
+  it('sets synchronizing flag', () => {
+    const result = reducer(initialState, actions.beginSynchronization())
+    expect(result.synchronizing).toEqual(true)
+  })
+
+  it('clear synchronizing flag', () => {
+    const result = reducer({...initialState, synchronizing: true}, actions.endSynchronization())
+    expect(result.synchronizing).toEqual(false)
   })
 })

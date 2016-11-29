@@ -7,6 +7,8 @@ export const FETCH_AUTHORIZATIONS = 'FETCH_AUTHORIZATIONS'
 export const RECEIVE_AUTHORIZATIONS = 'RECEIVE_AUTHORIZATIONS'
 export const DELETE_AUTHORIZATION = 'DELETE_AUTHORIZATION'
 export const ADD_AUTHORIZATION = 'ADD_AUTHORIZATION'
+export const BEGIN_SYNCHRONIZATION = 'BEGIN_SYNCHRONIZATION'
+export const END_SYNCHRONIZATION = 'END_SYNCHRONIZATION'
 
 export const fetchAuthorizations = () => (dispatch, getState) => {
   const state = getState()
@@ -67,4 +69,19 @@ export const toggleAuthorization = (provider) => (dispatch, getState) => {
         dispatch(deleteAuthorization(provider))
       })
   }
+}
+
+export const beginSynchronization = () => ({
+  type: BEGIN_SYNCHRONIZATION
+})
+
+export const endSynchronization = () => ({
+  type: END_SYNCHRONIZATION
+})
+
+export const synchronizeChannels = () => (dispatch, getState) => {
+  dispatch(beginSynchronization())
+  api.synchronizeChannels()
+    .then(() => { dispatch(endSynchronization()) })
+    .then(() => { dispatch(channelActions.fetchChannels()) })
 }
