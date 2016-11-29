@@ -1,55 +1,93 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import { UntitledIfEmpty } from '../ui'
 import { Input } from 'react-materialize'
 import classNames from 'classnames/bind'
 
+type SkipOption = {
+  id: string,
+  title: string
+};
+
+type Props = {
+  onDelete: Function,
+  onChoiceChange: Function,
+  choice: Choice,
+  skipOptions: SkipOption[],
+  sms: boolean,
+  ivr: boolean,
+  errors: any,
+  errorPath: string,
+};
+
+type Focus = null | 'response' | 'sms' | 'ivr';
+
+type State = {
+  response: string,
+  sms: string,
+  ivr: string,
+  editing: boolean,
+  focus: Focus,
+  doNotClose: boolean,
+  skipLogic: ?string,
+  errors: ?any,
+};
+
 class ChoiceEditor extends Component {
-  constructor(props) {
+  props: Props
+  state: State
+
+  constructor(props: Props) {
     super(props)
-    this.state = Object.assign({}, this.stateFromProps(props), { editing: false, doNotClose: false })
+    this.state = { ...this.stateFromProps(props), editing: false, doNotClose: false, focus: null, errors: null }
   }
 
-  responseChange(event) {
+  responseChange(event: Event) {
     event.preventDefault()
-    this.setState({
-      ...this.state,
-      response: event.target.value
-    })
-  }
-
-  smsChange(event) {
-    event.preventDefault()
-    this.setState({
-      ...this.state,
-      sms: event.target.value
-    })
-  }
-
-  ivrChange(event) {
-    event.preventDefault()
-    this.setState({
-      ...this.state,
-      ivr: event.target.value
-    })
-  }
-
-  componentWillReceiveProps(newProps) {
-    let newState = this.stateFromProps(newProps)
-    this.setState(Object.assign({}, newState, { editing: this.state.editing }))
-  }
-
-  stateFromProps(props) {
-    const { choice } = props
-    return {
-      response: choice.value,
-      sms: choice.responses.sms.join(', '),
-      ivr: choice.responses.ivr.join(', '),
-      skipLogic: choice.skipLogic,
-      errors: choice.errors
+    if (event.target instanceof HTMLInputElement) {
+      this.setState({
+        ...this.state,
+        response: event.target.value
+      })
     }
   }
 
-  enterEditMode(event, focus) {
+  smsChange(event: Event) {
+    event.preventDefault()
+    if (event.target instanceof HTMLInputElement) {
+      this.setState({
+        ...this.state,
+        sms: event.target.value
+      })
+    }
+  }
+
+  ivrChange(event: Event) {
+    event.preventDefault()
+    if (event.target instanceof HTMLInputElement) {
+      this.setState({
+        ...this.state,
+        ivr: event.target.value
+      })
+    }
+  }
+
+  componentWillReceiveProps(newProps: Props) {
+    let newState = this.stateFromProps(newProps)
+    this.setState({ ...newState, editing: this.state.editing })
+  }
+
+  stateFromProps(props: Props) {
+    const { choice } = props
+    return {
+      response: choice.value,
+      sms: choice.responses['en'].sms.join(', '),
+      ivr: choice.responses['en'].ivr.join(', '),
+      skipLogic: choice.skipLogic
+    }
+  }
+
+  enterEditMode(event: Event, focus: Focus) {
     event.preventDefault()
     this.setState({
       ...this.state,
@@ -58,7 +96,7 @@ class ChoiceEditor extends Component {
     })
   }
 
-  exitEditMode(autoComplete = false) {
+  exitEditMode(autoComplete: boolean = false) {
     const { onChoiceChange } = this.props
     if (this.state.doNotClose) {
       this.state.doNotClose = false
@@ -75,18 +113,18 @@ class ChoiceEditor extends Component {
     }
   }
 
-  autoComplete(event) {
+  autoComplete(event: Event) {
     this.exitEditMode(true)
   }
 
-  setDoNotClose(focus) {
+  setDoNotClose(focus: Focus) {
     if (this.state.focus != focus) {
       this.state.doNotClose = true
       this.state.focus = focus
     }
   }
 
-  onKeyDown(event, focus, autoComplete = false) {
+  onKeyDown(event: Event, focus: Focus, autoComplete: boolean = false) {
     if (event.key == 'Enter') {
       event.preventDefault()
       this.exitEditMode(autoComplete)
@@ -95,13 +133,15 @@ class ChoiceEditor extends Component {
     }
   }
 
-  skipLogicChange(event) {
+  skipLogicChange(event: Event) {
     const { onChoiceChange } = this.props
-    this.setState({
-      ...this.state,
-      skipLogic: event.target.value == '' ? null : event.target.value
-    })
-    onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic)
+    if (event.target instanceof HTMLInputElement) {
+      this.setState({
+        ...this.state,
+        skipLogic: event.target.value == '' ? null : event.target.value
+      })
+      onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic)
+    }
   }
 
   render() {
@@ -131,7 +171,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onBlur={e => this.autoComplete(e)}
-              onKeyDown={e => this.onKeyDown(e, 'sms', true)} />
+              onKeyDown={(e: Event) => this.onKeyDown(e, 'sms', true)} />
           </td>
           { sms
           ? <td onMouseDown={e => this.setDoNotClose('sms')}>

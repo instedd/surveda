@@ -1,3 +1,4 @@
+// @flow
 import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
 
@@ -5,7 +6,7 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 
-const dataReducer = (state, action) => {
+const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.TOGGLE_MODE: return toggleMode(state, action)
@@ -17,17 +18,15 @@ const dataReducer = (state, action) => {
 }
 
 const steps = (state, action) => {
-  const newSteps = state.steps == null ? null : stepsReducer(state.steps, action)
+  const newSteps = state.steps == null ? [] : stepsReducer(state.steps, action)
 
-  return do {
-    if (newSteps !== state.steps) {
-      ({
-        ...state,
-        steps: newSteps
-      })
-    } else {
-      state
+  if (newSteps !== state.steps) {
+    return {
+      ...state,
+      steps: newSteps
     }
+  } else {
+    return state
   }
 }
 
@@ -57,8 +56,10 @@ const addChoice = (state, action) => {
       {
         value: '',
         responses: {
-          sms: [],
-          ivr: []
+          'en': {
+            sms: [],
+            ivr: []
+          }
         },
         skipLogic: null
       }
@@ -91,8 +92,12 @@ const changeChoice = (state, action) => {
         ...step.choices[action.choiceChange.index],
         value: action.choiceChange.response,
         responses: {
-          sms: splitValues(smsValues),
-          ivr: ivrArrayValues
+          ...step.choices[action.choiceChange.index].responses,
+          'en': {
+            ...step.choices[action.choiceChange.index].responses['en'],
+            sms: splitValues(smsValues),
+            ivr: ivrArrayValues
+          }
         },
         skipLogic: action.choiceChange.skipLogic
       },
@@ -112,8 +117,8 @@ const autoComplete = (state, value) => {
       step.choices.forEach((choice) => {
         if (choice.value == value && !setted) {
           setted = true
-          smsValues = choice.responses.sms.join(',')
-          ivrValues = choice.responses.ivr.join(',')
+          smsValues = choice.responses['en'].sms.join(',')
+          ivrValues = choice.responses['en'].ivr.join(',')
         }
       })
     }
@@ -129,7 +134,7 @@ const deleteStep = (state, action) => {
   return filter(state, s => s.id != action.stepId)
 }
 
-const changeStep = (state, stepId, func) => {
+const changeStep = (state, stepId, func: (step: Step) => Step) => {
   const stepIndex = findIndex(state, s => s.id == stepId)
   return [
     ...state.slice(0, stepIndex),
@@ -138,12 +143,20 @@ const changeStep = (state, stepId, func) => {
   ]
 }
 
-const changeStepSmsPrompt = (state, action) => {
+type ActionChangeStepSmsPrompt = {
+  stepId: string,
+  newPrompt: string
+};
+
+const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt) => {
   return changeStep(state, action.stepId, step => ({
     ...step,
     prompt: {
       ...step.prompt,
-      sms: action.newPrompt
+      'en': {
+        ...step.prompt['en'],
+        sms: action.newPrompt
+      }
     }
   }))
 }
@@ -153,10 +166,13 @@ const changeStepIvrPrompt = (state, action) => {
     ...step,
     prompt: {
       ...step.prompt,
-      ivr: {
-        ...step.prompt.ivr,
-        text: action.newPrompt.text,
-        audioSource: action.newPrompt.audioSource
+      'en': {
+        ...step.prompt['en'],
+        ivr: {
+          ...step.prompt['en'].ivr,
+          text: action.newPrompt.text,
+          audioSource: action.newPrompt.audioSource
+        }
       }
     }
   }))
@@ -167,10 +183,13 @@ const changeStepIvrAudioId = (state, action) => {
     ...step,
     prompt: {
       ...step.prompt,
-      ivr: {
-        ...step.prompt.ivr,
-        audioId: action.newId,
-        audioSource: 'upload'
+      'en': {
+        ...step.prompt['en'],
+        ivr: {
+          ...step.prompt['en'].ivr,
+          audioId: action.newId,
+          audioSource: 'upload'
+        }
       }
     }
   }))
@@ -211,10 +230,12 @@ const newStep = () => ({
   title: '',
   store: '',
   prompt: {
-    sms: '',
-    ivr: {
-      text: '',
-      audioSource: 'tts'
+    'en': {
+      sms: '',
+      ivr: {
+        text: '',
+        audioSource: 'tts'
+      }
     }
   },
   choices: []
@@ -234,7 +255,11 @@ const toggleMode = (state, action) => {
   }
 }
 
-const changeName = (state, action) => {
+type ActionChangeName = {
+  newName: string
+};
+
+const changeName = (state: Questionnaire, action: ActionChangeName): Questionnaire => {
   return {
     ...state,
     name: action.newName
@@ -272,15 +297,20 @@ const setDefaultLanguage = (state, action) => {
   }
 }
 
+type ValidationState = {
+  data: Questionnaire,
+  errors: { [path: string]: string[] }
+};
+
 const validateReducer = (reducer) => {
-  return (state, action) => {
+  return (state: ValidationState, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
 
-const validate = (state) => {
+const validate = (state: ValidationState) => {
   if (!state.data) return
 
   state.errors = {}
@@ -300,11 +330,11 @@ const validateSteps = (path, steps, context) => {
 }
 
 const validateStep = (path, step, context) => {
-  if (context.sms && isBlank(step.prompt.sms)) {
+  if (context.sms && isBlank(step.prompt['en'].sms)) {
     addError(context, `${path}.prompt.sms`, 'SMS prompt must not be blank')
   }
 
-  if (context.ivr && step.prompt.ivr && step.prompt.ivr.audioSource == 'tts' && isBlank(step.prompt.ivr.text)) {
+  if (context.ivr && step.prompt['en'].ivr && step.prompt['en'].ivr.audioSource == 'tts' && isBlank(step.prompt['en'].ivr.text)) {
     addError(context, `${path}.prompt.ivr.text`, 'Voice prompt must not be blank')
   }
 
@@ -330,19 +360,19 @@ const validateChoices = (path, choices, context) => {
     if (values.includes(choice.value)) {
       addError(context, `${path}[${i}].value`, 'Value already used in a previous response')
     }
-    for (let choiceSms of choice.responses.sms) {
+    for (let choiceSms of choice.responses['en'].sms) {
       if (sms.includes(choiceSms)) {
         addError(context, `${path}[${i}].sms`, `Value "${choiceSms}" already used in a previous response`)
       }
     }
-    for (let choiceIvr of choice.responses.ivr) {
+    for (let choiceIvr of choice.responses['en'].ivr) {
       if (ivr.includes(choiceIvr)) {
         addError(context, `${path}[${i}].ivr`, `Value "${choiceIvr}" already used in a previous response`)
       }
     }
     values.push(choice.value)
-    sms.push(...choice.responses.sms)
-    ivr.push(...choice.responses.ivr)
+    sms.push(...choice.responses['en'].sms)
+    ivr.push(...choice.responses['en'].ivr)
   }
 }
 
@@ -351,16 +381,16 @@ const validateChoice = (path, choice, context) => {
     addError(context, `${path}.value`, 'Response must not be blank')
   }
 
-  if (context.sms && choice.responses.sms.length == 0) {
+  if (context.sms && choice.responses['en'].sms.length == 0) {
     addError(context, `${path}.sms`, 'SMS must not be blank')
   }
 
   if (context.ivr) {
-    if (choice.responses.ivr.length == 0) {
+    if (choice.responses['en'].ivr.length == 0) {
       addError(context, `${path}.ivr`, '"Phone call" must not be blank')
     }
 
-    if (choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
+    if (choice.responses['en'].ivr.some(value => !value.match('^[0-9#*]*$'))) {
       addError(context, `${path}.ivr`, '"Phone call" must only consist of single digits, "#" or "*"')
     }
   }
@@ -371,7 +401,7 @@ const addError = (context, path, error) => {
   context.errors[path].push(error)
 }
 
-const isBlank = (value) => {
+const isBlank = (value: string) => {
   return !value || value.trim().length == 0
 }
 
