@@ -30,7 +30,7 @@ defmodule Ask.JsonSchema do
   end
 
   def errors_to_json(errors) do
-    errors |> Enum.map(fn ({msg, _cols}) -> msg end)
+    errors |> Enum.map(fn ({msg, cols}) -> "#{msg}: #{inspect cols}" end)
   end
 
   defp get_validation_errors(object, type, schema) do

@@ -16,6 +16,8 @@ type Props = {
   skipOptions: SkipOption[],
   sms: boolean,
   ivr: boolean,
+  errors: any,
+  errorPath: string,
 };
 
 type Focus = null | 'response' | 'sms' | 'ivr';

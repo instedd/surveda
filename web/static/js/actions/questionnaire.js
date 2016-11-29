@@ -103,7 +103,6 @@ export const changeStepAudioIdIvr = (stepId, newId) => ({
   newId
 })
 
-
 export const changeStepTitle = (stepId, newTitle) => ({
   type: CHANGE_STEP_TITLE,
   stepId,
@@ -148,7 +147,6 @@ export const removeLanguage = (language) => ({
   type: REMOVE_LANGUAGE,
   language
 })
-
 
 export const setDefaultLanguage = (language) => ({
   type: SET_DEFAULT_LANGUAGE,

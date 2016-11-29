@@ -1,3 +1,4 @@
+// @flow
 export type Questionnaire = {
   name: string,
   steps: Step[],
@@ -5,12 +6,15 @@ export type Questionnaire = {
   languages: string[]
 };
 
+export type AudioPrompt = {
+    audioSource: 'tts' | 'upload',
+    text: string,
+    audioId?: ?string
+};
+
 export type LanguagePrompt = {
   sms: string,
-  ivr: {
-    audioSource: 'tts',
-    text: string
-  }
+  ivr: AudioPrompt,
 };
 
 export type Prompt = { [lang: string]: LanguagePrompt };
@@ -27,7 +31,7 @@ export type MultipleChoiceStep = {
 declare type Choice = {
   value: string,
   skipLogic: ?string,
-  responses: { [lang: string]: {
+  responses: { en: {
     sms: string[],
     ivr: string[]
   }}

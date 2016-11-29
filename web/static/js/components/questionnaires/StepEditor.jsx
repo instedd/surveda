@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+// @flow
+import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, InputWithLabel } from '../ui'
@@ -9,16 +10,53 @@ import Dropzone from 'react-dropzone'
 import { createAudio } from '../../api.js'
 import classNames from 'classnames/bind'
 
-const AudioDropzone = ({ onDrop, onDropRejected }) => {
-  return (
-    <Dropzone className='dropfile audio' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
-      <div className='drop-icon' />
-      <div className='drop-text audio' />
-    </Dropzone>
-  )
+// TODO: should we move AudioDropzone to its own file?
+type AudioDropzoneProps = {
+  onDrop: Function,
+  onDropRejected: Function
+};
+
+class AudioDropzone extends Component {
+  props: AudioDropzoneProps
+
+  render() {
+    const { onDrop, onDropRejected } = this.props
+    return (
+      <Dropzone className='dropfile audio' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
+        <div className='drop-icon' />
+        <div className='drop-text audio' />
+      </Dropzone>
+    )
+  }
 }
 
+type Props = {
+  step: Step,
+  questionnaireActions: any,
+  onDelete: Function,
+  onCollapse: Function,
+  questionnaire: Questionnaire,
+  errors: any,
+  errorPath: string,
+  skip: string,
+};
+
+type State = {
+  stepTitle: string,
+  stepType: string,
+  stepPromptSms: string,
+  stepPromptIvr: string,
+  stepStore: string,
+  audioErrors: string,
+  audioId: any,
+  audioSource: string,
+  audioUri: string,
+};
+
 class StepEditor extends Component {
+  props: Props
+  state: State
+
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -89,15 +127,24 @@ class StepEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
+
+    let audioId = null
+    if (step.prompt['en'] && step.prompt['en'].ivr) {
+      let ivrPrompt: AudioPrompt = step.prompt['en'].ivr
+      if (ivrPrompt.audioSource === 'upload') {
+        audioId = ivrPrompt.audioId
+      }
+    }
+
     return {
       stepTitle: step.title,
       stepType: step.type,
-      stepPromptSms: step.prompt.sms || '',
-      stepPromptIvr: (step.prompt.ivr || {}).text || '',
+      stepPromptSms: step.prompt['en'].sms || '',
+      stepPromptIvr: (step.prompt['en'].ivr || {}).text || '',
       stepStore: step.store || '',
-      audioId: (step.prompt.ivr || {}).audioId,
-      audioSource: (step.prompt.ivr || {}).audioSource || 'tts',
-      audioSrc: (step.prompt.ivr && step.prompt.ivr.audioId ? `/api/v1/audios/${step.prompt.ivr.audioId}` : ''),
+      audioId: audioId,
+      audioSource: (step.prompt['en'].ivr || {}).audioSource || 'tts',
+      audioUri: (step.prompt['en'].ivr && step.prompt['en'].ivr.audioId ? `/api/v1/audios/${step.prompt['en'].ivr.audioId}` : ''),
       audioErrors: ''
     }
   }
@@ -106,7 +153,7 @@ class StepEditor extends Component {
     const { step } = this.props
     createAudio(files)
       .then(response => {
-        this.setState({audioSrc: `/api/v1/audios/${response.result}`}, () => {
+        this.setState({audioUri: `/api/v1/audios/${response.result}`}, () => {
           this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
           $('audio')[0].load()
         })
@@ -201,7 +248,7 @@ class StepEditor extends Component {
         {(this.state.audioSource == 'upload')
         ? <div className='upload-audio'>
           <audio controls>
-            <source src={this.state.audioSrc} type='audio/mpeg' />
+            <source src={this.state.audioUri} type='audio/mpeg' />
           </audio>
           <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
         </div>
@@ -292,18 +339,6 @@ class StepEditor extends Component {
       </Card>
     )
   }
-}
-
-StepEditor.propTypes = {
-  questionnaireActions: PropTypes.object.isRequired,
-  dispatch: PropTypes.func,
-  questionnaire: PropTypes.object.isRequired,
-  errors: PropTypes.object.isRequired,
-  step: PropTypes.object.isRequired,
-  errorPath: PropTypes.string.isRequired,
-  onCollapse: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  skip: PropTypes.array.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({

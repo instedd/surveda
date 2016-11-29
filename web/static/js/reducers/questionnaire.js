@@ -92,8 +92,12 @@ const changeChoice = (state, action) => {
         ...step.choices[action.choiceChange.index],
         value: action.choiceChange.response,
         responses: {
-          sms: splitValues(smsValues),
-          ivr: ivrArrayValues
+          ...step.choices[action.choiceChange.index].responses,
+          'en': {
+            ...step.choices[action.choiceChange.index].responses['en'],
+            sms: splitValues(smsValues),
+            ivr: ivrArrayValues
+          }
         },
         skipLogic: action.choiceChange.skipLogic
       },
@@ -130,7 +134,7 @@ const deleteStep = (state, action) => {
   return filter(state, s => s.id != action.stepId)
 }
 
-const changeStep = (state, stepId, func) => {
+const changeStep = (state, stepId, func: (step: Step) => Step) => {
   const stepIndex = findIndex(state, s => s.id == stepId)
   return [
     ...state.slice(0, stepIndex),
@@ -162,10 +166,13 @@ const changeStepIvrPrompt = (state, action) => {
     ...step,
     prompt: {
       ...step.prompt,
-      ivr: {
-        ...step.prompt.ivr,
-        text: action.newPrompt.text,
-        audioSource: action.newPrompt.audioSource
+      'en': {
+        ...step.prompt['en'],
+        ivr: {
+          ...step.prompt['en'].ivr,
+          text: action.newPrompt.text,
+          audioSource: action.newPrompt.audioSource
+        }
       }
     }
   }))
@@ -176,10 +183,13 @@ const changeStepIvrAudioId = (state, action) => {
     ...step,
     prompt: {
       ...step.prompt,
-      ivr: {
-        ...step.prompt.ivr,
-        audioId: action.newId,
-        audioSource: 'upload'
+      'en': {
+        ...step.prompt['en'],
+        ivr: {
+          ...step.prompt['en'].ivr,
+          audioId: action.newId,
+          audioSource: 'upload'
+        }
       }
     }
   }))
@@ -287,20 +297,20 @@ const setDefaultLanguage = (state, action) => {
   }
 }
 
-type State = {
+type ValidationState = {
   data: Questionnaire,
   errors: { [path: string]: string[] }
 };
 
 const validateReducer = (reducer) => {
-  return (state: State, action: any) => {
+  return (state: ValidationState, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
 
-const validate = (state: State) => {
+const validate = (state: ValidationState) => {
   if (!state.data) return
 
   state.errors = {}
