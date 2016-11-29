@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow}
-  alias Ask.{Repo, Survey, Respondent, TestChannel}
+  alias Ask.{Repo, Survey, Respondent, TestChannel, QuotaBucket}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
   @always_schedule %{schedule_day_of_week: @everyday_schedule,
@@ -292,6 +292,74 @@ defmodule Ask.BrokerTest do
 
     survey = Repo.get(Survey, survey.id)
 
+    assert survey.state == "completed"
+  end
+
+  test "marks the survey as completed when all the quotas are reached" do
+    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, 10)
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
+    qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+    Broker.handle_info(:poll, nil)
+
+    # In the beginning it shouldn't be completed
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    # Not yet completed: missing fourth bucket
+    qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
+    qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
+    qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    qb4 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    # Now it should be completed
+    qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
+    Broker.handle_info(:poll, nil)
+
+    survey_id = survey.id
+    from q in QuotaBucket,
+      where: q.survey_id == ^survey_id
+
+    survey = Survey |> Repo.get(survey.id)
     assert survey.state == "completed"
   end
 

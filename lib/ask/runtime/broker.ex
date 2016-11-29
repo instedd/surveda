@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent}
+  alias Ask.{Repo, Survey, Respondent, QuotaBucket}
   alias Ask.Runtime.Session
 
   @batch_size 10
@@ -56,15 +56,28 @@ defmodule Ask.Runtime.Broker do
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0
     stalled = by_state["stalled"] || 0
+    reached_quotas = reached_quotas?(survey)
 
     cond do
-      active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed) ->
+      reached_quotas || (active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed)) ->
         complete(survey)
 
       active < @batch_size && pending > 0 ->
         start_some(survey, @batch_size - active)
 
       true -> :ok
+    end
+  end
+
+  defp reached_quotas?(survey) do
+    case survey.quota_vars do
+      [] -> false
+      _ ->
+        survey_id = survey.id
+        Repo.one(from q in QuotaBucket,
+          where: q.survey_id == ^survey_id,
+          where: q.count < q.quota,
+          select: count(q.id)) == 0
     end
   end
 
