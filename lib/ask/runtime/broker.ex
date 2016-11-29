@@ -6,7 +6,6 @@ defmodule Ask.Runtime.Broker do
   alias Ask.{Repo, Survey, Respondent, QuotaBucket}
   alias Ask.Runtime.Session
   alias Ask.QuotaBucket
-  alias Ask.Response
 
   @batch_size 10
   @poll_interval :timer.minutes(1)
@@ -157,7 +156,7 @@ defmodule Ask.Runtime.Broker do
                   (res.field_name == var) && (res.value == Map.fetch!(bucket.condition, var))
                 end)
               end)
-              
+
     matches
   end
 
@@ -166,12 +165,12 @@ defmodule Ask.Runtime.Broker do
     |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update
 
-    responses = Repo.all(from r in Response, where: r.respondent_id == ^respondent.id)
+    responses = respondent |> assoc(:responses) |> Repo.all
     matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
                     |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
 
     if matching_bucket do
-      Ask.Repo.query!("update quota_buckets set count = count + 1 where id = ?", [matching_bucket.id])
+      from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
     end
   end
 
