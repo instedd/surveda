@@ -26,7 +26,7 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { step, skip, sms, ivr } = this.props
+    const { step, skip, sms, ivr, errors, errorPath } = this.props
     const { choices } = step
 
     let skipOptions = skip.slice()
@@ -69,6 +69,8 @@ class StepMultipleChoiceEditor extends Component {
                     skipOptions={skipOptions}
                     sms={sms}
                     ivr={ivr}
+                    errors={errors}
+                    errorPath={`${errorPath}.choices[${index}]`}
                       />
                   )}
               </tbody>
@@ -88,7 +90,9 @@ StepMultipleChoiceEditor.propTypes = {
   step: PropTypes.object.isRequired,
   skip: PropTypes.array,
   sms: PropTypes.bool,
-  ivr: PropTypes.bool
+  ivr: PropTypes.bool,
+  errors: PropTypes.object.isRequired,
+  errorPath: PropTypes.string.isRequired
 }
 
 const mapDispatchToProps = (dispatch) => ({

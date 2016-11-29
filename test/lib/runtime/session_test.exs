@@ -5,6 +5,7 @@ defmodule Ask.SessionTest do
   alias Ask.Runtime.Session
   alias Ask.TestChannel
   alias Ask.Runtime.Flow
+  alias Ask.{Survey, Respondent}
 
   setup do
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -187,5 +188,86 @@ end
       %{field_name: "Smokes", value: "Yes"},
       %{field_name: "Exercises", value: "No"},
       %{field_name: "Perfect Number", value: "99"}] = responses
+  end
+
+  test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    {session, _} = Session.start(quiz, respondent, channel)
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    :end = Session.sync_step(session, Flow.Message.reply("N"))
+  end
+
+  test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "quota" => 2,
+          "count" => 2
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    {session, _} = Session.start(quiz, respondent, channel)
+    :end = Session.sync_step(session, Flow.Message.reply("N"))
   end
 end

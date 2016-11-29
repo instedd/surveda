@@ -6,7 +6,7 @@ import iso6393 from 'iso-639-3'
 
 class LanguagesList extends Component {
 
-  defaultLanguageSelected(lang){
+  defaultLanguageSelected(lang) {
     const props = this.props
     return (e) => {
       const { dispatch } = props
@@ -19,7 +19,7 @@ class LanguagesList extends Component {
     return language.name
   }
 
-  removeLanguage(lang){
+  removeLanguage(lang) {
     const props = this.props
     return (e) => {
       const { dispatch } = props
@@ -34,28 +34,28 @@ class LanguagesList extends Component {
       return <div>Loading...</div>
     }
 
-    let otherLangugages =  questionnaire.languages.filter((lang) => lang !== questionnaire.defaultLanguage)
-    otherLangugages =  otherLangugages.map((lang) => [lang, this.translateLangCode(lang)])
+    let otherLangugages = questionnaire.languages.filter((lang) => lang !== questionnaire.defaultLanguage)
+    otherLangugages = otherLangugages.map((lang) => [lang, this.translateLangCode(lang)])
     otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
-    otherLangugages =  otherLangugages.map((lang) =>
-        <div>
-          <span onClick={this.removeLanguage(lang[0])}> (x) </span>
-          <span>
-              {this.translateLangCode(lang[0])}
-          </span>
-          <span onClick={this.defaultLanguageSelected(lang[0])}> (set default) </span>
-        </div>
+    otherLangugages = otherLangugages.map((lang) =>
+      <div key={lang[0]}>
+        <span onClick={this.removeLanguage(lang[0])}> (x) </span>
+        <span>
+          {this.translateLangCode(lang[0])}
+        </span>
+        <span onClick={this.defaultLanguageSelected(lang[0])}> (set default) </span>
+      </div>
       )
 
     return (
       <div>
         <div>
         Primary language:
-        <div>
-          {this.translateLangCode(questionnaire.defaultLanguage)}
+          <div>
+            {this.translateLangCode(questionnaire.defaultLanguage)}
+          </div>
+          <br />
         </div>
-        <br />
-      </div>
         <div>
           <div>
             Other languages:
