@@ -530,6 +530,41 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
+  test "increments quota bucket when a respondent completes the survey" do
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+
+    selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "No"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
+
+    {:ok, broker} = Broker.start_link
+    broker |> send(:poll)
+
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    assert reply == {:prompt, "Which is the second perfect number??"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert reply == :end
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)

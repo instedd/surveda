@@ -5,6 +5,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto
   alias Ask.{Repo, Survey, Respondent, QuotaBucket}
   alias Ask.Runtime.Session
+  alias Ask.QuotaBucket
 
   @batch_size 10
   @poll_interval :timer.minutes(1)
@@ -147,10 +148,30 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp match_condition(responses, bucket) do
+    bucket_vars = Map.keys(bucket.condition)
+
+    matches = Enum.all?( bucket_vars, fn var ->
+                Enum.any?(responses, fn res ->
+                  (res.field_name == var) && (res.value == Map.fetch!(bucket.condition, var))
+                end)
+              end)
+
+    matches
+  end
+
   defp update_respondent(respondent, :end) do
     respondent
     |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update
+
+    responses = respondent |> assoc(:responses) |> Repo.all
+    matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
+                    |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
+
+    if matching_bucket do
+      from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+    end
   end
 
   defp update_respondent(respondent, {:stalled, session}) do
