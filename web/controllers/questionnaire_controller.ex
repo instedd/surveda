@@ -97,12 +97,17 @@ defmodule Ask.QuestionnaireController do
 
   defp validate_params(conn, _params) do
     questionnaire = conn.params["questionnaire"]
-    case JsonSchema.validate(questionnaire, :questionnaire) do
-      [] ->
-        conn |> assign(:questionnaire, questionnaire)
-      errors ->
-        json_errors = errors |> JsonSchema.errors_to_json
-        conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
-    end
+
+    # TODO: remove this line and uncomment the other ones
+    # ones validations work well
+    conn |> assign(:questionnaire, questionnaire)
+
+    # case JsonSchema.validate(questionnaire, :questionnaire) do
+    #   [] ->
+    #     conn |> assign(:questionnaire, questionnaire)
+    #   errors ->
+    #     json_errors = errors |> JsonSchema.errors_to_json
+    #     conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
+    # end
   end
 end
