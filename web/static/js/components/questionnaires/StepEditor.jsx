@@ -131,7 +131,7 @@ class StepEditor extends Component {
 
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} />
+      editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
     } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} />
     } else {
@@ -140,15 +140,19 @@ class StepEditor extends Component {
 
     let smsInput = null
     if (sms) {
+      // TODO: uncomment line below once error styles are fixed
+      let smsInputErrors = null // errors[`${errorPath}.prompt.sms`]
       smsInput = <div className='row'>
         <div className='col input-field s12'>
-          <InputWithLabel id='step_editor_sms_prompt' value={this.state.stepPromptSms} label='SMS message' >
+          <InputWithLabel id='step_editor_sms_prompt' value={this.state.stepPromptSms} label='SMS message' errors={smsInputErrors} >
             <input
               type='text'
               is length='140'
               onChange={e => this.stepPromptSmsChange(e)}
               onBlur={e => this.stepPromptSmsSubmit(e)}
-              ref={ref => $(ref).characterCounter()} />
+              ref={ref => $(ref).characterCounter()}
+              class={classNames({'invalid': smsInputErrors})}
+              />
           </InputWithLabel>
         </div>
       </div>
@@ -158,13 +162,17 @@ class StepEditor extends Component {
     let ivrFileInput = null
 
     if (ivr) {
+      // TODO: uncomment line below once error styles are fixed
+      let ivrInputErrors = null // errors[`${errorPath}.prompt.ivr.text`]
       ivrTextInput = <div className='row'>
         <div className='col input-field s12'>
           <InputWithLabel id='step_editor_voice_message' value={this.state.stepPromptIvr} label='Voice message' >
             <input
               type='text'
               onChange={e => this.stepPromptIvrChange(e)}
-              onBlur={e => this.stepPromptIvrSubmit(e)} />
+              onBlur={e => this.stepPromptIvrSubmit(e)}
+              className={classNames({'invalid': ivrInputErrors})}
+              />
           </InputWithLabel>
         </div>
       </div>

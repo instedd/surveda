@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { UntitledIfEmpty } from '../ui'
 import { Input } from 'react-materialize'
+import classNames from 'classnames/bind'
 
 class ChoiceEditor extends Component {
   constructor(props) {
@@ -104,7 +105,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, skipOptions, sms, ivr } = this.props
+    const { onDelete, skipOptions, sms, ivr, errors, errorPath } = this.props
 
     let skipLogicInput = <td>
       <Input s={12} type='select'
@@ -162,18 +163,23 @@ class ChoiceEditor extends Component {
           </td>
         </tr>)
     } else {
+      // TODO: these should probably be shown all the time, not only when the values are not empty
+      let responseErrors = this.state.response && this.state.response != '' && errors[`${errorPath}.value`]
+      let smsErrors = this.state.sms && this.state.sms != '' && errors[`${errorPath}.sms`]
+      let ivrErrors = this.state.ivr && this.state.ivr != '' && errors[`${errorPath}.ivr`]
+
       return (
         <tr>
-          <td onClick={e => this.enterEditMode(e, 'response')}>
+          <td onClick={e => this.enterEditMode(e, 'response')} className={classNames({'basic-error': responseErrors})}>
             <UntitledIfEmpty text={this.state.response} emptyText='No response' />
           </td>
           { sms
-          ? <td onClick={e => this.enterEditMode(e, 'sms')}>
+          ? <td onClick={e => this.enterEditMode(e, 'sms')} className={classNames({'basic-error': smsErrors})}>
             <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
           </td> : null
           }
           { ivr
-          ? <td onClick={e => this.enterEditMode(e, 'ivr')} className={this.state.errors && this.state.errors.responses.ivr ? 'basic-error' : ''}>
+          ? <td onClick={e => this.enterEditMode(e, 'ivr')} className={classNames({'basic-error': ivrErrors})}>
             <UntitledIfEmpty text={this.state.ivr} emptyText='No IVR' />
           </td> : null
           }
@@ -193,7 +199,9 @@ ChoiceEditor.propTypes = {
   choice: PropTypes.object,
   skipOptions: PropTypes.array,
   sms: PropTypes.bool,
-  ivr: PropTypes.bool
+  ivr: PropTypes.bool,
+  errors: PropTypes.object.isRequired,
+  errorPath: PropTypes.string.isRequired
 }
 
 export default ChoiceEditor
