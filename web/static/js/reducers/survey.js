@@ -1,5 +1,8 @@
 import * as actions from '../actions/survey'
 import fetchReducer from './fetch'
+import drop from 'lodash/drop'
+import flatten from 'lodash/flatten'
+import map from 'lodash/map'
 
 export const dataReducer = (state, action) => {
   switch (action.type) {
@@ -14,6 +17,7 @@ export const dataReducer = (state, action) => {
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
     case actions.SET_TIMEZONE: return setTimezone(state, action)
+    case actions.SET_QUOTA_VARS: return setQuotaVars(state, action)
     case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
     case actions.SAVED: return saved(state, action)
@@ -66,6 +70,42 @@ const setState = (state, action) => {
     ...state,
     state: action.state
   }
+}
+
+const setQuotaVars = (state, action) => {
+  return {
+    ...state,
+    quotas: {
+      vars: action.vars,
+      buckets: bucketsFor(action.vars, action.options)
+    }
+  }
+}
+
+const bucketsFor = (storeVars, options) => {
+  if (storeVars.length == 0) {
+    return []
+  } else {
+    return buildBuckets(storeVars, options)
+  }
+}
+
+const buildBuckets = (storeVars, options) => {
+  if (storeVars.length == 0) {
+    return [{}]
+  }
+
+  return flatten(map(options[storeVars[0]], (value) => {
+    return map(buildBuckets(drop(storeVars), options), (bucket) => {
+      return ({
+        ...bucket,
+        condition: {
+          ...bucket.condition,
+          [storeVars[0]]: value
+        }
+      })
+    })
+  }))
 }
 
 const saved = (state, action) => {

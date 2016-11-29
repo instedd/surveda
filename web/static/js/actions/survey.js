@@ -1,4 +1,7 @@
 import * as api from '../api'
+import find from 'lodash/find'
+import each from 'lodash/each'
+import map from 'lodash/map'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
@@ -15,6 +18,7 @@ export const RECEIVE = 'SURVEY_RECEIVE'
 export const SAVING = 'SURVEY_SAVING'
 export const SAVED = 'SURVEY_SAVED'
 export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
+export const SET_QUOTA_VARS = 'SURVEY_SET_QUOTA_VARS'
 export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
 export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
 
@@ -69,6 +73,25 @@ export const toggleDay = (day) => ({
   type: TOGGLE_DAY,
   day
 })
+
+export const setQuotaVars = (vars, questionnaire) => ({
+  type: SET_QUOTA_VARS,
+  vars,
+  options: valuesFrom(vars, questionnaire)
+})
+
+const valuesFrom = (storeVars, questionnaire) => {
+  let options = {}
+  each(storeVars, (storeVar) => {
+    const step = find(questionnaire.steps, (step) =>
+        step.store == storeVar
+      )
+    options[storeVar] = map(step.choices, (choice) =>
+      choice.value
+    )
+  })
+  return options
+}
 
 export const setState = (state) => ({
   type: SET_STATE,

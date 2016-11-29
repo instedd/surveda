@@ -5,6 +5,7 @@ import { playActionsFromState } from '../spec_helper'
 import reducer from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
 import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
+import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
@@ -260,18 +261,143 @@ describe('survey reducer', () => {
     expect(!state.errors.smsRetryConfiguration)
     expect(!state.errors.ivrRetryConfiguration)
   })
+
+  it('should set quota vars and define the buckets for the new vars', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          store: 'Gender',
+          choices: [{value: 'Male'}, {value: 'Female'}]
+        },
+        {
+          store: 'Exercises',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: ['Smokes', 'Gender', 'Exercises'],
+          buckets: [
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'No'}},
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'No'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'No'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'No'}}
+          ]
+        }
+      }
+    })
+  })
+
+  it('should build a bucket for one var', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          store: 'Gender',
+          choices: [{value: 'Male'}, {value: 'Female'}]
+        },
+        {
+          store: 'Exercises',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars(['Smokes'], questionnaire)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: ['Smokes'],
+          buckets: [
+            {'condition': {'Smokes': 'Yes'}},
+            {'condition': {'Smokes': 'No'}}
+          ]
+        }
+      }
+    })
+  })
+
+  it('should clear the bucket list when there is no var selected', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          store: 'Gender',
+          choices: [{value: 'Male'}, {value: 'Female'}]
+        },
+        {
+          store: 'Exercises',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire),
+      actions.setQuotaVars([], questionnaire)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: [],
+          buckets: []
+        }
+      }
+    })
+  })
 })
 
-const survey = {
-  'id': 1,
-  'projectId': 1,
-  'name': 'Foo',
-  'cutoff': 123,
-  'state': 'ready',
-  'questionnaireId': 1,
-  'scheduleDayOfWeek': {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
-  'scheduleStartTime': '02:00:00',
-  'scheduleEndTime': '06:00:00',
-  'channels': [1],
-  'respondentsCount': 2
-}
+const survey = deepFreeze({
+  id: 1,
+  projectId: 1,
+  name: 'Foo',
+  cutoff: 123,
+  state: 'ready',
+  questionnaireId: 1,
+  scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
+  scheduleStartTime: '02:00:00',
+  scheduleEndTime: '06:00:00',
+  channels: [1],
+  respondentsCount: 2,
+  quotas: {
+    vars: [],
+    buckets: []
+  }
+})
