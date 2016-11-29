@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.Session do
+  import Ecto.Query
   alias Ask.Runtime.{Flow, Channel, Session}
-  alias Ask.Repo
+  alias Ask.{Repo, QuotaBucket}
   defstruct [:channel, :fallback, :flow, :respondent, :retries]
 
   @timeout 10
@@ -95,7 +96,10 @@ defmodule Ask.Runtime.Session do
 
       {:ok, flow, %{prompts: [prompt], stores: stores}} ->
         store_responses(session.respondent, stores)
-        {:ok, %{session | flow: flow}, {:prompt, prompt}, @timeout}
+        case falls_in_quota_already_completed?(session.respondent) do
+          true -> :end
+          false -> {:ok, %{session | flow: flow}, {:prompt, prompt}, @timeout}
+        end
     end
   end
 
@@ -145,5 +149,43 @@ defmodule Ask.Runtime.Session do
 
   defp current_timeout(%Session{retries: [next_retry | _]}) do
     next_retry
+  end
+
+  defp falls_in_quota_already_completed?(respondent) do
+    survey_id = respondent.survey_id
+
+    # Get all quotas
+    buckets = Repo.all(from q in QuotaBucket,
+          where: q.survey_id == ^survey_id)
+
+    case buckets do
+      # No quotas: not completed
+      [] -> false
+      _ ->
+        # Get respondent responses
+        responses = (respondent |> Repo.preload(:responses)).responses
+
+        # Convert them to list of {field_name, value}
+        responses = responses |> Enum.map(fn response ->
+            {response.field_name, response.value}
+          end) |> Enum.into([])
+
+        # Get non-completed buckets
+        buckets = buckets |> Enum.filter(fn bucket  ->
+            bucket.count < bucket.quota
+          end)
+
+        # Convert them to a list of list of {key, value} using the condition
+        buckets = buckets |> Enum.map(fn bucket -> bucket.condition |> Map.to_list end)
+
+        # Filter buckets that contain each of the responses
+        buckets = responses |> Enum.reduce(buckets, fn(response, buckets) ->
+          buckets |> Enum.filter(fn bucket -> bucket |> Enum.member?(response) end)
+        end)
+
+        # If no non-completed buckets are left, it means that
+        # the responses are already covered by current quotas
+        buckets |> Enum.empty?
+    end
   end
 end
