@@ -20,7 +20,7 @@ class AddLanguage extends Component {
         <div className='col s12'>
           <div className='row'>
             <div className='input-field col s12'>
-              <input type='text' ref='languageInput' id='languageInput' autocomplete='off' />
+              <input type='text' ref='languageInput' id='languageInput' autoComplete='off' />
               <ul style={{background: '#bbb'}} ref='languagesDropdown' id='languageInput' />
               <label htmlFor='singleInput'>Add language</label>
             </div>
