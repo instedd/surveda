@@ -443,6 +443,46 @@ describe('survey reducer', () => {
       }
     })
   })
+
+  it('should clear the bucket list when changing the selected questionnaire', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          type: 'multiple-choice',
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          type: 'multiple-choice',
+          store: 'Gender',
+          choices: [{value: 'Male'}, {value: 'Female'}]
+        },
+        {
+          type: 'multiple-choice',
+          store: 'Exercises',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire),
+      actions.changeQuestionnaire(2)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: [],
+          buckets: []
+        }
+      }
+    })
+  })
 })
 
 const survey = deepFreeze({

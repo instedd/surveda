@@ -141,7 +141,11 @@ const saved = (state, action) => {
 const changeQuestionnaire = (state, action) => {
   return {
     ...state,
-    questionnaireId: action.questionnaire
+    questionnaireId: action.questionnaire,
+    quotas: {
+      vars: [],
+      buckets: []
+    }
   }
 }
 
