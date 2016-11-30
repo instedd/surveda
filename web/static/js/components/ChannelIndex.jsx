@@ -9,6 +9,7 @@ import { Preloader } from 'react-materialize'
 class ChannelIndex extends Component {
   componentDidMount() {
     this.props.actions.fetchChannels()
+    $(this.refs.popup).modal()
   }
 
   addChannel(event) {
