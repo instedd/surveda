@@ -125,27 +125,27 @@ class SurveyShow extends Component {
                     <tr>
                       <td>Pending</td>
                       <td>{ respondentsStats.pending.count }</td>
-                      <td>{ respondentsStats.pending.percent }%</td>
+                      <td>{ Math.round(respondentsStats.pending.percent) }%</td>
                     </tr>
                     <tr>
                       <td>Active</td>
                       <td>{ respondentsStats.active.count }</td>
-                      <td>{ respondentsStats.active.percent }%</td>
+                      <td>{ Math.round(respondentsStats.active.percent) }%</td>
                     </tr>
                     <tr>
                       <td>Completed</td>
                       <td>{ respondentsStats.completed.count }</td>
-                      <td>{ respondentsStats.completed.percent }%</td>
+                      <td>{ Math.round(respondentsStats.completed.percent) }%</td>
                     </tr>
                     <tr>
                       <td>Stalled</td>
                       <td>{ respondentsStats.stalled.count }</td>
-                      <td>{ respondentsStats.stalled.percent }%</td>
+                      <td>{ Math.round(respondentsStats.stalled.percent) }%</td>
                     </tr>
                     <tr>
                       <td>Failed</td>
                       <td>{ respondentsStats.failed.count }</td>
-                      <td>{ respondentsStats.failed.percent }%</td>
+                      <td>{ Math.round(respondentsStats.failed.percent) }%</td>
                     </tr>
                   </tbody>
                 </table>
