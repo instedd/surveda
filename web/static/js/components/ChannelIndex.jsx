@@ -35,7 +35,7 @@ class ChannelIndex extends Component {
       const checked = authorizations.items && authorizations.items.includes(provider)
       return <div className='switch'>
         <label>
-          <input type='checkbox' disabled={disabled} checked={checked} onClick={() => this.toggleProvider(provider)} />
+          <input type='checkbox' disabled={disabled} checked={checked} onChange={() => this.toggleProvider(provider)} />
           <span className='lever' />
         </label>
       </div>
