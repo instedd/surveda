@@ -5,7 +5,7 @@ defmodule Ask.SessionTest do
   alias Ask.Runtime.Session
   alias Ask.TestChannel
   alias Ask.Runtime.Flow
-  alias Ask.{Survey, Respondent}
+  alias Ask.{Survey, Respondent, QuotaBucket}
 
   setup do
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -269,5 +269,55 @@ end
 
     {session, _} = Session.start(quiz, respondent, channel)
     :end = Session.sync_step(session, Flow.Message.reply("N"))
+  end
+
+  test "assigns respondent to its bucket", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    {session, _} = Session.start(quiz, respondent, channel)
+
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    Session.sync_step(session, Flow.Message.reply("Y"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == qb2.id
   end
 end

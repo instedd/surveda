@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   alias Ask.Runtime.{Flow, Channel, Session}
-  alias Ask.{Repo, QuotaBucket}
+  alias Ask.{Repo, QuotaBucket, Respondent}
   defstruct [:channel, :fallback, :flow, :respondent, :retries]
 
   @timeout 10
@@ -89,16 +89,40 @@ defmodule Ask.Runtime.Session do
   end
 
   def sync_step(session, reply) do
-    case Flow.step(session.flow, reply) do
-      {:end, %{stores: stores}} ->
-        store_responses(session.respondent, stores)
+    step_answer = Flow.step(session.flow, reply)
+
+    respondent = session.respondent
+    survey = (respondent |> Repo.preload(:survey)).survey
+
+    # Get all quota buckets, if any
+    buckets =
+      case survey.quota_vars do
+        [] -> []
+        _ -> Repo.all(from q in QuotaBucket,
+               where: q.survey_id == ^survey.id)
+      end
+
+    stores =
+      case step_answer do
+        {:end, %{stores: stores}} -> stores
+        {:ok, _, %{stores: stores}} -> stores
+      end
+
+    # Store responses, assign respondent to bucket (if any, if there's a match)
+    # Since to determine the assigned bucket we need to get all responses,
+    # we return them here and reuse them in `falls_in_quota_already_completed`
+    # to avoid executing this query twice.
+    {respondent, responses} =
+      store_responses_and_assign_bucket(respondent, stores, buckets)
+
+    case step_answer do
+      {:end, _} ->
         :end
 
-      {:ok, flow, %{prompts: [prompt], stores: stores}} ->
-        store_responses(session.respondent, stores)
-        case falls_in_quota_already_completed?(session.respondent) do
+      {:ok, flow, %{prompts: [prompt]}} ->
+        case falls_in_quota_already_completed?(buckets, responses) do
           true -> :end
-          false -> {:ok, %{session | flow: flow}, {:prompt, prompt}, @timeout}
+          false -> {:ok, %{session | flow: flow, respondent: respondent}, {:prompt, prompt}, @timeout}
         end
     end
   end
@@ -135,12 +159,16 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  defp store_responses(respondent, stores) do
+  defp store_responses_and_assign_bucket(respondent, stores, buckets) do
+    # Add response to responses
     stores |> Enum.each(fn {field_name, value} ->
       respondent
       |> Ecto.build_assoc(:responses, field_name: field_name, value: value)
       |> Ask.Repo.insert
     end)
+
+    # Try to assign a bucket to the respondent
+    assign_bucket(respondent, buckets)
   end
 
   defp current_timeout(%Session{retries: []}) do
@@ -151,25 +179,45 @@ defmodule Ask.Runtime.Session do
     next_retry
   end
 
-  defp falls_in_quota_already_completed?(respondent) do
-    survey_id = respondent.survey_id
+  defp assign_bucket(respondent, []) do
+    {respondent, nil}
+  end
 
-    # Get all quotas
-    buckets = Repo.all(from q in QuotaBucket,
-          where: q.survey_id == ^survey_id)
+  defp assign_bucket(respondent, buckets) do
+    # Nothing to do if the respondent already has a bucket
+    if respondent.quota_bucket_id do
+      {respondent, nil}
+    else
+      # Get respondent responses
+      responses = (respondent |> Repo.preload(:responses)).responses
 
+      # Convert them to list of {field_name, value}
+      responses = responses |> Enum.map(fn response ->
+          {response.field_name, response.value}
+        end) |> Enum.into([]) |> Enum.sort
+
+      # Check which bucket matches exactly those responses
+      buckets = buckets |> Enum.filter(fn bucket ->
+        responses == (bucket.condition |> Map.to_list |> Enum.sort)
+      end)
+
+      respondent =
+        case buckets do
+          [bucket] ->
+            respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+          _ ->
+            respondent
+        end
+
+      {respondent, responses}
+    end
+  end
+
+  defp falls_in_quota_already_completed?(buckets, responses) do
     case buckets do
       # No quotas: not completed
       [] -> false
       _ ->
-        # Get respondent responses
-        responses = (respondent |> Repo.preload(:responses)).responses
-
-        # Convert them to list of {field_name, value}
-        responses = responses |> Enum.map(fn response ->
-            {response.field_name, response.value}
-          end) |> Enum.into([])
-
         # Get non-completed buckets
         buckets = buckets |> Enum.filter(fn bucket  ->
             bucket.count < bucket.quota
