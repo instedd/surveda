@@ -4,6 +4,7 @@ import projects from './projects'
 import project from './project'
 import surveys from './surveys'
 import respondentsStats from './respondentsStats'
+import respondentsQuotasStats from './respondentsQuotasStats'
 import questionnaires from './questionnaires'
 import questionnaire from './questionnaire'
 import survey from './survey'
@@ -20,6 +21,7 @@ export default combineReducers({
   projects,
   surveys,
   respondentsStats,
+  respondentsQuotasStats,
   questionnaire,
   questionnaires,
   survey,
