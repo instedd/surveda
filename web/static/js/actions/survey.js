@@ -1,7 +1,6 @@
 import * as api from '../api'
-import find from 'lodash/find'
 import each from 'lodash/each'
-import map from 'lodash/map'
+import { stepStoreValues } from '../reducers/questionnaire'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
@@ -88,14 +87,11 @@ export const setQuotaVars = (vars, questionnaire) => ({
 })
 
 const valuesFrom = (storeVars, questionnaire) => {
+  const values = stepStoreValues(questionnaire)
   let options = {}
+
   each(storeVars, (storeVar) => {
-    const step = find(questionnaire.steps, (step) =>
-        step.store == storeVar
-      )
-    options[storeVar] = map(step.choices, (choice) =>
-      choice.value
-    )
+    options[storeVar] = values[storeVar]
   })
   return options
 }

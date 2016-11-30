@@ -4,7 +4,7 @@ import classNames from 'classnames/bind'
 export class InputWithLabel extends Component {
   static propTypes = {
     children: PropTypes.node,
-    id: PropTypes.string,
+    id: PropTypes.any,
     value: React.PropTypes.oneOfType([
       React.PropTypes.string,
       React.PropTypes.number ]),

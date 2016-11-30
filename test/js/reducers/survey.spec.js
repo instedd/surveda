@@ -266,14 +266,17 @@ describe('survey reducer', () => {
     const questionnaire = deepFreeze({
       steps: [
         {
+          type: 'multiple-choice',
           store: 'Smokes',
           choices: [{value: 'Yes'}, {value: 'No'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Gender',
           choices: [{value: 'Male'}, {value: 'Female'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Exercises',
           choices: [{value: 'Yes'}, {value: 'No'}]
         }
@@ -311,14 +314,17 @@ describe('survey reducer', () => {
     const questionnaire = deepFreeze({
       steps: [
         {
+          type: 'multiple-choice',
           store: 'Smokes',
           choices: [{value: 'Yes'}, {value: 'No'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Gender',
           choices: [{value: 'Male'}, {value: 'Female'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Exercises',
           choices: [{value: 'Yes'}, {value: 'No'}]
         }
@@ -350,14 +356,17 @@ describe('survey reducer', () => {
     const questionnaire = deepFreeze({
       steps: [
         {
+          type: 'multiple-choice',
           store: 'Smokes',
           choices: [{value: 'Yes'}, {value: 'No'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Gender',
           choices: [{value: 'Male'}, {value: 'Female'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Exercises',
           choices: [{value: 'Yes'}, {value: 'No'}]
         }
@@ -387,14 +396,17 @@ describe('survey reducer', () => {
     const questionnaire = deepFreeze({
       steps: [
         {
+          type: 'multiple-choice',
           store: 'Smokes',
           choices: [{value: 'Yes'}, {value: 'No'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Gender',
           choices: [{value: 'Male'}, {value: 'Female'}]
         },
         {
+          type: 'multiple-choice',
           store: 'Exercises',
           choices: [{value: 'Yes'}, {value: 'No'}]
         }

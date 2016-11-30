@@ -4,7 +4,7 @@ import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
-import reducer from '../../../web/static/js/reducers/questionnaire'
+import reducer, { stepStoreValues } from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -625,6 +625,33 @@ describe('questionnaire reducer', () => {
       expect(resultState.errors).toEqual({
         'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
       })
+    })
+  })
+
+  it('should provide valid answers for multiple-choice steps', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          type: 'multiple-choice',
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          store: 'Gender',
+          choices: [{value: 'Male'}, {value: 'Female'}]
+        },
+        {
+          type: 'multiple-choice',
+          store: 'Exercises',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        }
+      ],
+      id: 1
+    })
+
+    expect(stepStoreValues(questionnaire)).toEqual({
+      Smokes: ['Yes', 'No'],
+      Exercises: ['Yes', 'No']
     })
   })
 })
