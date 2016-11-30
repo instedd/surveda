@@ -22,20 +22,26 @@ defmodule Ask.StepBuilder do
 
   def prompt(sms: sms) do
     %{
-      "sms" => sms
+      "en" => %{
+        "sms" => sms
+      }
     }
   end
 
   def prompt(ivr: ivr) do
     %{
-      "ivr" => ivr
+      "en" => %{
+        "ivr" => ivr
+      }
     }
   end
 
   def prompt(sms: sms, ivr: ivr) do
     %{
-      "sms" => sms,
-      "ivr" => ivr
+      "en" => %{
+        "sms" => sms,
+        "ivr" => ivr
+      }
     }
   end
 
@@ -58,18 +64,27 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def choice(value: value, sms: sms, ivr: ivr) do
+  def choice(value: value, responses: responses) do
     %{
       "value" => value,
-      "responses" => %{"sms" => sms, "ivr" => ivr}
+      "responses" => responses
     }
   end
 
-  def choice(value: value, sms: sms, ivr: ivr, skip_logic: skip_logic) do
+  def choice(value: value, responses: responses, skip_logic: skip_logic) do
     %{
       "value" => value,
-      "responses" => %{"sms" => sms, "ivr" => ivr},
+      "responses" => responses,
       "skip_logic" => skip_logic
+    }
+  end
+
+  def responses(sms: sms, ivr: ivr) do
+    %{
+      "en" => %{
+        "sms" => sms,
+        "ivr" => ivr
+      }
     }
   end
 end
@@ -88,8 +103,8 @@ defmodule Ask.DummySteps do
           ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["8"]),
-            choice(value: "No", sms: ["No", "N", "2"], ivr: ["9"])
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
           ]
         ),
         multiple_choice_step(
@@ -101,8 +116,8 @@ defmodule Ask.DummySteps do
           ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"]),
-            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         ),
         numeric_step(
@@ -122,11 +137,11 @@ defmodule Ask.DummySteps do
           ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"], skip_logic: "end"),
-            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"], skip_logic: nil),
-            choice(value: "Maybe", sms: ["Maybe", "M", "3"], ivr: ["3"]),
-            choice(value: "Sometimes", sms: ["Sometimes", "S", "4"], ivr: ["4"], skip_logic: "ccc"),
-            choice(value: "ALWAYS", sms: ["Always", "A", "5"], ivr: ["5"], skip_logic: "undefined_id")
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end"),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: nil),
+            choice(value: "Maybe", responses: responses(sms: ["Maybe", "M", "3"], ivr: ["3"])),
+            choice(value: "Sometimes", responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]), skip_logic: "ccc"),
+            choice(value: "ALWAYS", responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]), skip_logic: "undefined_id")
           ]
         ),
         multiple_choice_step(
@@ -137,8 +152,8 @@ defmodule Ask.DummySteps do
           ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"], skip_logic: "aaa"),
-            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         ),
         multiple_choice_step(
@@ -149,8 +164,8 @@ defmodule Ask.DummySteps do
           ),
           store: "Refresh",
           choices: [
-            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"]),
-            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         )
       ]
