@@ -4,6 +4,7 @@ import each from 'lodash/each'
 import map from 'lodash/map'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
+export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
@@ -67,6 +68,12 @@ export const shouldFetch = (state, projectId, id) => {
 export const changeCutoff = (cutoff) => ({
   type: CHANGE_CUTOFF,
   cutoff
+})
+
+export const quotaChange = (condition, quota) => ({
+  type: CHANGE_QUOTA,
+  condition,
+  quota
 })
 
 export const toggleDay = (day) => ({

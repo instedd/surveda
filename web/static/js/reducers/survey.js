@@ -3,11 +3,14 @@ import fetchReducer from './fetch'
 import drop from 'lodash/drop'
 import flatten from 'lodash/flatten'
 import map from 'lodash/map'
+import findIndex from 'lodash/findIndex'
+import isEqual from 'lodash/isEqual'
 
 export const dataReducer = (state, action) => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
+    case actions.CHANGE_QUOTA: return quotaChange(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
     case actions.TOGGLE_DAY: return toggleDay(state, action)
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
@@ -106,6 +109,26 @@ const buildBuckets = (storeVars, options) => {
       })
     })
   }))
+}
+
+const quotaChange = (state, action) => {
+  const bucketIndex = findIndex(state.quotas.buckets, (bucket) =>
+    isEqual(bucket.condition, action.condition)
+  )
+  return {
+    ...state,
+    quotas: {
+      ...state.quotas,
+      buckets: [
+        ...state.quotas.buckets.slice(0, bucketIndex),
+        {
+          ...state.quotas.buckets[bucketIndex],
+          quota: action.quota
+        },
+        ...state.quotas.buckets.slice(bucketIndex + 1)
+      ]
+    }
+  }
 }
 
 const saved = (state, action) => {

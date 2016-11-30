@@ -382,6 +382,55 @@ describe('survey reducer', () => {
       }
     })
   })
+
+  it('should change quota for a given condition', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          store: 'Gender',
+          choices: [{value: 'Male'}, {value: 'Female'}]
+        },
+        {
+          store: 'Exercises',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire),
+      actions.quotaChange({'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'Yes'}, 12345)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: ['Smokes', 'Gender', 'Exercises'],
+          buckets: [
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'No'}},
+            {
+              'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'Yes'},
+              'quota': 12345
+            },
+            {'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'No'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'No'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'Yes'}},
+            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'No'}}
+          ]
+        }
+      }
+    })
+  })
 })
 
 const survey = deepFreeze({
