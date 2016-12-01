@@ -435,4 +435,58 @@ end
     respondent = Respondent |> Repo.get(respondent.id)
     assert respondent.quota_bucket_id == qb2.id
   end
+
+  test "assigns respondent to its bucket, numeric condition", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Perfect Number" => [20, 30]},
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Perfect Number" => [31, 40]},
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [20, 30]},
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [31, 40]},
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    {session, _} = Session.start(quiz, respondent, channel)
+
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    {:ok, _session, _, _} = Session.sync_step(session, Flow.Message.reply("33"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == qb2.id
+  end
 end

@@ -198,8 +198,12 @@ defmodule Ask.Runtime.Session do
 
       # Check which bucket matches exactly those responses
       buckets = buckets |> Enum.filter(fn bucket ->
-        bucket.condition |> Map.to_list |> Enum.all?(fn kv ->
-          responses |> Enum.member?(kv)
+        bucket.condition |> Map.to_list |> Enum.all?(fn {key, value} ->
+          responses
+          |> Enum.filter(fn {response_key, _} -> response_key == key end)
+          |> Enum.all?(fn {_, response_value} ->
+            response_value |> QuotaBucket.matches_condition?(value)
+          end)
         end)
       end)
 
