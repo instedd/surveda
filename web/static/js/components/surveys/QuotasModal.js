@@ -28,6 +28,7 @@ export class QuotasModal extends Component {
       $('.modal').modal()
     })
   }
+
   onSubmit(e) {
     const selectedVars = filter(Object.keys(this.state.buckets), value =>
       this.state.buckets[value].checked

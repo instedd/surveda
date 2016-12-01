@@ -22,6 +22,7 @@ class SurveyWizardCutoffStep extends Component {
     this.cutoffChange = this.cutoffChange.bind(this)
     this.quotaChange = this.quotaChange.bind(this)
     this.setQuotaVars = this.setQuotaVars.bind(this)
+    this.toggleQuotas = this.toggleQuotas.bind(this)
   }
 
   cutoffChange(e) {
@@ -56,6 +57,15 @@ class SurveyWizardCutoffStep extends Component {
     return join(Object.keys(bucket.condition).map((key) => `${key}: ${bucket.condition[key]}`), ', ')
   }
 
+  toggleQuotas() {
+    const { dispatch, questionnaire, survey } = this.props
+    if (survey.quotas.vars.length > 0) {
+      dispatch(actions.setQuotaVars([], questionnaire))
+    } else {
+      $('#setupQuotas').modal('open')
+    }
+  }
+
   render() {
     const { questionnaire, survey } = this.props
 
@@ -80,13 +90,22 @@ class SurveyWizardCutoffStep extends Component {
           </div>
         </div>
         { questionnaire && Object.keys(stepStoreValues(questionnaire)).length > 0
-          ? <div className='row'>
-            <div className='col s12'>
-              <div>
-                <QuotasModal showLink modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' style={{maxWidth: '600px'}} showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
+          ? <span>
+            <div className='row'>
+              <div className='col s12'>
+                <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onClick={this.toggleQuotas} />
+                <label htmlFor='set-quotas'>Quotas for completes</label>
+                <p>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
               </div>
             </div>
-          </div>
+            <div className='row'>
+              <div className='col s12'>
+                <div>
+                  <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' style={{maxWidth: '600px'}} showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
+                </div>
+              </div>
+            </div>
+          </span>
         : '' }
 
         { survey.quotas.buckets
