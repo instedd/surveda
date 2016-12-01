@@ -634,6 +634,99 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  it('should add language selection step when adding a language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr')
+    ])
+
+    const languageSelection = resultState.data.steps[0]
+    expect(languageSelection.type).toEqual('language-selection')
+    expect(languageSelection.choices).toInclude('fr')
+  })
+
+  it('should add a new language last inside the choices of the language selection step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('en')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('de')
+    ])
+
+    const languageSelection = resultState.data.steps[0]
+    expect(languageSelection.choices[languageSelection.choices.length - 1]).toEqual('de')
+  })
+
+  it('should remove a language inside the choices of the language selection step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('en'),
+      actions.addLanguage('de'),
+      actions.addLanguage('es'),
+      actions.addLanguage('fr')
+    ])
+    const preLanguageSelection = preState.data.steps[0]
+    expect(preLanguageSelection.choices[2]).toEqual('de')
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.removeLanguage('de')
+    ])
+
+    const languageSelection = resultState.data.steps[0]
+    expect(languageSelection.choices[2]).toEqual('es')
+    expect(languageSelection.choices[3]).toEqual('fr')
+  })
+
+  it('should reorder correctly the languages inside the choices of the language selection step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('en'),
+      actions.addLanguage('es'),
+      actions.addLanguage('de'),
+      actions.addLanguage('fr')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.reorderLanguages('en', 4)
+    ])
+
+    const languageSelection = resultState.data.steps[0]
+    expect(languageSelection.choices[1]).toEqual('es')
+    expect(languageSelection.choices[2]).toEqual('de')
+    expect(languageSelection.choices[3]).toEqual('fr')
+    expect(languageSelection.choices[4]).toEqual('en')
+  })
+
+  it('should reorder correctly the languages inside the choices of the language selection step 2', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('en'),
+      actions.addLanguage('es'),
+      actions.addLanguage('de'),
+      actions.addLanguage('fr')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.reorderLanguages('fr', 1)
+    ])
+
+    const languageSelection = resultState.data.steps[0]
+    expect(languageSelection.choices[1]).toEqual('fr')
+    expect(languageSelection.choices[2]).toEqual('en')
+    expect(languageSelection.choices[3]).toEqual('es')
+    expect(languageSelection.choices[4]).toEqual('de')
+  })
+
   it('should add language', () => {
     const preState = playActions([
       actions.fetch(1, 1),
@@ -656,6 +749,7 @@ describe('questionnaire reducer', () => {
 
     const resultState = playActionsFromState(preState, reducer)([
       actions.addLanguage('fr'),
+      actions.addLanguage('de'),
       actions.addLanguage('fr')
     ])
 
@@ -670,7 +764,9 @@ describe('questionnaire reducer', () => {
     ])
 
     const state = playActionsFromState(preState, reducer)([
-      actions.addLanguage('fr')
+      actions.addLanguage('de'),
+      actions.addLanguage('fr'),
+      actions.addLanguage('en')
     ])
 
     const resultState = playActionsFromState(state, reducer)([

@@ -14,6 +14,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
+    case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     default: return steps(state, action)
   }
 }
@@ -269,8 +270,15 @@ const changeName = (state: Questionnaire, action: ActionChangeName): Questionnai
 
 const addLanguage = (state, action) => {
   if (state.languages.indexOf(action.language) == -1) {
+    let steps
+    if (state.languages.length == 1) {
+      steps = addLanguageSelectionStep(state, action)
+    } else {
+      steps = addOptionToLanguageSelectionStep(state, action.language)
+    }
     return {
       ...state,
+      steps: steps,
       languages: [...state.languages, action.language]
     }
   } else {
@@ -284,11 +292,68 @@ const removeLanguage = (state, action) => {
     const newLanguages = [...state.languages.slice(0, indexToDelete), ...state.languages.slice(indexToDelete + 1)]
     return {
       ...state,
+      steps: removeOptionFromLanguageSelectionStep(state, action.language),
       languages: newLanguages
     }
   } else {
     return state
   }
+}
+
+const reorderLanguages = (state, action) => {
+  let choices = state.steps[0].choices
+
+  var index = choices.indexOf(action.language)
+  if (index > -1) {
+    choices.splice(index, 1)
+    choices.splice(action.index, 0, action.language)
+  }
+
+  return {
+    ...state,
+    steps: changeStep(state.steps, state.steps[0].id, (step) => ({
+      ...step,
+      choices: choices
+    }))
+  }
+}
+
+const addOptionToLanguageSelectionStep = (state, language) => {
+  return changeStep(state.steps, state.steps[0].id, (step) => ({
+    ...step,
+    choices: [
+      ...step.choices,
+      language
+    ]
+  }))
+}
+
+const removeOptionFromLanguageSelectionStep = (state, language) => {
+  let choices = state.steps[0].choices
+  var index = choices.indexOf(language)
+
+  const newLanguages = [...choices.slice(0, index), ...choices.slice(index + 1)]
+
+  return changeStep(state.steps, state.steps[0].id, (step) => ({
+    ...step,
+    choices: newLanguages
+  }))
+}
+
+const addLanguageSelectionStep = (state, action) => {
+  return [
+    newLanguageSelectionStep(state.languages[0], action.language),
+    ...state.steps
+  ]
+}
+
+const newLanguageSelectionStep = (first, second) => {
+  var step = newStep()
+  step.type = 'language-selection'
+  step.choices = [null, first, second]
+  step.title = 'Language selection'
+
+  return step
 }
 
 const setDefaultLanguage = (state, action) => {
@@ -313,7 +378,6 @@ const validateReducer = (reducer) => {
 
 const validate = (state: ValidationState) => {
   if (!state.data) return
-
   state.errors = {}
   const context = {
     sms: state.data.modes.indexOf('sms') != -1,
