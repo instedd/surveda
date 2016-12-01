@@ -448,14 +448,14 @@ const changeNumericRanges = (state, action) => {
     let minValue = action.minValue ? parseInt(action.minValue) : null
     let maxValue = action.maxValue ? parseInt(action.maxValue) : null
     let values = []
-    if (minValue) {
+    if (minValue != null) {
       values.push(minValue)
     }
     if (rangesDelimiters) {
       let delimiters = rangesDelimiters.split(',')
       values = values.concat(delimiters.map((e) => { return parseInt(e) }))
     }
-    if (maxValue) {
+    if (maxValue != null) {
       values.push(maxValue)
     }
 
@@ -476,10 +476,10 @@ const changeNumericRanges = (state, action) => {
     }
 
     // generate ranges
-    if (!minValue) {
+    if (minValue == null) {
       values.unshift(null)
     }
-    if (maxValue) {
+    if (maxValue != null) {
       values.pop()
     }
 

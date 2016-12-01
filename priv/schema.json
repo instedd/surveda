@@ -25,12 +25,15 @@
         "title": {"type": "string"},
         "prompt": { "$ref": "#/definitions/prompt"},
         "store": { "type": "string" },
-        "choices": { "$ref": "#/definitions/choices" }
+        "choices": { "$ref": "#/definitions/choices" },
+        "min_value": {"type": ["integer", "null"]},
+        "max_value": {"type": ["integer", "null"]},
+        "ranges_delimiters": {"type": ["string", "null"]},
+        "ranges": {"$ref": "#/definitions/ranges"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
     },
-
     "choices": {
       "type": "array",
       "items": {
@@ -46,6 +49,21 @@
       },
       "additionalProperties": false,
       "required": ["responses", "value", "skip_logic"]
+    },
+
+    "ranges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/range"
+      }
+    },
+    "range": {
+      "properties": {
+        "from": {"type": ["integer", "null"]},
+        "to": {"type": ["integer", "null"]},
+        "skip_logic": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
     },
 
     "responses": {

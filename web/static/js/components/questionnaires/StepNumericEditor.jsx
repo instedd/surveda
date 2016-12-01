@@ -15,8 +15,8 @@ class StepNumericEditor extends Component {
     const { step } = props
     return {
       stepId: step.id,
-      minValue: step.minValue || '',
-      maxValue: step.maxValue || '',
+      minValue: step.minValue == null ? '' : step.minValue,
+      maxValue: step.maxValue == null ? '' : step.maxValue,
       ranges: step.ranges || [],
       rangesDelimiters: step.ranges ? this.delimitersFromRanges(step.ranges) : ''
     }
@@ -91,7 +91,7 @@ class StepNumericEditor extends Component {
     let minValue = <div className='row'>
       <div className='col input-field s2'>
         <InputWithLabel id='step_numeric_editor_min_value'
-          value={this.state.minValue}
+          value={`${this.state.minValue}`}
           label='Min value' >
           <input
             type='text'
@@ -117,7 +117,7 @@ class StepNumericEditor extends Component {
     let maxValue = <div className='row'>
       <div className='col input-field s2'>
         <InputWithLabel id='step_numeric_editor_max_value'
-          value={this.state.maxValue}
+          value={`${this.state.maxValue}`}
           label='Max value' >
           <input
             type='text'
@@ -143,8 +143,8 @@ class StepNumericEditor extends Component {
             <tbody>
               { ranges.map((range, index) =>
                 <tr key={index}>
-                  <td>{range.from ? range.from : 'No limit'} </td>
-                  <td>{range.to ? range.to : 'No limit'} </td>
+                  <td>{range.from == null ? 'No limit' : range.from} </td>
+                  <td>{range.to == null ? 'No limit' : range.to} </td>
                   <td>
                     <Input s={12} type='select'
                       onChange={e => this.skipLogicChange(e, index)}
