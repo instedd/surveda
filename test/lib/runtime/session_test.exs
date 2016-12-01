@@ -231,6 +231,37 @@ end
     :end = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
+  test "ends when quota is reached at leaf, with more stores", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Exercises" => "No"},
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => %{"Exercises" => "Yes"},
+          "quota" => 2,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    {session, _} = Session.start(quiz, respondent, channel)
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    :end = Session.sync_step(session, Flow.Message.reply("N"))
+  end
+
   test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do
     survey = respondent.survey
 
@@ -295,6 +326,46 @@ end
         %{
           "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
           "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    {session, _} = Session.start(quiz, respondent, channel)
+
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    Session.sync_step(session, Flow.Message.reply("Y"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == qb2.id
+  end
+
+  test "assigns respondent to its bucket, with more responses", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Exercises" => "No"},
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Exercises" => "Yes"},
+          "quota" => 2,
           "count" => 0
         },
       ]
