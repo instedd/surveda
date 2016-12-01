@@ -16,16 +16,10 @@ class AddLanguage extends Component {
 
   render() {
     return (
-      <div className='row'>
-        <div className='col s12'>
-          <div className='row'>
-            <div className='input-field col s12'>
-              <input type='text' ref='languageInput' id='languageInput' autoComplete='off' />
-              <ul style={{background: '#bbb'}} ref='languagesDropdown' id='languageInput' />
-              <label htmlFor='singleInput'>Add language</label>
-            </div>
-          </div>
-        </div>
+      <div className='input-field language-selection'>
+        <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' />
+        <label htmlFor='singleInput'><i className='material-icons v-middle'>add</i> Add language</label>
+        <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' />
       </div>
     )
   }

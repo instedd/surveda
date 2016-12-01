@@ -38,29 +38,42 @@ class LanguagesList extends Component {
     otherLangugages = otherLangugages.map((lang) => [lang, this.translateLangCode(lang)])
     otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
     otherLangugages = otherLangugages.map((lang) =>
-      <div key={lang[0]}>
-        <span onClick={this.removeLanguage(lang[0])}> (x) </span>
-        <span>
+      <li key={lang[0]}>
+        <span className='remove-language' onClick={this.removeLanguage(lang[0])}>
+          <i className='material-icons'>highlight_off</i>
+        </span>
+        <span className='language-name' title={this.translateLangCode(lang[0])}>
           {this.translateLangCode(lang[0])}
         </span>
-        <span onClick={this.defaultLanguageSelected(lang[0])}> (set default) </span>
-      </div>
+        <span className='set-default-language' onClick={this.defaultLanguageSelected(lang[0])}>
+          <i className='material-icons'>arrow_upward</i>
+        </span>
+        <span className='right-arrow'>
+          <i className='material-icons'>keyboard_arrow_right</i>
+        </span>
+      </li>
       )
 
     return (
-      <div>
-        <div>
-        Primary language:
-          <div>
-            {this.translateLangCode(questionnaire.defaultLanguage)}
+      <div className="languages">
+        <div className="row">
+          <div className="col s12">
+            <p className="grey-text">Primary language:</p>
+            <ul className='selected-language'>
+              <li>
+                <span>{this.translateLangCode(questionnaire.defaultLanguage)}</span>
+                <i className='material-icons'>keyboard_arrow_right</i>
+              </li>
+            </ul>
           </div>
-          <br />
         </div>
-        <div>
-          <div>
-            Other languages:
+        <div className="row">
+          <div className="col s12">
+            <p className="grey-text">Other languages:</p>
+            <ul className='other-languages-list'>
+              {otherLangugages}
+            </ul>
           </div>
-          {otherLangugages}
         </div>
       </div>
     )
