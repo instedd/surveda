@@ -1,7 +1,8 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
+  use Ask.Web, :model
   alias Ask.Runtime.{Broker, NuntiumChannel, Flow}
-  alias Ask.{Repo, Respondent}
+  alias Ask.{Repo, Respondent, Channel}
   import Ecto.Query
   defstruct [:oauth_token, :name, :settings]
 
@@ -78,6 +79,71 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
 
     Phoenix.Controller.json(conn, reply)
+  end
+
+  def sync_channels(user_id) do
+    nuntium_config = Application.get_env(:ask, Nuntium)
+    oauth_token = Ask.OAuthTokenServer.get_token "nuntium", user_id
+    client = Nuntium.Client.new(nuntium_config[:base_url], oauth_token)
+
+    case client |> Nuntium.Client.get_accounts do
+      {:ok, accounts} ->
+        case collect_remote_channels(client, accounts) do
+          {:ok, channels} ->
+            sync_channels(user_id, channels)
+
+          error -> error
+        end
+
+      error -> error
+    end
+  end
+
+  defp collect_remote_channels(client, accounts, all_channels \\ []) do
+    case accounts do
+      [account | accounts] ->
+        case client |> Nuntium.Client.get_channels(account) do
+          {:ok, channels} ->
+            new_channels = Enum.map(channels, fn ch -> {account, ch} end)
+            collect_remote_channels(client, accounts, all_channels ++ new_channels)
+
+          error -> error
+        end
+
+      [] -> {:ok, all_channels}
+    end
+  end
+
+  defp sync_channels(user_id, nuntium_channels) do
+    user = Ask.User |> Repo.get!(user_id)
+    channels = user |> assoc(:channels) |> where([c], c.provider == "nuntium") |> Repo.all
+
+    channels |> Enum.each(fn channel ->
+      exists = nuntium_channels |> Enum.any?(fn {account, nuntium_channel} -> same_channel?(channel, account, nuntium_channel) end)
+      if !exists do
+        channel |> Repo.delete
+      end
+    end)
+
+    nuntium_channels |> Enum.each(fn {account, nuntium_channel} ->
+      exists = channels |> Enum.any?(&same_channel?(&1, account, nuntium_channel))
+      if !exists do
+        user
+        |> Ecto.build_assoc(:channels)
+        |> Channel.changeset(%{name: "#{nuntium_channel["name"]} - #{account}", type: "sms", provider: "nuntium", settings: %{
+            "nuntium_channel" => nuntium_channel["name"],
+            "nuntium_account" => account
+          }})
+        |> Repo.insert
+      end
+    end)
+
+    :ok
+  end
+
+  defp same_channel?(channel, account, nuntium_channel) do
+    channel.settings["nuntium_account"] == account &&
+    channel.settings["nuntium_channel"] == nuntium_channel["name"]
   end
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
