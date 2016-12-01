@@ -18,6 +18,7 @@ class SurveyShow extends Component {
     survey: React.PropTypes.object,
     questionnaire: React.PropTypes.object,
     respondentsStats: React.PropTypes.object,
+    respondentsQuotasStats: React.PropTypes.object,
     completedByDate: React.PropTypes.array,
     target: React.PropTypes.number,
     totalRespondents: React.PropTypes.number
@@ -29,6 +30,7 @@ class SurveyShow extends Component {
       dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, survey.questionnaireId))
     )
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+    dispatch(respondentActions.fetchRespondentsQuotasStats(projectId, surveyId))
   }
 
   componentDidUpdate() {
@@ -78,10 +80,10 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, completedByDate, target, totalRespondents, questionnaire } = this.props
+    const { survey, respondentsStats, respondentsQuotasStats, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
-    if (!survey || !completedByDate || !questionnaire) {
+    if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats) {
       return <p>Loading...</p>
     }
 
@@ -96,6 +98,13 @@ class SurveyShow extends Component {
       {fallbackMode}
     </div>
 
+    let table
+    if (respondentsQuotasStats.length > 0) {
+      table = this.quotasForAnswers(respondentsQuotasStats)
+    } else {
+      table = this.dispositions(respondentsStats)
+    }
+
     return (
       <div>
         <div className='row'>
@@ -108,49 +117,7 @@ class SurveyShow extends Component {
         </div>
         <div className='row'>
           <div className='col s12 m8'>
-            <div className='card'>
-              <div className='card-table-title'>
-                Dispositions
-              </div>
-              <div className='card-table'>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Status</th>
-                      <th>Quantity</th>
-                      <th>Percent</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Pending</td>
-                      <td>{ respondentsStats.pending.count }</td>
-                      <td>{ respondentsStats.pending.percent }%</td>
-                    </tr>
-                    <tr>
-                      <td>Active</td>
-                      <td>{ respondentsStats.active.count }</td>
-                      <td>{ respondentsStats.active.percent }%</td>
-                    </tr>
-                    <tr>
-                      <td>Completed</td>
-                      <td>{ respondentsStats.completed.count }</td>
-                      <td>{ respondentsStats.completed.percent }%</td>
-                    </tr>
-                    <tr>
-                      <td>Stalled</td>
-                      <td>{ respondentsStats.stalled.count }</td>
-                      <td>{ respondentsStats.stalled.percent }%</td>
-                    </tr>
-                    <tr>
-                      <td>Failed</td>
-                      <td>{ respondentsStats.failed.count }</td>
-                      <td>{ respondentsStats.failed.percent }%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            {table}
           </div>
           <div>
             { RespondentsChartCount.respondentsReachedPercentage(completedByDate, target) + '% of target completed' }
@@ -167,10 +134,106 @@ class SurveyShow extends Component {
       </div>
     )
   }
+
+  dispositions(respondentsStats) {
+    return (
+    <div className='card'>
+      <div className='card-table-title'>
+        Dispositions
+      </div>
+      <div className='card-table'>
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Quantity</th>
+              <th>Percent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pending</td>
+              <td>{ respondentsStats.pending.count }</td>
+              <td>{ Math.round(respondentsStats.pending.percent) }%</td>
+            </tr>
+            <tr>
+              <td>Active</td>
+              <td>{ respondentsStats.active.count }</td>
+              <td>{ Math.round(respondentsStats.active.percent) }%</td>
+            </tr>
+            <tr>
+              <td>Completed</td>
+              <td>{ respondentsStats.completed.count }</td>
+              <td>{ Math.round(respondentsStats.completed.percent) }%</td>
+            </tr>
+            <tr>
+              <td>Stalled</td>
+              <td>{ respondentsStats.stalled.count }</td>
+              <td>{ Math.round(respondentsStats.stalled.percent) }%</td>
+            </tr>
+            <tr>
+              <td>Failed</td>
+              <td>{ respondentsStats.failed.count }</td>
+              <td>{ Math.round(respondentsStats.failed.percent) }%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    )
+  }
+
+  quotasForAnswers(stats) {
+    return (
+    <div className='card'>
+      <div className='card-table-title'>
+        {stats.length} quotas for answers
+      </div>
+      <div className='card-table'>
+        <table>
+          <thead>
+            <tr>
+              <th>Quota</th>
+              <th>Target</th>
+              <th>Percent</th>
+              <th>Full</th>
+              <th>Partials</th>
+            </tr>
+          </thead>
+          <tbody>
+            { stats.map((stat, index) => {
+              let conditions = []
+              for(let key in stat.condition) {
+                conditions.push([`${key}: ${stat.condition[key]}`])
+              }
+              return (
+                <tr key={index}>
+                  <td>
+                    { conditions.map((condition, index2) => (
+                      <span key={index2}>
+                        {condition}
+                        <br/>
+                      </span>
+                    )) }
+                  </td>
+                  <td>{stat.quota}</td>
+                  <td>{Math.round(stat.count * 100.0 / stat.quota)}%</td>
+                  <td>{stat.full}</td>
+                  <td>{stat.partials}</td>
+                </tr>
+              )
+            }) }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    )
+  }
 }
 
 const mapStateToProps = (state, ownProps) => {
   const respondentsStatsRoot = state.respondentsStats[ownProps.params.surveyId]
+  const respondentsQuotasStats = state.respondentsQuotasStats.data
 
   let respondentsStats = {}
   let completedRespondentsByDate = []
@@ -192,6 +255,7 @@ const mapStateToProps = (state, ownProps) => {
     survey: state.survey.data,
     questionnaire: state.questionnaire.data,
     respondentsStats: respondentsStats,
+    respondentsQuotasStats: respondentsQuotasStats,
     completedByDate: completedRespondentsByDate,
     target: target,
     totalRespondents: totalRespondents

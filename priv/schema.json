@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Ask JSON Schemas",
+
+  "definitions": {
+    "questionnaire": {
+      "type": "object",
+      "properties": {
+        "steps": { "$ref": "#/definitions/steps"}
+      },
+      "required": ["steps"]
+    },
+
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/step"
+      }
+    },
+
+    "step": {
+      "properties": {
+        "id": {"type": "string"},
+        "type": { "enum": ["multiple-choice", "numeric"] },
+        "title": {"type": "string"},
+        "prompt": { "$ref": "#/definitions/prompt"},
+        "store": { "type": "string" },
+        "choices": { "$ref": "#/definitions/choices" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "type", "title", "prompt", "store"]
+    },
+
+    "choices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/choice"
+      }
+    },
+
+    "choice": {
+      "properties": {
+        "value": {"type": "string"},
+        "responses": {"$ref": "#/definitions/responses"},
+        "skip_logic": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false,
+      "required": ["responses", "value", "skip_logic"]
+    },
+
+    "responses": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/lang_responses" }
+    },
+
+    "lang_responses": {
+      "type": "object",
+      "properties": {
+        "ivr": {"type": "array"},
+        "sms": {"type": "array"}
+      },
+      "additionalProperties": false
+    },
+
+    "prompt": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/lang_prompt"}
+    },
+
+    "lang_prompt": {
+      "type": "object",
+      "properties": {
+        "sms": { "type": "string" },
+        "ivr": { "$ref": "#/definitions/ivr"}
+      },
+      "additionalProperties": false
+    },
+
+    "ivr": {
+      "type": "object",
+      "properties": {
+        "text": {"type": "string"},
+        "audio_source": {"enum": ["tts", "upload"]},
+        "audio_id": {"type": "string"}
+      },
+      "additionalProperties": false,
+      "required": ["text", "audio_source"]
+    }
+  }
+}

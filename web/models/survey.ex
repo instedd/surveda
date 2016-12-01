@@ -34,7 +34,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas])
+    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas, :quota_vars])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to

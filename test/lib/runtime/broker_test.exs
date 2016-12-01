@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow}
-  alias Ask.{Repo, Survey, Respondent, TestChannel}
+  alias Ask.{Repo, Survey, Respondent, TestChannel, QuotaBucket}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
   @always_schedule %{schedule_day_of_week: @everyday_schedule,
@@ -295,6 +295,74 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
+  test "marks the survey as completed when all the quotas are reached" do
+    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, 10)
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
+    qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+    Broker.handle_info(:poll, nil)
+
+    # In the beginning it shouldn't be completed
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    # Not yet completed: missing fourth bucket
+    qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
+    qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
+    qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    qb4 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    # Now it should be completed
+    qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
+    Broker.handle_info(:poll, nil)
+
+    survey_id = survey.id
+    from q in QuotaBucket,
+      where: q.survey_id == ^survey_id
+
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "completed"
+  end
+
   test "always keeps batch_size number of respondents running" do
     [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, 20)
@@ -460,6 +528,41 @@ defmodule Ask.BrokerTest do
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "completed"
+  end
+
+  test "increments quota bucket when a respondent completes the survey" do
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+
+    selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "No"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
+
+    {:ok, broker} = Broker.start_link
+    broker |> send(:poll)
+
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    assert reply == {:prompt, "Which is the second perfect number??"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert reply == :end
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do

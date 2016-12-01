@@ -103,6 +103,54 @@ defmodule Ask.RespondentController do
     render(conn, "stats.json", stats: stats)
   end
 
+  def quotas_stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+    survey = Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    quotas_stats(conn, survey, survey.quota_vars)
+  end
+
+  defp quotas_stats(conn, _survey, []) do
+    render(conn, "quotas_stats.json", stats: [])
+  end
+
+  defp quotas_stats(conn, survey, _) do
+    # Get all respondents grouped by quota_bucket_id and state
+    values = Repo.all(from r in Respondent,
+      where: r.survey_id == ^survey.id,
+      where: not is_nil(r.quota_bucket_id),
+      group_by: [r.quota_bucket_id, r.state],
+      select: [r.quota_bucket_id, r.state, count(r.id)])
+
+    # Get all buckets
+    buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
+
+    stats = buckets |> Enum.map(fn bucket ->
+      bucket_values = values |> Enum.filter(fn [id, _, _] -> id == bucket.id end)
+      full = bucket_values
+      |> Enum.filter(fn [_, state, _] -> state == "completed" end)
+      |> Enum.map(fn [_, _, count] -> count end)
+      |> Enum.sum
+      partials = bucket_values
+      |> Enum.filter(fn [_, state, _] -> state == "active" end)
+      |> Enum.map(fn [_, _, count] -> count end)
+      |> Enum.sum
+
+      %{
+        condition: bucket.condition,
+        count: bucket.count,
+        quota: bucket.quota,
+        full: full,
+        partials: partials,
+      }
+    end)
+
+    render(conn, "quotas_stats.json", stats: stats)
+  end
+
   defp respondent_by_state(count, total_respondents) do
     percent = case total_respondents do
       0 -> 0

@@ -1,6 +1,7 @@
 {
-  "extends": ["standard", "standard-react"],
+  "extends": ["standard", "standard-react", "plugin:flowtype/recommended"],
   "parser": "babel-eslint",
+  "plugins": ["flowtype"],
   "globals": {
     "$": true,
     "d3": false

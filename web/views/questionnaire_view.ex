@@ -15,6 +15,9 @@ defmodule Ask.QuestionnaireView do
       modes: questionnaire.modes,
       updated_at: questionnaire.updated_at,
       project_id: questionnaire.project_id,
-      steps: questionnaire.steps}
+      steps: questionnaire.steps,
+      default_language: questionnaire.default_language,
+      languages: questionnaire.languages
+    }
   end
 end

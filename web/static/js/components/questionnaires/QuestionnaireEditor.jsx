@@ -5,6 +5,8 @@ import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
+import LanguageSelection from '../questionnaires/AddLanguage'
+import LanguagesList from '../questionnaires/LanguagesList'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -98,6 +100,12 @@ class QuestionnaireEditor extends Component {
     return (
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
+          <LanguagesList />
+          <div className='row'>
+            <div className='col s12'>
+              <LanguageSelection />
+            </div>
+          </div>
           <div className='row'>
             <div className='col s12'>
               <p className='grey-text'>Modes</p>

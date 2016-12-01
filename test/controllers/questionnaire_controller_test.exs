@@ -1,11 +1,13 @@
 defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
 
-  alias Ask.{Project, Questionnaire}
+  alias Ask.{Project, Questionnaire, JsonSchema}
   @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
-  @invalid_attrs %{}
+  @invalid_attrs %{steps: []}
 
   setup %{conn: conn} do
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+
     user = insert(:user)
     conn = conn
       |> put_private(:test_user, user)
@@ -61,6 +63,8 @@ defmodule Ask.QuestionnaireControllerTest do
         "project_id" => questionnaire.project_id,
         "modes" => ["sms", "ivr"],
         "steps" => [],
+        "default_language" => "en",
+        "languages" => [],
         "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at)
       }
     end

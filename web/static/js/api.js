@@ -46,7 +46,13 @@ const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
 }
 
 const commonCallback = (json, schema) => {
-  return () => normalize(camelizeKeys(json.data), schema)
+  return () => {
+    if (schema) {
+      return normalize(camelizeKeys(json.data), schema)
+    } else {
+      return json.data
+    }
+  }
 }
 
 const respondentsCallback = (json, schema) => {
@@ -170,6 +176,10 @@ export const fetchRespondents = (projectId, surveyId, limit, page) => {
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, respondentsStatsSchema)
+}
+
+export const fetchRespondentsQuotasStats = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, null)
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {

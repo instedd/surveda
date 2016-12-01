@@ -2,7 +2,7 @@ defmodule Ask.RespondentControllerTest do
 
   use Ask.ConnCase
 
-  alias Ask.{Project, Respondent}
+  alias Ask.{Project, Respondent, QuotaBucket, Survey}
 
   @valid_attrs %{phone_number: "some content"}
   @invalid_attrs %{}
@@ -384,6 +384,47 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_id == respondent_2.id |> to_string
     assert line_3_smoke == "No"
     assert line_3_drink == ""
+  end
+
+  test "quotas_stats", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = insert(:project, user: user)
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "quota" => 4,
+          "count" => 2
+        },
+      ]
+    }
+
+    survey = insert(:survey, project: project, started_at: t)
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+    qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+    insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb1.id, completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "active", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+
+    conn = get conn, project_survey_respondents_quotas_stats_path(conn, :quotas_stats, project.id, survey.id)
+    assert json_response(conn, 200) == %{"data" =>
+      [%{"condition" => %{"Exercises" => "No", "Smokes" => "No"}, "count" => 1,
+         "full" => 1, "partials" => 0, "quota" => 1},
+       %{"condition" => %{"Exercises" => "Yes", "Smokes" => "No"}, "count" => 2,
+         "full" => 1, "partials" => 1, "quota" => 4}]}
   end
 
   def completed_schedule do

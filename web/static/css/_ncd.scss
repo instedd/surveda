@@ -77,8 +77,6 @@ header {
   .logo {
     display: inline-block;
     vertical-align: top;
-    // width: 60px;
-    // height: 60px;
     padding-top: 3px;
     margin-right: 25px;
     margin-left: -85px;
@@ -784,6 +782,9 @@ label {
   display: block;
 }
 
+.btn-block {
+  width: 100%;
+}
 
 
 // ------- Respondent Chart SVG classes -----------

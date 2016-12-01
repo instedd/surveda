@@ -226,7 +226,7 @@ describe('questionnaire reducer', () => {
     expect(resultStep.title).toEqual('Do you smoke?')
     expect(resultStep.store).toEqual('Smokes')
     expect(resultStep.choices).toEqual([])
-    expect(resultStep.prompt).toEqual({ sms: 'Do you smoke?' })
+    expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?' })
   })
 
   it('should update step title', () => {
@@ -255,7 +255,7 @@ describe('questionnaire reducer', () => {
     )
 
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
-    expect(step.prompt.sms).toEqual('New prompt')
+    expect(step.prompt['en'].sms).toEqual('New prompt')
   })
 
   it('should update step prompt ivr', () => {
@@ -269,7 +269,7 @@ describe('questionnaire reducer', () => {
     )
 
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
-    expect(step.prompt.ivr).toEqual({text: 'New prompt', audioSource: 'tts'})
+    expect(step.prompt['en'].ivr).toEqual({text: 'New prompt', audioSource: 'tts'})
   })
 
   it('should update step store', () => {
@@ -320,7 +320,7 @@ describe('questionnaire reducer', () => {
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.choices.length).toEqual(3)
     expect(step.choices[2].value).toEqual('')
-    expect(step.choices[2].responses).toEqual({sms: [], ivr: []})
+    expect(step.choices[2].responses['en']).toEqual({sms: [], ivr: []})
   })
 
   it('should delete choice', () => {
@@ -353,21 +353,18 @@ describe('questionnaire reducer', () => {
     expect(step.choices[1]).toEqual({
       value: 'Maybe',
       responses: {
-        sms: [
-          'M',
-          'MB',
-          '3'
-        ],
-        ivr: [
-          'May'
-        ]
+        'en': {
+          sms: [
+            'M',
+            'MB',
+            '3'
+          ],
+          ivr: [
+            'May'
+          ]
+        }
       },
       skipLogic: 'end'
-      // 'errors': {
-      //   'responses': {
-      //     'ivr': true
-      //   }
-      // }
     })
   })
 
@@ -388,14 +385,16 @@ describe('questionnaire reducer', () => {
     expect(step.choices[2]).toEqual({
       value: 'Maybe',
       responses: {
-        sms: [
-          'M',
-          'MB',
-          '3'
-        ],
-        ivr: [
-          'May'
-        ]
+        'en': {
+          sms: [
+            'M',
+            'MB',
+            '3'
+          ],
+          ivr: [
+            'May'
+          ]
+        }
       },
       skipLogic: 'some-id'
     })
@@ -418,8 +417,10 @@ describe('questionnaire reducer', () => {
     expect(step.choices[2]).toEqual({
       value: 'Maybe',
       responses: {
-        sms: [],
-        ivr: []
+        'en': {
+          sms: [],
+          ivr: []
+        }
       },
       skipLogic: 'some-other-id'
     })
@@ -439,16 +440,19 @@ describe('questionnaire reducer', () => {
 
     const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.choices.length).toEqual(3)
+
     expect(step.choices[2]).toEqual({
       value: 'Maybe',
       responses: {
-        sms: [
-          'Perhaps'
-        ],
-        ivr: [
-          '2',
-          '3'
-        ]
+        'en': {
+          sms: [
+            'Perhaps'
+          ],
+          ivr: [
+            '2',
+            '3'
+          ]
+        }
       },
       skipLogic: 'some-other-id'
     })
@@ -563,13 +567,15 @@ describe('questionnaire reducer', () => {
       expect(step.choices[2]).toEqual({
         value: 'Maybe',
         responses: {
-          sms: ['A'],
-          ivr: [
-            '3',
-            'b',
-            '#',
-            '22'
-          ]
+          'en': {
+            sms: ['A'],
+            ivr: [
+              '3',
+              'b',
+              '#',
+              '22'
+            ]
+          }
         },
         skipLogic: 'some-other-id'
       })
@@ -628,6 +634,66 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  it('should add language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages).toInclude('fr')
+  })
+
+  it('should not add language if it was already added', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr'),
+      actions.addLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages.reduce((acum, lang) => (lang == 'fr') ? acum + 1 : acum, 0)).toEqual(1)
+  })
+
+  it('should remove language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const state = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr')
+    ])
+
+    const resultState = playActionsFromState(state, reducer)([
+      actions.removeLanguage('fr')
+    ])
+
+    const languages = resultState.data.languages
+    expect(languages).toNotInclude('fr')
+  })
+
+  it('should set default language', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.setDefaultLanguage('fr')
+    ])
+
+    expect(resultState.data.defaultLanguage).toEqual('fr')
+  })
+
   it('should provide valid answers for multiple-choice steps', () => {
     const questionnaire = deepFreeze({
       steps: [
@@ -667,34 +733,40 @@ const questionnaire = deepFreeze({
         {
           value: 'Yes',
           responses: {
-            sms: [
-              'Yes',
-              'Y',
-              '1'
-            ],
-            ivr: [
-              '1'
-            ]
+            'en': {
+              sms: [
+                'Yes',
+                'Y',
+                '1'
+              ],
+              ivr: [
+                '1'
+              ]
+            }
           },
           skipLogic: null
         },
         {
           value: 'No',
           responses: {
-            sms: [
-              'No',
-              'N',
-              '2'
-            ],
-            ivr: [
-              '2'
-            ]
+            'en': {
+              sms: [
+                'No',
+                'N',
+                '2'
+              ],
+              ivr: [
+                '2'
+              ]
+            }
           },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
         }
       ],
       prompt: {
-        sms: 'Do you smoke?'
+        'en': {
+          sms: 'Do you smoke?'
+        }
       }
     },
     {
@@ -706,32 +778,38 @@ const questionnaire = deepFreeze({
         {
           value: 'Yes',
           responses: {
-            sms: [
-              'Yes',
-              'Y',
-              '1'
-            ],
-            ivr: [
-              '1'
-            ]
+            'en': {
+              sms: [
+                'Yes',
+                'Y',
+                '1'
+              ],
+              ivr: [
+                '1'
+              ]
+            }
           }
         },
         {
           value: 'No',
           responses: {
-            sms: [
-              'No',
-              'N',
-              '2'
-            ],
-            ivr: [
-              '2'
-            ]
+            'en': {
+              sms: [
+                'No',
+                'N',
+                '2'
+              ],
+              ivr: [
+                '2'
+              ]
+            }
           }
         }
       ],
       prompt: {
-        sms: 'Do you exercise?'
+        'en': {
+          sms: 'Do you exercise?'
+        }
       }
     }
   ],
@@ -740,5 +818,7 @@ const questionnaire = deepFreeze({
   modes: [
     'sms', 'ivr'
   ],
-  id: 1
+  id: 1,
+  defaultLanguage: 'en',
+  languages: ['en']
 })

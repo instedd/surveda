@@ -7,6 +7,7 @@ export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const REMOVE_RESPONDENTS = 'REMOVE_RESPONDENTS'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
+export const RECEIVE_RESPONDENTS_QUOTAS_STATS = 'RECEIVE_RESPONDENTS_QUOTAS_STATS'
 export const INVALID_RESPONDENTS = 'INVALID_RESPONDENTS'
 export const CLEAR_INVALIDS = 'CLEAR_INVALIDS'
 
@@ -21,9 +22,19 @@ export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
     .then(stats => dispatch(receiveRespondentsStats(stats)))
 }
 
+export const fetchRespondentsQuotasStats = (projectId, surveyId) => dispatch => {
+  api.fetchRespondentsQuotasStats(projectId, surveyId)
+    .then(stats => dispatch(receiveRespondentsQuotasStats(stats)))
+}
+
 export const receiveRespondentsStats = (response) => ({
   type: RECEIVE_RESPONDENTS_STATS,
   response
+})
+
+export const receiveRespondentsQuotasStats = (data) => ({
+  type: RECEIVE_RESPONDENTS_QUOTAS_STATS,
+  data
 })
 
 export const receiveRespondents = (surveyId, page, respondents, respondentsCount) => ({

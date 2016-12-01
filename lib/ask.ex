@@ -19,7 +19,8 @@ defmodule Ask do
     children = if Mix.env != :test && !IEx.started? do
       [
         worker(Ask.OAuthTokenServer, []),
-        worker(Ask.Runtime.Broker, [])
+        worker(Ask.Runtime.Broker, []),
+        worker(Ask.JsonSchema, [])
       | children]
     else
       children

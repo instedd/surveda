@@ -48,6 +48,12 @@ defmodule Ask.RespondentView do
     }
   end
 
+  def render("quotas_stats.json", %{stats: stats}) do
+    %{
+      data: stats
+    }
+  end
+
   def render("completed_by_date.json", %{completed: {date, respondents_count}}) do
     %{
       date: Ecto.Date.cast!(date) |> Ecto.Date.to_string,

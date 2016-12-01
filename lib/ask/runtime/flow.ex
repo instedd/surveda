@@ -97,7 +97,7 @@ defmodule Ask.Runtime.Flow do
                     "multiple-choice" ->
                       choice = step["choices"]
                       |> Enum.find(fn choice ->
-                        choice["responses"][flow.mode] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+                        choice["responses"]["en"][flow.mode] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
                       end)
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
@@ -120,7 +120,7 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [step["prompt"][flow.mode]]}}
+        {:ok, flow, %{state | prompts: [step["prompt"]["en"][flow.mode]]}}
     end
   end
 

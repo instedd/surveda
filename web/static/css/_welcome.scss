@@ -93,12 +93,23 @@ body.welcome {
       }
     }
   }
+  &.login {
+    main {
+      @extend .grey, .lighten-3;
+      min-height: calc(100vh - 223px);
+      .card {
+        width: 35vw;
+        min-width: 350px;
+      }
+    }
+  }
 
   footer {
     @extend .grey-text, .text-darken-2;
     border-top: 1px solid color("grey", "lighten-2");
     padding-top: 1.3rem;
     padding-bottom: 1.3rem;
+    margin-top: 0;
 
     > .row {
       padding-left: 10px;

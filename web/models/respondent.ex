@@ -9,6 +9,7 @@ defmodule Ask.Respondent do
     field :timeout_at, Timex.Ecto.DateTime
     field :session, Ask.Ecto.Type.JSON
     belongs_to :survey, Ask.Survey
+    belongs_to :quota_bucket, Ask.QuotaBucket
     has_many :responses, Ask.Response
 
     timestamps()
@@ -19,7 +20,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :completed_at, :timeout_at])
+    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at])
     |> validate_required([:phone_number, :state])
   end
 

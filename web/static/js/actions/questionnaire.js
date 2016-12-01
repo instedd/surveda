@@ -17,6 +17,9 @@ export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
 export const SAVING = 'QUESTIONNAIRE_SAVING'
 export const SAVED = 'QUESTIONNAIRE_SAVED'
+export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
+export const REMOVE_LANGUAGE = 'QUESTIONNAIRE_REMOVE_LANGUAGE'
+export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -100,7 +103,6 @@ export const changeStepAudioIdIvr = (stepId, newId) => ({
   newId
 })
 
-
 export const changeStepTitle = (stepId, newTitle) => ({
   type: CHANGE_STEP_TITLE,
   stepId,
@@ -134,6 +136,21 @@ export const saving = () => ({
 export const saved = (questionnaire) => ({
   type: SAVED,
   data: questionnaire
+})
+
+export const addLanguage = (language) => ({
+  type: ADD_LANGUAGE,
+  language
+})
+
+export const removeLanguage = (language) => ({
+  type: REMOVE_LANGUAGE,
+  language
+})
+
+export const setDefaultLanguage = (language) => ({
+  type: SET_DEFAULT_LANGUAGE,
+  language
 })
 
 export const save = () => (dispatch, getState) => {

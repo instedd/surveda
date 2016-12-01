@@ -1,4 +1,4 @@
-defmodule Ask.QuotaBucket do
+  defmodule Ask.QuotaBucket do
   use Ask.Web, :model
 
   @max_int 2147483647
