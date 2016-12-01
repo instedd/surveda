@@ -150,6 +150,17 @@ defmodule Ask.StepsValidatorTest do
     ~s(
     {
       "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+      "title": "Language Selection",
+      "type": "language-selection",
+      "prompt": {},
+      "store": "",
+      "choices": ["en", "fr", "es"]
+    })
+    |> valid_step
+
+    ~s(
+    {
+      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
       "title": "Smoke",
       "type": "multiple-choice",
       "prompt": {},
