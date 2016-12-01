@@ -5,6 +5,7 @@ import { QuotasModal } from './QuotasModal'
 import { InputWithLabel } from '../ui'
 import find from 'lodash/find'
 import join from 'lodash/join'
+import { stepStoreValues } from '../../reducers/questionnaire'
 
 class SurveyWizardCutoffStep extends Component {
   static propTypes = {
@@ -78,9 +79,13 @@ class SurveyWizardCutoffStep extends Component {
             </InputWithLabel>
           </div>
         </div>
-        { questionnaire
+        { questionnaire && Object.keys(stepStoreValues(questionnaire)).length > 0
           ? <div className='row'>
-            <QuotasModal showLink modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' style={{maxWidth: '600px'}} showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
+            <div className='col s12'>
+              <div>
+                <QuotasModal showLink modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' style={{maxWidth: '600px'}} showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
+              </div>
+            </div>
           </div>
         : '' }
 

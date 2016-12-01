@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { stepStoreValues } from '../../reducers/questionnaire'
 import filter from 'lodash/filter'
+import includes from 'lodash/includes'
 
 export class QuotasModal extends Component {
   static propTypes = {
@@ -50,15 +51,13 @@ export class QuotasModal extends Component {
             <h4>{header}</h4>
             {Object.keys(stepStoreValues(questionnaire)).map((storeValue) =>
               <div className='row' key={storeValue} >
-                <div className='col s12'>
+                <div className='col s10'>
                   <i className='material-icons v-middle left'>list</i>
                   <span className='mode-label'>{storeValue}</span>
-                  <div className='switch right'>
-                    <label>
-                      <input type='checkbox' checked={survey.quotas.buckets[storeValue]} ref={node => { this.state.buckets[storeValue] = node }} />
-                      <span className='lever' />
-                    </label>
-                  </div>
+                </div>
+                <div className='col s1'>
+                  <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
+                  <label htmlFor={storeValue} />
                 </div>
               </div>
             )}
