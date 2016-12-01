@@ -12,6 +12,7 @@ class SurveyForm extends Component {
     projectId: PropTypes.any.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
+    questionnaire: PropTypes.object,
     respondents: PropTypes.object,
     channels: PropTypes.object,
     errors: PropTypes.object
@@ -29,7 +30,7 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondents, errors } = this.props
+    const { survey, projectId, questionnaires, channels, respondents, errors, questionnaire } = this.props
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
     const channelStepCompleted = survey.mode != null && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
@@ -58,7 +59,7 @@ class SurveyForm extends Component {
               <li className='collection-header'>
                 <h5>Progress <span className='right'>{percentage}</span></h5>
                 <p>
-                Complete the following tasks to get your Survey ready.
+                  Complete the following tasks to get your Survey ready.
                 </p>
                 <div className='progress'>
                   <div className='determinate' style={{ width: percentage }} />
@@ -70,7 +71,7 @@ class SurveyForm extends Component {
               <CollectionItem path='#schedule' icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
               <CollectionItem path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
               {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
-            <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
+              <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
             </ul>
           </div>
         </div>
@@ -88,7 +89,7 @@ class SurveyForm extends Component {
             <SurveyWizardScheduleStep survey={survey} />
           </div>
           <div id='cutoff' className='row scrollspy'>
-            <SurveyWizardCutoffStep survey={survey} />
+            <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} />
           </div>
         </div>
       </div>
