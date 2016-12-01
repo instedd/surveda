@@ -20,7 +20,7 @@ export const SAVED = 'QUESTIONNAIRE_SAVED'
 export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
 export const REMOVE_LANGUAGE = 'QUESTIONNAIRE_REMOVE_LANGUAGE'
 export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
-export const CHANGE_XXX = 'CHANGE_XXX'
+export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
@@ -170,8 +170,8 @@ export const createQuestionnaire = (projectId) => (dispatch) =>
     return questionnaire
   })
 
-export const changeXXX = (stepId, minValue, maxValue, rangeDelimiters) => ({
-  type: CHANGE_XXX,
+export const changeNumericRanges = (stepId, minValue, maxValue, rangeDelimiters) => ({
+  type: CHANGE_NUMERIC_RANGES,
   stepId: stepId,
   minValue: minValue,
   maxValue: maxValue,

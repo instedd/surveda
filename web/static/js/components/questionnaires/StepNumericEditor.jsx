@@ -38,7 +38,7 @@ class StepNumericEditor extends Component {
   }
 
   minValueSubmit(e) {
-    this.props.questionnaireActions.changeXXX(this.state.stepId, this.state.minValue,
+    this.props.questionnaireActions.changeNumericRanges(this.state.stepId, this.state.minValue,
       this.state.maxValue, this.state.rangesDelimiters)
   }
 
@@ -47,7 +47,7 @@ class StepNumericEditor extends Component {
   }
 
   maxValueSubmit(e) {
-    this.props.questionnaireActions.changeXXX(this.state.stepId, this.state.minValue,
+    this.props.questionnaireActions.changeNumericRanges(this.state.stepId, this.state.minValue,
       this.state.maxValue, this.state.rangesDelimiters)
   }
 
@@ -56,7 +56,7 @@ class StepNumericEditor extends Component {
   }
 
   rangesDelimitersSubmit(e) {
-    this.props.questionnaireActions.changeXXX(this.state.stepId, this.state.minValue,
+    this.props.questionnaireActions.changeNumericRanges(this.state.stepId, this.state.minValue,
       this.state.maxValue, this.state.rangesDelimiters)
   }
 

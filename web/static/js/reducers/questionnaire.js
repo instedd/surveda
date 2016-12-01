@@ -43,7 +43,7 @@ const stepsReducer = (state, action) => {
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
     case actions.CHANGE_CHOICE: return changeChoice(state, action)
-    case actions.CHANGE_XXX: return changeXXX(state, action)
+    case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
     case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
   }
 
@@ -441,7 +441,7 @@ const isBlank = (value: string) => {
 
 export default validateReducer(fetchReducer(actions, dataReducer))
 
-const changeXXX = (state, action) => {
+const changeNumericRanges = (state, action) => {
   return changeStep(state, action.stepId, step => {
     // validate
     let rangesDelimiters = action.rangesDelimiters
