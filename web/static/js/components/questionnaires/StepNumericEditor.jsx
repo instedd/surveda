@@ -13,7 +13,6 @@ class StepNumericEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
-    console.log('stateFromProps step', step)
     return {
       stepId: step.id,
       minValue: step.minValue || '',
@@ -88,8 +87,6 @@ class StepNumericEditor extends Component {
     if (skipOptionsLength != 0) {
       skipOptions.unshift({id: '', title: 'Next question'})
     }
-
-    console.log('skipOptions', skipOptions, 'ranges', ranges)
 
     let minValue = <div className='row'>
       <div className='col input-field s2'>

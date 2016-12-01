@@ -483,19 +483,15 @@ const changeXXX = (state, action) => {
       values.pop()
     }
 
-    console.log('values to generate ranges ', values)
-    console.log('current ranges are ', step.ranges)
     let ranges = []
     for (let [i, from] of values.entries()) {
       let to = i < (values.length - 1) ? (values[i + 1] - 1) : maxValue
       let prevRange = step.ranges.find((range) => {
         return range.from == from && range.to == to
       })
-      console.log('the prev range is ', prevRange, ' for the from ', from, ' and the to ', to)
       if (prevRange) {
         ranges.push({...prevRange})
       } else {
-        console.log('new range generated')
         ranges.push({
           from: from,
           to: to,
