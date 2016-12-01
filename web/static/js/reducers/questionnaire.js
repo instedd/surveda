@@ -1,6 +1,6 @@
 import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
-import each from 'lodash/each'
+import reduce from 'lodash/reduce'
 import map from 'lodash/map'
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
@@ -343,18 +343,16 @@ const isBlank = (value) => {
 }
 
 export const stepStoreValues = (questionnaire) => {
-  let options = {}
-
   const multipleChoiceSteps = filter(questionnaire.steps, (step) =>
     step.type == 'multiple-choice'
   )
 
-  each(multipleChoiceSteps, (step) => {
+  return reduce(multipleChoiceSteps, (options, step) => {
     options[step.store] = map(step.choices, (choice) =>
       choice.value
     )
-  })
-  return options
+    return options
+  }, {})
 }
 
 export default validateReducer(fetchReducer(actions, dataReducer))
