@@ -426,6 +426,10 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert reply == {:prompt, "What's the number of this question??"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert reply == :end
 
     now = Timex.now
@@ -555,6 +559,10 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert reply == {:prompt, "What's the number of this question??"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert reply == :end
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -590,6 +598,10 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("33"))
+    assert reply == {:prompt, "What's the number of this question??"}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert reply == :end
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)

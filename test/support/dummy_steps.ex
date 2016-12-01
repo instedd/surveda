@@ -125,6 +125,12 @@ defmodule Ask.DummySteps do
           title: "Which is the second perfect number?",
           prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
           store: "Perfect Number"
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "What's the number of this question?",
+          prompt: prompt(sms: sms_prompt("What's the number of this question??")),
+          store: "Question"
         )
       ]
 

@@ -176,8 +176,8 @@ end
 
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
-    step_result = Session.sync_step(session, Flow.Message.reply("99"))
-    assert :end == step_result
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("99"))
+    :end = Session.sync_step(session, Flow.Message.reply("11"))
 
     responses = respondent
     |> Ecto.assoc(:responses)
@@ -187,7 +187,9 @@ end
     assert [
       %{field_name: "Smokes", value: "Yes"},
       %{field_name: "Exercises", value: "No"},
-      %{field_name: "Perfect Number", value: "99"}] = responses
+      %{field_name: "Perfect Number", value: "99"},
+      %{field_name: "Question", value: "11"},
+      ] = responses
   end
 
   test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -260,6 +262,48 @@ end
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     :end = Session.sync_step(session, Flow.Message.reply("N"))
+  end
+
+  test "ends when quota is reached at leaf, numeric", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Smokes", "Perfect Number"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No", "Perfect Number" => [20, 30]},
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => %{"Smokes" => "No", "Perfect Number" => [31, 40]},
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [20, 30]},
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [31, 40]},
+          "quota" => 2,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    {session, _} = Session.start(quiz, respondent, channel)
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
+    :end = Session.sync_step(session, Flow.Message.reply("25"))
   end
 
   test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do

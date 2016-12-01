@@ -186,7 +186,7 @@ defmodule Ask.Runtime.Session do
   defp assign_bucket(respondent, buckets) do
     # Nothing to do if the respondent already has a bucket
     if respondent.quota_bucket_id do
-      {respondent, nil}
+      {respondent, []}
     else
       # Get respondent responses
       responses = (respondent |> Repo.preload(:responses)).responses
@@ -220,16 +220,15 @@ defmodule Ask.Runtime.Session do
       # No quotas: not completed
       [] -> false
       _ ->
-        # Convert them to a list of list of {key, value} using the condition
-        # buckets = buckets |> Enum.map(fn bucket -> bucket.condition |> Map.to_list end)
-
         # Filter buckets that contain each of the responses
         buckets = responses |> Enum.reduce(buckets, fn(response, buckets) ->
-          {response_key, _} = response
+          {response_key, response_value} = response
           buckets |> Enum.filter(fn bucket ->
             # The response must be in the bucket, otherwise we keep the bucket
             if bucket.condition |> Map.keys |> Enum.member?(response_key) do
-              bucket.condition |> Map.to_list |> Enum.member?(response)
+              bucket.condition |> Map.to_list |> Enum.any?(fn {key, value} ->
+                key == response_key && (response_value |> QuotaBucket.matches_condition?(value))
+              end)
             else
               true
             end
