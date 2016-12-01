@@ -531,5 +531,3 @@ const changeRangeSkipLogic = (state, action) => {
     }
   })
 }
-
-export default fetchReducer(actions, dataReducer)

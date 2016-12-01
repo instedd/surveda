@@ -170,11 +170,11 @@ defmodule Ask.DummySteps do
           ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"], skip_logic: "end"),
-            choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"], skip_logic: nil),
-            choice(value: "Maybe", sms: ["Maybe", "M", "3"], ivr: ["3"]),
-            choice(value: "Sometimes", sms: ["Sometimes", "S", "4"], ivr: ["4"], skip_logic: "ddd"),
-            choice(value: "ALWAYS", sms: ["Always", "A", "5"], ivr: ["5"], skip_logic: "undefined_id")
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end"),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: nil),
+            choice(value: "Maybe", responses: responses(sms: ["Maybe", "M", "3"], ivr: ["3"])),
+            choice(value: "Sometimes", responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]), skip_logic: "ddd"),
+            choice(value: "ALWAYS", responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]), skip_logic: "undefined_id")
           ]
         ),
         multiple_choice_step(
@@ -237,8 +237,8 @@ defmodule Ask.DummySteps do
             ),
             store: "Last",
             choices: [
-              choice(value: "Yes", sms: ["Yes", "Y", "1"], ivr: ["1"]),
-              choice(value: "No", sms: ["No", "N", "2"], ivr: ["2"])
+              choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+              choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
             ]
           )
       ]
