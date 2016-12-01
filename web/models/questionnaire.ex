@@ -5,6 +5,7 @@ defmodule Ask.Questionnaire do
     field :name, :string
     field :modes, Ask.Ecto.Type.StringList
     field :steps, Ask.Ecto.Type.JSON
+    field :quota_completed_msg, Ask.Ecto.Type.JSON
     field :languages, Ask.Ecto.Type.JSON
     field :default_language, :string
     belongs_to :project, Ask.Project
