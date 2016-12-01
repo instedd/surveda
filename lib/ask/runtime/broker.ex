@@ -151,13 +151,26 @@ defmodule Ask.Runtime.Broker do
   defp match_condition(responses, bucket) do
     bucket_vars = Map.keys(bucket.condition)
 
-    matches = Enum.all?( bucket_vars, fn var ->
-                Enum.any?(responses, fn res ->
-                  (res.field_name == var) && (res.value == Map.fetch!(bucket.condition, var))
-                end)
-              end)
+    Enum.all?(bucket_vars, fn var ->
+      Enum.any?(responses, fn res ->
+        (res.field_name == var) && match_single_condition(res.value, Map.fetch!(bucket.condition, var))
+      end)
+    end)
+  end
 
-    matches
+  # Numeric condition
+  defp match_single_condition(value, [from, to]) do
+    case Integer.parse(value) do
+    {value, ""} ->
+      from <= value && value <= to
+    _ ->
+      false
+    end
+  end
+
+  # Text condition
+  defp match_single_condition(value, condition) do
+    value == condition
   end
 
   defp update_respondent(respondent, :end) do
