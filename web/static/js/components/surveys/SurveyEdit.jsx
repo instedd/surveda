@@ -8,7 +8,7 @@ import * as questionnairesActions from '../../actions/questionnaires'
 import * as respondentsActions from '../../actions/respondents'
 import SurveyForm from './SurveyForm'
 import { Tooltip } from '../ui'
-import { launchSurvey, updateSurvey } from '../../api'
+import { launchSurvey } from '../../api'
 import * as routes from '../../routes'
 
 class SurveyEdit extends Component {
