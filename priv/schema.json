@@ -26,6 +26,7 @@
         "prompt": { "$ref": "#/definitions/prompt"},
         "store": { "type": "string" },
         "choices": { "$ref": "#/definitions/choices" },
+        "language_choices": { "type": "array" },
         "min_value": {"type": ["integer", "null"]},
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
