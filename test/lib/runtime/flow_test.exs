@@ -70,7 +70,8 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} = flow |> Flow.step()
     {:ok, flow, _} = flow |> Flow.step(Flow.Message.reply("Y"))
     {:ok, flow, _} = flow |> Flow.step(Flow.Message.reply("N"))
-    step = flow |> Flow.step(Flow.Message.reply("99"))
+    {:ok, flow, _} = flow |> Flow.step(Flow.Message.reply("99"))
+    step = flow |> Flow.step(Flow.Message.reply("11"))
     assert {:end, _} = step
   end
 

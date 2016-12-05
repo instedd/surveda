@@ -21,8 +21,23 @@
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:condition, :survey_id, :quota, :count])
-    |> validate_required([:condition, :survey_id, :quota])
+    |> validate_required([:condition, :survey_id])
     |> foreign_key_constraint(:survey_id)
     |> validate_number(:quota, greater_than_or_equal_to: 0, less_than: @max_int)
+  end
+
+  # Numeric condition
+  def matches_condition?(value, [from, to]) do
+    case Integer.parse(value) do
+    {value, ""} ->
+      from <= value && value <= to
+    _ ->
+      false
+    end
+  end
+
+  # Text condition
+  def matches_condition?(value, condition) do
+    value == condition
   end
 end

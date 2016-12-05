@@ -158,6 +158,13 @@ defmodule Ask.DummySteps do
           prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic()
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "What's the number of this question?",
+          prompt: prompt(sms: sms_prompt("What's the number of this question??")),
+          store: "Question",
+          skip_logic: default_numeric_skip_logic()
         )
       ]
 

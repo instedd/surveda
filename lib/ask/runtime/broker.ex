@@ -151,13 +151,12 @@ defmodule Ask.Runtime.Broker do
   defp match_condition(responses, bucket) do
     bucket_vars = Map.keys(bucket.condition)
 
-    matches = Enum.all?( bucket_vars, fn var ->
-                Enum.any?(responses, fn res ->
-                  (res.field_name == var) && (res.value == Map.fetch!(bucket.condition, var))
-                end)
-              end)
-
-    matches
+    Enum.all?(bucket_vars, fn var ->
+      Enum.any?(responses, fn res ->
+        (res.field_name == var) &&
+          res.value |> QuotaBucket.matches_condition?(Map.fetch!(bucket.condition, var))
+      end)
+    end)
   end
 
   defp update_respondent(respondent, :end) do

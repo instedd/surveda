@@ -135,7 +135,7 @@ class ChoiceEditor extends Component {
 
   skipLogicChange(event: Event) {
     const { onChoiceChange } = this.props
-    if (event.target instanceof HTMLInputElement) {
+    if (event.target instanceof HTMLSelectElement) {
       this.setState({
         ...this.state,
         skipLogic: event.target.value == '' ? null : event.target.value

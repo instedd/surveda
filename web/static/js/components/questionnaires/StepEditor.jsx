@@ -6,6 +6,7 @@ import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, In
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
+import StepLanguageSelection from './StepLanguageSelection'
 import Dropzone from 'react-dropzone'
 import { createAudio } from '../../api.js'
 import classNames from 'classnames/bind'
@@ -181,6 +182,8 @@ class StepEditor extends Component {
       editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
     } else if (step.type == 'numeric') {
       editor = <StepNumericEditor step={step} skip={skip} />
+    } else if (step.type == 'language-selection') {
+      editor = <StepLanguageSelection step={step} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }
@@ -262,24 +265,27 @@ class StepEditor extends Component {
           <li className='collection-item input-field header'>
             <div className='row'>
               <div className='col s12'>
-                <div className='left'>
+                { this.state.stepType != 'language-selection'
+                ? <div className='left'>
                   <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('multiple-choice')}>
                         <i className='material-icons left'>list</i>
-                        Multiple choice
+                            Multiple choice
                         {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
                       </a>
                     </DropdownItem>
                     <DropdownItem>
                       <a onClick={e => this.changeStepType('numeric')}>
                         <i className='material-icons left sharp'>dialpad</i>
-                        Numeric
+                            Numeric
                         {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
                       </a>
                     </DropdownItem>
                   </Dropdown>
                 </div>
+                : <i className='material-icons left'>language</i>
+                }
                 <span className={classNames({'red-text': hasErrors})}>
                   <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
                 </span>

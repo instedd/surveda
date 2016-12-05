@@ -67,7 +67,7 @@ class SurveyEdit extends Component {
           </Tooltip>
           : ''
         }
-        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} />
+        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaires[survey.questionnaireId]} />
       </div>
     )
   }

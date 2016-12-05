@@ -19,6 +19,7 @@ export const SAVING = 'QUESTIONNAIRE_SAVING'
 export const SAVED = 'QUESTIONNAIRE_SAVED'
 export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
 export const REMOVE_LANGUAGE = 'QUESTIONNAIRE_REMOVE_LANGUAGE'
+export const REORDER_LANGUAGES = 'QUESTIONNAIRE_REORDER_LANGUAGES'
 export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
@@ -153,6 +154,12 @@ export const removeLanguage = (language) => ({
 export const setDefaultLanguage = (language) => ({
   type: SET_DEFAULT_LANGUAGE,
   language
+})
+
+export const reorderLanguages = (language, index) => ({
+  type: REORDER_LANGUAGES,
+  language,
+  index
 })
 
 export const save = () => (dispatch, getState) => {

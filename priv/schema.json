@@ -21,7 +21,7 @@
     "step": {
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["multiple-choice", "numeric"] },
+        "type": { "enum": ["multiple-choice", "numeric", "language-selection"] },
         "title": {"type": "string"},
         "prompt": { "$ref": "#/definitions/prompt"},
         "store": { "type": "string" },

@@ -186,7 +186,7 @@ defmodule Ask.Runtime.Session do
   defp assign_bucket(respondent, buckets) do
     # Nothing to do if the respondent already has a bucket
     if respondent.quota_bucket_id do
-      {respondent, nil}
+      {respondent, []}
     else
       # Get respondent responses
       responses = (respondent |> Repo.preload(:responses)).responses
@@ -198,7 +198,13 @@ defmodule Ask.Runtime.Session do
 
       # Check which bucket matches exactly those responses
       buckets = buckets |> Enum.filter(fn bucket ->
-        responses == (bucket.condition |> Map.to_list |> Enum.sort)
+        bucket.condition |> Map.to_list |> Enum.all?(fn {key, value} ->
+          responses
+          |> Enum.filter(fn {response_key, _} -> response_key == key end)
+          |> Enum.all?(fn {_, response_value} ->
+            response_value |> QuotaBucket.matches_condition?(value)
+          end)
+        end)
       end)
 
       respondent =
@@ -218,22 +224,27 @@ defmodule Ask.Runtime.Session do
       # No quotas: not completed
       [] -> false
       _ ->
-        # Get non-completed buckets
-        buckets = buckets |> Enum.filter(fn bucket  ->
-            bucket.count < bucket.quota
-          end)
-
-        # Convert them to a list of list of {key, value} using the condition
-        buckets = buckets |> Enum.map(fn bucket -> bucket.condition |> Map.to_list end)
-
         # Filter buckets that contain each of the responses
         buckets = responses |> Enum.reduce(buckets, fn(response, buckets) ->
-          buckets |> Enum.filter(fn bucket -> bucket |> Enum.member?(response) end)
+          {response_key, response_value} = response
+          buckets |> Enum.filter(fn bucket ->
+            # The response must be in the bucket, otherwise we keep the bucket
+            if bucket.condition |> Map.keys |> Enum.member?(response_key) do
+              bucket.condition |> Map.to_list |> Enum.any?(fn {key, value} ->
+                key == response_key && (response_value |> QuotaBucket.matches_condition?(value))
+              end)
+            else
+              true
+            end
+          end)
         end)
 
-        # If no non-completed buckets are left, it means that
-        # the responses are already covered by current quotas
-        buckets |> Enum.empty?
+        # The answer is: there it at least one bucket, and all of the buckets are full
+        case buckets do
+          [] -> false
+          _ ->
+            buckets |> Enum.all?(fn bucket -> bucket.count >= bucket.quota end)
+        end
     end
   end
 end
