@@ -150,4 +150,15 @@ defmodule Ask.FlowTest do
 
   end
 
+  describe "multiple choice" do
+    test "continues with next question when the reply isn't between the choices"
+      do
+      {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
+      result = flow |> Flow.step(Flow.Message.reply("INVALID CHOICE"))
+
+      assert {:ok, _, flow_reply} = result
+      assert Enum.at(flow_reply.prompts, 0) == "Do you exercise? Reply 1 for YES, 2 for NO"
+    end
+  end
+
 end
