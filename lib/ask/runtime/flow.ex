@@ -45,8 +45,8 @@ defmodule Ask.Runtime.Flow do
           value = String.to_integer(reply_value)
           step["ranges"]
           |> Enum.find_value(nil, fn (range) ->
-            if (range["from"] == nil || range["from"] <= value) && (range["to"] >=
-              value || range["to"] == nil), do: range["skip_logic"], else: false
+            if (range["from"] == nil || range["from"] <= value) && (range["to"]
+              == nil || range["to"] >= value), do: range["skip_logic"], else: false
           end)
         "multiple-choice" ->
           step
