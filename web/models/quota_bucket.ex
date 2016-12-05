@@ -21,7 +21,7 @@
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:condition, :survey_id, :quota, :count])
-    |> validate_required([:condition, :survey_id, :quota])
+    |> validate_required([:condition, :survey_id])
     |> foreign_key_constraint(:survey_id)
     |> validate_number(:quota, greater_than_or_equal_to: 0, less_than: @max_int)
   end
