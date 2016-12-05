@@ -142,7 +142,7 @@ class StepNumericEditor extends Component {
             </thead>
             <tbody>
               { ranges.map((range, index) =>
-                <tr key={index}>
+                <tr key={`${range.from},${range.to}`}>
                   <td>{range.from == null ? 'No limit' : range.from} </td>
                   <td>{range.to == null ? 'No limit' : range.to} </td>
                   <td>
