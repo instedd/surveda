@@ -126,8 +126,7 @@ class SurveyWizardRetryAttempts extends Component {
                     className={invalid ? 'invalid' : ''}
                     />
                 </InputWithLabel>
-                <span className='small-text-bellow error'>
-                  { invalid ? <span>{this.errorText(mode, survey.errors)}. </span> : '' }
+                <span className='small-text-bellow'>
                   Enter delays like 5m 2h to express time units
                 </span>
                 {this.retryConfigurationFlow(mode, defaultValue)}
