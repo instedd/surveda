@@ -40,10 +40,20 @@ defmodule Ask.Runtime.Flow do
 
   defp next_step_by_skip_logic(flow, step, reply_value) do
     skip_logic =
-      step
-      |> Map.get("choices")
-      |> Enum.find(fn choice -> choice["value"] == reply_value end)
-      |> Map.get("skip_logic")
+      case step["type"] do
+        "numeric" ->
+          value = String.to_integer(reply_value)
+          step["ranges"]
+          |> Enum.find_value(nil, fn (range) ->
+            if (range["from"] == nil || range["from"] <= value) && (range["to"]
+              == nil || range["to"] >= value), do: range["skip_logic"], else: false
+          end)
+        "multiple-choice" ->
+          step
+          |> Map.get("choices")
+          |> Enum.find(fn choice -> choice["value"] == reply_value end)
+          |> Map.get("skip_logic")
+      end
 
     case skip_logic do
       nil ->
@@ -66,7 +76,7 @@ defmodule Ask.Runtime.Flow do
   defp advance_current_step(flow, step, reply_value) do
     next_step =
       cond do
-        step["type"] == "numeric" || !reply_value ->
+        !reply_value ->
           flow.current_step + 1
         :else ->
           next_step_by_skip_logic(flow, step, reply_value)

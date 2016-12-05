@@ -225,7 +225,6 @@ describe('questionnaire reducer', () => {
     expect(resultStep.type).toEqual('numeric')
     expect(resultStep.title).toEqual('Do you smoke?')
     expect(resultStep.store).toEqual('Smokes')
-    expect(resultStep.choices).toEqual([])
     expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?' })
   })
 

@@ -45,6 +45,8 @@ const stepsReducer = (state, action) => {
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
     case actions.CHANGE_CHOICE: return changeChoice(state, action)
+    case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
+    case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
   }
 
   return state
@@ -204,12 +206,44 @@ const changeStepTitle = (state, action) => {
   }))
 }
 
+const clearTypeProperties = (step) => {
+  let commons = ['id', 'title', 'prompt', 'store']
+  let baseStep = {}
+  for (let prop in step) {
+    if (commons.includes(prop)) {
+      baseStep[prop] = step[prop]
+    }
+  }
+
+  return baseStep
+}
+
 const changeStepType = (state, action) => {
-  return changeStep(state, action.stepId, step => ({
-    ...step,
-    type: action.stepType,
-    choices: []
-  }))
+  switch (action.stepType) {
+    case 'multiple-choice':
+      return changeStep(state, action.stepId, step => {
+        let baseStep = clearTypeProperties(step)
+        return {
+          ...baseStep,
+          type: action.stepType,
+          choices: []
+        }
+      })
+    case 'numeric':
+      return changeStep(state, action.stepId, step => {
+        let baseStep = clearTypeProperties(step)
+        return {
+          ...baseStep,
+          type: action.stepType,
+          minValue: null,
+          maxValue: null,
+          rangesDelimiters: null,
+          ranges: [{from: null, to: null, skipLogic: null}]
+        }
+      })
+    default:
+      throw new Error(`unknown step type: ${action.stepType}`)
+  }
 }
 
 const changeStepStore = (state, action) => {
@@ -484,3 +518,90 @@ export const stepStoreValues = (questionnaire) => {
 }
 
 export default validateReducer(fetchReducer(actions, dataReducer))
+
+const changeNumericRanges = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    // validate
+    let rangesDelimiters = action.rangesDelimiters
+    let minValue = action.minValue ? parseInt(action.minValue) : null
+    let maxValue = action.maxValue ? parseInt(action.maxValue) : null
+    let values = []
+    if (minValue != null) {
+      values.push(minValue)
+    }
+    if (rangesDelimiters) {
+      let delimiters = rangesDelimiters.split(',')
+      values = values.concat(delimiters.map((e) => { return parseInt(e) }))
+    }
+    if (maxValue != null) {
+      values.push(maxValue)
+    }
+
+    let isValid = true
+    let i = 0
+    while (isValid && i < values.length - 1) {
+      isValid = values[i] < values[i + 1]
+      i++
+    }
+
+    if (!isValid) {
+      return {
+        ...step,
+        minValue: minValue,
+        maxValue: maxValue,
+        rangesDelimiters: rangesDelimiters
+      }
+    }
+
+    // generate ranges
+    if (minValue == null) {
+      values.unshift(null)
+    }
+    if (maxValue != null) {
+      values.pop()
+    }
+
+    let ranges = []
+    for (let [i, from] of values.entries()) {
+      let to = i < (values.length - 1) ? (values[i + 1] - 1) : maxValue
+      let prevRange = step.ranges.find((range) => {
+        return range.from == from && range.to == to
+      })
+      if (prevRange) {
+        ranges.push({...prevRange})
+      } else {
+        ranges.push({
+          from: from,
+          to: to,
+          skipLogic: null
+        })
+      }
+    }
+
+    // be happy
+    return {
+      ...step,
+      minValue: minValue,
+      maxValue: maxValue,
+      rangesDelimiters: rangesDelimiters,
+      ranges: ranges
+    }
+  })
+}
+
+const changeRangeSkipLogic = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    let newRange = {
+      ...step.ranges[action.rangeIndex],
+      skipLogic: action.skipLogic
+    }
+    return {
+      ...step,
+      ranges: [
+        ...step.ranges.slice(0, action.rangeIndex),
+        newRange,
+        ...step.ranges.slice(action.rangeIndex + 1)
+      ]
+    }
+  })
+}
