@@ -1,33 +1,58 @@
 import * as actions from '../../actions/questionnaire'
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import iso6393 from 'iso-639-3'
 import 'materialize-autocomplete'
 
 class AddLanguage extends Component {
 
+  constructor(props) {
+    super(props)
+    this.state = {
+      editing: false
+    }
+    this.handleClick = this.handleClick.bind(this)
+    this.endEdit = this.endEdit.bind(this)
+  }
+
+  handleClick() {
+    if (!this.state.editing) {
+      this.setState({editing: !this.state.editing})
+    }
+  }
+
+  endEdit() {
+    this.setState({editing: false})
+  }
+
   languageAdded(context) {
     return (language) => {
       const { dispatch } = context.props
+      context.endEdit()
       dispatch(actions.addLanguage(language.id))
       $(context.refs.languageInput).val('')
     }
   }
 
   render() {
-    return (
-      <div className='input-field language-selection'>
-        <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' />
-        <label htmlFor='singleInput'><i className='material-icons v-middle'>add</i> Add language</label>
-        <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' />
-      </div>
-    )
+    if (!this.state.editing) {
+      return (
+        <a onClick={this.handleClick}>
+          <span>Add Language</span>
+        </a>
+      )
+    } else {
+      return (
+        <div className='input-field language-selection'>
+          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' />
+          <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' />
+        </div>
+      )
+    }
   }
 
-  componentDidMount() {
-    const { questionnaire } = this.props
+  componentDidUpdate() {
     const thisContext = this
-    const languageAdded = this.languageAdded
     const languageInput = this.refs.languageInput
     const languagesDropdown = this.refs.languagesDropdown
 
@@ -52,6 +77,9 @@ class AddLanguage extends Component {
         callback(value, matchingOptions)
       }
     })
+    if (this.refs.languageInput) {
+      this.refs.languageInput.focus()
+    }
   }
 }
 
