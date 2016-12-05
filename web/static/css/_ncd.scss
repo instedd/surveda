@@ -43,20 +43,17 @@ nav {
 
 html, body {
   @extend .grey, .lighten-3;
-  > main {
-    > div {
-    }
-  }
 }
 
 
 main:not(.main-welcome) {
   @include flexbox();
   flex: 1 0 auto;
+  padding-bottom: 61px;
+  position: relative;
   > div {
     flex: 1;
     padding-top: 90px;
-    padding-bottom: 80px;
   }
 }
 
@@ -77,7 +74,7 @@ header {
   .logo {
     display: inline-block;
     vertical-align: top;
-    padding-top: 3px;
+    padding-top: 8px;
     margin-right: 25px;
     margin-left: -85px;
     + a.breadcrumb:before {
@@ -188,6 +185,7 @@ header {
   a.page-title {
     font-size: 20px;
     max-width: 95%;
+    padding-top: 4px;
     display: inline-block;
     i {
       @extend .grey-text, .lighten-2;
@@ -212,11 +210,17 @@ header {
 
 
 footer {
-  position: relative;
-  margin-top: -40px;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  // margin-top: -78px;
+  padding-top: 1.3rem;
+  padding-bottom: 1.3rem;
+  .row {
+    margin-bottom: 0;
+  }
+
 }
-
-
 
 // ------- Card w/Table ----------
 
