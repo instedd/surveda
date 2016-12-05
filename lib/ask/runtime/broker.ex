@@ -21,6 +21,12 @@ defmodule Ask.Runtime.Broker do
     GenServer.call(@server_ref, {:sync_step, respondent, reply})
   end
 
+  # Makes the borker performs a poll on the surveys.
+  # This method is intended to be used by tests.
+  def poll do
+    GenServer.call(@server_ref, :poll)
+  end
+
   def init(_args) do
     :timer.send_interval(@poll_interval, :poll)
     {:ok, nil}
@@ -45,6 +51,11 @@ defmodule Ask.Runtime.Broker do
 
   def handle_call({:sync_step, respondent, reply}, _from, state) do
     {:reply, do_sync_step(respondent, reply), state}
+  end
+
+  def handle_call(:poll, _from, state) do
+    handle_info(:poll, state)
+    {:reply, :ok, state}
   end
 
   defp poll_survey(survey) do

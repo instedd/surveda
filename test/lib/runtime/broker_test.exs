@@ -407,9 +407,9 @@ defmodule Ask.BrokerTest do
     [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, broker} = Broker.start_link
-    broker |> send(:poll)
+    Broker.poll
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -439,6 +439,8 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
     assert respondent.session == nil
     assert respondent.completed_at in interval
+
+    :ok = broker |> GenServer.stop
   end
 
   test "only polls surveys schedule for todays weekday" do
@@ -544,9 +546,9 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
 
     {:ok, broker} = Broker.start_link
-    broker |> send(:poll)
+    Broker.poll
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -571,6 +573,8 @@ defmodule Ask.BrokerTest do
            |> Repo.all
            |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
            |> Enum.all?( fn (b) -> b.count == 0 end)
+
+    :ok = broker |> GenServer.stop
   end
 
   test "increments quota bucket when a respondent completes the survey, with numeric condition" do
@@ -583,9 +587,9 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "Yes", :"Perfect Number" => [31, 40]}, quota: 10, count: 0)
 
     {:ok, broker} = Broker.start_link
-    broker |> send(:poll)
+    Broker.poll
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -610,6 +614,8 @@ defmodule Ask.BrokerTest do
            |> Repo.all
            |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
            |> Enum.all?( fn (b) -> b.count == 0 end)
+
+    :ok = broker |> GenServer.stop
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
