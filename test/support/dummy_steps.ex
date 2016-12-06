@@ -26,6 +26,9 @@ defmodule Ask.StepBuilder do
     %{
       "en" => %{
         "sms" => sms
+      },
+      "es" => %{
+        "sms" => "#{sms} (Spanish)"
       }
     }
   end
@@ -42,6 +45,10 @@ defmodule Ask.StepBuilder do
     %{
       "en" => %{
         "sms" => sms,
+        "ivr" => ivr
+      },
+      "es" => %{
+        "sms" => "#{sms} (Spanish)",
         "ivr" => ivr
       }
     }

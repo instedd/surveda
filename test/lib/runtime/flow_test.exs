@@ -8,7 +8,7 @@ defmodule Ask.FlowTest do
 
   test "start" do
     flow = Flow.start(@quiz, "sms")
-    assert %Flow{} = flow
+    assert %Flow{language: "en"} = flow
   end
 
   test "first step of empty quiz" do
@@ -161,4 +161,39 @@ defmodule Ask.FlowTest do
     end
   end
 
+  test "language selection step" do
+    steps = @dummy_steps
+    languageStep = %{
+      "id" => "1234-5678",
+      "type" => "language-selection",
+      "title" => "Language selection",
+      "store" => "",
+      "prompt" => %{
+        "en" => %{
+          "sms" => "1 for English, 2 for Spanish",
+          "ivr" => %{
+            "text" => "1 para ingles, 2 para español",
+            "audioSource" => "tts",
+          }
+        }
+      },
+      "languageChoices" => [nil, "en", "es"],
+    }
+    steps = [languageStep | steps]
+    quiz = build(:questionnaire, steps: steps)
+
+    flow = Flow.start(quiz, "sms")
+    assert flow.language == "en"
+
+    step = flow |> Flow.step
+    assert {:ok, flow, %{prompts: prompts}} = step
+
+    assert prompts == ["1 for English, 2 for Spanish"]
+
+    step = flow |> Flow.step(Flow.Message.reply("2"))
+    assert {:ok, flow, %{prompts: prompts}} = step
+
+    assert flow.language == "es"
+    assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"]
+  end
 end
