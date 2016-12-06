@@ -439,9 +439,6 @@ const addLanguageSelectionStep = (state, action) => {
 }
 
 const setDefaultLanguage = (state, action) => {
-  console.log(state.steps)
-  console.log(action)
-
   return {
     ...state,
     defaultLanguage: action.language
@@ -597,7 +594,7 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   // First column is the default lang, then the rest of the langs
   const headers = concat([defaultLang], nonDefaultLangs)
-  let rows = [headers.map(h => `"${h}"`)]
+  let rows = [headers.map(h => `${h}`)]
 
   // Keep a record of exported strings to avoid dups
   let exported = {}
@@ -611,9 +608,9 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
           exported[defaultSms] = true
           rows.push(headers.map(lang => {
             if (step.prompt[lang] && step.prompt[lang].sms) {
-              return `"${step.prompt[lang].sms}"`
+              return `${step.prompt[lang].sms}`
             } else {
-              return '""'
+              return ''
             }
           }))
         }
@@ -626,9 +623,9 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
           exported[defaultIvr] = true
           rows.push(headers.map(lang => {
             if (step.prompt[lang] && step.prompt[lang].ivr) {
-              return `"${step.prompt[lang].ivr.text}"`
+              return `${step.prompt[lang].ivr.text}`
             } else {
-              '""'
+              ''
             }
           }))
         }
@@ -643,9 +640,9 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
             exported[defaultResponseSms] = true
             rows.push(headers.map(lang => {
               if (choice.responses[lang]) {
-                return `"${choice.responses[lang].sms.join(', ')}"`
+                return `${choice.responses[lang].sms.join(', ')}`
               } else {
-                return '""'
+                return ''
               }
             }))
           }

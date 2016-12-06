@@ -7,6 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { csvForTranslation } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from '../questionnaires/LanguagesList'
+import csvString from 'csv-string';
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -94,10 +95,7 @@ class QuestionnaireEditor extends Component {
 
     const data = csvForTranslation(questionnaire)
     let csvContent = 'data:text/csv;charset=utf-8,'
-    data.forEach((infoArray, index) => {
-      const dataString = infoArray.join(',')
-      csvContent += index < data.length ? `${dataString}\n` : dataString
-    })
+    csvContent += csvString.stringify(data)
     const encodedUri = encodeURI(csvContent)
     window.location = encodedUri
   }

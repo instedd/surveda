@@ -845,14 +845,12 @@ describe('questionnaire reducer', () => {
       const csv = csvForTranslation(state.data)
 
       const expected = [
-        ['"en"', '"fr"', '"es"'],
-        ['"Do you smoke?"', '""', '"Fumas?"'],
-        ['"Yes, Y, 1"', '""', '"Sí, S, 1"'],
-        ['"No, N, 2"', '""', '"No, N, 2"'],
-        ['"Do you exercise?"', '""', '"Ejercitas?"']
+        ['en', 'fr', 'es'],
+        ['Do you smoke?', '', 'Fumas?'],
+        ['Yes, Y, 1', '', 'Sí, S, 1'],
+        ['No, N, 2', '', 'No, N, 2'],
+        ['Do you exercise?', '', 'Ejercitas?']
       ]
-
-      console.log(csv)
 
       expect(csv.length).toEqual(expected.length)
       expected.forEach((row, index) => expect(csv[index]).toEqual(row))
