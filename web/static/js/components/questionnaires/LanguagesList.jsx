@@ -3,6 +3,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import 'materialize-autocomplete'
 import iso6393 from 'iso-639-3'
+import AddLanguage from './AddLanguage'
 
 class LanguagesList extends Component {
 
@@ -54,6 +55,20 @@ class LanguagesList extends Component {
       </li>
       )
 
+    let otherLangugagesComponent = null
+    if (otherLangugages.length != 0) {
+      otherLangugagesComponent = (
+        <div className="row">
+          <div className="col s12">
+            <p className="grey-text">Other languages:</p>
+            <ul className='other-languages-list'>
+              {otherLangugages}
+            </ul>
+          </div>
+        </div>
+        )
+    }
+
     return (
       <div className="languages">
         <div className="row">
@@ -67,13 +82,9 @@ class LanguagesList extends Component {
             </ul>
           </div>
         </div>
+        {otherLangugagesComponent}
         <div className="row">
-          <div className="col s12">
-            <p className="grey-text">Other languages:</p>
-            <ul className='other-languages-list'>
-              {otherLangugages}
-            </ul>
-          </div>
+          <AddLanguage />
         </div>
       </div>
     )
