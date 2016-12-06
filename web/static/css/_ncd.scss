@@ -300,6 +300,8 @@ footer {
 .card-error {
   @extend .red-text, .darken-1;
 }
+
+
 // ------- Survey Card  ----------
 
 .survey-card .card {
@@ -330,8 +332,8 @@ i.survey-status {
   margin-right: 10px;
 }
 
-// ------- Left Wizard ----------
 
+// ------- Left Wizard ----------
 
 .collection.wizard {
   @extend .z-depth-1;
@@ -623,6 +625,21 @@ i.survey-status {
     right: 5px;
     top: 0px;
     width: 74%;
+  }
+}
+
+.add-language {
+  @extend .grey-text;
+  font-size: 17px;
+  display: inline-block;
+  margin-left: 10px;
+  cursor: pointer;
+  span {
+    vertical-align: middle;
+  }
+  i {
+    font-size: 28px;
+    vertical-align: middle;
   }
 }
 

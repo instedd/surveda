@@ -18,7 +18,7 @@ class SurveyShow extends Component {
     survey: React.PropTypes.object,
     questionnaire: React.PropTypes.object,
     respondentsStats: React.PropTypes.object,
-    respondentsQuotasStats: React.PropTypes.object,
+    respondentsQuotasStats: React.PropTypes.array,
     completedByDate: React.PropTypes.array,
     target: React.PropTypes.number,
     totalRespondents: React.PropTypes.number
