@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.Flow do
-  defstruct current_step: nil, questionnaire: nil, mode: nil
+  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil
   alias Ask.{Repo, Questionnaire}
   alias __MODULE__
 
@@ -8,7 +8,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   def start(quiz, mode) do
-    %Flow{questionnaire: quiz, mode: mode}
+    %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language}
   end
 
   def step(flow, reply \\ :answer) do
@@ -22,12 +22,12 @@ defmodule Ask.Runtime.Flow do
   end
 
   def dump(flow) do
-    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode}
+    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language}
   end
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"]}
+    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"]}
   end
 
   defp is_numeric(str) do
@@ -40,10 +40,22 @@ defmodule Ask.Runtime.Flow do
 
   defp next_step_by_skip_logic(flow, step, reply_value) do
     skip_logic =
-      step
-      |> Map.get("choices")
-      |> Enum.find(fn choice -> choice["value"] == reply_value end)
-      |> Map.get("skip_logic")
+      case step["type"] do
+        "numeric" ->
+          value = String.to_integer(reply_value)
+          step["ranges"]
+          |> Enum.find_value(nil, fn (range) ->
+            if (range["from"] == nil || range["from"] <= value) && (range["to"]
+              == nil || range["to"] >= value), do: range["skip_logic"], else: false
+          end)
+        "multiple-choice" ->
+          step
+          |> Map.get("choices")
+          |> Enum.find(fn choice -> choice["value"] == reply_value end)
+          |> Map.get("skip_logic")
+        "language-selection" ->
+          nil
+      end
 
     case skip_logic do
       nil ->
@@ -66,7 +78,7 @@ defmodule Ask.Runtime.Flow do
   defp advance_current_step(flow, step, reply_value) do
     next_step =
       cond do
-        step["type"] == "numeric" || !reply_value ->
+        !reply_value ->
           flow.current_step + 1
         :else ->
           next_step_by_skip_logic(flow, step, reply_value)
@@ -97,12 +109,24 @@ defmodule Ask.Runtime.Flow do
                     "multiple-choice" ->
                       choice = step["choices"]
                       |> Enum.find(fn choice ->
-                        choice["responses"]["en"][flow.mode] |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+                        fetch(flow, choice, "responses") |> Enum.any?(fn r -> (r |> clean_string) == reply end)
                       end)
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
                       if (is_numeric(reply)), do: reply, else: nil
+                    "language-selection" ->
+                      choices = step["languageChoices"]
+                      {num, ""} = Integer.parse(reply)
+                      (choices |> Enum.at(num)) || (choices |> Enum.at(1))
                   end
+
+    # Select language to use in next questions
+    flow =
+      if step["type"] == "language-selection" do
+        %Flow{flow | language: reply_value}
+      else
+        flow
+      end
 
     flow = flow |> advance_current_step(step, reply_value)
 
@@ -120,12 +144,25 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [step["prompt"]["en"][flow.mode]]}}
+        {:ok, flow, %{state | prompts: [fetch(flow, step, "prompt")]}}
     end
   end
 
   defp clean_string(string) do
     string |> String.trim |> String.downcase
+  end
+
+  defp fetch(flow, step, key) do
+    # If a key is missing in a language, try with the default one as a replacement
+    fetch(flow, step, key, flow.language) ||
+      fetch(flow, step, key, flow.questionnaire.default_language)
+  end
+
+  defp fetch(flow, step, key, language) do
+    step
+    |> Map.get(key, %{})
+    |> Map.get(language, %{})
+    |> Map.get(flow.mode)
   end
 
 end

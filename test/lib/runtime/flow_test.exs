@@ -8,7 +8,7 @@ defmodule Ask.FlowTest do
 
   test "start" do
     flow = Flow.start(@quiz, "sms")
-    assert %Flow{} = flow
+    assert %Flow{language: "en"} = flow
   end
 
   test "first step of empty quiz" do
@@ -105,7 +105,30 @@ defmodule Ask.FlowTest do
   test "when skip_logic is a valid id jumps to the specified id" do
     {:ok, flow, _} = init_quiz_and_send_response("S")
 
-    assert flow.current_step == 2
+    assert flow.current_step == 3
+  end
+
+  describe "numeric steps" do
+    test "when value is in a middle range it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("50"))
+
+      assert {:end, _} = result
+    end
+
+    test "when value is in the first range and it has no min value it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("-10"))
+
+      assert {:end, _} = result
+    end
+
+    test "when value is in the last range and it has no max value it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("999"))
+
+      assert {:end, _} = result
+    end
   end
 
   describe "when skip_logic is an invalid id" do
@@ -127,4 +150,50 @@ defmodule Ask.FlowTest do
 
   end
 
+  describe "multiple choice" do
+    test "continues with next question when the reply isn't between the choices"
+      do
+      {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
+      result = flow |> Flow.step(Flow.Message.reply("INVALID CHOICE"))
+
+      assert {:ok, _, flow_reply} = result
+      assert Enum.at(flow_reply.prompts, 0) == "Do you exercise? Reply 1 for YES, 2 for NO"
+    end
+  end
+
+  test "language selection step" do
+    steps = @dummy_steps
+    languageStep = %{
+      "id" => "1234-5678",
+      "type" => "language-selection",
+      "title" => "Language selection",
+      "store" => "",
+      "prompt" => %{
+        "en" => %{
+          "sms" => "1 for English, 2 for Spanish",
+          "ivr" => %{
+            "text" => "1 para ingles, 2 para español",
+            "audioSource" => "tts",
+          }
+        }
+      },
+      "languageChoices" => [nil, "en", "es"],
+    }
+    steps = [languageStep | steps]
+    quiz = build(:questionnaire, steps: steps)
+
+    flow = Flow.start(quiz, "sms")
+    assert flow.language == "en"
+
+    step = flow |> Flow.step
+    assert {:ok, flow, %{prompts: prompts}} = step
+
+    assert prompts == ["1 for English, 2 for Spanish"]
+
+    step = flow |> Flow.step(Flow.Message.reply("2"))
+    assert {:ok, flow, %{prompts: prompts}} = step
+
+    assert flow.language == "es"
+    assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"]
+  end
 end

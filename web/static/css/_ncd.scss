@@ -300,6 +300,8 @@ footer {
 .card-error {
   @extend .red-text, .darken-1;
 }
+
+
 // ------- Survey Card  ----------
 
 .survey-card .card {
@@ -330,8 +332,8 @@ i.survey-status {
   margin-right: 10px;
 }
 
-// ------- Left Wizard ----------
 
+// ------- Left Wizard ----------
 
 .collection.wizard {
   @extend .z-depth-1;
@@ -626,6 +628,21 @@ i.survey-status {
   }
 }
 
+.add-language {
+  @extend .grey-text;
+  font-size: 17px;
+  display: inline-block;
+  margin-left: 10px;
+  cursor: pointer;
+  span {
+    vertical-align: middle;
+  }
+  i {
+    font-size: 28px;
+    vertical-align: middle;
+  }
+}
+
 // ------- Forms --------------
 
 .dropfile {
@@ -845,6 +862,27 @@ i.survey-status {
 
 .no-padd {
   padding: 0;
+}
+
+.empty-projects {
+  @extend .grey-text;
+  text-align: center;
+  width: 350px;
+  margin: 0 auto;
+
+  .icons {
+    border-top: 1px solid color('grey', 'lighten-2');
+    padding-top: 3rem;
+    margin-top: 3rem;
+    i {
+      font-size: 46px;
+      margin: 0 .9rem;
+    }
+  }
+  p {
+    font-size: 16px;
+    line-height: 2;
+  }
 }
 
 .empty_page {

@@ -6,7 +6,7 @@ export const EmptyPage = ({ icon, title, linkPath, onClick, children }) => {
   if (linkPath) {
     link = <Link to={linkPath}>Create one</Link>
   } else if (onClick) {
-    link = <a href='#' onClick={onClick}>Create one</a>
+    link = <a href='#' className='green-text' onClick={onClick}><h5>Create one</h5></a>
   } else {
     link = children
   }

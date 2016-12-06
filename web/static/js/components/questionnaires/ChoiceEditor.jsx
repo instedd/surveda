@@ -14,6 +14,7 @@ type Props = {
   onChoiceChange: Function,
   choice: Choice,
   skipOptions: SkipOption[],
+  questionnaire: Questionnaire,
   sms: boolean,
   ivr: boolean,
   errors: any,
@@ -79,10 +80,12 @@ class ChoiceEditor extends Component {
 
   stateFromProps(props: Props) {
     const { choice } = props
+    const lang = props.questionnaire.defaultLanguage
+
     return {
       response: choice.value,
-      sms: choice.responses['en'].sms.join(', '),
-      ivr: choice.responses['en'].ivr.join(', '),
+      sms: ((choice.responses[lang] || {}).sms || []).join(', '),
+      ivr: ((choice.responses[lang] || {}).ivr || []).join(', '),
       skipLogic: choice.skipLogic
     }
   }
@@ -236,6 +239,7 @@ class ChoiceEditor extends Component {
 ChoiceEditor.propTypes = {
   onDelete: PropTypes.func,
   onChoiceChange: PropTypes.func,
+  questionnaire: PropTypes.object,
   choice: PropTypes.object,
   skipOptions: PropTypes.array,
   sms: PropTypes.bool,

@@ -128,10 +128,11 @@ class StepEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
+    const lang = props.questionnaire.defaultLanguage
 
     let audioId = null
-    if (step.prompt['en'] && step.prompt['en'].ivr) {
-      let ivrPrompt: AudioPrompt = step.prompt['en'].ivr
+    if (step.prompt[lang] && step.prompt[lang].ivr) {
+      let ivrPrompt: AudioPrompt = step.prompt[lang].ivr
       if (ivrPrompt.audioSource === 'upload') {
         audioId = ivrPrompt.audioId
       }
@@ -140,12 +141,12 @@ class StepEditor extends Component {
     return {
       stepTitle: step.title,
       stepType: step.type,
-      stepPromptSms: step.prompt['en'].sms || '',
-      stepPromptIvr: (step.prompt['en'].ivr || {}).text || '',
+      stepPromptSms: (step.prompt[lang] || {}).sms || '',
+      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || '',
       stepStore: step.store || '',
       audioId: audioId,
-      audioSource: (step.prompt['en'].ivr || {}).audioSource || 'tts',
-      audioUri: (step.prompt['en'].ivr && step.prompt['en'].ivr.audioId ? `/api/v1/audios/${step.prompt['en'].ivr.audioId}` : ''),
+      audioSource: ((step.prompt[lang] || {}).ivr || {}).audioSource || 'tts',
+      audioUri: (step.prompt[lang] && step.prompt[lang].ivr && step.prompt[lang].ivr.audioId ? `/api/v1/audios/${step.prompt[lang].ivr.audioId}` : ''),
       audioErrors: ''
     }
   }
@@ -179,9 +180,9 @@ class StepEditor extends Component {
 
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
+      editor = <StepMultipleChoiceEditor questionnaire={questionnaire} step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
     } else if (step.type == 'numeric') {
-      editor = <StepNumericEditor step={step} />
+      editor = <StepNumericEditor questionnaire={questionnaire} step={step} skip={skip} />
     } else if (step.type == 'language-selection') {
       editor = <StepLanguageSelection step={step} />
     } else {
@@ -286,9 +287,7 @@ class StepEditor extends Component {
                 </div>
                 : <i className='material-icons left'>language</i>
                 }
-                <span className={classNames({'red-text': hasErrors})}>
-                  <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
-                </span>
+                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
