@@ -8,6 +8,7 @@ import { csvForTranslation } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguageSelection from '../questionnaires/AddLanguage'
 import LanguagesList from '../questionnaires/LanguagesList'
+import QuotaCompletedMsg from '../questionnaires/QuotaCompletedMsg'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -167,6 +168,9 @@ class QuestionnaireEditor extends Component {
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
+          </div>
+          <div>
+            <QuotaCompletedMsg />
           </div>
         </div>
       </div>
