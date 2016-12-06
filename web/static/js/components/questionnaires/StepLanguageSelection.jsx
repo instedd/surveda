@@ -20,9 +20,9 @@ class StepLanguageSelection extends Component {
 
   render() {
     const { step } = this.props
-    const { choices } = step
+    const { languageChoices } = step
 
-    let selectOptions = choices.map((choice, index) =>
+    let selectOptions = languageChoices.map((choice, index) =>
       index > 0 ? <option key={index} id={index} value={index} >
         {index}
       </option>
@@ -44,7 +44,7 @@ class StepLanguageSelection extends Component {
                 </tr>
               </thead>
               <tbody>
-                { choices.map((choice, index) =>
+                { languageChoices.map((choice, index) =>
                   choice
                   ? <tr key={`${choice}${index}`}>
                     <td>

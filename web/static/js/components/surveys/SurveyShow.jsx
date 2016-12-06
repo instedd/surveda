@@ -83,7 +83,7 @@ class SurveyShow extends Component {
     const { survey, respondentsStats, respondentsQuotasStats, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
-    if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats) {
+    if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats || !respondentsStats) {
       return <p>Loading...</p>
     }
 
@@ -235,7 +235,7 @@ const mapStateToProps = (state, ownProps) => {
   const respondentsStatsRoot = state.respondentsStats[ownProps.params.surveyId]
   const respondentsQuotasStats = state.respondentsQuotasStats.data
 
-  let respondentsStats = {}
+  let respondentsStats = null
   let completedRespondentsByDate = []
   // Default values
   let target = 1

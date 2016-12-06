@@ -3,6 +3,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import 'materialize-autocomplete'
 import iso6393 from 'iso-639-3'
+import AddLanguage from './AddLanguage'
 
 class LanguagesList extends Component {
 
@@ -19,16 +20,8 @@ class LanguagesList extends Component {
     return language.name
   }
 
-  removeLanguage(lang) {
-    const props = this.props
-    return (e) => {
-      const { dispatch } = props
-      dispatch(actions.removeLanguage(lang))
-    }
-  }
-
   render() {
-    const { questionnaire } = this.props
+    const { questionnaire, onRemoveLanguage } = this.props
 
     if (!questionnaire) {
       return <div>Loading...</div>
@@ -39,7 +32,7 @@ class LanguagesList extends Component {
     otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
     otherLangugages = otherLangugages.map((lang) =>
       <li key={lang[0]}>
-        <span className='remove-language' onClick={this.removeLanguage(lang[0])}>
+        <span className='remove-language' onClick={() => onRemoveLanguage(lang[0])}>
           <i className='material-icons'>highlight_off</i>
         </span>
         <span className='language-name' title={this.translateLangCode(lang[0])}>
@@ -54,6 +47,20 @@ class LanguagesList extends Component {
       </li>
       )
 
+    let otherLangugagesComponent = null
+    if (otherLangugages.length != 0) {
+      otherLangugagesComponent = (
+        <div className="row">
+          <div className="col s12">
+            <p className="grey-text">Other languages:</p>
+            <ul className='other-languages-list'>
+              {otherLangugages}
+            </ul>
+          </div>
+        </div>
+        )
+    }
+
     return (
       <div className="languages">
         <div className="row">
@@ -67,17 +74,17 @@ class LanguagesList extends Component {
             </ul>
           </div>
         </div>
+        {otherLangugagesComponent}
         <div className="row">
-          <div className="col s12">
-            <p className="grey-text">Other languages:</p>
-            <ul className='other-languages-list'>
-              {otherLangugages}
-            </ul>
-          </div>
+          <AddLanguage />
         </div>
       </div>
     )
   }
+}
+
+LanguagesList.propTypes = {
+  onRemoveLanguage: PropTypes.func
 }
 
 const mapStateToProps = (state, ownProps) => ({

@@ -25,6 +25,7 @@ export const SET_SMS_QUOTA_COMPLETED_MSG = 'QUESTIONNAIRE_SMS_SET_QUOTA_COMPLETE
 export const SET_IVR_QUOTA_COMPLETED_MSG = 'QUESTIONNAIRE_IVR_SET_QUOTA_COMPLETED_MSG'
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
+export const UPLOAD_CSV_FOR_TRANSLATION = 'UPLOAD_CSV_FOR_TRANSLATION'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -202,4 +203,9 @@ export const changeRangeSkipLogic = (stepId, skipLogic, rangeIndex) => ({
   stepId: stepId,
   rangeIndex: rangeIndex,
   skipLogic: skipLogic
+})
+
+export const uploadCsvForTranslation = (csv) => ({
+  type: UPLOAD_CSV_FOR_TRANSLATION,
+  csv
 })

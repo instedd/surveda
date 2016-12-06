@@ -184,6 +184,7 @@ StepNumericEditor.propTypes = {
   maxValue: PropTypes.number,
   ranges: PropTypes.array,
   rageDelimiters: PropTypes.string,
+  questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
   skip: PropTypes.array.isRequired
 }

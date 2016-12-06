@@ -21,8 +21,12 @@ class AddLanguage extends Component {
     }
   }
 
-  endEdit() {
-    this.setState({editing: false})
+  endEdit(e) {
+    const context = this
+    // todo: Avoid using timeout
+    setTimeout(
+      () => context.setState({editing: false}), 100
+    )
   }
 
   languageAdded(context) {
@@ -37,14 +41,14 @@ class AddLanguage extends Component {
   render() {
     if (!this.state.editing) {
       return (
-        <a onClick={this.handleClick}>
-          <span>Add Language</span>
+        <a onClick={this.handleClick} href="#">
+          <span>+ Add Language</span>
         </a>
       )
     } else {
       return (
         <div className='input-field language-selection'>
-          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' />
+          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' placeholder='Start typing a language' onBlur={this.endEdit}/>
           <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' />
         </div>
       )

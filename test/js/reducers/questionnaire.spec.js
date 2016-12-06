@@ -225,7 +225,7 @@ describe('questionnaire reducer', () => {
     expect(resultStep.type).toEqual('numeric')
     expect(resultStep.title).toEqual('Do you smoke?')
     expect(resultStep.store).toEqual('Smokes')
-    expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?' })
+    expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?', ivr: { audioSource: 'tts', text: 'Do you smoke?' } })
   })
 
   it('should update step title', () => {
@@ -889,18 +889,43 @@ describe('questionnaire reducer', () => {
       const csv = csvForTranslation(state.data)
 
       const expected = [
-        ['"en"', '"fr"', '"es"'],
-        ['"Do you smoke?"', '""', '"Fumas?"'],
-        ['"Yes, Y, 1"', '""', '"Sí, S, 1"'],
-        ['"No, N, 2"', '""', '"No, N, 2"'],
-        ['"Do you exercise?"', '""', '"Ejercitas?"']
+        ['en', 'fr', 'es'],
+        ['Do you smoke?', '', 'Fumas?'],
+        ['Yes, Y, 1', '', 'Sí, S, 1'],
+        ['No, N, 2', '', 'No, N, 2'],
+        ['Do you exercise?', '', 'Ejercitas?']
       ]
-
-      console.log(csv)
 
       expect(csv.length).toEqual(expected.length)
       expected.forEach((row, index) => expect(csv[index]).toEqual(row))
     })
+  })
+
+  it('should upload csv', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('es'),
+      actions.uploadCsvForTranslation(
+        [
+          ['en', 'es'],
+          ['Do you smoke?', 'Cxu vi fumas?'],
+          ['Do you exercise?', 'Cxu vi ekzercas?'],
+          ['Yes, Y, 1', 'Jes, J, 1'],
+        ]
+      )
+    ])
+
+    expect(resultState.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
+    expect(resultState.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
+
+    expect(resultState.data.steps[1].choices[0].responses.es.sms).toEqual(['Jes', 'J', '1'])
+    expect(resultState.data.steps[1].choices[1].responses.es.sms).toEqual(['No', 'N', '2']) // original preserved
+
+    expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
   })
 })
 
@@ -967,7 +992,11 @@ const questionnaire = deepFreeze({
       ],
       prompt: {
         'en': {
-          sms: 'Do you smoke?'
+          sms: 'Do you smoke?',
+          ivr: {
+            text: 'Do you smoke?',
+            audioSource: 'tts',
+          }
         },
         'es': {
           sms: 'Fumas?'
