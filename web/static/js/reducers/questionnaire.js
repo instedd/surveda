@@ -93,9 +93,6 @@ const deleteChoice = (state, action) => {
   }))
 }
 
-// TODO: now we're assuming that the choice content being changed is
-// in the default language. Revisit this if we ever allow users to
-// directly edit content in all languages directly from the UI.
 const changeChoice = (state, action, quiz: Questionnaire) => {
   let smsValues = action.choiceChange.smsValues
   let ivrValues = action.choiceChange.ivrValues
@@ -103,6 +100,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
     [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response, quiz)
   }
   let ivrArrayValues = splitValues(ivrValues)
+  const lang = quiz.defaultLanguage
   return changeStep(state, action.stepId, (step) => ({
     ...step,
     choices: [
@@ -112,7 +110,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
         value: action.choiceChange.response,
         responses: {
           ...step.choices[action.choiceChange.index].responses,
-          'en': {
+          [lang]: {
             ...step.choices[action.choiceChange.index].responses[quiz.defaultLanguage],
             sms: splitValues(smsValues),
             ivr: ivrArrayValues
