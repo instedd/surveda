@@ -3,6 +3,7 @@ import fetchReducer from './fetch'
 import drop from 'lodash/drop'
 import flatten from 'lodash/flatten'
 import map from 'lodash/map'
+import split from 'lodash/split'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
 
@@ -79,7 +80,7 @@ const setQuotaVars = (state, action) => {
   return {
     ...state,
     quotas: {
-      vars: action.vars,
+      vars: map(action.vars, (storeVar) => storeVar.var),
       buckets: bucketsFor(action.vars, action.options)
     }
   }
@@ -98,17 +99,33 @@ const buildBuckets = (storeVars, options) => {
     return [{}]
   }
 
-  return flatten(map(options[storeVars[0]], (value) => {
+  const firstVar = options[storeVars[0].var]
+
+  let values = firstVar.values
+  if (firstVar.type == 'numeric') {
+    values = intervalsFrom(storeVars[0].steps)
+  }
+
+  return flatten(map(values, (value) => {
     return map(buildBuckets(drop(storeVars), options), (bucket) => {
       return ({
         ...bucket,
         condition: {
           ...bucket.condition,
-          [storeVars[0]]: value
+          [storeVars[0].var]: value
         }
       })
     })
   }))
+}
+
+const intervalsFrom = (valueString) => {
+  const values = map(split(valueString, ','), (value) => value.trim())
+  if (values.length <= 1) {
+    return []
+  }
+
+  return [[values[0], (values[1] - 1).toString()], ...intervalsFrom(drop(values))]
 }
 
 const quotaChange = (state, action) => {
