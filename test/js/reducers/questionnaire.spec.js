@@ -816,6 +816,50 @@ describe('questionnaire reducer', () => {
       Exercises: ['Yes', 'No']
     })
   })
+
+  it('should set quota_completed_msg for the first time', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const smsText = 'Thanks for participating in the poll'
+    const ivrText = 'Thank you very much'
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.setSmsQuotaCompletedMsg(smsText),
+      actions.setIvrQuotaCompletedMsg(ivrText)
+    ])
+
+    expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual(smsText)
+    expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual(ivrText)
+  })
+
+  it('should not modify other mode quota message', () => {
+    const quotaMessage = {
+      'en': {
+        'sms': 'thanks for answering sms',
+        'ivr': 'thanks for answering phone call'
+      }
+    }
+
+    let q = Object.assign({}, questionnaire)
+    q.quotaCompletedMsg = quotaMessage
+
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(q)
+    ])
+
+    const newIvrText = 'Thank you very much'
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.setIvrQuotaCompletedMsg(newIvrText)
+    ])
+
+    expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual('thanks for answering sms')
+    expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual(newIvrText)
+  })
 })
 
 const questionnaire = deepFreeze({
@@ -916,5 +960,6 @@ const questionnaire = deepFreeze({
   ],
   id: 1,
   defaultLanguage: 'en',
-  languages: ['en']
+  languages: ['en'],
+  quotaCompletedMsg: null
 })

@@ -15,6 +15,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
+    case actions.SET_SMS_QUOTA_COMPLETED_MSG: return setSmsQuotaCompletedMsg(state, action)
+    case actions.SET_IVR_QUOTA_COMPLETED_MSG: return setIvrQuotaCompletedMsg(state, action)
     default: return steps(state, action)
   }
 }
@@ -316,6 +318,32 @@ const reorderLanguages = (state, action) => {
       choices: choices
     }))
   }
+}
+
+const setQuotaCompletedMsg = (state, action, mode) => {
+  let quotaCompletedMsg
+  let defaultLanguageMsg
+  if (state.quotaCompletedMsg) {
+    quotaCompletedMsg = Object.assign({}, state.quotaCompletedMsg)
+    defaultLanguageMsg = quotaCompletedMsg[state.defaultLanguage]
+  } else {
+    quotaCompletedMsg = {}
+    defaultLanguageMsg = {}
+    quotaCompletedMsg[state.defaultLanguage] = defaultLanguageMsg
+  }
+  defaultLanguageMsg[mode] = action.msg
+  return ({
+    ...state,
+    quotaCompletedMsg: quotaCompletedMsg
+  })
+}
+
+const setIvrQuotaCompletedMsg = (state, action) => {
+  return setQuotaCompletedMsg(state, action, 'ivr')
+}
+
+const setSmsQuotaCompletedMsg = (state, action) => {
+  return setQuotaCompletedMsg(state, action, 'sms')
 }
 
 const addOptionToLanguageSelectionStep = (state, language) => {

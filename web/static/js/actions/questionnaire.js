@@ -21,6 +21,8 @@ export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
 export const REMOVE_LANGUAGE = 'QUESTIONNAIRE_REMOVE_LANGUAGE'
 export const REORDER_LANGUAGES = 'QUESTIONNAIRE_REORDER_LANGUAGES'
 export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
+export const SET_SMS_QUOTA_COMPLETED_MSG = 'QUESTIONNAIRE_SMS_SET_QUOTA_COMPLETED_MSG'
+export const SET_IVR_QUOTA_COMPLETED_MSG = 'QUESTIONNAIRE_IVR_SET_QUOTA_COMPLETED_MSG'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -158,6 +160,16 @@ export const reorderLanguages = (language, index) => ({
   type: REORDER_LANGUAGES,
   language,
   index
+})
+
+export const setSmsQuotaCompletedMsg = (msg) => ({
+  type: SET_SMS_QUOTA_COMPLETED_MSG,
+  msg
+})
+
+export const setIvrQuotaCompletedMsg = (msg) => ({
+  type: SET_IVR_QUOTA_COMPLETED_MSG,
+  msg
 })
 
 export const save = () => (dispatch, getState) => {
