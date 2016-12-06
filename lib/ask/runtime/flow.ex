@@ -115,7 +115,7 @@ defmodule Ask.Runtime.Flow do
                     "numeric" ->
                       if (is_numeric(reply)), do: reply, else: nil
                     "language-selection" ->
-                      choices = step["languageChoices"]
+                      choices = step["language_choices"]
                       {num, ""} = Integer.parse(reply)
                       (choices |> Enum.at(num)) || (choices |> Enum.at(1))
                   end

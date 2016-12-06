@@ -177,7 +177,7 @@ defmodule Ask.FlowTest do
           }
         }
       },
-      "languageChoices" => [nil, "en", "es"],
+      "language_choices" => [nil, "en", "es"],
     }
     steps = [languageStep | steps]
     quiz = build(:questionnaire, steps: steps)
