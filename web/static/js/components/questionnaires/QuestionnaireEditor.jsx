@@ -7,7 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { csvForTranslation } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from '../questionnaires/LanguagesList'
-import csvString from 'csv-string';
+import csvString from 'csv-string'
 
 class QuestionnaireEditor extends Component {
   constructor(props) {
@@ -103,14 +103,14 @@ class QuestionnaireEditor extends Component {
   openUploadCsvDialog(e) {
     e.preventDefault()
 
-    $("#questionnaire_file_upload").trigger('click')
+    $('#questionnaire_file_upload').trigger('click')
   }
 
   uploadCsv(e) {
     e.preventDefault()
 
     let files = e.target.files
-    if (files.length < 1) return;
+    if (files.length < 1) return
 
     let file = files[0]
     let reader = new FileReader()
@@ -120,7 +120,7 @@ class QuestionnaireEditor extends Component {
 
       // Do some validations before uploading the CSV
       if (csv.length == 0) {
-        alert("Error: CSV is empty")
+        alert('Error: CSV is empty')
         return
       }
 
@@ -179,7 +179,7 @@ class QuestionnaireEditor extends Component {
           </div>
           <div className='row'>
             <div className='col s12'>
-              <input id="questionnaire_file_upload" type="file" accept=".csv" style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
+              <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
               <i className='material-icons v-middle left'>file_upload</i>
               <a href='#' onClick={e => this.openUploadCsvDialog(e)}>Upload contents as CSV</a>
             </div>
