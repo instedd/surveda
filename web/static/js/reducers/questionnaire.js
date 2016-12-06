@@ -777,7 +777,6 @@ const translatePrompt = (prompt, defaultLanguage, lookup) => {
       } else {
         newPrompt[lang] = {}
       }
-      console.log(text)
       newPrompt[lang].sms = text
     }
   }
@@ -792,7 +791,6 @@ const translatePrompt = (prompt, defaultLanguage, lookup) => {
         } else {
           newPrompt[lang] = {}
         }
-        console.log(text)
         newPrompt[lang].ivr = {text, audioSource: 'tts'}
       }
     }
@@ -825,7 +823,6 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
       } else {
         newChoice.responses[lang] = {}
       }
-      console.log(text)
       newChoice.responses[lang].sms = text.split(",").map(s => s.trim())
     }
   }
