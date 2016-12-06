@@ -17,7 +17,8 @@ defmodule Ask.QuestionnaireView do
       project_id: questionnaire.project_id,
       steps: questionnaire.steps,
       default_language: questionnaire.default_language,
-      languages: questionnaire.languages
+      languages: questionnaire.languages,
+      quota_completed_msg: questionnaire.quota_completed_msg
     }
   end
 end
