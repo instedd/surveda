@@ -12,8 +12,8 @@ const App = ({ children, tabs, body }) => (
       <HeaderContainer tabs={tabs} logout={logout} user={config.user} />
       <main>
         {body || children}
+        <Footer />
       </main>
-      <Footer />
       <ConfirmationModal modalId='unhandledError' modalText='Please go to the home page' header='Sorry, something went wrong' confirmationText='Click to go to the home page' onConfirm={(event) => onConfirm(event)} />
     </div>
   </IntlProvider>

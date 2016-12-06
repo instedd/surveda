@@ -4,7 +4,7 @@ import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
-import reducer, { stepStoreValues } from '../../../web/static/js/reducers/questionnaire'
+import reducer, { stepStoreValues, csvForTranslation } from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -225,7 +225,6 @@ describe('questionnaire reducer', () => {
     expect(resultStep.type).toEqual('numeric')
     expect(resultStep.title).toEqual('Do you smoke?')
     expect(resultStep.store).toEqual('Smokes')
-    expect(resultStep.choices).toEqual([])
     expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?' })
   })
 
@@ -350,21 +349,17 @@ describe('questionnaire reducer', () => {
 
     const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
     expect(step.choices.length).toEqual(2)
-    expect(step.choices[1]).toEqual({
-      value: 'Maybe',
-      responses: {
-        'en': {
-          sms: [
-            'M',
-            'MB',
-            '3'
-          ],
-          ivr: [
-            'May'
-          ]
-        }
-      },
-      skipLogic: 'end'
+    expect(step.choices[1].value).toEqual('Maybe')
+    expect(step.choices[1].skipLogic).toEqual('end')
+    expect(step.choices[1].responses['en']).toEqual({
+      sms: [
+        'M',
+        'MB',
+        '3'
+      ],
+      ivr: [
+        'May'
+      ]
     })
   })
 
@@ -646,7 +641,7 @@ describe('questionnaire reducer', () => {
 
     const languageSelection = resultState.data.steps[0]
     expect(languageSelection.type).toEqual('language-selection')
-    expect(languageSelection.choices).toInclude('fr')
+    expect(languageSelection.languageChoices).toInclude('fr')
   })
 
   it('should add a new language last inside the choices of the language selection step', () => {
@@ -661,7 +656,7 @@ describe('questionnaire reducer', () => {
     ])
 
     const languageSelection = resultState.data.steps[0]
-    expect(languageSelection.choices[languageSelection.choices.length - 1]).toEqual('de')
+    expect(languageSelection.languageChoices[languageSelection.languageChoices.length - 1]).toEqual('de')
   })
 
   it('should remove a language inside the choices of the language selection step', () => {
@@ -674,15 +669,15 @@ describe('questionnaire reducer', () => {
       actions.addLanguage('fr')
     ])
     const preLanguageSelection = preState.data.steps[0]
-    expect(preLanguageSelection.choices[2]).toEqual('de')
+    expect(preLanguageSelection.languageChoices[2]).toEqual('de')
 
     const resultState = playActionsFromState(preState, reducer)([
       actions.removeLanguage('de')
     ])
 
     const languageSelection = resultState.data.steps[0]
-    expect(languageSelection.choices[2]).toEqual('es')
-    expect(languageSelection.choices[3]).toEqual('fr')
+    expect(languageSelection.languageChoices[2]).toEqual('es')
+    expect(languageSelection.languageChoices[3]).toEqual('fr')
   })
 
   it('should reorder correctly the languages inside the choices of the language selection step', () => {
@@ -700,10 +695,10 @@ describe('questionnaire reducer', () => {
     ])
 
     const languageSelection = resultState.data.steps[0]
-    expect(languageSelection.choices[1]).toEqual('es')
-    expect(languageSelection.choices[2]).toEqual('de')
-    expect(languageSelection.choices[3]).toEqual('fr')
-    expect(languageSelection.choices[4]).toEqual('en')
+    expect(languageSelection.languageChoices[1]).toEqual('es')
+    expect(languageSelection.languageChoices[2]).toEqual('de')
+    expect(languageSelection.languageChoices[3]).toEqual('fr')
+    expect(languageSelection.languageChoices[4]).toEqual('en')
   })
 
   it('should reorder correctly the languages inside the choices of the language selection step 2', () => {
@@ -721,10 +716,10 @@ describe('questionnaire reducer', () => {
     ])
 
     const languageSelection = resultState.data.steps[0]
-    expect(languageSelection.choices[1]).toEqual('fr')
-    expect(languageSelection.choices[2]).toEqual('en')
-    expect(languageSelection.choices[3]).toEqual('es')
-    expect(languageSelection.choices[4]).toEqual('de')
+    expect(languageSelection.languageChoices[1]).toEqual('fr')
+    expect(languageSelection.languageChoices[2]).toEqual('en')
+    expect(languageSelection.languageChoices[3]).toEqual('es')
+    expect(languageSelection.languageChoices[4]).toEqual('de')
   })
 
   it('should add language', () => {
@@ -777,6 +772,26 @@ describe('questionnaire reducer', () => {
     expect(languages).toNotInclude('fr')
   })
 
+  it('should remove language and remove language selection step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    let oldStepsLength = preState.data.steps.length
+
+    const state = playActionsFromState(preState, reducer)([
+      actions.addLanguage('de')
+    ])
+
+    const resultState = playActionsFromState(state, reducer)([
+      actions.removeLanguage('de')
+    ])
+
+    let steps = resultState.data.steps
+    expect(steps.length).toEqual(oldStepsLength)
+  })
+
   it('should set default language', () => {
     const preState = playActions([
       actions.fetch(1, 1),
@@ -784,6 +799,7 @@ describe('questionnaire reducer', () => {
     ])
 
     const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('fr'),
       actions.setDefaultLanguage('fr')
     ])
 
@@ -860,6 +876,32 @@ describe('questionnaire reducer', () => {
     expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual('thanks for answering sms')
     expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual(newIvrText)
   })
+
+  describe('csv for translation', () => {
+    it('should work', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('fr'),
+        actions.addLanguage('es')
+      ])
+
+      const csv = csvForTranslation(state.data)
+
+      const expected = [
+        ['"en"', '"fr"', '"es"'],
+        ['"Do you smoke?"', '""', '"Fumas?"'],
+        ['"Yes, Y, 1"', '""', '"Sí, S, 1"'],
+        ['"No, N, 2"', '""', '"No, N, 2"'],
+        ['"Do you exercise?"', '""', '"Ejercitas?"']
+      ]
+
+      console.log(csv)
+
+      expect(csv.length).toEqual(expected.length)
+      expected.forEach((row, index) => expect(csv[index]).toEqual(row))
+    })
+  })
 })
 
 const questionnaire = deepFreeze({
@@ -882,6 +924,16 @@ const questionnaire = deepFreeze({
               ivr: [
                 '1'
               ]
+            },
+            'es': {
+              sms: [
+                'Sí',
+                'S',
+                '1'
+              ],
+              ivr: [
+                '1'
+              ]
             }
           },
           skipLogic: null
@@ -898,6 +950,16 @@ const questionnaire = deepFreeze({
               ivr: [
                 '2'
               ]
+            },
+            'es': {
+              sms: [
+                'No',
+                'N',
+                '2'
+              ],
+              ivr: [
+                '2'
+              ]
             }
           },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
@@ -906,6 +968,9 @@ const questionnaire = deepFreeze({
       prompt: {
         'en': {
           sms: 'Do you smoke?'
+        },
+        'es': {
+          sms: 'Fumas?'
         }
       }
     },
@@ -949,6 +1014,9 @@ const questionnaire = deepFreeze({
       prompt: {
         'en': {
           sms: 'Do you exercise?'
+        },
+        'es': {
+          sms: 'Ejercitas?'
         }
       }
     }

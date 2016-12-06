@@ -105,7 +105,30 @@ defmodule Ask.FlowTest do
   test "when skip_logic is a valid id jumps to the specified id" do
     {:ok, flow, _} = init_quiz_and_send_response("S")
 
-    assert flow.current_step == 2
+    assert flow.current_step == 3
+  end
+
+  describe "numeric steps" do
+    test "when value is in a middle range it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("50"))
+
+      assert {:end, _} = result
+    end
+
+    test "when value is in the first range and it has no min value it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("-10"))
+
+      assert {:end, _} = result
+    end
+
+    test "when value is in the last range and it has no max value it finds it" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("999"))
+
+      assert {:end, _} = result
+    end
   end
 
   describe "when skip_logic is an invalid id" do
@@ -125,6 +148,17 @@ defmodule Ask.FlowTest do
       end
     end
 
+  end
+
+  describe "multiple choice" do
+    test "continues with next question when the reply isn't between the choices"
+      do
+      {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
+      result = flow |> Flow.step(Flow.Message.reply("INVALID CHOICE"))
+
+      assert {:ok, _, flow_reply} = result
+      assert Enum.at(flow_reply.prompts, 0) == "Do you exercise? Reply 1 for YES, 2 for NO"
+    end
   end
 
 end

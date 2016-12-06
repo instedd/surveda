@@ -10,14 +10,16 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def numeric_step(id: id, title: title, prompt: prompt, store: store) do
-    %{
+  def numeric_step(id: id, title: title, prompt: prompt, store: store,
+    skip_logic: skip_logic) do
+    base = %{
       "id" => id,
       "type" => "numeric",
       "title" => title,
       "prompt" => prompt,
       "store" => store,
     }
+    Map.merge(base, skip_logic)
   end
 
   def prompt(sms: sms) do
@@ -87,6 +89,36 @@ defmodule Ask.StepBuilder do
       }
     }
   end
+
+  def default_numeric_skip_logic() do
+    %{
+      "min_value" => nil,
+      "max_value" => nil,
+      "ranges_delimiters" => "",
+      "ranges" => [%{"from" => nil, "to" => nil, "skip_logic" => nil}]
+    }
+  end
+
+  def numeric_skip_logic(min_value: min_value, max_value: max_value, ranges_delimiters:
+    ranges_delimiters, ranges: ranges) do
+    # froms =
+    #   ranges_delimiters
+    #   |> String.split(",")
+    #   |> Enum.map(&String.to_integer/1)
+    # tos =
+    #   froms
+    #   |> Enum.drop(1)
+    #   |> Enum.map(fn(v) -> v-1 end)
+    #   |> Enum.concat([max_value])
+    # ranges = Enum.zip(froms, tos)
+    %{
+      "min_value" => min_value,
+      "max_value" => max_value,
+      "ranges_delimiters" => ranges_delimiters,
+      "ranges" => ranges
+    }
+  end
+
 end
 
 defmodule Ask.DummySteps do
@@ -124,13 +156,15 @@ defmodule Ask.DummySteps do
           id: Ecto.UUID.generate,
           title: "Which is the second perfect number?",
           prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
-          store: "Perfect Number"
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic()
         ),
         numeric_step(
           id: Ecto.UUID.generate,
           title: "What's the number of this question?",
           prompt: prompt(sms: sms_prompt("What's the number of this question??")),
-          store: "Question"
+          store: "Question",
+          skip_logic: default_numeric_skip_logic()
         )
       ]
 
@@ -146,7 +180,7 @@ defmodule Ask.DummySteps do
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end"),
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: nil),
             choice(value: "Maybe", responses: responses(sms: ["Maybe", "M", "3"], ivr: ["3"])),
-            choice(value: "Sometimes", responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]), skip_logic: "ccc"),
+            choice(value: "Sometimes", responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]), skip_logic: "ddd"),
             choice(value: "ALWAYS", responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]), skip_logic: "undefined_id")
           ]
         ),
@@ -173,7 +207,47 @@ defmodule Ask.DummySteps do
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
-        )
+        ),
+        numeric_step(
+          id: "ddd",
+          title:
+          "What is the probability that a number has more prime factors than the sum of its digits?",
+          prompt: prompt(
+            sms: sms_prompt("What is the probability that a number has more prime factors than the sum of its digits?")
+          ),
+          store: "Probability",
+          skip_logic: numeric_skip_logic(min_value: 0, max_value: 100,
+            ranges_delimiters: "25,75", ranges: [
+                %{
+                  "from" => nil,
+                  "to" => 24,
+                  "skip_logic" => "end"
+                },
+                %{
+                  "from" => 25,
+                  "to" => 74,
+                  "skip_logic" => "end"
+                },
+                %{
+                  "from" => 75,
+                  "to" => nil,
+                  "skip_logic" => "end"
+                }
+              ]
+            )
+          ),
+          multiple_choice_step(
+            id: "eee",
+            title: "Is this the last question?",
+            prompt: prompt(
+              sms: sms_prompt("Is this the last question?")
+            ),
+            store: "Last",
+            choices: [
+              choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+              choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+            ]
+          )
       ]
     end
   end

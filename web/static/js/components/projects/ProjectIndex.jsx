@@ -87,7 +87,22 @@ class ProjectIndex extends Component {
       <div>
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0)
-          ? <EmptyPage icon='assignment_turned_in' title='You have no projects yet' linkPath={routes.newProject} />
+          ? <div className='empty-projects'>
+              <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
+              <div className='organize'>
+                <div className='icons'>
+                  <i className='material-icons'>assignment_turned_in</i>
+                  <i className='material-icons'>assignment</i>
+                  <i className='material-icons'>perm_phone_msg</i>
+                  <i className='material-icons'>folder_shared</i>
+                </div>
+                <p>
+                  <b>Organize your work</b><br/>
+                  Manage survey, questionnaires, contents and collaborators under the same context.
+                </p>
+
+              </div>
+            </div>
           : <CardTable title={title} footer={footer} highlight>
               <colgroup>
                 <col width="60%" />

@@ -4,6 +4,7 @@ import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
+import { csvForTranslation } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguageSelection from '../questionnaires/AddLanguage'
 import LanguagesList from '../questionnaires/LanguagesList'
@@ -87,6 +88,21 @@ class QuestionnaireEditor extends Component {
     }
   }
 
+  downloadCsv(e) {
+    e.preventDefault()
+
+    const { questionnaire } = this.props
+
+    const data = csvForTranslation(questionnaire)
+    let csvContent = 'data:text/csv;charset=utf-8,'
+    data.forEach((infoArray, index) => {
+      const dataString = infoArray.join(',')
+      csvContent += index < data.length ? `${dataString}\n` : dataString
+    })
+    const encodedUri = encodeURI(csvContent)
+    window.location = encodedUri
+  }
+
   render() {
     const { questionnaire } = this.props
 
@@ -100,11 +116,15 @@ class QuestionnaireEditor extends Component {
     return (
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
-          <LanguagesList />
-          <div className='row'>
-            <div className='col s12'>
-              <LanguageSelection />
-            </div>
+          <div>
+            <LanguagesList />
+          </div>
+          <div>
+            <LanguageSelection />
+          </div>
+          <div className='col s12'>
+            <i className='material-icons v-middle left'>file_download</i>
+            <a href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>Download contents as CSV</a>
           </div>
           <div className='row'>
             <div className='col s12'>
