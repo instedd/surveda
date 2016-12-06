@@ -776,6 +776,26 @@ describe('questionnaire reducer', () => {
     expect(languages).toNotInclude('fr')
   })
 
+  it('should remove language and remove language selection step', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    let oldStepsLength = preState.data.steps.length;
+
+    const state = playActionsFromState(preState, reducer)([
+      actions.addLanguage('de'),
+    ])
+
+    const resultState = playActionsFromState(state, reducer)([
+      actions.removeLanguage('de')
+    ])
+
+    let steps = resultState.data.steps
+    expect(steps.length).toEqual(oldStepsLength)
+  })
+
   it('should set default language', () => {
     const preState = playActions([
       actions.fetch(1, 1),

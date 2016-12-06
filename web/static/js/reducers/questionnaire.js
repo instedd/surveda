@@ -324,9 +324,17 @@ const removeLanguage = (state, action) => {
   const indexToDelete = state.languages.indexOf(action.language)
   if (indexToDelete != -1) {
     const newLanguages = [...state.languages.slice(0, indexToDelete), ...state.languages.slice(indexToDelete + 1)]
+    let newSteps = removeOptionFromLanguageSelectionStep(state, action.language)
+
+    // If only one language remains, remove the language-selection
+    // step (should be the first one)
+    if (newLanguages.length == 1 && state.languages.length > 1) {
+      newSteps = newSteps.slice(1)
+    }
+
     return {
       ...state,
-      steps: removeOptionFromLanguageSelectionStep(state, action.language),
+      steps: newSteps,
       languages: newLanguages
     }
   } else {
