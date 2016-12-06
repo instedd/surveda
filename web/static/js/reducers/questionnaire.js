@@ -407,11 +407,10 @@ const reorderLanguages = (state, action) => {
 const setQuotaCompletedMsg = (state, action, mode) => {
   let quotaCompletedMsg
   let defaultLanguageMsg
-  if (state.quotaCompletedMsg) {
-    quotaCompletedMsg = Object.assign({}, state.quotaCompletedMsg)
+  quotaCompletedMsg = Object.assign({}, state.quotaCompletedMsg)
+  if (state.quotaCompletedMsg && state.quotaCompletedMsg[state.defaultLanguage]) {
     defaultLanguageMsg = quotaCompletedMsg[state.defaultLanguage]
   } else {
-    quotaCompletedMsg = {}
     defaultLanguageMsg = {}
     quotaCompletedMsg[state.defaultLanguage] = defaultLanguageMsg
   }
@@ -798,7 +797,7 @@ const translatePrompt = (prompt, defaultLanguage, lookup) => {
 
   let sms = defaultLanguagePrompt.sms
   if (sms && (translations = lookup[sms])) {
-    for(let lang in translations) {
+    for (let lang in translations) {
       const text = translations[lang]
       if (newPrompt[lang]) {
         newPrompt[lang] = {...newPrompt[lang]}
@@ -811,7 +810,7 @@ const translatePrompt = (prompt, defaultLanguage, lookup) => {
 
   let ivr = defaultLanguagePrompt.ivr
   if (ivr && ivr.audioSource == 'tts' && (translations = lookup[ivr.text])) {
-    for(let lang in translations) {
+    for (let lang in translations) {
       const text = translations[lang]
       if (!prompt[lang] || !prompt[lang].ivr || prompt[lang].ivr.audioSource == 'tts') {
         if (newPrompt[lang]) {
@@ -838,20 +837,20 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
 
   let newChoice = {
     ...choice,
-    responses: {...choice.responses},
+    responses: {...choice.responses}
   }
 
-  let sms = defaultLanguageResponses.sms.join(", ")
+  let sms = defaultLanguageResponses.sms.join(', ')
   let translations
   if (sms && (translations = lookup[sms])) {
-    for(let lang in translations) {
+    for (let lang in translations) {
       const text = translations[lang]
       if (newChoice.responses[lang]) {
         newChoice.responses[lang] = {...newChoice.responses[lang]}
       } else {
         newChoice.responses[lang] = {}
       }
-      newChoice.responses[lang].sms = text.split(",").map(s => s.trim())
+      newChoice.responses[lang].sms = text.split(',').map(s => s.trim())
     }
   }
 
@@ -865,15 +864,15 @@ const buildCsvLookup = (csv, defaultLanguage) => {
   const headers = csv[0]
   const defaultLanguageIndex = headers.indexOf(defaultLanguage)
 
-  for(let i = 1; i < csv.length; i++) {
+  for (let i = 1; i < csv.length; i++) {
     const row = csv[i]
     const defaultLanguageText = row[defaultLanguageIndex]
     if (!defaultLanguageText || defaultLanguageText.trim().length == 0) {
       continue
     }
 
-    for(let j = 0; j < headers.length; j++) {
-      if (j == defaultLanguageIndex) continue;
+    for (let j = 0; j < headers.length; j++) {
+      if (j == defaultLanguageIndex) continue
 
       const otherLanguage = headers[j]
       const otherLanguageText = row[j]

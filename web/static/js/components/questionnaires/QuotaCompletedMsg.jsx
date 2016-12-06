@@ -39,7 +39,10 @@ class QuotaCompletedMsg extends Component {
     const { questionnaire } = this.props
 
     let quotaCompletedMsgs = questionnaire.modes.map((mode) => {
-      const value = questionnaire.quotaCompletedMsg && questionnaire.quotaCompletedMsg[questionnaire.defaultLanguage][mode] ? questionnaire.quotaCompletedMsg[questionnaire.defaultLanguage][mode] : ''
+      const quotaMsg = questionnaire.quotaCompletedMsg
+      const defaultLang = questionnaire.defaultLanguage
+
+      const value = quotaMsg && quotaMsg[defaultLang] && quotaMsg[defaultLang][mode] || ''
 
       return (
         <div className='row' key={`quota-completed-${mode}`}>
