@@ -140,6 +140,21 @@ class QuestionnaireEditor extends Component {
     e.target.value = null
   }
 
+  removeLanguage(lang) {
+    const { questionnaire } = this.props
+
+    // If only one language will be left, and the language select step
+    // is selected, make sure to unselect it first
+    if (questionnaire.languages.length == 2 && questionnaire.steps[0].id == this.state.currentStep) {
+      this.setState({
+        ...this.state,
+        currentStep: null
+      })
+    }
+
+    this.props.questionnaireActions.removeLanguage(lang)
+  }
+
   render() {
     const { questionnaire } = this.props
 
@@ -154,7 +169,7 @@ class QuestionnaireEditor extends Component {
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
           <div className='row'>
-            <LanguagesList />
+            <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} />
           </div>
           <div className='row'>
             <div className='col s12'>

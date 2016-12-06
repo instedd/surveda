@@ -20,16 +20,8 @@ class LanguagesList extends Component {
     return language.name
   }
 
-  removeLanguage(lang) {
-    const props = this.props
-    return (e) => {
-      const { dispatch } = props
-      dispatch(actions.removeLanguage(lang))
-    }
-  }
-
   render() {
-    const { questionnaire } = this.props
+    const { questionnaire, onRemoveLanguage } = this.props
 
     if (!questionnaire) {
       return <div>Loading...</div>
@@ -40,7 +32,7 @@ class LanguagesList extends Component {
     otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
     otherLangugages = otherLangugages.map((lang) =>
       <li key={lang[0]}>
-        <span className='remove-language' onClick={this.removeLanguage(lang[0])}>
+        <span className='remove-language' onClick={() => onRemoveLanguage(lang[0])}>
           <i className='material-icons'>highlight_off</i>
         </span>
         <span className='language-name' title={this.translateLangCode(lang[0])}>
@@ -89,6 +81,10 @@ class LanguagesList extends Component {
       </div>
     )
   }
+}
+
+LanguagesList.propTypes = {
+  onRemoveLanguage: PropTypes.func
 }
 
 const mapStateToProps = (state, ownProps) => ({
