@@ -225,7 +225,7 @@ describe('questionnaire reducer', () => {
     expect(resultStep.type).toEqual('numeric')
     expect(resultStep.title).toEqual('Do you smoke?')
     expect(resultStep.store).toEqual('Smokes')
-    expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?' })
+    expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?', ivr: { audioSource: 'tts', text: 'Do you smoke?' } })
   })
 
   it('should update step title', () => {
@@ -856,6 +856,33 @@ describe('questionnaire reducer', () => {
       expected.forEach((row, index) => expect(csv[index]).toEqual(row))
     })
   })
+
+  it('should upload csv', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('es'),
+      actions.uploadCsvForTranslation(
+        [
+          ['en', 'es'],
+          ['Do you smoke?', 'Cxu vi fumas?'],
+          ['Do you exercise?', 'Cxu vi ekzercas?'],
+          ['Yes, Y, 1', 'Jes, J, 1'],
+        ]
+      )
+    ])
+
+    expect(resultState.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
+    expect(resultState.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
+
+    expect(resultState.data.steps[1].choices[0].responses.es.sms).toEqual(['Jes', 'J', '1'])
+    expect(resultState.data.steps[1].choices[1].responses.es.sms).toEqual(['No', 'N', '2']) // original preserved
+
+    expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
+  })
 })
 
 const questionnaire = deepFreeze({
@@ -921,7 +948,11 @@ const questionnaire = deepFreeze({
       ],
       prompt: {
         'en': {
-          sms: 'Do you smoke?'
+          sms: 'Do you smoke?',
+          ivr: {
+            text: 'Do you smoke?',
+            audioSource: 'tts',
+          }
         },
         'es': {
           sms: 'Fumas?'

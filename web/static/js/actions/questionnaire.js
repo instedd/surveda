@@ -23,6 +23,7 @@ export const REORDER_LANGUAGES = 'QUESTIONNAIRE_REORDER_LANGUAGES'
 export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
+export const UPLOAD_CSV_FOR_TRANSLATION = 'UPLOAD_CSV_FOR_TRANSLATION'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -190,4 +191,9 @@ export const changeRangeSkipLogic = (stepId, skipLogic, rangeIndex) => ({
   stepId: stepId,
   rangeIndex: rangeIndex,
   skipLogic: skipLogic
+})
+
+export const uploadCsvForTranslation = (csv) => ({
+  type: UPLOAD_CSV_FOR_TRANSLATION,
+  csv
 })

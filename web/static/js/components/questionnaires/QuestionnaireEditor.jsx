@@ -100,6 +100,46 @@ class QuestionnaireEditor extends Component {
     window.location = encodedUri
   }
 
+  openUploadCsvDialog(e) {
+    e.preventDefault()
+
+    $("#questionnaire_file_upload").trigger('click')
+  }
+
+  uploadCsv(e) {
+    e.preventDefault()
+
+    let files = e.target.files
+    if (files.length < 1) return;
+
+    let file = files[0]
+    let reader = new FileReader()
+    reader.onload = (e2) => {
+      let contents = e2.target.result
+      let csv = csvString.parse(contents)
+
+      // Do some validations before uploading the CSV
+      if (csv.length == 0) {
+        alert("Error: CSV is empty")
+        return
+      }
+
+      let headers = csv[0]
+      let defaultLanguageIndex = headers.indexOf(this.props.questionnaire.defaultLanguage)
+      if (defaultLanguageIndex == -1) {
+        alert(`Error: CSV doesn't have a header for the primary language '${this.props.questionnaire.defaultLanguage}'`)
+        return
+      }
+
+      this.props.questionnaireActions.uploadCsvForTranslation(csv)
+    }
+    reader.readAsText(file)
+
+    // Make sure to clear the input's value so a same file
+    // can be uploaded multiple times
+    e.target.value = null
+  }
+
   render() {
     const { questionnaire } = this.props
 
@@ -120,6 +160,13 @@ class QuestionnaireEditor extends Component {
             <div className='col s12'>
               <i className='material-icons v-middle left'>file_download</i>
               <a href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>Download contents as CSV</a>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <input id="questionnaire_file_upload" type="file" accept=".csv" style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
+              <i className='material-icons v-middle left'>file_upload</i>
+              <a href='#' onClick={e => this.openUploadCsvDialog(e)}>Upload contents as CSV</a>
             </div>
           </div>
           <div className='row'>
