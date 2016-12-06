@@ -287,9 +287,7 @@ class StepEditor extends Component {
                 </div>
                 : <i className='material-icons left'>language</i>
                 }
-                <span className={classNames({'red-text': hasErrors})}>
-                  <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
-                </span>
+                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
