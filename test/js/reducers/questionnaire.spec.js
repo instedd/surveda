@@ -778,10 +778,10 @@ describe('questionnaire reducer', () => {
       actions.receive(questionnaire)
     ])
 
-    let oldStepsLength = preState.data.steps.length;
+    let oldStepsLength = preState.data.steps.length
 
     const state = playActionsFromState(preState, reducer)([
-      actions.addLanguage('de'),
+      actions.addLanguage('de')
     ])
 
     const resultState = playActionsFromState(state, reducer)([
@@ -895,7 +895,7 @@ describe('questionnaire reducer', () => {
           ['en', 'es'],
           ['Do you smoke?', 'Cxu vi fumas?'],
           ['Do you exercise?', 'Cxu vi ekzercas?'],
-          ['Yes, Y, 1', 'Jes, J, 1'],
+          ['Yes, Y, 1', 'Jes, J, 1']
         ]
       )
     ])
@@ -976,7 +976,7 @@ const questionnaire = deepFreeze({
           sms: 'Do you smoke?',
           ivr: {
             text: 'Do you smoke?',
-            audioSource: 'tts',
+            audioSource: 'tts'
           }
         },
         'es': {
@@ -1002,7 +1002,7 @@ const questionnaire = deepFreeze({
               ivr: [
                 '1'
               ]
-            },
+            }
           }
         },
         {
