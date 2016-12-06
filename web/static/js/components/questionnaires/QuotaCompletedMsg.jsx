@@ -1,9 +1,14 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { InputWithLabel, Card } from '../ui'
 import * as actions from '../../actions/questionnaire'
 
 class QuotaCompletedMsg extends Component {
+  static propTypes = {
+    dispatch: PropTypes.func.isRequired,
+    questionnaire: PropTypes.object
+  }
+
   constructor(props) {
     super(props)
     this.state = {
