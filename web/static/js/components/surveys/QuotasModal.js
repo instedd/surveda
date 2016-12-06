@@ -92,10 +92,10 @@ export class QuotasModal extends Component {
                 </div>
               )}
             </div>
-            <div className='modal-footer card-action'>
-              <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={this.onSubmit}>DONE</a>
-              <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
-            </div>
+          </div>
+          <div className='modal-footer card-action'>
+            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={this.onSubmit}>DONE</a>
+            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
           </div>
         </div>
       </div>
