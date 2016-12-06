@@ -6,7 +6,15 @@ import * as actions from '../../actions/questionnaire'
 class QuotaCompletedMsg extends Component {
   constructor(props) {
     super(props)
+    this.state = {
+      editing: false
+    }
     this.quotaCompletedMsgChanged = this.quotaCompletedMsgChanged.bind(this)
+    this.handleClick = this.handleClick.bind(this)
+  }
+
+  handleClick() {
+    this.setState({editing: !this.state.editing})
   }
 
   quotaCompletedMsgChanged(e, mode) {
@@ -42,15 +50,28 @@ class QuotaCompletedMsg extends Component {
       )
     })
 
-    return (
-      <Card>
-        <i className='material-icons left'>pie chart</i>
-        Quota completed message
-        <div>
-          {quotaCompletedMsgs}
+    if (this.state.editing) {
+      return (
+        <Card>
+          <div onClick={this.handleClick} >
+            <i className='material-icons left'>pie_chart</i>
+            Quota completed message
+            <i className='material-icons'>expand_less</i>
+          </div>
+          <div>
+            {quotaCompletedMsgs}
+          </div>
+        </Card>
+      )
+    } else {
+      return (
+        <div onClick={this.handleClick} >
+          <i className='material-icons left'>pie_chart</i>
+          Quota completed messages
+          <i className='material-icons right grey-text'>expand_more</i>
         </div>
-      </Card>
-    )
+      )
+    }
   }
 }
 
