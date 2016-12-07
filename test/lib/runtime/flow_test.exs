@@ -156,14 +156,13 @@ defmodule Ask.FlowTest do
 
   # end
 
-    test "continues with next question when the reply isn't numeric"
-      do
-      {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(Flow.Message.reply("*"))
+  test "continues with next question when the reply isn't numeric"
+    do
+    {:ok, flow, _} = init_quiz_and_send_response("S")
+    result = flow |> Flow.step(Flow.Message.reply("*"))
 
-      assert {:ok, _, flow_reply} = result
-      assert Enum.at(flow_reply.prompts, 0) == "Is this the last question?"
-    end
+    assert {:ok, _, flow_reply} = result
+    assert Enum.at(flow_reply.prompts, 0) == "Is this the last question?"
   end
 
   describe "multiple choice" do
