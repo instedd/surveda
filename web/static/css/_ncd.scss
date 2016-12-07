@@ -38,6 +38,16 @@ nav {
   box-shadow: none;
 }
 
+input[type="checkbox"] + label:before,
+input[type="checkbox"]:checked + label:before {
+  border-right-color: black;
+  border-bottom-color: black;
+}
+[type="checkbox"].filled-in:checked + label:after {
+  @extend .black;
+  border-color: black;
+}
+
 // --------- NCD classes ---------------
 
 
