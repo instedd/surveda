@@ -54,7 +54,13 @@ class SurveyWizardCutoffStep extends Component {
   }
 
   bucketLabel(bucket) {
-    return join(Object.keys(bucket.condition).map((key) => `${key}: ${bucket.condition[key]}`), ', ')
+    return join(Object.keys(bucket.condition).map((key) => {
+      let value = bucket.condition[key]
+      if ((typeof value) == 'object') {
+        value = join(value, ' - ')
+      }
+      return `${key}: ${value}`
+    }), ', ')
   }
 
   toggleQuotas() {
