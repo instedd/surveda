@@ -37,7 +37,6 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  saving: bool,
   errors: any,
   errorPath: string,
   skip: string,
@@ -53,7 +52,6 @@ type State = {
   audioId: any,
   audioSource: string,
   audioUri: string,
-  saving: bool,
 };
 
 class StepEditor extends Component {
@@ -120,13 +118,6 @@ class StepEditor extends Component {
   }
 
   componentWillReceiveProps(newProps) {
-    // If we just went from "saving" to "saved", don't
-    // override state because it might override data
-    // of an input the user is editing
-    if (this.state.saving && !newProps.saving) {
-      return
-    }
-
     this.setState(this.stateFromProps(newProps))
   }
 
@@ -136,7 +127,7 @@ class StepEditor extends Component {
   }
 
   stateFromProps(props) {
-    const { step, saving } = props
+    const { step } = props
     const lang = props.questionnaire.defaultLanguage
 
     let audioId = null
@@ -156,8 +147,7 @@ class StepEditor extends Component {
       audioId: audioId,
       audioSource: ((step.prompt[lang] || {}).ivr || {}).audioSource || 'tts',
       audioUri: (step.prompt[lang] && step.prompt[lang].ivr && step.prompt[lang].ivr.audioId ? `/api/v1/audios/${step.prompt[lang].ivr.audioId}` : ''),
-      audioErrors: '',
-      saving: saving
+      audioErrors: ''
     }
   }
 
@@ -181,7 +171,7 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, errors, errorPath, skip, saving } = this.props
+    const { step, onCollapse, questionnaire, errors, errorPath, skip } = this.props
 
     const hasErrors = Object.keys(errors).length != 0
 
@@ -190,9 +180,9 @@ class StepEditor extends Component {
 
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor questionnaire={questionnaire} saving={saving} step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
+      editor = <StepMultipleChoiceEditor questionnaire={questionnaire} step={step} skip={skip} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
     } else if (step.type == 'numeric') {
-      editor = <StepNumericEditor questionnaire={questionnaire} saving={saving} step={step} skip={skip} />
+      editor = <StepNumericEditor questionnaire={questionnaire} step={step} skip={skip} />
     } else if (step.type == 'language-selection') {
       editor = <StepLanguageSelection step={step} />
     } else {
@@ -358,7 +348,6 @@ class StepEditor extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   questionnaire: state.questionnaire.data,
-  saving: state.questionnaire.saving,
   errors: state.questionnaire.errors
 })
 
