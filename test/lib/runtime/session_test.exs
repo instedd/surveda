@@ -239,8 +239,6 @@ end
 
     {:end, {:prompt, "Bye!"}} = Session.sync_step(session, Flow.Message.reply("N"))
 
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Bye!"]]
-
     respondent = Respondent |> Repo.get(respondent.id)
     assert respondent.state == "rejected"
   end

@@ -70,6 +70,8 @@ defmodule Ask.Runtime.NuntiumChannel do
         case Broker.sync_step(respondent, Flow.Message.reply(body)) do
           {:prompt, prompt} ->
             [%{"to": from, "body": prompt}]
+          {:end, {:prompt, prompt}} ->
+            [%{"to": from, "body": prompt}]
           :end ->
             []
         end

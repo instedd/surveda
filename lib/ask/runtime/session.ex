@@ -126,9 +126,7 @@ defmodule Ask.Runtime.Session do
             respondent |> Respondent.changeset(%{state: "rejected"}) |> Repo.update!
 
             msg = quota_completed_msg(session.flow)
-            runtime_channel = Ask.Channel.runtime_channel(session.channel)
-            if msg && (runtime_channel |> Channel.can_push_question?) do
-              runtime_channel |> Channel.ask(session.respondent.sanitized_phone_number, [msg])
+            if msg do
               {:end, {:prompt, msg}}
             else
               :end
