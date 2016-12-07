@@ -27,12 +27,23 @@
   end
 
   # Numeric condition
-  def matches_condition?(value, [from, to]) do
+  def matches_condition?(value, [from, to]) when is_integer(from) and is_integer(to) do
     case Integer.parse(value) do
     {value, ""} ->
       from <= value && value <= to
     _ ->
       false
+    end
+  end
+
+  def matches_condition?(value, [from_val, to_val]) do
+    from = String.to_integer(from_val)
+    to = String.to_integer(to_val)
+    case Integer.parse(value) do
+      {value, ""} ->
+        from <= value && value <= to
+      _ ->
+        false
     end
   end
 
