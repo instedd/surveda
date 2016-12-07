@@ -180,7 +180,7 @@ defmodule Ask.DummySteps do
           id: "aaa",
           title: "Do you smoke?",
           prompt: prompt(
-            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS")
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know")
           ),
           store: "Smokes",
           choices: [
@@ -188,7 +188,8 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: nil),
             choice(value: "Maybe", responses: responses(sms: ["Maybe", "M", "3"], ivr: ["3"])),
             choice(value: "Sometimes", responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]), skip_logic: "ddd"),
-            choice(value: "ALWAYS", responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]), skip_logic: "undefined_id")
+            choice(value: "ALWAYS", responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]), skip_logic: "undefined_id"),
+            choice(value: "I don't know", responses: responses(sms: ["Dont know", "D", "6"], ivr: ["6"]), skip_logic: "")
           ]
         ),
         multiple_choice_step(

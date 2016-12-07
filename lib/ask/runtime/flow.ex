@@ -58,7 +58,7 @@ defmodule Ask.Runtime.Flow do
       end
 
     case skip_logic do
-      nil ->
+      x when x == "" or x == nil ->
         flow.current_step + 1
       "end" ->
         length(flow.questionnaire.steps)
@@ -68,7 +68,8 @@ defmodule Ask.Runtime.Flow do
           |> Enum.find_index(fn istep -> istep["id"] == next_id end)
 
         if (!next_step_index || flow.current_step > next_step_index) do
-          raise "Skip logic: invalid step id."
+          # raise "Skip logic: invalid step id."
+          next_step_index = length(flow.questionnaire.steps)
         end
 
         next_step_index
