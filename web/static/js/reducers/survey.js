@@ -120,12 +120,12 @@ const buildBuckets = (storeVars, options) => {
 }
 
 const intervalsFrom = (valueString) => {
-  const values = map(split(valueString, ','), (value) => value.trim())
+  const values = map(split(valueString, ','), (value) => parseInt(value.trim()))
   if (values.length <= 1) {
     return []
   }
 
-  return [[values[0], (values[1] - 1).toString()], ...intervalsFrom(drop(values))]
+  return [[values[0], values[1] - 1], ...intervalsFrom(drop(values))]
 }
 
 const quotaChange = (state, action) => {

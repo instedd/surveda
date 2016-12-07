@@ -512,14 +512,14 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Age'],
           buckets: [
-            {'condition': {Smokes: 'Yes', 'Age': ['20', '29']}},
-            {'condition': {Smokes: 'Yes', 'Age': ['30', '39']}},
-            {'condition': {Smokes: 'Yes', 'Age': ['40', '49']}},
-            {'condition': {Smokes: 'Yes', 'Age': ['50', '119']}},
-            {'condition': {Smokes: 'No', 'Age': ['20', '29']}},
-            {'condition': {Smokes: 'No', 'Age': ['30', '39']}},
-            {'condition': {Smokes: 'No', 'Age': ['40', '49']}},
-            {'condition': {Smokes: 'No', 'Age': ['50', '119']}}
+            {'condition': {Smokes: 'Yes', 'Age': [20, 29]}},
+            {'condition': {Smokes: 'Yes', 'Age': [30, 39]}},
+            {'condition': {Smokes: 'Yes', 'Age': [40, 49]}},
+            {'condition': {Smokes: 'Yes', 'Age': [50, 119]}},
+            {'condition': {Smokes: 'No', 'Age': [20, 29]}},
+            {'condition': {Smokes: 'No', 'Age': [30, 39]}},
+            {'condition': {Smokes: 'No', 'Age': [40, 49]}},
+            {'condition': {Smokes: 'No', 'Age': [50, 119]}}
           ]
         }
       }
