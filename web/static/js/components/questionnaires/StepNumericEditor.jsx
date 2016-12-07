@@ -94,7 +94,7 @@ class StepNumericEditor extends Component {
           value={`${this.state.minValue}`}
           label='Min value' >
           <input
-            type='text'
+            type='number'
             onChange={e => this.minValueChange(e)}
             onBlur={e => this.minValueSubmit(e)} />
         </InputWithLabel>
@@ -120,7 +120,7 @@ class StepNumericEditor extends Component {
           value={`${this.state.maxValue}`}
           label='Max value' >
           <input
-            type='text'
+            type='number'
             is length='20'
             onChange={e => this.maxValueChange(e)}
             onBlur={e => this.maxValueSubmit(e)} />
