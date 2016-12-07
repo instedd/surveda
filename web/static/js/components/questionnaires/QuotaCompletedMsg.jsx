@@ -38,6 +38,10 @@ class QuotaCompletedMsg extends Component {
   render() {
     const { questionnaire } = this.props
 
+    if (!questionnaire) {
+      return <div>Loading...</div>
+    }
+
     let quotaCompletedMsgs = questionnaire.modes.map((mode) => {
       const quotaMsg = questionnaire.quotaCompletedMsg
       const defaultLang = questionnaire.defaultLanguage
