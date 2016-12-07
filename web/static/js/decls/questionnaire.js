@@ -4,7 +4,8 @@ export type Questionnaire = {
   steps: Step[],
   modes: string[],
   languages: string[],
-  defaultLanguage: string
+  defaultLanguage: string,
+  quotaCompletedMsg: any,
 };
 
 export type AudioPrompt = {

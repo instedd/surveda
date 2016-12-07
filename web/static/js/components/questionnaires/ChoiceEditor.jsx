@@ -15,6 +15,7 @@ type Props = {
   choice: Choice,
   skipOptions: SkipOption[],
   questionnaire: Questionnaire,
+  saving: bool,
   sms: boolean,
   ivr: boolean,
   errors: any,
@@ -32,6 +33,7 @@ type State = {
   doNotClose: boolean,
   skipLogic: ?string,
   errors: ?any,
+  saving: bool,
 };
 
 class ChoiceEditor extends Component {
@@ -40,7 +42,7 @@ class ChoiceEditor extends Component {
 
   constructor(props: Props) {
     super(props)
-    this.state = { ...this.stateFromProps(props), editing: false, doNotClose: false, focus: null, errors: null }
+    this.state = { ...this.stateFromProps(props), editing: false, saving: false, doNotClose: false, focus: null, errors: null }
   }
 
   responseChange(event: Event) {
@@ -74,8 +76,15 @@ class ChoiceEditor extends Component {
   }
 
   componentWillReceiveProps(newProps: Props) {
+    // If we just went from "saving" to "saved", don't
+    // override state because it might override data
+    // of an input the user is editing
+    if (this.state.saving && !newProps.saving) {
+      return
+    }
+
     let newState = this.stateFromProps(newProps)
-    this.setState({ ...newState, editing: this.state.editing })
+    this.setState({ ...newState, editing: this.state.editing, saving: newProps.saving })
   }
 
   stateFromProps(props: Props) {
@@ -240,6 +249,7 @@ ChoiceEditor.propTypes = {
   onDelete: PropTypes.func,
   onChoiceChange: PropTypes.func,
   questionnaire: PropTypes.object,
+  saving: PropTypes.bool,
   choice: PropTypes.object,
   skipOptions: PropTypes.array,
   sms: PropTypes.bool,

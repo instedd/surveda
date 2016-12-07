@@ -21,6 +21,8 @@ export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
 export const REMOVE_LANGUAGE = 'QUESTIONNAIRE_REMOVE_LANGUAGE'
 export const REORDER_LANGUAGES = 'QUESTIONNAIRE_REORDER_LANGUAGES'
 export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
+export const SET_SMS_QUOTA_COMPLETED_MSG = 'QUESTIONNAIRE_SMS_SET_QUOTA_COMPLETED_MSG'
+export const SET_IVR_QUOTA_COMPLETED_MSG = 'QUESTIONNAIRE_IVR_SET_QUOTA_COMPLETED_MSG'
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
 export const UPLOAD_CSV_FOR_TRANSLATION = 'UPLOAD_CSV_FOR_TRANSLATION'
@@ -161,6 +163,16 @@ export const reorderLanguages = (language, index) => ({
   type: REORDER_LANGUAGES,
   language,
   index
+})
+
+export const setSmsQuotaCompletedMsg = (msg) => ({
+  type: SET_SMS_QUOTA_COMPLETED_MSG,
+  msg
+})
+
+export const setIvrQuotaCompletedMsg = (msg) => ({
+  type: SET_IVR_QUOTA_COMPLETED_MSG,
+  msg
 })
 
 export const save = () => (dispatch, getState) => {

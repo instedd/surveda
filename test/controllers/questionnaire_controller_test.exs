@@ -65,7 +65,8 @@ defmodule Ask.QuestionnaireControllerTest do
         "steps" => [],
         "default_language" => "en",
         "languages" => [],
-        "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at)
+        "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at),
+        "quota_completed_msg" => nil
       }
     end
 

@@ -7,6 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { csvForTranslation } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from '../questionnaires/LanguagesList'
+import QuotaCompletedMsg from '../questionnaires/QuotaCompletedMsg'
 import csvString from 'csv-string'
 
 class QuestionnaireEditor extends Component {
@@ -168,20 +169,22 @@ class QuestionnaireEditor extends Component {
     return (
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
-          <div className='row'>
-            <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} />
-          </div>
+          <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} />
           <div className='row'>
             <div className='col s12'>
-              <i className='material-icons v-middle left'>file_download</i>
-              <a href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>Download contents as CSV</a>
+              <a className='btn-icon-grey' href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
+                <i className='material-icons'>file_download</i>
+                <span>Download contents as CSV</span>
+              </a>
             </div>
           </div>
           <div className='row'>
             <div className='col s12'>
-              <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
-              <i className='material-icons v-middle left'>file_upload</i>
-              <a href='#' onClick={e => this.openUploadCsvDialog(e)}>Upload contents as CSV</a>
+              <input id="questionnaire_file_upload" type="file" accept=".csv" style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
+              <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
+                <i className='material-icons'>file_upload</i>
+                <span>Upload contents as CSV</span>
+              </a>
             </div>
           </div>
           <div className='row'>
@@ -225,6 +228,9 @@ class QuestionnaireEditor extends Component {
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
+          </div>
+          <div className='row'>
+            <QuotaCompletedMsg />
           </div>
         </div>
       </div>
