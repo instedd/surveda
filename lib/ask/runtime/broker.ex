@@ -153,6 +153,10 @@ defmodule Ask.Runtime.Broker do
         update_respondent(respondent, {:ok, session, timeout})
         step
 
+      {:end, data} ->
+        update_respondent(respondent, :end)
+        {:end, data}
+
       :end ->
         update_respondent(respondent, :end)
         :end

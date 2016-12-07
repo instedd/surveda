@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow}
-  alias Ask.{Repo, Survey, Respondent, TestChannel, QuotaBucket}
+  alias Ask.{Repo, Survey, Respondent, TestChannel, QuotaBucket, Questionnaire}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
   @always_schedule %{schedule_day_of_week: @everyday_schedule,
@@ -439,6 +439,49 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
     assert respondent.session == nil
     assert respondent.completed_at in interval
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "respondent flow with quota completed msg" do
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+
+    quotas = %{
+      "vars" => ["Smokes"],
+      "buckets" => [
+        %{
+          "condition" => %{"Smokes" => "No"},
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => %{"Smokes" => "Yes"},
+          "quota" => 1,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    quiz = survey.questionnaire
+    quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    {:end, {:prompt, "Bye!"}} = Broker.sync_step(respondent, Flow.Message.reply("No"))
 
     :ok = broker |> GenServer.stop
   end

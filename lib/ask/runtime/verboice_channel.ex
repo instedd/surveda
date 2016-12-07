@@ -42,6 +42,11 @@ defmodule Ask.Runtime.VerboiceChannel do
         case Broker.sync_step(respondent, response) do
           {:prompt, prompt} ->
             "<Response>#{gather(respondent, prompt)}#{gather(respondent, prompt)}#{gather(respondent, prompt)}</Response>"
+          {:end, {:prompt, text}} ->
+            # TODO: this assumes prompt is always text, because this can
+            # only happen for reproducing the "quota-completed message",
+            # which can't specify an audio yet
+            "<Response><Say>#{text}</Say><Hangup/></Response>"
           :end ->
             "<Response><Hangup/></Response>"
         end

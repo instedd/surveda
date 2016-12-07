@@ -5,7 +5,7 @@ defmodule Ask.SessionTest do
   alias Ask.Runtime.Session
   alias Ask.TestChannel
   alias Ask.Runtime.Flow
-  alias Ask.{Survey, Respondent, QuotaBucket}
+  alias Ask.{Survey, Respondent, QuotaBucket, Questionnaire}
 
   setup do
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -192,7 +192,9 @@ end
       ] = responses
   end
 
-  test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel} do
+  test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel, test_channel: test_channel} do
+    quiz = quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
+
     survey = respondent.survey
 
     quotas = %{
@@ -227,10 +229,17 @@ end
     |> Repo.update!
 
     respondent = Respondent |> Repo.get(respondent.id)
+    phone_number = respondent.sanitized_phone_number
 
     {session, _} = Session.start(quiz, respondent, channel)
+    assert_receive [:setup, ^test_channel, ^respondent]
+
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
-    :end = Session.sync_step(session, Flow.Message.reply("N"))
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    {:end, {:prompt, "Bye!"}} = Session.sync_step(session, Flow.Message.reply("N"))
+
+    assert_receive [:ask, ^test_channel, ^phone_number, ["Bye!"]]
   end
 
   test "ends when quota is reached at leaf, with more stores", %{quiz: quiz, respondent: respondent, channel: channel} do

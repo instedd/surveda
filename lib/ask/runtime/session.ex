@@ -121,7 +121,15 @@ defmodule Ask.Runtime.Session do
 
       {:ok, flow, %{prompts: [prompt]}} ->
         case falls_in_quota_already_completed?(buckets, responses) do
-          true -> :end
+          true ->
+            msg = quota_completed_msg(session.flow)
+            runtime_channel = Ask.Channel.runtime_channel(session.channel)
+            if msg && (runtime_channel |> Channel.can_push_question?) do
+              runtime_channel |> Channel.ask(session.respondent.sanitized_phone_number, [msg])
+              {:end, {:prompt, msg}}
+            else
+              :end
+            end
           false -> {:ok, %{session | flow: flow, respondent: respondent}, {:prompt, prompt}, @timeout}
         end
     end
@@ -245,6 +253,16 @@ defmodule Ask.Runtime.Session do
           _ ->
             buckets |> Enum.all?(fn bucket -> bucket.count >= bucket.quota end)
         end
+    end
+  end
+
+  defp quota_completed_msg(flow) do
+    msg = flow.questionnaire.quota_completed_msg
+    if msg do
+      (msg |> Map.get(flow.language) |> Map.get(flow.mode)) ||
+        (msg |> Map.get(flow.questionnaire.defaultLanguage) |> Map.get(flow.mode))
+    else
+      nil
     end
   end
 end
