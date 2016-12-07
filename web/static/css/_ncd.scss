@@ -301,6 +301,10 @@ footer {
   @extend .red-text, .darken-1;
 }
 
+.modal-content .card-content {
+  overflow: scroll;
+  max-height: 250px;
+}
 
 // ------- Survey Card  ----------
 

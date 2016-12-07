@@ -806,30 +806,55 @@ describe('questionnaire reducer', () => {
     expect(resultState.data.defaultLanguage).toEqual('fr')
   })
 
-  it('should provide valid answers for multiple-choice steps', () => {
-    const questionnaire = deepFreeze({
-      steps: [
-        {
-          type: 'multiple-choice',
-          store: 'Smokes',
-          choices: [{value: 'Yes'}, {value: 'No'}]
-        },
-        {
-          store: 'Gender',
-          choices: [{value: 'Male'}, {value: 'Female'}]
-        },
-        {
-          type: 'multiple-choice',
-          store: 'Exercises',
-          choices: [{value: 'Yes'}, {value: 'No'}]
-        }
-      ],
-      id: 1
+  describe('helpers', () => {
+    it('should provide valid answers for multiple-choice steps', () => {
+      const questionnaire = deepFreeze({
+        steps: [
+          {
+            type: 'multiple-choice',
+            store: 'Smokes',
+            choices: [{value: 'Yes'}, {value: 'No'}]
+          },
+          {
+            type: 'multiple-choice',
+            store: 'Gender',
+            choices: [{value: 'Male'}, {value: 'Female'}]
+          },
+          {
+            type: 'multiple-choice',
+            store: 'Exercises',
+            choices: [{value: 'Yes'}, {value: 'No'}]
+          }
+        ],
+        id: 1
+      })
+
+      expect(stepStoreValues(questionnaire)).toEqual({
+        Smokes: {type: 'multiple-choice', values: ['Yes', 'No']},
+        Gender: {type: 'multiple-choice', values: ['Male', 'Female']},
+        Exercises: {type: 'multiple-choice', values: ['Yes', 'No']}
+      })
     })
 
-    expect(stepStoreValues(questionnaire)).toEqual({
-      Smokes: ['Yes', 'No'],
-      Exercises: ['Yes', 'No']
+    it('should provide valid answers for numeric steps', () => {
+      const questionnaire = deepFreeze({
+        steps: [
+          {
+            type: 'numeric',
+            store: 'Cigarettes'
+          },
+          {
+            type: 'numeric',
+            store: 'Exercise'
+          }
+        ],
+        id: 1
+      })
+
+      expect(stepStoreValues(questionnaire)).toEqual({
+        Cigarettes: {type: 'numeric', values: []},
+        Exercise: {type: 'numeric', values: []}
+      })
     })
   })
 
@@ -1006,7 +1031,7 @@ const questionnaire = deepFreeze({
           sms: 'Do you smoke?',
           ivr: {
             text: 'Do you smoke?',
-            audioSource: 'tts',
+            audioSource: 'tts'
           }
         },
         'es': {

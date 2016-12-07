@@ -83,15 +83,15 @@ export const toggleDay = (day) => ({
 export const setQuotaVars = (vars, questionnaire) => ({
   type: SET_QUOTA_VARS,
   vars,
-  options: valuesFrom(vars, questionnaire)
+  options: optionsFrom(vars, questionnaire)
 })
 
-const valuesFrom = (storeVars, questionnaire) => {
-  const values = stepStoreValues(questionnaire)
+const optionsFrom = (storeVars, questionnaire) => {
+  const storeValues = stepStoreValues(questionnaire)
   let options = {}
 
   each(storeVars, (storeVar) => {
-    options[storeVar] = values[storeVar]
+    options[storeVar.var] = storeValues[storeVar.var]
   })
   return options
 }

@@ -286,7 +286,7 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
-      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire)
+      actions.setQuotaVars([{var: 'Smokes'}, {var: 'Gender'}, {var: 'Exercises'}], questionnaire)
     ])
 
     expect(state).toEqual({
@@ -296,14 +296,14 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Gender', 'Exercises'],
           buckets: [
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'No'}},
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'No'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'No'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'No'}}
+            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'No'}},
+            {'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'No'}},
+            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'No'}},
+            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'No'}}
           ]
         }
       }
@@ -334,7 +334,7 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
-      actions.setQuotaVars(['Smokes'], questionnaire)
+      actions.setQuotaVars([{var: 'Smokes'}], questionnaire)
     ])
 
     expect(state).toEqual({
@@ -344,8 +344,8 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes'],
           buckets: [
-            {'condition': {'Smokes': 'Yes'}},
-            {'condition': {'Smokes': 'No'}}
+            {'condition': {Smokes: 'Yes'}},
+            {'condition': {Smokes: 'No'}}
           ]
         }
       }
@@ -376,7 +376,7 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
-      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire),
+      actions.setQuotaVars([{var: 'Smokes'}, {var: 'Gender'}, {var: 'Exercises'}], questionnaire),
       actions.setQuotaVars([], questionnaire)
     ])
 
@@ -416,8 +416,8 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
-      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire),
-      actions.quotaChange({'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'Yes'}, 12345)
+      actions.setQuotaVars([{var: 'Smokes'}, {var: 'Gender'}, {var: 'Exercises'}], questionnaire),
+      actions.quotaChange({Smokes: 'Yes', Gender: 'Female', Exercises: 'Yes'}, 12345)
     ])
 
     expect(state).toEqual({
@@ -427,17 +427,17 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Gender', 'Exercises'],
           buckets: [
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Male', 'Exercises': 'No'}},
+            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'No'}},
             {
-              'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'Yes'},
+              'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'Yes'},
               'quota': 12345
             },
-            {'condition': {'Smokes': 'Yes', 'Gender': 'Female', 'Exercises': 'No'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Male', 'Exercises': 'No'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'Yes'}},
-            {'condition': {'Smokes': 'No', 'Gender': 'Female', 'Exercises': 'No'}}
+            {'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'No'}},
+            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'No'}},
+            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'Yes'}},
+            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'No'}}
           ]
         }
       }
@@ -468,7 +468,7 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
-      actions.setQuotaVars(['Smokes', 'Gender', 'Exercises'], questionnaire),
+      actions.setQuotaVars([{var: 'Smokes'}, {var: 'Gender'}, {var: 'Exercises'}], questionnaire),
       actions.changeQuestionnaire(2)
     ])
 
@@ -479,6 +479,48 @@ describe('survey reducer', () => {
         quotas: {
           vars: [],
           buckets: []
+        }
+      }
+    })
+  })
+
+  it('should set quota vars for numeric steps', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          type: 'multiple-choice',
+          store: 'Smokes',
+          choices: [{value: 'Yes'}, {value: 'No'}]
+        },
+        {
+          type: 'numeric',
+          store: 'Age'
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars([{var: 'Smokes', steps: ''}, {var: 'Age', steps: '20, 30, 40, 50, 120'}], questionnaire)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: ['Smokes', 'Age'],
+          buckets: [
+            {'condition': {Smokes: 'Yes', 'Age': ['20', '29']}},
+            {'condition': {Smokes: 'Yes', 'Age': ['30', '39']}},
+            {'condition': {Smokes: 'Yes', 'Age': ['40', '49']}},
+            {'condition': {Smokes: 'Yes', 'Age': ['50', '119']}},
+            {'condition': {Smokes: 'No', 'Age': ['20', '29']}},
+            {'condition': {Smokes: 'No', 'Age': ['30', '39']}},
+            {'condition': {Smokes: 'No', 'Age': ['40', '49']}},
+            {'condition': {Smokes: 'No', 'Age': ['50', '119']}}
+          ]
         }
       }
     })

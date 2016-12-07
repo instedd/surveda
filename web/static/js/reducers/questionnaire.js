@@ -602,14 +602,13 @@ const isBlank = (value: string) => {
 }
 
 export const stepStoreValues = (questionnaire: Questionnaire) => {
-  const multipleChoiceSteps = filter(questionnaire.steps, (step) =>
-    step.type == 'multiple-choice'
-  )
-
-  return reduce(multipleChoiceSteps, (options, step) => {
-    options[step.store] = map(step.choices, (choice) =>
-      choice.value
-    )
+  return reduce(questionnaire.steps, (options, step) => {
+    options[step.store] = {
+      type: step.type,
+      values: map(step.choices, (choice) =>
+        choice.value
+      )
+    }
     return options
   }, {})
 }

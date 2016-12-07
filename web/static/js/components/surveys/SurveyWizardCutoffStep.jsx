@@ -93,7 +93,7 @@ class SurveyWizardCutoffStep extends Component {
           ? <span>
             <div className='row'>
               <div className='col s12'>
-                <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onClick={this.toggleQuotas} />
+                <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={this.toggleQuotas} />
                 <label htmlFor='set-quotas'>Quotas for completes</label>
                 <p>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
               </div>
