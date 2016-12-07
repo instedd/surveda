@@ -41,7 +41,7 @@ class AddLanguage extends Component {
   render() {
     if (!this.state.editing) {
       return (
-        <a className='btn-icon-grey' href='#' onClick={this.handleClick}>
+        <a className='add-language' onClick={this.handleClick}>
           <i className='material-icons'>add</i>
           <span>Add Language</span>
         </a>
