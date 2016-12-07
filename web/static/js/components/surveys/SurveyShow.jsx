@@ -229,9 +229,9 @@ class SurveyShow extends Component {
                     )) }
                   </td>
                   <td className='right-align'>{stat.quota}</td>
-                  <td className='right-align'>{Math.round(stat.count * 100.0 / stat.quota)}%</td>
-                  <td className='right-align'>{stat.full}</td>
-                  <td className='right-align'>{stat.partials}</td>
+                  <td className='right-align'>{stat.quota == 0 ? "-" : `${Math.round(stat.count * 100.0 / stat.quota)}%`}</td>
+                  <td className='right-align'>{stat.quota == 0 ? "-" : stat.full}</td>
+                  <td className='right-align'>{stat.quota == 0 ? "-" : stat.partials}</td>
                 </tr>
               )
             }) }
