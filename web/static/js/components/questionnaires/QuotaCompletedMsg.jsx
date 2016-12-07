@@ -51,7 +51,7 @@ class QuotaCompletedMsg extends Component {
       return (
         <div className='row' key={`quota-completed-${mode}`}>
           <div className='input-field'>
-            <InputWithLabel value={value} label={`${mode == 'sms' ? 'SMS' : 'Voice'} message`}>
+            <InputWithLabel value={value} label={`${mode == 'sms' ? 'SMS' : 'Voice'} message`} id={`${mode == 'sms' ? 'quota_sms' : 'quota_voice'}`}>
               <input
                 type='text'
                 onChange={e => this.quotaCompletedMsgChanged(e, mode)}
