@@ -102,7 +102,7 @@ export class QuotasModal extends Component {
           </div>
           <div className='card-action'>
             <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={this.onSubmit}>DONE</a>
-            <a href='#!' className='modal-action modal-close waves-effect grey-text btn-flat'>Cancel</a>
+            <a href='#!' className='modal-action modal-close grey-text btn-link'>Cancel</a>
           </div>
         </div>
       </div>

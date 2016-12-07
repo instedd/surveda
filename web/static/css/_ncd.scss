@@ -1055,6 +1055,14 @@ label {
   width: 100%;
 }
 
+.btn-link {
+  padding: 0 1rem;
+  &:hover,
+  &:focus {
+    color: color("grey", "darken-3") !important;
+  }
+}
+
 
 // ------- Respondent Chart SVG classes -----------
 
