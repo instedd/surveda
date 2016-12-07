@@ -660,7 +660,7 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
       if (step.type === 'multiple-choice') {
         step.choices.forEach(choice => {
           // Response sms
-          const defaultResponseSms = choice.responses[defaultLang].sms.join(', ')
+          const defaultResponseSms = ((choice.responses[defaultLang] || {}).sms || []).join(', ')
           if (defaultResponseSms.trim().length != 0 && !exported[defaultResponseSms]) {
             exported[defaultResponseSms] = true
             rows.push(headers.map(lang => {
