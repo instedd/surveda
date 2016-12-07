@@ -4,7 +4,17 @@ defmodule Ask.Respondent do
   schema "respondents" do
     field :phone_number, :string
     field :sanitized_phone_number, :string
-    field :state, :string, default: "pending" # pending, active, completed, failed
+
+    # Valid states are:
+    # * pending: the initial state of a respondent, before communication starts
+    # * active: a communication is being held with the respondent
+    # * completed: the communication finished succesfully (it reached the end)
+    # * failed: communication couldn't be established or was cut, only for IVR
+    # * stalled: communication couldn't be established or was cut, only for SMS.
+    #            communication might continue if the respondent replies at any time
+    # * rejected: communication ended because the respondent fell in a full quota bucket
+    field :state, :string, default: "pending" # pending, active, completed, failed, stalled, rejected
+
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
     field :session, Ask.Ecto.Type.JSON
