@@ -822,15 +822,7 @@ const translatePrompt = (prompt, defaultLanguage, lookup) => {
 
   let sms = defaultLanguagePrompt.sms
   if (sms && (translations = lookup[sms])) {
-    for (let lang in translations) {
-      const text = translations[lang]
-      if (newPrompt[lang]) {
-        newPrompt[lang] = {...newPrompt[lang]}
-      } else {
-        newPrompt[lang] = {}
-      }
-      newPrompt[lang].sms = text
-    }
+    addTranslations(newPrompt, translations, 'sms')
   }
 
   let ivr = defaultLanguagePrompt.ivr
@@ -865,19 +857,9 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
     responses: {...choice.responses}
   }
 
-  let sms = defaultLanguageResponses.sms.join(', ')
-  let translations
-  if (sms && (translations = lookup[sms])) {
-    for (let lang in translations) {
-      const text = translations[lang]
-      if (newChoice.responses[lang]) {
-        newChoice.responses[lang] = {...newChoice.responses[lang]}
-      } else {
-        newChoice.responses[lang] = {}
-      }
-      newChoice.responses[lang].sms = text.split(',').map(s => s.trim())
-    }
-  }
+  processTranslations(defaultLanguageResponses.sms.join(', '),
+    newChoice.responses, lookup,
+    (obj, text) => { obj.sms = text.split(',').map(s => s.trim()) })
 
   return newChoice
 }
@@ -887,35 +869,32 @@ const translateQuotaCompletedMsg = (msg, defaultLanguage, lookup) => {
   if (!defaultLanguageValue) return msg
 
   let newMsg = {...msg}
-  let translations
-
-  let sms = defaultLanguageValue.sms
-  if (sms && (translations = lookup[sms])) {
-    for (let lang in translations) {
-      const text = translations[lang]
-      if (newMsg[lang]) {
-        newMsg[lang] = {...newMsg[lang]}
-      } else {
-        newMsg[lang] = {}
-      }
-      newMsg[lang].sms = text
-    }
-  }
-
-  let ivr = defaultLanguageValue.ivr
-  if (ivr && (translations = lookup[ivr])) {
-    for (let lang in translations) {
-      const text = translations[lang]
-      if (newMsg[lang]) {
-        newMsg[lang] = {...newMsg[lang]}
-      } else {
-        newMsg[lang] = {}
-      }
-      newMsg[lang].ivr = text
-    }
-  }
-
+  processTranslations(defaultLanguageValue.sms, newMsg, lookup, 'sms')
+  processTranslations(defaultLanguageValue.ivr, newMsg, lookup, 'ivr')
   return newMsg
+}
+
+const processTranslations = (value, obj, lookup, funcOrProperty) => {
+  let translations
+  if (value && (translations = lookup[value])) {
+    addTranslations(obj, translations, funcOrProperty)
+  }
+}
+
+const addTranslations = (obj, translations, funcOrProperty) => {
+  for (let lang in translations) {
+    const text = translations[lang]
+    if (obj[lang]) {
+      obj[lang] = {...obj[lang]}
+    } else {
+      obj[lang] = {}
+    }
+    if (typeof(funcOrProperty) == 'function') {
+      funcOrProperty(obj[lang], text)
+    } else {
+      obj[lang][funcOrProperty] = text
+    }
+  }
 }
 
 // Converts a CSV into a dictionary:
