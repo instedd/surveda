@@ -799,7 +799,9 @@ const uploadCsvForTranslation = (state, action) => {
   const lookup = buildCsvLookup(csv, defaultLanguage)
   let newState = {...state}
   newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
-  newState.quotaCompletedMsg = translateQuotaCompletedMsg(state.quotaCompletedMsg, defaultLanguage, lookup)
+  if (state.quotaCompletedMsg) {
+    newState.quotaCompletedMsg = translateQuotaCompletedMsg(state.quotaCompletedMsg, defaultLanguage, lookup)
+  }
   return newState
 }
 

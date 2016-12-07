@@ -938,6 +938,33 @@ describe('questionnaire reducer', () => {
 
     const resultState = playActionsFromState(preState, reducer)([
       actions.addLanguage('es'),
+      actions.uploadCsvForTranslation(
+        [
+          ['en', 'es'],
+          ['Do you smoke?', 'Cxu vi fumas?'],
+          ['Do you exercise?', 'Cxu vi ekzercas?'],
+          ['Yes, Y, 1', 'Jes, J, 1'],
+        ]
+      )
+    ])
+
+    expect(resultState.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
+    expect(resultState.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
+
+    expect(resultState.data.steps[1].choices[0].responses.es.sms).toEqual(['Jes', 'J', '1'])
+    expect(resultState.data.steps[1].choices[1].responses.es.sms).toEqual(['No', 'N', '2']) // original preserved
+
+    expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
+  })
+
+  it('should upload csv with quota completed msg', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire)
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('es'),
       actions.setSmsQuotaCompletedMsg("Done"),
       actions.setIvrQuotaCompletedMsg("Done!"),
       actions.uploadCsvForTranslation(
@@ -952,13 +979,6 @@ describe('questionnaire reducer', () => {
       )
     ])
 
-    expect(resultState.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
-    expect(resultState.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
-
-    expect(resultState.data.steps[1].choices[0].responses.es.sms).toEqual(['Jes', 'J', '1'])
-    expect(resultState.data.steps[1].choices[1].responses.es.sms).toEqual(['No', 'N', '2']) // original preserved
-
-    expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
 
     expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
     expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual('Listo!')
