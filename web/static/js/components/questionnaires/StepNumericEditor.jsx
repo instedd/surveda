@@ -185,6 +185,7 @@ StepNumericEditor.propTypes = {
   ranges: PropTypes.array,
   rageDelimiters: PropTypes.string,
   questionnaire: PropTypes.object.isRequired,
+  saving: PropTypes.bool,
   step: PropTypes.object.isRequired,
   skip: PropTypes.array.isRequired
 }
