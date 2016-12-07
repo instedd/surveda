@@ -45,6 +45,7 @@ body.welcome {
           }
           &.outlined {
             @extend .green-text;
+            line-height: 45px;
             border: 2px solid color("green", "base");
             border-radius: 3px;
             &:hover {
