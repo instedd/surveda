@@ -488,6 +488,9 @@ i.survey-status {
           font-size: 20px;
           display: block;
           padding: 25px 20px;
+          i {
+            padding-top: 4px;
+          }
           span {
             @extend .truncate;
             width: 83%;
@@ -503,6 +506,18 @@ i.survey-status {
       border-bottom: none;
       .card {
         border-radius: 0 0 3px 3px;
+      }
+    }
+  }
+  &.dark {
+    border: none;
+    li .card {
+      border-radius: 3px;
+      @extend .grey;
+      .card-content.closed-step {
+        a, i {
+          @extend .white-text;
+        }
       }
     }
   }
@@ -656,6 +671,30 @@ i.survey-status {
     vertical-align: middle;
   }
 }
+
+.collection.dark {
+  border: none;
+  border-radius: 3px;
+  .collection-item {
+    @extend .grey;
+    &.header {
+      border-radius: 3px 3px 0 0;
+      a.page-title {
+        @extend .white-text;
+      }
+    }
+    label, * {
+      @extend .white-text;
+    }
+    input[type='text'] {
+      @extend .white-text;
+      &:focus:not([readonly]) {
+        border-bottom-color: white;
+      }
+    }
+  }
+}
+
 
 // ------- Forms --------------
 

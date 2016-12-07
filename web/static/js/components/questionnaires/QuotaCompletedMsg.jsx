@@ -65,13 +65,17 @@ class QuotaCompletedMsg extends Component {
     if (this.state.editing) {
       return (
         <Card>
-          <ul className='collection collection-card'>
+          <ul className='collection collection-card dark'>
             <li className='collection-item header'>
-              <div className='row' onClick={this.handleClick} style={{cursor: 'pointer'}} >
+              <div className='row'>
                 <div className='col s12'>
                   <i className='material-icons left'>pie_chart</i>
-                  Quota completed message
-                  <i className='material-icons collapse right'>expand_less</i>
+                  <a className='page-title truncate'>
+                    <span>Quota completed message</span>
+                  </a>
+                  <a className='collapse right' href='#!' onClick={this.handleClick}>
+                    <i className='material-icons'>expand_less</i>
+                  </a>
                 </div>
               </div>
             </li>
@@ -85,11 +89,20 @@ class QuotaCompletedMsg extends Component {
       )
     } else {
       return (
-        <div onClick={this.handleClick} style={{cursor: 'pointer'}} >
-          <i className='material-icons left'>pie_chart</i>
-          Quota completed messages
-          <i className='material-icons right grey-text'>expand_more</i>
-        </div>
+        <ul className='collapsible dark'>
+          <li>
+            <Card>
+              <div className='card-content closed-step'>
+                <a className='truncate' href='#!' onClick={this.handleClick}>
+                  <i className='material-icons left'>pie_chart</i>
+                  <span>Quota completed messages</span>
+                  <i className='material-icons right grey-text'>expand_more</i>
+                </a>
+              </div>
+
+            </Card>
+          </li>
+        </ul>
       )
     }
   }
