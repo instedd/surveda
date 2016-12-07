@@ -3,6 +3,7 @@ import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
 import reduce from 'lodash/reduce'
 import map from 'lodash/map'
+import reject from 'lodash/reject'
 import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
@@ -602,7 +603,11 @@ const isBlank = (value: string) => {
 }
 
 export const stepStoreValues = (questionnaire: Questionnaire) => {
-  return reduce(questionnaire.steps, (options, step) => {
+  const multipleChoiceSteps = reject(questionnaire.steps, (step) =>
+    step.type == 'language-selection'
+  )
+
+  return reduce(multipleChoiceSteps, (options, step) => {
     options[step.store] = {
       type: step.type,
       values: map(step.choices, (choice) =>
@@ -890,7 +895,7 @@ const addTranslations = (obj, translations, funcOrProperty) => {
     } else {
       obj[lang] = {}
     }
-    if (typeof(funcOrProperty) == 'function') {
+    if (typeof (funcOrProperty) == 'function') {
       funcOrProperty(obj[lang], text)
     } else {
       obj[lang][funcOrProperty] = text

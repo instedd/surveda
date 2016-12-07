@@ -856,6 +856,32 @@ describe('questionnaire reducer', () => {
         Exercise: {type: 'numeric', values: []}
       })
     })
+
+    it('should ignore language-selection steps', () => {
+      const questionnaire = deepFreeze({
+        steps: [
+          {
+            type: 'numeric',
+            store: 'Cigarettes'
+          },
+          {
+            type: 'multiple-choice',
+            store: 'Gender',
+            choices: [{value: 'Male'}, {value: 'Female'}]
+          },
+          {
+            type: 'language-selection',
+            store: 'Language'
+          }
+        ],
+        id: 1
+      })
+
+      expect(stepStoreValues(questionnaire)).toEqual({
+        Cigarettes: {type: 'numeric', values: []},
+        Gender: {type: 'multiple-choice', values: ['Male', 'Female']}
+      })
+    })
   })
 
   it('should set quota_completed_msg for the first time', () => {
@@ -909,8 +935,8 @@ describe('questionnaire reducer', () => {
         actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
-        actions.setSmsQuotaCompletedMsg("Done"),
-        actions.setIvrQuotaCompletedMsg("Done!")
+        actions.setSmsQuotaCompletedMsg('Done'),
+        actions.setIvrQuotaCompletedMsg('Done!')
       ])
 
       const csv = csvForTranslation(state.data)
@@ -922,7 +948,7 @@ describe('questionnaire reducer', () => {
         ['No, N, 2', '', 'No, N, 2'],
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', ''],
-        ['Done!', '', ''],
+        ['Done!', '', '']
       ]
 
       expect(csv.length).toEqual(expected.length)
@@ -943,7 +969,7 @@ describe('questionnaire reducer', () => {
           ['en', 'es'],
           ['Do you smoke?', 'Cxu vi fumas?'],
           ['Do you exercise?', 'Cxu vi ekzercas?'],
-          ['Yes, Y, 1', 'Jes, J, 1'],
+          ['Yes, Y, 1', 'Jes, J, 1']
         ]
       )
     ])
@@ -965,8 +991,8 @@ describe('questionnaire reducer', () => {
 
     const resultState = playActionsFromState(preState, reducer)([
       actions.addLanguage('es'),
-      actions.setSmsQuotaCompletedMsg("Done"),
-      actions.setIvrQuotaCompletedMsg("Done!"),
+      actions.setSmsQuotaCompletedMsg('Done'),
+      actions.setIvrQuotaCompletedMsg('Done!'),
       actions.uploadCsvForTranslation(
         [
           ['en', 'es'],
@@ -974,11 +1000,10 @@ describe('questionnaire reducer', () => {
           ['Do you exercise?', 'Cxu vi ekzercas?'],
           ['Yes, Y, 1', 'Jes, J, 1'],
           ['Done', 'Listo'],
-          ['Done!', 'Listo!'],
+          ['Done!', 'Listo!']
         ]
       )
     ])
-
 
     expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
     expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual('Listo!')
