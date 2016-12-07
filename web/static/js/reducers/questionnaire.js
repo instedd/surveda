@@ -18,6 +18,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     case actions.SET_SMS_QUOTA_COMPLETED_MSG: return setSmsQuotaCompletedMsg(state, action)
     case actions.SET_IVR_QUOTA_COMPLETED_MSG: return setIvrQuotaCompletedMsg(state, action)
+    case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     default: return steps(state, action)
   }
 }
@@ -61,7 +62,6 @@ const stepsReducer = (state, action, quiz: Questionnaire) => {
     case actions.CHANGE_CHOICE: return changeChoice(state, action, quiz)
     case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
     case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
-    case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action, quiz)
   }
 
   return state
@@ -677,6 +677,29 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     }
   })
 
+  let q = questionnaire.quotaCompletedMsg
+  if (q) {
+    if (q[defaultLang] && q[defaultLang].sms && q[defaultLang].sms.trim().length != 0) {
+      rows.push(headers.map(lang => {
+        if (q[lang] && q[lang].sms) {
+          return q[lang].sms
+        } else {
+          return ''
+        }
+      }))
+    }
+
+    if (q[defaultLang] && q[defaultLang].ivr && q[defaultLang].ivr.trim().length != 0) {
+      rows.push(headers.map(lang => {
+        if (q[lang] && q[lang].ivr) {
+          return q[lang].ivr
+        } else {
+          return ''
+        }
+      }))
+    }
+  }
+
   return rows
 }
 
@@ -769,14 +792,16 @@ const changeRangeSkipLogic = (state, action) => {
   })
 }
 
-const uploadCsvForTranslation = (state, action, quiz) => {
+const uploadCsvForTranslation = (state, action) => {
   // Convert CSV into a dictionary:
   // {defaultLanguageText -> {otherLanguage -> otherLanguageText}}
-  const defaultLanguage = quiz.defaultLanguage
+  const defaultLanguage = state.defaultLanguage
   const csv = action.csv
   const lookup = buildCsvLookup(csv, defaultLanguage)
-  state = state.map(step => translateStep(step, defaultLanguage, lookup))
-  return state
+  let newState = {...state}
+  newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
+  newState.quotaCompletedMsg = translateQuotaCompletedMsg(state.quotaCompletedMsg, defaultLanguage, lookup)
+  return newState
 }
 
 const translateStep = (step, defaultLanguage, lookup) => {
@@ -855,6 +880,42 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
   }
 
   return newChoice
+}
+
+const translateQuotaCompletedMsg = (msg, defaultLanguage, lookup) => {
+  let defaultLanguageValue = msg[defaultLanguage]
+  if (!defaultLanguageValue) return msg
+
+  let newMsg = {...msg}
+  let translations
+
+  let sms = defaultLanguageValue.sms
+  if (sms && (translations = lookup[sms])) {
+    for (let lang in translations) {
+      const text = translations[lang]
+      if (newMsg[lang]) {
+        newMsg[lang] = {...newMsg[lang]}
+      } else {
+        newMsg[lang] = {}
+      }
+      newMsg[lang].sms = text
+    }
+  }
+
+  let ivr = defaultLanguageValue.ivr
+  if (ivr && (translations = lookup[ivr])) {
+    for (let lang in translations) {
+      const text = translations[lang]
+      if (newMsg[lang]) {
+        newMsg[lang] = {...newMsg[lang]}
+      } else {
+        newMsg[lang] = {}
+      }
+      newMsg[lang].ivr = text
+    }
+  }
+
+  return newMsg
 }
 
 // Converts a CSV into a dictionary:

@@ -883,7 +883,9 @@ describe('questionnaire reducer', () => {
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('fr'),
-        actions.addLanguage('es')
+        actions.addLanguage('es'),
+        actions.setSmsQuotaCompletedMsg("Done"),
+        actions.setIvrQuotaCompletedMsg("Done!")
       ])
 
       const csv = csvForTranslation(state.data)
@@ -893,7 +895,9 @@ describe('questionnaire reducer', () => {
         ['Do you smoke?', '', 'Fumas?'],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
         ['No, N, 2', '', 'No, N, 2'],
-        ['Do you exercise?', '', 'Ejercitas?']
+        ['Do you exercise?', '', 'Ejercitas?'],
+        ['Done', '', ''],
+        ['Done!', '', ''],
       ]
 
       expect(csv.length).toEqual(expected.length)
@@ -909,12 +913,16 @@ describe('questionnaire reducer', () => {
 
     const resultState = playActionsFromState(preState, reducer)([
       actions.addLanguage('es'),
+      actions.setSmsQuotaCompletedMsg("Done"),
+      actions.setIvrQuotaCompletedMsg("Done!"),
       actions.uploadCsvForTranslation(
         [
           ['en', 'es'],
           ['Do you smoke?', 'Cxu vi fumas?'],
           ['Do you exercise?', 'Cxu vi ekzercas?'],
           ['Yes, Y, 1', 'Jes, J, 1'],
+          ['Done', 'Listo'],
+          ['Done!', 'Listo!'],
         ]
       )
     ])
@@ -926,6 +934,9 @@ describe('questionnaire reducer', () => {
     expect(resultState.data.steps[1].choices[1].responses.es.sms).toEqual(['No', 'N', '2']) // original preserved
 
     expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
+
+    expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
+    expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual('Listo!')
   })
 })
 
