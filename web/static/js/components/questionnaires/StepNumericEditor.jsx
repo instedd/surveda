@@ -88,8 +88,7 @@ class StepNumericEditor extends Component {
       skipOptions.unshift({id: '', title: 'Next question'})
     }
 
-    let minValue = <div className='row'>
-      <div className='col input-field s2'>
+    let minValue = <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_min_value'
           value={`${this.state.minValue}`}
           label='Min value' >
@@ -99,10 +98,8 @@ class StepNumericEditor extends Component {
             onBlur={e => this.minValueSubmit(e)} />
         </InputWithLabel>
       </div>
-    </div>
 
-    let rangesDelimiters = <div className='row'>
-      <div className='col input-field s2'>
+    let rangesDelimiters = <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_range_delimiters'
           value={this.state.rangesDelimiters}
           label='Range delimiters' >
@@ -112,10 +109,8 @@ class StepNumericEditor extends Component {
             onBlur={e => this.rangesDelimitersSubmit(e)} />
         </InputWithLabel>
       </div>
-    </div>
 
-    let maxValue = <div className='row'>
-      <div className='col input-field s2'>
+    let maxValue = <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_max_value'
           value={`${this.state.maxValue}`}
           label='Max value' >
@@ -126,7 +121,6 @@ class StepNumericEditor extends Component {
             onBlur={e => this.maxValueSubmit(e)} />
         </InputWithLabel>
       </div>
-    </div>
 
     let skipLogicTable = null
     if (ranges) {
@@ -169,9 +163,11 @@ class StepNumericEditor extends Component {
       <h5>Responses</h5>
       <p><b>Setup a valid range for user input. Leave min or max empty if not
       applicable and enter range delimiters separated by comma if needed.</b></p>
-      {minValue}
-      {rangesDelimiters}
-      {maxValue}
+      <div className='row range-fields'>
+        {minValue}
+        {rangesDelimiters}
+        {maxValue}
+      </div>
       {skipLogicTable}
     </div>
   }

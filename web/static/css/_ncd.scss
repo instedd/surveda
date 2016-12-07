@@ -806,6 +806,13 @@ i.survey-status {
   }
 }
 
+.range-fields {
+  .input-field.inline {
+    min-width: 145px;
+  }
+}
+
+
 .collection.collection-card {
   overflow: visible;
 }
