@@ -69,10 +69,10 @@ defmodule Ask.Runtime.Flow do
 
         if (!next_step_index || flow.current_step > next_step_index) do
           # raise "Skip logic: invalid step id."
-          next_step_index = length(flow.questionnaire.steps)
+          length(flow.questionnaire.steps)
+        else
+          next_step_index
         end
-
-        next_step_index
     end
   end
 
