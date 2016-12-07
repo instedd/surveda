@@ -311,10 +311,53 @@ footer {
   @extend .red-text, .darken-1;
 }
 
-.modal-content .card-content {
-  overflow: scroll;
-  max-height: 250px;
+.modal.card {
+  max-height: 70vh;
+  min-height: 350px;
+  max-width: 800px !important;
+  min-width: 400px;
+  overflow-y: initial;
+
+  .modal-content {
+    padding: 0;
+  }
+
+  .card-title.header {
+    @extend .grey, .lighten-2;
+    padding: 1rem 1.3rem;
+    p {
+      @extend .grey-text;
+      font-size: 15px;
+      margin: 0;
+    }
+  }
+
+  .card-content {
+    overflow-y: auto;
+    max-height: 250px;
+    padding: .8rem 1rem 0;
+
+    .row {
+      margin: 0;
+      height: 56px;
+      line-height: 56px;
+      .col {
+        padding: 0;
+      }
+    }
+  }
+  .card-action {
+    border-top: none;
+
+    .btn-large {
+      border-radius: 3px;
+      line-height: 50px;
+      height: 50px;
+      padding: 0 1.3rem;
+    }
+  }
 }
+
 
 
 // ------------ Survey ----------
@@ -324,6 +367,36 @@ footer {
 }
 .respondent-chart {
   margin: .5rem 0 2rem;
+}
+
+.question.left {
+  width: 90%;
+  .question-icon-label {
+    float: left;
+    min-width: 100px;
+    width: 20%;
+    i {
+      margin-right: 10px;
+      line-height: 56px;
+    }
+    span {
+      @extend .truncate;
+    }
+  }
+  .question-value {
+    @extend .grey-text;
+    float: left;
+    width: 72%;
+    .input-field {
+      margin-top: 0;
+      input {
+        height: 2rem;
+      }
+    }
+    .small-text-bellow {
+      line-height: 1;
+    }
+  }
 }
 
 // ------- Survey Card  ----
@@ -1152,6 +1225,9 @@ label {
   .audio-section audio {
     position: relative;
     width: 100%;
+  }
+  .question.left .question-value {
+    width: 60%;
   }
 }
 

@@ -58,46 +58,51 @@ export class QuotasModal extends Component {
         {modalLink}
         <div id={modalId} className='modal card' style={style}>
           <div className='modal-content'>
-            <div className='card-title'><h4>{header}</h4></div>
+            <div className='card-title header'>
+              <h5>{header}</h5>
+              <p>Choose the questionnaire answers you want to use to define quotas</p>
+            </div>
             <div className='card-content'>
               {Object.keys(storeValues).map((storeValue) =>
                 <div className='row' key={storeValue} >
+                  <div className='col s12'>
                   { storeValues[storeValue].type == 'numeric'
-                    ? <span>
-                      <div className='col s4'>
-                        <i className='material-icons v-middle left'>#</i>
-                        <span className='mode-label'>{storeValue}</span>
-                      </div>
-                      <div className='col s7'>
-                        <input type='text' ref={node => { this.state.steps[storeValue] = node }} />
-                        <span className='small-text-bellow'>
-                          Enter comma-separated values to create ranges like 5,10,20
-                        </span>
-                      </div>
-                    </span>
-                    : <span>
-                      <div className='col s4'>
-                        <i className='material-icons v-middle left'>list</i>
-                        <span className='mode-label'>{storeValue}</span>
-                      </div>
-                      <div className='col s7'>
-                        <p className='grey-text'>
+                    ? <div className='question left'>
+                        <div className='question-icon-label'>
+                          <i className='material-icons v-middle left'>dialpad</i>
+                          <span>{storeValue}</span>
+                        </div>
+                        <div className='question-value'>
+                          <div className='input-field'>
+                            <input type='text' ref={node => { this.state.steps[storeValue] = node }} />
+                            <span className='small-text-bellow'>
+                              Enter comma-separated values to create ranges like 5,10,20
+                            </span>
+                          </div>
+                        </div>
+                    </div>
+                    : <div className='question left'>
+                        <div className='question-icon-label'>
+                          <i className='material-icons v-middle left'>list</i>
+                          <span>{storeValue}</span>
+                        </div>
+                        <div className='question-value'>
                           {join(storeValues[storeValue].values, ', ')}
-                        </p>
-                      </div>
-                    </span>
+                        </div>
+                    </div>
                   }
-                  <div className='col s1'>
-                    <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
-                    <label htmlFor={storeValue} />
+                    <div className='checkbox right'>
+                      <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
+                      <label htmlFor={storeValue} />
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
-          <div className='modal-footer card-action'>
-            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={this.onSubmit}>DONE</a>
-            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
+          <div className='card-action'>
+            <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={this.onSubmit}>DONE</a>
+            <a href='#!' className='modal-action modal-close waves-effect grey-text btn-flat'>Cancel</a>
           </div>
         </div>
       </div>
