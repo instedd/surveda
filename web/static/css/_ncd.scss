@@ -688,9 +688,8 @@ i.survey-status {
     }
     input[type='text'] {
       @extend .white-text;
-      &:focus:not([readonly]) {
-        border-bottom-color: white;
-      }
+      border-bottom-color: color('grey', 'lighten-1')!important;
+      box-shadow: none !important;
     }
   }
 }
