@@ -61,19 +61,27 @@ class QuotaCompletedMsg extends Component {
     if (this.state.editing) {
       return (
         <Card>
-          <div onClick={this.handleClick} >
-            <i className='material-icons left'>pie_chart</i>
-            Quota completed message
-            <i className='material-icons'>expand_less</i>
-          </div>
-          <div>
-            {quotaCompletedMsgs}
-          </div>
+          <ul className='collection collection-card'>
+            <li className='collection-item header'>
+              <div className='row' onClick={this.handleClick} style={{cursor: 'pointer'}} >
+                <div className='col s12'>
+                  <i className='material-icons left'>pie_chart</i>
+                  Quota completed message
+                  <i className='material-icons collapse right'>expand_less</i>
+                </div>
+              </div>
+            </li>
+            <li className='collection-item'>
+              <div>
+                {quotaCompletedMsgs}
+              </div>
+            </li>
+          </ul>
         </Card>
       )
     } else {
       return (
-        <div onClick={this.handleClick} >
+        <div onClick={this.handleClick} style={{cursor: 'pointer'}} >
           <i className='material-icons left'>pie_chart</i>
           Quota completed messages
           <i className='material-icons right grey-text'>expand_more</i>

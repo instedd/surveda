@@ -229,7 +229,7 @@ class QuestionnaireEditor extends Component {
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
           </div>
-          <div>
+          <div className='row'>
             <QuotaCompletedMsg />
           </div>
         </div>
