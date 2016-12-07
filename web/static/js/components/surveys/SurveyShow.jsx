@@ -70,7 +70,7 @@ class SurveyShow extends Component {
   modeFor(type, mode) {
     return (
       <div className='mode'>
-        <span className='type'>{type} Mode</span>
+        <label className='grey-text'>{type} Mode</label>
         <div>
           <i className='material-icons'>{this.iconForMode(mode)}</i>
           <span className='mode-label name'>{this.labelForMode(mode)}</span>
@@ -93,7 +93,7 @@ class SurveyShow extends Component {
       fallbackMode = this.modeFor('Fallback', survey.mode[1])
     }
 
-    let modes = <div className='survey-modes col s12 m4'>
+    let modes = <div className='survey-modes'>
       {primaryMode}
       {fallbackMode}
     </div>
@@ -106,30 +106,42 @@ class SurveyShow extends Component {
     }
 
     return (
-      <div>
-        <div className='row'>
-          <div className='col s12 m8'>
+      <div className='row'>
+        <div className='col s12 m8'>
             <h4>
               {questionnaire.name}
             </h4>
             <SurveyStatus survey={survey} />
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col s12 m8'>
             {table}
-          </div>
-          <div>
-            { RespondentsChartCount.respondentsReachedPercentage(completedByDate, target) + '% of target completed' }
-          </div>
-          <div className='col s12 m4'>
-            <RespondentsChart completedByDate={cumulativeCount} />
-            <div>
-              Respondents contacted
+        </div>
+        <div className='col s12 m4'>
+          <div className='row survey-chart'>
+            <div className='col s12'>
+              <label className='grey-text'>
+                { RespondentsChartCount.respondentsReachedPercentage(completedByDate, target) + '% of target completed' }
+              </label>
             </div>
-            { this.respondentsFraction(completedByDate, totalRespondents) }
           </div>
-          {modes}
+          <div className='row respondent-chart'>
+            <div className='col s12'>
+              <RespondentsChart completedByDate={cumulativeCount} />
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <label className='grey-text'>
+                Respondents contacted
+              </label>
+              <div>
+                { this.respondentsFraction(completedByDate, totalRespondents) }
+              </div>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              {modes}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -146,35 +158,35 @@ class SurveyShow extends Component {
           <thead>
             <tr>
               <th>Status</th>
-              <th>Quantity</th>
-              <th>Percent</th>
+              <th className='right-align'>Quantity</th>
+              <th className='right-align'>Percent</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>Pending</td>
-              <td>{ respondentsStats.pending.count }</td>
-              <td>{ Math.round(respondentsStats.pending.percent) }%</td>
+              <td className='right-align'>{ respondentsStats.pending.count }</td>
+              <td className='right-align'>{ Math.round(respondentsStats.pending.percent) }%</td>
             </tr>
             <tr>
               <td>Active</td>
-              <td>{ respondentsStats.active.count }</td>
-              <td>{ Math.round(respondentsStats.active.percent) }%</td>
+              <td className='right-align'>{ respondentsStats.active.count }</td>
+              <td className='right-align'>{ Math.round(respondentsStats.active.percent) }%</td>
             </tr>
             <tr>
               <td>Completed</td>
-              <td>{ respondentsStats.completed.count }</td>
-              <td>{ Math.round(respondentsStats.completed.percent) }%</td>
+              <td className='right-align'>{ respondentsStats.completed.count }</td>
+              <td className='right-align'>{ Math.round(respondentsStats.completed.percent) }%</td>
             </tr>
             <tr>
               <td>Stalled</td>
-              <td>{ respondentsStats.stalled.count }</td>
-              <td>{ Math.round(respondentsStats.stalled.percent) }%</td>
+              <td className='right-align'>{ respondentsStats.stalled.count }</td>
+              <td className='right-align'>{ Math.round(respondentsStats.stalled.percent) }%</td>
             </tr>
             <tr>
               <td>Failed</td>
-              <td>{ respondentsStats.failed.count }</td>
-              <td>{ Math.round(respondentsStats.failed.percent) }%</td>
+              <td className='right-align'>{ respondentsStats.failed.count }</td>
+              <td className='right-align'>{ Math.round(respondentsStats.failed.percent) }%</td>
             </tr>
           </tbody>
         </table>
@@ -194,10 +206,10 @@ class SurveyShow extends Component {
           <thead>
             <tr>
               <th>Quota</th>
-              <th>Target</th>
-              <th>Percent</th>
-              <th>Full</th>
-              <th>Partials</th>
+              <th className='right-align'>Target</th>
+              <th className='right-align'>Percent</th>
+              <th className='right-align'>Full</th>
+              <th className='right-align'>Partials</th>
             </tr>
           </thead>
           <tbody>
@@ -216,10 +228,10 @@ class SurveyShow extends Component {
                       </span>
                     )) }
                   </td>
-                  <td>{stat.quota}</td>
-                  <td>{Math.round(stat.count * 100.0 / stat.quota)}%</td>
-                  <td>{stat.full}</td>
-                  <td>{stat.partials}</td>
+                  <td className='right-align'>{stat.quota}</td>
+                  <td className='right-align'>{Math.round(stat.count * 100.0 / stat.quota)}%</td>
+                  <td className='right-align'>{stat.full}</td>
+                  <td className='right-align'>{stat.partials}</td>
                 </tr>
               )
             }) }

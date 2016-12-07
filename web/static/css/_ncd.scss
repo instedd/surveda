@@ -306,7 +306,17 @@ footer {
   max-height: 250px;
 }
 
-// ------- Survey Card  ----------
+
+// ------------ Survey ----------
+
+.survey-chart {
+  padding-top: 6rem;
+}
+.respondent-chart {
+  margin: .5rem 0 2rem;
+}
+
+// ------- Survey Card  ----
 
 .survey-card .card {
   @extend .black-text;
