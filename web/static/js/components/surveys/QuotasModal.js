@@ -45,6 +45,8 @@ export class QuotasModal extends Component {
   render() {
     const { showLink, linkText, header, survey, questionnaire, modalId, style } = this.props
 
+    this.state.buckets = {}
+
     let modalLink = null
     if (showLink) {
       modalLink = (<a className='modal-trigger' href={`#${modalId}`}>{linkText}</a>)
