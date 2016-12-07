@@ -122,6 +122,9 @@ defmodule Ask.Runtime.Session do
       {:ok, flow, %{prompts: [prompt]}} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
+            # Mark the respondent as failed
+            respondent |> Respondent.changeset(%{state: "rejected"}) |> Repo.update!
+
             msg = quota_completed_msg(session.flow)
             runtime_channel = Ask.Channel.runtime_channel(session.channel)
             if msg && (runtime_channel |> Channel.can_push_question?) do

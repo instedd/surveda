@@ -240,6 +240,9 @@ end
     {:end, {:prompt, "Bye!"}} = Session.sync_step(session, Flow.Message.reply("N"))
 
     assert_receive [:ask, ^test_channel, ^phone_number, ["Bye!"]]
+
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.state == "rejected"
   end
 
   test "ends when quota is reached at leaf, with more stores", %{quiz: quiz, respondent: respondent, channel: channel} do
