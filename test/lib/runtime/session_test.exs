@@ -237,10 +237,7 @@ end
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
-    {:end, {:prompt, "Bye!"}} = Session.sync_step(session, Flow.Message.reply("N"))
-
-    respondent = Respondent |> Repo.get(respondent.id)
-    assert respondent.state == "rejected"
+    {:rejected, {:prompt, "Bye!"}} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "ends when quota is reached at leaf, with more stores", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -271,7 +268,7 @@ end
 
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
-    :end = Session.sync_step(session, Flow.Message.reply("N"))
+    :rejected = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "ends when quota is reached at leaf, numeric", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -313,7 +310,7 @@ end
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
-    :end = Session.sync_step(session, Flow.Message.reply("25"))
+    :rejected = Session.sync_step(session, Flow.Message.reply("25"))
   end
 
   test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -353,7 +350,7 @@ end
     respondent = Respondent |> Repo.get(respondent.id)
 
     {session, _} = Session.start(quiz, respondent, channel)
-    :end = Session.sync_step(session, Flow.Message.reply("N"))
+    :rejected = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "assigns respondent to its bucket", %{quiz: quiz, respondent: respondent, channel: channel} do

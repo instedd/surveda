@@ -122,14 +122,11 @@ defmodule Ask.Runtime.Session do
       {:ok, flow, %{prompts: [prompt]}} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
-            # Mark the respondent as failed
-            respondent |> Respondent.changeset(%{state: "rejected"}) |> Repo.update!
-
             msg = quota_completed_msg(session.flow)
             if msg do
-              {:end, {:prompt, msg}}
+              {:rejected, {:prompt, msg}}
             else
-              :end
+              :rejected
             end
           false -> {:ok, %{session | flow: flow, respondent: respondent}, {:prompt, prompt}, @timeout}
         end

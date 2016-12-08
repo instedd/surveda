@@ -160,6 +160,14 @@ defmodule Ask.Runtime.Broker do
       :end ->
         update_respondent(respondent, :end)
         :end
+
+      {:rejected, data} ->
+        update_respondent(respondent, :rejected)
+        {:end, data}
+
+      :rejected ->
+        update_respondent(respondent, :rejected)
+        :end
     end
   end
 
@@ -191,6 +199,12 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, {:stalled, session}) do
     respondent
     |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
+    |> Repo.update
+  end
+
+  defp update_respondent(respondent, :rejected) do
+    respondent
+    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
     |> Repo.update
   end
 
