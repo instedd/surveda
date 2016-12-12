@@ -138,8 +138,14 @@ const autoComplete = (state, value, quiz: Questionnaire) => {
       step.choices.forEach((choice) => {
         if (choice.value == value && !setted) {
           setted = true
-          smsValues = choice.responses[quiz.defaultLanguage].sms.join(',')
-          ivrValues = choice.responses[quiz.defaultLanguage].ivr.join(',')
+
+          if (choice.responses[quiz.defaultLanguage].sms) {
+            smsValues = choice.responses[quiz.defaultLanguage].sms.join(',')
+          }
+
+          if (choice.responses[quiz.defaultLanguage].ivr) {
+            ivrValues = choice.responses[quiz.defaultLanguage].ivr.join(',')
+          }
         }
       })
     }
@@ -224,16 +230,13 @@ const changeStepTitle = (state, action) => {
   }))
 }
 
-const clearTypeProperties = (step) => {
-  let commons = ['id', 'title', 'prompt', 'store']
-  let baseStep = {}
-  for (let prop in step) {
-    if (commons.includes(prop)) {
-      baseStep[prop] = step[prop]
-    }
+const clearTypeProperties = (step: Step): BaseStep => {
+  return {
+    id: step.id,
+    title: step.title,
+    prompt: step.prompt,
+    store: step.store
   }
-
-  return baseStep
 }
 
 const changeStepType = (state, action) => {
@@ -686,9 +689,10 @@ const changeNumericRanges = (state, action) => {
   return changeStep(state, action.stepId, step => {
     // validate
     let rangesDelimiters = action.rangesDelimiters
-    let minValue = action.minValue ? parseInt(action.minValue) : null
-    let maxValue = action.maxValue ? parseInt(action.maxValue) : null
-    let values = []
+    let minValue: ?number = action.minValue ? parseInt(action.minValue) : null
+    let maxValue: ?number = action.maxValue ? parseInt(action.maxValue) : null
+    let values: Array<number> = []
+
     if (minValue != null) {
       values.push(minValue)
     }
@@ -716,17 +720,44 @@ const changeNumericRanges = (state, action) => {
       }
     }
 
+    // Just to please Flow...
+    let auxValues: Array<?number> = values.map(n => n)
+
     // generate ranges
     if (minValue == null) {
-      values.unshift(null)
+      auxValues.unshift(null)
     }
     if (maxValue != null) {
-      values.pop()
+      auxValues.pop()
     }
 
     let ranges = []
-    for (let [i, from] of values.entries()) {
-      let to = i < (values.length - 1) ? (values[i + 1] - 1) : maxValue
+    for (let [i, from] of auxValues.entries()) {
+      // P1. From the `for` expression above we know `0 <= i < auxValues.length`
+      //
+      // P2. Precondition: there may only be a null element at the 0th position of
+      // `auxValues`. At the moment of writing this comment the code above satisfies
+      // this assertion.
+      //
+      // Here we'll compute the `to` end of the current range.
+      let to
+      if (i == auxValues.length - 1) {
+        // P3. We're at the end of the `auxValues` array, which means we're computing
+        // the last range, which MUST end with `maxValue`.
+        to = maxValue
+      } else {
+        // P4. We are not at the end of the array.
+        // 4a. Because of `P4`, the `to` end of the current range is
+        // the `from` in `auxValues` minus 1, so there's no overlap. Note that
+        // since `i + 1 > 0` (see `P1`), `auxValues[i+1]` is guaranteed to be not null (see `P2`).
+        const nextFrom = auxValues[i + 1]
+        // 4b. Unfortunately, Flow can't make this sort of analysis, so we need to explicitly
+        // ensure that `auxValues[i + 1]` is not null.
+        if (nextFrom) {
+          to = nextFrom - 1
+        }
+      }
+
       let prevRange = step.ranges.find((range) => {
         return range.from == from && range.to == to
       })
@@ -783,11 +814,13 @@ const uploadCsvForTranslation = (state, action) => {
   return newState
 }
 
-const translateStep = (step, defaultLanguage, lookup) => {
+const translateStep = (step, defaultLanguage, lookup): any => {
   let newStep = {...step}
   newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
-  if (step.type == 'multiple-choice') {
-    newStep.choices = translateChoices(step.choices, defaultLanguage, lookup)
+  if (step.type === 'multiple-choice') {
+    let multipleChoice: any = {...step}
+    multipleChoice.choices = translateChoices(multipleChoice.choices, defaultLanguage, lookup)
+    return multipleChoice
   }
   return newStep
 }
@@ -836,7 +869,9 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
     responses: {...choice.responses}
   }
 
-  processTranslations(defaultLanguageResponses.sms.join(', '),
+  const defLangResp = defaultLanguageResponses.sms ? defaultLanguageResponses.sms.join(', ') : ''
+
+  processTranslations(defLangResp,
     newChoice.responses, lookup,
     (obj, text) => { obj.sms = text.split(',').map(s => s.trim()) })
 

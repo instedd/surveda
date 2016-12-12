@@ -21,33 +21,45 @@ export type LanguagePrompt = {
 
 export type Prompt = { [lang: string]: LanguagePrompt };
 
-export type MultipleChoiceStep = {
-  id: string,
+export type MultipleChoiceStep = BaseStep & {
   type: 'multiple-choice',
-  title: string,
-  store: string,
-  prompt: Prompt,
   choices: Choice[]
 };
 
-export type LanguageSelectionStep = {
-  id: string,
+export type LanguageSelectionStep = BaseStep & {
   type: 'language-selection',
-  title: string,
-  store: string,
-  prompt: Prompt,
   languageChoices: (?string)[]
-}
+};
+
+export type NumericStep = BaseStep & {
+  type: 'numeric',
+  minValue: ?number,
+  maxValue: ?number,
+  rangesDelimiters: ?string,
+  ranges: Range[]
+};
+
+export type Range = {
+  from: ?number,
+  to: ?number,
+  skipLogic: ?string
+};
 
 export type Choice = {
   value: string,
   skipLogic: ?string,
   responses: {
     [lang: string]: {
-      sms: string[],
-      ivr: string[]
+      sms?: string[],
+      ivr?: string[]
     }
   }
 };
 
-type Step = MultipleChoiceStep | LanguageSelectionStep;
+export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep;
+export type BaseStep = {
+  id: string,
+  title: string,
+  store: string,
+  prompt: Prompt
+};
