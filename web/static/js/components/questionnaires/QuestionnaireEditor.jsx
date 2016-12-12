@@ -98,7 +98,11 @@ class QuestionnaireEditor extends Component {
     let csvContent = 'data:text/csv;charset=utf-8,'
     csvContent += csvString.stringify(data)
     const encodedUri = encodeURI(csvContent)
-    window.location = encodedUri
+    const a = document.createElement('a')
+    a.href = encodedUri
+    const filename = questionnaire.name.replace(/\W/g, '')
+    a.download = filename + '_translations.csv'
+    a.click()
   }
 
   openUploadCsvDialog(e) {
