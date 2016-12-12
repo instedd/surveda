@@ -806,6 +806,7 @@ const uploadCsvForTranslation = (state, action) => {
   const defaultLanguage = state.defaultLanguage
   const csv = action.csv
   const lookup = buildCsvLookup(csv, defaultLanguage)
+
   let newState = {...state}
   newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
   if (state.quotaCompletedMsg) {
@@ -818,9 +819,8 @@ const translateStep = (step, defaultLanguage, lookup): any => {
   let newStep = {...step}
   newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
   if (step.type === 'multiple-choice') {
-    let multipleChoice: any = {...step}
-    multipleChoice.choices = translateChoices(multipleChoice.choices, defaultLanguage, lookup)
-    return multipleChoice
+    newStep.choices = translateChoices(newStep.choices, defaultLanguage, lookup)
+    return newStep
   }
   return newStep
 }

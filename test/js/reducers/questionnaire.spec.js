@@ -973,7 +973,7 @@ describe('questionnaire reducer', () => {
         ['Yes, Y, 1', '', 'Sí, S, 1'],
         ['No, N, 2', '', 'No, N, 2'],
         ['Do you exercise?', '', 'Ejercitas?'],
-        ['Done', '', ''],
+        ['Done', '', '']
       ]
 
       expect(csv.length).toEqual(expected.length)
