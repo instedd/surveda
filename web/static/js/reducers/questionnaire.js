@@ -628,54 +628,30 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   // Keep a record of exported strings to avoid dups
   let exported = {}
+  let context = {rows, headers, exported}
 
   questionnaire.steps.forEach(step => {
     if (step.type !== 'language-selection') {
       // Sms Prompt
-      if (step.prompt[defaultLang] && step.prompt[defaultLang] && step.prompt[defaultLang].sms && step.prompt[defaultLang].sms.trim().length != 0) {
-        const defaultSms = step.prompt[defaultLang].sms
-        if (!exported[defaultSms]) {
-          exported[defaultSms] = true
-          rows.push(headers.map(lang => {
-            if (step.prompt[lang] && step.prompt[lang].sms) {
-              return `${step.prompt[lang].sms}`
-            } else {
-              return ''
-            }
-          }))
-        }
-      }
+      let defaultSms = ((step.prompt[defaultLang] || {}).sms || "").trim()
+      addToCsvForTranslation(defaultSms, context, lang =>
+        (step.prompt[lang] || {}).sms || ""
+      )
 
       // Ivr Prompt
-      if (step.prompt[defaultLang] && step.prompt[defaultLang] && step.prompt[defaultLang].ivr && step.prompt[defaultLang].ivr.text && step.prompt[defaultLang].ivr.text.trim().length != 0) {
-        const defaultIvr = step.prompt[defaultLang].ivr.text
-        if (!exported[defaultIvr]) {
-          exported[defaultIvr] = true
-          rows.push(headers.map(lang => {
-            if (step.prompt[lang] && step.prompt[lang].ivr) {
-              return `${step.prompt[lang].ivr.text}`
-            } else {
-              ''
-            }
-          }))
-        }
-      }
+      let defaultIvr = (((step.prompt[defaultLang] || {}).ivr || {}).text || "").trim()
+      addToCsvForTranslation(defaultIvr, context, lang =>
+        ((step.prompt[lang] || {}).ivr || {}).text || ""
+      )
 
       // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
       if (step.type === 'multiple-choice') {
         step.choices.forEach(choice => {
           // Response sms
-          const defaultResponseSms = ((choice.responses[defaultLang] || {}).sms || []).join(', ')
-          if (defaultResponseSms.trim().length != 0 && !exported[defaultResponseSms]) {
-            exported[defaultResponseSms] = true
-            rows.push(headers.map(lang => {
-              if (choice.responses[lang]) {
-                return `${choice.responses[lang].sms.join(', ')}`
-              } else {
-                return ''
-              }
-            }))
-          }
+          const defaultResponseSms = ((choice.responses[defaultLang] || {}).sms || []).join(', ').trim()
+          addToCsvForTranslation(defaultResponseSms, context, lang =>
+            ((choice.responses[lang] || {}).sms || []).join(', ')
+          )
         })
       }
     }
@@ -683,28 +659,25 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   let q = questionnaire.quotaCompletedMsg
   if (q) {
-    if (q[defaultLang] && q[defaultLang].sms && q[defaultLang].sms.trim().length != 0) {
-      rows.push(headers.map(lang => {
-        if (q[lang] && q[lang].sms) {
-          return q[lang].sms
-        } else {
-          return ''
-        }
-      }))
-    }
+    let defaultSmsCompletedMsg = ((q[defaultLang] || {}).sms || "").trim()
+    addToCsvForTranslation(defaultSmsCompletedMsg, context, lang =>
+      (q[lang] || {}).sms || ""
+    )
 
-    if (q[defaultLang] && q[defaultLang].ivr && q[defaultLang].ivr.trim().length != 0) {
-      rows.push(headers.map(lang => {
-        if (q[lang] && q[lang].ivr) {
-          return q[lang].ivr
-        } else {
-          return ''
-        }
-      }))
-    }
+    let defaultIvrCompletedMsg = ((q[defaultLang] || {}).ivr || "").trim()
+    addToCsvForTranslation(defaultIvrCompletedMsg, context, lang =>
+      (q[lang] || {}).ivr || ""
+    )
   }
 
   return rows
+}
+
+const addToCsvForTranslation = (text, context, func) => {
+  if (text.length != 0 && !context.exported[text]) {
+    context.exported[text] = true
+    context.rows.push(context.headers.map(func))
+  }
 }
 
 export default validateReducer(fetchReducer(actions, dataReducer))
