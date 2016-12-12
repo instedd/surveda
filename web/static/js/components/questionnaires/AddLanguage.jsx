@@ -58,6 +58,7 @@ class AddLanguage extends Component {
 
   componentDidUpdate() {
     const thisContext = this
+    const { questionnaire } = this.props
     const languageInput = this.refs.languageInput
     const languagesDropdown = this.refs.languagesDropdown
 
@@ -75,9 +76,12 @@ class AddLanguage extends Component {
       },
       onSelect: thisContext.languageAdded(thisContext),
       getData: function(value, callback) {
-        const languagesOptions = iso6393.map((lang) => ({'id': idForLanguange(lang), 'text': lang.name}))
-        // Next step: Don't show options that have been already selected
-        // languagesOptions = languagesOptions.filter((lang) => questionnaire.languages.indexOf(lang.id) == -1 && questionnaire.defaultLanguage !== lang)
+        let languagesOptions = iso6393.map((lang) => ({'id': idForLanguange(lang), 'text': lang.name}))
+
+        // Don't show languages that are already selected
+        languagesOptions = languagesOptions.filter((lang) =>
+          (questionnaire.languages || []).indexOf(lang.id) == -1 && questionnaire.defaultLanguage !== lang)
+
         const matchingOptions = languagesOptions.filter((lang) => matchesLanguage(value.toLowerCase(), lang))
         callback(value, matchingOptions)
       }
