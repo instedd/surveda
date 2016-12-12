@@ -636,15 +636,15 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
   questionnaire.steps.forEach(step => {
     if (step.type !== 'language-selection') {
       // Sms Prompt
-      let defaultSms = ((step.prompt[defaultLang] || {}).sms || "").trim()
+      let defaultSms = ((step.prompt[defaultLang] || {}).sms || '').trim()
       addToCsvForTranslation(defaultSms, context, lang =>
-        (step.prompt[lang] || {}).sms || ""
+        (step.prompt[lang] || {}).sms || ''
       )
 
       // Ivr Prompt
-      let defaultIvr = (((step.prompt[defaultLang] || {}).ivr || {}).text || "").trim()
+      let defaultIvr = (((step.prompt[defaultLang] || {}).ivr || {}).text || '').trim()
       addToCsvForTranslation(defaultIvr, context, lang =>
-        ((step.prompt[lang] || {}).ivr || {}).text || ""
+        ((step.prompt[lang] || {}).ivr || {}).text || ''
       )
 
       // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
@@ -662,14 +662,14 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   let q = questionnaire.quotaCompletedMsg
   if (q) {
-    let defaultSmsCompletedMsg = ((q[defaultLang] || {}).sms || "").trim()
+    let defaultSmsCompletedMsg = ((q[defaultLang] || {}).sms || '').trim()
     addToCsvForTranslation(defaultSmsCompletedMsg, context, lang =>
-      (q[lang] || {}).sms || ""
+      (q[lang] || {}).sms || ''
     )
 
-    let defaultIvrCompletedMsg = ((q[defaultLang] || {}).ivr || "").trim()
+    let defaultIvrCompletedMsg = ((q[defaultLang] || {}).ivr || '').trim()
     addToCsvForTranslation(defaultIvrCompletedMsg, context, lang =>
-      (q[lang] || {}).ivr || ""
+      (q[lang] || {}).ivr || ''
     )
   }
 
