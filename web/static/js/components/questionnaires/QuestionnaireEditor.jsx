@@ -180,7 +180,7 @@ class QuestionnaireEditor extends Component {
           </div>
           <div className='row'>
             <div className='col s12'>
-              <input id="questionnaire_file_upload" type="file" accept=".csv" style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
+              <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
               <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
                 <i className='material-icons'>file_upload</i>
                 <span>Upload contents as CSV</span>
