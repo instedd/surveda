@@ -9,8 +9,18 @@ class AddLanguage extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      editing: false
+      editing: false,
     }
+
+    // We want to close the languages popup when clicking outside
+    // the text input. However, materialize_autocomplete triggers
+    // the selection on the onClick event, so on the mouseDown event
+    // the popup will be closed. To prevent this, we add an onMouseDown
+    // event on the <ul> of the popup and set this flag to true.
+    // So, when we click on the popup the popup won't be closed until
+    // the language is added (languageAdded handler). Clicking outside
+    // of the popup will close the popup correctly.
+    this.preventClose = false
     this.handleClick = this.handleClick.bind(this)
     this.endEdit = this.endEdit.bind(this)
   }
@@ -23,19 +33,23 @@ class AddLanguage extends Component {
 
   endEdit(e) {
     const context = this
-    // todo: Avoid using timeout
-    setTimeout(
-      () => context.setState({editing: false}), 100
-    )
+    if (!this.preventClose) {
+      context.setState({editing: false})
+    }
   }
 
   languageAdded(context) {
     return (language) => {
       const { dispatch } = context.props
+      this.preventClose = false
       context.endEdit()
       dispatch(actions.addLanguage(language.id))
       $(context.refs.languageInput).val('')
     }
+  }
+
+  preventCloseCallback(e) {
+    this.preventClose = true
   }
 
   render() {
@@ -50,7 +64,7 @@ class AddLanguage extends Component {
       return (
         <div className='input-field language-selection'>
           <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' placeholder='Start typing a language' onBlur={this.endEdit}/>
-          <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' />
+          <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' onMouseDown={(e) => this.preventCloseCallback(e)} />
         </div>
       )
     }
