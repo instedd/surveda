@@ -481,6 +481,8 @@ type ValidationState = {
 };
 
 const validateReducer = (reducer) => {
+  // React will call this with an undefined the first time for initialization.
+  // We mimic that in the specs, so ValidationState needs to become optional here.
   return (state: ?ValidationState, action: any) => {
     const newState = reducer(state, action)
     validate(newState)

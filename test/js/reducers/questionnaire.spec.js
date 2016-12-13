@@ -818,26 +818,129 @@ describe('questionnaire reducer', () => {
 
   describe('helpers', () => {
     it('should provide valid answers for multiple-choice steps', () => {
-      const questionnaire: Questionnaire = deepFreeze({
+      const bareQuestionnaire: Questionnaire = {
+        name: 'q1',
+        modes: ['sms'],
+        languages: [],
+        defaultLanguage: 'en',
+        quotaCompletedMsg: null,
         steps: [
           {
             type: 'multiple-choice',
+            title: 'Do you smoke?',
             store: 'Smokes',
-            choices: [{value: 'Yes'}, {value: 'No'}]
+            id: '17141bea-a81c-4227-bdda-f5f69188b0e7',
+            choices: [
+              {
+                value: 'Yes',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Yes'
+                    ]
+                  }
+                },
+                skipLogic: null
+              },
+              {
+                value: 'No',
+                responses: {
+                  'en': {
+                    sms: [
+                      'No',
+                      'N',
+                      '2'
+                    ]
+                  }
+                },
+                skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
+              }
+            ],
+            prompt: {
+              'en': {
+                sms: 'Do you smoke?',
+                ivr: {
+                  text: 'Do you smoke?',
+                  audioSource: 'tts'
+                }
+              }
+            }
           },
           {
             type: 'multiple-choice',
-            store: 'Gender',
-            choices: [{value: 'Male'}, {value: 'Female'}]
-          },
-          {
-            type: 'multiple-choice',
+            title: 'Do you exercise?',
             store: 'Exercises',
-            choices: [{value: 'Yes'}, {value: 'No'}]
+            id: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+            choices: [
+              {
+                value: 'Yes',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Yes'
+                    ]
+                  }
+                },
+                skipLogic: null
+              },
+              {
+                value: 'No',
+                responses: {
+                  'en': {
+                    sms: [
+                      'No'
+                    ]
+                  }
+                },
+                skipLogic: null
+              }
+            ],
+            prompt: {
+              'en': {
+                sms: 'Do you exercise?'
+              }
+            }
+          },
+          {
+            type: 'multiple-choice',
+            title: 'What is your gender?',
+            store: 'Gender',
+            id: '16588daa-cd81-40b1-8cac-ff2e72a15c15',
+            choices: [
+              {
+                value: 'Male',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Male'
+                    ]
+                  }
+                },
+                skipLogic: null
+              },
+              {
+                value: 'Female',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Female'
+                    ]
+                  }
+                },
+                skipLogic: null
+              }
+            ],
+            prompt: {
+              'en': {
+                sms: 'What is your gender?'
+              }
+            }
           }
         ],
         id: 1
-      })
+      }
+
+      const questionnaire = deepFreeze(bareQuestionnaire)
 
       expect(stepStoreValues(questionnaire)).toEqual({
         Smokes: {type: 'multiple-choice', values: ['Yes', 'No']},
@@ -1195,4 +1298,6 @@ const bareQuestionnaire: Questionnaire = {
 // As a workaround, we define `bareQuestionnaire` and explicitly annotate it as
 // Questionnaire. That will let us catch inconsistencies when we define the
 // Questionnaire fixture for testing here.
+// The limitations of deepFreeze are probably related to sealed objects being used under its hood.
+// See: https://flowtype.org/docs/objects.html#sealed-object-types
 const questionnaire = deepFreeze(bareQuestionnaire)
