@@ -108,11 +108,11 @@ class SurveyShow extends Component {
     return (
       <div className='row'>
         <div className='col s12 m8'>
-            <h4>
-              {questionnaire.name}
-            </h4>
-            <SurveyStatus survey={survey} />
-            {table}
+          <h4>
+            {questionnaire.name}
+          </h4>
+          <SurveyStatus survey={survey} />
+          {table}
         </div>
         <div className='col s12 m4'>
           <div className='row survey-chart'>
@@ -149,96 +149,97 @@ class SurveyShow extends Component {
 
   dispositions(respondentsStats) {
     return (
-    <div className='card'>
-      <div className='card-table-title'>
+      <div className='card'>
+        <div className='card-table-title'>
         Dispositions
+        </div>
+        <div className='card-table'>
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th className='right-align'>Quantity</th>
+                <th className='right-align'>Percent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pending</td>
+                <td className='right-align'>{ respondentsStats.pending.count }</td>
+                <td className='right-align'>{ Math.round(respondentsStats.pending.percent) }%</td>
+              </tr>
+              <tr>
+                <td>Active</td>
+                <td className='right-align'>{ respondentsStats.active.count }</td>
+                <td className='right-align'>{ Math.round(respondentsStats.active.percent) }%</td>
+              </tr>
+              <tr>
+                <td>Completed</td>
+                <td className='right-align'>{ respondentsStats.completed.count }</td>
+                <td className='right-align'>{ Math.round(respondentsStats.completed.percent) }%</td>
+              </tr>
+              <tr>
+                <td>Stalled</td>
+                <td className='right-align'>{ respondentsStats.stalled.count }</td>
+                <td className='right-align'>{ Math.round(respondentsStats.stalled.percent) }%</td>
+              </tr>
+              <tr>
+                <td>Failed</td>
+                <td className='right-align'>{ respondentsStats.failed.count }</td>
+                <td className='right-align'>{ Math.round(respondentsStats.failed.percent) }%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div className='card-table'>
-        <table>
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th className='right-align'>Quantity</th>
-              <th className='right-align'>Percent</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Pending</td>
-              <td className='right-align'>{ respondentsStats.pending.count }</td>
-              <td className='right-align'>{ Math.round(respondentsStats.pending.percent) }%</td>
-            </tr>
-            <tr>
-              <td>Active</td>
-              <td className='right-align'>{ respondentsStats.active.count }</td>
-              <td className='right-align'>{ Math.round(respondentsStats.active.percent) }%</td>
-            </tr>
-            <tr>
-              <td>Completed</td>
-              <td className='right-align'>{ respondentsStats.completed.count }</td>
-              <td className='right-align'>{ Math.round(respondentsStats.completed.percent) }%</td>
-            </tr>
-            <tr>
-              <td>Stalled</td>
-              <td className='right-align'>{ respondentsStats.stalled.count }</td>
-              <td className='right-align'>{ Math.round(respondentsStats.stalled.percent) }%</td>
-            </tr>
-            <tr>
-              <td>Failed</td>
-              <td className='right-align'>{ respondentsStats.failed.count }</td>
-              <td className='right-align'>{ Math.round(respondentsStats.failed.percent) }%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
     )
   }
 
   quotasForAnswers(stats) {
     return (
-    <div className='card'>
-      <div className='card-table-title'>
-        {stats.length} quotas for answers
-      </div>
-      <div className='card-table'>
-        <table>
-          <thead>
-            <tr>
-              <th>Quota</th>
-              <th className='right-align'>Target</th>
-              <th className='right-align'>Percent</th>
-              <th className='right-align'>Full</th>
-              <th className='right-align'>Partials</th>
-            </tr>
-          </thead>
-          <tbody>
-            { stats.map((stat, index) => {
-              let conditions = []
-              for(let key in stat.condition) {
-                conditions.push([`${key}: ${stat.condition[key]}`])
-              }
-              return (
-                <tr key={index}>
-                  <td>
-                    { conditions.map((condition, index2) => (
-                      <span key={index2}>
-                        {condition}
-                        <br/>
-                      </span>
+      <div className='card'>
+        <div className='card-table-title'>
+          {stats.length} quotas for answers
+        </div>
+        <div className='card-table'>
+          <table>
+            <thead>
+              <tr>
+                <th>Quota</th>
+                <th className='right-align'>Target</th>
+                <th className='right-align'>Percent</th>
+                <th className='right-align'>Full</th>
+                <th className='right-align'>Partials</th>
+              </tr>
+            </thead>
+            <tbody>
+              { stats.map((stat, index) => {
+                let conditions = []
+                for (let key in stat.condition) {
+                  conditions.push([`${key}: ${stat.condition[key]}`])
+                }
+                const quota = stat.quota == null ? 0 : stat.quota
+                return (
+                  <tr key={index}>
+                    <td>
+                      { conditions.map((condition, index2) => (
+                        <span key={index2}>
+                          {condition}
+                          <br />
+                        </span>
                     )) }
-                  </td>
-                  <td className='right-align'>{stat.quota}</td>
-                  <td className='right-align'>{stat.quota == 0 ? "-" : `${Math.round(stat.count * 100.0 / stat.quota)}%`}</td>
-                  <td className='right-align'>{stat.quota == 0 ? "-" : stat.full}</td>
-                  <td className='right-align'>{stat.quota == 0 ? "-" : stat.partials}</td>
-                </tr>
-              )
-            }) }
-          </tbody>
-        </table>
+                    </td>
+                    <td className='right-align'>{quota}</td>
+                    <td className='right-align'>{quota == 0 ? '-' : `${Math.round(stat.count * 100.0 / quota)}%`}</td>
+                    <td className='right-align'>{quota == 0 ? '-' : stat.full}</td>
+                    <td className='right-align'>{quota == 0 ? '-' : stat.partials}</td>
+                  </tr>
+                )
+              }) }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
     )
   }
 }
