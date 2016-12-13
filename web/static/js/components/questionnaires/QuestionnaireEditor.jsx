@@ -4,7 +4,7 @@ import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { csvForTranslation } from '../../reducers/questionnaire'
+import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from '../questionnaires/LanguagesList'
 import QuotaCompletedMsg from '../questionnaires/QuotaCompletedMsg'
@@ -100,8 +100,7 @@ class QuestionnaireEditor extends Component {
     const encodedUri = encodeURI(csvContent)
     const a = document.createElement('a')
     a.href = encodedUri
-    const filename = questionnaire.name.replace(/\W/g, '')
-    a.download = filename + '_translations.csv'
+    a.download = csvTranslationFilename(questionnaire)
     a.click()
   }
 

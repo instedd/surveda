@@ -1,10 +1,11 @@
 /* eslint-env mocha */
+// @flow
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
-import reducer, { stepStoreValues, csvForTranslation } from '../../../web/static/js/reducers/questionnaire'
+import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -817,7 +818,7 @@ describe('questionnaire reducer', () => {
 
   describe('helpers', () => {
     it('should provide valid answers for multiple-choice steps', () => {
-      const questionnaire = deepFreeze({
+      const questionnaire: Questionnaire = deepFreeze({
         steps: [
           {
             type: 'multiple-choice',
@@ -1043,10 +1044,19 @@ describe('questionnaire reducer', () => {
       expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
       expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual('Listo!')
     })
+
+    it('should compute a valid alphanumeric filename', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Foo!@#%!     123  []]!!!??')
+      ])
+      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual('Foo123_translations.csv')
+    })
   })
 })
 
-const questionnaire = deepFreeze({
+const bareQuestionnaire: Questionnaire = {
   steps: [
     {
       type: 'multiple-choice',
@@ -1139,7 +1149,8 @@ const questionnaire = deepFreeze({
                 '1'
               ]
             }
-          }
+          },
+          skipLogic: null
         },
         {
           value: 'No',
@@ -1154,7 +1165,8 @@ const questionnaire = deepFreeze({
                 '2'
               ]
             }
-          }
+          },
+          skipLogic: null
         }
       ],
       prompt: {
@@ -1176,4 +1188,11 @@ const questionnaire = deepFreeze({
   defaultLanguage: 'en',
   languages: ['en'],
   quotaCompletedMsg: null
-})
+}
+
+// TODO: investigate why Flow ignores the result of `deepFreeze`
+// It probably is defined as `any` somewhere.
+// As a workaround, we define `bareQuestionnaire` and explicitly annotate it as
+// Questionnaire. That will let us catch inconsistencies when we define the
+// Questionnaire fixture for testing here.
+const questionnaire = deepFreeze(bareQuestionnaire)
