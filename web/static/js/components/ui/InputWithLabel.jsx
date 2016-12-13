@@ -31,7 +31,7 @@ export class InputWithLabel extends Component {
     return (
       <div>
         {childrenWithProps}
-        <label htmlFor={id} className={classNames({'active': value})} data-error={errorMessage}>{label}</label>
+        <label htmlFor={id} className={classNames({'active': value != null})} data-error={errorMessage}>{label}</label>
       </div>
     )
   }

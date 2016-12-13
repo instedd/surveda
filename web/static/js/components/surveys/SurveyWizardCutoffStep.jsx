@@ -118,7 +118,7 @@ class SurveyWizardCutoffStep extends Component {
           ? survey.quotas.buckets.map((bucket, index) =>
             <div className='row' key={index} >
               <div className='input-field col s12'>
-                <InputWithLabel value={bucket.quota || ''} id={this.bucketLabel(bucket)} label={this.bucketLabel(bucket)} >
+                <InputWithLabel value={bucket.quota == null ? 0 : bucket.quota} id={this.bucketLabel(bucket)} label={this.bucketLabel(bucket)} >
                   <input
                     type='text'
                     onChange={this.quotaChange}
