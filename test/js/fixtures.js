@@ -10,52 +10,42 @@ const bareQuestionnaire: Questionnaire = {
         {
           value: 'Yes',
           responses: {
-            'en': {
-              sms: [
+            sms: {
+              en: [
                 'Yes',
                 'Y',
                 '1'
               ],
-              ivr: [
-                '1'
-              ]
-            },
-            'es': {
-              sms: [
+              'es': [
                 'Sí',
                 'S',
                 '1'
-              ],
-              ivr: [
-                '1'
               ]
-            }
+            },
+            ivr: [
+              '1'
+            ]
           },
           skipLogic: null
         },
         {
           value: 'No',
           responses: {
-            'en': {
-              sms: [
+            sms: {
+              'en': [
                 'No',
                 'N',
                 '2'
               ],
-              ivr: [
+              'es': [
+                'No',
+                'N',
                 '2'
               ]
             },
-            'es': {
-              sms: [
-                'No',
-                'N',
-                '2'
-              ],
-              ivr: [
-                '2'
-              ]
-            }
+            ivr: [
+              '2'
+            ]
           },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
         }

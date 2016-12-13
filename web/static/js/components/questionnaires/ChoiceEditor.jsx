@@ -79,8 +79,8 @@ class ChoiceEditor extends Component {
 
     return {
       response: choice.value,
-      sms: ((choice.responses[lang] || {}).sms || []).join(', '),
-      ivr: ((choice.responses[lang] || {}).ivr || []).join(', '),
+      sms: ((choice.responses.sms || {})[lang] || []).join(', '),
+      ivr: (choice.responses.ivr || []).join(', '),
       skipLogic: choice.skipLogic
     }
   }
