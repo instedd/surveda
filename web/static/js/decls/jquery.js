@@ -1,1 +1,1 @@
-declare var $: Function
+declare var $: Function;

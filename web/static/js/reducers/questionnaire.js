@@ -481,7 +481,9 @@ type ValidationState = {
 };
 
 const validateReducer = (reducer) => {
-  return (state: ValidationState, action: any) => {
+  // React will call this with an undefined the first time for initialization.
+  // We mimic that in the specs, so ValidationState needs to become optional here.
+  return (state: ?ValidationState, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
@@ -674,6 +676,11 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
   }
 
   return rows
+}
+
+export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
+  const filename = questionnaire.name.replace(/\W/g, '')
+  return filename + '_translations.csv'
 }
 
 const addToCsvForTranslation = (text, context, func) => {

@@ -1,10 +1,11 @@
 /* eslint-env mocha */
+// @flow
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
-import reducer, { stepStoreValues, csvForTranslation } from '../../../web/static/js/reducers/questionnaire'
+import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -817,26 +818,129 @@ describe('questionnaire reducer', () => {
 
   describe('helpers', () => {
     it('should provide valid answers for multiple-choice steps', () => {
-      const questionnaire = deepFreeze({
+      const bareQuestionnaire: Questionnaire = {
+        name: 'q1',
+        modes: ['sms'],
+        languages: [],
+        defaultLanguage: 'en',
+        quotaCompletedMsg: null,
         steps: [
           {
             type: 'multiple-choice',
+            title: 'Do you smoke?',
             store: 'Smokes',
-            choices: [{value: 'Yes'}, {value: 'No'}]
+            id: '17141bea-a81c-4227-bdda-f5f69188b0e7',
+            choices: [
+              {
+                value: 'Yes',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Yes'
+                    ]
+                  }
+                },
+                skipLogic: null
+              },
+              {
+                value: 'No',
+                responses: {
+                  'en': {
+                    sms: [
+                      'No',
+                      'N',
+                      '2'
+                    ]
+                  }
+                },
+                skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
+              }
+            ],
+            prompt: {
+              'en': {
+                sms: 'Do you smoke?',
+                ivr: {
+                  text: 'Do you smoke?',
+                  audioSource: 'tts'
+                }
+              }
+            }
           },
           {
             type: 'multiple-choice',
-            store: 'Gender',
-            choices: [{value: 'Male'}, {value: 'Female'}]
-          },
-          {
-            type: 'multiple-choice',
+            title: 'Do you exercise?',
             store: 'Exercises',
-            choices: [{value: 'Yes'}, {value: 'No'}]
+            id: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+            choices: [
+              {
+                value: 'Yes',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Yes'
+                    ]
+                  }
+                },
+                skipLogic: null
+              },
+              {
+                value: 'No',
+                responses: {
+                  'en': {
+                    sms: [
+                      'No'
+                    ]
+                  }
+                },
+                skipLogic: null
+              }
+            ],
+            prompt: {
+              'en': {
+                sms: 'Do you exercise?'
+              }
+            }
+          },
+          {
+            type: 'multiple-choice',
+            title: 'What is your gender?',
+            store: 'Gender',
+            id: '16588daa-cd81-40b1-8cac-ff2e72a15c15',
+            choices: [
+              {
+                value: 'Male',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Male'
+                    ]
+                  }
+                },
+                skipLogic: null
+              },
+              {
+                value: 'Female',
+                responses: {
+                  'en': {
+                    sms: [
+                      'Female'
+                    ]
+                  }
+                },
+                skipLogic: null
+              }
+            ],
+            prompt: {
+              'en': {
+                sms: 'What is your gender?'
+              }
+            }
           }
         ],
         id: 1
-      })
+      }
+
+      const questionnaire = deepFreeze(bareQuestionnaire)
 
       expect(stepStoreValues(questionnaire)).toEqual({
         Smokes: {type: 'multiple-choice', values: ['Yes', 'No']},
@@ -1043,10 +1147,19 @@ describe('questionnaire reducer', () => {
       expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
       expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual('Listo!')
     })
+
+    it('should compute a valid alphanumeric filename', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Foo!@#%!     123  []]!!!??')
+      ])
+      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual('Foo123_translations.csv')
+    })
   })
 })
 
-const questionnaire = deepFreeze({
+const bareQuestionnaire: Questionnaire = {
   steps: [
     {
       type: 'multiple-choice',
@@ -1139,7 +1252,8 @@ const questionnaire = deepFreeze({
                 '1'
               ]
             }
-          }
+          },
+          skipLogic: null
         },
         {
           value: 'No',
@@ -1154,7 +1268,8 @@ const questionnaire = deepFreeze({
                 '2'
               ]
             }
-          }
+          },
+          skipLogic: null
         }
       ],
       prompt: {
@@ -1176,4 +1291,13 @@ const questionnaire = deepFreeze({
   defaultLanguage: 'en',
   languages: ['en'],
   quotaCompletedMsg: null
-})
+}
+
+// TODO: investigate why Flow ignores the result of `deepFreeze`
+// It probably is defined as `any` somewhere.
+// As a workaround, we define `bareQuestionnaire` and explicitly annotate it as
+// Questionnaire. That will let us catch inconsistencies when we define the
+// Questionnaire fixture for testing here.
+// The limitations of deepFreeze are probably related to sealed objects being used under its hood.
+// See: https://flowtype.org/docs/objects.html#sealed-object-types
+const questionnaire = deepFreeze(bareQuestionnaire)
