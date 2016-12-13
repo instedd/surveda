@@ -71,7 +71,7 @@ class QuotaCompletedMsg extends Component {
                 <div className='col s12'>
                   <i className='material-icons left'>pie_chart</i>
                   <a className='page-title truncate'>
-                    <span>Quota completed message</span>
+                    <span>Quota completed messages</span>
                   </a>
                   <a className='collapse right' href='#!' onClick={this.handleClick}>
                     <i className='material-icons'>expand_less</i>
