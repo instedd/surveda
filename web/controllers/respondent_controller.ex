@@ -277,7 +277,7 @@ defmodule Ask.RespondentController do
       |> render("empty.json", respondent: [])
   end
 
-  def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id, "offset" => offset}) do
     project = Project
     |> Repo.get!(project_id)
     |> authorize(conn)
@@ -286,6 +286,8 @@ defmodule Ask.RespondentController do
     project
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
+
+    {offset, ""} = Integer.parse(offset)
 
     # We first need to get all unique field names in all responses
     all_fields = Repo.all(from resp in Response,
@@ -304,17 +306,33 @@ defmodule Ask.RespondentController do
     |> Repo.stream
     |> Stream.map(fn respondent ->
         row = [respondent.id]
+        responses = respondent.responses
 
         # We traverse all fields and see if there's a response for this respondent
         row = all_fields |> Enum.reduce(row, fn field_name, acc ->
-          response = respondent.responses
+          response = responses
           |> Enum.filter(fn response -> response.field_name == field_name end)
           case response do
             [resp] -> acc ++ [resp.value]
             _ -> acc ++ [""]
           end
         end)
-        row ++ [(respondent.updated_at || respondent.created_at) |> Timex.format!("%Y-%m-%d %H:%M:%S GMT", :strftime)]
+
+        date = case responses do
+          [] -> nil
+          _ -> responses
+               |> Enum.map(fn r -> r.updated_at end)
+               |> Enum.max
+               |> Ecto.DateTime.to_erl
+               |> Timex.Ecto.DateTime.cast!
+               |> Timex.shift(minutes: -offset)
+        end
+
+        if date do
+          row ++ [date |> Timex.format!("%b %e, %Y %H:%M", :strftime)]
+        else
+          row ++ ["-"]
+        end
     end)
 
     # Add header to csv_rows

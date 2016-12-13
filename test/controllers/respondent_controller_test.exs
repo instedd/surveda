@@ -369,18 +369,18 @@ defmodule Ask.RespondentControllerTest do
     respondent_2 = insert(:respondent, survey: survey)
     insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
 
-    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id)
+    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
     assert line1 == "Respondent ID,Smoke,Drink,Date"
 
-    [line_2_id, line_2_smoke, line_2_drink, _] = line2 |> String.split(",")
+    [line_2_id, line_2_smoke, line_2_drink, _] = line2 |> String.split(",", parts: 4)
     assert line_2_id == respondent_1.id |> to_string
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
 
-    [line_3_id, line_3_smoke, line_3_drink, _] = line3 |> String.split(",")
+    [line_3_id, line_3_smoke, line_3_drink, _] = line3 |> String.split(",", parts: 4)
     assert line_3_id == respondent_2.id |> to_string
     assert line_3_smoke == "No"
     assert line_3_drink == ""

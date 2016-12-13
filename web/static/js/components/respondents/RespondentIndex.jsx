@@ -6,6 +6,7 @@ import range from 'lodash/range'
 import values from 'lodash/values'
 import { CardTable, Tooltip } from '../ui'
 import * as routes from '../../routes'
+import dateformat from 'dateformat'
 
 class RespondentIndex extends Component {
   componentDidMount() {
@@ -31,7 +32,8 @@ class RespondentIndex extends Component {
 
   downloadCSV() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsCSV(projectId, surveyId)
+    const offset = new Date().getTimezoneOffset()
+    window.location = routes.respondentsCSV(projectId, surveyId, offset)
   }
 
   render() {
@@ -116,7 +118,7 @@ class RespondentIndex extends Component {
           <tbody>
             { range(0, pageSize).map(index => {
               const respondent = respondentsList[index]
-              if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={respondentsFieldName.length + 2}></td></tr>
+              if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={respondentsFieldName.length + 2} /></tr>
 
               return (
                 <tr key={respondent.id}>
@@ -125,10 +127,10 @@ class RespondentIndex extends Component {
                     return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
                   })}
                   <td>
-                    {respondent.date ? new Date(respondent.date).toUTCString() : '-'}
+                    {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
                   </td>
                 </tr>
-            )
+              )
             })}
           </tbody>
         </CardTable>

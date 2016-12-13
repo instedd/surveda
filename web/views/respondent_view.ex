@@ -21,8 +21,8 @@ defmodule Ask.RespondentView do
       survey_id: respondent.survey_id,
       responses: render_many(responses, Ask.RespondentView, "response.json", as: :response),
       date: case responses do
-        [_ | _] -> Enum.max(Enum.map(responses, fn r -> r.updated_at end))
-        _ -> nil
+        [] -> nil
+        _ -> responses |>  Enum.map(fn r -> r.updated_at end) |> Enum.max
       end
     }
   end
