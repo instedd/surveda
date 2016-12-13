@@ -116,7 +116,7 @@ class RespondentIndex extends Component {
           <tbody>
             { range(0, pageSize).map(index => {
               const respondent = respondentsList[index]
-              if (!respondent) return <tr key={-index}><td colSpan={respondentsFieldName.length + 2}>&nbsp;</td></tr>
+              if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={respondentsFieldName.length + 2}></td></tr>
 
               return (
                 <tr key={respondent.id}>

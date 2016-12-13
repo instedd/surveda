@@ -94,7 +94,7 @@ class QuestionnaireIndex extends Component {
           <tbody>
             { range(0, pageSize).map(index => {
               const questionnaire = questionnaires[index]
-              if (!questionnaire) return <tr key={-index}><td colSpan='2'>&nbsp;</td></tr>
+              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan='2'></td></tr>
 
               return (
                 <tr key={questionnaire.id} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaire.id))}>

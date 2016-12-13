@@ -33,6 +33,14 @@
 table.highlight > tbody > tr:hover {
   cursor: pointer;
 }
+table.highlight > tbody > tr.empty-row,
+table > tbody > tr.empty-row {
+  height: 73px;
+  &:hover {
+    @extend .white;
+    cursor: default;
+  }
+}
 
 nav {
   box-shadow: none;

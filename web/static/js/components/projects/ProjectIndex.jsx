@@ -119,7 +119,7 @@ class ProjectIndex extends Component {
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={-index}><td colSpan='3'>&nbsp;</td></tr>
+                if (!project) return <tr key={-index} className='empty-row'><td colSpan='3'></td></tr>
 
                 return (
                   <tr key={project.id}>
