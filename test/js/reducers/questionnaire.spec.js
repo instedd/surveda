@@ -653,6 +653,26 @@ describe('questionnaire reducer', () => {
       expect(languageSelection.languageChoices).toInclude('fr')
     })
 
+    it('should allow edition of ivr message for language selection step when switching default language', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es')
+      ])
+
+      const languageSelection = resultState.data.steps[0]
+      const finalResultState = playActionsFromState(resultState, reducer)([
+        actions.changeStepPromptIvr(languageSelection.id, {text: 'New language prompt', audioSource: 'tts'})
+      ])
+      const finalLanguageSelection = finalResultState.data.steps[0]
+      expect(finalLanguageSelection.prompt['es'].ivr).toEqual({text: 'New language prompt', audioSource: 'tts'})
+    })
+
     it('should add a new language last inside the choices of the language selection step', () => {
       const preState = playActions([
         actions.fetch(1, 1),

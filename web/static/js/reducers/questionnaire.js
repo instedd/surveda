@@ -197,7 +197,7 @@ const changeStepIvrPrompt = (state, action, quiz: Questionnaire) => {
       [quiz.defaultLanguage]: {
         ...step.prompt[quiz.defaultLanguage],
         ivr: {
-          ...step.prompt[quiz.defaultLanguage].ivr,
+          ...(step.prompt[quiz.defaultLanguage] ? step.prompt[quiz.defaultLanguage].ivr : {}),
           text: action.newPrompt.text,
           audioSource: action.newPrompt.audioSource
         }
