@@ -137,7 +137,7 @@ class QuestionnaireEditor extends Component {
 
       this.props.questionnaireActions.uploadCsvForTranslation(csv)
 
-      window.Materialize.toast('CSV uploaded successfully!', 5000)
+      window.Materialize.toast(`CSV uploaded successfully! ${csv.length - 1} keys were updated in ${headers.length - 1} languages`, 5000)
     }
     reader.readAsText(file)
 
