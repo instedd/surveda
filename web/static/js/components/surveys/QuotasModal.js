@@ -66,8 +66,8 @@ export class QuotasModal extends Component {
               {Object.keys(storeValues).map((storeValue) =>
                 <div className='row' key={storeValue} >
                   <div className='col s12'>
-                  { storeValues[storeValue].type == 'numeric'
-                    ? <div className='question left'>
+                    { storeValues[storeValue].type == 'numeric'
+                      ? <div className='question left'>
                         <div className='question-icon-label'>
                           <i className='material-icons v-middle left'>dialpad</i>
                           <span>{storeValue}</span>
@@ -80,8 +80,8 @@ export class QuotasModal extends Component {
                             </span>
                           </div>
                         </div>
-                    </div>
-                    : <div className='question left'>
+                      </div>
+                      : <div className='question left'>
                         <div className='question-icon-label'>
                           <i className='material-icons v-middle left'>list</i>
                           <span>{storeValue}</span>
@@ -89,8 +89,8 @@ export class QuotasModal extends Component {
                         <div className='question-value'>
                           {join(storeValues[storeValue].values, ', ')}
                         </div>
-                    </div>
-                  }
+                      </div>
+                    }
                     <div className='checkbox right'>
                       <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
                       <label htmlFor={storeValue} />
