@@ -19,7 +19,6 @@ class SurveyWizardRespondentsStep extends Component {
       .then(response => {
         dispatch(respondentsActions.receiveRespondents(survey.id, 1, response.entities.respondents || {}, response.respondentsCount))
         dispatch(actions.updateRespondentsCount(response.respondentsCount))
-        dispatch(actions.save())
       }, (e) => {
         e.json().then((value) => {
           dispatch(respondentsActions.receiveInvalids(value))
@@ -34,7 +33,6 @@ class SurveyWizardRespondentsStep extends Component {
       .then(respondents => {
         dispatch(respondentsActions.removeRespondents(respondents))
         dispatch(actions.updateRespondentsCount(0))
-        dispatch(actions.save())
       })
   }
 
