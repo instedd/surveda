@@ -679,7 +679,7 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 }
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
-  const filename = questionnaire.name.replace(/\W/g, '')
+  const filename = (questionnaire.name || '').replace(/\W/g, '')
   return filename + '_translations.csv'
 }
 
