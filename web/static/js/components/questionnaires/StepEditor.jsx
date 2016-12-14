@@ -163,7 +163,7 @@ class StepEditor extends Component {
       .catch((e) => {
         e.json()
          .then((response) => {
-           let errors = response.errors.data.join(' ')
+           let errors = (response.errors.data || ['Only mp3 and wav files are allowed.']).join(' ')
            this.setState({audioErrors: errors})
            $('#unprocessableEntity').modal('open')
          })
