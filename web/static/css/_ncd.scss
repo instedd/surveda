@@ -903,6 +903,34 @@ i.survey-status {
   }
 }
 
+.quotas {
+  p.grey-text {
+    padding-left: 36px;
+    margin: 0;
+    max-width: 500px;
+  }
+  .col > div {
+    position: relative;
+    margin-left: 36px;
+    input[type='text'] {
+      max-width: 90px;
+      margin-left: 250px;
+      height: 2rem;
+      border-bottom-color: color('grey', 'lighten-2');
+    }
+    label {
+      @extend .truncate;
+      font-size: 1rem;
+      line-height: 46px;
+      height: 46px;
+      position: absolute;
+      width: 220px;
+      top: 0;
+      left: 0;
+    }
+  }
+}
+
 
 .collection.collection-card {
   overflow: visible;

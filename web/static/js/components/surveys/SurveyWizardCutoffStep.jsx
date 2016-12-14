@@ -86,7 +86,7 @@ class SurveyWizardCutoffStep extends Component {
           </div>
         </div>
         <div className='row'>
-          <div className='input-field col s6 l4'>
+          <div className='input-field col s8 l4'>
             <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='Completed results' >
               <input
                 type='text'
@@ -96,28 +96,28 @@ class SurveyWizardCutoffStep extends Component {
           </div>
         </div>
         { questionnaire && Object.keys(stepStoreValues(questionnaire)).length > 0
-          ? <span>
-            <div className='row'>
+          ? <div>
+            <div className='row quotas'>
               <div className='col s12'>
                 <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={this.toggleQuotas} />
                 <label htmlFor='set-quotas'>Quotas for completes</label>
-                <p>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
+                <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
               </div>
             </div>
-            <div className='row'>
+            <div className='row quotas'>
               <div className='col s12'>
                 <div>
-                  <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' style={{maxWidth: '600px'}} showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
+                  <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
                 </div>
               </div>
             </div>
-          </span>
+          </div>
         : '' }
 
         { survey.quotas.buckets
           ? survey.quotas.buckets.map((bucket, index) =>
-            <div className='row' key={index} >
-              <div className='input-field col s12'>
+            <div className='row quotas' key={index} >
+              <div className='col s12'>
                 <InputWithLabel value={bucket.quota == null ? 0 : bucket.quota} id={this.bucketLabel(bucket)} label={this.bucketLabel(bucket)} >
                   <input
                     type='text'
