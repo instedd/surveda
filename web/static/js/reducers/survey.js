@@ -6,6 +6,7 @@ import map from 'lodash/map'
 import split from 'lodash/split'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
+import uniqWith from 'lodash/uniqWith'
 
 export const dataReducer = (state, action) => {
   switch (action.type) {
@@ -146,6 +147,14 @@ const quotaChange = (state, action) => {
       ]
     }
   }
+}
+
+export const rebuildInputFromQuotaBuckets = (store, survey) => {
+  let conditionsOfStore = uniqWith(survey.quotas.buckets.map((bucket) => bucket.condition[store]), isEqual)
+  conditionsOfStore = conditionsOfStore.map( x => x[1] = x[1] + 1)
+  conditionsOfStore = flatten(conditionsOfStore)
+  conditionsOfStore = uniqWith(conditionsOfStore, isEqual)
+  return store
 }
 
 const saved = (state, action) => {
