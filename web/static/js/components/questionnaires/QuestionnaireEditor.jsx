@@ -124,18 +124,20 @@ class QuestionnaireEditor extends Component {
 
       // Do some validations before uploading the CSV
       if (csv.length == 0) {
-        alert('Error: CSV is empty')
+        window.Materialize.toast('Error: CSV is empty', 5000)
         return
       }
 
       let headers = csv[0]
       let defaultLanguageIndex = headers.indexOf(this.props.questionnaire.defaultLanguage)
       if (defaultLanguageIndex == -1) {
-        alert(`Error: CSV doesn't have a header for the primary language '${this.props.questionnaire.defaultLanguage}'`)
+        window.Materialize.toast(`Error: CSV doesn't have a header for the primary language '${this.props.questionnaire.defaultLanguage}'`, 5000)
         return
       }
 
       this.props.questionnaireActions.uploadCsvForTranslation(csv)
+
+      window.Materialize.toast('CSV uploaded successfully!', 5000)
     }
     reader.readAsText(file)
 
