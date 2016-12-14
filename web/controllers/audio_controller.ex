@@ -28,9 +28,10 @@ defmodule Ask.AudioController do
   def show(conn, %{"id" => uuid}) do
     audio = Repo.get_by!(Audio, uuid: uuid)
 
+    # Send raw audio. If later we want to set a filename, so it
+    # can be downloaded, be careful to use a valid filename
+    # (one that doesn't have commas or strange characters)
     conn
-    |> put_resp_content_type("audio/mpeg")
-    |> put_resp_header("content-disposition", "attachment; filename=#{audio.filename}")
     |> send_resp(200, audio.data)
   end
 end
