@@ -690,6 +690,45 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "stops survey when there's an uncaught exception" do
+    # First, we create a quiz with a single step with an invalid skip_logic value for the "Yes" choice
+    step = Ask.StepBuilder
+      .multiple_choice_step(
+        id: "bbb",
+        title: "Do you exercise?",
+        prompt: Ask.StepBuilder.prompt(
+          sms: Ask.StepBuilder.sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+        ),
+        store: "Exercises",
+        choices: [
+          Ask.StepBuilder.choice(value: "Yes", responses: Ask.StepBuilder.responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: ""),
+          Ask.StepBuilder.choice(value: "No", responses: Ask.StepBuilder.responses(sms: ["No", "N", "2"], ivr: ["2"]))
+        ]
+      )
+
+    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent([step])
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    # Respondent says 1 (i.e.: Yes), causing an invalid skip_logic to be inspected
+    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+
+    # Given the Broker failed for mysterious reasons, we want to stop the survey to prevent
+    # further consequences. Right now we don't have that notion, so for the moment we mark it
+    # as 'completed'.
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "completed"
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    :ok = broker |> GenServer.stop
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)

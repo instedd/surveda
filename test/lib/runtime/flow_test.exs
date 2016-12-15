@@ -96,12 +96,6 @@ defmodule Ask.FlowTest do
     assert {:ok, _, _} = result
   end
 
-  test "when skip_logic is an empty string it continues with next step" do
-    result = init_quiz_and_send_response("6")
-
-    assert {:ok, _, _} = result
-  end
-
   test "when skip_logic is not present continues with next step" do
     result = init_quiz_and_send_response("M")
 
@@ -137,24 +131,22 @@ defmodule Ask.FlowTest do
     end
   end
 
-  # describe "when skip_logic is an invalid id" do
+  describe "when skip_logic is an invalid id" do
+    test "when it doesn't exist raises" do
+      assert_raise RuntimeError, fn ->
+        init_quiz_and_send_response("A")
+      end
+    end
 
-  #   test "when it doesn't exist raises" do
-  #     assert_raise RuntimeError, fn ->
-  #       init_quiz_and_send_response("A")
-  #     end
-  #   end
+    test "when the step is previous raises" do
+      {:ok, flow, _} = init_quiz_and_send_response("M")
 
-  #   test "when the step is previous raises" do
-  #     {:ok, flow, _} = init_quiz_and_send_response("M")
-
-  #     assert_raise RuntimeError, fn ->
-  #       flow
-  #       |> Flow.step(Flow.Message.reply("Y"))
-  #     end
-  #   end
-
-  # end
+      assert_raise RuntimeError, fn ->
+        flow
+        |> Flow.step(Flow.Message.reply("Y"))
+      end
+    end
+  end
 
   test "continues with next question when the reply isn't numeric"
     do
