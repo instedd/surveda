@@ -108,12 +108,20 @@ const buildBuckets = (storeVars, options) => {
 
   return flatten(map(values, (value) => {
     return map(buildBuckets(drop(storeVars), options), (bucket) => {
+      let condition = []
+      if (bucket.condition && bucket.condition.length > 0) {
+        condition = bucket.condition
+      }
+
       return ({
         ...bucket,
-        condition: {
-          ...bucket.condition,
-          [storeVars[0].var]: value
-        }
+        condition: [
+          ...condition,
+          {
+            store: storeVars[0].var,
+            value: value
+          }
+        ]
       })
     })
   }))
