@@ -131,22 +131,22 @@ defmodule Ask.SurveyControllerTest do
           "vars" => ["gender", "smokes"],
           "buckets" => [
             %{
-              "condition" => %{"gender" => "male", "smokes" => "no"},
+              "condition" => [%{"store" => "smokes", "value" => "no"}, %{"store" => "gender", "value" => "male"}],
               "quota" => 10,
               "count" => 3
             },
             %{
-              "condition" => %{"gender" => "male", "smokes" => "yes"},
+              "condition" => [%{"store" => "smokes", "value" => "yes"}, %{"store" => "gender", "value" => "male"}],
               "quota" => 20,
               "count" => 0
             },
             %{
-              "condition" => %{"gender" => "female", "smokes" => "no"},
+              "condition" => [%{"store" => "smokes", "value" => "no"}, %{"store" => "gender", "value" => "female"}],
               "quota" => 30,
               "count" => 1
             },
             %{
-              "condition" => %{"gender" => "female", "smokes" => "yes"},
+              "condition" => [%{"store" => "smokes", "value" => "yes"}, %{"store" => "gender", "value" => "female"}],
               "quota" => 40,
               "count" => 0
             },
@@ -277,20 +277,20 @@ defmodule Ask.SurveyControllerTest do
 
       attrs = %{quotas: %{vars: ["Smokes", "Exercises"], buckets: [
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "No"},
+          "condition" => [%{"store" => "Exercises", "value" => "No"}, %{"store" => "Smokes", "value" => "No"}],
           "quota" => 10,
           "count" => 3
         },
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Exercises", "value" => "No"}, %{"store" => "Smokes", "value" => "Yes"}],
           "quota" => 20
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "No"},
+          "condition" => [%{"store" => "Exercises", "value" => "Yes"}, %{"store" => "Smokes", "value" => "No"}],
           "quota" => 30
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Exercises", "value" => "Yes"}, %{"store" => "Smokes", "value" => "Yes"}],
           "quota" => 40
         },
       ]}}
@@ -298,22 +298,22 @@ defmodule Ask.SurveyControllerTest do
       assert json_response(conn2, 200)["data"]["quotas"]["vars"] == ["Smokes", "Exercises"]
       assert json_response(conn2, 200)["data"]["quotas"]["buckets"] == [
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 10,
           "count" => 3
         },
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 20,
           "count" => 0
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 30,
           "count" => 0
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 40,
           "count" => 0
         },
@@ -324,22 +324,22 @@ defmodule Ask.SurveyControllerTest do
         "vars" => ["Smokes", "Exercises"],
         "buckets" => [
           %{
-            "condition" => %{"Exercises" => "No", "Smokes" => "No"},
+            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
             "quota" => 10,
             "count" => 3
           },
           %{
-            "condition" => %{"Exercises" => "No", "Smokes" => "Yes"},
+            "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
             "quota" => 20,
             "count" => 0
           },
           %{
-            "condition" => %{"Exercises" => "Yes", "Smokes" => "No"},
+            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
             "quota" => 30,
             "count" => 0
           },
           %{
-            "condition" => %{"Exercises" => "Yes", "Smokes" => "Yes"},
+            "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
             "quota" => 40,
             "count" => 0
           },
@@ -355,45 +355,45 @@ defmodule Ask.SurveyControllerTest do
       insert(:quota_bucket, survey: survey, condition: %{gender: "female", smokes: "no"}, quota: 30, count: 1)
       insert(:quota_bucket, survey: survey, condition: %{gender: "female", smokes: "yes"}, quota: 40)
 
-      attrs = %{quotas: %{vars: ["Smokes", "Exercises"], buckets: [
+      attrs = %{quotas: %{vars: ["Exercises", "Smokes"], buckets: [
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "No"},
+          "condition" => [%{"store" => "Exercises", "value" => "No"}, %{"store" => "Smokes", "value" => "No"}],
           "quota" => 10,
           "count" => 3
         },
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Exercises", "value" => "No"}, %{"store" => "Smokes", "value" => "Yes"}],
           "quota" => 20
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "No"},
+          "condition" => [%{"store" => "Exercises", "value" => "Yes"}, %{"store" => "Smokes", "value" => "No"}],
           "quota" => 30
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Exercises", "value" => "Yes"}, %{"store" => "Smokes", "value" => "Yes"}],
           "quota" => 40
         },
       ]}}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
-      assert json_response(conn, 200)["data"]["quotas"]["vars"] == ["Smokes", "Exercises"]
+      assert json_response(conn, 200)["data"]["quotas"]["vars"] == ["Exercises", "Smokes"]
       assert json_response(conn, 200)["data"]["quotas"]["buckets"] == [
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 10,
           "count" => 3
         },
         %{
-          "condition" => %{"Exercises" => "No", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 20,
           "count" => 0
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 30,
           "count" => 0
         },
         %{
-          "condition" => %{"Exercises" => "Yes", "Smokes" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 40,
           "count" => 0
         },
