@@ -150,11 +150,12 @@ const quotaChange = (state, action) => {
 }
 
 export const rebuildInputFromQuotaBuckets = (store, survey) => {
-  let conditionsOfStore = uniqWith(survey.quotas.buckets.map((bucket) => bucket.condition[store]), isEqual)
-  conditionsOfStore = conditionsOfStore.map( x => x[1] = x[1] + 1)
-  conditionsOfStore = flatten(conditionsOfStore)
-  conditionsOfStore = uniqWith(conditionsOfStore, isEqual)
-  return store
+  const buckets = survey.quotas.buckets.filter((bucket) => Object.keys(bucket.condition).includes(store))
+  let conditions = uniqWith(buckets.map((bucket) => bucket.condition[store]), isEqual)
+  conditions = conditions.map(x => [x[0], x[1] + 1])
+  conditions = flatten(conditions)
+  conditions = uniqWith(conditions, isEqual)
+  return conditions.join()
 }
 
 const saved = (state, action) => {
