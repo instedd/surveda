@@ -2,7 +2,7 @@
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
-import reducer from '../../../web/static/js/reducers/survey'
+import reducer, {rebuildInputFromQuotaBuckets} from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
 import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
@@ -524,6 +524,27 @@ describe('survey reducer', () => {
         }
       }
     })
+  })
+
+  it('should rebuild input from quota buckets', () => {
+    const survey = deepFreeze({
+      quotas: {
+        vars: ['age'],
+        buckets: [
+          {
+            'condition': {
+              'age': [1, 9]
+            }
+          },
+          {
+            'condition': {
+              'age': [10, 49]
+            }
+          }
+        ]
+      }
+    })
+    expect(rebuildInputFromQuotaBuckets('age', survey)).toEqual('1,10,50')
   })
 })
 

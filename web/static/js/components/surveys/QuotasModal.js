@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { stepStoreValues } from '../../reducers/questionnaire'
+import { rebuildInputFromQuotaBuckets } from '../../reducers/survey'
 import filter from 'lodash/filter'
 import map from 'lodash/map'
 import join from 'lodash/join'
@@ -74,7 +75,7 @@ export class QuotasModal extends Component {
                         </div>
                         <div className='question-value'>
                           <div className='input-field'>
-                            <input type='text' ref={node => { this.state.steps[storeValue] = node }} />
+                            <input type='text' ref={node => { this.state.steps[storeValue] = node }} defaultValue={rebuildInputFromQuotaBuckets(storeValue, survey)} />
                             <span className='small-text-bellow'>
                               Enter comma-separated values to create ranges like 5,10,20
                             </span>
