@@ -26,16 +26,8 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, step, skip, sms, ivr, errors, errorPath } = this.props
+    const { questionnaire, step, stepsAfter, sms, ivr, errors, errorPath } = this.props
     const { choices } = step
-
-    let skipOptions = skip.slice()
-    let skipOptionsLength = skipOptions.length
-
-    skipOptions.unshift({id: 'end', title: 'End survey'})
-    if (skipOptionsLength != 0) {
-      skipOptions.unshift({id: '', title: 'Next question'})
-    }
 
     return (
       <div>
@@ -67,7 +59,7 @@ class StepMultipleChoiceEditor extends Component {
                     choice={choice}
                     onDelete={(e) => this.deleteChoice(e, index)}
                     onChoiceChange={this.changeChoice(index)}
-                    skipOptions={skipOptions}
+                    stepsAfter={stepsAfter}
                     sms={sms}
                     ivr={ivr}
                     errors={errors}
@@ -90,7 +82,7 @@ StepMultipleChoiceEditor.propTypes = {
   actions: PropTypes.object.isRequired,
   questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
-  skip: PropTypes.array,
+  stepsAfter: PropTypes.array,
   sms: PropTypes.bool,
   ivr: PropTypes.bool,
   errors: PropTypes.object.isRequired,

@@ -1,5 +1,6 @@
 [ignore]
 <PROJECT_ROOT>/node_modules/react-timeago
+<PROJECT_ROOT>/node_modules/csv-info
 [include]
 [libs]
 web/static/js/decls/

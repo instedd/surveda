@@ -1,19 +1,14 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import { UntitledIfEmpty } from '../ui'
-import { Input } from 'react-materialize'
 import classNames from 'classnames/bind'
-
-type SkipOption = {
-  id: string,
-  title: string
-};
+import SkipLogic from './SkipLogic'
 
 type Props = {
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
-  skipOptions: SkipOption[],
+  stepsAfter: Step[],
   questionnaire: Questionnaire,
   sms: boolean,
   ivr: boolean,
@@ -136,32 +131,27 @@ class ChoiceEditor extends Component {
     }
   }
 
-  skipLogicChange(event: Event) {
+  skipLogicChange(skipOption: ?string) {
     const { onChoiceChange } = this.props
-    if (event.target instanceof HTMLSelectElement) {
-      this.setState({
-        ...this.state,
-        skipLogic: event.target.value == '' ? null : event.target.value
-      })
+    this.setState({
+      ...this.state,
+      skipLogic: skipOption
+    }, () => {
       onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.skipLogic)
-    }
+    })
   }
 
   render() {
-    const { onDelete, skipOptions, sms, ivr, errors, errorPath } = this.props
+    const { onDelete, stepsAfter, sms, ivr, errors, errorPath } = this.props
 
-    let skipLogicInput = <td>
-      <Input s={12} type='select'
-        onChange={e => this.skipLogicChange(e)}
-        defaultValue={this.state.skipLogic}
-        >
-        { skipOptions.map((option) =>
-          <option key={option.id} id={option.id} name={option.title} value={option.id} >
-            {option.title == '' ? 'Untitled' : option.title }
-          </option>
-        )}
-      </Input>
-    </td>
+    let skipLogicInput =
+      <td>
+        <SkipLogic
+          onChange={skipOption => this.skipLogicChange(skipOption)}
+          value={this.state.skipLogic}
+          stepsAfter={stepsAfter}
+          />
+      </td>
 
     if (this.state.editing) {
       return (
@@ -234,18 +224,6 @@ class ChoiceEditor extends Component {
       )
     }
   }
-}
-
-ChoiceEditor.propTypes = {
-  onDelete: PropTypes.func,
-  onChoiceChange: PropTypes.func,
-  questionnaire: PropTypes.object,
-  choice: PropTypes.object,
-  skipOptions: PropTypes.array,
-  sms: PropTypes.bool,
-  ivr: PropTypes.bool,
-  errors: PropTypes.object.isRequired,
-  errorPath: PropTypes.string.isRequired
 }
 
 export default ChoiceEditor

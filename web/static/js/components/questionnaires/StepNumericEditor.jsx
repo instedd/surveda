@@ -1,11 +1,22 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { InputWithLabel, Card } from '../ui'
 import { bindActionCreators } from 'redux'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { Input } from 'react-materialize'
+import SkipLogic from './SkipLogic'
+
+type State = {
+  stepId: string,
+  minValue: string,
+  maxValue: string,
+  rangesDelimiters: string,
+  ranges: Range[]
+}
 
 class StepNumericEditor extends Component {
+  state: State
+
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -60,10 +71,12 @@ class StepNumericEditor extends Component {
       this.state.maxValue, this.state.rangesDelimiters)
   }
 
-  skipLogicChange(e, rangeIndex) {
+  skipLogicChange(skipOption, rangeIndex) {
+    const { questionnaireActions } = this.props
+
     let newRange = {
       ...this.state.ranges[rangeIndex],
-      skipLogic: e.target.value == '' ? null : e.target.value
+      skipLogic: skipOption
     }
     this.setState({
       ranges: [
@@ -71,24 +84,20 @@ class StepNumericEditor extends Component {
         newRange,
         ...this.state.ranges.slice(rangeIndex + 1)
       ]
+    }, () => {
+      questionnaireActions.changeRangeSkipLogic(
+        this.state.stepId,
+        this.state.ranges[rangeIndex].skipLogic,
+        rangeIndex)
     })
-    this.props.questionnaireActions.changeRangeSkipLogic(this.state.stepId,
-      e.target.value, rangeIndex)
   }
 
   render() {
-    const { step, skip } = this.props
+    const { step, stepsAfter } = this.props
     const { ranges } = step
 
-    let skipOptions = skip.slice()
-    let skipOptionsLength = skipOptions.length
-
-    skipOptions.unshift({id: 'end', title: 'End survey'})
-    if (skipOptionsLength != 0) {
-      skipOptions.unshift({id: '', title: 'Next question'})
-    }
-
-    let minValue = <div className='col s12 m2 input-field inline'>
+    let minValue =
+      <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_min_value'
           value={`${this.state.minValue}`}
           label='Min value' >
@@ -99,7 +108,8 @@ class StepNumericEditor extends Component {
         </InputWithLabel>
       </div>
 
-    let rangesDelimiters = <div className='col s12 m2 input-field inline'>
+    let rangesDelimiters =
+      <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_range_delimiters'
           value={this.state.rangesDelimiters}
           label='Range delimiters' >
@@ -110,7 +120,8 @@ class StepNumericEditor extends Component {
         </InputWithLabel>
       </div>
 
-    let maxValue = <div className='col s12 m2 input-field inline'>
+    let maxValue =
+      <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_max_value'
           value={`${this.state.maxValue}`}
           label='Max value' >
@@ -140,16 +151,11 @@ class StepNumericEditor extends Component {
                   <td>{range.from == null ? 'No limit' : range.from} </td>
                   <td>{range.to == null ? 'No limit' : range.to} </td>
                   <td>
-                    <Input s={12} type='select'
-                      onChange={e => this.skipLogicChange(e, index)}
-                      defaultValue={range.skipLogic ? range.skipLogic : 'Null'}
-                      >
-                      { skipOptions.map((option) =>
-                        <option key={option.id} id={option.id} name={option.title} value={option.id} >
-                          {option.title == '' ? 'Untitled' : option.title }
-                        </option>
-                      )}
-                    </Input>
+                    <SkipLogic
+                      onChange={skipOption => this.skipLogicChange(skipOption, index)}
+                      value={range.skipLogic}
+                      stepsAfter={stepsAfter}
+                      />
                   </td>
                 </tr>
                 )}
@@ -182,7 +188,7 @@ StepNumericEditor.propTypes = {
   rageDelimiters: PropTypes.string,
   questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
-  skip: PropTypes.array.isRequired
+  stepsAfter: PropTypes.array.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({})

@@ -1,3 +1,4 @@
+// @flow weak
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { withRouter } from 'react-router'
@@ -6,11 +7,18 @@ import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
-import LanguagesList from '../questionnaires/LanguagesList'
-import QuotaCompletedMsg from '../questionnaires/QuotaCompletedMsg'
+import LanguagesList from './LanguagesList'
+import QuotaCompletedMsg from './QuotaCompletedMsg'
 import csvString from 'csv-string'
 
+type State = {
+  addingStep: boolean,
+  currentStep: ?Step
+}
+
 class QuestionnaireEditor extends Component {
+  state: State
+
   constructor(props) {
     super(props)
     this.state = this.internalState(null)

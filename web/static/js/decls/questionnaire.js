@@ -63,3 +63,8 @@ export type BaseStep = {
   store: string,
   prompt: Prompt
 };
+
+export type SkipOption = {
+  id: string,
+  title: string
+};

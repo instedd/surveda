@@ -50,9 +50,9 @@ class LanguagesList extends Component {
     let otherLangugagesComponent = null
     if (otherLangugages.length != 0) {
       otherLangugagesComponent = (
-        <div className="row">
-          <div className="col s12">
-            <p className="grey-text">Other languages:</p>
+        <div className='row'>
+          <div className='col s12'>
+            <p className='grey-text'>Other languages:</p>
             <ul className='other-languages-list'>
               {otherLangugages}
             </ul>
@@ -62,10 +62,10 @@ class LanguagesList extends Component {
     }
 
     return (
-      <div className="languages">
-        <div className="row">
-          <div className="col s12">
-            <p className="grey-text">Primary language:</p>
+      <div className='languages'>
+        <div className='row'>
+          <div className='col s12'>
+            <p className='grey-text'>Primary language:</p>
             <ul className='selected-language'>
               <li>
                 <span>{this.translateLangCode(questionnaire.defaultLanguage)}</span>
@@ -75,7 +75,7 @@ class LanguagesList extends Component {
           </div>
         </div>
         {otherLangugagesComponent}
-        <div className="row">
+        <div className='row'>
           <AddLanguage />
         </div>
       </div>
