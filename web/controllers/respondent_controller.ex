@@ -94,11 +94,9 @@ defmodule Ask.RespondentController do
         stalled: respondent_by_state(stalled, total_respondents),
         failed: respondent_by_state(failed, total_respondents)
       },
-      completed_by_date: %{
-        respondents_by_date: respondents_by_date,
-        cutoff: survey.cutoff,
-        total_respondents: total_respondents
-      }
+      respondents_by_date: respondents_by_date,
+      cutoff: survey.cutoff,
+      total_respondents: total_respondents
     }
     render(conn, "stats.json", stats: stats)
   end

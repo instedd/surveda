@@ -20,6 +20,7 @@ class SurveyShow extends Component {
     respondentsStats: React.PropTypes.object,
     respondentsQuotasStats: React.PropTypes.array,
     completedByDate: React.PropTypes.array,
+    contactedRespondents: React.PropTypes.number,
     target: React.PropTypes.number,
     totalRespondents: React.PropTypes.number
   }
@@ -38,11 +39,6 @@ class SurveyShow extends Component {
     if (survey && survey.state == 'not_ready') {
       router.replace(routes.surveyEdit(survey.projectId, survey.id))
     }
-  }
-
-  respondentsFraction(completedByDate, targetValue) {
-    const reached = completedByDate.length == 0 ? 0 : RespondentsChartCount.cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
-    return reached + '/' + targetValue
   }
 
   iconForMode(mode) {
@@ -80,7 +76,7 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, respondentsQuotasStats, completedByDate, target, totalRespondents, questionnaire } = this.props
+    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
     if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats || !respondentsStats) {
@@ -133,7 +129,7 @@ class SurveyShow extends Component {
                 Respondents contacted
               </label>
               <div>
-                { this.respondentsFraction(completedByDate, totalRespondents) }
+                { contactedRespondents + '/' + totalRespondents }
               </div>
             </div>
           </div>
@@ -250,15 +246,16 @@ const mapStateToProps = (state, ownProps) => {
 
   let respondentsStats = null
   let completedRespondentsByDate = []
-  // Default values
+  let contactedRespondents = 0
   let target = 1
   let totalRespondents = 1
 
   if (respondentsStatsRoot) {
     respondentsStats = respondentsStatsRoot.respondentsByState
-    completedRespondentsByDate = respondentsStatsRoot.completedByDate.respondentsByDate
-    target = respondentsStatsRoot.completedByDate.cutoff || respondentsStatsRoot.completedByDate.totalRespondents
-    totalRespondents = respondentsStatsRoot.completedByDate.totalRespondents
+    completedRespondentsByDate = respondentsStatsRoot.respondentsByDate
+    target = respondentsStatsRoot.cutoff || respondentsStatsRoot.totalRespondents
+    totalRespondents = respondentsStatsRoot.totalRespondents
+    contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByState.pending.count
   }
 
   return ({
@@ -270,6 +267,7 @@ const mapStateToProps = (state, ownProps) => {
     respondentsStats: respondentsStats,
     respondentsQuotasStats: respondentsQuotasStats,
     completedByDate: completedRespondentsByDate,
+    contactedRespondents: contactedRespondents,
     target: target,
     totalRespondents: totalRespondents
   })
