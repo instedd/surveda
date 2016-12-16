@@ -48,6 +48,10 @@ defmodule Ask.TestChannel do
 end
 
 defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
+  def prepare(_, _) do
+    :ok
+  end
+
   def setup(channel, phone_number) do
     send channel.pid, [:setup, channel, phone_number]
   end

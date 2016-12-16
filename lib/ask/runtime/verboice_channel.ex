@@ -141,6 +141,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def can_push_question?(_), do: false
     def ask(_, _, _), do: throw(:not_implemented)
+    def prepare(_, _), do: :ok
 
     def setup(channel, respondent) do
       channel.client

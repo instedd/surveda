@@ -11,14 +11,25 @@ defmodule Nuntium.Client do
   end
 
   # @spec send_ao(t, String.t) :: any()
-  def send_ao(client, messages) do
-    url = "#{client.base_url}/api/ao_messages.json"
-    OAuth2.Client.post(client.oauth2_client, url, messages)
+  def send_ao(client, account, messages) do
+    url = "#{client.base_url}/api/ao_messages.json?account=#{account}"
+    client.oauth2_client
+    |> OAuth2.Client.post(url, messages)
+    |> parse_response
   end
 
-  def application_update(client, app = %{}) do
-    url = "#{client.base_url}/api/applications/me"
-    OAuth2.Client.put(client.oauth2_client, url, app)
+  def application_update(client, account, app = %{}) do
+    url = "#{client.base_url}/api/applications/me?account=#{account}"
+    client.oauth2_client
+    |> OAuth2.Client.put(url, app)
+    |> parse_response
+  end
+
+  def channel_update(client, account, channel_name, settings = %{}) do
+    url = "#{client.base_url}/api/channels/#{channel_name}.json?account=#{account}&application=-"
+    client.oauth2_client
+    |> OAuth2.Client.put(url, settings)
+    |> parse_response
   end
 
   def get_accounts(client) do

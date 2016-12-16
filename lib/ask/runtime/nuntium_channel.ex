@@ -12,7 +12,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     %NuntiumChannel{oauth_token: oauth_token, name: name, settings: channel.settings}
   end
 
-  def oauth2_authorize(code, redirect_uri, callback_url) do
+  def oauth2_authorize(code, redirect_uri, _callback_url) do
     nuntium_config = Application.get_env(:ask, Nuntium)
     guisso_config = nuntium_config[:guisso]
 
@@ -26,16 +26,6 @@ defmodule Ask.Runtime.NuntiumChannel do
       code: code,
       client_secret: guisso_config[:client_secret],
       token_type: "bearer")
-
-    # Update the Nuntium app to setup the callback URL
-    nuntium_config = Application.get_env(:ask, Nuntium)
-    Nuntium.Client.new(nuntium_config[:base_url], client.token)
-    |> Nuntium.Client.application_update(%{
-      interface: %{
-        type: "http_get_callback",
-        url: callback_url
-      }
-    })
 
     client.token
   end
@@ -147,6 +137,35 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
+    def prepare(channel, callback_url) do
+      # Update the Nuntium app to setup the callback URL
+      nuntium_config = Application.get_env(:ask, Nuntium)
+      client = Nuntium.Client.new(nuntium_config[:base_url], channel.oauth_token)
+
+      app_settings = %{
+        interface: %{
+          type: "http_get_callback",
+          url: callback_url
+        }
+      }
+
+      case client |> Nuntium.Client.application_update(channel.settings["nuntium_account"], app_settings) do
+        {:ok, %{"name" => app_name}} ->
+
+          case Nuntium.Client.channel_update(client,
+            channel.settings["nuntium_account"],
+            channel.settings["nuntium_channel"],
+            %{application: app_name, enabled: true}) do
+
+            {:ok, _} -> :ok
+
+            error -> error
+          end
+
+        error -> error
+      end
+    end
+
     def setup(_channel, _respondent), do: :ok
     def can_push_question?(_), do: true
 
@@ -156,11 +175,11 @@ defmodule Ask.Runtime.NuntiumChannel do
         %{
           to: "sms://#{phone_number}",
           body: prompt,
-          suggested_channel: channel.name,
+          suggested_channel: channel.settings["nuntium_channel"],
         }
       end)
       Nuntium.Client.new(nuntium_config[:base_url], channel.oauth_token)
-      |> Nuntium.Client.send_ao(messages)
+      |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
     end
   end
 end

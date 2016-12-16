@@ -128,15 +128,32 @@ defmodule Ask.SurveyController do
     |> Repo.get!(survey.project_id)
     |> authorize(conn)
 
-    changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
-    case Repo.update(changeset) do
-      {:ok, survey} ->
-        project |> Project.touch!
-        render(conn, "show.json", survey: survey)
-      {:error, changeset} ->
+    case prepare_channels(conn, survey.channels) do
+      :ok ->
+        changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
+        case Repo.update(changeset) do
+          {:ok, survey} ->
+            project |> Project.touch!
+            render(conn, "show.json", survey: survey)
+          {:error, changeset} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        end
+
+      {:error, _reason} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> render("show.json", survey: survey)
+    end
+  end
+
+  defp prepare_channels(_, []), do: :ok
+  defp prepare_channels(conn, [channel | rest]) do
+    runtime_channel = Ask.Channel.runtime_channel(channel)
+    case Ask.Runtime.Channel.prepare(runtime_channel, callback_url(conn, :callback, channel.provider)) do
+      {:ok, _} -> prepare_channels(conn, rest)
+      error -> error
     end
   end
 
