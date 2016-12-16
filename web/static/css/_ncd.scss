@@ -578,7 +578,7 @@ i.survey-status {
           @extend .clearfix;
           font-size: 20px;
           display: block;
-          padding: 25px 20px;
+          padding: 25px 15px 25px 20px;
           i {
             padding-top: 4px;
           }
@@ -772,6 +772,11 @@ i.survey-status {
       border-radius: 3px 3px 0 0;
       a.page-title {
         @extend .white-text;
+        line-height: 1.5;
+        margin-left: 0;
+      }
+      i {
+        line-height: 1.4;
       }
     }
     label, * {
