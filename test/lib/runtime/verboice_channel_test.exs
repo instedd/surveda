@@ -32,8 +32,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
         {Flow.Message.answer, {:prompt, Ask.StepBuilder.tts_prompt("Do you exercise?")},"<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather></Response>"},
         {Flow.Message.answer, {:prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")},"<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather></Response>"},
         {Flow.Message.answer, :end,                                                                           "<Response><Hangup/></Response>"},
-        # TODO: this next test is not quite right, the prompt shouldn't be a text
-        {Flow.Message.answer, {:end, {:prompt, "Bye!"}},                          "<Response><Say>Bye!</Say><Hangup/></Response>"},
+        {Flow.Message.answer, {:end, {:prompt, Ask.StepBuilder.tts_prompt("Bye!")}},                          "<Response><Say>Bye!</Say><Hangup/></Response>"},
         {Flow.Message.answer, {:prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")}, "<Play>http://app.ask.dev/audio/foo</Play>"},
         {Flow.Message.reply("8"), {:prompt, Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")}, "<Play>http://app.ask.dev/audio/foo</Play>"},
       ]

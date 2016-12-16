@@ -662,16 +662,16 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     }
   })
 
-  let q = questionnaire.quotaCompletedMsg
+  const q = questionnaire.quotaCompletedMsg
   if (q) {
     let defaultSmsCompletedMsg = ((q[defaultLang] || {}).sms || '').trim()
     addToCsvForTranslation(defaultSmsCompletedMsg, context, lang =>
       (q[lang] || {}).sms || ''
     )
 
-    let defaultIvrCompletedMsg = ((q[defaultLang] || {}).ivr || '').trim()
+    let defaultIvrCompletedMsg = (((q[defaultLang] || {}).ivr || {}).text || '').trim()
     addToCsvForTranslation(defaultIvrCompletedMsg, context, lang =>
-      (q[lang] || {}).ivr || ''
+      ((q[lang] || {}).ivr || {}).text || ''
     )
   }
 
@@ -891,7 +891,7 @@ const translateQuotaCompletedMsg = (msg, defaultLanguage, lookup) => {
 
   let newMsg = {...msg}
   processTranslations(defaultLanguageValue.sms, newMsg, lookup, 'sms')
-  processTranslations(defaultLanguageValue.ivr, newMsg, lookup, 'ivr')
+  processTranslations((defaultLanguageValue.ivr || {}).text, newMsg, lookup, 'ivr')
   return newMsg
 }
 

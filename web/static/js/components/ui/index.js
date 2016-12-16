@@ -1,4 +1,5 @@
 export * from './AddButton'
+export * from './AudioDropzone'
 export * from './Card'
 export * from './CardTable'
 export * from './CollectionItem'

@@ -2,34 +2,13 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, InputWithLabel } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, InputWithLabel, AudioDropzone } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 import StepLanguageSelection from './StepLanguageSelection'
-import Dropzone from 'react-dropzone'
 import { createAudio } from '../../api.js'
 import classNames from 'classnames/bind'
-
-// TODO: should we move AudioDropzone to its own file?
-type AudioDropzoneProps = {
-  onDrop: Function,
-  onDropRejected: Function
-};
-
-class AudioDropzone extends Component {
-  props: AudioDropzoneProps
-
-  render() {
-    const { onDrop, onDropRejected } = this.props
-    return (
-      <Dropzone className='dropfile audio' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
-        <div className='drop-icon' />
-        <div className='drop-text audio' />
-      </Dropzone>
-    )
-  }
-}
 
 type Props = {
   step: Step,

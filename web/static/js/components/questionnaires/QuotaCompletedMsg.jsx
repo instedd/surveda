@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { InputWithLabel, Card } from '../ui'
+import { InputWithLabel, Card, Dropdown, DropdownItem, ConfirmationModal, AudioDropzone } from '../ui'
 import * as actions from '../../actions/questionnaire'
+import { createAudio } from '../../api.js'
 
 class QuotaCompletedMsg extends Component {
   static propTypes = {
@@ -11,99 +12,229 @@ class QuotaCompletedMsg extends Component {
 
   constructor(props) {
     super(props)
+    this.audioControl = null
+    this.loadAudio = false
     this.state = {
-      editing: false
+      editing: false,
+      audioErrors: null
     }
-    this.quotaCompletedMsgChanged = this.quotaCompletedMsgChanged.bind(this)
-    this.handleClick = this.handleClick.bind(this)
+  }
+
+  getIvr() {
+    const { questionnaire } = this.props
+
+    const quotaMsg = questionnaire.quotaCompletedMsg
+    const defaultLang = questionnaire.defaultLanguage
+    return (quotaMsg[defaultLang] || {}).ivr || {}
   }
 
   handleClick() {
     this.setState({editing: !this.state.editing})
   }
 
-  quotaCompletedMsgChanged(e, mode) {
-    const { dispatch } = this.props
+  changeSmsText(e) {
     e.preventDefault()
-    switch (mode) {
-      case 'sms':
-        dispatch(actions.setSmsQuotaCompletedMsg(e.target.value))
-        break
-      case 'ivr':
-        dispatch(actions.setIvrQuotaCompletedMsg(e.target.value))
-        break
-    }
+
+    const { dispatch } = this.props
+    dispatch(actions.setSmsQuotaCompletedMsg(e.target.value))
   }
 
-  render() {
+  changeIvrText(e) {
+    e.preventDefault()
+
+    const { dispatch } = this.props
+    const ivr = this.getIvr()
+
+    dispatch(actions.setIvrQuotaCompletedMsg({
+      ...ivr,
+      text: e.target.value
+    }))
+  }
+
+  changeIvrMode(e, mode) {
+    e.preventDefault()
+
+    const { dispatch } = this.props
+    const ivr = this.getIvr()
+
+    dispatch(actions.setIvrQuotaCompletedMsg({
+      ...ivr,
+      audioSource: mode
+    }))
+  }
+
+  handleFileUpload(files) {
+    let self = this
+
+    createAudio(files)
+      .then(response => {
+        const { dispatch } = self.props
+        const ivr = self.getIvr()
+        self.loadAudio = true
+        dispatch(actions.setIvrQuotaCompletedMsg({
+          ...ivr,
+          audioId: response.result
+        }))
+      })
+      .catch((e) => {
+        e.json()
+         .then((response) => {
+           let errors = (response.errors.data || ['Only mp3 and wav files are allowed.']).join(' ')
+           this.setState({audioErrors: errors})
+           $('#unprocessableEntity').modal('open')
+         })
+      })
+  }
+
+  collapsed() {
+    return (
+      <ul className='collapsible dark'>
+        <li>
+          <Card>
+            <div className='card-content closed-step'>
+              <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
+                <i className='material-icons left'>pie_chart</i>
+                <span>Quota completed messages</span>
+                <i className='material-icons right grey-text'>expand_more</i>
+              </a>
+            </div>
+
+          </Card>
+        </li>
+      </ul>
+    )
+  }
+
+  expanded() {
     const { questionnaire } = this.props
 
-    if (!questionnaire) {
-      return <div>Loading...</div>
-    }
+    const quotaMsg = questionnaire.quotaCompletedMsg
+    const defaultLang = questionnaire.defaultLanguage
 
-    let quotaCompletedMsgs = questionnaire.modes.map((mode) => {
-      const quotaMsg = questionnaire.quotaCompletedMsg
-      const defaultLang = questionnaire.defaultLanguage
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
 
-      const value = quotaMsg && quotaMsg[defaultLang] && quotaMsg[defaultLang][mode] || ''
-
-      return (
-        <div className='row' key={`quota-completed-${mode}`}>
+    let smsInput = null
+    if (sms) {
+      const smsMessage = ((quotaMsg || {})[defaultLang] || {}).sms || ''
+      smsInput = (
+        <div className='row' key='quota-completed-sms'>
           <div className='input-field'>
-            <InputWithLabel value={value} label={`${mode == 'sms' ? 'SMS' : 'Voice'} message`} id={`${mode == 'sms' ? 'quota_sms' : 'quota_voice'}`}>
+            <InputWithLabel value={smsMessage} label='SMS message' id='quota_sms'>
               <input
                 type='text'
-                onChange={e => this.quotaCompletedMsgChanged(e, mode)}
+                onChange={e => this.changeSmsText(e)}
               />
             </InputWithLabel>
           </div>
         </div>
       )
-    })
+    }
 
-    if (this.state.editing) {
-      return (
-        <Card>
-          <ul className='collection collection-card dark'>
-            <li className='collection-item header'>
-              <div className='row'>
-                <div className='col s12'>
-                  <i className='material-icons left'>pie_chart</i>
-                  <a className='page-title truncate'>
-                    <span>Quota completed messages</span>
-                  </a>
-                  <a className='collapse right' href='#!' onClick={this.handleClick}>
-                    <i className='material-icons'>expand_less</i>
-                  </a>
-                </div>
-              </div>
-            </li>
-            <li className='collection-item'>
-              <div>
-                {quotaCompletedMsgs}
-              </div>
-            </li>
-          </ul>
-        </Card>
+    let ivrTextInput = null
+    let ivrFileInput = null
+    if (ivr) {
+      const ivrProperty = this.getIvr()
+      const ivrText = ivrProperty.text || ''
+      const ivrAudioSource = ivrProperty.audioSource
+      const ivrAudioUri = ivrProperty.audioId ? `/api/v1/audios/${ivrProperty.audioId}` : ''
+
+      ivrTextInput = (
+        <div className='row' key='quota-completed-ivr'>
+          <div className='input-field'>
+            <InputWithLabel value={ivrText} label='Voice message' id='quota_voice'>
+              <input
+                type='text'
+                onChange={e => this.changeIvrText(e)}
+              />
+            </InputWithLabel>
+          </div>
+        </div>
       )
-    } else {
-      return (
-        <ul className='collapsible dark'>
-          <li>
-            <Card>
-              <div className='card-content closed-step'>
-                <a className='truncate' href='#!' onClick={this.handleClick}>
-                  <i className='material-icons left'>pie_chart</i>
+
+      let uploadComponent = null
+      if (ivrAudioSource == 'upload') {
+        uploadComponent = (
+          <div className='upload-audio'>
+            <audio controls ref={ref => { this.audioControl = ref }}>
+              <source src={ivrAudioUri} type='audio/mpeg' />
+            </audio>
+            <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+          </div>
+        )
+      }
+
+      ivrFileInput = (
+        <div className='row audio-section'>
+          <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+          <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors || ''} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+          <div className='audio-dropdown'>
+            <Dropdown className='step-mode underlined' label={ivrAudioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
+              <DropdownItem>
+                <a onClick={e => this.changeIvrMode(e, 'tts')}>
+                  <i className='material-icons left'>record_voice_over</i>
+                  Text to speech
+                  {ivrAudioSource == 'tts' ? <i className='material-icons right'>done</i> : ''}
+                </a>
+              </DropdownItem>
+              <DropdownItem>
+                <a onClick={e => this.changeIvrMode(e, 'upload')}>
+                  <i className='material-icons left'>file_upload</i>
+                  Upload a file
+                  {ivrAudioSource == 'upload' ? <i className='material-icons right'>done</i> : ''}
+                </a>
+              </DropdownItem>
+            </Dropdown>
+          </div>
+          {uploadComponent}
+        </div>
+      )
+    }
+
+    return (
+      <Card>
+        <ul className='collection collection-card dark'>
+          <li className='collection-item header'>
+            <div className='row'>
+              <div className='col s12'>
+                <i className='material-icons left'>pie_chart</i>
+                <a className='page-title truncate'>
                   <span>Quota completed messages</span>
-                  <i className='material-icons right grey-text'>expand_more</i>
+                </a>
+                <a className='collapse right' href='#!' onClick={(e) => this.handleClick(e)}>
+                  <i className='material-icons'>expand_less</i>
                 </a>
               </div>
-
-            </Card>
+            </div>
+          </li>
+          <li className='collection-item'>
+            <div>
+              {smsInput}
+              {ivrTextInput}
+              {ivrFileInput}
+            </div>
           </li>
         </ul>
-      )
+      </Card>
+    )
+  }
+
+  render() {
+    if (!this.props.questionnaire) {
+      return <div>Loading...</div>
+    }
+
+    if (this.state.editing) {
+      return this.expanded()
+    } else {
+      return this.collapsed()
+    }
+  }
+
+  componentDidUpdate() {
+    if (this.loadAudio && this.audioControl) {
+      this.loadAudio = false
+      this.audioControl.load()
     }
   }
 }

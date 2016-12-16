@@ -18,12 +18,16 @@ defmodule Ask.Runtime.VerboiceChannel do
   def oauth2_authorize(_code, _redirect_uri, _callback_url), do: throw(:not_implemented)
   def oauth2_refresh(_access_token), do: throw(:not_implemented)
 
-  def gather(respondent, %{"audio_source" => "upload", "audio_id" => audio_id}) do
-    "<Gather action=\"#{callback_url(respondent)}\"><Play>#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}</Play></Gather>"
+  def gather(respondent, prompt) do
+    "<Gather action=\"#{callback_url(respondent)}\">#{say_or_play(prompt)}</Gather>"
   end
 
-  def gather(respondent, %{"audio_source" => "tts", "text" => text}) do
-    "<Gather action=\"#{callback_url(respondent)}\"><Say>#{text}</Say></Gather>"
+  def say_or_play(%{"audio_source" => "upload", "audio_id" => audio_id}) do
+    "<Play>#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}</Play>"
+  end
+
+  def say_or_play(%{"audio_source" => "tts", "text" => text}) do
+    "<Say>#{text}</Say>"
   end
 
   def callback(conn, params = %{"respondent" => respondent_id}) do
@@ -42,11 +46,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         case Broker.sync_step(respondent, response) do
           {:prompt, prompt} ->
             "<Response>#{gather(respondent, prompt)}#{gather(respondent, prompt)}#{gather(respondent, prompt)}</Response>"
-          {:end, {:prompt, text}} ->
-            # TODO: this assumes prompt is always text, because this can
-            # only happen for reproducing the "quota-completed message",
-            # which can't specify an audio yet
-            "<Response><Say>#{text}</Say><Hangup/></Response>"
+          {:end, {:prompt, prompt}} ->
+            "<Response>#{say_or_play(prompt)}<Hangup/></Response>"
           :end ->
             "<Response><Hangup/></Response>"
         end

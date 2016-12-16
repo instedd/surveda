@@ -1026,7 +1026,7 @@ describe('questionnaire reducer', () => {
       ])
 
       const smsText = 'Thanks for participating in the poll'
-      const ivrText = 'Thank you very much'
+      const ivrText = {text: 'Thank you very much', audioSource: 'tts'}
 
       const resultState = playActionsFromState(preState, reducer)([
         actions.setSmsQuotaCompletedMsg(smsText),
@@ -1053,7 +1053,7 @@ describe('questionnaire reducer', () => {
         actions.receive(q)
       ])
 
-      const newIvrText = 'Thank you very much'
+      const newIvrText = {text: 'Thank you very much', audioSource: 'tts'}
 
       const resultState = playActionsFromState(preState, reducer)([
         actions.setIvrQuotaCompletedMsg(newIvrText)
@@ -1072,7 +1072,7 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
         actions.setSmsQuotaCompletedMsg('Done'),
-        actions.setIvrQuotaCompletedMsg('Done!')
+        actions.setIvrQuotaCompletedMsg({text: 'Done!', audioSource: 'tts'})
       ])
 
       const csv = csvForTranslation(state.data)
@@ -1098,7 +1098,7 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
         actions.setSmsQuotaCompletedMsg('Done'),
-        actions.setIvrQuotaCompletedMsg('Done')
+        actions.setIvrQuotaCompletedMsg({text: 'Done', audioSource: 'tts'})
       ])
 
       const csv = csvForTranslation(state.data)
@@ -1152,7 +1152,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActionsFromState(preState, reducer)([
         actions.addLanguage('es'),
         actions.setSmsQuotaCompletedMsg('Done'),
-        actions.setIvrQuotaCompletedMsg('Done!'),
+        actions.setIvrQuotaCompletedMsg({text: 'Done!', audioSource: 'tts'}),
         actions.uploadCsvForTranslation(
           [
             ['en', 'es'],
