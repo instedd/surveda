@@ -55,8 +55,13 @@ defmodule Ask.SurveyView do
   end
 
   def render("survey_bucket.json", %{bucket: bucket}) do
+    condition =
+      bucket.condition
+      |> Enum.reduce([], fn {store, value}, conditions ->
+        [%{"store" => store, "value" => value} | conditions]
+      end)
     %{
-      "condition" => bucket.condition,
+      "condition" => condition,
       "quota" => bucket.quota,
       "count" => bucket.count
     }

@@ -201,22 +201,22 @@ end
       "vars" => ["Smokes", "Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 1,
           "count" => 1
         },
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 2,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 3,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 4,
           "count" => 0
         },
@@ -247,12 +247,12 @@ end
       "vars" => ["Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Exercises" => "No"},
+          "condition" => [%{"store" => "Exercises","value" => "No"}],
           "quota" => 1,
           "count" => 1
         },
         %{
-          "condition" => %{"Exercises" => "Yes"},
+          "condition" => [%{"store" => "Exercises","value" => "Yes"}],
           "quota" => 2,
           "count" => 0
         },
@@ -278,22 +278,26 @@ end
       "vars" => ["Smokes", "Perfect Number"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Perfect Number" => [20, 30]},
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Perfect Number", "value" => [20, 30]}],
           "quota" => 1,
           "count" => 1
         },
         %{
-          "condition" => %{"Smokes" => "No", "Perfect Number" => [31, 40]},
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Perfect Number", "value" => [31, 40]}],
           "quota" => 2,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [20, 30]},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Perfect Number", "value" => [20, 30]}],
           "quota" => 1,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [31, 40]},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Perfect Number", "value" => [31, 40]}],
           "quota" => 2,
           "count" => 0
         },
@@ -320,22 +324,26 @@ end
       "vars" => ["Smokes", "Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Exercises", "value" => "No"}],
           "quota" => 1,
           "count" => 1
         },
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 2,
           "count" => 2
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Exercises", "value" => "No"}],
           "quota" => 3,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 4,
           "count" => 0
         },
@@ -360,22 +368,22 @@ end
       "vars" => ["Smokes", "Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 1,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 2,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 3,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 4,
           "count" => 0
         },
@@ -410,12 +418,12 @@ end
       "vars" => ["Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Exercises" => "No"},
+          "condition" => [%{"store" => "Exercises", "value" => "No"}],
           "quota" => 1,
           "count" => 0
         },
         %{
-          "condition" => %{"Exercises" => "Yes"},
+          "condition" => [%{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 2,
           "count" => 0
         },
@@ -450,22 +458,26 @@ end
       "vars" => ["Smokes", "Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Perfect Number" => [20, 30]},
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Perfect Number", "value" => [20, 30]}],
           "quota" => 1,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "No", "Perfect Number" => [31, 40]},
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Perfect Number", "value" => [31, 40]}],
           "quota" => 2,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [20, 30]},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Perfect Number", "value" => [20, 30]}],
           "quota" => 3,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Perfect Number" => [31, 40]},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Perfect Number", "value" => [31, 40]}],
           "quota" => 4,
           "count" => 0
         },

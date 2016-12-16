@@ -296,14 +296,14 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Gender', 'Exercises'],
           buckets: [
-            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'No'}},
-            {'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'No'}},
-            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'No'}},
-            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'No'}}
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}]}
           ]
         }
       }
@@ -344,8 +344,8 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes'],
           buckets: [
-            {'condition': {Smokes: 'Yes'}},
-            {'condition': {Smokes: 'No'}}
+            {'condition': [{store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Smokes', value: 'No'}]}
           ]
         }
       }
@@ -417,7 +417,7 @@ describe('survey reducer', () => {
       actions.fetch(1, 1),
       actions.receive(survey),
       actions.setQuotaVars([{var: 'Smokes'}, {var: 'Gender'}, {var: 'Exercises'}], questionnaire),
-      actions.quotaChange({Smokes: 'Yes', Gender: 'Female', Exercises: 'Yes'}, 12345)
+      actions.quotaChange([{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}], 12345)
     ])
 
     expect(state).toEqual({
@@ -427,17 +427,14 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Gender', 'Exercises'],
           buckets: [
-            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'Yes', Gender: 'Male', Exercises: 'No'}},
-            {
-              'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'Yes'},
-              'quota': 12345
-            },
-            {'condition': {Smokes: 'Yes', Gender: 'Female', Exercises: 'No'}},
-            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'No', Gender: 'Male', Exercises: 'No'}},
-            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'Yes'}},
-            {'condition': {Smokes: 'No', Gender: 'Female', Exercises: 'No'}}
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}], 'quota': 12345},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}]}
           ]
         }
       }
@@ -512,14 +509,14 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Age'],
           buckets: [
-            {'condition': {Smokes: 'Yes', 'Age': [20, 29]}},
-            {'condition': {Smokes: 'Yes', 'Age': [30, 39]}},
-            {'condition': {Smokes: 'Yes', 'Age': [40, 49]}},
-            {'condition': {Smokes: 'Yes', 'Age': [50, 119]}},
-            {'condition': {Smokes: 'No', 'Age': [20, 29]}},
-            {'condition': {Smokes: 'No', 'Age': [30, 39]}},
-            {'condition': {Smokes: 'No', 'Age': [40, 49]}},
-            {'condition': {Smokes: 'No', 'Age': [50, 119]}}
+            {'condition': [{store: 'Age', value: [20, 29]}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Age', value: [30, 39]}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Age', value: [40, 49]}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Age', value: [50, 119]}, {store: 'Smokes', value: 'Yes'}]},
+            {'condition': [{store: 'Age', value: [20, 29]}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Age', value: [30, 39]}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Age', value: [40, 49]}, {store: 'Smokes', value: 'No'}]},
+            {'condition': [{store: 'Age', value: [50, 119]}, {store: 'Smokes', value: 'No'}]}
           ]
         }
       }

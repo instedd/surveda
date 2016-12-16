@@ -303,22 +303,22 @@ defmodule Ask.BrokerTest do
       "vars" => ["Smokes", "Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 1,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 2,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 3,
           "count" => 0
         },
         %{
-          "condition" => %{"Smokes" => "Yes", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 4,
           "count" => 0
         },
@@ -450,12 +450,12 @@ defmodule Ask.BrokerTest do
       "vars" => ["Smokes"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}],
           "quota" => 1,
           "count" => 1
         },
         %{
-          "condition" => %{"Smokes" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}],
           "quota" => 1,
           "count" => 0
         },

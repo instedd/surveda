@@ -394,12 +394,12 @@ defmodule Ask.RespondentControllerTest do
       "vars" => ["Smokes", "Exercises"],
       "buckets" => [
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "No"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
           "quota" => 1,
           "count" => 1
         },
         %{
-          "condition" => %{"Smokes" => "No", "Exercises" => "Yes"},
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
           "quota" => 4,
           "count" => 2
         },
