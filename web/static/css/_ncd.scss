@@ -524,6 +524,11 @@ i.survey-status {
     margin-right: -20px;
   }
 }
+.wizard-content {
+  > div {
+    min-height: calc(100vh - 148px);
+  }
+}
 
 .step-mode {
   position: relative;
