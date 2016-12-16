@@ -28,10 +28,10 @@ export default (
         <Route path='surveys'>
           <IndexRoute components={{ body: SurveyIndex, tabs: ProjectTabs }} />
 
-          <Route path=':surveyId' title={SurveyTitle} showSavingStatus >
+          <Route path=':surveyId' title={SurveyTitle}>
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
             <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
-            <Route path='edit' component={SurveyEdit} />
+            <Route path='edit' component={SurveyEdit} showSavingStatus />
           </Route>
         </Route>
 
