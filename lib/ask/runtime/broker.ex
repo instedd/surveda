@@ -148,26 +148,37 @@ defmodule Ask.Runtime.Broker do
   defp do_sync_step(respondent, reply) do
     session = respondent.session |> Session.load
 
-    case Session.sync_step(session, reply) do
-      {:ok, session, step, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout})
-        step
+    try do
+      case Session.sync_step(session, reply) do
+        {:ok, session, step, timeout} ->
+          update_respondent(respondent, {:ok, session, timeout})
+          step
 
-      {:end, data} ->
-        update_respondent(respondent, :end)
-        {:end, data}
+        {:end, data} ->
+          update_respondent(respondent, :end)
+          {:end, data}
 
-      :end ->
-        update_respondent(respondent, :end)
-        :end
+        :end ->
+          update_respondent(respondent, :end)
+          :end
 
-      {:rejected, data} ->
-        update_respondent(respondent, :rejected)
-        {:end, data}
+        {:rejected, data} ->
+          update_respondent(respondent, :rejected)
+          {:end, data}
 
-      :rejected ->
-        update_respondent(respondent, :rejected)
-        :end
+        :rejected ->
+          update_respondent(respondent, :rejected)
+          :end
+      end
+    rescue
+      e in RuntimeError ->
+        Sentry.capture_exception(e, [
+          stacktrace: System.stacktrace(),
+          extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
+
+        Survey
+        |> Repo.get(respondent.survey_id)
+        |> complete
     end
   end
 
