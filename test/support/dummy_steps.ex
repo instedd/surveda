@@ -76,7 +76,8 @@ defmodule Ask.StepBuilder do
   def choice(value: value, responses: responses) do
     %{
       "value" => value,
-      "responses" => responses
+      "responses" => responses,
+      "skip_logic" => nil
     }
   end
 
