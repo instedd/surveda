@@ -60,21 +60,25 @@ class ChannelIndex extends Component {
     return (
       <div>
         <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
-        <div className='modal' ref='popup'>
-          <ul className='collection with-header'>
-            <li className='collection-header'>
+        <div className='modal card' ref='popup'>
+          <div className='modal-content'>
+            <div className='card-title header'>
               <h5>Create a channel</h5>
               <p>Ask will sync available channels from these providers after user authorization</p>
-            </li>
-            <li className='collection-item'>
-              <h5>Verboice</h5>
-              {providerSwitch('verboice')}
-            </li>
-            <li className='collection-item'>
-              <h5>Nuntium</h5>
-              {providerSwitch('nuntium')}
-            </li>
-          </ul>
+            </div>
+            <ul className='collection'>
+              <li className='collection-item icon verboice'>
+                <h5>Verboice</h5>
+                {providerSwitch('verboice')}
+                <i className='material-icons arrow-right'>chevron_right</i>
+              </li>
+              <li className='collection-item icon nuntium'>
+                <h5>Nuntium</h5>
+                {providerSwitch('nuntium')}
+                <i className='material-icons arrow-right'>chevron_right</i>
+              </li>
+            </ul>
+          </div>
         </div>
         { (Object.keys(channels).length == 0)
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
