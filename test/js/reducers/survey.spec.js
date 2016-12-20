@@ -543,6 +543,55 @@ describe('survey reducer', () => {
     })
     expect(rebuildInputFromQuotaBuckets('age', survey)).toEqual('1,10,50')
   })
+
+  it('changes modeComparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison()
+    ])
+    expect(state.data.modeComparison).toEqual(true)
+
+    const state2 = playActionsFromState(state, reducer)([
+      actions.changeModeComparison()
+    ])
+    expect(state2.data.modeComparison).toEqual(false)
+  })
+
+  it('selects mode, no comparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.selectMode(['ivr'])
+    ])
+    expect(state.data.mode).toEqual([['ivr']])
+  })
+
+  it('selects mode, comparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison(),
+      actions.selectMode(['ivr'])
+    ])
+    expect(state.data.mode).toEqual([['sms'], ['ivr']])
+
+    const state2 = playActionsFromState(state, reducer)([
+      actions.selectMode(['sms'])
+    ])
+    expect(state2.data.mode).toEqual([['ivr']])
+  })
+
+  it('changes modeComparison with many modes', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison(),
+      actions.selectMode(['ivr']),
+      actions.changeModeComparison()
+    ])
+    expect(state.data.mode).toEqual([['sms']])
+  })
 })
 
 const survey = deepFreeze({
@@ -560,5 +609,6 @@ const survey = deepFreeze({
   quotas: {
     vars: [],
     buckets: []
-  }
+  },
+  mode: [['sms']]
 })

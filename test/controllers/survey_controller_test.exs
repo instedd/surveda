@@ -506,7 +506,7 @@ defmodule Ask.SurveyControllerTest do
       add_channel_to(survey, channel)
       add_respondent_to survey
 
-      attrs = %{mode: ["sms"]}
+      attrs = %{mode: [["sms"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -521,7 +521,7 @@ defmodule Ask.SurveyControllerTest do
       add_channel_to(survey, channel)
       add_respondent_to survey
 
-      attrs = %{mode: ["sms", "ivr"]}
+      attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -543,7 +543,7 @@ defmodule Ask.SurveyControllerTest do
       |> put_assoc(:channels, [channel, channel2])
       |> Repo.update
 
-      attrs = %{mode: ["sms", "ivr"]}
+      attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -554,7 +554,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding cutoff", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: ["sms"])
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: [["sms"]])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -569,7 +569,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, mode: ["sms"])
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, mode: [["sms"]])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -584,7 +584,7 @@ defmodule Ask.SurveyControllerTest do
     test "changes state to not_ready when an invalid retry attempt configuration is passed", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: ["sms"], questionnaire_id: questionnaire.id)
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaire_id: questionnaire.id)
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -599,7 +599,7 @@ defmodule Ask.SurveyControllerTest do
     test "returns state to ready when a valid retry configuration is passed", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: ["sms"], questionnaire_id: questionnaire.id, sms_retry_configuration: "12j 13p 14q")
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaire_id: questionnaire.id, sms_retry_configuration: "12j 13p 14q")
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -617,7 +617,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding a day in schedule", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, mode: ["sms"])
+      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, mode: [["sms"]])
       add_channel_to(survey, channel)
       add_respondent_to survey
 

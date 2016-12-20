@@ -65,8 +65,8 @@ defmodule Ask.Survey do
 
     channels = get_field(changeset, :channels)
     ready = questionnaire_id && respondents_count && respondents_count > 0
-      && length(channels) > 0 && schedule_completed && mode && validate_retry_attempts_configuration(changeset)
-      && Enum.all?(mode, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
+      && length(channels) > 0 && schedule_completed && mode && (length(mode) > 0) && validate_retry_attempts_configuration(changeset)
+      && Enum.all?(hd(mode), fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
 
     cond do
       state == "not_ready" && ready ->
@@ -113,14 +113,14 @@ defmodule Ask.Survey do
   end
 
   def primary_channel(survey) do
-    case survey.mode do
+    case hd(survey.mode) do
       [mode | _] -> channel(survey, mode)
       _ -> nil
     end
   end
 
   def fallback_channel(survey) do
-    case survey.mode do
+    case hd(survey.mode) do
       [_, mode] -> channel(survey, mode)
       _ -> nil
     end

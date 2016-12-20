@@ -30,7 +30,7 @@ defmodule Ask.Factory do
       schedule_end_time: Ecto.Time.cast!("18:00:00"),
       name: sequence(:survey, &"Survey #{&1}"),
       timezone: "UTC",
-      mode: ["sms"]
+      mode: [["sms"]]
     }
   end
 

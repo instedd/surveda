@@ -33,7 +33,7 @@ defmodule Ask.SurveyTest do
   end
 
   test "primary SMS and no fallback channel" do
-    survey = %Survey{mode: ["sms"], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
+    survey = %Survey{mode: [["sms"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
     prim = Survey.primary_channel(survey)
     assert prim.name == "An SMS Channel"
@@ -44,7 +44,7 @@ defmodule Ask.SurveyTest do
   end
 
    test "primary IVR and no fallback channel" do
-    survey = %Survey{mode: ["ivr"], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
+    survey = %Survey{mode: [["ivr"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
     prim = Survey.primary_channel(survey)
     assert prim.name == "An IVR Channel"
@@ -55,7 +55,7 @@ defmodule Ask.SurveyTest do
   end
 
   test "primary SMS and fallback IVR channel" do
-    survey = %Survey{mode: ["sms", "ivr"], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
+    survey = %Survey{mode: [["sms", "ivr"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
     prim = Survey.primary_channel(survey)
     assert prim.name == "An SMS Channel"
@@ -67,7 +67,7 @@ defmodule Ask.SurveyTest do
   end
 
   test "primary IVR and fallback SMS channel" do
-    survey = %Survey{mode: ["ivr", "sms"], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
+    survey = %Survey{mode: [["ivr", "sms"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
     prim = Survey.primary_channel(survey)
     assert prim.name == "An IVR Channel"

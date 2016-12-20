@@ -6,6 +6,8 @@ import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardChannelsStep from './SurveyWizardChannelsStep'
 import SurveyWizardScheduleStep from './SurveyWizardScheduleStep'
 import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
+import flatMap from 'lodash/flatMap'
+import uniq from 'lodash/uniq'
 
 class SurveyForm extends Component {
   static propTypes = {
@@ -26,6 +28,7 @@ class SurveyForm extends Component {
 
   allModesHaveAChannel(modes, channels, allChannels) {
     const selectedTypes = channels.map(id => allChannels[id].type)
+    modes = uniq(flatMap(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
   }
 
@@ -33,7 +36,7 @@ class SurveyForm extends Component {
     const { survey, projectId, questionnaires, channels, respondents, errors, questionnaire } = this.props
     const questionnaireStepCompleted = survey.questionnaireId != null
     const respondentsStepCompleted = survey.respondentsCount > 0
-    const channelStepCompleted = survey.mode != null && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
+    const channelStepCompleted = survey.mode != null && survey.mode.length > 0 && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration)
     const scheduleStepCompleted =
