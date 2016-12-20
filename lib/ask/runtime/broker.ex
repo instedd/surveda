@@ -6,6 +6,7 @@ defmodule Ask.Runtime.Broker do
   alias Ask.{Repo, Survey, Respondent, QuotaBucket}
   alias Ask.Runtime.Session
   alias Ask.QuotaBucket
+  require Logger
 
   @batch_size 10
   @poll_interval :timer.minutes(1)
@@ -59,25 +60,35 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp poll_survey(survey) do
-    by_state = Repo.all(
-      from r in assoc(survey, :respondents),
-      group_by: :state,
-      select: {r.state, count("*")}) |> Enum.into(%{})
+    try do
+      by_state = Repo.all(
+        from r in assoc(survey, :respondents),
+        group_by: :state,
+        select: {r.state, count("*")}) |> Enum.into(%{})
 
-    active = by_state["active"] || 0
-    pending = by_state["pending"] || 0
-    completed = by_state["completed"] || 0
-    stalled = by_state["stalled"] || 0
-    reached_quotas = reached_quotas?(survey)
+      active = by_state["active"] || 0
+      pending = by_state["pending"] || 0
+      completed = by_state["completed"] || 0
+      stalled = by_state["stalled"] || 0
+      reached_quotas = reached_quotas?(survey)
 
-    cond do
-      reached_quotas || (active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed)) ->
-        complete(survey)
+      cond do
+        reached_quotas || (active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed)) ->
+          complete(survey)
 
-      active < @batch_size && pending > 0 ->
-        start_some(survey, @batch_size - active)
+        active < @batch_size && pending > 0 ->
+          start_some(survey, @batch_size - active)
 
-      true -> :ok
+        true -> :ok
+      end
+    rescue
+      e ->
+        if Mix.env != :test do
+          Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
+        end
+        Sentry.capture_exception(e, [
+          stacktrace: System.stacktrace(),
+          extra: %{survey_id: survey.id}])
     end
   end
 
@@ -171,7 +182,10 @@ defmodule Ask.Runtime.Broker do
           :end
       end
     rescue
-      e in RuntimeError ->
+      e ->
+        if Mix.env != :test do
+          Logger.error "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id}): #{inspect e} #{inspect System.stacktrace}"
+        end
         Sentry.capture_exception(e, [
           stacktrace: System.stacktrace(),
           extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
