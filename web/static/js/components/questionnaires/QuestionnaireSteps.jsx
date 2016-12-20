@@ -1,7 +1,9 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes, Component } from 'react'
 import { Card } from '../ui'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
+import { DragDropContext } from 'react-dnd'
+import HTML5Backend from 'react-dnd-html5-backend'
 
 const StepsList = ({steps, onClick}) => {
   if (steps.length != 0) {
@@ -23,30 +25,33 @@ const StepsList = ({steps, onClick}) => {
   }
 }
 
-const QuestionnaireSteps = ({ steps, current, onSelectStep, onDeselectStep, onDeleteStep }) => {
-  if (current == null) {
-    // All collapsed
-    return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
-  } else {
-    const itemIndex = steps.findIndex(step => step.id == current)
+class QuestionnaireSteps extends Component {
+  render() {
+    const { steps, current, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+    if (current == null) {
+      // All collapsed
+      return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
+    } else {
+      const itemIndex = steps.findIndex(step => step.id == current)
 
-    // Only one expanded
-    const stepsBefore = steps.slice(0, itemIndex)
-    const currentStep = steps[itemIndex]
-    const stepsAfter = steps.slice(itemIndex + 1)
+      // Only one expanded
+      const stepsBefore = steps.slice(0, itemIndex)
+      const currentStep = steps[itemIndex]
+      const stepsAfter = steps.slice(itemIndex + 1)
 
-    return (
-      <div>
-        <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
-        <StepEditor
-          step={currentStep}
-          errorPath={`steps[${itemIndex}]`}
-          onCollapse={() => onDeselectStep()}
-          onDelete={() => onDeleteStep()}
-          stepsAfter={stepsAfter} />
-        <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} />
-      </div>
-    )
+      return (
+        <div>
+          <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
+          <StepEditor
+            step={currentStep}
+            errorPath={`steps[${itemIndex}]`}
+            onCollapse={() => onDeselectStep()}
+            onDelete={() => onDeleteStep()}
+            stepsAfter={stepsAfter} />
+          <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} />
+        </div>
+      )
+    }
   }
 }
 
@@ -63,4 +68,4 @@ StepsList.propTypes = {
   onClick: PropTypes.func
 }
 
-export default QuestionnaireSteps
+export default DragDropContext(HTML5Backend)(QuestionnaireSteps)
