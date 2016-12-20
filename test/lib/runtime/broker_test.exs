@@ -716,7 +716,7 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     # Respondent says 1 (i.e.: Yes), causing an invalid skip_logic to be inspected
-    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+    Broker.sync_step(respondent, Flow.Message.reply("1"))
 
     # Given the Broker failed for mysterious reasons, we want to stop the survey to prevent
     # further consequences. Right now we don't have that notion, so for the moment we mark it
@@ -724,7 +724,7 @@ defmodule Ask.BrokerTest do
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "completed"
 
-    respondent = Repo.get(Respondent, respondent.id)
+    Repo.get(Respondent, respondent.id)
 
     :ok = broker |> GenServer.stop
   end
