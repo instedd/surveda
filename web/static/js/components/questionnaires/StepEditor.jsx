@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, InputWithLabel, AudioDropzone } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
+import SmsPrompt from './SmsPrompt'
 import StepNumericEditor from './StepNumericEditor'
 import StepLanguageSelection from './StepLanguageSelection'
 import { createAudio, autocompleteVars } from '../../api.js'
@@ -182,20 +183,7 @@ class StepEditor extends Component {
     if (sms) {
       // TODO: uncomment line below once error styles are fixed
       let smsInputErrors = null // errors[`${errorPath}.prompt.sms`]
-      smsInput = <div className='row'>
-        <div className='col input-field s12'>
-          <InputWithLabel id='step_editor_sms_prompt' value={this.state.stepPromptSms} label='SMS message' errors={smsInputErrors} >
-            <input
-              type='text'
-              is length='140'
-              onChange={e => this.stepPromptSmsChange(e)}
-              onBlur={e => this.stepPromptSmsSubmit(e)}
-              ref={ref => $(ref).characterCounter()}
-              class={classNames({'invalid': smsInputErrors})}
-              />
-          </InputWithLabel>
-        </div>
-      </div>
+      smsInput = <SmsPrompt id='step_editor_sms_prompt' value={this.state.stepPromptSms} inputErrors={smsInputErrors} onChange={e => this.stepPromptSmsChange(e)} onBlur={e => this.stepPromptSmsSubmit(e)} />
     }
 
     let ivrTextInput = null
