@@ -191,6 +191,23 @@ export const createQuestionnaire = (projectId) => (dispatch) =>
     return questionnaire
   })
 
+export const duplicateQuestionnaire = (projectId, questionnaire) => (dispatch) => {
+  // To duplicate a questionnaire we simply create a new
+  // one with the same data as the given questionnaire,
+  // except for the name
+  let copy = {
+    ...questionnaire,
+    name: `${questionnaire.name || 'Untitled'} (duplicate)`
+  }
+  return api.createQuestionnaire(projectId, copy)
+  .then(response => {
+    const questionnaire = response.entities.questionnaires[response.result]
+    dispatch(fetch(projectId, questionnaire.id))
+    dispatch(receive(questionnaire))
+    return questionnaire
+  })
+}
+
 export const changeNumericRanges = (stepId, minValue, maxValue, rangeDelimiters) => ({
   type: CHANGE_NUMERIC_RANGES,
   stepId: stepId,

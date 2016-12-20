@@ -24,8 +24,8 @@ defmodule Ask.QuestionnaireController do
     params = conn.assigns[:questionnaire]
 
     params = params
-    |> Map.put("languages", ["en"])
-    |> Map.put("default_language", "en")
+    |> Map.put_new("languages", ["en"])
+    |> Map.put_new("default_language", "en")
 
     changeset = project
     |> authorize(conn)

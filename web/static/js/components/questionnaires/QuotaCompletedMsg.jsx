@@ -23,7 +23,7 @@ class QuotaCompletedMsg extends Component {
   getIvr() {
     const { questionnaire } = this.props
 
-    const quotaMsg = questionnaire.quotaCompletedMsg
+    const quotaMsg = questionnaire.quotaCompletedMsg || {}
     const defaultLang = questionnaire.defaultLanguage
     return (quotaMsg[defaultLang] || {}).ivr || {}
   }
@@ -108,7 +108,7 @@ class QuotaCompletedMsg extends Component {
   expanded() {
     const { questionnaire } = this.props
 
-    const quotaMsg = questionnaire.quotaCompletedMsg
+    const quotaMsg = questionnaire.quotaCompletedMsg || {}
     const defaultLang = questionnaire.defaultLanguage
 
     const sms = questionnaire.modes.indexOf('sms') != -1
