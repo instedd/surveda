@@ -237,3 +237,8 @@ export const deleteAuthorization = (provider) => {
 export const synchronizeChannels = () => {
   return apiFetch(`authorizations/synchronize`)
 }
+
+export const autocompleteVars = (projectId, text) => {
+  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${escape(text)}`)
+  .then(response => response.json())
+}

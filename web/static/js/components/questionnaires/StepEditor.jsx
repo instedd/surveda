@@ -7,7 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import StepNumericEditor from './StepNumericEditor'
 import StepLanguageSelection from './StepLanguageSelection'
-import { createAudio } from '../../api.js'
+import { createAudio, autocompleteVars } from '../../api.js'
 import classNames from 'classnames/bind'
 
 type Props = {
@@ -16,6 +16,7 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
+  project: Project,
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
@@ -36,10 +37,12 @@ type State = {
 class StepEditor extends Component {
   props: Props
   state: State
+  clickedVarAutocomplete: boolean
 
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
+    this.clickedVarAutocomplete = false
   }
 
   stepTitleChange(e) {
@@ -79,15 +82,20 @@ class StepEditor extends Component {
     this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
   }
 
-  stepStoreChange(e) {
-    e.preventDefault()
-    this.setState({stepStore: e.target.value})
+  stepStoreChange(e, value) {
+    if (this.clickedVarAutocomplete) return
+    if (e) e.preventDefault()
+    this.setState({stepStore: value})
   }
 
-  stepStoreSubmit(e) {
-    e.preventDefault()
+  stepStoreSubmit(e, value) {
+    if (this.clickedVarAutocomplete) return
+    const varsDropdown = this.refs.varsDropdown
+    $(varsDropdown).hide()
+
+    if (e) e.preventDefault()
     const { step } = this.props
-    this.props.questionnaireActions.changeStepStore(step.id, e.target.value)
+    this.props.questionnaireActions.changeStepStore(step.id, value)
   }
 
   delete(e) {
@@ -147,6 +155,10 @@ class StepEditor extends Component {
            $('#unprocessableEntity').modal('open')
          })
       })
+  }
+
+  clickedVarAutocompleteCallback(e) {
+    this.clickedVarAutocomplete = true
   }
 
   render() {
@@ -301,8 +313,15 @@ class StepEditor extends Component {
                   <input
                     type='text'
                     value={this.state.stepStore}
-                    onChange={e => this.stepStoreChange(e)}
-                    onBlur={e => this.stepStoreSubmit(e)}
+                    onChange={e => this.stepStoreChange(e, e.target.value)}
+                    onBlur={e => this.stepStoreSubmit(e, e.target.value)}
+                    autoComplete='off'
+                    className='autocomplete'
+                    ref='varInput'
+                    />
+                  <ul className='autocomplete-content dropdown-content var-dropdown'
+                    ref='varsDropdown'
+                    onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
                     />
                 </div>
               </div>
@@ -321,9 +340,49 @@ class StepEditor extends Component {
       </Card>
     )
   }
+
+  componentDidMount() {
+    this.setupAutocomplete()
+  }
+
+  componentDidUpdate() {
+    this.setupAutocomplete()
+  }
+
+  setupAutocomplete() {
+    const self = this
+    const varInput = this.refs.varInput
+    const varsDropdown = this.refs.varsDropdown
+    const { project } = this.props
+
+    $(varInput).click(() => $(varsDropdown).show())
+
+    $(varInput).materialize_autocomplete({
+      limit: 100,
+      multiple: {
+        enable: false
+      },
+      dropdown: {
+        el: varsDropdown,
+        itemTemplate: '<li class="ac-item" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
+      },
+      onSelect: (item) => {
+        self.clickedVarAutocomplete = false
+        self.stepStoreChange(null, item.text)
+        self.stepStoreSubmit(null, item.text)
+      },
+      getData: (value, callback) => {
+        autocompleteVars(project.id, value)
+        .then(response => {
+          callback(value, response.map(x => ({id: x, text: x})))
+        })
+      }
+    })
+  }
 }
 
 const mapStateToProps = (state, ownProps) => ({
+  project: state.project.data,
   questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors
 })
