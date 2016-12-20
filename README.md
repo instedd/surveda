@@ -12,6 +12,12 @@ To open a shell in a container: `docker exec -it ask_db_1 bash`, where `ask_db_1
 
 To start an Elixir console in your running Phoenix app container: `docker exec -it ask_app_1 iex -S mix`.
 
+## Exposing your containers as *.ask.dev
+
+You can use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.ask.dev` and ngrok at `ngrok.ask.dev`.
+
+Just follow the instructions at the README of dockerdev.
+
 ## Linting and Formatting
 
 To help us keep a consistent coding style, we're using StandardJS. Follow their instructions to install it: http://standardjs.com/#install
