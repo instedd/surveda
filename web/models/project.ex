@@ -3,10 +3,11 @@ defmodule Ask.Project do
 
   schema "projects" do
     field :name, :string
-    belongs_to :user, Ask.User
 
     has_many :questionnaires, Ask.Questionnaire
     has_many :surveys, Ask.Survey
+    many_to_many :users, Ask.User, join_through: Ask.ProjectMembership, on_replace: :delete
+    has_many :project_memberships, Ask.ProjectMembership
 
     timestamps()
   end

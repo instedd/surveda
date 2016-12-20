@@ -18,7 +18,6 @@ defmodule Ask.Factory do
 
   def project_factory do
     %Ask.Project{
-      user: build(:user),
       name: sequence(:project, &"Project #{&1}")
     }
   end
