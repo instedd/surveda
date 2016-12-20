@@ -1,5 +1,6 @@
 defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
+  use Ask.DummySteps
 
   alias Ask.{Project, Questionnaire, JsonSchema}
   @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
@@ -121,6 +122,19 @@ defmodule Ask.QuestionnaireControllerTest do
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
     end
+
+    test "creates and creates variables", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      questionnaire = %{name: "some content", modes: ["sms", "ivr"], steps: @dummy_steps}
+      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: questionnaire
+      id = json_response(conn, 201)["data"]["id"]
+      assert id
+
+      vars = (Questionnaire
+      |> Repo.get!(id)
+      |> Repo.preload(:questionnaire_variables)).questionnaire_variables
+      assert length(vars) == 4
+    end
   end
 
   describe "update:" do
@@ -147,6 +161,25 @@ defmodule Ask.QuestionnaireControllerTest do
 
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
+
+    test "updates and creates variables", %{conn: conn, user: user} do
+      project = insert(:project, user: user)
+      questionnaire = insert(:questionnaire, project: project)
+
+      %Ask.QuestionnaireVariable{
+        project_id: questionnaire.project_id,
+        questionnaire_id: questionnaire.id,
+        name: "Gonna be erased",
+      } |> Repo.insert!
+
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: @dummy_steps}
+      assert json_response(conn, 200)["data"]["id"]
+
+      vars = (Questionnaire
+      |> Repo.get!(questionnaire.id)
+      |> Repo.preload(:questionnaire_variables)).questionnaire_variables
+      assert length(vars) == 4
     end
   end
 
