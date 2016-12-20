@@ -1,5 +1,4 @@
 import React, { PropTypes, Component } from 'react'
-import { Card } from '../ui'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 import StepEditor from './StepEditor'
 import { DragDropContext } from 'react-dnd'
@@ -11,11 +10,7 @@ const StepsList = ({steps, onClick}) => {
       <ul className='collapsible'>
         { steps.map((step) => (
           <li key={step.id}>
-            <Card>
-              <div className='card-content closed-step'>
-                <QuestionnaireClosedStep step={step} onClick={stepId => onClick(stepId)} />
-              </div>
-            </Card>
+            <QuestionnaireClosedStep step={step} onClick={stepId => onClick(stepId)} />
           </li>
         ))}
       </ul>
