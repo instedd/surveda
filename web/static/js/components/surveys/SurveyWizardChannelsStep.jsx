@@ -84,7 +84,7 @@ class SurveyWizardChannelsStep extends Component {
 
     const currentChannels = survey.channels || []
     const mode = survey.mode || []
-    const modeComparison = (mode.length == 0 || mode.length > 1) ? true : survey.modeComparison
+    const modeComparison = mode.length > 1 || survey.modeComparison
 
     let channelsComponent = []
     let allModes = uniq(flatMap(mode))

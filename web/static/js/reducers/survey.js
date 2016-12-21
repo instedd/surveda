@@ -213,7 +213,7 @@ const selectChannels = (state, action) => {
 const selectMode = (state, action) => {
   let newMode
   let stateMode = state.mode || []
-  let modeComparison = (stateMode.length == 0 || stateMode.length > 1) ? true : state.modeComparison
+  let modeComparison = stateMode.length > 1 || state.modeComparison
 
   if (modeComparison) {
     let mode = state.mode || []
@@ -229,7 +229,8 @@ const selectMode = (state, action) => {
 
   return {
     ...state,
-    mode: newMode
+    mode: newMode,
+    modeComparison
   }
 }
 
