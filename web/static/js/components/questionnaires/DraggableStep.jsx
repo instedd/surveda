@@ -24,10 +24,13 @@ class DraggableStep extends Component {
     const draggable = step.type != 'language-selection'
 
     if (draggable) {
-      const draggableStyle = {
+      let draggableStyle: any = {
         opacity: isDragging ? 0.0 : 1,
-        cursor: 'move',
-        borderBottom: isOver ? 'green medium solid' : 'inherit'
+        cursor: 'move'
+      }
+
+      if (isOver) {
+        draggableStyle['borderBottom'] = 'green medium solid'
       }
 
       return connectDropTarget(connectDragSource(
@@ -51,7 +54,7 @@ export const stepSource = {
   endDrag(props, monitor, component) {
     const { step, questionnaireActions } = props
 
-    if (monitor.didDrop() && monitor.getDropResult().id != step.id) {
+    if (monitor.didDrop() && (monitor.getDropResult().id !== step.id)) {
       questionnaireActions.moveStep(step.id, monitor.getDropResult().id)
     }
   }
