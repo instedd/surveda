@@ -1,8 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
 import { InputWithLabel } from '../ui'
-import * as questionnaireActions from '../../actions/questionnaire'
 import classNames from 'classnames/bind'
 
 class SmsPrompt extends Component {
@@ -29,10 +26,6 @@ class SmsPrompt extends Component {
   }
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
-})
-
 SmsPrompt.propTypes = {
   id: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
@@ -41,4 +34,4 @@ SmsPrompt.propTypes = {
   onBlur: PropTypes.func.isRequired
 }
 
-export default connect(mapDispatchToProps)(SmsPrompt)
+export default SmsPrompt
