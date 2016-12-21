@@ -91,10 +91,10 @@ defmodule Ask.StepBuilder do
 
   def responses(sms: sms, ivr: ivr) do
     %{
-      "en" => %{
-        "sms" => sms,
-        "ivr" => ivr
-      }
+      "sms" => %{
+        "en" => sms
+      },
+      "ivr" => ivr
     }
   end
 

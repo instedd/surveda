@@ -327,7 +327,7 @@ describe('questionnaire reducer', () => {
       const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
       expect(step.choices.length).toEqual(3)
       expect(step.choices[2].value).toEqual('')
-      expect(step.choices[2].responses['en']).toEqual({sms: [], ivr: []})
+      expect(step.choices[2].responses).toEqual({sms: {'en': []}, ivr: []})
     })
 
     it('should delete choice', () => {
@@ -359,16 +359,12 @@ describe('questionnaire reducer', () => {
       expect(step.choices.length).toEqual(2)
       expect(step.choices[1].value).toEqual('Maybe')
       expect(step.choices[1].skipLogic).toEqual('end')
-      expect(step.choices[1].responses['en']).toEqual({
-        sms: [
-          'M',
-          'MB',
-          '3'
-        ],
-        ivr: [
-          'May'
-        ]
-      })
+      expect(step.choices[1].responses.ivr).toEqual('May')
+      expect(step.choices[1].responses.sms['en']).toEqual([
+        'M',
+        'MB',
+        '3'
+      ])
     })
 
     it('should autocomplete choice options when parameter is true', () => {
@@ -388,14 +384,12 @@ describe('questionnaire reducer', () => {
       expect(step.choices[2]).toEqual({
         value: 'Maybe',
         responses: {
-          'en': {
-            sms: [
+          ivr: ['May'],
+          sms: {
+            'en': [
               'M',
               'MB',
               '3'
-            ],
-            ivr: [
-              'May'
             ]
           }
         },
@@ -420,9 +414,9 @@ describe('questionnaire reducer', () => {
       expect(step.choices[2]).toEqual({
         value: 'Maybe',
         responses: {
-          'en': {
-            sms: [],
-            ivr: []
+          ivr: [],
+          sms: {
+            'en': []
           }
         },
         skipLogic: 'some-other-id'
@@ -447,13 +441,10 @@ describe('questionnaire reducer', () => {
       expect(step.choices[2]).toEqual({
         value: 'Maybe',
         responses: {
-          'en': {
-            sms: [
+          ivr: ['2', '3'],
+          sms: {
+            'en': [
               'Perhaps'
-            ],
-            ivr: [
-              '2',
-              '3'
             ]
           }
         },
@@ -571,14 +562,14 @@ describe('questionnaire reducer', () => {
       expect(step.choices[2]).toEqual({
         value: 'Maybe',
         responses: {
-          'en': {
-            sms: ['A'],
-            ivr: [
-              '3',
-              'b',
-              '#',
-              '22'
-            ]
+          ivr: [
+            '3',
+            'b',
+            '#',
+            '22'
+          ],
+          sms: {
+            'en': ['A']
           }
         },
         skipLogic: 'some-other-id'
@@ -1137,8 +1128,8 @@ describe('questionnaire reducer', () => {
       expect(resultState.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
       expect(resultState.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
 
-      expect(resultState.data.steps[1].choices[0].responses.es.sms).toEqual(['Jes', 'J', '1'])
-      expect(resultState.data.steps[1].choices[1].responses.es.sms).toEqual(['No', 'N', '2']) // original preserved
+      expect(resultState.data.steps[1].choices[0].responses.sms.es).toEqual(['Jes', 'J', '1'])
+      expect(resultState.data.steps[1].choices[1].responses.sms.es).toEqual(['No', 'N', '2']) // original preserved
 
       expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
     })
@@ -1166,7 +1157,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
-      expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual('Listo!')
+      expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
     })
 
     it('should compute a valid alphanumeric filename', () => {

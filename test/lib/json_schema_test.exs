@@ -49,9 +49,6 @@ defmodule Ask.StepsValidatorTest do
   defp valid_responses(json), do: valid_thing(json, :responses)
   defp invalid_responses(json, case_desc), do: invalid_thing(json, :responses, case_desc)
 
-  defp valid_lang_responses(json), do: valid_thing(json, :lang_responses)
-  defp invalid_lang_responses(json, case_desc), do: invalid_thing(json, :lang_responses, case_desc)
-
   test "questionnaire" do
     ~s({})
     |> invalid_questionnaire("Steps must be mandatory")
@@ -291,32 +288,17 @@ defmodule Ask.StepsValidatorTest do
 
   test "responses" do
     ~s({
-      "en": {
-        "foo": "bar"
+      "sms": {
+        "en": "bar"
       }
     }) |> invalid_responses("Responses must have lang_responses structure")
 
     ~s({
-      "en": {},
-      "fr": {}
+      "sms": {
+        "en" : [],
+        "fr" : []
+        },
+      "ivr": []
     }) |> valid_responses
-  end
-
-  test "lang_responses" do
-    ~s({
-      "ivr": {},
-      "sms": []
-    })
-    |> invalid_lang_responses("Responses ivr must be an array")
-
-    ~s({
-      "ivr": [],
-      "sms": {}
-    })
-    |> invalid_lang_responses("Responses sms must be an array")
-
-    ~s({"sms": []}) |> valid_lang_responses
-    ~s({"ivr": []}) |> valid_lang_responses
-    ~s({"ivr": ["1"], "sms": ["Y"]}) |> valid_lang_responses
   end
 end
