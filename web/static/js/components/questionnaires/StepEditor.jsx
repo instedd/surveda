@@ -10,6 +10,7 @@ import IvrPrompt from './IvrPrompt'
 import StepNumericEditor from './StepNumericEditor'
 import StepLanguageSelection from './StepLanguageSelection'
 import { createAudio, autocompleteVars } from '../../api.js'
+import DraggableStep from './DraggableStep'
 
 type Props = {
   step: Step,
@@ -21,6 +22,7 @@ type Props = {
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
+  draggable: boolean
 };
 
 type State = {
@@ -195,93 +197,95 @@ class StepEditor extends Component {
     }
 
     return (
-      <Card key={step.id}>
-        <ul className='collection collection-card'>
-          <li className='collection-item input-field header'>
-            <div className='row'>
-              <div className='col s12'>
-                { this.state.stepType != 'language-selection'
-                ? <div className='left'>
-                  <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
-                    <DropdownItem>
-                      <a onClick={e => this.changeStepType('multiple-choice')}>
-                        <i className='material-icons left'>list</i>
-                            Multiple choice
-                        {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
-                      </a>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <a onClick={e => this.changeStepType('numeric')}>
-                        <i className='material-icons left sharp'>dialpad</i>
-                            Numeric
-                        {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
-                      </a>
-                    </DropdownItem>
-                  </Dropdown>
+      <DraggableStep step={step}>
+        <Card key={step.id}>
+          <ul className='collection collection-card'>
+            <li className='collection-item input-field header'>
+              <div className='row'>
+                <div className='col s12'>
+                  { this.state.stepType != 'language-selection'
+                  ? <div className='left'>
+                    <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
+                      <DropdownItem>
+                        <a onClick={e => this.changeStepType('multiple-choice')}>
+                          <i className='material-icons left'>list</i>
+                              Multiple choice
+                          {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
+                        </a>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <a onClick={e => this.changeStepType('numeric')}>
+                          <i className='material-icons left sharp'>dialpad</i>
+                              Numeric
+                          {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
+                        </a>
+                      </DropdownItem>
+                    </Dropdown>
+                  </div>
+                  : <i className='material-icons left'>language</i>
+                  }
+                  <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
+                  <a href='#!'
+                    className='collapse right'
+                    onClick={e => {
+                      e.preventDefault()
+                      onCollapse()
+                    }}>
+                    <i className='material-icons'>expand_less</i>
+                  </a>
                 </div>
-                : <i className='material-icons left'>language</i>
-                }
-                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
+              </div>
+            </li>
+            <li className='collection-item'>
+              <div className='row'>
+                <div className='col s12'>
+                  <h5>Question Prompt</h5>
+                </div>
+              </div>
+              {smsInput}
+              {ivrInput}
+            </li>
+            <li className='collection-item'>
+              <div className='row'>
+                <div className='col s12'>
+                  {editor}
+                </div>
+              </div>
+            </li>
+            <li className='collection-item'>
+              <div className='row'>
+                <div className='col s12'>
+                  Variable name:
+                  <div className='input-field inline'>
+                    <input
+                      type='text'
+                      value={this.state.stepStore}
+                      onChange={e => this.stepStoreChange(e, e.target.value)}
+                      onBlur={e => this.stepStoreSubmit(e, e.target.value)}
+                      autoComplete='off'
+                      className='autocomplete'
+                      ref='varInput'
+                      />
+                    <ul className='autocomplete-content dropdown-content var-dropdown'
+                      ref='varsDropdown'
+                      onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
+                      />
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li className='collection-item'>
+              <div className='row'>
                 <a href='#!'
-                  className='collapse right'
-                  onClick={e => {
-                    e.preventDefault()
-                    onCollapse()
-                  }}>
-                  <i className='material-icons'>expand_less</i>
+                  className='right'
+                  onClick={(e) => this.delete(e)}>
+                  DELETE
                 </a>
               </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <div className='col s12'>
-                <h5>Question Prompt</h5>
-              </div>
-            </div>
-            {smsInput}
-            {ivrInput}
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <div className='col s12'>
-                {editor}
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <div className='col s12'>
-                Variable name:
-                <div className='input-field inline'>
-                  <input
-                    type='text'
-                    value={this.state.stepStore}
-                    onChange={e => this.stepStoreChange(e, e.target.value)}
-                    onBlur={e => this.stepStoreSubmit(e, e.target.value)}
-                    autoComplete='off'
-                    className='autocomplete'
-                    ref='varInput'
-                    />
-                  <ul className='autocomplete-content dropdown-content var-dropdown'
-                    ref='varsDropdown'
-                    onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
-                    />
-                </div>
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <a href='#!'
-                className='right'
-                onClick={(e) => this.delete(e)}>
-                DELETE
-              </a>
-            </div>
-          </li>
-        </ul>
-      </Card>
+            </li>
+          </ul>
+        </Card>
+      </DraggableStep>
     )
   }
 
