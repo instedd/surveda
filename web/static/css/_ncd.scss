@@ -360,7 +360,7 @@ footer {
     margin: 0;
 
     .icon {
-      min-height: 150px;
+      min-height: 170px;
       position: relative;
       h5 {
         padding-left: 75px;
@@ -385,6 +385,11 @@ footer {
       }
       .switch {
         @include transform(scale(0.85) translate-x(-2rem));
+        display: inline-block;
+      }
+      span.channel-description {
+        display: inline-block;
+        vertical-align: text-top;
       }
       .arrow-right {
         font-size: 24px;

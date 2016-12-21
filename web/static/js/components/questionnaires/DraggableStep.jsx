@@ -18,26 +18,35 @@ type Props = {
 class DraggableStep extends Component {
   props: Props
 
-  render() {
-    const { step, isDragging, isOver, connectDropTarget, connectDragSource, children } = this.props
+  draggableStep() {
+    const { step, isDragging, isOver, connectDragSource, children } = this.props
 
-    const draggable = step.type != 'language-selection'
+    const draggable = step == null || step.type != 'language-selection'
+
+    let draggableStyle: any = {
+      opacity: isDragging ? 0.0 : 1,
+      cursor: 'move'
+    }
+
+    if (isOver) {
+      draggableStyle['borderBottom'] = 'green medium solid'
+    }
+
+    const renderedDraggable =
+      <div style={draggableStyle}>
+        {children}
+      </div>
 
     if (draggable) {
-      const draggableStyle = {
-        opacity: isDragging ? 0.0 : 1,
-        cursor: 'move',
-        borderBottom: isOver ? 'green medium solid' : 'inherit'
-      }
-
-      return connectDropTarget(connectDragSource(
-        <div style={draggableStyle}>
-          {children}
-        </div>
-      ))
+      return connectDragSource(renderedDraggable)
     } else {
-      return children
+      return renderedDraggable
     }
+  }
+
+  render() {
+    const { connectDropTarget } = this.props
+    return connectDropTarget(this.draggableStep())
   }
 }
 
@@ -51,8 +60,12 @@ export const stepSource = {
   endDrag(props, monitor, component) {
     const { step, questionnaireActions } = props
 
-    if (monitor.didDrop() && monitor.getDropResult().id != step.id) {
-      questionnaireActions.moveStep(step.id, monitor.getDropResult().id)
+    if (monitor.didDrop()) {
+      if (monitor.getDropResult().step == null) {
+        questionnaireActions.moveStepToTop(step.id)
+      } else if (monitor.getDropResult().step.id !== step.id) {
+        questionnaireActions.moveStep(step.id, monitor.getDropResult().step.id)
+      }
     }
   }
 }
@@ -73,7 +86,7 @@ export const collectTarget = (connect, monitor) => {
 
 export const stepTarget = {
   drop(props, monitor) {
-    return { id: props.step.id }
+    return { step: props.step }
   }
 }
 

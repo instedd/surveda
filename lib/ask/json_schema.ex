@@ -3,6 +3,10 @@ defmodule Ask.JsonSchema do
   A service which validates objects according to types defined in `schema.json`.
   """
   use GenServer
+  require Logger
+  defmodule State do
+    defstruct [:schema_path, :schema_mtime, :schema]
+  end
 
   @server_ref {:global, __MODULE__}
 
@@ -14,15 +18,40 @@ defmodule Ask.JsonSchema do
 
   def init([]), do: init(["schema.json"])
   def init([schema_path]) do
-    schema = File.read!(Application.app_dir(:ask) <> "/priv/" <> schema_path)
-             |> Poison.decode!
-             |> ExJsonSchema.Schema.resolve
-    {:ok, schema}
+    schema_path = Application.app_dir(:ask) <> "/priv/" <> schema_path
+    schema_mtime = File.stat!(schema_path).mtime
+    schema = load_schema(schema_path)
+
+    if Mix.env == :dev do
+      :timer.send_interval(:timer.seconds(1), :reload)
+    end
+
+    {:ok, %State{schema_path: schema_path, schema_mtime: schema_mtime, schema: schema}}
   end
 
-  def handle_call({:validate, object, type}, _from, schema) do
-    errors = get_validation_errors(object, type, schema)
-    {:reply, errors, schema}
+  def handle_call({:validate, object, type}, _from, state) do
+    errors = get_validation_errors(object, type, state.schema)
+    {:reply, errors, state}
+  end
+
+  def handle_info(:reload, state) do
+    mtime = File.stat!(state.schema_path).mtime
+
+    state = if mtime > state.schema_mtime do
+      try do
+        schema = load_schema(state.schema_path)
+        Logger.info "Schema reloaded!"
+        %{state | schema_mtime: mtime, schema: schema}
+      rescue
+        e ->
+          Logger.info "Error during schema reloading: #{inspect e}"
+          %{state | schema_mtime: mtime}
+      end
+    else
+      state
+    end
+
+    {:noreply, state}
   end
 
   def validate(object, type, server \\ @server_ref) do
@@ -31,6 +60,12 @@ defmodule Ask.JsonSchema do
 
   def errors_to_json(errors) do
     errors |> Enum.map(fn ({msg, cols}) -> "#{msg}: #{inspect cols}" end)
+  end
+
+  defp load_schema(schema_path) do
+    File.read!(schema_path)
+    |> Poison.decode!
+    |> ExJsonSchema.Schema.resolve
   end
 
   defp get_validation_errors(object, type, schema) do

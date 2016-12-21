@@ -52,6 +52,7 @@ const stepsReducer = (state, action, quiz: Questionnaire) => {
   switch (action.type) {
     case actions.ADD_STEP: return addStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
+    case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action, quiz)
@@ -183,6 +184,11 @@ const moveStep = (state, action) => {
   }
 
   return reduce(state, move, [])
+}
+
+const moveStepToTop = (state, action) => {
+  const stepToMove = state[findIndex(state, s => s.id === action.stepId)]
+  return concat([stepToMove], reject(state, s => s.id === action.stepId))
 }
 
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T) {
