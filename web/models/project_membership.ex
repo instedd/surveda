@@ -16,5 +16,4 @@ defmodule Ask.ProjectMembership do
     |> foreign_key_constraint(:user)
     |> foreign_key_constraint(:project)
   end
-
 end
