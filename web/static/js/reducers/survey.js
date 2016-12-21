@@ -236,7 +236,8 @@ const selectMode = (state, action) => {
 
 const changeModeComparison = (state, action) => {
   let newMode = state.mode || []
-  let newModeComparison = !state.modeComparison
+  let modeComparison = newMode.length > 1 || state.modeComparison
+  let newModeComparison = !modeComparison
 
   if (!newModeComparison) {
     if (newMode.length == 0) {
