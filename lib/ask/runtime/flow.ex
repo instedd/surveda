@@ -128,7 +128,11 @@ defmodule Ask.Runtime.Flow do
         flow
       end
 
-    flow = flow |> advance_current_step(step, reply_value)
+    flow = if(reply_value || reply == "*") do
+      flow |> advance_current_step(step, reply_value)
+    else
+      flow
+    end
 
     case reply_value do
       nil ->

@@ -169,5 +169,4 @@ defmodule Ask.SurveyController do
       error -> error
     end
   end
-
 end

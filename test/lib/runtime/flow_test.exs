@@ -57,6 +57,22 @@ defmodule Ask.FlowTest do
     assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
   end
 
+  describe "retry step" do
+    test "retry step (sms)" do
+      {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
+      step = flow |> Flow.step(Flow.Message.reply("x"))
+      assert {:ok, %Flow{}, %{prompts: prompts}} = step
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+    end
+
+    test "next step (ivr mode)" do
+      {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
+      step = flow |> Flow.step(Flow.Message.reply("0"))
+      assert {:ok, %Flow{}, %{prompts: prompts}} = step
+      assert prompts == [%{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}]
+    end
+  end
+
   test "next step with store, case insensitive, strip space" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
     step = flow |> Flow.step(Flow.Message.reply(" y "))
@@ -148,18 +164,16 @@ defmodule Ask.FlowTest do
     end
   end
 
-  test "continues with next question when the reply isn't numeric"
-    do
-    {:ok, flow, _} = init_quiz_and_send_response("S")
-    result = flow |> Flow.step(Flow.Message.reply("*"))
+  describe "skip question" do
+    test "numeric step continues with next question when skip question key is pressed" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("*"))
 
-    assert {:ok, _, flow_reply} = result
-    assert Enum.at(flow_reply.prompts, 0) == "Is this the last question?"
-  end
+      assert {:ok, _, flow_reply} = result
+      assert Enum.at(flow_reply.prompts, 0) == "Is this the last question?"
+    end
 
-  describe "multiple choice" do
-    test "continues with next question when the reply isn't between the choices"
-      do
+    test "multiple choice step continues with next question when skip question key is pressed" do
       {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
       result = flow |> Flow.step(Flow.Message.reply("*"))
 
