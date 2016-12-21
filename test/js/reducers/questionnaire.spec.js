@@ -326,6 +326,18 @@ describe('questionnaire reducer', () => {
       expect(questionnaire.steps[1]).toEqual(state.data.steps[0])
     })
 
+    it('should move step to top', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.moveStepToTop('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      expect(questionnaire.steps.length).toEqual(state.data.steps.length)
+      expect(questionnaire.steps[0]).toEqual(state.data.steps[1])
+      expect(questionnaire.steps[1]).toEqual(state.data.steps[0])
+    })
+
     describe('choices', () => {
       it('should add choice', () => {
         const preState = playActions([
