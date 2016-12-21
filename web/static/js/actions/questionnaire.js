@@ -7,6 +7,7 @@ export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
 export const TOGGLE_MODE = 'QUESTIONNAIRE_TOGGLE_MODE'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
+export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
@@ -124,6 +125,12 @@ export const changeStepType = (stepId, stepType) => ({
 
 export const addStep = () => ({
   type: ADD_STEP
+})
+
+export const moveStep = (sourceStepId, targetStepId) => ({
+  type: MOVE_STEP,
+  sourceStepId,
+  targetStepId
 })
 
 export const changeName = (newName) => ({
