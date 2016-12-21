@@ -187,7 +187,7 @@ defmodule Ask.BrokerTest do
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "ivr")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz, mode: [["sms", "ivr"]]})) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "ivr"]]})) |> Repo.preload([:channels])
 
     channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
 
@@ -227,7 +227,7 @@ defmodule Ask.BrokerTest do
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "sms")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz, mode: [["ivr", "sms"]]})) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]})) |> Repo.preload([:channels])
 
     channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
 
@@ -467,7 +467,7 @@ defmodule Ask.BrokerTest do
     |> Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
-    quiz = survey.questionnaire
+    quiz = survey |> Survey.questionnaire
     quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
 
     {:ok, broker} = Broker.start_link
@@ -733,9 +733,10 @@ defmodule Ask.BrokerTest do
     test_channel = TestChannel.new(mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
     quiz = insert(:questionnaire, steps: steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaire: quiz, mode: [[mode]]})) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [[mode]]})) |> Repo.preload([:channels])
     channel_changeset = Ecto.Changeset.change(channel)
     survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+
     respondent = insert(:respondent, survey: survey)
     phone_number = respondent.sanitized_phone_number
 

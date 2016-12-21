@@ -12,6 +12,7 @@ export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
 export const SELECT_CHANNELS = 'SURVEY_SELECT_CHANNELS'
 export const SELECT_MODE = 'SURVEY_SELECT_MODE'
 export const CHANGE_MODE_COMPARISON = 'SURVEY_CHANGE_MODE_COMPARISON'
+export const CHANGE_QUESTIONNAIRE_COMPARISON = 'SURVEY_CHANGE_QUESTIONNAIRE_COMPARISON'
 export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
 export const FETCH = 'SURVEY_FETCH'
@@ -124,6 +125,10 @@ export const selectMode = (mode) => ({
 
 export const changeModeComparison = () => ({
   type: CHANGE_MODE_COMPARISON
+})
+
+export const changeQuestionnaireComparison = () => ({
+  type: CHANGE_QUESTIONNAIRE_COMPARISON
 })
 
 export const setScheduleTo = (hour) => ({

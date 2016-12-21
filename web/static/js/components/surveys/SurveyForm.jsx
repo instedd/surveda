@@ -34,7 +34,7 @@ class SurveyForm extends Component {
 
   render() {
     const { survey, projectId, questionnaires, channels, respondents, errors, questionnaire } = this.props
-    const questionnaireStepCompleted = survey.questionnaireId != null
+    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
     const respondentsStepCompleted = survey.respondentsCount > 0
     const channelStepCompleted = survey.mode != null && survey.mode.length > 0 && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''

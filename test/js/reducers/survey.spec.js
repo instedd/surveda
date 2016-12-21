@@ -592,6 +592,60 @@ describe('survey reducer', () => {
     ])
     expect(state.data.mode).toEqual([['sms']])
   })
+
+  it('changes questionnaireComparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison()
+    ])
+    expect(state.data.questionnaireComparison).toEqual(true)
+
+    const state2 = playActionsFromState(state, reducer)([
+      actions.changeQuestionnaireComparison()
+    ])
+    expect(state2.data.questionnaireComparison).toEqual(false)
+  })
+
+  it('changes questionnaire, no comparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaire(2)
+    ])
+    expect(state.data.questionnaireIds).toEqual([2])
+  })
+
+  it('changes questionnaire, with comparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(2)
+    ])
+    expect(state.data.questionnaireIds).toEqual([1, 2])
+
+    const state2 = playActionsFromState(state, reducer)([
+      actions.changeQuestionnaire(3)
+    ])
+    expect(state2.data.questionnaireIds).toEqual([1, 2, 3])
+
+    const state3 = playActionsFromState(state2, reducer)([
+      actions.changeQuestionnaire(2)
+    ])
+    expect(state3.data.questionnaireIds).toEqual([1, 3])
+  })
+
+  it('changes questionnaireComparison with many questionnaires', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(2),
+      actions.changeQuestionnaireComparison()
+    ])
+    expect(state.data.questionnaireIds).toEqual([1])
+  })
 })
 
 const survey = deepFreeze({
@@ -600,7 +654,7 @@ const survey = deepFreeze({
   name: 'Foo',
   cutoff: 123,
   state: 'ready',
-  questionnaireId: 1,
+  questionnaireIds: [1],
   scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
   scheduleStartTime: '02:00:00',
   scheduleEndTime: '06:00:00',

@@ -22,9 +22,9 @@ defmodule Ask.Survey do
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
     has_many :quota_buckets, Ask.QuotaBucket, on_replace: :delete
+    many_to_many :questionnaires, Ask.Questionnaire, join_through: Ask.SurveyQuestionnaire, on_replace: :delete
 
     belongs_to :project, Ask.Project
-    belongs_to :questionnaire, Ask.Questionnaire
 
     timestamps()
   end
@@ -34,7 +34,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :questionnaire_id, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas, :quota_vars])
+    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas, :quota_vars])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
@@ -56,7 +56,6 @@ defmodule Ask.Survey do
   def update_state(changeset) do
     state = get_field(changeset, :state)
     mode = get_field(changeset, :mode)
-    questionnaire_id = get_field(changeset, :questionnaire_id)
     respondents_count = get_field(changeset, :respondents_count)
 
     schedule = get_field(changeset, :schedule_day_of_week)
@@ -64,7 +63,9 @@ defmodule Ask.Survey do
     schedule_completed = Enum.reduce(values, fn (x, acc) -> acc || x end)
 
     channels = get_field(changeset, :channels)
-    ready = questionnaire_id && respondents_count && respondents_count > 0
+    questionnaires = get_field(changeset, :questionnaires)
+
+    ready = length(questionnaires) > 0 && respondents_count && respondents_count > 0
       && length(channels) > 0 && schedule_completed && mode && (length(mode) > 0) && validate_retry_attempts_configuration(changeset)
       && Enum.all?(hd(mode), fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
 
@@ -150,5 +151,9 @@ defmodule Ask.Survey do
           _ -> 0
         end
     end
+  end
+
+  def questionnaire(survey = %Ask.Survey{}) do
+    hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
   end
 end

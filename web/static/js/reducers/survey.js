@@ -21,6 +21,7 @@ export const dataReducer = (state, action) => {
     case actions.SELECT_CHANNELS: return selectChannels(state, action)
     case actions.SELECT_MODE: return selectMode(state, action)
     case actions.CHANGE_MODE_COMPARISON: return changeModeComparison(state, action)
+    case actions.CHANGE_QUESTIONNAIRE_COMPARISON: return changeQuestionnaireComparison(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
     case actions.SET_TIMEZONE: return setTimezone(state, action)
@@ -176,9 +177,28 @@ const saved = (state, action) => {
 }
 
 const changeQuestionnaire = (state, action) => {
+  let questionnaireId = parseInt(action.questionnaire)
+
+  let newQuestionnaireIds
+  let questionnaireIds = state.questionnaireIds || []
+  let questionnaireComparison = questionnaireIds.length > 1 || state.questionnaireComparison
+
+  if (questionnaireComparison) {
+    newQuestionnaireIds = questionnaireIds.slice()
+    let index = questionnaireIds.indexOf(questionnaireId)
+    if (index == -1) {
+      newQuestionnaireIds.push(questionnaireId)
+    } else {
+      newQuestionnaireIds.splice(index, 1)
+    }
+  } else {
+    newQuestionnaireIds = [questionnaireId]
+  }
+
   return {
     ...state,
-    questionnaireId: action.questionnaire,
+    questionnaireIds: newQuestionnaireIds,
+    questionnaireComparison,
     quotas: {
       vars: [],
       buckets: []
@@ -251,6 +271,24 @@ const changeModeComparison = (state, action) => {
     ...state,
     mode: newMode,
     modeComparison: newModeComparison
+  }
+}
+
+const changeQuestionnaireComparison = (state, action) => {
+  let newQuestionnaireIds = state.questionnaireIds || []
+  let questionnaireComparison = newQuestionnaireIds.length > 1 || state.questionnaireComparison
+  let newQuestionnaireComparison = !questionnaireComparison
+
+  if (!newQuestionnaireComparison) {
+    if (newQuestionnaireIds.length > 1) {
+      newQuestionnaireIds = [newQuestionnaireIds[0]]
+    }
+  }
+
+  return {
+    ...state,
+    questionnaireIds: newQuestionnaireIds,
+    questionnaireComparison: newQuestionnaireComparison
   }
 }
 
