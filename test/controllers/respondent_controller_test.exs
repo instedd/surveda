@@ -19,7 +19,8 @@ defmodule Ask.RespondentControllerTest do
   describe "index" do
 
     test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == []
@@ -27,7 +28,8 @@ defmodule Ask.RespondentControllerTest do
     end
 
     test "fetches responses on index", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project)
       respondent = insert(:respondent, survey: survey)
       response = insert(:response, respondent: respondent, value: "Yes")
@@ -59,7 +61,8 @@ defmodule Ask.RespondentControllerTest do
 
   test "lists stats for a given survey", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     insert_list(10, :respondent, survey: survey, state: "pending")
     insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
@@ -86,7 +89,8 @@ defmodule Ask.RespondentControllerTest do
 
   test "first value of respondents by date corresponds to started_at date", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     insert_list(10, :respondent, survey: survey, state: "pending")
 
@@ -97,7 +101,8 @@ defmodule Ask.RespondentControllerTest do
 
   test "fills dates when any respondent completed the survey with 0's", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     insert_list(10, :respondent, survey: survey, state: "pending")
     insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-03T10:00:00Z", "{ISO:Extended}"))
@@ -110,7 +115,9 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, project: project, level: "owner")
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
     insert_list(5, :respondent, survey: survey, state: "pending")
 
@@ -132,7 +139,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "uploads CSV file with phone numbers and creates and renders resource when data is valid", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
@@ -149,7 +157,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "uploads CSV file with phone numbers ignoring additional columns", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_additional_columns.csv", filename: "phone_numbers.csv"}
@@ -165,7 +174,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "uploads CSV file with single line", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_one.csv", filename: "phone_numbers.csv"}
@@ -181,7 +191,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "uploads CSV file with phone and creates and renders resource when data contains special characters but is valid", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_special_characters.csv", filename: "phone_numbers.csv"}
@@ -194,7 +205,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "uploads CSV file with phone numbers but does not create and render resource when numbers contains invalid characters", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_invalid.csv", filename: "phone_numbers.csv"}
@@ -206,7 +218,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "uploads CSV file with phone numbers rejecting duplicated entries", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_duplicated.csv", filename: "phone_numbers.csv"}
@@ -222,7 +235,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "it supports \r as a field separator", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_r.csv", filename: "phone_numbers.csv"}
@@ -237,7 +251,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "it supports \n as a field separator", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_newline.csv", filename: "phone_numbers.csv"}
@@ -252,7 +267,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "updates survey state if the respondents CSV upload is the only remaining step on the survey wizard", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
 
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: ["sms"])
@@ -273,7 +289,8 @@ defmodule Ask.RespondentControllerTest do
 
   test "updates project updated_at when uploading CSV", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = insert(:project, user: user, updated_at: datetime)
+    project = insert(:project, updated_at: datetime)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
@@ -284,7 +301,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "deletes all the respondents from a survey", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
 
@@ -308,7 +326,8 @@ defmodule Ask.RespondentControllerTest do
 
   test "updates project updated_at when deleting", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = insert(:project, user: user, updated_at: datetime)
+    project = insert(:project, updated_at: datetime)
+    insert(:project_membership, user: user, project: project, level: "owner")
     survey = insert(:survey, project: project)
 
     delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
@@ -339,7 +358,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "updates survey state if the respondents are deleted from a 'ready' survey", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready", schedule_day_of_week: completed_schedule)
     channel = insert(:channel, name: "test")
@@ -358,7 +378,8 @@ defmodule Ask.RespondentControllerTest do
   end
 
   test "download csv", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready", schedule_day_of_week: completed_schedule)
     respondent_1 = insert(:respondent, survey: survey)
@@ -386,7 +407,8 @@ defmodule Ask.RespondentControllerTest do
 
   test "quotas_stats", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
 
     quotas = %{
       "vars" => ["Smokes", "Exercises"],

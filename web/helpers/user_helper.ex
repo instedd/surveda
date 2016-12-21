@@ -17,4 +17,11 @@ defmodule User.Helper do
     end
     project
   end
+
+  def authorize_channel(channel, conn) do
+    if channel.user_id != current_user(conn).id do
+      raise UnauthorizedError, conn: conn
+    end
+    channel
+  end
 end

@@ -40,7 +40,8 @@ defmodule Ask.QuestionnaireControllerTest do
     end
 
     test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       conn = get conn, project_questionnaire_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == []
     end
@@ -55,7 +56,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
   describe "show:" do
     test "renders chosen resource", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = insert(:questionnaire, project: project)
       conn = get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
       assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
@@ -86,14 +88,16 @@ defmodule Ask.QuestionnaireControllerTest do
 
   describe "create:" do
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
       assert json_response(conn, 201)["data"]["id"]
       assert Repo.get_by(Questionnaire, @valid_attrs)
     end
 
     test "creates with default languages and default_language", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
       questionnaire = Questionnaire |> Ask.Repo.get(json_response(conn, 201)["data"]["id"])
       assert questionnaire.languages == ["en"]
@@ -101,7 +105,8 @@ defmodule Ask.QuestionnaireControllerTest do
     end
 
     test "does not create resource and renders errors when data is invalid", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
@@ -115,7 +120,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "updates project updated_at when questionnaire is created", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, user: user, updated_at: datetime)
+      project = insert(:project, updated_at: datetime)
+      insert(:project_membership, user: user, project: project, level: "owner")
       post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
 
       project = Project |> Repo.get(project.id)
@@ -125,7 +131,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
   describe "update:" do
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = insert(:questionnaire, project: project)
       conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
@@ -141,7 +148,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "updates project updated_at when questionnaire is updated", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, user: user, updated_at: datetime)
+      project = insert(:project, updated_at: datetime)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = insert(:questionnaire, project: project)
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @valid_attrs
 
@@ -152,7 +160,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
   describe "delete:" do
     test "deletes chosen resource", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = insert(:questionnaire, project: project)
       conn = delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
       assert response(conn, 204)
@@ -168,7 +177,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "updates project updated_at when questionnaire is deleted", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, user: user, updated_at: datetime)
+      project = insert(:project, updated_at: datetime)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = insert(:questionnaire, project: project)
       delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
 

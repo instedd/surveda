@@ -34,7 +34,7 @@ defmodule Ask.ChannelController do
   def show(conn, %{"id" => id}) do
     channel = Channel
     |> Repo.get!(id)
-    |> authorize(conn)
+    |> authorize_channel(conn)
 
     render(conn, "show.json", channel: channel)
   end
@@ -42,7 +42,7 @@ defmodule Ask.ChannelController do
   def update(conn, %{"id" => id, "channel" => channel_params}) do
     changeset = Channel
     |> Repo.get!(id)
-    |> authorize(conn)
+    |> authorize_channel(conn)
     |> Channel.changeset(channel_params)
 
     case Repo.update(changeset) do
@@ -58,7 +58,7 @@ defmodule Ask.ChannelController do
   def delete(conn, %{"id" => id}) do
     Channel
     |> Repo.get!(id)
-    |> authorize(conn)
+    |> authorize_channel(conn)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!()

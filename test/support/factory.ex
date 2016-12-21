@@ -67,6 +67,11 @@ defmodule Ask.Factory do
     }
   end
 
+  def project_membership_factory do
+    %Ask.ProjectMembership{
+    }
+  end
+
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
     %Ask.Respondent{
