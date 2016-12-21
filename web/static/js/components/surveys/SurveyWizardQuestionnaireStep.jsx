@@ -51,8 +51,18 @@ class SurveyWizardQuestionnaireStep extends Component {
     )
   }
 
+  questionnaireComparisonChange(e) {
+    const { dispatch } = this.props
+    dispatch(actions.changeQuestionnaireComparison())
+  }
+
   render() {
-    const { questionnaires, projectId } = this.props
+    const { questionnaires, projectId, survey } = this.props
+
+    const questionnaireIds = survey.questionnaireIds || []
+    const questionnaireComparison = (questionnaireIds.length > 1) ? true : survey.questionnaireComparison
+    const inputType = questionnaireComparison ? 'checkbox' : 'radio'
+
     return (
       <div>
         <div className='row'>
@@ -65,16 +75,28 @@ class SurveyWizardQuestionnaireStep extends Component {
         </div>
         <div className='row'>
           <div className='col s12'>
+            <p>
+              <input
+                id='questionnaires_comparison'
+                type='checkbox'
+                defaultChecked={questionnaireComparison}
+                onClick={e => this.questionnaireComparisonChange(e)}
+                className='with-gap'
+                />
+              <label htmlFor='questionnaires_comparison'>Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)</label>
+            </p>
+          </div>
+          <div className='col s12'>
             { Object.keys(questionnaires).map((questionnaireId) => (
               <div key={questionnaireId}>
                 <p>
                   <input
                     id={questionnaireId}
-                    type='radio'
+                    type={inputType}
                     name='questionnaire'
                     className='with-gap'
                     value={questionnaireId}
-                    defaultChecked={this.props.survey.questionnaireId == questionnaireId}
+                    defaultChecked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
                     onClick={e => this.questionnaireChange(e)}
                   />
                   <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} /></label>

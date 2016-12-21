@@ -103,7 +103,7 @@ class SurveyWizardCutoffStep extends Component {
                 <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
               </div>
             </div>
-            <div className='row quotas'>
+            <div className='row'>
               <div className='col s12'>
                 <div>
                   <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />

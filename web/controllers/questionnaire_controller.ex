@@ -24,8 +24,8 @@ defmodule Ask.QuestionnaireController do
     params = conn.assigns[:questionnaire]
 
     params = params
-    |> Map.put("languages", ["en"])
-    |> Map.put("default_language", "en")
+    |> Map.put_new("languages", ["en"])
+    |> Map.put_new("default_language", "en")
 
     changeset = project
     |> authorize(conn)
@@ -35,6 +35,7 @@ defmodule Ask.QuestionnaireController do
     case Repo.insert(changeset) do
       {:ok, questionnaire} ->
         project |> Project.touch!
+        questionnaire |> Questionnaire.recreate_variables!
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
@@ -71,6 +72,7 @@ defmodule Ask.QuestionnaireController do
     case Repo.update(changeset) do
       {:ok, questionnaire} ->
         project |> Project.touch!
+        questionnaire |> Questionnaire.recreate_variables!
         render(conn, "show.json", questionnaire: questionnaire)
       {:error, changeset} ->
         conn

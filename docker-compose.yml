@@ -7,7 +7,7 @@ volumes:
 
 services:
   db:
-    image: mysql:5.7
+    image: instedd/ask-mysql:5.7
     volumes:
       - 'db:/var/lib/mysql'
     environment:

@@ -57,6 +57,12 @@ class SurveyEdit extends Component {
       return <div>Loading...</div>
     }
 
+    let questionnaireIds = survey.questionnaireIds || []
+    let questionnaire = null
+    if (questionnaireIds.length == 1) {
+      questionnaire = questionnaires[questionnaireIds[0]]
+    }
+
     return (
       <div className='white'>
         { survey.state == 'ready'
@@ -67,7 +73,7 @@ class SurveyEdit extends Component {
           </Tooltip>
           : ''
         }
-        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaires[survey.questionnaireId]} />
+        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} />
       </div>
     )
   }

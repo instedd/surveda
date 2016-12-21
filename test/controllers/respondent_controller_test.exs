@@ -271,7 +271,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:project_membership, user: user, project: project, level: "owner")
 
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: ["sms"])
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule, mode: [["sms"]])
     channel = insert(:channel, name: "test")
 
     add_channel_to(survey, channel)
@@ -361,7 +361,7 @@ defmodule Ask.RespondentControllerTest do
     project = insert(:project)
     insert(:project_membership, user: user, project: project, level: "owner")
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready", schedule_day_of_week: completed_schedule)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
     channel = insert(:channel, name: "test")
 
     add_channel_to(survey, channel)
@@ -381,7 +381,7 @@ defmodule Ask.RespondentControllerTest do
     project = insert(:project)
     insert(:project_membership, user: user, project: project, level: "owner")
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaire_id: questionnaire.id, state: "ready", schedule_day_of_week: completed_schedule)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
     respondent_1 = insert(:respondent, survey: survey)
     insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")

@@ -45,7 +45,7 @@ defmodule Ask.SurveyControllerTest do
         "name" => survey.name,
         "mode" => survey.mode,
         "project_id" => survey.project_id,
-        "questionnaire_id" => nil,
+        "questionnaire_ids" => [],
         "channels" => [],
         "cutoff" => nil,
         "state" => "not_ready",
@@ -78,7 +78,7 @@ defmodule Ask.SurveyControllerTest do
         "name" => survey.name,
         "mode" => survey.mode,
         "project_id" => survey.project_id,
-        "questionnaire_id" => nil,
+        "questionnaire_ids" => [],
         "channels" => [%{
           "id" => channel.id,
           "type" => "sms"
@@ -116,7 +116,7 @@ defmodule Ask.SurveyControllerTest do
         "name" => survey.name,
         "mode" => survey.mode,
         "project_id" => survey.project_id,
-        "questionnaire_id" => nil,
+        "questionnaire_ids" => [],
         "channels" => [],
         "cutoff" => nil,
         "state" => "not_ready",
@@ -213,7 +213,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates schedule when data is valid", %{conn: conn, user: user} do
       [project, questionnaire, _] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire])
 
       attrs = %{schedule_day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -223,7 +223,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates cutoff when channels are included in params", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -254,7 +254,7 @@ defmodule Ask.SurveyControllerTest do
         "mode" => survey.mode,
         "name" => survey.name,
         "project_id" => survey.project_id,
-        "questionnaire_id" => nil,
+        "questionnaire_ids" => [],
         "channels" => [%{
            "id" => channel2.id,
            "type" => "sms"
@@ -282,7 +282,7 @@ defmodule Ask.SurveyControllerTest do
     test "saves quota_buckets and quota_vars", %{conn: conn, user: user} do
       [project, questionnaire, _] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire])
 
       attrs = %{quotas: %{vars: ["Smokes", "Exercises"], buckets: [
         %{
@@ -510,10 +510,14 @@ defmodule Ask.SurveyControllerTest do
       add_channel_to(survey, channel)
       add_respondent_to survey
 
-      attrs = %{questionnaire_id: questionnaire.id}
+      attrs = %{questionnaire_ids: [questionnaire.id]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
+
+      qs = (new_survey |> Repo.preload(:questionnaires)).questionnaires
+      assert length(qs) == 1
+      assert hd(qs).id == questionnaire.id
 
       assert new_survey.state == "ready"
     end
@@ -521,11 +525,11 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when selecting mode", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
       add_channel_to(survey, channel)
       add_respondent_to survey
 
-      attrs = %{mode: ["sms"]}
+      attrs = %{mode: [["sms"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -536,11 +540,11 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when selecting mode, missing channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
       add_channel_to(survey, channel)
       add_respondent_to survey
 
-      attrs = %{mode: ["sms", "ivr"]}
+      attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -551,7 +555,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when selecting mode, all channels", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
       add_respondent_to survey
 
       channel2 = insert(:channel, user: user, type: "ivr")
@@ -562,7 +566,7 @@ defmodule Ask.SurveyControllerTest do
       |> put_assoc(:channels, [channel, channel2])
       |> Repo.update
 
-      attrs = %{mode: ["sms", "ivr"]}
+      attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -573,7 +577,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding cutoff", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule, mode: ["sms"])
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule, mode: [["sms"]])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -588,7 +592,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule, mode: ["sms"])
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, schedule_day_of_week: completed_schedule, mode: [["sms"]])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -603,7 +607,7 @@ defmodule Ask.SurveyControllerTest do
     test "changes state to not_ready when an invalid retry attempt configuration is passed", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: ["sms"], questionnaire_id: questionnaire.id)
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [questionnaire])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -618,7 +622,7 @@ defmodule Ask.SurveyControllerTest do
     test "returns state to ready when a valid retry configuration is passed", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: ["sms"], questionnaire_id: questionnaire.id, sms_retry_configuration: "12j 13p 14q")
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [questionnaire], sms_retry_configuration: "12j 13p 14q")
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -636,7 +640,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding a day in schedule", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, mode: ["sms"])
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, mode: [["sms"]])
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -651,7 +655,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when removing schedule", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 3, schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, schedule_day_of_week: completed_schedule)
       add_channel_to(survey, channel)
       add_respondent_to survey
 
@@ -666,7 +670,7 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when removing channel", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule)
       add_respondent_to survey
       add_channel_to(survey, channel)
 
@@ -683,16 +687,19 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when removing questionnaire", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule)
       add_respondent_to survey
       add_channel_to(survey, channel)
 
       assert survey.state == "ready"
 
-      attrs = %{questionnaire_id: nil}
+      attrs = %{questionnaire_ids: []}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
+
+      qs = (new_survey |> Repo.preload(:questionnaires)).questionnaires
+      assert length(qs) == 0
 
       assert new_survey.state == "not_ready"
     end
@@ -717,7 +724,7 @@ defmodule Ask.SurveyControllerTest do
     test "does not update state when adding cutoff if missing respondents", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      survey = insert(:survey, project: project, questionnaire_id: questionnaire.id, schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule)
       assert survey.state == "not_ready"
       add_channel_to(survey, channel)
 

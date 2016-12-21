@@ -7,6 +7,7 @@ import split from 'lodash/split'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
+import some from 'lodash/some'
 
 export const dataReducer = (state, action) => {
   switch (action.type) {
@@ -19,6 +20,8 @@ export const dataReducer = (state, action) => {
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
     case actions.SELECT_CHANNELS: return selectChannels(state, action)
     case actions.SELECT_MODE: return selectMode(state, action)
+    case actions.CHANGE_MODE_COMPARISON: return changeModeComparison(state, action)
+    case actions.CHANGE_QUESTIONNAIRE_COMPARISON: return changeQuestionnaireComparison(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
     case actions.SET_STATE: return setState(state, action)
     case actions.SET_TIMEZONE: return setTimezone(state, action)
@@ -174,9 +177,28 @@ const saved = (state, action) => {
 }
 
 const changeQuestionnaire = (state, action) => {
+  let questionnaireId = parseInt(action.questionnaire)
+
+  let newQuestionnaireIds
+  let questionnaireIds = state.questionnaireIds || []
+  let questionnaireComparison = questionnaireIds.length > 1 || state.questionnaireComparison
+
+  if (questionnaireComparison) {
+    newQuestionnaireIds = questionnaireIds.slice()
+    let index = questionnaireIds.indexOf(questionnaireId)
+    if (index == -1) {
+      newQuestionnaireIds.push(questionnaireId)
+    } else {
+      newQuestionnaireIds.splice(index, 1)
+    }
+  } else {
+    newQuestionnaireIds = [questionnaireId]
+  }
+
   return {
     ...state,
-    questionnaireId: action.questionnaire,
+    questionnaireIds: newQuestionnaireIds,
+    questionnaireComparison,
     quotas: {
       vars: [],
       buckets: []
@@ -209,9 +231,64 @@ const selectChannels = (state, action) => {
 }
 
 const selectMode = (state, action) => {
+  let newMode
+  let stateMode = state.mode || []
+  let modeComparison = stateMode.length > 1 || state.modeComparison
+
+  if (modeComparison) {
+    let mode = state.mode || []
+    if (some(mode, m => isEqual(m, action.mode))) {
+      newMode = mode.filter(m => !isEqual(m, action.mode))
+    } else {
+      newMode = mode.slice()
+      newMode.push(action.mode)
+    }
+  } else {
+    newMode = [action.mode]
+  }
+
   return {
     ...state,
-    mode: action.mode
+    mode: newMode,
+    modeComparison
+  }
+}
+
+const changeModeComparison = (state, action) => {
+  let newMode = state.mode || []
+  let modeComparison = newMode.length > 1 || state.modeComparison
+  let newModeComparison = !modeComparison
+
+  if (!newModeComparison) {
+    if (newMode.length == 0) {
+      newMode = []
+    } else if (newMode.length > 1) {
+      newMode = [newMode[0]]
+    }
+  }
+
+  return {
+    ...state,
+    mode: newMode,
+    modeComparison: newModeComparison
+  }
+}
+
+const changeQuestionnaireComparison = (state, action) => {
+  let newQuestionnaireIds = state.questionnaireIds || []
+  let questionnaireComparison = newQuestionnaireIds.length > 1 || state.questionnaireComparison
+  let newQuestionnaireComparison = !questionnaireComparison
+
+  if (!newQuestionnaireComparison) {
+    if (newQuestionnaireIds.length > 1) {
+      newQuestionnaireIds = [newQuestionnaireIds[0]]
+    }
+  }
+
+  return {
+    ...state,
+    questionnaireIds: newQuestionnaireIds,
+    questionnaireComparison: newQuestionnaireComparison
   }
 }
 

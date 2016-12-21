@@ -13,6 +13,7 @@ import * as routes from '../../routes'
 class QuestionnaireIndex extends Component {
   componentDidMount() {
     this.creatingQuestionnaire = false
+    this.duplicatingQuestionnaire = false
 
     const { projectId } = this.props
     // Fetch project for title
@@ -50,9 +51,27 @@ class QuestionnaireIndex extends Component {
       })
   }
 
+  goTo(questionnaireId) {
+    const { projectId, router } = this.props
+    router.push(routes.editQuestionnaire(projectId, questionnaireId))
+  }
+
+  duplicate(questionnaire) {
+    // Prevent multiple clicks to duplicate multiple questionnaires
+    if (this.duplicatingQuestionnaire) return
+    this.duplicatingQuestionnaire = true
+
+    const { router, projectId, questionnaireActions } = this.props
+    questionnaireActions.duplicateQuestionnaire(projectId, questionnaire)
+      .then(questionnaire => {
+        this.duplicatingQuestionnaire = false
+        router.push(routes.questionnaire(projectId, questionnaire.id))
+      })
+  }
+
   render() {
     const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, projectId, router } = this.props
+      totalCount, hasPreviousPage, hasNextPage } = this.props
 
     if (!questionnaires) {
       return (
@@ -89,23 +108,29 @@ class QuestionnaireIndex extends Component {
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               <th>Modes</th>
+              <th className='duplicate' />
             </tr>
           </thead>
           <tbody>
             { range(0, pageSize).map(index => {
               const questionnaire = questionnaires[index]
-              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan='2'></td></tr>
+              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
               return (
-                <tr key={questionnaire.id} onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaire.id))}>
-                  <td>
+                <tr key={questionnaire.id}>
+                  <td onClick={() => this.goTo(questionnaire.id)}>
                     <UntitledIfEmpty text={questionnaire.name} />
                   </td>
-                  <td>
+                  <td onClick={() => this.goTo(questionnaire.id)}>
                     { (questionnaire.modes || []).join(', ').toUpperCase() }
                   </td>
+                  <td className='duplicate'>
+                    <a onClick={() => this.duplicate(questionnaire)}>
+                      <i className='material-icons'>content_copy</i>
+                    </a>
+                  </td>
                 </tr>
-                )
+              )
             }
             )}
           </tbody>

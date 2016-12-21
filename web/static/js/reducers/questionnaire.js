@@ -51,6 +51,7 @@ const steps = (state, action) => {
 const stepsReducer = (state, action, quiz: Questionnaire) => {
   switch (action.type) {
     case actions.ADD_STEP: return addStep(state, action)
+    case actions.MOVE_STEP: return moveStep(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action, quiz)
@@ -76,9 +77,9 @@ const addChoice = (state, action) => {
       {
         value: '',
         responses: {
-          'en': {
-            sms: [],
-            ivr: []
+          ivr: [],
+          sms: {
+            'en': []
           }
         },
         skipLogic: null
@@ -103,28 +104,32 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
     [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response, quiz)
   }
-  let ivrArrayValues = splitValues(ivrValues)
-  const lang = quiz.defaultLanguage
-  return changeStep(state, action.stepId, (step) => ({
-    ...step,
-    choices: [
-      ...step.choices.slice(0, action.choiceChange.index),
-      {
-        ...step.choices[action.choiceChange.index],
-        value: action.choiceChange.response,
-        responses: {
-          ...step.choices[action.choiceChange.index].responses,
-          [lang]: {
-            ...step.choices[action.choiceChange.index].responses[quiz.defaultLanguage],
-            sms: splitValues(smsValues),
-            ivr: ivrArrayValues
-          }
+
+  return changeStep(state, action.stepId, (step) => {
+    const previousChoices = step.choices.slice(0, action.choiceChange.index)
+    const choice = step.choices[action.choiceChange.index]
+    const nextChoices = step.choices.slice(action.choiceChange.index + 1)
+    return ({
+      ...step,
+      choices: [
+        ...previousChoices,
+        {
+          ...choice,
+          value: action.choiceChange.response,
+          responses: {
+            ...choice.responses,
+            ivr: splitValues(ivrValues),
+            sms: {
+              ...choice.responses.sms,
+              [quiz.defaultLanguage]: splitValues(smsValues)
+            }
+          },
+          skipLogic: action.choiceChange.skipLogic
         },
-        skipLogic: action.choiceChange.skipLogic
-      },
-      ...step.choices.slice(action.choiceChange.index + 1)
-    ]
-  }))
+        ...nextChoices
+      ]
+    })
+  })
 }
 
 const autoComplete = (state, value, quiz: Questionnaire) => {
@@ -139,12 +144,12 @@ const autoComplete = (state, value, quiz: Questionnaire) => {
         if (choice.value == value && !setted) {
           setted = true
 
-          if (choice.responses[quiz.defaultLanguage].sms) {
-            smsValues = choice.responses[quiz.defaultLanguage].sms.join(',')
+          if (choice.responses.sms && choice.responses.sms[quiz.defaultLanguage]) {
+            smsValues = choice.responses.sms[quiz.defaultLanguage].join(',')
           }
 
-          if (choice.responses[quiz.defaultLanguage].ivr) {
-            ivrValues = choice.responses[quiz.defaultLanguage].ivr.join(',')
+          if (choice.responses.ivr) {
+            ivrValues = choice.responses.ivr.join(',')
           }
         }
       })
@@ -159,6 +164,25 @@ const splitValues = (values) => {
 
 const deleteStep = (state, action) => {
   return filter(state, s => s.id != action.stepId)
+}
+
+const moveStep = (state, action) => {
+  const stepToMove = state[findIndex(state, s => s.id === action.sourceStepId)]
+  const stepAbove = state[findIndex(state, s => s.id === action.targetStepId)]
+
+  const move = (accum, step) => {
+    if (step.id != stepToMove.id) {
+      accum.push(step)
+    }
+
+    if (step.id === stepAbove.id) {
+      accum.push(stepToMove)
+    }
+
+    return accum
+  }
+
+  return reduce(state, move, [])
 }
 
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T) {
@@ -549,22 +573,22 @@ const validateChoices = (path, choices: Choice[], context) => {
       addError(context, `${path}[${i}].value`, 'Value already used in a previous response')
     }
 
-    if (choice.responses[context.defaultLanguage] && choice.responses[context.defaultLanguage].sms) {
-      for (let choiceSms of choice.responses[context.defaultLanguage].sms) {
+    if (choice.responses.sms && choice.responses.sms[context.defaultLanguage]) {
+      for (let choiceSms of choice.responses.sms[context.defaultLanguage]) {
         if (sms.includes(choiceSms)) {
           addError(context, `${path}[${i}].sms`, `Value "${choiceSms}" already used in a previous response`)
         }
       }
-      sms.push(...choice.responses[context.defaultLanguage].sms)
+      sms.push(...choice.responses.sms[context.defaultLanguage])
     }
 
-    if (choice.responses[context.defaultLanguage] && choice.responses[context.defaultLanguage].ivr) {
-      for (let choiceIvr of choice.responses[context.defaultLanguage].ivr) {
+    if (choice.responses.ivr) {
+      for (let choiceIvr of choice.responses.ivr) {
         if (ivr.includes(choiceIvr)) {
           addError(context, `${path}[${i}].ivr`, `Value "${choiceIvr}" already used in a previous response`)
         }
       }
-      ivr.push(...choice.responses[context.defaultLanguage].ivr)
+      ivr.push(...choice.responses.ivr)
     }
 
     values.push(choice.value)
@@ -577,22 +601,20 @@ const validateChoice = (path, choice: Choice, context) => {
   }
 
   if (context.sms &&
-      choice.responses[context.defaultLanguage] &&
-      choice.responses[context.defaultLanguage].sms &&
-      choice.responses[context.defaultLanguage].sms.length == 0) {
+      choice.responses.sms &&
+      choice.responses.sms[context.defaultLanguage] &&
+      choice.responses.sms[context.defaultLanguage].length == 0) {
     addError(context, `${path}.sms`, 'SMS must not be blank')
   }
 
   if (context.ivr) {
-    if (choice.responses[context.defaultLanguage] &&
-        choice.responses[context.defaultLanguage].ivr &&
-        choice.responses[context.defaultLanguage].ivr.length == 0) {
+    if (choice.responses.ivr &&
+        choice.responses.ivr.length == 0) {
       addError(context, `${path}.ivr`, '"Phone call" must not be blank')
     }
 
-    if (choice.responses[context.defaultLanguage] &&
-        choice.responses[context.defaultLanguage].ivr &&
-        choice.responses[context.defaultLanguage].ivr.some(value => !value.match('^[0-9#*]*$'))) {
+    if (choice.responses.ivr &&
+        choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
       addError(context, `${path}.ivr`, '"Phone call" must only consist of single digits, "#" or "*"')
     }
   }
@@ -653,9 +675,9 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
       if (step.type === 'multiple-choice') {
         step.choices.forEach(choice => {
           // Response sms
-          const defaultResponseSms = ((choice.responses[defaultLang] || {}).sms || []).join(', ').trim()
+          const defaultResponseSms = ((choice.responses.sms || {})[defaultLang] || []).join(', ').trim()
           addToCsvForTranslation(defaultResponseSms, context, lang =>
-            ((choice.responses[lang] || {}).sms || []).join(', ')
+            ((choice.responses.sms || {})[lang] || []).join(', ')
           )
         })
       }
@@ -817,7 +839,7 @@ const uploadCsvForTranslation = (state, action) => {
   let newState = {...state}
   newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
   if (state.quotaCompletedMsg) {
-    newState.quotaCompletedMsg = translateQuotaCompletedMsg(state.quotaCompletedMsg, defaultLanguage, lookup)
+    newState.quotaCompletedMsg = translatePrompt(state.quotaCompletedMsg, defaultLanguage, lookup)
   }
   return newState
 }
@@ -862,46 +884,6 @@ const translatePrompt = (prompt, defaultLanguage, lookup) => {
   return newPrompt
 }
 
-const translateChoices = (choices, defaultLanguage, lookup) => {
-  return choices.map(choice => translateChoice(choice, defaultLanguage, lookup))
-}
-
-const translateChoice = (choice, defaultLanguage, lookup) => {
-  let { responses } = choice
-  let defaultLanguageResponses = responses[defaultLanguage]
-  if (!defaultLanguageResponses) return choice
-
-  let newChoice = {
-    ...choice,
-    responses: {...choice.responses}
-  }
-
-  const defLangResp = defaultLanguageResponses.sms ? defaultLanguageResponses.sms.join(', ') : ''
-
-  processTranslations(defLangResp,
-    newChoice.responses, lookup,
-    (obj, text) => { obj.sms = text.split(',').map(s => s.trim()) })
-
-  return newChoice
-}
-
-const translateQuotaCompletedMsg = (msg, defaultLanguage, lookup) => {
-  let defaultLanguageValue = msg[defaultLanguage]
-  if (!defaultLanguageValue) return msg
-
-  let newMsg = {...msg}
-  processTranslations(defaultLanguageValue.sms, newMsg, lookup, 'sms')
-  processTranslations((defaultLanguageValue.ivr || {}).text, newMsg, lookup, 'ivr')
-  return newMsg
-}
-
-const processTranslations = (value, obj, lookup, funcOrProperty) => {
-  let translations
-  if (value && (translations = lookup[value])) {
-    addTranslations(obj, translations, funcOrProperty)
-  }
-}
-
 const addTranslations = (obj, translations, funcOrProperty) => {
   for (let lang in translations) {
     const text = translations[lang]
@@ -916,6 +898,39 @@ const addTranslations = (obj, translations, funcOrProperty) => {
       obj[lang][funcOrProperty] = text
     }
   }
+}
+
+const translateChoices = (choices, defaultLanguage, lookup) => {
+  return choices.map(choice => translateChoice(choice, defaultLanguage, lookup))
+}
+
+const translateChoice = (choice, defaultLanguage, lookup) => {
+  let { responses } = choice
+  if (!responses.sms || !responses.sms[defaultLanguage]) return choice
+
+  let newChoice = {
+    ...choice,
+    responses: {...choice.responses}
+  }
+
+  const defLangResp = (responses.sms[defaultLanguage] || []).join(', ')
+
+  newChoice.responses.sms = processTranslations(defLangResp, newChoice.responses.sms || {}, lookup)
+
+  return newChoice
+}
+
+const processTranslations = (value, obj, lookup, funcOrProperty) => {
+  let translations
+  if (value && (translations = lookup[value])) {
+    for (let lang in translations) {
+      obj = {
+        ...obj,
+        [lang]: translations[lang].split(',').map(s => s.trim())
+      }
+    }
+  }
+  return obj
 }
 
 // Converts a CSV into a dictionary:

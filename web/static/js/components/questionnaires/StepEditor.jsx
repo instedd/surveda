@@ -2,13 +2,14 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { EditableTitleLabel, Card, Dropdown, DropdownItem, ConfirmationModal, InputWithLabel, AudioDropzone } from '../ui'
+import { EditableTitleLabel, Card, Dropdown, DropdownItem } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
+import SmsPrompt from './SmsPrompt'
+import IvrPrompt from './IvrPrompt'
 import StepNumericEditor from './StepNumericEditor'
 import StepLanguageSelection from './StepLanguageSelection'
-import { createAudio } from '../../api.js'
-import classNames from 'classnames/bind'
+import { createAudio, autocompleteVars } from '../../api.js'
 
 type Props = {
   step: Step,
@@ -16,6 +17,7 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
+  project: any,
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
@@ -36,10 +38,12 @@ type State = {
 class StepEditor extends Component {
   props: Props
   state: State
+  clickedVarAutocomplete: boolean
 
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
+    this.clickedVarAutocomplete = false
   }
 
   stepTitleChange(e) {
@@ -79,15 +83,20 @@ class StepEditor extends Component {
     this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
   }
 
-  stepStoreChange(e) {
-    e.preventDefault()
-    this.setState({stepStore: e.target.value})
+  stepStoreChange(e, value) {
+    if (this.clickedVarAutocomplete) return
+    if (e) e.preventDefault()
+    this.setState({stepStore: value})
   }
 
-  stepStoreSubmit(e) {
-    e.preventDefault()
+  stepStoreSubmit(e, value) {
+    if (this.clickedVarAutocomplete) return
+    const varsDropdown = this.refs.varsDropdown
+    $(varsDropdown).hide()
+
+    if (e) e.preventDefault()
     const { step } = this.props
-    this.props.questionnaireActions.changeStepStore(step.id, e.target.value)
+    this.props.questionnaireActions.changeStepStore(step.id, value)
   }
 
   delete(e) {
@@ -149,6 +158,10 @@ class StepEditor extends Component {
       })
   }
 
+  clickedVarAutocompleteCallback(e) {
+    this.clickedVarAutocomplete = true
+  }
+
   render() {
     const { step, onCollapse, questionnaire, errors, errorPath, stepsAfter } = this.props
 
@@ -170,71 +183,15 @@ class StepEditor extends Component {
     if (sms) {
       // TODO: uncomment line below once error styles are fixed
       let smsInputErrors = null // errors[`${errorPath}.prompt.sms`]
-      smsInput = <div className='row'>
-        <div className='col input-field s12'>
-          <InputWithLabel id='step_editor_sms_prompt' value={this.state.stepPromptSms} label='SMS message' errors={smsInputErrors} >
-            <input
-              type='text'
-              is length='140'
-              onChange={e => this.stepPromptSmsChange(e)}
-              onBlur={e => this.stepPromptSmsSubmit(e)}
-              ref={ref => $(ref).characterCounter()}
-              class={classNames({'invalid': smsInputErrors})}
-              />
-          </InputWithLabel>
-        </div>
-      </div>
+      smsInput = <SmsPrompt id='step_editor_sms_prompt' value={this.state.stepPromptSms} inputErrors={smsInputErrors} onChange={e => this.stepPromptSmsChange(e)} onBlur={e => this.stepPromptSmsSubmit(e)} />
     }
 
-    let ivrTextInput = null
-    let ivrFileInput = null
+    let ivrInput = null
 
     if (ivr) {
       // TODO: uncomment line below once error styles are fixed
       let ivrInputErrors = null // errors[`${errorPath}.prompt.ivr.text`]
-      ivrTextInput = <div className='row'>
-        <div className='col input-field s12'>
-          <InputWithLabel id='step_editor_voice_message' value={this.state.stepPromptIvr} label='Voice message' >
-            <input
-              type='text'
-              onChange={e => this.stepPromptIvrChange(e)}
-              onBlur={e => this.stepPromptIvrSubmit(e)}
-              className={classNames({'invalid': ivrInputErrors})}
-              />
-          </InputWithLabel>
-        </div>
-      </div>
-
-      ivrFileInput = <div className='row audio-section'>
-        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-        <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-        <div className='audio-dropdown'>
-          <Dropdown className='step-mode underlined' label={this.state.audioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
-            <DropdownItem>
-              <a onClick={e => this.changeIvrMode(e, 'tts')}>
-                <i className='material-icons left'>record_voice_over</i>
-                Text to speech
-                {this.state.audioSource == 'tts' ? <i className='material-icons right'>done</i> : ''}
-              </a>
-            </DropdownItem>
-            <DropdownItem>
-              <a onClick={e => this.changeIvrMode(e, 'upload')}>
-                <i className='material-icons left'>file_upload</i>
-                Upload a file
-                {this.state.audioSource == 'upload' ? <i className='material-icons right'>done</i> : ''}
-              </a>
-            </DropdownItem>
-          </Dropdown>
-        </div>
-        {(this.state.audioSource == 'upload')
-        ? <div className='upload-audio'>
-          <audio controls>
-            <source src={this.state.audioUri} type='audio/mpeg' />
-          </audio>
-          <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
-        </div>
-        : ''}
-      </div>
+      ivrInput = <IvrPrompt id='step_editor_sms_prompt' value={this.state.stepPromptIvr} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} audioErrors={this.state.audioErrors} audioSource={this.state.audioSource} audioUri={this.state.audioUri} handleFileUpload={files => this.handleFileUpload(files)} />
     }
 
     return (
@@ -283,8 +240,7 @@ class StepEditor extends Component {
               </div>
             </div>
             {smsInput}
-            {ivrTextInput}
-            {ivrFileInput}
+            {ivrInput}
           </li>
           <li className='collection-item'>
             <div className='row'>
@@ -301,8 +257,15 @@ class StepEditor extends Component {
                   <input
                     type='text'
                     value={this.state.stepStore}
-                    onChange={e => this.stepStoreChange(e)}
-                    onBlur={e => this.stepStoreSubmit(e)}
+                    onChange={e => this.stepStoreChange(e, e.target.value)}
+                    onBlur={e => this.stepStoreSubmit(e, e.target.value)}
+                    autoComplete='off'
+                    className='autocomplete'
+                    ref='varInput'
+                    />
+                  <ul className='autocomplete-content dropdown-content var-dropdown'
+                    ref='varsDropdown'
+                    onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
                     />
                 </div>
               </div>
@@ -321,9 +284,49 @@ class StepEditor extends Component {
       </Card>
     )
   }
+
+  componentDidMount() {
+    this.setupAutocomplete()
+  }
+
+  componentDidUpdate() {
+    this.setupAutocomplete()
+  }
+
+  setupAutocomplete() {
+    const self = this
+    const varInput = this.refs.varInput
+    const varsDropdown = this.refs.varsDropdown
+    const { project } = this.props
+
+    $(varInput).click(() => $(varsDropdown).show())
+
+    $(varInput).materialize_autocomplete({
+      limit: 100,
+      multiple: {
+        enable: false
+      },
+      dropdown: {
+        el: varsDropdown,
+        itemTemplate: '<li class="ac-item" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
+      },
+      onSelect: (item) => {
+        self.clickedVarAutocomplete = false
+        self.stepStoreChange(null, item.text)
+        self.stepStoreSubmit(null, item.text)
+      },
+      getData: (value, callback) => {
+        autocompleteVars(project.id, value)
+        .then(response => {
+          callback(value, response.map(x => ({id: x, text: x})))
+        })
+      }
+    })
+  }
 }
 
 const mapStateToProps = (state, ownProps) => ({
+  project: state.project.data,
   questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors
 })

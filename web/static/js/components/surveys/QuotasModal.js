@@ -50,7 +50,7 @@ export class QuotasModal extends Component {
 
     let modalLink = null
     if (showLink) {
-      modalLink = (<a className='modal-trigger' href={`#${modalId}`}>{linkText}</a>)
+      modalLink = (<a className='modal-trigger edit-quotas' href={`#${modalId}`}>{linkText}</a>)
     }
     const storeValues = stepStoreValues(questionnaire)
 
@@ -92,7 +92,7 @@ export class QuotasModal extends Component {
                         </div>
                       </div>
                     }
-                    <div className='checkbox right'>
+                    <div className='question right'>
                       <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
                       <label htmlFor={storeValue} />
                     </div>

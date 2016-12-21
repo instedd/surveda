@@ -1,9 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.Project
-  alias Ask.Channel
-  alias Ask.Survey
+  alias Ask.{Project, Channel, Survey, Questionnaire}
 
   def index(conn, %{"project_id" => project_id}) do
     surveys = Project
@@ -69,10 +67,12 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:channels])
+    |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
     |> with_respondents_count
     |> Survey.changeset(survey_params)
     |> update_channels(survey_params)
+    |> update_questionnaires(survey_params)
     |> Survey.update_state
 
     case Repo.update(changeset) do
@@ -96,6 +96,19 @@ defmodule Ask.SurveyController do
   end
 
   defp update_channels(changeset, _) do
+    changeset
+  end
+
+  defp update_questionnaires(changeset, %{"questionnaire_ids" => questionnaires_params}) do
+    questionnaires_changeset = Enum.map(questionnaires_params, fn ch ->
+      Repo.get!(Questionnaire, ch) |> change
+    end)
+
+    changeset
+    |> put_assoc(:questionnaires, questionnaires_changeset)
+  end
+
+  defp update_questionnaires(changeset, _) do
     changeset
   end
 

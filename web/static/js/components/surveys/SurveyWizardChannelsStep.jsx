@@ -3,6 +3,10 @@ import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
 import * as actions from '../../actions/survey'
 import values from 'lodash/values'
+import flatMap from 'lodash/flatMap'
+import uniq from 'lodash/uniq'
+import some from 'lodash/some'
+import isEqual from 'lodash/isEqual'
 
 class SurveyWizardChannelsStep extends Component {
   static propTypes = {
@@ -23,12 +27,17 @@ class SurveyWizardChannelsStep extends Component {
     dispatch(actions.selectChannels(currentChannels))
   }
 
-  modeChange(e) {
+  modeChange(e, value) {
     const { dispatch } = this.props
-    dispatch(actions.selectMode(e.target.value.split('_')))
+    dispatch(actions.selectMode(value))
   }
 
-  newChannelComponent(type, allChannels, currentChannels, index, total) {
+  modeComparisonChange(e) {
+    const { dispatch } = this.props
+    dispatch(actions.changeModeComparison())
+  }
+
+  newChannelComponent(type, allChannels, currentChannels) {
     const currentChannel = currentChannels.find(id => allChannels[id].type == type)
 
     let label
@@ -38,13 +47,6 @@ class SurveyWizardChannelsStep extends Component {
       label = 'Phone'
     }
     label += ' channel'
-    if (total != 1) {
-      if (index == 0) {
-        label += ' (primary)'
-      } else {
-        label += ' (fallback)'
-      }
-    }
 
     let channels = values(allChannels)
     channels = channels.filter(c => c.type == type)
@@ -69,6 +71,10 @@ class SurveyWizardChannelsStep extends Component {
     )
   }
 
+  modeIncludes(modes, target) {
+    return some(modes, ary => isEqual(ary, target))
+  }
+
   render() {
     const { survey, channels } = this.props
 
@@ -77,14 +83,16 @@ class SurveyWizardChannelsStep extends Component {
     }
 
     const currentChannels = survey.channels || []
-    const mode = survey.mode ? survey.mode.join('_') : null
+    const mode = survey.mode || []
+    const modeComparison = mode.length > 1 || survey.modeComparison
 
     let channelsComponent = []
-    if (survey.mode) {
-      for (let i = 0; i < survey.mode.length; i++) {
-        channelsComponent.push(this.newChannelComponent(survey.mode[i], channels, currentChannels, i, survey.mode.length))
-      }
+    let allModes = uniq(flatMap(mode))
+    for (const targetMode of allModes) {
+      channelsComponent.push(this.newChannelComponent(targetMode, channels, currentChannels))
     }
+
+    let inputType = modeComparison ? 'checkbox' : 'radio'
 
     return (
       <div>
@@ -100,49 +108,59 @@ class SurveyWizardChannelsStep extends Component {
           <div className='col s12'>
             <p>
               <input
+                id='questionnaire_mode_comparison'
+                type='checkbox'
+                defaultChecked={modeComparison}
+                onClick={e => this.modeComparisonChange(e)}
+                className='with-gap'
+                />
+              <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
+            </p>
+            <p>
+              <input
                 id='questionnaire_mode_ivr'
-                type='radio'
+                type={inputType}
                 name='questionnaire_mode'
                 className='with-gap'
                 value='ivr'
-                defaultChecked={mode == 'ivr'}
-                onClick={e => this.modeChange(e)}
+                defaultChecked={this.modeIncludes(mode, ['ivr'])}
+                onClick={e => this.modeChange(e, ['ivr'])}
                 />
               <label htmlFor='questionnaire_mode_ivr'>Phone call</label>
             </p>
             <p>
               <input
                 id='questionnaire_mode_ivr_sms'
-                type='radio'
+                type={inputType}
                 name='questionnaire_mode'
                 className='with-gap'
                 value='ivr_sms'
-                defaultChecked={mode == 'ivr_sms'}
-                onClick={e => this.modeChange(e)}
+                defaultChecked={this.modeIncludes(mode, ['ivr', 'sms'])}
+                onClick={e => this.modeChange(e, ['ivr', 'sms'])}
                 />
               <label htmlFor='questionnaire_mode_ivr_sms'>Phone call with SMS fallback</label>
             </p>
             <p>
               <input
                 id='questionnaire_mode_sms'
-                type='radio'
+                type={inputType}
                 name='questionnaire_mode'
                 className='with-gap'
                 value='sms'
-                defaultChecked={mode == 'sms'}
-                onClick={e => this.modeChange(e)}
+                defaultChecked={this.modeIncludes(mode, ['sms'])}
+                onClick={e => this.modeChange(e, ['sms'])}
                 />
               <label htmlFor='questionnaire_mode_sms'>SMS</label>
             </p>
             <p>
               <input
                 id='questionnaire_mode_sms_ivr'
-                type='radio'
+                type={inputType}
                 name='questionnaire_mode'
                 className='with-gap'
                 value='sms_ivr'
-                defaultChecked={mode == 'sms_ivr'}
-                onClick={e => this.modeChange(e)}
+                defaultChecked={this.modeIncludes(mode, ['sms', 'ivr'])}
+                onClick={e => this.modeChange(e, ['sms', 'ivr'])}
                 />
               <label htmlFor='questionnaire_mode_sms_ivr'>SMS with phone call fallback</label>
             </p>

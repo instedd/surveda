@@ -15,7 +15,7 @@ defmodule Ask.SurveyView do
       mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
-      questionnaire_id: survey.questionnaire_id,
+      questionnaire_id: questionnaire_ids(survey),
       cutoff: survey.cutoff,
       channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel )
     }
@@ -28,7 +28,7 @@ defmodule Ask.SurveyView do
       mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
-      questionnaire_id: survey.questionnaire_id,
+      questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
       channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel),
       respondents_count: survey.respondents_count,
@@ -65,5 +65,11 @@ defmodule Ask.SurveyView do
       "quota" => bucket.quota,
       "count" => bucket.count
     }
+  end
+
+  defp questionnaire_ids(survey = %Ask.Survey{}) do
+    (survey
+    |> Ask.Repo.preload(:questionnaires)).questionnaires
+    |> Enum.map(&(&1.id))
   end
 end

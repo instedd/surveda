@@ -7,6 +7,7 @@ export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
 export const TOGGLE_MODE = 'QUESTIONNAIRE_TOGGLE_MODE'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
+export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
@@ -126,6 +127,12 @@ export const addStep = () => ({
   type: ADD_STEP
 })
 
+export const moveStep = (sourceStepId, targetStepId) => ({
+  type: MOVE_STEP,
+  sourceStepId,
+  targetStepId
+})
+
 export const changeName = (newName) => ({
   type: CHANGE_NAME,
   newName
@@ -190,6 +197,23 @@ export const createQuestionnaire = (projectId) => (dispatch) =>
     dispatch(receive(questionnaire))
     return questionnaire
   })
+
+export const duplicateQuestionnaire = (projectId, questionnaire) => (dispatch) => {
+  // To duplicate a questionnaire we simply create a new
+  // one with the same data as the given questionnaire,
+  // except for the name
+  let copy = {
+    ...questionnaire,
+    name: `${questionnaire.name || 'Untitled'} (duplicate)`
+  }
+  return api.createQuestionnaire(projectId, copy)
+  .then(response => {
+    const questionnaire = response.entities.questionnaires[response.result]
+    dispatch(fetch(projectId, questionnaire.id))
+    dispatch(receive(questionnaire))
+    return questionnaire
+  })
+}
 
 export const changeNumericRanges = (stepId, minValue, maxValue, rangeDelimiters) => ({
   type: CHANGE_NUMERIC_RANGES,

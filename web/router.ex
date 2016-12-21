@@ -40,6 +40,7 @@ defmodule Ask.Router do
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
+        get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
       end
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]

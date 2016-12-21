@@ -258,6 +258,12 @@ footer {
     > table {
       @extend .bordered;
 
+      tr:hover {
+        .duplicate i {
+          display: block;
+        }
+      }
+
       th {
         @extend .grey-text, .lighten-2;
         padding: 25px;
@@ -271,6 +277,10 @@ footer {
             margin-right: 9px;
           }
         }
+        &.duplicate {
+          width: 50px;
+          padding: 5px;
+        }
       }
 
       td {
@@ -281,6 +291,19 @@ footer {
         }
         &.project-name {
           word-break: break-all;
+        }
+        &.duplicate {
+          width: 50px;
+          padding: 0;
+          text-align: center;
+          i {
+            @include transition(color ease-in-out .25s);
+            @extend .grey-text, .lighten-2;
+            display: none;
+            &:hover {
+              @extend .black-text;
+            }
+          }
         }
       }
     }
@@ -319,6 +342,9 @@ footer {
   @extend .red-text, .darken-1;
 }
 
+
+// ------- Modal Card ----------
+
 .modal.card {
   max-height: 70vh;
   min-height: 350px;
@@ -330,6 +356,51 @@ footer {
     padding: 0;
   }
 
+  .collection {
+    margin: 0;
+
+    .icon {
+      min-height: 150px;
+      position: relative;
+      h5 {
+        padding-left: 75px;
+        line-height: 60px;
+        position: relative;
+        &:before {
+          content: '';
+          width: 60px;
+          height: 60px;
+          background-size: 60px 60px;
+          background-repeat: no-repeat;
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+      }
+      &.verboice h5:before {
+        background-image: url('/images/verboice@2x.png')
+      }
+      &.nuntium h5:before {
+        background-image: url('/images/nuntium@2x.png')
+      }
+      .switch {
+        @include transform(scale(0.85) translate-x(-2rem));
+      }
+      .arrow-right {
+        font-size: 24px;
+        position: absolute;
+        right: 25px;
+        top: calc(50% - 10px);
+      }
+      &.disabled {
+        opacity: .5;
+        filter: url("data:image/svg+xml;utf8,&lt;svg xmlns=\'http://www.w3.org/2000/svg\'&gt;&lt;filter id=\'grayscale\'&gt;&lt;feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/&gt;&lt;/filter&gt;&lt;/svg&gt;#grayscale");
+        filter: gray;
+        -webkit-filter: grayscale(100%);
+      }
+    }
+  }
+
   .card-title.header {
     @extend .grey, .lighten-2;
     padding: 1rem 1.3rem;
@@ -337,6 +408,7 @@ footer {
       @extend .grey-text;
       font-size: 15px;
       margin: 0;
+      padding: 0 !important;
     }
   }
 
@@ -404,6 +476,17 @@ footer {
     .small-text-bellow {
       line-height: 1;
     }
+  }
+}
+.question.right {
+  label {
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    display: inline-block;
+    height: 25px;
+    line-height: 25px;
+    font-size: 1rem;
   }
 }
 
@@ -940,7 +1023,9 @@ i.survey-status {
     }
   }
 }
-
+.edit-quotas {
+  padding-left: 36px;
+}
 
 .collection.collection-card {
   overflow: visible;
@@ -969,6 +1054,15 @@ i.survey-status {
   }
 }
 
+.var-dropdown {
+  position: absolute;
+  width: 100%;
+  max-height: 280px;
+  li {
+    line-height: 3;
+    padding: 0 1rem;
+  }
+}
 
 .selected-language {
   li {

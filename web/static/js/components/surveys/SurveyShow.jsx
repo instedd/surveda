@@ -27,9 +27,12 @@ class SurveyShow extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
-    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey =>
-      dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, survey.questionnaireId))
-    )
+    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey => {
+      let questionnaireIds = survey.questionnaireIds || []
+      for (let questionnaireId of questionnaireIds) {
+        dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
+      }
+    })
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsQuotasStats(projectId, surveyId))
   }

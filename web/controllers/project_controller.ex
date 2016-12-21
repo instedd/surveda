@@ -78,4 +78,20 @@ defmodule Ask.ProjectController do
 
     send_resp(conn, :no_content, "")
   end
+
+  def autocomplete_vars(conn, %{"project_id" => id, "text" => text}) do
+    Project
+    |> Repo.get!(id)
+    |> authorize(conn)
+
+    text = text |> String.downcase
+
+    vars = (from v in Ask.QuestionnaireVariable, where: v.project_id == ^id)
+    |> Repo.all
+    |> Enum.map(&(&1.name))
+    |> Enum.filter(&(&1 |> String.downcase |> String.starts_with?(text)))
+    |> Enum.filter(&(&1 != text))
+
+    conn |> json(vars)
+  end
 end

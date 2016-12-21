@@ -356,7 +356,7 @@ defmodule Ask.RespondentController do
     survey = Map.merge(survey, %{respondents_count: respondents_count})
 
     survey
-    |> Repo.preload([:channels])
+    |> Repo.preload([:channels, :questionnaires])
     |> change
     |> Survey.update_state
     |> Repo.update

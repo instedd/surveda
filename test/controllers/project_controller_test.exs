@@ -1,5 +1,6 @@
 defmodule Ask.ProjectControllerTest do
   use Ask.ConnCase
+  use Ask.DummySteps
 
   alias Ask.Project
   @valid_attrs %{name: "some content"}
@@ -137,6 +138,15 @@ defmodule Ask.ProjectControllerTest do
       end
     end
 
+  end
+
+  test "autocomplete vars", %{conn: conn, user: user} do
+    project = insert(:project, user: user)
+    q1 = insert(:questionnaire, project: project, steps: @dummy_steps)
+    q1 |> Ask.Questionnaire.recreate_variables!
+
+    conn = get conn, project_autocomplete_vars_path(conn, :autocomplete_vars, project.id, %{"text" => "E"})
+    assert json_response(conn, 200) == ["Exercises"]
   end
 
 end

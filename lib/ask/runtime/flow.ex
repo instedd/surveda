@@ -109,7 +109,7 @@ defmodule Ask.Runtime.Flow do
                     "multiple-choice" ->
                       choice = step["choices"]
                       |> Enum.find(fn choice ->
-                        fetch(flow, choice, "responses") |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+                        fetch(:response, flow, choice) |> Enum.any?(fn r -> (r |> clean_string) == reply end)
                       end)
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
@@ -144,7 +144,7 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [fetch(flow, step, "prompt")]}}
+        {:ok, flow, %{state | prompts: [fetch(:prompt, flow, step)]}}
     end
   end
 
@@ -152,19 +152,29 @@ defmodule Ask.Runtime.Flow do
     string |> String.trim |> String.downcase
   end
 
-  defp fetch(flow, step, key) do
+  defp fetch(key, flow, step) do
     # If a key is missing in a language, try with the default one as a replacement
-    fetch(flow, step, key, flow.language) ||
-      fetch(flow, step, key, flow.questionnaire.default_language)
+    fetch(key, flow, step, flow.language) ||
+      fetch(key, flow, step, flow.questionnaire.default_language)
   end
 
-  defp fetch(flow, step, key, language) do
+  defp fetch(:prompt, flow, step, language) do
     step
-    |> Map.get(key, %{})
+    |> Map.get("prompt", %{})
     |> Map.get(language, %{})
     |> Map.get(flow.mode)
   end
 
+  defp fetch(:response, flow, step, language) do
+    case step
+    |> Map.get("responses", %{})
+    |> Map.get(flow.mode, %{}) do
+      response when is_map(response) ->
+        response |> Map.get(language)
+      response ->
+        response
+    end
+  end
 end
 
 defmodule Ask.Runtime.Flow.Message do

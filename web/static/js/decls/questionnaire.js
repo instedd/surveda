@@ -49,9 +49,9 @@ export type Choice = {
   value: string,
   skipLogic: ?string,
   responses: {
-    [lang: string]: {
-      sms?: string[],
-      ivr?: string[]
+    ivr?: string[],
+    sms?: {
+      [lang: string]: string[]
     }
   }
 };
