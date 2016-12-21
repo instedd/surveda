@@ -49,6 +49,15 @@ defmodule Ask.Factory do
       modes: ["sms", "ivr"],
       steps: [],
       default_language: "en",
+      # error_msg: %{
+      #   en: %{
+      #     sms: "You have entered an invalid answer",
+      #     ivr: %{
+      #       audio_source: "tts",
+      #       text: "You have entered an invalid answer"
+      #     }
+      #   }
+      # },
       languages: []
     }
   end
@@ -94,5 +103,4 @@ defmodule Ask.Factory do
       expires_at: Timex.now |> Timex.add(Timex.Duration.from_hours(1))
     }
   end
-
 end

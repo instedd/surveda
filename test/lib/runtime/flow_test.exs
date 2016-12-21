@@ -62,14 +62,20 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
       step = flow |> Flow.step(Flow.Message.reply("x"))
       assert {:ok, %Flow{}, %{prompts: prompts}} = step
-      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert prompts == [
+        "You have entered an invalid answer",
+        "Do you smoke? Reply 1 for YES, 2 for NO"
+      ]
     end
 
     test "next step (ivr mode)" do
       {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
       step = flow |> Flow.step(Flow.Message.reply("0"))
       assert {:ok, %Flow{}, %{prompts: prompts}} = step
-      assert prompts == [%{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}]
+      assert prompts == [
+        %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+        %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
+      ]
     end
   end
 

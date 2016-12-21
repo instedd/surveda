@@ -128,16 +128,16 @@ defmodule Ask.Runtime.Flow do
         flow
       end
 
-    flow = if(reply_value || reply == "*") do
-      flow |> advance_current_step(step, reply_value)
-    else
-      flow
-    end
-
     case reply_value do
       nil ->
-        {flow, %Reply{}}
+        if (reply == "*") do
+          flow = flow |> advance_current_step(step, reply_value)
+          {flow, %Reply{}}
+        else
+          {flow, %Reply{prompts: [fetch(:error_msg, flow, step)]}}
+        end
       reply_value ->
+        flow = flow |> advance_current_step(step, reply_value)
         {flow, %Reply{stores: %{step["store"] => reply_value}}}
     end
   end
@@ -148,7 +148,7 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [fetch(:prompt, flow, step)]}}
+        {:ok, flow, %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}}
     end
   end
 
@@ -177,6 +177,20 @@ defmodule Ask.Runtime.Flow do
         response |> Map.get(language)
       response ->
         response
+    end
+  end
+
+  defp fetch(:error_msg, flow, _, _language) do
+    # flow.questionnaire.error_msg
+    # |> Map.get(language, %{})
+    # |> Map.get(flow.mode)
+    # TODO Replace this with the proper implementation as soon as we got error_msg in the questionnaire
+    case flow.mode do
+      "sms" -> "You have entered an invalid answer"
+      "ivr" -> %{
+        "audio_source" => "tts",
+        "text" => "You have entered an invalid answer"
+      }
     end
   end
 end
