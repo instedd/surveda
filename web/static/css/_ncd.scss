@@ -258,6 +258,12 @@ footer {
     > table {
       @extend .bordered;
 
+      tr:hover {
+        .duplicate i {
+          display: block;
+        }
+      }
+
       th {
         @extend .grey-text, .lighten-2;
         padding: 25px;
@@ -271,6 +277,10 @@ footer {
             margin-right: 9px;
           }
         }
+        &.duplicate {
+          width: 50px;
+          padding: 5px;
+        }
       }
 
       td {
@@ -281,6 +291,19 @@ footer {
         }
         &.project-name {
           word-break: break-all;
+        }
+        &.duplicate {
+          width: 50px;
+          padding: 0;
+          text-align: center;
+          i {
+            @include transition(color ease-in-out .25s);
+            @extend .grey-text, .lighten-2;
+            display: none;
+            &:hover {
+              @extend .black-text;
+            }
+          }
         }
       }
     }

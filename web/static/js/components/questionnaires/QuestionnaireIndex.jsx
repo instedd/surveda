@@ -108,7 +108,7 @@ class QuestionnaireIndex extends Component {
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               <th>Modes</th>
-              <th />
+              <th className='duplicate' />
             </tr>
           </thead>
           <tbody>
@@ -124,7 +124,7 @@ class QuestionnaireIndex extends Component {
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     { (questionnaire.modes || []).join(', ').toUpperCase() }
                   </td>
-                  <td>
+                  <td className='duplicate'>
                     <a onClick={() => this.duplicate(questionnaire)}>
                       <i className='material-icons'>content_copy</i>
                     </a>
