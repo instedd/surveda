@@ -2,7 +2,6 @@ defmodule User.Helper do
   import Ecto
   import Ecto.Query
   alias Ask.Repo
-  alias Ask.ProjectMembership
   alias Ask.UnauthorizedError
 
   def current_user(conn) do

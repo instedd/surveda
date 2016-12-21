@@ -130,7 +130,8 @@ defmodule Ask.QuestionnaireControllerTest do
     end
 
     test "creates and creates variables", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = %{name: "some content", modes: ["sms", "ivr"], steps: @dummy_steps}
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: questionnaire
       id = json_response(conn, 201)["data"]["id"]
@@ -172,7 +173,8 @@ defmodule Ask.QuestionnaireControllerTest do
     end
 
     test "updates and creates variables", %{conn: conn, user: user} do
-      project = insert(:project, user: user)
+      project = insert(:project)
+      insert(:project_membership, user: user, project: project, level: "owner")
       questionnaire = insert(:questionnaire, project: project)
 
       %Ask.QuestionnaireVariable{

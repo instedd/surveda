@@ -141,7 +141,8 @@ defmodule Ask.ProjectControllerTest do
   end
 
   test "autocomplete vars", %{conn: conn, user: user} do
-    project = insert(:project, user: user)
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "owner")
     q1 = insert(:questionnaire, project: project, steps: @dummy_steps)
     q1 |> Ask.Questionnaire.recreate_variables!
 
