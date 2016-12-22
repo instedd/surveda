@@ -1,5 +1,6 @@
 defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
+  use Ask.TestHelpers
 
   alias Ask.{Survey, Project}
   @valid_attrs %{name: "some content"}
@@ -15,8 +16,7 @@ defmodule Ask.SurveyControllerTest do
 
   describe "index" do
     test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == []
     end
@@ -37,8 +37,7 @@ defmodule Ask.SurveyControllerTest do
 
   describe "show" do
     test "shows chosen resource", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_path(conn, :show, project, survey)
       assert json_response(conn, 200)["data"] == %{"id" => survey.id,
@@ -68,8 +67,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "shows chosen resource with channels", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       channel = insert(:channel, user: user)
       survey = insert(:survey, project: project)
       insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
@@ -104,8 +102,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "shows chosen resource with buckets", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project, quota_vars: ["gender", "smokes"])
       insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "no"}, quota: 10, count: 3)
       insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "yes"}, quota: 20)
@@ -175,8 +172,7 @@ defmodule Ask.SurveyControllerTest do
 
   describe "create" do
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       conn = post conn, project_survey_path(conn, :create, project.id)
       assert json_response(conn, 201)["data"]["id"]
       assert Repo.get_by(Survey, %{project_id: project.id})
@@ -191,8 +187,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "updates project updated_at when survey is created", %{conn: conn, user: user} do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, updated_at: datetime)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       post conn, project_survey_path(conn, :create, project.id)
 
       project = Project |> Repo.get(project.id)
@@ -202,8 +197,7 @@ defmodule Ask.SurveyControllerTest do
 
   describe "update" do
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
@@ -233,8 +227,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "does not update chosen resource and renders errors when data is invalid", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
@@ -243,8 +236,7 @@ defmodule Ask.SurveyControllerTest do
     test "deletes previous channels associations when updates including channels params", %{conn: conn, user: user} do
       channel = insert(:channel, user: user)
       channel2 = insert(:channel, user: user)
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [channel2.id]}
@@ -357,8 +349,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "replaces quota_buckets when vars are updated", %{conn: conn, user: user}  do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project, quota_vars: ["gender", "smokes"])
       insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "no"}, quota: 10, count: 3)
       insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "yes"}, quota: 20)
@@ -418,8 +409,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "fails if the schedule from is greater or equal to the to", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       attrs = Map.merge(@valid_attrs, %{schedule_start_time: "02:00:00", schedule_end_time: "01:00:00"})
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -427,8 +417,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "schedule to and from are saved successfully", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       attrs = Map.merge(@valid_attrs, %{schedule_start_time: "01:00:00", schedule_end_time: "02:00:00"})
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -441,8 +430,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "rejects update with correct error when cutoff field is greater than the max value", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       max_int = 2147483648
       attrs = Map.merge(@valid_attrs, %{cutoff: max_int})
@@ -451,8 +439,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "rejects update with correct error when cutoff field is less than zero", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       attrs = Map.merge(@valid_attrs, %{cutoff: 0})
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: attrs
@@ -461,9 +448,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "updates project updated_at when survey is updated", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, updated_at: datetime, )
-      insert(:project_membership, user: user, project: project, level: "owner")
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{name: "New name"}
 
@@ -474,8 +459,7 @@ defmodule Ask.SurveyControllerTest do
 
   describe "delete" do
     test "deletes chosen resource", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
       assert response(conn, 204)
@@ -491,8 +475,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "updates project updated_at when survey is deleted", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, updated_at: datetime)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       delete conn, project_survey_path(conn, :delete, survey.project, survey)
 
@@ -505,7 +488,6 @@ defmodule Ask.SurveyControllerTest do
     test "updates state when adding questionnaire", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
-      insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule)
       add_channel_to(survey, channel)
       add_respondent_to survey
@@ -707,7 +689,6 @@ defmodule Ask.SurveyControllerTest do
     test "does not update state when adding cutoff if missing questionnaire", %{conn: conn, user: user} do
       [project, _, channel] = prepare_for_state_update(user)
 
-      insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project, schedule_day_of_week: completed_schedule)
       assert survey.state == "not_ready"
       add_channel_to(survey, channel)
@@ -752,8 +733,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   test "launch survey", %{conn: conn, user: user} do
-    project = insert(:project)
-    insert(:project_membership, user: user, project: project, level: "owner")
+    project = create_project_for_user(user)
     survey = insert(:survey, project: project)
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
@@ -762,8 +742,7 @@ defmodule Ask.SurveyControllerTest do
 
   test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
     now = Timex.now
-    project = insert(:project)
-    insert(:project_membership, user: user, project: project, level: "owner")
+    project = create_project_for_user(user)
     survey = insert(:survey, project: project)
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     started_at = Repo.get(Survey, survey.id).started_at
@@ -772,8 +751,7 @@ defmodule Ask.SurveyControllerTest do
 
   test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = insert(:project, updated_at: datetime)
-    insert(:project_membership, user: user, project: project, level: "owner")
+    project = create_project_for_user(user)
     survey = insert(:survey, project: project)
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
@@ -782,8 +760,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   def prepare_for_state_update(user) do
-    project = insert(:project)
-    insert(:project_membership, user: user, project: project, level: "owner")
+    project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
     channel = insert(:channel, name: "test")
     [project, questionnaire, channel]

@@ -1,6 +1,7 @@
 defmodule Ask.ProjectControllerTest do
   use Ask.ConnCase
   use Ask.DummySteps
+  use Ask.TestHelpers
 
   alias Ask.Project
   @valid_attrs %{name: "some content"}
@@ -21,8 +22,7 @@ defmodule Ask.ProjectControllerTest do
     end
 
     test "list only entries of the current user on index", %{conn: conn, user: user} do
-      user_project = insert(:project)
-      insert(:project_membership, user: user, project: user_project, level: "owner")
+      user_project = create_project_for_user(user)
       insert(:project)
 
       conn = get conn, project_path(conn, :index)
@@ -34,19 +34,16 @@ defmodule Ask.ProjectControllerTest do
     end
 
     test "shows running survey count", %{conn: conn, user: user} do
-      project1 = insert(:project)
-      insert(:project_membership, user: user, project: project1, level: "owner")
+      project1 = create_project_for_user(user)
       insert(:survey, project: project1, state: "running")
       insert(:survey, project: project1, state: "running")
       insert(:survey, project: project1, state: "pending")
 
-      project2 = insert(:project)
-      insert(:project_membership, user: user, project: project2, level: "owner")
+      project2 = create_project_for_user(user)
       insert(:survey, project: project2, state: "running")
       insert(:survey, project: project2, state: "pending")
 
-      project3 = insert(:project)
-      insert(:project_membership, user: user, project: project3, level: "owner")
+      project3 = create_project_for_user(user)
 
       conn = get conn, project_path(conn, :index)
       project_map_1 = %{"id"      => project1.id,
@@ -69,8 +66,7 @@ defmodule Ask.ProjectControllerTest do
   describe "show" do
 
     test "shows chosen resource", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
@@ -105,8 +101,7 @@ defmodule Ask.ProjectControllerTest do
   describe "update" do
 
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       conn = put conn, project_path(conn, :update, project), project: @valid_attrs
       assert json_response(conn, 200)["data"]["id"]
       assert Repo.get_by(Project, @valid_attrs)
@@ -124,8 +119,7 @@ defmodule Ask.ProjectControllerTest do
   describe "delete" do
 
     test "deletes chosen resource", %{conn: conn, user: user} do
-      project = insert(:project)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      project = create_project_for_user(user)
       conn = delete conn, project_path(conn, :delete, project)
       assert response(conn, 204)
       refute Repo.get(Project, project.id)
@@ -141,8 +135,7 @@ defmodule Ask.ProjectControllerTest do
   end
 
   test "autocomplete vars", %{conn: conn, user: user} do
-    project = insert(:project)
-    insert(:project_membership, user: user, project: project, level: "owner")
+    project = create_project_for_user(user)
     q1 = insert(:questionnaire, project: project, steps: @dummy_steps)
     q1 |> Ask.Questionnaire.recreate_variables!
 
