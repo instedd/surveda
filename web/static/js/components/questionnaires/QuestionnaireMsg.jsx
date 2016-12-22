@@ -86,7 +86,7 @@ class QuestionnaireMsg extends Component {
   }
 
   collapsed() {
-    const { title } = self.props
+    const { title } = this.props
 
     return (
       <ul className='collapsible dark'>
