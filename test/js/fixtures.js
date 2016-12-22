@@ -120,7 +120,8 @@ const bareQuestionnaire: Questionnaire = {
   id: 1,
   defaultLanguage: 'en',
   languages: ['en'],
-  quotaCompletedMsg: null
+  quotaCompletedMsg: null,
+  errorMsg: null
 }
 
 // TODO: investigate why Flow ignores the result of `deepFreeze`

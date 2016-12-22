@@ -3,11 +3,14 @@ import { connect } from 'react-redux'
 import { InputWithLabel, Card, Dropdown, DropdownItem, ConfirmationModal, AudioDropzone } from '../ui'
 import * as actions from '../../actions/questionnaire'
 import { createAudio } from '../../api.js'
+import { decamelize } from 'humps'
 
-class QuotaCompletedMsg extends Component {
+class QuestionnaireMsg extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
-    questionnaire: PropTypes.object
+    questionnaire: PropTypes.object,
+    messageKey: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired
   }
 
   constructor(props) {
@@ -21,11 +24,11 @@ class QuotaCompletedMsg extends Component {
   }
 
   getIvr() {
-    const { questionnaire } = this.props
+    const { questionnaire, messageKey } = this.props
 
-    const quotaMsg = questionnaire.quotaCompletedMsg || {}
+    const questionnaireMsg = questionnaire[messageKey] || {}
     const defaultLang = questionnaire.defaultLanguage
-    return (quotaMsg[defaultLang] || {}).ivr || {}
+    return (questionnaireMsg[defaultLang] || {}).ivr || {}
   }
 
   handleClick() {
@@ -33,19 +36,15 @@ class QuotaCompletedMsg extends Component {
   }
 
   changeSmsText(e) {
-    e.preventDefault()
-
-    const { dispatch } = this.props
-    dispatch(actions.setSmsQuotaCompletedMsg(e.target.value))
+    const { dispatch, messageKey } = this.props
+    dispatch(actions.setSmsQuestionnaireMsg(messageKey, e.target.value))
   }
 
   changeIvrText(e) {
-    e.preventDefault()
-
-    const { dispatch } = this.props
+    const { dispatch, messageKey } = this.props
     const ivr = this.getIvr()
 
-    dispatch(actions.setIvrQuotaCompletedMsg({
+    dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
       ...ivr,
       text: e.target.value
     }))
@@ -54,10 +53,10 @@ class QuotaCompletedMsg extends Component {
   changeIvrMode(e, mode) {
     e.preventDefault()
 
-    const { dispatch } = this.props
+    const { dispatch, messageKey } = this.props
     const ivr = this.getIvr()
 
-    dispatch(actions.setIvrQuotaCompletedMsg({
+    dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
       ...ivr,
       audioSource: mode
     }))
@@ -68,10 +67,10 @@ class QuotaCompletedMsg extends Component {
 
     createAudio(files)
       .then(response => {
-        const { dispatch } = self.props
+        const { dispatch, messageKey } = self.props
         const ivr = self.getIvr()
         self.loadAudio = true
-        dispatch(actions.setIvrQuotaCompletedMsg({
+        dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
           ...ivr,
           audioId: response.result
         }))
@@ -87,6 +86,8 @@ class QuotaCompletedMsg extends Component {
   }
 
   collapsed() {
+    const { title } = self.props
+
     return (
       <ul className='collapsible dark'>
         <li>
@@ -94,7 +95,7 @@ class QuotaCompletedMsg extends Component {
             <div className='card-content closed-step'>
               <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
                 <i className='material-icons left'>pie_chart</i>
-                <span>Quota completed messages</span>
+                <span>{title} messages</span>
                 <i className='material-icons right grey-text'>expand_more</i>
               </a>
             </div>
@@ -106,9 +107,9 @@ class QuotaCompletedMsg extends Component {
   }
 
   expanded() {
-    const { questionnaire } = this.props
+    const { questionnaire, messageKey, title } = this.props
 
-    const quotaMsg = questionnaire.quotaCompletedMsg || {}
+    const questionnaireMsg = questionnaire[messageKey] || {}
     const defaultLang = questionnaire.defaultLanguage
 
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -116,11 +117,11 @@ class QuotaCompletedMsg extends Component {
 
     let smsInput = null
     if (sms) {
-      const smsMessage = ((quotaMsg || {})[defaultLang] || {}).sms || ''
+      const smsMessage = ((questionnaireMsg || {})[defaultLang] || {}).sms || ''
       smsInput = (
-        <div className='row' key='quota-completed-sms'>
+        <div className='row' key={`${decamelize(messageKey, '-')}'-sms'`}>
           <div className='input-field'>
-            <InputWithLabel value={smsMessage} label='SMS message' id='quota_sms'>
+            <InputWithLabel value={smsMessage} label='SMS message' id={`${decamelize(messageKey)}'_sms'`}>
               <input
                 type='text'
                 onChange={e => this.changeSmsText(e)}
@@ -140,9 +141,9 @@ class QuotaCompletedMsg extends Component {
       const ivrAudioUri = ivrProperty.audioId ? `/api/v1/audios/${ivrProperty.audioId}` : ''
 
       ivrTextInput = (
-        <div className='row' key='quota-completed-ivr'>
+        <div className='row' key={`${decamelize(messageKey, '-')}'-ivr'`}>
           <div className='input-field'>
-            <InputWithLabel value={ivrText} label='Voice message' id='quota_voice'>
+            <InputWithLabel value={ivrText} label='Voice message' id={`${decamelize(messageKey, '-')}'-voice'`}>
               <input
                 type='text'
                 onChange={e => this.changeIvrText(e)}
@@ -199,7 +200,7 @@ class QuotaCompletedMsg extends Component {
               <div className='col s12'>
                 <i className='material-icons left'>pie_chart</i>
                 <a className='page-title truncate'>
-                  <span>Quota completed messages</span>
+                  <span>{title} messages</span>
                 </a>
                 <a className='collapse right' href='#!' onClick={(e) => this.handleClick(e)}>
                   <i className='material-icons'>expand_less</i>
@@ -243,4 +244,4 @@ const mapStateToProps = (state) => ({
   questionnaire: state.questionnaire.data
 })
 
-export default connect(mapStateToProps)(QuotaCompletedMsg)
+export default connect(mapStateToProps)(QuestionnaireMsg)
