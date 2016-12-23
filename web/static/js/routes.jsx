@@ -14,6 +14,7 @@ import RespondentIndex from './components/respondents/RespondentIndex'
 import ProjectTitle from './components/projects/ProjectTitle'
 import SurveyTitle from './components/surveys/SurveyTitle'
 import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
+import CollaboratorIndex from './components/collaborators/CollaboratorIndex'
 
 export default (
   <Route path='/' component={App}>
@@ -43,6 +44,10 @@ export default (
           <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} showSavingStatus />
         </Route>
 
+        <Route path='collaborators' >
+          <IndexRoute components={{ body: CollaboratorIndex, tabs: ProjectTabs }} />
+        </Route>
+
       </Route>
     </Route>
 
@@ -61,6 +66,7 @@ export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, s
 export const respondentsCSV = (projectId, surveyId, offset) => `/api/v1${surveyRespondents(projectId, surveyId)}/csv?offset=${offset}`
 export const surveyEdit = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
 export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
+export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const channels = '/channels'

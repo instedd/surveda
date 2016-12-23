@@ -94,4 +94,12 @@ defmodule Ask.ProjectController do
 
     conn |> json(vars)
   end
+
+  def collaborators(conn, %{"project_id" => id}) do
+    project = Project
+    |> Repo.get!(id)
+    |> authorize(conn)
+
+    render(conn, "show.json", project: project)
+  end
 end
