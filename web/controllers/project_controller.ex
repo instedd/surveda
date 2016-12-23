@@ -1,7 +1,7 @@
 defmodule Ask.ProjectController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey}
+  alias Ask.{Project, Survey, ProjectMembership}
 
   def index(conn, _params) do
     projects = conn
@@ -19,10 +19,17 @@ defmodule Ask.ProjectController do
   end
 
   def create(conn, %{"project" => project_params}) do
-    changeset = conn
+    user_changeset = conn
     |> current_user
-    |> build_assoc(:projects)
-    |> Project.changeset(project_params)
+    |> change
+
+    membership_changeset = %ProjectMembership{}
+    |> change
+    |> put_assoc(:user, user_changeset)
+    |> put_change(:level, "owner")
+
+    changeset = Project.changeset(%Project{}, project_params)
+    |> put_assoc(:project_memberships, [membership_changeset])
 
     case Repo.insert(changeset) do
       {:ok, project} ->
