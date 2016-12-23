@@ -8,7 +8,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
-import QuotaCompletedMsg from './QuotaCompletedMsg'
+import QuestionnaireMsg from './QuestionnaireMsg'
 import csvString from 'csv-string'
 
 type State = {
@@ -243,7 +243,10 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           <div className='row'>
-            <QuotaCompletedMsg />
+            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' />
+          </div>
+          <div className='row'>
+            <QuestionnaireMsg title='Error' messageKey='errorMsg' />
           </div>
         </div>
       </div>
