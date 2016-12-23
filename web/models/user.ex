@@ -5,7 +5,6 @@ defmodule Ask.User do
     field :email, :string
     field :encrypted_password, :string
 
-    # has_many :projects, Ask.Project
     has_many :channels, Ask.Channel
     has_many :oauth_tokens, Ask.OAuthToken
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectMembership, on_replace: :delete

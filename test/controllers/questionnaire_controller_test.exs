@@ -118,7 +118,8 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "updates project updated_at when questionnaire is created", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = create_project_for_user(user)
+      project = insert(:project, updated_at: datetime)
+      insert(:project_membership, user: user, project: project, level: "owner")
       post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
 
       project = Project |> Repo.get(project.id)
