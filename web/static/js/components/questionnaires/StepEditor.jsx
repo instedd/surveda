@@ -31,11 +31,7 @@ type State = {
   stepType: string,
   stepPromptSms: string,
   stepPromptIvr: string,
-  stepStore: string,
-  audioErrors: string,
-  audioId: any,
-  audioSource: string,
-  audioUri: string,
+  stepStore: string
 };
 
 class StepEditor extends Component {
