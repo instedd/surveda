@@ -6,7 +6,6 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
 import NumericStepEditor from './NumericStepEditor'
 import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
-import { autocompleteVars } from '../../api.js'
 
 type Props = {
   step: Step,
@@ -25,8 +24,7 @@ type State = {
   stepTitle: string,
   stepType: string,
   stepPromptSms: string,
-  stepPromptIvr: string,
-  stepStore: string
+  stepPromptIvr: string
 };
 
 class StepEditor extends Component {
@@ -38,22 +36,6 @@ class StepEditor extends Component {
     super(props)
     this.state = this.stateFromProps(props)
     this.clickedVarAutocomplete = false
-  }
-
-  stepStoreChange(e, value) {
-    if (this.clickedVarAutocomplete) return
-    if (e) e.preventDefault()
-    this.setState({stepStore: value})
-  }
-
-  stepStoreSubmit(e, value) {
-    if (this.clickedVarAutocomplete) return
-    const varsDropdown = this.refs.varsDropdown
-    $(varsDropdown).hide()
-
-    if (e) e.preventDefault()
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepStore(step.id, value)
   }
 
   componentWillReceiveProps(newProps) {
@@ -68,8 +50,7 @@ class StepEditor extends Component {
       stepTitle: step.title,
       stepType: step.type,
       stepPromptSms: (step.prompt[lang] || {}).sms || '',
-      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || '',
-      stepStore: step.store || ''
+      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || ''
     }
   }
 
@@ -126,45 +107,6 @@ class StepEditor extends Component {
     return (
       editor
     )
-  }
-
-  componentDidMount() {
-    this.setupAutocomplete()
-  }
-
-  componentDidUpdate() {
-    this.setupAutocomplete()
-  }
-
-  setupAutocomplete() {
-    const self = this
-    const varInput = this.refs.varInput
-    const varsDropdown = this.refs.varsDropdown
-    const { project } = this.props
-
-    $(varInput).click(() => $(varsDropdown).show())
-
-    $(varInput).materialize_autocomplete({
-      limit: 100,
-      multiple: {
-        enable: false
-      },
-      dropdown: {
-        el: varsDropdown,
-        itemTemplate: '<li class="ac-item" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
-      },
-      onSelect: (item) => {
-        self.clickedVarAutocomplete = false
-        self.stepStoreChange(null, item.text)
-        self.stepStoreSubmit(null, item.text)
-      },
-      getData: (value, callback) => {
-        autocompleteVars(project.id, value)
-        .then(response => {
-          callback(value, response.map(x => ({id: x, text: x})))
-        })
-      }
-    })
   }
 }
 
