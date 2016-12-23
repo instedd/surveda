@@ -70,12 +70,22 @@ class ChannelIndex extends Component {
               <li className='collection-item icon verboice'>
                 <h5>Verboice</h5>
                 {providerSwitch('verboice')}
+                <span className='channel-description'>
+                  <b>Voice channels</b>
+                  <br/>
+                  Callcentric, SIP client, SIP server, Skype, Twillio
+                </span>
                 <i className='material-icons arrow-right'>chevron_right</i>
               </li>
               <li className='collection-item icon nuntium'>
                 <h5>Nuntium</h5>
                 {providerSwitch('nuntium')}
                 <i className='material-icons arrow-right'>chevron_right</i>
+                <span className='channel-description'>
+                  <b>SMS channels</b>
+                  <br/>
+                  Clickatell, DTAC, I-POP, Multimodem iSms and 8 more
+                </span>
               </li>
             </ul>
           </div>

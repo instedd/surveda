@@ -2,8 +2,9 @@ defmodule Ask.QuestionnaireControllerTest do
   use Ask.ConnCase
   use Ask.DummySteps
   use Ask.TestHelpers
+  import Ask.StepBuilder
 
-  alias Ask.{Project, Questionnaire, JsonSchema}
+  alias Ask.{Project, Questionnaire, Translation, JsonSchema}
   @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
   @invalid_attrs %{steps: []}
 
@@ -181,6 +182,207 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Repo.get!(questionnaire.id)
       |> Repo.preload(:questionnaire_variables)).questionnaire_variables
       assert length(vars) == 4
+    end
+  end
+
+  describe "update translations" do
+    test "creates no translations", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+
+      steps = []
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+
+      assert (Translation |> Repo.all |> length) == 0
+    end
+
+    test "creates translations for one sms prompt", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+            "en" => %{"sms" => "EN 1"},
+            "es" => %{"sms" => "ES 1"},
+          },
+          store: "X",
+          choices: []
+        )
+      ]
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      assert json_response(conn, 200)["data"]["id"]
+
+      translations = Translation |> Repo.all
+      assert (translations |> length) == 1
+
+      t = hd(translations)
+      assert t.project_id == project.id
+      assert t.questionnaire_id == questionnaire.id
+      assert t.mode == "sms"
+      assert t.source_lang == "en"
+      assert t.source_text == "EN 1"
+      assert t.target_lang == "es"
+      assert t.target_text == "ES 1"
+    end
+
+    test "creates and recreates translations for other pieces", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+
+      # Multiple additions
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "es" => %{"sms" => "ES 1"},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2", "audio_source": "tts"}},
+          },
+          store: "X",
+          choices: [
+            choice(value: "", responses: %{
+              "sms" => %{
+                "en" => ["EN 3", "EN 4"],
+                "es" => ["ES 3", "ES 4"],
+                "fr" => [""],
+              },
+            })
+          ]
+        )
+      ]
+      quota_completed_msg = %{
+        "en" => %{"sms" => "EN 5", "ivr" => %{"text" => "EN 6", "audio_source": "tts"}},
+        "es" => %{"sms" => "ES 5"},
+        "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 6", "audio_source": "tts"}},
+      }
+
+      original_conn = conn
+
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire),
+      questionnaire: %{steps: steps, quota_completed_msg: quota_completed_msg}
+      assert json_response(conn, 200)["data"]["id"]
+
+      translations = Translation
+      |> Repo.all
+      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.sort
+
+      expected = [
+        {"sms", "en", "EN 1", "es", "ES 1"},
+        {"ivr", "en", "EN 2", "fr", "FR 2"},
+        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "en", "EN 6", "fr", "FR 6"},
+      ] |> Enum.sort
+
+      assert translations == expected
+
+      # Additions and deletions
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "es" => %{"sms" => ""},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source": "tts"}},
+          },
+          store: "X",
+          choices: [
+            choice(value: "", responses: %{
+              "sms" => %{
+                "en" => ["EN 3", "EN 4"],
+                "es" => ["ES 3", "ES 4"],
+                "fr" => ["FR 3", "FR 4"],
+              },
+            }),
+            choice(value: "", responses: %{
+              "sms" => %{
+                "en" => ["EN 3", "EN 4"],
+                "es" => ["ES 10"],
+                "fr" => ["FR 3", "FR 4"],
+              },
+            })
+          ]
+        )
+      ]
+
+      conn = put original_conn, project_questionnaire_path(conn, :update, project, questionnaire),
+      questionnaire: %{steps: steps, quota_completed_msg: quota_completed_msg}
+      assert json_response(conn, 200)["data"]["id"]
+
+      translations = Translation
+      |> Repo.all
+      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.sort
+
+      expected = [
+        {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
+        {"sms", "en", "EN 3, EN 4", "es", "ES 10"},
+        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
+        {"sms", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "en", "EN 6", "fr", "FR 6"},
+      ] |> Enum.sort
+
+      assert translations == expected
+
+      # Single change (optimization)
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "es" => %{"sms" => ""},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source": "tts"}},
+          },
+          store: "X",
+          choices: [
+            choice(value: "", responses: %{
+              "sms" => %{
+                "en" => ["EN 3", "EN 4"],
+                "es" => ["ES 3", "ES 4"],
+                "fr" => ["FR 3", "FR 4"],
+              },
+            }),
+            choice(value: "", responses: %{
+              "sms" => %{
+                "en" => ["EN 3", "EN 4"],
+                "es" => ["ES 9"],
+                "fr" => ["FR 3", "FR 4"],
+              },
+            })
+          ]
+        )
+      ]
+
+      conn = put original_conn, project_questionnaire_path(conn, :update, project, questionnaire),
+      questionnaire: %{steps: steps, quota_completed_msg: quota_completed_msg}
+      assert json_response(conn, 200)["data"]["id"]
+
+      translations = Translation
+      |> Repo.all
+      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.sort
+
+      expected = [
+        {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
+        {"sms", "en", "EN 3, EN 4", "es", "ES 9"},
+        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
+        {"sms", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "en", "EN 6", "fr", "FR 6"},
+      ] |> Enum.sort
+
+      assert translations == expected
     end
   end
 

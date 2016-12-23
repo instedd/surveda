@@ -17,8 +17,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
-    case actions.SET_SMS_QUOTA_COMPLETED_MSG: return setSmsQuotaCompletedMsg(state, action)
-    case actions.SET_IVR_QUOTA_COMPLETED_MSG: return setIvrQuotaCompletedMsg(state, action)
+    case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
+    case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     default: return steps(state, action)
   }
@@ -52,6 +52,7 @@ const stepsReducer = (state, action, quiz: Questionnaire) => {
   switch (action.type) {
     case actions.ADD_STEP: return addStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
+    case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action, quiz)
@@ -183,6 +184,11 @@ const moveStep = (state, action) => {
   }
 
   return reduce(state, move, [])
+}
+
+const moveStepToTop = (state, action) => {
+  const stepToMove = state[findIndex(state, s => s.id === action.stepId)]
+  return concat([stepToMove], reject(state, s => s.id === action.stepId))
 }
 
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T) {
@@ -432,29 +438,28 @@ const reorderLanguages = (state, action) => {
   }
 }
 
-const setQuotaCompletedMsg = (state, action, mode) => {
-  let quotaCompletedMsg
+const setQuestionnaireMsg = (state, action, mode) => {
+  let questionnaireMsg
   let defaultLanguageMsg
-  quotaCompletedMsg = Object.assign({}, state.quotaCompletedMsg)
-  if (state.quotaCompletedMsg && state.quotaCompletedMsg[state.defaultLanguage]) {
-    defaultLanguageMsg = quotaCompletedMsg[state.defaultLanguage]
+  questionnaireMsg = Object.assign({}, state[action.msgKey])
+  if (state[action.msgKey] && state[action.msgKey][state.defaultLanguage]) {
+    defaultLanguageMsg = questionnaireMsg[state.defaultLanguage]
   } else {
     defaultLanguageMsg = {}
-    quotaCompletedMsg[state.defaultLanguage] = defaultLanguageMsg
+    questionnaireMsg[state.defaultLanguage] = defaultLanguageMsg
   }
   defaultLanguageMsg[mode] = action.msg
-  return ({
-    ...state,
-    quotaCompletedMsg: quotaCompletedMsg
-  })
+  let newState = {...state}
+  newState[action.msgKey] = questionnaireMsg
+  return newState
 }
 
-const setIvrQuotaCompletedMsg = (state, action) => {
-  return setQuotaCompletedMsg(state, action, 'ivr')
+const setIvrQuestionnaireMsg = (state, action) => {
+  return setQuestionnaireMsg(state, action, 'ivr')
 }
 
-const setSmsQuotaCompletedMsg = (state, action) => {
-  return setQuotaCompletedMsg(state, action, 'sms')
+const setSmsQuestionnaireMsg = (state, action) => {
+  return setQuestionnaireMsg(state, action, 'sms')
 }
 
 const addOptionToLanguageSelectionStep = (state, language) => {
@@ -686,18 +691,27 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   const q = questionnaire.quotaCompletedMsg
   if (q) {
-    let defaultSmsCompletedMsg = ((q[defaultLang] || {}).sms || '').trim()
-    addToCsvForTranslation(defaultSmsCompletedMsg, context, lang =>
-      (q[lang] || {}).sms || ''
-    )
+    addMessageToCsvForTranslation(q, defaultLang, context)
+  }
 
-    let defaultIvrCompletedMsg = (((q[defaultLang] || {}).ivr || {}).text || '').trim()
-    addToCsvForTranslation(defaultIvrCompletedMsg, context, lang =>
-      ((q[lang] || {}).ivr || {}).text || ''
-    )
+  const e = questionnaire.errorMsg
+  if (e) {
+    addMessageToCsvForTranslation(e, defaultLang, context)
   }
 
   return rows
+}
+
+const addMessageToCsvForTranslation = (m, defaultLang, context) => {
+  let defaultSmsCompletedMsg = ((m[defaultLang] || {}).sms || '').trim()
+  addToCsvForTranslation(defaultSmsCompletedMsg, context, lang =>
+    (m[lang] || {}).sms || ''
+  )
+
+  let defaultIvrCompletedMsg = (((m[defaultLang] || {}).ivr || {}).text || '').trim()
+  addToCsvForTranslation(defaultIvrCompletedMsg, context, lang =>
+    ((m[lang] || {}).ivr || {}).text || ''
+  )
 }
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
@@ -840,6 +854,9 @@ const uploadCsvForTranslation = (state, action) => {
   newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
   if (state.quotaCompletedMsg) {
     newState.quotaCompletedMsg = translatePrompt(state.quotaCompletedMsg, defaultLanguage, lookup)
+  }
+  if (state.errorMsg) {
+    newState.errorMsg = translatePrompt(state.errorMsg, defaultLanguage, lookup)
   }
   return newState
 }

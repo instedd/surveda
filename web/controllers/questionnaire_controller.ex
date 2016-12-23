@@ -73,6 +73,7 @@ defmodule Ask.QuestionnaireController do
       {:ok, questionnaire} ->
         project |> Project.touch!
         questionnaire |> Questionnaire.recreate_variables!
+        questionnaire |> Ask.Translation.rebuild
         render(conn, "show.json", questionnaire: questionnaire)
       {:error, changeset} ->
         conn

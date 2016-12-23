@@ -1,14 +1,7 @@
 import React, { PropTypes, Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import * as questionnaireActions from '../../actions/questionnaire'
 import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 
 class StepsList extends Component {
-  onMoveStep(sourceStepId, targetStepId) {
-    this.props.questionnaireActions.moveStep(sourceStepId, targetStepId)
-  }
-
   render() {
     const { steps, onClick } = this.props
     if (steps.length != 0) {
@@ -33,12 +26,7 @@ class StepsList extends Component {
 
 StepsList.propTypes = {
   steps: PropTypes.array,
-  onClick: PropTypes.func,
-  questionnaireActions: PropTypes.object
+  onClick: PropTypes.func
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
-})
-
-export default connect(null, mapDispatchToProps)(StepsList)
+export default StepsList

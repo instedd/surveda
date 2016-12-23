@@ -2,14 +2,16 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { EditableTitleLabel, Card, Dropdown, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
+import StepCard from './StepCard'
 import StepNumericEditor from './StepNumericEditor'
 import StepLanguageSelection from './StepLanguageSelection'
 import { createAudio, autocompleteVars } from '../../api.js'
+import DraggableStep from './DraggableStep'
 
 type Props = {
   step: Step,
@@ -21,6 +23,7 @@ type Props = {
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
+  draggable: boolean
 };
 
 type State = {
@@ -187,101 +190,93 @@ class StepEditor extends Component {
     }
 
     let ivrInput = null
-
     if (ivr) {
       // TODO: uncomment line below once error styles are fixed
       let ivrInputErrors = null // errors[`${errorPath}.prompt.ivr.text`]
       ivrInput = <IvrPrompt id='step_editor_sms_prompt' value={this.state.stepPromptIvr} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} audioErrors={this.state.audioErrors} audioSource={this.state.audioSource} audioUri={this.state.audioUri} handleFileUpload={files => this.handleFileUpload(files)} />
     }
 
+    let prompts = <li className='collection-item' key='prompts'>
+      <div className='row'>
+        <div className='col s12'>
+          <h5>Question Prompt</h5>
+        </div>
+      </div>
+      {smsInput}
+      {ivrInput}
+    </li>
+
+    let optionsEditor = <li className='collection-item' key='editor'>
+      <div className='row'>
+        <div className='col s12'>
+          {editor}
+        </div>
+      </div>
+    </li>
+
+    let variableName = <li className='collection-item' key='variable_name'>
+      <div className='row'>
+        <div className='col s12'>
+          Variable name:
+          <div className='input-field inline'>
+            <input
+              type='text'
+              value={this.state.stepStore}
+              onChange={e => this.stepStoreChange(e, e.target.value)}
+              onBlur={e => this.stepStoreSubmit(e, e.target.value)}
+              autoComplete='off'
+              className='autocomplete'
+              ref='varInput'
+            />
+            <ul className='autocomplete-content dropdown-content var-dropdown'
+              ref='varsDropdown'
+              onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
+            />
+          </div>
+        </div>
+      </div>
+    </li>
+
+    let deleteButton = <li className='collection-item' key='delete_button'>
+      <div className='row'>
+        <a href='#!'
+          className='right'
+          onClick={(e) => this.delete(e)}>
+          DELETE
+        </a>
+      </div>
+    </li>
+
+    let items = [prompts, optionsEditor, variableName, deleteButton]
+
+    let icon = null
+    if (this.state.stepType != 'language-selection') {
+      icon = <div className='left'>
+        <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
+          <DropdownItem>
+            <a onClick={e => this.changeStepType('multiple-choice')}>
+              <i className='material-icons left'>list</i>
+              Multiple choice
+              {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
+            </a>
+          </DropdownItem>
+          <DropdownItem>
+            <a onClick={e => this.changeStepType('numeric')}>
+              <i className='material-icons left sharp'>dialpad</i>
+              Numeric
+              {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
+            </a>
+          </DropdownItem>
+        </Dropdown>
+      </div>
+    } else {
+      icon = <i className='material-icons left'>language</i>
+    }
+
     return (
-      <Card key={step.id}>
-        <ul className='collection collection-card'>
-          <li className='collection-item input-field header'>
-            <div className='row'>
-              <div className='col s12'>
-                { this.state.stepType != 'language-selection'
-                ? <div className='left'>
-                  <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
-                    <DropdownItem>
-                      <a onClick={e => this.changeStepType('multiple-choice')}>
-                        <i className='material-icons left'>list</i>
-                            Multiple choice
-                        {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
-                      </a>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <a onClick={e => this.changeStepType('numeric')}>
-                        <i className='material-icons left sharp'>dialpad</i>
-                            Numeric
-                        {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
-                      </a>
-                    </DropdownItem>
-                  </Dropdown>
-                </div>
-                : <i className='material-icons left'>language</i>
-                }
-                <EditableTitleLabel className='editable-field' title={this.state.stepTitle} emptyText='Untitled question' onSubmit={(value) => { this.stepTitleSubmit(value) }} />
-                <a href='#!'
-                  className='collapse right'
-                  onClick={e => {
-                    e.preventDefault()
-                    onCollapse()
-                  }}>
-                  <i className='material-icons'>expand_less</i>
-                </a>
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <div className='col s12'>
-                <h5>Question Prompt</h5>
-              </div>
-            </div>
-            {smsInput}
-            {ivrInput}
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <div className='col s12'>
-                {editor}
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <div className='col s12'>
-                Variable name:
-                <div className='input-field inline'>
-                  <input
-                    type='text'
-                    value={this.state.stepStore}
-                    onChange={e => this.stepStoreChange(e, e.target.value)}
-                    onBlur={e => this.stepStoreSubmit(e, e.target.value)}
-                    autoComplete='off'
-                    className='autocomplete'
-                    ref='varInput'
-                    />
-                  <ul className='autocomplete-content dropdown-content var-dropdown'
-                    ref='varsDropdown'
-                    onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
-                    />
-                </div>
-              </div>
-            </div>
-          </li>
-          <li className='collection-item'>
-            <div className='row'>
-              <a href='#!'
-                className='right'
-                onClick={(e) => this.delete(e)}>
-                DELETE
-              </a>
-            </div>
-          </li>
-        </ul>
-      </Card>
+      <DraggableStep step={step}>
+        <StepCard onCollapse={onCollapse} items={items} icon={icon} step={step} stepTitle={this.state.stepTitle} onTitleSubmit={(value) => { this.stepTitleSubmit(value) }} />
+      </DraggableStep>
     )
   }
 
