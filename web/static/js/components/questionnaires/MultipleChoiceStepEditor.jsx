@@ -39,7 +39,6 @@ class MultipleChoiceStepEditor extends Component {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
-    this.clickedVarAutocomplete = false
   }
 
   componentWillReceiveProps(newProps) {
@@ -56,10 +55,6 @@ class MultipleChoiceStepEditor extends Component {
       stepPromptSms: (step.prompt[lang] || {}).sms || '',
       stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || ''
     }
-  }
-
-  clickedVarAutocompleteCallback(e) {
-    this.clickedVarAutocomplete = true
   }
 
   render() {

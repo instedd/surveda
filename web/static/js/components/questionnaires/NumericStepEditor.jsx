@@ -60,10 +60,6 @@ class NumericStepEditor extends Component {
     }
   }
 
-  clickedVarAutocompleteCallback(e) {
-    this.clickedVarAutocomplete = true
-  }
-
   render() {
     const { step, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete } = this.props
 
