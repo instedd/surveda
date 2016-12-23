@@ -3,7 +3,10 @@ defmodule Ask.Repo.Migrations.RemoveUserIdFromProjects do
 
   def change do
     Ask.Repo.transaction fn ->
-      Ask.Repo.query("ALTER TABLE projects DROP FOREIGN KEY projects_user_id_fkey, DROP COLUMN user_id")
+      Ask.Repo.query!("ALTER TABLE projects DROP FOREIGN KEY projects_user_id_fkey")
+      alter table(:projects) do
+        remove :user_id
+      end
     end
   end
 end

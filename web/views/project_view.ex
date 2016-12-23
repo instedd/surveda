@@ -19,7 +19,6 @@ defmodule Ask.ProjectView do
 
   defp render_one(project) do
     %{id: project.id,
-      # user_id: project.user_id,
       name: project.name,
       updated_at: project.updated_at}
   end
