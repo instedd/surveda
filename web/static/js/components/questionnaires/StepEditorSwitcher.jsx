@@ -4,7 +4,7 @@ import StepEditor from './StepEditor'
 class StepEditorSwitcher extends Component {
 
   render() {
-    const { step, errorPath, onCollapse, onDelete, stepsAfter } = this.props
+    const { step, errorPath, onCollapse, onDelete, stepsBefore, stepsAfter } = this.props
 
     return (
       <StepEditor
@@ -12,7 +12,8 @@ class StepEditorSwitcher extends Component {
         errorPath={errorPath}
         onCollapse={() => onCollapse()}
         onDelete={() => onDelete()}
-        stepsAfter={stepsAfter} />
+        stepsAfter={stepsAfter}
+        stepsBefore={stepsBefore} />
     )
   }
 }
@@ -22,7 +23,8 @@ StepEditorSwitcher.propTypes = {
   errorPath: PropTypes.string.isRequired,
   onCollapse: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  stepsAfter: PropTypes.array.isRequired
+  stepsAfter: PropTypes.array.isRequired,
+  stepsBefore: PropTypes.array.isRequired
 }
 
 export default StepEditorSwitcher
