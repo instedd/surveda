@@ -20,43 +20,9 @@ type Props = {
   stepsBefore: Step[]
 };
 
-type State = {
-  stepTitle: string,
-  stepType: string,
-  stepPromptSms: string,
-  stepPromptIvr: string
-};
-
 class StepEditor extends Component {
   props: Props
-  state: State
   clickedVarAutocomplete: boolean
-
-  constructor(props) {
-    super(props)
-    this.state = this.stateFromProps(props)
-    this.clickedVarAutocomplete = false
-  }
-
-  componentWillReceiveProps(newProps) {
-    this.setState(this.stateFromProps(newProps))
-  }
-
-  stateFromProps(props) {
-    const { step } = props
-    const lang = props.questionnaire.defaultLanguage
-
-    return {
-      stepTitle: step.title,
-      stepType: step.type,
-      stepPromptSms: (step.prompt[lang] || {}).sms || '',
-      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || ''
-    }
-  }
-
-  clickedVarAutocompleteCallback(e) {
-    this.clickedVarAutocomplete = true
-  }
 
   render() {
     const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, project, onDelete } = this.props

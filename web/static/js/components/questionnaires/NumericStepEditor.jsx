@@ -70,36 +70,23 @@ class NumericStepEditor extends Component {
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
-    let editor =
-      <StepNumericEditor
-        questionnaire={questionnaire}
-        step={step}
-        stepsAfter={stepsAfter}
-        stepsBefore={stepsBefore} />
-
-    let prompts = <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} sms={sms} ivr={ivr} />
-
-    let optionsEditor = <li className='collection-item' key='editor'>
-      <div className='row'>
-        <div className='col s12'>
-          {editor}
-        </div>
-      </div>
-    </li>
-
-    let variableName = <StepStoreVariable step={step} />
-
-    let deleteButton = <StepDeleteButton onDelete={onDelete} />
-
-    let icon = <StepTypeSelector stepType={step.type} stepId={step.id} />
-
     return (
       <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} icon={icon} stepId={step.id} stepTitle={this.state.stepTitle} >
-          {prompts}
-          {optionsEditor}
-          {variableName}
-          {deleteButton}
+        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
+          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} sms={sms} ivr={ivr} />
+          <li className='collection-item' key='editor'>
+            <div className='row'>
+              <div className='col s12'>
+                <StepNumericEditor
+                  questionnaire={questionnaire}
+                  step={step}
+                  stepsAfter={stepsAfter}
+                  stepsBefore={stepsBefore} />
+              </div>
+            </div>
+          </li>
+          <StepStoreVariable step={step} />
+          <StepDeleteButton onDelete={onDelete} />
         </StepCard>
       </DraggableStep>
     )

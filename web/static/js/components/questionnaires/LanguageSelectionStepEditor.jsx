@@ -63,27 +63,19 @@ class LanguageSelectionStepEditor extends Component {
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
-    let editor = <StepLanguageSelection step={step} />
-
-    let prompts = <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} sms={sms} ivr={ivr} />
-
-    let optionsEditor = <li className='collection-item' key='editor'>
-      <div className='row'>
-        <div className='col s12'>
-          {editor}
-        </div>
-      </div>
-    </li>
-
-    let icon = <i className='material-icons left'>language</i>
-
     // TODO: Insert hardcoded 'variable' name
 
     return (
       <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} icon={icon} stepId={step.id} stepTitle={this.state.stepTitle} >
-          {prompts}
-          {optionsEditor}
+        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
+          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} sms={sms} ivr={ivr} />
+          <li className='collection-item' key='editor'>
+            <div className='row'>
+              <div className='col s12'>
+                <StepLanguageSelection step={step} />
+              </div>
+            </div>
+          </li>
           Variable name: language
         </StepCard>
       </DraggableStep>
