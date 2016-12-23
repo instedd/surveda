@@ -2,16 +2,11 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Dropdown, DropdownItem } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
-import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
-import SmsPrompt from './SmsPrompt'
-import IvrPrompt from './IvrPrompt'
-import StepCard from './StepCard'
-import StepNumericEditor from './StepNumericEditor'
-import StepLanguageSelection from './StepLanguageSelection'
-import { createAudio, autocompleteVars } from '../../api.js'
-import DraggableStep from './DraggableStep'
+import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
+import NumericStepEditor from './NumericStepEditor'
+import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
+import { autocompleteVars } from '../../api.js'
 
 type Props = {
   step: Step,
@@ -43,11 +38,6 @@ class StepEditor extends Component {
     super(props)
     this.state = this.stateFromProps(props)
     this.clickedVarAutocomplete = false
-  }
-
-  stepTitleChange(e) {
-    e.preventDefault()
-    this.setState({stepTitle: e.target.value})
   }
 
   stepTitleSubmit(value) {
@@ -108,11 +98,6 @@ class StepEditor extends Component {
     this.setState(this.stateFromProps(newProps))
   }
 
-  changeIvrMode(e, mode) {
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: this.state.stepPromptIvr, audioSource: mode})
-  }
-
   stateFromProps(props) {
     const { step } = props
     const lang = props.questionnaire.defaultLanguage
@@ -131,134 +116,56 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, errors, errorPath, stepsAfter, stepsBefore } = this.props
+    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onDelete, onCollapse, project } = this.props
 
-    const sms = questionnaire.modes.indexOf('sms') != -1
-    const ivr = questionnaire.modes.indexOf('ivr') != -1
+    // const sms = questionnaire.modes.indexOf('sms') != -1
+    // const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let editor
     if (step.type == 'multiple-choice') {
       editor =
-        <StepMultipleChoiceEditor
-          questionnaire={questionnaire}
+        <MultipleChoiceStepEditor
           step={step}
-          stepsAfter={stepsAfter}
-          stepsBefore={stepsBefore}
-          sms={sms}
-          ivr={ivr}
+          questionnaireActions={questionnaireActions}
+          onDelete={(e) => this.delete(e)}
+          onCollapse={onCollapse}
+          questionnaire={questionnaire}
+          project={project}
           errors={errors}
-          errorPath={errorPath} />
+          errorPath={errorPath}
+          stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore} />
     } else if (step.type == 'numeric') {
       editor =
-        <StepNumericEditor
-          questionnaire={questionnaire}
+        <NumericStepEditor
           step={step}
+          questionnaireActions={questionnaireActions}
+          onDelete={(e) => this.delete(e)}
+          onCollapse={onCollapse}
+          questionnaire={questionnaire}
+          project={project}
+          errors={errors}
+          errorPath={errorPath}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore} />
     } else if (step.type == 'language-selection') {
-      editor = <StepLanguageSelection step={step} />
+      editor =
+        <LanguageSelectionStepEditor
+          step={step}
+          questionnaireActions={questionnaireActions}
+          onCollapse={onCollapse}
+          questionnaire={questionnaire}
+          project={project}
+          errors={errors}
+          errorPath={errorPath}
+          stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }
 
-    let smsInput = null
-    if (sms) {
-      // TODO: uncomment line below once error styles are fixed
-      let smsInputErrors = null // errors[`${errorPath}.prompt.sms`]
-      smsInput = <SmsPrompt id='step_editor_sms_prompt' value={this.state.stepPromptSms} inputErrors={smsInputErrors} onChange={e => this.stepPromptSmsChange(e)} onBlur={e => this.stepPromptSmsSubmit(e)} />
-    }
-
-    let ivrInput = null
-    if (ivr) {
-      // TODO: uncomment line below once error styles are fixed
-      let ivrInputErrors = null // errors[`${errorPath}.prompt.ivr.text`]
-      ivrInput = <IvrPrompt id='step_editor_ivr_prompt' value={this.state.stepPromptIvr} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} stepId={step.id} ivrPrompt={step.prompt[this.props.questionnaire.defaultLanguage].ivr} />
-    }
-
-    let prompts = <li className='collection-item' key='prompts'>
-      <div className='row'>
-        <div className='col s12'>
-          <h5>Question Prompt</h5>
-        </div>
-      </div>
-      {smsInput}
-      {ivrInput}
-    </li>
-
-    let optionsEditor = <li className='collection-item' key='editor'>
-      <div className='row'>
-        <div className='col s12'>
-          {editor}
-        </div>
-      </div>
-    </li>
-
-    let variableName = <li className='collection-item' key='variable_name'>
-      <div className='row'>
-        <div className='col s12'>
-          Variable name:
-          <div className='input-field inline'>
-            <input
-              type='text'
-              value={this.state.stepStore}
-              onChange={e => this.stepStoreChange(e, e.target.value)}
-              onBlur={e => this.stepStoreSubmit(e, e.target.value)}
-              autoComplete='off'
-              className='autocomplete'
-              ref='varInput'
-            />
-            <ul className='autocomplete-content dropdown-content var-dropdown'
-              ref='varsDropdown'
-              onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
-            />
-          </div>
-        </div>
-      </div>
-    </li>
-
-    let deleteButton = <li className='collection-item' key='delete_button'>
-      <div className='row'>
-        <a href='#!'
-          className='right'
-          onClick={(e) => this.delete(e)}>
-          DELETE
-        </a>
-      </div>
-    </li>
-
-    let icon = null
-    if (this.state.stepType != 'language-selection') {
-      icon = <div className='left'>
-        <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
-          <DropdownItem>
-            <a onClick={e => this.changeStepType('multiple-choice')}>
-              <i className='material-icons left'>list</i>
-              Multiple choice
-              {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
-            </a>
-          </DropdownItem>
-          <DropdownItem>
-            <a onClick={e => this.changeStepType('numeric')}>
-              <i className='material-icons left sharp'>dialpad</i>
-              Numeric
-              {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
-            </a>
-          </DropdownItem>
-        </Dropdown>
-      </div>
-    } else {
-      icon = <i className='material-icons left'>language</i>
-    }
-
     return (
-      <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} icon={icon} step={step} stepTitle={this.state.stepTitle} onTitleSubmit={(value) => { this.stepTitleSubmit(value) }}>
-          {prompts}
-          {optionsEditor}
-          {variableName}
-          {deleteButton}
-        </StepCard>
-      </DraggableStep>
+      editor
     )
   }
 

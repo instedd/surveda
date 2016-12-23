@@ -12,7 +12,7 @@ type State = {
   maxValue: string,
   rangesDelimiters: string,
   ranges: Range[]
-}
+};
 
 class StepNumericEditor extends Component {
   state: State
