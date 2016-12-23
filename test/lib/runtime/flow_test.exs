@@ -57,26 +57,110 @@ defmodule Ask.FlowTest do
     assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
   end
 
-  describe "retry step" do
-    test "retry step (sms)" do
-      {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
-      step = flow |> Flow.step(Flow.Message.reply("x"))
-      assert {:ok, %Flow{}, %{prompts: prompts}} = step
-      assert prompts == [
-        "You have entered an invalid answer",
-        "Do you smoke? Reply 1 for YES, 2 for NO"
-      ]
-    end
+  test "retry step (sms mode)" do
+    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
+    step = flow |> Flow.step(Flow.Message.reply("x"))
+    assert {:ok, %Flow{}, %{prompts: prompts}} = step
+    assert prompts == [
+      "You have entered an invalid answer",
+      "Do you smoke? Reply 1 for YES, 2 for NO"
+    ]
+  end
 
-    test "next step (ivr mode)" do
-      {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
-      step = flow |> Flow.step(Flow.Message.reply("0"))
-      assert {:ok, %Flow{}, %{prompts: prompts}} = step
-      assert prompts == [
-        %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
-        %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
-      ]
-    end
+  test "retry step (ivr mode)" do
+    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
+    step = flow |> Flow.step(Flow.Message.reply("0"))
+    assert {:ok, %Flow{}, %{prompts: prompts}} = step
+    assert prompts == [
+      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
+    ]
+  end
+
+  test "retry step up to 3 times (sms mode)" do
+    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
+    step = flow |> Flow.step(Flow.Message.reply("x"))
+    {:ok, flow, %{prompts: prompts}} = step
+
+    assert flow.retries == 1
+    assert prompts == [
+      "You have entered an invalid answer",
+      "Do you smoke? Reply 1 for YES, 2 for NO"
+    ]
+
+    step = flow |> Flow.step(Flow.Message.reply("x"))
+    {:ok, flow, %{prompts: prompts}} = step
+
+    assert flow.retries == 2
+    assert prompts == [
+      "You have entered an invalid answer",
+      "Do you smoke? Reply 1 for YES, 2 for NO"
+    ]
+
+    step = flow |> Flow.step(Flow.Message.reply("x"))
+
+    assert {:end, _} = step
+  end
+
+  test "retry step 2 times, then valid answer, then retry 3 times (ivr mode)" do
+    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
+    step = flow |> Flow.step(Flow.Message.reply("0"))
+
+    assert {:ok, flow, %{prompts: prompts}} = step
+    assert flow.retries == 1
+    assert prompts == [
+      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
+    ]
+
+    step = flow |> Flow.step(Flow.Message.reply("8"))
+
+    assert {:ok, flow, %{stores: stores, prompts: prompts}} = step
+    assert flow.retries == 0
+    assert stores == %{"Smokes" => "Yes"}
+    assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
+
+    step = flow |> Flow.step(Flow.Message.reply("8"))
+
+    assert {:ok, flow, %{prompts: prompts}} = step
+    assert flow.retries == 1
+    assert prompts == [
+      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
+    ]
+
+    step = flow |> Flow.step(Flow.Message.reply("8"))
+
+    assert {:ok, flow, %{prompts: prompts}} = step
+    assert flow.retries == 2
+    assert prompts == [
+      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
+    ]
+
+    step = flow |> Flow.step(Flow.Message.reply("8"))
+
+    assert {:end, _} = step
+  end
+
+  test "no response is considered an invalid answer and consumes one retry" do
+    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
+    step = flow |> Flow.step(Flow.Message.reply(nil))
+
+    assert {:ok, %Flow{retries: 1}, %{prompts: prompts}} = step
+    assert prompts == [
+      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
+    ]
+  end
+
+  test "* is considered a valid answer and will reset retries" do
+    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
+    step = flow |> Flow.step(Flow.Message.reply(nil))
+    assert {:ok, %Flow{retries: 1}, _} = step
+    step = flow |> Flow.step(Flow.Message.reply("*"))
+    assert {:ok, %Flow{retries: 0}, %{prompts: prompts}} = step
+    assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
   end
 
   test "next step with store, case insensitive, strip space" do
