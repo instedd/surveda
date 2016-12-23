@@ -56,12 +56,6 @@ class StepEditor extends Component {
     this.props.questionnaireActions.changeStepStore(step.id, value)
   }
 
-  delete(e) {
-    e.preventDefault()
-    const { onDelete } = this.props
-    onDelete()
-  }
-
   componentWillReceiveProps(newProps) {
     this.setState(this.stateFromProps(newProps))
   }
@@ -84,7 +78,7 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, project } = this.props
+    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, project, onDelete } = this.props
 
     let editor
     if (step.type == 'multiple-choice') {
@@ -92,7 +86,7 @@ class StepEditor extends Component {
         <MultipleChoiceStepEditor
           step={step}
           questionnaireActions={questionnaireActions}
-          onDelete={(e) => this.delete(e)}
+          onDelete={onDelete}
           onCollapse={onCollapse}
           questionnaire={questionnaire}
           project={project}
@@ -105,7 +99,7 @@ class StepEditor extends Component {
         <NumericStepEditor
           step={step}
           questionnaireActions={questionnaireActions}
-          onDelete={(e) => this.delete(e)}
+          onDelete={onDelete}
           onCollapse={onCollapse}
           questionnaire={questionnaire}
           project={project}

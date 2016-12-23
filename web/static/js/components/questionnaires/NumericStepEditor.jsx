@@ -9,6 +9,7 @@ import StepCard from './StepCard'
 import StepNumericEditor from './StepNumericEditor'
 import { autocompleteVars } from '../../api.js'
 import DraggableStep from './DraggableStep'
+import StepDeleteButton from './StepDeleteButton'
 
 type Props = {
   step: Step,
@@ -125,15 +126,7 @@ class NumericStepEditor extends Component {
       </div>
     </li>
 
-    let deleteButton = <li className='collection-item' key='delete_button'>
-      <div className='row'>
-        <a href='#!'
-          className='right'
-          onClick={onDelete}>
-          DELETE
-        </a>
-      </div>
-    </li>
+    let deleteButton = <StepDeleteButton onDelete={onDelete} />
 
     let icon = <StepTypeSelector stepType={step.type} stepId={step.id} />
 

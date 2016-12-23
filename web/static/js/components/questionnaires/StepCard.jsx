@@ -43,7 +43,7 @@ class StepCard extends Component {
 StepCard.propTypes = {
   icon: PropTypes.object.isRequired,
   stepTitle: PropTypes.string.isRequired,
-  stepId: PropTypes.object.isRequired,
+  stepId: PropTypes.any.isRequired,
   children: PropTypes.node,
   onCollapse: PropTypes.func.isRequired,
   questionnaireActions: PropTypes.any
