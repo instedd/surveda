@@ -4,7 +4,7 @@ import { EditableTitleLabel, Card } from '../ui'
 class StepCard extends Component {
 
   render() {
-    const { onCollapse, step, items, icon, stepTitle, onTitleSubmit } = this.props
+    const { onCollapse, step, children, icon, stepTitle, onTitleSubmit } = this.props
 
     return (
       <Card key={step.id}>
@@ -25,9 +25,7 @@ class StepCard extends Component {
               </div>
             </div>
           </li>
-          { items.map(item =>
-            item
-          )}
+          {children}
         </ul>
       </Card>
     )
@@ -37,9 +35,9 @@ class StepCard extends Component {
 StepCard.propTypes = {
   icon: PropTypes.object.isRequired,
   stepTitle: PropTypes.string.isRequired,
-  items: PropTypes.any.isRequired,
   step: PropTypes.object.isRequired,
   onTitleSubmit: PropTypes.func.isRequired,
+  children: PropTypes.node,
   onCollapse: PropTypes.func.isRequired
 }
 

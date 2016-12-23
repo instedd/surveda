@@ -226,8 +226,6 @@ class StepEditor extends Component {
       </div>
     </li>
 
-    let items = [prompts, optionsEditor, variableName, deleteButton]
-
     let icon = null
     if (this.state.stepType != 'language-selection') {
       icon = <div className='left'>
@@ -254,7 +252,12 @@ class StepEditor extends Component {
 
     return (
       <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} items={items} icon={icon} step={step} stepTitle={this.state.stepTitle} onTitleSubmit={(value) => { this.stepTitleSubmit(value) }} />
+        <StepCard onCollapse={onCollapse} icon={icon} step={step} stepTitle={this.state.stepTitle} onTitleSubmit={(value) => { this.stepTitleSubmit(value) }}>
+          {prompts}
+          {optionsEditor}
+          {variableName}
+          {deleteButton}
+        </StepCard>
       </DraggableStep>
     )
   }
