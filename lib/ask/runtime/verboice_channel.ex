@@ -115,7 +115,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
         case Broker.sync_step(respondent, response) do
           {:prompt, prompt} ->
-            "<Response>#{gather(respondent, prompt)}#{gather(respondent, prompt)}#{gather(respondent, prompt)}</Response>"
+            "<Response>#{gather(respondent, prompt)}</Response>"
           {:end, {:prompt, prompt}} ->
             "<Response>#{say_or_play(prompt)}<Hangup/></Response>"
           :end ->
