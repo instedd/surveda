@@ -40,38 +40,6 @@ class StepEditor extends Component {
     this.clickedVarAutocomplete = false
   }
 
-  stepTitleSubmit(value) {
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepTitle(step.id, value)
-  }
-
-  changeStepType(type) {
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepType(step.id, type)
-  }
-
-  stepPromptSmsChange(e) {
-    e.preventDefault()
-    this.setState({stepPromptSms: e.target.value})
-  }
-
-  stepPromptSmsSubmit(e) {
-    e.preventDefault()
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptSms(step.id, e.target.value)
-  }
-
-  stepPromptIvrChange(e) {
-    e.preventDefault()
-    this.setState({stepPromptIvr: e.target.value})
-  }
-
-  stepPromptIvrSubmit(e) {
-    e.preventDefault()
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
-  }
-
   stepStoreChange(e, value) {
     if (this.clickedVarAutocomplete) return
     if (e) e.preventDefault()
@@ -116,10 +84,7 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onDelete, onCollapse, project } = this.props
-
-    // const sms = questionnaire.modes.indexOf('sms') != -1
-    // const ivr = questionnaire.modes.indexOf('ivr') != -1
+    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, project } = this.props
 
     let editor
     if (step.type == 'multiple-choice') {

@@ -2,7 +2,7 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Dropdown, DropdownItem } from '../ui'
+import StepTypeSelector from './StepTypeSelector'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepPrompts from './StepPrompts'
 import StepCard from './StepCard'
@@ -40,11 +40,6 @@ class NumericStepEditor extends Component {
     super(props)
     this.state = this.stateFromProps(props)
     this.clickedVarAutocomplete = false
-  }
-
-  changeStepType(type) {
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepType(step.id, type)
   }
 
   stepStoreChange(e, value) {
@@ -140,24 +135,7 @@ class NumericStepEditor extends Component {
       </div>
     </li>
 
-    let icon = <div className='left'>
-      <Dropdown className='step-mode' label={this.state.stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
-        <DropdownItem>
-          <a onClick={e => this.changeStepType('multiple-choice')}>
-            <i className='material-icons left'>list</i>
-              Multiple choice
-            {this.state.stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
-          </a>
-        </DropdownItem>
-        <DropdownItem>
-          <a onClick={e => this.changeStepType('numeric')}>
-            <i className='material-icons left sharp'>dialpad</i>
-              Numeric
-            {this.state.stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
-          </a>
-        </DropdownItem>
-      </Dropdown>
-    </div>
+    let icon = <StepTypeSelector stepType={step.type} stepId={step.id} />
 
     return (
       <DraggableStep step={step}>
