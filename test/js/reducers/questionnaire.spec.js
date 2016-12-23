@@ -862,6 +862,7 @@ describe('questionnaire reducer', () => {
         languages: [],
         defaultLanguage: 'en',
         quotaCompletedMsg: null,
+        errorMsg: null,
         steps: [
           {
             type: 'multiple-choice',

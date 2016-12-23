@@ -68,7 +68,24 @@ defmodule Ask.QuestionnaireControllerTest do
         "default_language" => "en",
         "languages" => [],
         "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at),
-        "quota_completed_msg" => nil
+        "quota_completed_msg" => %{
+        "en" => %{
+          "sms" => "Quota completed",
+          "ivr" => %{
+            "audio_source" => "tts",
+            "text" => "Quota completed (ivr)"
+          }
+        }
+      },
+        "error_msg" => %{
+        "en" => %{
+          "sms" => "You have entered an invalid answer",
+          "ivr" => %{
+            "audio_source" => "tts",
+            "text" => "You have entered an invalid answer (ivr)"
+          }
+        }
+      },
       }
     end
 

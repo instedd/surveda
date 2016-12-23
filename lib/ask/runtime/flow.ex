@@ -192,18 +192,10 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
-  defp fetch(:error_msg, flow, _, _language) do
-    # flow.questionnaire.error_msg
-    # |> Map.get(language, %{})
-    # |> Map.get(flow.mode)
-    # TODO Replace this with the proper implementation as soon as we got error_msg in the questionnaire
-    case flow.mode do
-      "sms" -> "You have entered an invalid answer"
-      "ivr" -> %{
-        "audio_source" => "tts",
-        "text" => "You have entered an invalid answer"
-      }
-    end
+  defp fetch(:error_msg, flow, _, language) do
+    flow.questionnaire.error_msg
+    |> Map.get(language, %{})
+    |> Map.get(flow.mode)
   end
 end
 

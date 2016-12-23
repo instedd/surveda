@@ -72,7 +72,7 @@ defmodule Ask.FlowTest do
     step = flow |> Flow.step(Flow.Message.reply("0"))
     assert {:ok, %Flow{}, %{prompts: prompts}} = step
     assert prompts == [
-      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
       %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
     ]
   end
@@ -109,7 +109,7 @@ defmodule Ask.FlowTest do
     assert {:ok, flow, %{prompts: prompts}} = step
     assert flow.retries == 1
     assert prompts == [
-      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
       %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
     ]
 
@@ -125,7 +125,7 @@ defmodule Ask.FlowTest do
     assert {:ok, flow, %{prompts: prompts}} = step
     assert flow.retries == 1
     assert prompts == [
-      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
       %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
     ]
 
@@ -134,7 +134,7 @@ defmodule Ask.FlowTest do
     assert {:ok, flow, %{prompts: prompts}} = step
     assert flow.retries == 2
     assert prompts == [
-      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
       %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
     ]
 
@@ -149,7 +149,7 @@ defmodule Ask.FlowTest do
 
     assert {:ok, %Flow{retries: 1}, %{prompts: prompts}} = step
     assert prompts == [
-      %{"text" => "You have entered an invalid answer", "audio_source" => "tts"},
+      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
       %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
     ]
   end

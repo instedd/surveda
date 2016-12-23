@@ -268,7 +268,7 @@ end
 
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
-    :rejected = Session.sync_step(session, Flow.Message.reply("N"))
+    {:rejected, {:prompt, "Quota completed"}} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "ends when quota is reached at leaf, numeric", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -314,7 +314,7 @@ end
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
-    :rejected = Session.sync_step(session, Flow.Message.reply("25"))
+    {:rejected, {:prompt, "Quota completed"}} = Session.sync_step(session, Flow.Message.reply("25"))
   end
 
   test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -358,7 +358,7 @@ end
     respondent = Respondent |> Repo.get(respondent.id)
 
     {session, _} = Session.start(quiz, respondent, channel)
-    :rejected = Session.sync_step(session, Flow.Message.reply("N"))
+    {:rejected, {:prompt, "Quota completed"}} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "assigns respondent to its bucket", %{quiz: quiz, respondent: respondent, channel: channel} do

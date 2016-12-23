@@ -49,15 +49,24 @@ defmodule Ask.Factory do
       modes: ["sms", "ivr"],
       steps: [],
       default_language: "en",
-      # error_msg: %{
-      #   en: %{
-      #     sms: "You have entered an invalid answer",
-      #     ivr: %{
-      #       audio_source: "tts",
-      #       text: "You have entered an invalid answer"
-      #     }
-      #   }
-      # },
+      quota_completed_msg: %{
+        "en" => %{
+          "sms" => "Quota completed",
+          "ivr" => %{
+            "audio_source" => "tts",
+            "text" => "Quota completed (ivr)"
+          }
+        }
+      },
+      error_msg: %{
+        "en" => %{
+          "sms" => "You have entered an invalid answer",
+          "ivr" => %{
+            "audio_source" => "tts",
+            "text" => "You have entered an invalid answer (ivr)"
+          }
+        }
+      },
       languages: []
     }
   end
