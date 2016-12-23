@@ -1,7 +1,9 @@
 defmodule Ask.Runtime.Flow do
-  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil
+  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0
   alias Ask.{Repo, Questionnaire}
   alias __MODULE__
+
+  @max_retries 2
 
   defmodule Reply do
     defstruct stores: [], prompts: []
@@ -61,7 +63,7 @@ defmodule Ask.Runtime.Flow do
       nil ->
         flow.current_step + 1
       "end" ->
-        length(flow.questionnaire.steps)
+        flow |> end_flow
       next_id ->
         next_step_index =
           flow.questionnaire.steps
@@ -85,6 +87,10 @@ defmodule Ask.Runtime.Flow do
       end
 
     %{flow | current_step: next_step}
+  end
+
+  def end_flow(flow) do
+    length(flow.questionnaire.steps)
   end
 
   defp accept_reply(flow = %Flow{current_step: nil}, :answer) do
@@ -128,13 +134,21 @@ defmodule Ask.Runtime.Flow do
         flow
       end
 
-    flow = flow |> advance_current_step(step, reply_value)
-
     case reply_value do
       nil ->
-        {flow, %Reply{}}
+        if reply == "*" do
+          flow = flow |> advance_current_step(step, reply_value)
+          {%{flow | retries: 0}, %Reply{}}
+        else
+          if flow.retries >=  @max_retries do
+            {%{flow | current_step: flow |> end_flow}, %Reply{}}
+          else
+            {%{flow | retries: flow.retries + 1}, %Reply{prompts: [fetch(:error_msg, flow, step)]}}
+          end
+        end
       reply_value ->
-        {flow, %Reply{stores: %{step["store"] => reply_value}}}
+        flow = flow |> advance_current_step(step, reply_value)
+        {%{flow | retries: 0}, %Reply{stores: %{step["store"] => reply_value}}}
     end
   end
 
@@ -144,9 +158,11 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: [fetch(:prompt, flow, step)]}}
+        {:ok, flow, %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}}
     end
   end
+
+  defp clean_string(nil), do: ""
 
   defp clean_string(string) do
     string |> String.trim |> String.downcase
@@ -174,6 +190,12 @@ defmodule Ask.Runtime.Flow do
       response ->
         response
     end
+  end
+
+  defp fetch(:error_msg, flow, _, language) do
+    flow.questionnaire.error_msg
+    |> Map.get(language, %{})
+    |> Map.get(flow.mode)
   end
 end
 

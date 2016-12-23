@@ -18,7 +18,8 @@ defmodule Ask.QuestionnaireView do
       steps: questionnaire.steps,
       default_language: questionnaire.default_language,
       languages: questionnaire.languages,
-      quota_completed_msg: questionnaire.quota_completed_msg
+      quota_completed_msg: questionnaire.quota_completed_msg,
+      error_msg: questionnaire.error_msg
     }
   end
 end

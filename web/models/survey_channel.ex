@@ -15,5 +15,4 @@ defmodule Ask.SurveyChannel do
     |> foreign_key_constraint(:survey)
     |> foreign_key_constraint(:channel)
   end
-
 end
