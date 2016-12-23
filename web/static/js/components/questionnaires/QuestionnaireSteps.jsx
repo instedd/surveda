@@ -1,5 +1,5 @@
 import React, { PropTypes, Component } from 'react'
-import StepEditorSwitcher from './StepEditorSwitcher'
+import StepEditor from './StepEditor'
 import StepsList from './StepsList'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
@@ -32,7 +32,7 @@ const questionnaireSteps = (steps, current, onSelectStep, onDeselectStep, onDele
     return (
       <div>
         <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
-        <StepEditorSwitcher
+        <StepEditor
           step={currentStep}
           errorPath={`steps[${itemIndex}]`}
           onCollapse={() => onDeselectStep()}

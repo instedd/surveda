@@ -121,44 +121,13 @@ class StepEditor extends Component {
     const { step } = props
     const lang = props.questionnaire.defaultLanguage
 
-    let audioId = null
-    if (step.prompt[lang] && step.prompt[lang].ivr) {
-      let ivrPrompt: AudioPrompt = step.prompt[lang].ivr
-      if (ivrPrompt.audioSource === 'upload') {
-        audioId = ivrPrompt.audioId
-      }
-    }
-
     return {
       stepTitle: step.title,
       stepType: step.type,
       stepPromptSms: (step.prompt[lang] || {}).sms || '',
       stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || '',
-      stepStore: step.store || '',
-      audioId: audioId,
-      audioSource: ((step.prompt[lang] || {}).ivr || {}).audioSource || 'tts',
-      audioUri: (step.prompt[lang] && step.prompt[lang].ivr && step.prompt[lang].ivr.audioId ? `/api/v1/audios/${step.prompt[lang].ivr.audioId}` : ''),
-      audioErrors: ''
+      stepStore: step.store || ''
     }
-  }
-
-  handleFileUpload(files) {
-    const { step } = this.props
-    createAudio(files)
-      .then(response => {
-        this.setState({audioUri: `/api/v1/audios/${response.result}`}, () => {
-          this.props.questionnaireActions.changeStepAudioIdIvr(step.id, response.result)
-          $('audio')[0].load()
-        })
-      })
-      .catch((e) => {
-        e.json()
-         .then((response) => {
-           let errors = (response.errors.data || ['Only mp3 and wav files are allowed.']).join(' ')
-           this.setState({audioErrors: errors})
-           $('#unprocessableEntity').modal('open')
-         })
-      })
   }
 
   clickedVarAutocompleteCallback(e) {
@@ -207,7 +176,7 @@ class StepEditor extends Component {
     if (ivr) {
       // TODO: uncomment line below once error styles are fixed
       let ivrInputErrors = null // errors[`${errorPath}.prompt.ivr.text`]
-      ivrInput = <IvrPrompt id='step_editor_sms_prompt' value={this.state.stepPromptIvr} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} audioErrors={this.state.audioErrors} audioSource={this.state.audioSource} audioUri={this.state.audioUri} handleFileUpload={files => this.handleFileUpload(files)} />
+      ivrInput = <IvrPrompt id='step_editor_ivr_prompt' value={this.state.stepPromptIvr} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} stepId={step.id} ivrPrompt={step.prompt[this.props.questionnaire.defaultLanguage].ivr} />
     }
 
     let prompts = <li className='collection-item' key='prompts'>
