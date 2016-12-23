@@ -67,5 +67,6 @@ export type BaseStep = {
 
 export type SkipOption = {
   id: string,
-  title: string
+  title: string,
+  enabled: boolean
 };

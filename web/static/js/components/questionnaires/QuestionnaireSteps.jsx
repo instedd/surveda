@@ -37,7 +37,8 @@ const questionnaireSteps = (steps, current, onSelectStep, onDeselectStep, onDele
           errorPath={`steps[${itemIndex}]`}
           onCollapse={() => onDeselectStep()}
           onDelete={() => onDeleteStep()}
-          stepsAfter={stepsAfter} />
+          stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore} />
         <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} />
       </div>
     )

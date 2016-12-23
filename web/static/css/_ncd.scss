@@ -968,6 +968,10 @@ i.survey-status {
   }
 }
 
+.invalidValue {
+  color: red;
+  text-decoration: line-through;
+}
 
 .select-wrapper {
   .caret {
@@ -986,6 +990,7 @@ i.survey-status {
       right: 0;
     }
   }
+
   .dropdown-content {
     li {
       span {

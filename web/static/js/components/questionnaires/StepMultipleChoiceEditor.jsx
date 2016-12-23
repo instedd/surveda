@@ -26,7 +26,7 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, step, stepsAfter, sms, ivr, errors, errorPath } = this.props
+    const { questionnaire, step, stepsBefore, stepsAfter, sms, ivr, errors, errorPath } = this.props
     const { choices } = step
 
     return (
@@ -60,6 +60,7 @@ class StepMultipleChoiceEditor extends Component {
                     onDelete={(e) => this.deleteChoice(e, index)}
                     onChoiceChange={this.changeChoice(index)}
                     stepsAfter={stepsAfter}
+                    stepsBefore={stepsBefore}
                     sms={sms}
                     ivr={ivr}
                     errors={errors}
@@ -82,6 +83,7 @@ StepMultipleChoiceEditor.propTypes = {
   actions: PropTypes.object.isRequired,
   questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
+  stepsBefore: PropTypes.array,
   stepsAfter: PropTypes.array,
   sms: PropTypes.bool,
   ivr: PropTypes.bool,

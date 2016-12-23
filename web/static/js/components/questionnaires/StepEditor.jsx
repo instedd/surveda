@@ -23,7 +23,7 @@ type Props = {
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
-  draggable: boolean
+  stepsBefore: Step[]
 };
 
 type State = {
@@ -166,16 +166,30 @@ class StepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, errors, errorPath, stepsAfter } = this.props
+    const { step, onCollapse, questionnaire, errors, errorPath, stepsAfter, stepsBefore } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let editor
     if (step.type == 'multiple-choice') {
-      editor = <StepMultipleChoiceEditor questionnaire={questionnaire} step={step} stepsAfter={stepsAfter} sms={sms} ivr={ivr} errors={errors} errorPath={errorPath} />
+      editor =
+        <StepMultipleChoiceEditor
+          questionnaire={questionnaire}
+          step={step}
+          stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore}
+          sms={sms}
+          ivr={ivr}
+          errors={errors}
+          errorPath={errorPath} />
     } else if (step.type == 'numeric') {
-      editor = <StepNumericEditor questionnaire={questionnaire} step={step} stepsAfter={stepsAfter} />
+      editor =
+        <StepNumericEditor
+          questionnaire={questionnaire}
+          step={step}
+          stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore} />
     } else if (step.type == 'language-selection') {
       editor = <StepLanguageSelection step={step} />
     } else {

@@ -8,6 +8,7 @@ type Props = {
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
+  stepsBefore: Step[],
   stepsAfter: Step[],
   questionnaire: Questionnaire,
   sms: boolean,
@@ -142,7 +143,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepsAfter, sms, ivr, errors, errorPath } = this.props
+    const { onDelete, stepsBefore, stepsAfter, sms, ivr, errors, errorPath } = this.props
 
     let skipLogicInput =
       <td>
@@ -150,6 +151,7 @@ class ChoiceEditor extends Component {
           onChange={skipOption => this.skipLogicChange(skipOption)}
           value={this.state.skipLogic}
           stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore}
           />
       </td>
 

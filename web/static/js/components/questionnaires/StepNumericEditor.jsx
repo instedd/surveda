@@ -93,7 +93,7 @@ class StepNumericEditor extends Component {
   }
 
   render() {
-    const { step, stepsAfter } = this.props
+    const { step, stepsAfter, stepsBefore } = this.props
     const { ranges } = step
 
     let minValue =
@@ -155,6 +155,7 @@ class StepNumericEditor extends Component {
                       onChange={skipOption => this.skipLogicChange(skipOption, index)}
                       value={range.skipLogic}
                       stepsAfter={stepsAfter}
+                      stepsBefore={stepsBefore}
                       />
                   </td>
                 </tr>
@@ -188,7 +189,8 @@ StepNumericEditor.propTypes = {
   rageDelimiters: PropTypes.string,
   questionnaire: PropTypes.object.isRequired,
   step: PropTypes.object.isRequired,
-  stepsAfter: PropTypes.array.isRequired
+  stepsAfter: PropTypes.array.isRequired,
+  stepsBefore: PropTypes.array.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => ({})

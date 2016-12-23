@@ -20,6 +20,7 @@ describe('<SkipLogic/>', () => {
     const wrapper =
       shallow(
         <SkipLogic
+          stepsBefore={[]}
           stepsAfter={[step1, step2]}
           onChange={(value) => {
             lastChange = value
@@ -35,6 +36,25 @@ describe('<SkipLogic/>', () => {
 
     skipTo('', wrapper)
     expect(lastChange).toEqual(null)
+  })
+
+  it('supports current values of missing steps', () => {
+    const step1 = questionnaire.steps[0]
+    const step2 = questionnaire.steps[1]
+
+    const wrapper =
+      shallow(
+        <SkipLogic
+          stepsBefore={[]}
+          stepsAfter={[step1, step2]}
+          onChange={(value) => value}
+          value={null} />
+      )
+
+    expect(wrapper.state()['value']).toEqual(null)
+
+    skipTo('foo', wrapper)
+    expect(wrapper.state()['value']).toEqual('foo')
   })
 })
 
