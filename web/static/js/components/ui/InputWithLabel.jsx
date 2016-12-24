@@ -29,12 +29,9 @@ export class InputWithLabel extends Component {
 
     let errorMessage = null
 
-    // TODO: the error message in a label looks bad. Fix this style problem,
-    // and then uncomment these lines:
-    //
-    // if (errors) {
-    //   errorMessage = errors.join(', ')
-    // }
+    if (errors) {
+      errorMessage = errors.join(', ')
+    }
 
     return (
       <div>

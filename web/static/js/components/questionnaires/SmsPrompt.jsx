@@ -7,6 +7,8 @@ class SmsPrompt extends Component {
   render() {
     const { id, value, inputErrors, onChange, onBlur } = this.props
 
+    const maybeInvalidClass = classNames({'invalid': inputErrors != null && inputErrors.length > 0})
+
     return (
       <div className='row'>
         <div className='col input-field s12'>
@@ -16,8 +18,11 @@ class SmsPrompt extends Component {
               is length='140'
               onChange={e => onChange(e)}
               onBlur={e => onBlur(e)}
-              ref={ref => $(ref).characterCounter()}
-              class={classNames({'invalid': inputErrors})}
+              ref={ref => {
+                $(ref).characterCounter()
+                $(ref).addClass(maybeInvalidClass)
+              }}
+              class={maybeInvalidClass}
               />
           </InputWithLabel>
         </div>
@@ -29,7 +34,7 @@ class SmsPrompt extends Component {
 SmsPrompt.propTypes = {
   id: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
-  inputErrors: PropTypes.bool,
+  inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired
 }

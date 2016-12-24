@@ -885,6 +885,14 @@ i.survey-status {
 
 
 // ------- Forms --------------
+.input-field label {
+  width:100%;
+}
+
+input[type=text].invalid + label:after {
+  margin-top: -20px;
+  font-size: 0.85rem;  
+}
 
 .dropfile {
   @include  transition(border-color ease-in-out .2s);
