@@ -78,14 +78,10 @@ class StepMultipleChoiceEditor extends Component {
               </tbody>
             </table>
           </div>
-          <div className='row'>
-            <div className='col s2 card-action'>
-              <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
-            </div>
+          <div className='card-action'>
+            <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
             { myErrors
-            ? <div className='col s10 card-action-error'>
-              {myErrors}
-            </div>
+            ? <span className='card-error'>{myErrors}</span>
             : null
             }
           </div>
