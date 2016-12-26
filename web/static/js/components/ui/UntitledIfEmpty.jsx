@@ -11,5 +11,5 @@ export const UntitledIfEmpty = ({ text, emptyText = 'Untitled', className }) => 
 UntitledIfEmpty.propTypes = {
   text: PropTypes.string,
   emptyText: PropTypes.string,
-  className: PropTypes.object
+  className: PropTypes.string
 }
