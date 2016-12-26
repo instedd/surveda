@@ -522,7 +522,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toEqual({
-        'steps[0].choices': ['Must have at least two responses']
+        'steps[0].choices': ['You should define at least two response options']
       })
     })
 

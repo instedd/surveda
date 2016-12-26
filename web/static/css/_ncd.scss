@@ -332,15 +332,25 @@ footer {
           }
         }
       }
-    }
+    }    
     .basic-error {
       color: red!important;
     }
   }
+  .card-action-error {
+    padding-bottom:20px;
+    padding-top:20px;
+    padding-left:0px;
+    border-top: solid 1px transparent;
+    color: red
+  }
+
+
 }
 .card-error {
   @extend .red-text, .darken-1;
 }
+
 
 
 // ------- Modal Card ----------

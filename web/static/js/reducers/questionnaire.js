@@ -562,7 +562,7 @@ const validateStep = (path, step, context) => {
 
 const validateChoices = (path, choices: Choice[], context) => {
   if (choices.length < 2) {
-    addError(context, path, 'Must have at least two responses')
+    addError(context, path, 'You should define at least two response options')
   }
 
   for (let i = 0; i < choices.length; i++) {

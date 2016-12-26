@@ -32,6 +32,11 @@ class StepMultipleChoiceEditor extends Component {
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
+    let myErrors = errors[`${errorPath}.choices`]
+    if (myErrors) {
+      myErrors.join(', ')
+    }
+
     return (
       <div>
         <h5>Responses</h5>
@@ -73,8 +78,16 @@ class StepMultipleChoiceEditor extends Component {
               </tbody>
             </table>
           </div>
-          <div className='card-action'>
-            <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
+          <div className='row'>
+            <div className='col s2 card-action'>
+              <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
+            </div>
+            { myErrors
+            ? <div className='col s10 card-action-error'>
+              {myErrors}
+            </div>
+            : null
+            }
           </div>
         </Card>
       </div>
