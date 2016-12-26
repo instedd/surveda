@@ -13,7 +13,7 @@ type Props = {
   connectDropTarget: Function,
   children: any,
   questionnaireActions: any
-}
+};
 
 class DraggableStep extends Component {
   props: Props
