@@ -11,7 +11,7 @@ type Props = {
   questionnaireActions: any
 };
 
-class NumericStepEditor extends Component {
+class StepTypeSelector extends Component {
   props: Props
 
   changeStepType(type) {
@@ -46,4 +46,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(NumericStepEditor)
+export default connect(null, mapDispatchToProps)(StepTypeSelector)
