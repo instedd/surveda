@@ -118,7 +118,7 @@ class IvrPrompt extends Component {
 IvrPrompt.propTypes = {
   id: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
-  inputErrors: PropTypes.bool,
+  inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   changeIvrMode: PropTypes.func.isRequired,
