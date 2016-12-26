@@ -65,6 +65,8 @@ class IvrPrompt extends Component {
   render() {
     const { id, value, inputErrors, onChange, onBlur, changeIvrMode } = this.props
 
+    const maybeInvalidClass = classNames({'validate invalid': inputErrors})
+
     return (
       <div>
         <div className='row'>
@@ -74,7 +76,8 @@ class IvrPrompt extends Component {
                 type='text'
                 onChange={e => onChange(e)}
                 onBlur={e => onBlur(e)}
-                className={classNames({'invalid': inputErrors})}
+                className={maybeInvalidClass}
+                ref={ref => { $(ref).addClass(maybeInvalidClass)}}
               />
             </InputWithLabel>
           </div>

@@ -7,7 +7,9 @@ class SmsPrompt extends Component {
   render() {
     const { id, value, inputErrors, onChange, onBlur } = this.props
 
-    const maybeInvalidClass = classNames({'invalid': inputErrors != null && inputErrors.length > 0})
+    const maybeInvalidClass = classNames({
+      'validate invalid': inputErrors != null && inputErrors.length > 0
+    })
 
     return (
       <div className='row'>

@@ -56,6 +56,39 @@ input[type="checkbox"]:checked + label:before {
   border-color: black;
 }
 
+/* Text inputs */
+
+input:not([type]),
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=url],
+input[type=time],
+input[type=date],
+input[type=datetime],
+input[type=datetime-local],
+input[type=tel],
+input[type=number],
+input[type=search],
+textarea.materialize-textarea {
+
+
+  // Form Message Shared Styles
+  & + label:after {
+    display: block;
+    content: "";
+    font-size: 0.8rem;
+    position: absolute;
+    top: 30px;
+    opacity: 0;
+    transition: .2s opacity ease-out, .2s color ease-out;
+  }
+  & + label.active:after {
+    top: 60px;
+  }
+}
+
+
 // --------- NCD classes ---------------
 
 
@@ -332,7 +365,7 @@ footer {
           }
         }
       }
-    }    
+    }
     .basic-error {
       color: red!important;
       border-bottom: dotted 1px;
@@ -896,14 +929,6 @@ i.survey-status {
 
 
 // ------- Forms --------------
-.input-field label {
-  width:100%;
-}
-
-input[type=text].invalid + label:after {
-  margin-top: -20px;
-  font-size: 0.85rem;  
-}
 
 .dropfile {
   @include  transition(border-color ease-in-out .2s);
