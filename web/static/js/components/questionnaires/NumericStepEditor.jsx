@@ -56,12 +56,16 @@ class NumericStepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete } = this.props
+    const { step, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete, errors, errorPath } = this.props
 
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
-          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} />
+          <StepPrompts
+            stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]}
+            stepId={step.id}
+            errors={errors}
+            errorPath={errorPath} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>

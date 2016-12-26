@@ -64,7 +64,11 @@ class MultipleChoiceStepEditor extends Component {
           icon={
             <StepTypeSelector stepType={step.type} stepId={step.id} />
           } >
-          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} />
+          <StepPrompts
+            stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]}
+            stepId={step.id}
+            errors={errors}
+            errorPath={errorPath} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>

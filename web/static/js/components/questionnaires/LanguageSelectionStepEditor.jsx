@@ -52,12 +52,16 @@ class LanguageSelectionStepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire } = this.props
+    const { step, onCollapse, questionnaire, errors, errorPath } = this.props
 
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
-          <StepPrompts stepPrompt={step.prompt[questionnaire.defaultLanguage]} stepId={step.id} />
+          <StepPrompts
+            stepPrompt={step.prompt[questionnaire.defaultLanguage]}
+            stepId={step.id}
+            errors={errors}
+            errorPath={errorPath} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>

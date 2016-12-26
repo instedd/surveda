@@ -54,22 +54,20 @@ class StepPrompts extends Component {
   }
 
   render() {
-    const { stepId, questionnaire } = this.props
+    const { stepId, questionnaire, errors, errorPath } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let smsInput = null
     if (sms) {
-      // TODO: uncomment line below once error styles are fixed
-      let smsInputErrors = null // errors[`${errorPath}.prompt.sms`]
+      let smsInputErrors = errors[`${errorPath}.prompt.sms`]
       smsInput = <SmsPrompt id='step_editor_sms_prompt' value={this.state.stepPromptSms} inputErrors={smsInputErrors} onChange={e => this.stepPromptSmsChange(e)} onBlur={e => this.stepPromptSmsSubmit(e)} />
     }
 
     let ivrInput = null
     if (ivr) {
-      // TODO: uncomment line below once error styles are fixed
-      let ivrInputErrors = null // errors[`${errorPath}.prompt.ivr.text`]
+      let ivrInputErrors = errors[`${errorPath}.prompt.ivr.text`]
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt' value={this.state.stepPromptIvrText} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} stepId={stepId} ivrPrompt={this.state.stepPromptIvr} />
     }
 
@@ -92,7 +90,9 @@ StepPrompts.propTypes = {
   stepPrompt: PropTypes.object,
   stepId: PropTypes.string.isRequired,
   inputErrors: PropTypes.bool,
-  questionnaire: PropTypes.object
+  questionnaire: PropTypes.object,
+  errors: PropTypes.object,
+  errorPath: PropTypes.string
 }
 
 const mapStateToProps = (state, ownProps) => ({
