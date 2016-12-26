@@ -14,7 +14,7 @@ export class InputWithLabel extends Component {
   }
 
   render() {
-    let { children, id, value, label } = this.props
+    let { children, id, value, label, errors } = this.props
     id = do {
       if (id) {
         id

@@ -69,7 +69,7 @@ class IvrPrompt extends Component {
       <div>
         <div className='row'>
           <div className='col input-field s12'>
-            <InputWithLabel id={id} value={value} label='Voice message' >
+            <InputWithLabel id={id} value={value} label='Voice message' errors={inputErrors} >
               <input
                 type='text'
                 onChange={e => onChange(e)}
