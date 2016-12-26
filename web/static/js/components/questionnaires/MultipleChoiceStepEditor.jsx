@@ -17,7 +17,6 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  project: any,
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
@@ -34,7 +33,6 @@ type State = {
 class MultipleChoiceStepEditor extends Component {
   props: Props
   state: State
-  clickedVarAutocomplete: boolean
 
   constructor(props) {
     super(props)
@@ -94,7 +92,6 @@ class MultipleChoiceStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  project: state.project.data,
   questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors
 })

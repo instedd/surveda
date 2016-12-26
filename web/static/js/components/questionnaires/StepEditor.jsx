@@ -13,7 +13,6 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  project: any,
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
@@ -25,47 +24,30 @@ class StepEditor extends Component {
   clickedVarAutocomplete: boolean
 
   render() {
-    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, project, onDelete } = this.props
+    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, onDelete } = this.props
 
     let editor
+
+    let commonProps = {step, questionnaireActions, onCollapse, questionnaire, errors, errorPath}
+
     if (step.type == 'multiple-choice') {
       editor =
         <MultipleChoiceStepEditor
-          step={step}
-          questionnaireActions={questionnaireActions}
+          {...commonProps}
           onDelete={onDelete}
-          onCollapse={onCollapse}
-          questionnaire={questionnaire}
-          project={project}
-          errors={errors}
-          errorPath={errorPath}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore} />
     } else if (step.type == 'numeric') {
       editor =
         <NumericStepEditor
-          step={step}
-          questionnaireActions={questionnaireActions}
+          {...commonProps}
           onDelete={onDelete}
-          onCollapse={onCollapse}
-          questionnaire={questionnaire}
-          project={project}
-          errors={errors}
-          errorPath={errorPath}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore} />
     } else if (step.type == 'language-selection') {
       editor =
         <LanguageSelectionStepEditor
-          step={step}
-          questionnaireActions={questionnaireActions}
-          onCollapse={onCollapse}
-          questionnaire={questionnaire}
-          project={project}
-          errors={errors}
-          errorPath={errorPath}
-          stepsAfter={stepsAfter}
-          stepsBefore={stepsBefore} />
+          {...commonProps} />
     } else {
       throw new Error(`unknown step type: ${step.type}`)
     }
@@ -77,7 +59,6 @@ class StepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  project: state.project.data,
   questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors
 })

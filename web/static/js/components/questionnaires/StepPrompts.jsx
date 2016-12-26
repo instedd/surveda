@@ -36,7 +36,7 @@ class StepPrompts extends Component {
 
   changeIvrMode(e, mode) {
     const { stepId } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(stepId, {text: this.state.stepPromptIvr, audioSource: mode})
+    this.props.questionnaireActions.changeStepPromptIvr(stepId, {text: this.state.stepPromptIvrText, audioSource: mode})
   }
 
   componentWillReceiveProps(newProps) {
@@ -48,7 +48,7 @@ class StepPrompts extends Component {
 
     return {
       stepPromptSms: (stepPrompt || {}).sms || '',
-      stepPromptIvr: (stepPrompt || {}).ivr,
+      stepPromptIvr: (stepPrompt || {}).ivr || {},
       stepPromptIvrText: ((stepPrompt || {}).ivr || {}).text || ''
     }
   }
@@ -86,7 +86,7 @@ class StepPrompts extends Component {
 
 StepPrompts.propTypes = {
   questionnaireActions: PropTypes.any,
-  stepPrompt: PropTypes.object.isRequired,
+  stepPrompt: PropTypes.object,
   stepId: PropTypes.string.isRequired,
   sms: PropTypes.bool.isRequired,
   ivr: PropTypes.bool.isRequired,

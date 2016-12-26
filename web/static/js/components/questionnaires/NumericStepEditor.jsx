@@ -17,7 +17,6 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  project: any,
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
@@ -28,19 +27,16 @@ type State = {
   stepTitle: string,
   stepType: string,
   stepPromptSms: string,
-  stepPromptIvr: string,
-  stepStore: string
+  stepPromptIvr: string
 };
 
 class NumericStepEditor extends Component {
   props: Props
   state: State
-  clickedVarAutocomplete: boolean
 
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
-    this.clickedVarAutocomplete = false
   }
 
   componentWillReceiveProps(newProps) {
@@ -55,8 +51,7 @@ class NumericStepEditor extends Component {
       stepTitle: step.title,
       stepType: step.type,
       stepPromptSms: (step.prompt[lang] || {}).sms || '',
-      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || '',
-      stepStore: step.store || ''
+      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || ''
     }
   }
 
@@ -90,7 +85,6 @@ class NumericStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  project: state.project.data,
   questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors
 })
