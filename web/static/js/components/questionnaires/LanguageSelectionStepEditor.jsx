@@ -7,6 +7,7 @@ import StepPrompts from './StepPrompts'
 import StepCard from './StepCard'
 import StepLanguageSelection from './StepLanguageSelection'
 import DraggableStep from './DraggableStep'
+import StepStoreVariable from './StepStoreVariable'
 
 type Props = {
   step: Step,
@@ -53,8 +54,6 @@ class LanguageSelectionStepEditor extends Component {
   render() {
     const { step, onCollapse, questionnaire } = this.props
 
-    // TODO: Insert hardcoded 'variable' name
-
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
@@ -66,7 +65,7 @@ class LanguageSelectionStepEditor extends Component {
               </div>
             </div>
           </li>
-          Variable name: language
+          <StepStoreVariable step={step} />
         </StepCard>
       </DraggableStep>
     )

@@ -316,7 +316,7 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     id: uuid.v4(),
     type: 'language-selection',
     title: 'Language selection',
-    store: '',
+    store: 'language',
     prompt: {
       'en': {
         sms: '',
