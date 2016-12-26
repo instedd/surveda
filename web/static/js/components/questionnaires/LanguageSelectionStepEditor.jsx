@@ -53,15 +53,12 @@ class LanguageSelectionStepEditor extends Component {
   render() {
     const { step, onCollapse, questionnaire } = this.props
 
-    const sms = questionnaire.modes.indexOf('sms') != -1
-    const ivr = questionnaire.modes.indexOf('ivr') != -1
-
     // TODO: Insert hardcoded 'variable' name
 
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
-          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} sms={sms} ivr={ivr} />
+          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>

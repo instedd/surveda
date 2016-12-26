@@ -58,16 +58,13 @@ class MultipleChoiceStepEditor extends Component {
   render() {
     const { step, onCollapse, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onDelete } = this.props
 
-    const sms = questionnaire.modes.indexOf('sms') != -1
-    const ivr = questionnaire.modes.indexOf('ivr') != -1
-
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle}
           icon={
             <StepTypeSelector stepType={step.type} stepId={step.id} />
           } >
-          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} sms={sms} ivr={ivr} />
+          <StepPrompts stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]} stepId={step.id} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>
@@ -76,8 +73,6 @@ class MultipleChoiceStepEditor extends Component {
                   step={step}
                   stepsAfter={stepsAfter}
                   stepsBefore={stepsBefore}
-                  sms={sms}
-                  ivr={ivr}
                   errors={errors}
                   errorPath={errorPath} />
               </div>

@@ -54,7 +54,10 @@ class StepPrompts extends Component {
   }
 
   render() {
-    const { sms, ivr, stepId } = this.props
+    const { stepId, questionnaire } = this.props
+
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let smsInput = null
     if (sms) {
@@ -88,13 +91,16 @@ StepPrompts.propTypes = {
   questionnaireActions: PropTypes.any,
   stepPrompt: PropTypes.object,
   stepId: PropTypes.string.isRequired,
-  sms: PropTypes.bool.isRequired,
-  ivr: PropTypes.bool.isRequired,
-  inputErrors: PropTypes.bool
+  inputErrors: PropTypes.bool,
+  questionnaire: PropTypes.object
 }
+
+const mapStateToProps = (state, ownProps) => ({
+  questionnaire: state.questionnaire.data
+})
 
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepPrompts)
+export default connect(mapStateToProps, mapDispatchToProps)(StepPrompts)

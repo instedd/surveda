@@ -12,7 +12,6 @@ type Props = {
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
-  questionnaire: Questionnaire,
   errors: any,
   errorPath: string,
   stepsAfter: Step[],
@@ -24,11 +23,11 @@ class StepEditor extends Component {
   clickedVarAutocomplete: boolean
 
   render() {
-    const { step, questionnaire, errors, errorPath, stepsAfter, stepsBefore, onCollapse, onDelete } = this.props
+    const { step, errors, errorPath, stepsAfter, stepsBefore, onCollapse, onDelete } = this.props
 
     let editor
 
-    let commonProps = {step, questionnaireActions, onCollapse, questionnaire, errors, errorPath}
+    let commonProps = {step, questionnaireActions, onCollapse, errors, errorPath}
 
     if (step.type == 'multiple-choice') {
       editor =
@@ -59,7 +58,6 @@ class StepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors
 })
 
