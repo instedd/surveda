@@ -53,7 +53,6 @@ class IvrPrompt extends Component {
         })
       })
       .catch((e) => {
-        console.log('el error', e)
         e.json()
          .then((response) => {
            let errors = (response.errors.data || ['Only mp3 and wav files are allowed.']).join(' ')
