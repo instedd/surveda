@@ -20,7 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry]]
+                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal]]
   end
 
   # Specifies which paths to compile per environment.
@@ -50,7 +50,9 @@ defmodule Ask.Mixfile do
       {:sentry, "~> 1.0"},
       {:hackney, "~> 1.0"},
       {:tributary, "~> 0.2.1"},
-      {:ex_json_schema, "~> 0.5.2"}
+      {:ex_json_schema, "~> 0.5.2"},
+      {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
+      {:appsignal, "~> 0.9.2"}
    ]
   end
 

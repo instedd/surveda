@@ -74,6 +74,10 @@ config :sentry,
   use_error_logger: true,
   release: version
 
+config :appsignal, :config,
+  name: :ask,
+  env: Mix.env || :dev,
+  revision: version
 
 if File.exists?("#{__DIR__}/local.exs") do
   import_config "#{__DIR__}/local.exs"
