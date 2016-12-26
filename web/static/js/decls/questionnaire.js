@@ -29,7 +29,8 @@ export type MultipleChoiceStep = BaseStep & {
 
 export type LanguageSelectionStep = BaseStep & {
   type: 'language-selection',
-  languageChoices: (?string)[]
+  languageChoices: (?string)[],
+  prompt: LanguagePrompt
 };
 
 export type NumericStep = BaseStep & {

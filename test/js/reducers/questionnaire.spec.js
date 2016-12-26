@@ -688,7 +688,7 @@ describe('questionnaire reducer', () => {
         actions.changeStepPromptIvr(languageSelection.id, {text: 'New language prompt', audioSource: 'tts'})
       ])
       const finalLanguageSelection = finalResultState.data.steps[0]
-      expect(finalLanguageSelection.prompt['es'].ivr).toEqual({text: 'New language prompt', audioSource: 'tts'})
+      expect(finalLanguageSelection.prompt.ivr).toEqual({text: 'New language prompt', audioSource: 'tts'})
     })
 
     it('should add a new language last inside the choices of the language selection step', () => {

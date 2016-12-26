@@ -207,50 +207,68 @@ type ActionChangeStepSmsPrompt = {
 };
 
 const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Questionnaire): Step[] => {
-  return changeStep(state, action.stepId, step => ({
-    ...step,
-    prompt: {
-      ...step.prompt,
-      [quiz.defaultLanguage]: {
-        ...step.prompt[quiz.defaultLanguage],
-        sms: action.newPrompt
+  return changeStep(state, action.stepId, step => {
+    return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+      ...prompt,
+      sms: action.newPrompt
+    }))
+  })
+}
+
+function getStepPrompt(step, language) {
+  if (step.type == 'language-selection') {
+    return step.prompt
+  } else {
+    return step.prompt[language]
+  }
+}
+
+function setStepPrompt<T: Step>(step, language, func: (prompt: Object) => T) {
+  let prompt = getStepPrompt(step, language)
+  console.log('adentro del codigo nuevo')
+  prompt = func(prompt)
+  if (step.type == 'language-selection') {
+    console.log('adentro del language')
+    step = {
+      ...step,
+      prompt
+    }
+  } else {
+    step = {
+      ...step,
+      prompt: {
+        ...step.prompt,
+        [language]: prompt
       }
     }
-  }))
+  }
+  return step
 }
 
 const changeStepIvrPrompt = (state, action, quiz: Questionnaire) => {
-  return changeStep(state, action.stepId, step => ({
-    ...step,
-    prompt: {
-      ...step.prompt,
-      [quiz.defaultLanguage]: {
-        ...step.prompt[quiz.defaultLanguage],
-        ivr: {
-          ...(step.prompt[quiz.defaultLanguage] ? step.prompt[quiz.defaultLanguage].ivr : {}),
-          text: action.newPrompt.text,
-          audioSource: action.newPrompt.audioSource
-        }
+  return changeStep(state, action.stepId, step => {
+    return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+      ...prompt,
+      ivr: {
+        ...prompt.ivr,
+        text: action.newPrompt.text,
+        audioSource: action.newPrompt.audioSource
       }
-    }
-  }))
+    }))
+  })
 }
 
 const changeStepIvrAudioId = (state, action, quiz: Questionnaire) => {
-  return changeStep(state, action.stepId, step => ({
-    ...step,
-    prompt: {
-      ...step.prompt,
-      [quiz.defaultLanguage]: {
-        ...step.prompt[quiz.defaultLanguage],
-        ivr: {
-          ...step.prompt[quiz.defaultLanguage].ivr,
-          audioId: action.newId,
-          audioSource: 'upload'
-        }
+  return changeStep(state, action.stepId, step => {
+    return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+      ...prompt,
+      ivr: {
+        ...prompt.ivr,
+        audioId: action.newId,
+        audioSource: 'upload'
       }
-    }
-  }))
+    }))
+  })
 }
 
 const changeStepTitle = (state, action) => {
@@ -318,12 +336,10 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     title: 'Language selection',
     store: 'language',
     prompt: {
-      'en': {
-        sms: '',
-        ivr: {
-          text: '',
-          audioSource: 'tts'
-        }
+      sms: '',
+      ivr: {
+        text: '',
+        audioSource: 'tts'
       }
     },
     languageChoices: [null, first, second]

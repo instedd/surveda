@@ -23,7 +23,7 @@
         "id": {"type": "string"},
         "type": { "enum": ["multiple-choice", "numeric", "language-selection"] },
         "title": {"type": "string"},
-        "prompt": { "$ref": "#/definitions/prompt"},
+        "prompt": { "oneOf": [{"$ref": "#/definitions/prompt"}, {"$ref": "#/definitions/lang_prompt"}]},
         "store": { "type": "string" },
         "choices": { "$ref": "#/definitions/choices" },
         "language_choices": { "type": "array" },

@@ -12,7 +12,7 @@ import StepDeleteButton from './StepDeleteButton'
 import StepStoreVariable from './StepStoreVariable'
 
 type Props = {
-  step: Step,
+  step: NumericStep,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
