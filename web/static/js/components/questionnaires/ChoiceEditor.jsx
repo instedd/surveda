@@ -199,14 +199,20 @@ class ChoiceEditor extends Component {
         </tr>)
     } else {
       // TODO: these should probably be shown all the time, not only when the values are not empty
-      let responseErrors = this.state.response && this.state.response != '' && errors[`${errorPath}.value`]
+      let responseErrors = errors[`${errorPath}.value`]
       let smsErrors = this.state.sms && this.state.sms != '' && errors[`${errorPath}.sms`]
       let ivrErrors = this.state.ivr && this.state.ivr != '' && errors[`${errorPath}.ivr`]
 
       return (
         <tr>
-          <td onClick={e => this.enterEditMode(e, 'response')} className={classNames({'basic-error': responseErrors})}>
-            <UntitledIfEmpty text={this.state.response} emptyText='No response' />
+          <td onClick={e => this.enterEditMode(e, 'response')}>
+            <UntitledIfEmpty
+              text={this.state.response}
+              emptyText='No response'
+              className={classNames({
+                'basic-error': responseErrors,
+                'tooltip-error': responseErrors
+              })} />
           </td>
           { sms
           ? <td onClick={e => this.enterEditMode(e, 'sms')} className={classNames({'basic-error': smsErrors})}>
