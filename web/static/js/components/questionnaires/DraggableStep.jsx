@@ -25,7 +25,7 @@ class DraggableStep extends Component {
 
     let draggableStyle: any = {
       opacity: isDragging ? 0.0 : 1,
-      cursor: 'move'
+      cursor: draggable ? 'move' : ''
     }
 
     if (isOver) {
