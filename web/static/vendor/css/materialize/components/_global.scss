@@ -500,6 +500,10 @@ td, th{
     margin: 0;
     border-bottom: 1px solid $collection-border-color;
 
+    &.no-separator {
+      border-bottom: none;
+    }
+
     // Avatar Collection
     &.avatar {
       min-height: 84px;

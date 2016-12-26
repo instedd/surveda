@@ -23,7 +23,7 @@ class QuestionnaireClosedStep extends Component {
                 event.preventDefault()
                 onClick(step.id)
               }}>
-                {step.type == 'multiple-choice' ? <i className='material-icons left'>list</i> : step.type == 'numeric' ? <i className='material-icons sharp left'>dialpad</i> : <i className='material-icons left'>language</i>}
+                {step.type == 'multiple-choice' ? <i className='material-icons left'>list</i> : step.type == 'numeric' ? <i className='material-icons sharp left'>dialpad</i> : step.type == 'explanation' ? <i className='material-icons sharp left'>chat_bubble_outline</i> : <i className='material-icons left'>language</i>}
                 <UntitledIfEmpty text={step.title} emptyText='Untitled question' />
                 <i className='material-icons right grey-text'>expand_more</i>
               </a>

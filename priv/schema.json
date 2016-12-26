@@ -21,7 +21,7 @@
     "step": {
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["multiple-choice", "numeric", "language-selection"] },
+        "type": { "enum": ["multiple-choice", "numeric", "language-selection", "explanation"] },
         "title": {"type": "string"},
         "prompt": { "anyOf": [{"$ref": "#/definitions/prompt"}, {"$ref": "#/definitions/lang_prompt"}]},
         "store": { "type": "string" },
@@ -30,7 +30,8 @@
         "min_value": {"type": ["integer", "null"]},
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
-        "ranges": {"$ref": "#/definitions/ranges"}
+        "ranges": {"$ref": "#/definitions/ranges"},
+        "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]

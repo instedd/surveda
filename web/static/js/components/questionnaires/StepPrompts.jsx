@@ -55,7 +55,7 @@ class StepPrompts extends Component {
   }
 
   render() {
-    const { step, questionnaire, errors, errorPath } = this.props
+    const { stepId, questionnaire, errors, errorPath, classes } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -73,7 +73,7 @@ class StepPrompts extends Component {
     }
 
     return (
-      <li className='collection-item' key='prompts'>
+      <li className={`collection-item ${classes}`} key='prompts'>
         <div className='row'>
           <div className='col s12'>
             <h5>Question Prompt</h5>
@@ -92,7 +92,8 @@ StepPrompts.propTypes = {
   inputErrors: PropTypes.bool,
   questionnaire: PropTypes.object,
   errors: PropTypes.object,
-  errorPath: PropTypes.string
+  errorPath: PropTypes.string,
+  classes: PropTypes.string
 }
 
 const mapStateToProps = (state, ownProps) => ({

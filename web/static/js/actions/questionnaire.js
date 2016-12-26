@@ -30,6 +30,7 @@ export const SET_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_SET_QUESTIONNAIRE_MS
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
 export const UPLOAD_CSV_FOR_TRANSLATION = 'UPLOAD_CSV_FOR_TRANSLATION'
+export const CHANGE_EXPLANATION_STEP_SKIP_LOGIC = 'CHANGE_EXPLANATION_STEP_SKIP_LOGIC'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -254,4 +255,10 @@ export const changeRangeSkipLogic = (stepId, skipLogic, rangeIndex) => ({
 export const uploadCsvForTranslation = (csv) => ({
   type: UPLOAD_CSV_FOR_TRANSLATION,
   csv
+})
+
+export const changeExplanationStepSkipLogic = (stepId, skipLogic) => ({
+  type: CHANGE_EXPLANATION_STEP_SKIP_LOGIC,
+  stepId: stepId,
+  skipLogic: skipLogic
 })
