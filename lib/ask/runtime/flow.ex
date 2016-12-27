@@ -174,6 +174,12 @@ defmodule Ask.Runtime.Flow do
       fetch(key, flow, step, flow.questionnaire.default_language)
   end
 
+  defp fetch(:prompt, flow, step = %{"type" => "language-selection"}, _language) do
+    step
+    |> Map.get("prompt", %{})
+    |> Map.get(flow.mode)
+  end
+
   defp fetch(:prompt, flow, step, language) do
     step
     |> Map.get("prompt", %{})

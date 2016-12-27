@@ -280,12 +280,10 @@ defmodule Ask.FlowTest do
       "title" => "Language selection",
       "store" => "",
       "prompt" => %{
-        "en" => %{
-          "sms" => "1 for English, 2 for Spanish",
-          "ivr" => %{
-            "text" => "1 para ingles, 2 para español",
-            "audioSource" => "tts",
-          }
+        "sms" => "1 for English, 2 for Spanish",
+        "ivr" => %{
+          "text" => "1 para ingles, 2 para español",
+          "audioSource" => "tts",
         }
       },
       "language_choices" => [nil, "en", "es"],
