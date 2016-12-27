@@ -8,6 +8,7 @@ import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
+import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -656,7 +657,8 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   // First column is the default lang, then the rest of the langs
   const headers = concat([defaultLang], nonDefaultLangs)
-  let rows = [headers.map(h => `${h}`)]
+  let languageNames = headers.map(h => language.codeToName(h))
+  let rows = [languageNames]
 
   // Keep a record of exported strings to avoid dups
   let exported = {}
@@ -848,6 +850,12 @@ const uploadCsvForTranslation = (state, action) => {
   // {defaultLanguageText -> {otherLanguage -> otherLanguageText}}
   const defaultLanguage = state.defaultLanguage
   const csv = action.csv
+
+  // Replace language names with language codes
+  const languageNames = csv[0]
+  const languageCodes = languageNames.map(name => language.nameToCode(name))
+  csv[0] = languageCodes
+
   const lookup = buildCsvLookup(csv, defaultLanguage)
 
   let newState = {...state}

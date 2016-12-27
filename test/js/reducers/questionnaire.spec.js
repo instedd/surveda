@@ -1096,7 +1096,7 @@ describe('questionnaire reducer', () => {
       const csv = csvForTranslation(state.data)
 
       const expected = [
-        ['en', 'fr', 'es'],
+        ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
         ['No, N, 2', '', 'No, N, 2'],
@@ -1122,7 +1122,7 @@ describe('questionnaire reducer', () => {
       const csv = csvForTranslation(state.data)
 
       const expected = [
-        ['en', 'fr', 'es'],
+        ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
         ['No, N, 2', '', 'No, N, 2'],
@@ -1144,7 +1144,7 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('es'),
         actions.uploadCsvForTranslation(
           [
-            ['en', 'es'],
+            ['English', 'Spanish'],
             ['Do you smoke?', 'Cxu vi fumas?'],
             ['Do you exercise?', 'Cxu vi ekzercas?'],
             ['Yes, Y, 1', 'Jes, J, 1']
@@ -1173,7 +1173,7 @@ describe('questionnaire reducer', () => {
         actions.setIvrQuestionnaireMsg('quotaCompletedMsg', {text: 'Done!', audioSource: 'tts'}),
         actions.uploadCsvForTranslation(
           [
-            ['en', 'es'],
+            ['English', 'Spanish'],
             ['Do you smoke?', 'Cxu vi fumas?'],
             ['Do you exercise?', 'Cxu vi ekzercas?'],
             ['Yes, Y, 1', 'Jes, J, 1'],
