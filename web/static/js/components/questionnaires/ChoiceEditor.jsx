@@ -1,9 +1,8 @@
 // @flow
 import React, { Component } from 'react'
-import { UntitledIfEmpty } from '../ui'
+import { UntitledIfEmpty, Tooltip } from '../ui'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
-import { Tooltip } from '../ui'
 
 type Props = {
   onDelete: Function,
@@ -143,7 +142,7 @@ class ChoiceEditor extends Component {
     })
   }
 
-  maybeTooltip(shouldWrap: any, elem: any, tooltipText: string) {
+  maybeTooltip(shouldWrap: boolean, elem, tooltipText: string) {
     if (shouldWrap) {
       return (
         <Tooltip text={tooltipText} position='bottom' className='error'>
