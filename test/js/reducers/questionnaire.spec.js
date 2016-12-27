@@ -709,6 +709,50 @@ describe('questionnaire reducer', () => {
       expect(finalLanguageSelection.prompt.sms).toEqual('New language prompt')
     })
 
+    it('should update step prompt ivr on a new step', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es'),
+        actions.addStep()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      const finalState = playActionsFromState(resultState, reducer)([
+        actions.changeStepPromptIvr(newStep.id, {text: 'Nuevo prompt', audioSource: 'tts'})]
+      )
+
+      const step = find(finalState.data.steps, s => s.id === newStep.id)
+      expect(step.prompt['es'].ivr).toEqual({text: 'Nuevo prompt', audioSource: 'tts'})
+    })
+
+    it('should update step audioId ivr on a new step', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es'),
+        actions.addStep()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      const finalState = playActionsFromState(resultState, reducer)([
+        actions.changeStepAudioIdIvr(newStep.id, '1234')]
+      )
+
+      const step = find(finalState.data.steps, s => s.id === newStep.id)
+      expect(step.prompt['es'].ivr).toEqual({text: '', audioId: '1234', audioSource: 'upload'})
+    })
+
     it('should add a new language last inside the choices of the language selection step', () => {
       const preState = playActions([
         actions.fetch(1, 1),

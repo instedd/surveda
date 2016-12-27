@@ -224,7 +224,7 @@ function getStepPrompt(step, language) {
 }
 
 function setStepPrompt<T: Step>(step, language, func: (prompt: Object) => T) {
-  let prompt = getStepPrompt(step, language)
+  let prompt = getStepPrompt(step, language) || newStepPrompt()
   prompt = func(prompt)
   if (step.type == 'language-selection') {
     step = {
@@ -336,14 +336,18 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     type: 'language-selection',
     title: 'Language selection',
     store: 'language',
-    prompt: {
-      sms: '',
-      ivr: {
-        text: '',
-        audioSource: 'tts'
-      }
-    },
+    prompt: newStepPrompt(),
     languageChoices: [null, first, second]
+  }
+}
+
+const newStepPrompt = () => {
+  return {
+    sms: '',
+    ivr: {
+      text: '',
+      audioSource: 'tts'
+    }
   }
 }
 
@@ -354,13 +358,7 @@ const newMultipleChoiceStep = () => {
     title: '',
     store: '',
     prompt: {
-      'en': {
-        sms: '',
-        ivr: {
-          text: '',
-          audioSource: 'tts'
-        }
-      }
+      'en': newStepPrompt()
     },
     choices: []
   }

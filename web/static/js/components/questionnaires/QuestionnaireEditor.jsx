@@ -14,7 +14,7 @@ import csvString from 'csv-string'
 type State = {
   addingStep: boolean,
   currentStep: ?Step
-}
+};
 
 class QuestionnaireEditor extends Component {
   state: State
