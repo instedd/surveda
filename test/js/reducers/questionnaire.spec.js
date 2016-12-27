@@ -691,6 +691,24 @@ describe('questionnaire reducer', () => {
       expect(finalLanguageSelection.prompt.ivr).toEqual({text: 'New language prompt', audioSource: 'tts'})
     })
 
+    it('should allow edition of sms message for language selection step', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr')
+      ])
+
+      const languageSelection = resultState.data.steps[0]
+      const finalResultState = playActionsFromState(resultState, reducer)([
+        actions.changeStepPromptSms(languageSelection.id, 'New language prompt')
+      ])
+      const finalLanguageSelection = finalResultState.data.steps[0]
+      expect(finalLanguageSelection.prompt.sms).toEqual('New language prompt')
+    })
+
     it('should add a new language last inside the choices of the language selection step', () => {
       const preState = playActions([
         actions.fetch(1, 1),
