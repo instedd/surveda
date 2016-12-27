@@ -139,6 +139,10 @@ class QuestionnaireEditor extends Component {
 
       let primaryLanguageCode = this.props.questionnaire.defaultLanguage
       let primaryLanguageName = language.codeToName(primaryLanguageCode)
+      if (!primaryLanguageName) {
+        window.Materialize.toast(`Error: primary language name not found for code ${primaryLanguageCode}`, 5000)
+        return
+      }
 
       let headers = csv[0]
       let defaultLanguageIndex = headers.indexOf(primaryLanguageName)
