@@ -16,8 +16,6 @@ defmodule Ask.Repo.Migrations.UpdateMultipleChoiceResponsesInQuestionnaireSteps 
     end
   end
 
-  alias Ask.Repo.Migrations.UpdateMultipleChoiceResponsesInQuestionnaireSteps
-
   def up do
     Questionnaire |> Repo.all |> Enum.each(fn q ->
       steps = case q.steps do
