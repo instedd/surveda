@@ -138,7 +138,7 @@ class QuestionnaireMsg extends Component {
     if (ivr) {
       const ivrProperty = this.getIvr()
       const ivrText = ivrProperty.text || ''
-      const ivrAudioSource = ivrProperty.audioSource
+      const ivrAudioSource = ivrProperty.audioSource || 'tts'
       const ivrAudioUri = ivrProperty.audioId ? `/api/v1/audios/${ivrProperty.audioId}` : ''
 
       ivrTextInput = (

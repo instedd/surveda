@@ -88,7 +88,6 @@ textarea.materialize-textarea {
   }
 }
 
-
 // --------- NCD classes ---------------
 
 
@@ -272,7 +271,12 @@ footer {
   }
 
 }
-
+.back-error {
+  background-color: #ff5722 !important;
+}
+.text-error {
+  color: #ff5722 !important;
+}
 // ------- Card w/Table ----------
 
 .card {
@@ -367,8 +371,22 @@ footer {
       }
     }
     .basic-error {
-      color: red!important;
-      border-bottom: dotted 1px;
+      @extend .text-error;
+      border-bottom: dotted 1px #ff5722 ;
+    }
+    .tooltip-error {
+      position: relative;
+      &:after {
+        content: '';
+        @extend .back-error;
+        display: block;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        top: 5px;
+        right: -28px;
+      }
     }
   }
   .card-action-error {
@@ -385,7 +403,16 @@ footer {
   @extend .red-text, .darken-1;
 }
 
-
+.material-tooltip.error {
+  font-size: .8rem;
+  line-height: 1;
+  padding: 6px 10px;
+  min-height: 16px;
+  border-radius: 4px;
+  .backdrop {
+    @extend .back-error;
+  }
+}
 
 // ------- Modal Card ----------
 

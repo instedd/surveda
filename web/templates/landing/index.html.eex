@@ -124,9 +124,9 @@
             <div class="row">
               <div class="col m9 s12">
                 <ul>
-                  <li><a href="#!">InSTEDD</a></li>
-                  <li><a href="#!">Terms of service</a></li>
-                  <li><a href="#!">Support</a></li>
+                  <li><a href="http://instedd.org">InSTEDD</a></li>
+                  <li><a href="http://instedd.org/terms-of-service/">Terms of service</a></li>
+                  <li><a href="mailto:support@instedd.org?subject=[ask]">Support</a></li>
                 </ul>
               </div>
               <div class="col m2 offset-m1 s12">

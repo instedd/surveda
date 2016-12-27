@@ -11,12 +11,15 @@ export class Tooltip extends Component {
     children: React.PropTypes.node.isRequired,
     position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
     delay: React.PropTypes.number,
-    text: React.PropTypes.string.isRequired
+    text: React.PropTypes.string.isRequired,
+    className: React.PropTypes.string
   }
 
   componentDidMount() {
     const node = ReactDOM.findDOMNode(this.refs.node)
-    $(node).tooltip()
+    const tooltip = $(node).tooltip()[0]
+    const tooltipId = tooltip.getAttribute("data-tooltip-id")
+    $(`#${tooltipId}`).addClass(this.props.className)
   }
 
   componentWillUnmount() {

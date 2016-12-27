@@ -1,6 +1,6 @@
 // @flow
 import React, { Component } from 'react'
-import { UntitledIfEmpty } from '../ui'
+import { UntitledIfEmpty, Tooltip } from '../ui'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined } from '../../step'
@@ -143,6 +143,18 @@ class ChoiceEditor extends Component {
     })
   }
 
+  maybeTooltip(shouldWrap: boolean, elem, tooltipText: string) {
+    if (shouldWrap) {
+      return (
+        <Tooltip text={tooltipText} position='bottom' className='error'>
+          {elem}
+        </Tooltip>
+      )
+    } else {
+      return elem
+    }
+  }
+
   render() {
     const { onDelete, stepsBefore, stepsAfter, sms, ivr, errors, errorPath } = this.props
 
@@ -199,21 +211,24 @@ class ChoiceEditor extends Component {
           </td>
         </tr>)
     } else {
-      // TODO: these should probably be shown all the time, not only when the values are not empty
       let responseErrors = errors[`${errorPath}.value`]
       let smsErrors = this.state.sms && this.state.sms != '' && errors[`${errorPath}.sms`]
       let ivrErrors = this.state.ivr && this.state.ivr != '' && errors[`${errorPath}.ivr`]
 
+      const responseTooltip = (responseErrors || [this.state.response]).join(', ')
+
+      const response =
+        <div>
+          <UntitledIfEmpty
+            text={this.state.response}
+            emptyText='No response'
+            className={classNames({'basic-error tooltip-error': responseErrors})} />
+        </div>
+
       return (
         <tr>
           <td onClick={e => this.enterEditMode(e, 'response')}>
-            <UntitledIfEmpty
-              text={this.state.response}
-              emptyText='No response'
-              className={classNames({
-                'basic-error': responseErrors,
-                'tooltip-error': responseErrors
-              })} />
+            {this.maybeTooltip(responseErrors, response, responseTooltip)}
           </td>
           { sms
           ? <td onClick={e => this.enterEditMode(e, 'sms')} className={classNames({'basic-error': smsErrors})}>

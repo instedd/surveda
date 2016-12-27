@@ -1,10 +1,14 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes, Component } from 'react'
 
-export const UntitledIfEmpty = ({ text, emptyText = 'Untitled', className }) => {
-  if (!text || text.trim() == '') {
-    return <em className={className}>{emptyText}</em>
-  } else {
-    return <span className={className}>{text}</span>
+export class UntitledIfEmpty extends Component {
+  render() {
+    const { text, emptyText = 'Untitled', className } = this.props
+
+    if (!text || text.trim() == '') {
+      return <em className={className}>{emptyText}</em>
+    } else {
+      return <span className={className}>{text}</span>
+    }
   }
 }
 
