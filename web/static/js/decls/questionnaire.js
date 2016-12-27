@@ -22,7 +22,7 @@ export type LanguagePrompt = {
 
 export type Prompt = { [lang: string]: LanguagePrompt };
 
-export type MultipleChoiceStep = BaseStep & {
+export type MultipleChoiceStep = BaseStep & MultilingualStep & {
   type: 'multiple-choice',
   choices: Choice[]
 };
@@ -33,12 +33,12 @@ export type LanguageSelectionStep = BaseStep & {
   prompt: LanguagePrompt
 };
 
-export type NumericStep = BaseStep & {
+export type NumericStep = BaseStep & MultilingualStep & {
   type: 'numeric',
   minValue: ?number,
   maxValue: ?number,
   rangesDelimiters: ?string,
-  ranges: Range[]
+  ranges: Range[],
 };
 
 export type Range = {
@@ -63,8 +63,11 @@ export type BaseStep = {
   id: string,
   title: string,
   store: string,
-  prompt: Prompt
 };
+
+export type MultilingualStep = {
+  prompt: Prompt
+}
 
 export type SkipOption = {
   id: string,

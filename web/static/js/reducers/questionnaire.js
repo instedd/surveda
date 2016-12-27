@@ -48,7 +48,7 @@ const steps = (state, action) => {
   }
 }
 
-const stepsReducer = (state, action, quiz: Questionnaire) => {
+const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
   switch (action.type) {
     case actions.ADD_STEP: return addStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
@@ -225,10 +225,8 @@ function getStepPrompt(step, language) {
 
 function setStepPrompt<T: Step>(step, language, func: (prompt: Object) => T) {
   let prompt = getStepPrompt(step, language)
-  console.log('adentro del codigo nuevo')
   prompt = func(prompt)
   if (step.type == 'language-selection') {
-    console.log('adentro del language')
     step = {
       ...step,
       prompt
@@ -282,7 +280,6 @@ const clearTypeProperties = (step: Step): BaseStep => {
   return {
     id: step.id,
     title: step.title,
-    prompt: step.prompt,
     store: step.store
   }
 }
@@ -292,23 +289,27 @@ const changeStepType = (state, action) => {
     case 'multiple-choice':
       return changeStep(state, action.stepId, step => {
         let baseStep = clearTypeProperties(step)
-        return {
+        let newStep = {
           ...baseStep,
           type: action.stepType,
+          prompt: step.prompt,
           choices: []
         }
+        return newStep
       })
     case 'numeric':
       return changeStep(state, action.stepId, step => {
         let baseStep = clearTypeProperties(step)
-        return {
+        let newStep = {
           ...baseStep,
           type: action.stepType,
+          prompt: step.prompt,
           minValue: null,
           maxValue: null,
           rangesDelimiters: null,
           ranges: [{from: null, to: null, skipLogic: null}]
         }
+        return newStep
       })
     default:
       throw new Error(`unknown step type: ${action.stepType}`)
@@ -877,17 +878,18 @@ const uploadCsvForTranslation = (state, action) => {
   return newState
 }
 
-const translateStep = (step, defaultLanguage, lookup): any => {
+const translateStep = (step, defaultLanguage, lookup): Step => {
   let newStep = {...step}
-  newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
-  if (step.type === 'multiple-choice') {
-    newStep.choices = translateChoices(newStep.choices, defaultLanguage, lookup)
-    return newStep
+  if (step.type !== 'language-selection') {
+    newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
+    if (step.type === 'multiple-choice') {
+      newStep.choices = translateChoices(newStep.choices, defaultLanguage, lookup)
+    }
   }
-  return newStep
+  return ((newStep: any): Step)
 }
 
-const translatePrompt = (prompt, defaultLanguage, lookup) => {
+const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   let defaultLanguagePrompt = prompt[defaultLanguage]
   if (!defaultLanguagePrompt) return prompt
 
