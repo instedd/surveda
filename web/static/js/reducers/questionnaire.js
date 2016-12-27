@@ -8,6 +8,8 @@ import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
+import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
+  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined } from '../step'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -215,34 +217,6 @@ const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Que
   })
 }
 
-function getStepPrompt(step, language) {
-  if (step.type == 'language-selection') {
-    return step.prompt
-  } else {
-    return step.prompt[language]
-  }
-}
-
-function setStepPrompt<T: Step>(step, language, func: (prompt: Object) => T) {
-  let prompt = getStepPrompt(step, language) || newStepPrompt()
-  prompt = func(prompt)
-  if (step.type == 'language-selection') {
-    step = {
-      ...step,
-      prompt
-    }
-  } else {
-    step = {
-      ...step,
-      prompt: {
-        ...step.prompt,
-        [language]: prompt
-      }
-    }
-  }
-  return step
-}
-
 const changeStepIvrPrompt = (state, action, quiz: Questionnaire) => {
   return changeStep(state, action.stepId, step => {
     return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
@@ -338,16 +312,6 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     store: 'language',
     prompt: newStepPrompt(),
     languageChoices: [null, first, second]
-  }
-}
-
-const newStepPrompt = () => {
-  return {
-    sms: '',
-    ivr: {
-      text: '',
-      audioSource: 'tts'
-    }
   }
 }
 
@@ -555,19 +519,15 @@ const validateSteps = (path, steps, context) => {
 }
 
 const validateStep = (path, step, context) => {
-  if (context.sms &&
-      (!step.prompt[context.defaultLanguage] ||
-      !step.prompt[context.defaultLanguage].sms ||
-      isBlank(step.prompt[context.defaultLanguage].sms))) {
+  if (context.sms && getStepPromptSms(step, context.defaultLanguage).length == 0) {
     addError(context, `${path}.prompt.sms`, 'SMS prompt must not be blank')
   }
 
-  if (context.ivr &&
-      step.prompt[context.defaultLanguage] &&
-      step.prompt[context.defaultLanguage].ivr &&
-      step.prompt[context.defaultLanguage].ivr.audioSource == 'tts' &&
-      isBlank(step.prompt[context.defaultLanguage].ivr.text)) {
-    addError(context, `${path}.prompt.ivr.text`, 'Voice prompt must not be blank')
+  if (context.ivr) {
+    let ivr = getStepPromptIvr(step, context.defaultLanguage)
+    if (ivr.audioSource == 'tts' && isBlank(ivr.text)) {
+      addError(context, `${path}.prompt.ivr.text`, 'Voice prompt must not be blank')
+    }
   }
 
   if (step.type === 'multiple-choice') {
@@ -680,24 +640,20 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
   questionnaire.steps.forEach(step => {
     if (step.type !== 'language-selection') {
       // Sms Prompt
-      let defaultSms = ((step.prompt[defaultLang] || {}).sms || '').trim()
-      addToCsvForTranslation(defaultSms, context, lang =>
-        (step.prompt[lang] || {}).sms || ''
-      )
+      let defaultSms = getStepPromptSms(step, defaultLang)
+      addToCsvForTranslation(defaultSms, context, lang => getStepPromptSms(step, lang))
 
       // Ivr Prompt
-      let defaultIvr = (((step.prompt[defaultLang] || {}).ivr || {}).text || '').trim()
-      addToCsvForTranslation(defaultIvr, context, lang =>
-        ((step.prompt[lang] || {}).ivr || {}).text || ''
-      )
+      let defaultIvr = getStepPromptIvrText(step, defaultLang)
+      addToCsvForTranslation(defaultIvr, context, lang => getStepPromptIvrText(step, lang))
 
       // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
       if (step.type === 'multiple-choice') {
         step.choices.forEach(choice => {
           // Response sms
-          const defaultResponseSms = ((choice.responses.sms || {})[defaultLang] || []).join(', ').trim()
+          const defaultResponseSms = getChoiceResponseSmsJoined(choice, defaultLang)
           addToCsvForTranslation(defaultResponseSms, context, lang =>
-            ((choice.responses.sms || {})[lang] || []).join(', ')
+            getChoiceResponseSmsJoined(choice, lang)
           )
         })
       }
@@ -718,15 +674,11 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 }
 
 const addMessageToCsvForTranslation = (m, defaultLang, context) => {
-  let defaultSmsCompletedMsg = ((m[defaultLang] || {}).sms || '').trim()
-  addToCsvForTranslation(defaultSmsCompletedMsg, context, lang =>
-    (m[lang] || {}).sms || ''
-  )
+  let defaultSmsCompletedMsg = getPromptSms(m, defaultLang)
+  addToCsvForTranslation(defaultSmsCompletedMsg, context, lang => getPromptSms(m, lang))
 
-  let defaultIvrCompletedMsg = (((m[defaultLang] || {}).ivr || {}).text || '').trim()
-  addToCsvForTranslation(defaultIvrCompletedMsg, context, lang =>
-    ((m[lang] || {}).ivr || {}).text || ''
-  )
+  let defaultIvrCompletedMsg = getPromptIvrText(m, defaultLang)
+  addToCsvForTranslation(defaultIvrCompletedMsg, context, lang => getPromptIvrText(m, lang))
 }
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
@@ -946,7 +898,7 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
     responses: {...choice.responses}
   }
 
-  const defLangResp = (responses.sms[defaultLanguage] || []).join(', ')
+  const defLangResp = getChoiceResponseSmsJoined(choice, defaultLanguage)
 
   newChoice.responses.sms = processTranslations(defLangResp, newChoice.responses.sms || {}, lookup)
 

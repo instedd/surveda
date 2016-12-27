@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import { UntitledIfEmpty } from '../ui'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
+import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined } from '../../step'
 
 type Props = {
   onDelete: Function,
@@ -80,8 +81,8 @@ class ChoiceEditor extends Component {
 
     return {
       response: choice.value,
-      sms: ((choice.responses.sms || {})[lang] || []).join(', '),
-      ivr: (choice.responses.ivr || []).join(', '),
+      sms: getChoiceResponseSmsJoined(choice, lang),
+      ivr: getChoiceResponseIvrJoined(choice),
       skipLogic: choice.skipLogic
     }
   }

@@ -8,6 +8,7 @@ import StepCard from './StepCard'
 import StepLanguageSelection from './StepLanguageSelection'
 import DraggableStep from './DraggableStep'
 import StepStoreVariable from './StepStoreVariable'
+import { getStepPromptSms, getStepPromptIvrText } from '../../step'
 
 type Props = {
   step: LanguageSelectionStep,
@@ -40,13 +41,13 @@ class LanguageSelectionStepEditor extends Component {
   }
 
   stateFromProps(props) {
-    const { step } = props
+    const { step, questionnaire } = props
 
     return {
       stepTitle: step.title,
       stepType: step.type,
-      stepPromptSms: step.prompt.sms || '',
-      stepPromptIvr: (step.prompt.ivr || {}).text || ''
+      stepPromptSms: getStepPromptSms(step, questionnaire.defaultLanguage),
+      stepPromptIvr: getStepPromptIvrText(step, questionnaire.defaultLanguage)
     }
   }
 
@@ -57,8 +58,7 @@ class LanguageSelectionStepEditor extends Component {
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
           <StepPrompts
-            stepPrompt={step.prompt}
-            stepId={step.id}
+            step={step}
             errors={errors}
             errorPath={errorPath} />
           <li className='collection-item' key='editor'>
