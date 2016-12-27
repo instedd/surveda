@@ -15,6 +15,7 @@ import guisso from './guisso'
 import respondents from './respondents'
 import respondentsCount from './respondentsCount'
 import timezones from './timezones'
+import collaborators from './collaborators'
 
 export default combineReducers({
   authorizations,
@@ -32,5 +33,6 @@ export default combineReducers({
   respondentsCount,
   channels,
   guisso,
-  timezones
+  timezones,
+  collaborators
 })
