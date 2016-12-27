@@ -143,7 +143,7 @@ class ChoiceEditor extends Component {
     })
   }
 
-  maybeTooltip(shouldWrap, elem, tooltipText) {
+  maybeTooltip(shouldWrap: any, elem: any, tooltipText: string) {
     if (shouldWrap) {
       return (
         <Tooltip text={tooltipText} position='bottom' className='error'>
@@ -215,7 +215,7 @@ class ChoiceEditor extends Component {
       let smsErrors = this.state.sms && this.state.sms != '' && errors[`${errorPath}.sms`]
       let ivrErrors = this.state.ivr && this.state.ivr != '' && errors[`${errorPath}.ivr`]
 
-      const responseTooltip = (responseErrors ? responseErrors : [this.state.response]).join(', ')
+      const responseTooltip = (responseErrors || [this.state.response]).join(', ')
 
       const response =
         <div>
@@ -224,7 +224,6 @@ class ChoiceEditor extends Component {
             emptyText='No response'
             className={classNames({'basic-error tooltip-error': responseErrors})} />
         </div>
-
 
       return (
         <tr>
