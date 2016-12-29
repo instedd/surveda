@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { CardTable } from '../ui'
@@ -13,13 +13,15 @@ class CollaboratorIndex extends Component {
   }
 
   render() {
-    const { project, collaborators } = this.props
+    const { collaborators } = this.props
     if (!collaborators) {
       return <div>Loading...</div>
     }
+    const title = `${collaborators.length} ${(collaborators.length == 1) ? ' collaborator' : ' collaborators'}`
+
     return (
       <div>
-        <CardTable title='Collaborators'>
+        <CardTable title={title}>
           <thead>
             <tr>
               <th>Email</th>
@@ -40,6 +42,12 @@ class CollaboratorIndex extends Component {
       </div>
     )
   }
+}
+
+CollaboratorIndex.propTypes = {
+  projectId: PropTypes.string.isRequired,
+  collaborators: PropTypes.array,
+  actions: PropTypes.object.isRequired
 }
 
 const mapDispatchToProps = (dispatch) => ({
