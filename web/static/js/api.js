@@ -96,7 +96,7 @@ const apiPutJSON = (url, schema, body) => {
 }
 
 const apiDelete = (url) => {
-  return apiFetch(url, {method: 'DELETE' })
+  return apiFetch(url, {method: 'DELETE'})
 }
 
 export const fetchProjects = () => {
@@ -241,4 +241,8 @@ export const synchronizeChannels = () => {
 export const autocompleteVars = (projectId, text) => {
   return apiFetch(`projects/${projectId}/autocomplete_vars?text=${escape(text)}`)
   .then(response => response.json())
+}
+
+export const fetchCollaborators = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/collaborators`)
 }

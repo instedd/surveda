@@ -143,4 +143,13 @@ defmodule Ask.ProjectControllerTest do
     assert json_response(conn, 200) == ["Exercises"]
   end
 
+  test "lists collaborators", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    conn = get conn, project_collaborators_path(conn, :collaborators, project.id)
+
+    assert json_response(conn, 200)["data"]["collaborators"] == [
+      %{"email" => user.email, "role" => "owner"}
+    ]
+  end
+
 end

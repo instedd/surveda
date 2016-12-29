@@ -11,6 +11,7 @@ class ProjectTabs extends Component {
       <Tabs id='project_tabs'>
         <TabLink tabId='project_tabs' to={routes.surveyIndex(projectId)}>Surveys</TabLink>
         <TabLink tabId='project_tabs' to={routes.questionnaireIndex(projectId)}>Questionnaires</TabLink>
+        <TabLink tabId='project_tabs' to={routes.collaboratorIndex(projectId)}>Collaborators</TabLink>
       </Tabs>
     )
   }

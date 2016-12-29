@@ -41,6 +41,7 @@ defmodule Ask.Router do
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
+        get "/collaborators", ProjectController, :collaborators, as: :collaborators
       end
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]

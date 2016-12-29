@@ -17,6 +17,16 @@ defmodule Ask.ProjectView do
     render_one(project)
   end
 
+  def render("collaborators.json", %{collaborators: collaborators}) do
+    %{data: %{collaborators: render_many(collaborators, Ask.ProjectView, "collaborator.json", as: :collaborator)}}
+  end
+
+  def render("collaborator.json", %{collaborator: collaborator}) do
+    %{email: collaborator.user.email,
+      role: collaborator.level
+    }
+  end
+
   defp render_one(project) do
     %{id: project.id,
       name: project.name,

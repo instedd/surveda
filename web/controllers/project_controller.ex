@@ -94,4 +94,15 @@ defmodule Ask.ProjectController do
 
     conn |> json(vars)
   end
+
+  def collaborators(conn, %{"project_id" => id}) do
+    memberships = Project
+    |> Repo.get!(id)
+    |> authorize(conn)
+    |> assoc(:project_memberships)
+    |> Repo.all
+    |> Repo.preload(:user)
+
+    render(conn, "collaborators.json", collaborators: memberships)
+  end
 end
