@@ -143,7 +143,7 @@ class ChoiceEditor extends Component {
     })
   }
 
-  maybeTooltip(shouldWrap: boolean, elem, tooltipText: string) {
+  maybeTooltip(shouldWrap: any, elem: any, tooltipText: string) {
     if (shouldWrap) {
       return (
         <Tooltip text={tooltipText} position='bottom' className='error'>
