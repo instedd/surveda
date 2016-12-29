@@ -56,7 +56,6 @@ config :addict,
   user_schema: Ask.User,
   repo: Ask.Repo,
   from_email: "no-reply@example.com", # CHANGE THIS
-  not_logged_in_url: "/landing",
   mail_service: nil
 
 version = case File.read("VERSION") do

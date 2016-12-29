@@ -1,8 +1,8 @@
 defmodule Ask.PageControllerTest do
   use Ask.ConnCase
 
-  test "GET /", %{conn: conn} do
-    conn = get conn, "/"
-    assert redirected_to(conn) =~ "/landing"
+  test "GET /foo", %{conn: conn} do
+    conn = get conn, "/foo"
+    assert redirected_to(conn) =~ "/login?redirect=/foo"
   end
 end

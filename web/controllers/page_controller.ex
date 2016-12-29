@@ -1,10 +1,20 @@
 defmodule Ask.PageController do
   use Ask.Web, :controller
 
-  plug Addict.Plugs.Authenticated when action in [:index]
+  def index(conn, %{"path" => path}) do
+    user = get_session(conn, :current_user)
 
-  def index(conn, _params) do
-    user = User.Helper.current_user(conn)
-    render conn, "index.html", user: user
+    case {path, user} do
+      {[], nil} ->
+        conn
+        |> render("landing.html")
+      {path, nil} ->
+        conn
+        |> redirect(to: "/login?redirect=/#{Enum.join path, "/"}")
+      _ ->
+        conn
+        |> assign(:current_user, user)
+        |> render("index.html", user: user)
+    end
   end
 end

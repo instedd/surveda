@@ -5,7 +5,10 @@ defmodule User.Helper do
   alias Ask.UnauthorizedError
 
   def current_user(conn) do
-    conn.assigns.current_user
+    case conn.assigns do
+      %{current_user: user} -> user
+      _ -> nil
+    end
   end
 
   def authorize(project, conn) do

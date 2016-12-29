@@ -11,7 +11,7 @@ import configureStore from './store/configureStore'
 const store = configureStore()
 const history = syncHistoryWithStore(browserHistory, store)
 
-render(
-  <Root store={store} history={history} />,
-  document.getElementById('root')
-)
+const root = document.getElementById('root')
+if (root) {
+  render(<Root store={store} history={history} />, root)
+}
