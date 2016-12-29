@@ -22,6 +22,7 @@ script:
   - docker-compose run --rm app mix test
   - docker-compose run --rm brunch npm test
   - docker-compose run --rm brunch ./node_modules/brunch/bin/brunch build
+  - docker-compose run --rm brunch sh -c 'apt-get update && apt-get install libelf1 && ./node_modules/.bin/flow check'
 
 deploy:
   skip_cleanup: true

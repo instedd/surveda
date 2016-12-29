@@ -38,5 +38,6 @@ defmodule Ask.Endpoint do
     key: "_ask_key",
     signing_salt: "/wP7KV3P"
 
+  use Appsignal.Phoenix
   plug Ask.Router
 end

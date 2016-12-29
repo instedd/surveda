@@ -1,19 +1,27 @@
 import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import * as questionnaireActions from '../../actions/questionnaire'
 import { EditableTitleLabel, Card } from '../ui'
 
 class StepCard extends Component {
 
+  stepTitleSubmit(value) {
+    const { stepId } = this.props
+    this.props.questionnaireActions.changeStepTitle(stepId, value)
+  }
+
   render() {
-    const { onCollapse, step, items, icon, stepTitle, onTitleSubmit } = this.props
+    const { onCollapse, stepId, children, icon, stepTitle } = this.props
 
     return (
-      <Card key={step.id}>
+      <Card key={stepId}>
         <ul className='collection collection-card'>
           <li className='collection-item input-field header'>
             <div className='row'>
               <div className='col s12'>
                 {icon}
-                <EditableTitleLabel className='editable-field' title={stepTitle} emptyText='Untitled question' onSubmit={value => onTitleSubmit(value)} />
+                <EditableTitleLabel className='editable-field' title={stepTitle} emptyText='Untitled question' onSubmit={value => this.stepTitleSubmit(value)} />
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -25,9 +33,7 @@ class StepCard extends Component {
               </div>
             </div>
           </li>
-          { items.map(item =>
-            item
-          )}
+          {children}
         </ul>
       </Card>
     )
@@ -37,10 +43,14 @@ class StepCard extends Component {
 StepCard.propTypes = {
   icon: PropTypes.object.isRequired,
   stepTitle: PropTypes.string.isRequired,
-  items: PropTypes.any.isRequired,
-  step: PropTypes.object.isRequired,
-  onTitleSubmit: PropTypes.func.isRequired,
-  onCollapse: PropTypes.func.isRequired
+  stepId: PropTypes.any.isRequired,
+  children: PropTypes.node,
+  onCollapse: PropTypes.func.isRequired,
+  questionnaireActions: PropTypes.any
 }
 
-export default StepCard
+const mapDispatchToProps = (dispatch) => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default connect(null, mapDispatchToProps)(StepCard)

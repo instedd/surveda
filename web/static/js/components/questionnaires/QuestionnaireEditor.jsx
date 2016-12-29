@@ -10,6 +10,7 @@ import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
 import csvString from 'csv-string'
+import * as language from '../../language'
 
 type State = {
   addingStep: boolean,
@@ -136,10 +137,17 @@ class QuestionnaireEditor extends Component {
         return
       }
 
+      let primaryLanguageCode = this.props.questionnaire.defaultLanguage
+      let primaryLanguageName = language.codeToName(primaryLanguageCode)
+      if (!primaryLanguageName) {
+        window.Materialize.toast(`Error: primary language name not found for code ${primaryLanguageCode}`, 5000)
+        return
+      }
+
       let headers = csv[0]
-      let defaultLanguageIndex = headers.indexOf(this.props.questionnaire.defaultLanguage)
+      let defaultLanguageIndex = headers.indexOf(primaryLanguageName)
       if (defaultLanguageIndex == -1) {
-        window.Materialize.toast(`Error: CSV doesn't have a header for the primary language '${this.props.questionnaire.defaultLanguage}'`, 5000)
+        window.Materialize.toast(`Error: CSV doesn't have a header for the primary language '${primaryLanguageName}'`, 5000)
         return
       }
 

@@ -1,4 +1,5 @@
 import React, { PropTypes, Component } from 'react'
+import uuid from 'node-uuid'
 import classNames from 'classnames/bind'
 
 export class InputWithLabel extends Component {
@@ -13,7 +14,14 @@ export class InputWithLabel extends Component {
   }
 
   render() {
-    const { children, id, value, label, errors } = this.props
+    let { children, id, value, label, errors } = this.props
+    id = do {
+      if (id) {
+        id
+      } else {
+        uuid.v4()
+      }
+    }
 
     var childrenWithProps = React.Children.map(children, function(child) {
       return React.cloneElement(child, { id: id, value: value })
@@ -21,12 +29,9 @@ export class InputWithLabel extends Component {
 
     let errorMessage = null
 
-    // TODO: the error message in a label looks bad. Fix this style problem,
-    // and then uncomment these lines:
-    //
-    // if (errors) {
-    //   errorMessage = errors.join(', ')
-    // }
+    if (errors) {
+      errorMessage = errors.join(', ')
+    }
 
     return (
       <div>

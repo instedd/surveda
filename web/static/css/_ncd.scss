@@ -56,6 +56,38 @@ input[type="checkbox"]:checked + label:before {
   border-color: black;
 }
 
+/* Text inputs */
+
+input:not([type]),
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=url],
+input[type=time],
+input[type=date],
+input[type=datetime],
+input[type=datetime-local],
+input[type=tel],
+input[type=number],
+input[type=search],
+textarea.materialize-textarea {
+
+
+  // Form Message Shared Styles
+  & + label:after {
+    display: block;
+    content: "";
+    font-size: 0.8rem;
+    position: absolute;
+    top: 30px;
+    opacity: 0;
+    transition: .2s opacity ease-out, .2s color ease-out;
+  }
+  & + label.active:after {
+    top: 60px;
+  }
+}
+
 // --------- NCD classes ---------------
 
 
@@ -239,7 +271,12 @@ footer {
   }
 
 }
-
+.back-error {
+  background-color: #ff5722 !important;
+}
+.text-error {
+  color: #ff5722 !important;
+}
 // ------- Card w/Table ----------
 
 .card {
@@ -334,14 +371,48 @@ footer {
       }
     }
     .basic-error {
-      color: red!important;
+      @extend .text-error;
+      border-bottom: dotted 1px #ff5722 ;
+    }
+    .tooltip-error {
+      position: relative;
+      &:after {
+        content: '';
+        @extend .back-error;
+        display: block;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        top: 5px;
+        right: -28px;
+      }
     }
   }
+  .card-action-error {
+    padding-bottom:20px;
+    padding-top:20px;
+    padding-left:0px;
+    border-top: solid 1px transparent;
+    color: red
+  }
+
+
 }
 .card-error {
   @extend .red-text, .darken-1;
 }
 
+.material-tooltip.error {
+  font-size: .8rem;
+  line-height: 1;
+  padding: 6px 10px;
+  min-height: 16px;
+  border-radius: 4px;
+  .backdrop {
+    @extend .back-error;
+  }
+}
 
 // ------- Modal Card ----------
 

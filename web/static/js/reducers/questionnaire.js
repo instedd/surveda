@@ -8,6 +8,7 @@ import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
+import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -100,10 +101,12 @@ const deleteChoice = (state, action) => {
 }
 
 const changeChoice = (state, action, quiz: Questionnaire) => {
-  let smsValues = action.choiceChange.smsValues
-  let ivrValues = action.choiceChange.ivrValues
+  let response = action.choiceChange.response.trim()
+  let smsValues = action.choiceChange.smsValues.trim()
+  let ivrValues = action.choiceChange.ivrValues.trim()
+
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
-    [smsValues, ivrValues] = autoComplete(state, action.choiceChange.response, quiz)
+    [smsValues, ivrValues] = autoComplete(state, response, quiz)
   }
 
   return changeStep(state, action.stepId, (step) => {
@@ -116,7 +119,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
         ...previousChoices,
         {
           ...choice,
-          value: action.choiceChange.response,
+          value: response,
           responses: {
             ...choice.responses,
             ivr: splitValues(ivrValues),
@@ -213,7 +216,7 @@ const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Que
       ...step.prompt,
       [quiz.defaultLanguage]: {
         ...step.prompt[quiz.defaultLanguage],
-        sms: action.newPrompt
+        sms: action.newPrompt.trim()
       }
     }
   }))
@@ -228,7 +231,7 @@ const changeStepIvrPrompt = (state, action, quiz: Questionnaire) => {
         ...step.prompt[quiz.defaultLanguage],
         ivr: {
           ...(step.prompt[quiz.defaultLanguage] ? step.prompt[quiz.defaultLanguage].ivr : {}),
-          text: action.newPrompt.text,
+          text: action.newPrompt.text.trim(),
           audioSource: action.newPrompt.audioSource
         }
       }
@@ -256,7 +259,7 @@ const changeStepIvrAudioId = (state, action, quiz: Questionnaire) => {
 const changeStepTitle = (state, action) => {
   return changeStep(state, action.stepId, step => ({
     ...step,
-    title: action.newTitle
+    title: action.newTitle.trim()
   }))
 }
 
@@ -300,7 +303,7 @@ const changeStepType = (state, action) => {
 const changeStepStore = (state, action) => {
   return changeStep(state, action.stepId, step => ({
     ...step,
-    store: action.newStore
+    store: action.newStore.trim()
   }))
 }
 
@@ -316,7 +319,7 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     id: uuid.v4(),
     type: 'language-selection',
     title: 'Language selection',
-    store: '',
+    store: 'language',
     prompt: {
       'en': {
         sms: '',
@@ -370,7 +373,7 @@ type ActionChangeName = {
 const changeName = (state: Questionnaire, action: ActionChangeName): Questionnaire => {
   return {
     ...state,
-    name: action.newName
+    name: action.newName.trim()
   }
 }
 
@@ -448,7 +451,16 @@ const setQuestionnaireMsg = (state, action, mode) => {
     defaultLanguageMsg = {}
     questionnaireMsg[state.defaultLanguage] = defaultLanguageMsg
   }
-  defaultLanguageMsg[mode] = action.msg
+
+  let msg = action.msg
+  if (typeof (msg) == 'string') {
+    msg = msg.trim()
+  }
+  if (msg.text) {
+    msg.text = msg.text.trim()
+  }
+
+  defaultLanguageMsg[mode] = msg
   let newState = {...state}
   newState[action.msgKey] = questionnaireMsg
   return newState
@@ -562,7 +574,7 @@ const validateStep = (path, step, context) => {
 
 const validateChoices = (path, choices: Choice[], context) => {
   if (choices.length < 2) {
-    addError(context, path, 'Must have at least two responses')
+    addError(context, path, 'You should define at least two response options')
   }
 
   for (let i = 0; i < choices.length; i++) {
@@ -656,7 +668,8 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
   // First column is the default lang, then the rest of the langs
   const headers = concat([defaultLang], nonDefaultLangs)
-  let rows = [headers.map(h => `${h}`)]
+  let languageNames = headers.map(h => language.codeToName(h))
+  let rows = [languageNames]
 
   // Keep a record of exported strings to avoid dups
   let exported = {}
@@ -848,6 +861,12 @@ const uploadCsvForTranslation = (state, action) => {
   // {defaultLanguageText -> {otherLanguage -> otherLanguageText}}
   const defaultLanguage = state.defaultLanguage
   const csv = action.csv
+
+  // Replace language names with language codes
+  const languageNames = csv[0]
+  const languageCodes = languageNames.map(name => language.nameToCode(name.trim()))
+  csv[0] = languageCodes
+
   const lookup = buildCsvLookup(csv, defaultLanguage)
 
   let newState = {...state}
@@ -959,10 +978,12 @@ const buildCsvLookup = (csv, defaultLanguage) => {
 
   for (let i = 1; i < csv.length; i++) {
     const row = csv[i]
-    const defaultLanguageText = row[defaultLanguageIndex]
+    let defaultLanguageText = row[defaultLanguageIndex]
     if (!defaultLanguageText || defaultLanguageText.trim().length == 0) {
       continue
     }
+
+    defaultLanguageText = defaultLanguageText.trim()
 
     for (let j = 0; j < headers.length; j++) {
       if (j == defaultLanguageIndex) continue
@@ -978,7 +999,7 @@ const buildCsvLookup = (csv, defaultLanguage) => {
         lookup[defaultLanguageText] = {}
       }
 
-      lookup[defaultLanguageText][otherLanguage] = otherLanguageText
+      lookup[defaultLanguageText][otherLanguage] = otherLanguageText.trim()
     }
   }
 

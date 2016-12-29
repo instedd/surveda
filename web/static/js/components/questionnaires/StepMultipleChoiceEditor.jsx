@@ -26,8 +26,16 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, step, stepsBefore, stepsAfter, sms, ivr, errors, errorPath } = this.props
+    const { questionnaire, step, stepsBefore, stepsAfter, errors, errorPath } = this.props
     const { choices } = step
+
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
+
+    let myErrors = errors[`${errorPath}.choices`]
+    if (myErrors) {
+      myErrors.join(', ')
+    }
 
     return (
       <div>
@@ -72,6 +80,10 @@ class StepMultipleChoiceEditor extends Component {
           </div>
           <div className='card-action'>
             <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
+            { myErrors
+            ? <span className='card-error'>{myErrors}</span>
+            : null
+            }
           </div>
         </Card>
       </div>
@@ -85,8 +97,6 @@ StepMultipleChoiceEditor.propTypes = {
   step: PropTypes.object.isRequired,
   stepsBefore: PropTypes.array,
   stepsAfter: PropTypes.array,
-  sms: PropTypes.bool,
-  ivr: PropTypes.bool,
   errors: PropTypes.object.isRequired,
   errorPath: PropTypes.string.isRequired
 }

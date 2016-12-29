@@ -13,7 +13,7 @@ type Props = {
   connectDropTarget: Function,
   children: any,
   questionnaireActions: any
-}
+};
 
 class DraggableStep extends Component {
   props: Props
@@ -25,7 +25,7 @@ class DraggableStep extends Component {
 
     let draggableStyle: any = {
       opacity: isDragging ? 0.0 : 1,
-      cursor: 'move'
+      cursor: draggable ? 'move' : ''
     }
 
     if (isOver) {

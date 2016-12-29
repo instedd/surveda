@@ -63,7 +63,6 @@ defmodule Ask.RespondentController do
     |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
-    |> Repo.preload(:respondents)
 
     by_state = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
@@ -75,7 +74,7 @@ defmodule Ask.RespondentController do
       group_by: fragment("DATE(completed_at)"),
       select: {fragment("DATE(completed_at)"), count("*")})
 
-    total_respondents = length(survey.respondents)
+    total_respondents = survey |> assoc(:respondents) |> Repo.aggregate(:count, :id)
     range = Timex.Interval.new(from: survey.started_at, until: Timex.now)
     respondents_by_date = Enum.map(range, fn datetime -> responded_on(Timex.to_erl(datetime), by_date) end)
 

@@ -116,7 +116,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.changeName('Some other name')
+        actions.changeName('  Some other name  ')
       ])
 
       expect(state.data.name).toEqual('Some other name')
@@ -243,7 +243,7 @@ describe('questionnaire reducer', () => {
       ])
 
       const resultState = playActionsFromState(preState, reducer)([
-        actions.changeStepTitle('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New title')
+        actions.changeStepTitle('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New title  ')
       ])
 
       expect(resultState.data.steps.length).toEqual(preState.data.steps.length)
@@ -258,7 +258,7 @@ describe('questionnaire reducer', () => {
       ])
 
       const resultState = playActionsFromState(preState, reducer)([
-        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New prompt')]
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New prompt  ')]
       )
 
       const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
@@ -272,7 +272,7 @@ describe('questionnaire reducer', () => {
       ])
 
       const resultState = playActionsFromState(preState, reducer)([
-        actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: 'New prompt', audioSource: 'tts'})]
+        actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: '  New prompt  ', audioSource: 'tts'})]
       )
 
       const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
@@ -286,7 +286,7 @@ describe('questionnaire reducer', () => {
       ])
 
       const resultState = playActionsFromState(preState, reducer)([
-        actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 'New store')]
+        actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New store  ')]
       )
 
       const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
@@ -377,7 +377,7 @@ describe('questionnaire reducer', () => {
         ])
 
         const resultState = playActionsFromState(preState, reducer)([
-          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end')
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, '  Maybe  ', '  M,  MB  , 3  ', '  May  ', 'end')
         ])
 
         const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
@@ -522,7 +522,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toEqual({
-        'steps[0].choices': ['Must have at least two responses']
+        'steps[0].choices': ['You should define at least two response options']
       })
     })
 
@@ -1043,16 +1043,16 @@ describe('questionnaire reducer', () => {
         actions.receive(questionnaire)
       ])
 
-      const smsText = 'Thanks for participating in the poll'
-      const ivrText = {text: 'Thank you very much', audioSource: 'tts'}
+      const smsText = '  Thanks for participating in the poll  '
+      const ivrText = {text: '  Thank you very much  ', audioSource: 'tts'}
 
       const resultState = playActionsFromState(preState, reducer)([
         actions.setSmsQuestionnaireMsg('quotaCompletedMsg', smsText),
         actions.setIvrQuestionnaireMsg('quotaCompletedMsg', ivrText)
       ])
 
-      expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual(smsText)
-      expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual(ivrText)
+      expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual(smsText.trim())
+      expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual({text: 'Thank you very much', audioSource: 'tts'})
     })
 
     it('should not modify other mode quota message', () => {
@@ -1096,7 +1096,7 @@ describe('questionnaire reducer', () => {
       const csv = csvForTranslation(state.data)
 
       const expected = [
-        ['en', 'fr', 'es'],
+        ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
         ['No, N, 2', '', 'No, N, 2'],
@@ -1122,7 +1122,7 @@ describe('questionnaire reducer', () => {
       const csv = csvForTranslation(state.data)
 
       const expected = [
-        ['en', 'fr', 'es'],
+        ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
         ['No, N, 2', '', 'No, N, 2'],
@@ -1144,10 +1144,10 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('es'),
         actions.uploadCsvForTranslation(
           [
-            ['en', 'es'],
-            ['Do you smoke?', 'Cxu vi fumas?'],
-            ['Do you exercise?', 'Cxu vi ekzercas?'],
-            ['Yes, Y, 1', 'Jes, J, 1']
+            ['  English  ', '  Spanish  '],
+            ['  Do you smoke?  ', '  Cxu vi fumas?  '],
+            ['  Do you exercise?  ', '  Cxu vi ekzercas?  '],
+            ['  Yes, Y, 1  ', '  Jes, J, 1  ']
           ]
         )
       ])
@@ -1173,7 +1173,7 @@ describe('questionnaire reducer', () => {
         actions.setIvrQuestionnaireMsg('quotaCompletedMsg', {text: 'Done!', audioSource: 'tts'}),
         actions.uploadCsvForTranslation(
           [
-            ['en', 'es'],
+            ['English', 'Spanish'],
             ['Do you smoke?', 'Cxu vi fumas?'],
             ['Do you exercise?', 'Cxu vi ekzercas?'],
             ['Yes, Y, 1', 'Jes, J, 1'],
