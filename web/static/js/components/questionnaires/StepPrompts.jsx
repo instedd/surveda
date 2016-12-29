@@ -4,9 +4,9 @@ import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
+import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText } from '../../step'
 
 class StepPrompts extends Component {
-
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -19,8 +19,8 @@ class StepPrompts extends Component {
 
   stepPromptSmsSubmit(e) {
     e.preventDefault()
-    const { stepId } = this.props
-    this.props.questionnaireActions.changeStepPromptSms(stepId, e.target.value)
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptSms(step.id, e.target.value)
   }
 
   stepPromptIvrChange(e) {
@@ -30,13 +30,13 @@ class StepPrompts extends Component {
 
   stepPromptIvrSubmit(e) {
     e.preventDefault()
-    const { stepId } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(stepId, {text: e.target.value, audioSource: 'tts'})
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
   }
 
   changeIvrMode(e, mode) {
-    const { stepId } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(stepId, {text: this.state.stepPromptIvrText, audioSource: mode})
+    const { step } = this.props
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: this.state.stepPromptIvrText, audioSource: mode})
   }
 
   componentWillReceiveProps(newProps) {
@@ -44,17 +44,18 @@ class StepPrompts extends Component {
   }
 
   stateFromProps(props) {
-    const { stepPrompt } = props
+    const { step, questionnaire } = props
+    const lang = questionnaire.defaultLanguage
 
     return {
-      stepPromptSms: (stepPrompt || {}).sms || '',
-      stepPromptIvr: (stepPrompt || {}).ivr || {},
-      stepPromptIvrText: ((stepPrompt || {}).ivr || {}).text || ''
+      stepPromptSms: getStepPromptSms(step, lang),
+      stepPromptIvr: getStepPromptIvr(step, lang),
+      stepPromptIvrText: getStepPromptIvrText(step, lang)
     }
   }
 
   render() {
-    const { stepId, questionnaire, errors, errorPath } = this.props
+    const { step, questionnaire, errors, errorPath } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -68,7 +69,7 @@ class StepPrompts extends Component {
     let ivrInput = null
     if (ivr) {
       let ivrInputErrors = errors[`${errorPath}.prompt.ivr.text`]
-      ivrInput = <IvrPrompt id='step_editor_ivr_prompt' value={this.state.stepPromptIvrText} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} stepId={stepId} ivrPrompt={this.state.stepPromptIvr} />
+      ivrInput = <IvrPrompt id='step_editor_ivr_prompt' value={this.state.stepPromptIvrText} inputErrors={ivrInputErrors} onChange={e => this.stepPromptIvrChange(e)} onBlur={e => this.stepPromptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} stepId={step.id} ivrPrompt={this.state.stepPromptIvr} />
     }
 
     return (
@@ -87,8 +88,7 @@ class StepPrompts extends Component {
 
 StepPrompts.propTypes = {
   questionnaireActions: PropTypes.any,
-  stepPrompt: PropTypes.object,
-  stepId: PropTypes.string.isRequired,
+  step: PropTypes.object,
   inputErrors: PropTypes.bool,
   questionnaire: PropTypes.object,
   errors: PropTypes.object,
