@@ -8,7 +8,7 @@ type Props = {
   onChange: Function,
   stepsBefore: Step[],
   stepsAfter: Step[],
-  label: ?string
+  label?: string
 };
 
 type State = {

@@ -6,7 +6,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { autocompleteVars } from '../../api.js'
 
 type Props = {
-  step: Step,
+  step: StoreStep & BaseStep,
   questionnaireActions: any,
   project: any,
 };

@@ -255,21 +255,14 @@ const changeStepTitle = (state, action) => {
   }))
 }
 
-const clearTypeProperties = (step: Step): BaseStep => {
-  return {
-    id: step.id,
-    title: step.title,
-    store: step.store
-  }
-}
-
 const changeStepType = (state, action) => {
   switch (action.stepType) {
     case 'multiple-choice':
       return changeStep(state, action.stepId, step => {
-        let baseStep = clearTypeProperties(step)
         let newStep = {
-          ...baseStep,
+          id: step.id,
+          title: step.title,
+          store: step.store,
           type: action.stepType,
           prompt: step.prompt,
           choices: []
@@ -278,9 +271,10 @@ const changeStepType = (state, action) => {
       })
     case 'numeric':
       return changeStep(state, action.stepId, step => {
-        let baseStep = clearTypeProperties(step)
         let newStep = {
-          ...baseStep,
+          id: step.id,
+          title: step.title,
+          store: step.store,
           type: action.stepType,
           prompt: step.prompt,
           minValue: null,
@@ -292,12 +286,14 @@ const changeStepType = (state, action) => {
       })
     case 'explanation':
       return changeStep(state, action.stepId, step => {
-        let baseStep = clearTypeProperties(step)
-        return {
-          ...baseStep,
+        let newStep = {
+          id: step.id,
           type: action.stepType,
+          title: step.title,
+          prompt: step.prompt,
           skipLogic: null
         }
+        return newStep
       })
     default:
       throw new Error(`unknown step type: ${action.stepType}`)

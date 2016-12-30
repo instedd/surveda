@@ -11,7 +11,7 @@ import StepDeleteButton from './StepDeleteButton'
 import SkipLogic from './SkipLogic'
 
 type Props = {
-  step: Step,
+  step: ExplanationStep,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
@@ -26,7 +26,8 @@ type State = {
   stepTitle: string,
   stepType: string,
   stepPromptSms: string,
-  stepPromptIvr: string
+  stepPromptIvr: string,
+  skipLogic: ?string
 };
 
 class ExplanationStepEditor extends Component {
@@ -50,7 +51,8 @@ class ExplanationStepEditor extends Component {
       stepTitle: step.title,
       stepType: step.type,
       stepPromptSms: (step.prompt[lang] || {}).sms || '',
-      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || ''
+      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || '',
+      skipLogic: step.skipLogic
     }
   }
 
