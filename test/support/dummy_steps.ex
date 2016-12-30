@@ -22,6 +22,16 @@ defmodule Ask.StepBuilder do
     Map.merge(base, skip_logic)
   end
 
+  def explanation_step(id: id, title: title, prompt: prompt, skip_logic: skip_logic) do
+    %{
+      "id" => id,
+      "type" => "explanation",
+      "title" => title,
+      "prompt" => prompt,
+      "skip_logic" => skip_logic,
+    }
+  end
+
   def prompt(sms: sms) do
     %{
       "en" => %{
@@ -257,6 +267,40 @@ defmodule Ask.DummySteps do
               choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
             ]
           )
+      ]
+
+      @explanation_steps_minimal [
+        explanation_step(
+          id: "aaa",
+          title: "Let there be rock",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          skip_logic: nil
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
+      ]
+
+      @only_explanation_steps [
+        explanation_step(
+          id: "aaa",
+          title: "Let there be rock",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          skip_logic: nil
+        )
       ]
     end
   end

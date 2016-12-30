@@ -177,7 +177,7 @@ end
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("99"))
-    :end = Session.sync_step(session, Flow.Message.reply("11"))
+    {:end, _} = Session.sync_step(session, Flow.Message.reply("11"))
 
     responses = respondent
     |> Ecto.assoc(:responses)

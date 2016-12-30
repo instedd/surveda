@@ -18,9 +18,13 @@ defmodule Ask.Runtime.Session do
     flow = case runtime_channel |> Channel.can_push_question? do
       true ->
         case flow |> Flow.step do
-          {:end, _} -> :end
-          {:ok, flow, %{prompts: [prompt]}} ->
-            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, [prompt])
+          {:end, %{prompts: prompts}} ->
+            if prompts != [] do
+              runtime_channel |> Channel.ask(respondent.sanitized_phone_number, prompts)
+            end
+            :end
+          {:ok, flow, %{prompts: prompts}} ->
+            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, prompts)
             flow
         end
 
@@ -116,9 +120,10 @@ defmodule Ask.Runtime.Session do
       store_responses_and_assign_bucket(respondent, stores, buckets)
 
     case step_answer do
+      {:end, %{prompts: prompts}} ->
+        {:end, %{prompt: prompts}}
       {:end, _} ->
         :end
-
       {:ok, flow, %{prompts: [prompt]}} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
