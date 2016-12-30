@@ -952,6 +952,11 @@ i.survey-status {
       box-shadow: none !important;
     }
   }
+  .audio-dropdown {
+    ul i.material-icons {
+      @extend .black-text;
+    }
+  }
 }
 
 
