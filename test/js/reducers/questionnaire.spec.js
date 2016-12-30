@@ -914,6 +914,35 @@ describe('questionnaire reducer', () => {
 
       expect(resultState.data.defaultLanguage).toEqual('fr')
     })
+
+    it('should set active language', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr')
+      ])
+
+      expect(resultState.data.activeLanguage).toEqual('fr')
+    })
+
+    it('should set active language to default language when removing active language', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr'),
+        actions.removeLanguage('fr')
+      ])
+
+      expect(resultState.data.activeLanguage).toEqual('en')
+    })
   })
 
   describe('helpers', () => {
@@ -923,6 +952,7 @@ describe('questionnaire reducer', () => {
         modes: ['sms'],
         languages: [],
         defaultLanguage: 'en',
+        activeLanguage: 'en',
         quotaCompletedMsg: null,
         errorMsg: null,
         steps: [

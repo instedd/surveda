@@ -46,7 +46,7 @@ class NumericStepEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
-    const lang = props.questionnaire.defaultLanguage
+    const lang = props.questionnaire.activeLanguage
 
     return {
       stepTitle: step.title,

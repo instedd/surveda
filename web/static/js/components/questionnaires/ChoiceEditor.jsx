@@ -77,7 +77,7 @@ class ChoiceEditor extends Component {
 
   stateFromProps(props: Props) {
     const { choice } = props
-    const lang = props.questionnaire.defaultLanguage
+    const lang = props.questionnaire.activeLanguage
 
     return {
       response: choice.value,

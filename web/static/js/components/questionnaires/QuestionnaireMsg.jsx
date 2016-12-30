@@ -28,8 +28,7 @@ class QuestionnaireMsg extends Component {
     const { questionnaire, messageKey } = this.props
 
     const questionnaireMsg = questionnaire[messageKey] || {}
-    const defaultLang = questionnaire.defaultLanguage
-    return getPromptIvr(questionnaireMsg, defaultLang)
+    return getPromptIvr(questionnaireMsg, questionnaire.activeLanguage)
   }
 
   handleClick() {
@@ -111,14 +110,14 @@ class QuestionnaireMsg extends Component {
     const { questionnaire, messageKey, title } = this.props
 
     const questionnaireMsg = questionnaire[messageKey] || {}
-    const defaultLang = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let smsInput = null
     if (sms) {
-      const smsMessage = getPromptSms(questionnaireMsg, defaultLang)
+      const smsMessage = getPromptSms(questionnaireMsg, activeLanguage)
       smsInput = (
         <div className='row' key={`${decamelize(messageKey, '-')}'-sms'`}>
           <div className='input-field'>

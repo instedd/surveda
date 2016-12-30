@@ -46,8 +46,8 @@ class LanguageSelectionStepEditor extends Component {
     return {
       stepTitle: step.title,
       stepType: step.type,
-      stepPromptSms: getStepPromptSms(step, questionnaire.defaultLanguage),
-      stepPromptIvr: getStepPromptIvrText(step, questionnaire.defaultLanguage)
+      stepPromptSms: getStepPromptSms(step, questionnaire.activeLanguage),
+      stepPromptIvr: getStepPromptIvrText(step, questionnaire.activeLanguage)
     }
   }
 

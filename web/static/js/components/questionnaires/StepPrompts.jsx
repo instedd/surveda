@@ -45,7 +45,7 @@ class StepPrompts extends Component {
 
   stateFromProps(props) {
     const { step, questionnaire } = props
-    const lang = questionnaire.defaultLanguage
+    const lang = questionnaire.activeLanguage
 
     return {
       stepPromptSms: getStepPromptSms(step, lang),

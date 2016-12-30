@@ -24,6 +24,7 @@ export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
 export const REMOVE_LANGUAGE = 'QUESTIONNAIRE_REMOVE_LANGUAGE'
 export const REORDER_LANGUAGES = 'QUESTIONNAIRE_REORDER_LANGUAGES'
 export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
+export const SET_ACTIVE_LANGUAGE = 'QUESTIONNAIRE_SET_ACTIVE_LANGUAGE'
 export const SET_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_SET_QUESTIONNAIRE_MSG'
 export const SET_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_SET_QUESTIONNAIRE_MSG'
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
@@ -34,7 +35,12 @@ export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
   return api.fetchQuestionnaire(projectId, id)
     .then(response => {
-      dispatch(receive(response.entities.questionnaires[response.result]))
+      // When we receive a questionnaire from the server, set the
+      // activeLanguage property to be the same as the defaultLanguage,
+      // so we don't have to do `defaultLanguage || activeLanguage` everywhere
+      let questionnaire = response.entities.questionnaires[response.result]
+      questionnaire.activeLanguage = questionnaire.defaultLanguage
+      dispatch(receive(questionnaire))
     })
     .then(() => {
       return getState().questionnaire.data
@@ -57,10 +63,12 @@ export const fetchQuestionnaireIfNeeded = (projectId, id) => {
   }
 }
 
-export const receive = (questionnaire) => ({
-  type: RECEIVE,
-  data: questionnaire
-})
+export const receive = (questionnaire) => {
+  return {
+    type: RECEIVE,
+    data: questionnaire
+  }
+}
 
 export const shouldFetch = (state, projectId, id) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
@@ -170,6 +178,11 @@ export const removeLanguage = (language) => ({
 
 export const setDefaultLanguage = (language) => ({
   type: SET_DEFAULT_LANGUAGE,
+  language
+})
+
+export const setActiveLanguage = (language) => ({
+  type: SET_ACTIVE_LANGUAGE,
   language
 })
 

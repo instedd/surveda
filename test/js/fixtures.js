@@ -119,6 +119,7 @@ const bareQuestionnaire: Questionnaire = {
   ],
   id: 1,
   defaultLanguage: 'en',
+  activeLanguage: 'en',
   languages: ['en'],
   quotaCompletedMsg: null,
   errorMsg: null

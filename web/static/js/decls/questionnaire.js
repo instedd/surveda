@@ -5,6 +5,7 @@ export type Questionnaire = {
   modes: string[],
   languages: string[],
   defaultLanguage: string,
+  activeLanguage: string,
   quotaCompletedMsg: ?Prompt,
   errorMsg: ?Prompt,
 };

@@ -19,6 +19,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
+    case actions.SET_ACTIVE_LANGUAGE: return setActiveLanguage(state, action)
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
     case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
@@ -127,7 +128,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
             ivr: splitValues(ivrValues),
             sms: {
               ...choice.responses.sms,
-              [quiz.defaultLanguage]: splitValues(smsValues)
+              [quiz.activeLanguage]: splitValues(smsValues)
             }
           },
           skipLogic: action.choiceChange.skipLogic
@@ -150,8 +151,8 @@ const autoComplete = (state, value, quiz: Questionnaire) => {
         if (choice.value == value && !setted) {
           setted = true
 
-          if (choice.responses.sms && choice.responses.sms[quiz.defaultLanguage]) {
-            smsValues = choice.responses.sms[quiz.defaultLanguage].join(',')
+          if (choice.responses.sms && choice.responses.sms[quiz.activeLanguage]) {
+            smsValues = choice.responses.sms[quiz.activeLanguage].join(',')
           }
 
           if (choice.responses.ivr) {
@@ -213,7 +214,7 @@ type ActionChangeStepSmsPrompt = {
 
 const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Questionnaire): Step[] => {
   return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+    return setStepPrompt(step, quiz.activeLanguage, prompt => ({
       ...prompt,
       sms: action.newPrompt.trim()
     }))
@@ -222,7 +223,7 @@ const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Que
 
 const changeStepIvrPrompt = (state, action, quiz: Questionnaire) => {
   return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+    return setStepPrompt(step, quiz.activeLanguage, prompt => ({
       ...prompt,
       ivr: {
         ...prompt.ivr,
@@ -235,7 +236,7 @@ const changeStepIvrPrompt = (state, action, quiz: Questionnaire) => {
 
 const changeStepIvrAudioId = (state, action, quiz: Questionnaire) => {
   return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+    return setStepPrompt(step, quiz.activeLanguage, prompt => ({
       ...prompt,
       ivr: {
         ...prompt.ivr,
@@ -386,9 +387,16 @@ const removeLanguage = (state, action) => {
       newSteps = newSteps.slice(1)
     }
 
+    // If the active language was removed, set it to the default language
+    let activeLanguage = state.activeLanguage
+    if (action.language == activeLanguage) {
+      activeLanguage = state.defaultLanguage
+    }
+
     return {
       ...state,
       steps: newSteps,
+      activeLanguage,
       languages: newLanguages
     }
   } else {
@@ -422,13 +430,13 @@ const reorderLanguages = (state, action) => {
 
 const setQuestionnaireMsg = (state, action, mode) => {
   let questionnaireMsg
-  let defaultLanguageMsg
+  let activeLanguageMsg
   questionnaireMsg = Object.assign({}, state[action.msgKey])
-  if (state[action.msgKey] && state[action.msgKey][state.defaultLanguage]) {
-    defaultLanguageMsg = questionnaireMsg[state.defaultLanguage]
+  if (state[action.msgKey] && state[action.msgKey][state.activeLanguage]) {
+    activeLanguageMsg = questionnaireMsg[state.activeLanguage]
   } else {
-    defaultLanguageMsg = {}
-    questionnaireMsg[state.defaultLanguage] = defaultLanguageMsg
+    activeLanguageMsg = {}
+    questionnaireMsg[state.activeLanguage] = activeLanguageMsg
   }
 
   let msg = action.msg
@@ -439,7 +447,7 @@ const setQuestionnaireMsg = (state, action, mode) => {
     msg.text = msg.text.trim()
   }
 
-  defaultLanguageMsg[mode] = msg
+  activeLanguageMsg[mode] = msg
   let newState = {...state}
   newState[action.msgKey] = questionnaireMsg
   return newState
@@ -491,7 +499,15 @@ const addLanguageSelectionStep = (state, action) => {
 const setDefaultLanguage = (state, action) => {
   return {
     ...state,
-    defaultLanguage: action.language
+    defaultLanguage: action.language,
+    activeLanguage: action.language
+  }
+}
+
+const setActiveLanguage = (state, action) => {
+  return {
+    ...state,
+    activeLanguage: action.language
   }
 }
 
@@ -516,7 +532,7 @@ const validate = (state: ValidationState) => {
   const context = {
     sms: state.data.modes.indexOf('sms') != -1,
     ivr: state.data.modes.indexOf('ivr') != -1,
-    defaultLanguage: state.data.defaultLanguage,
+    activeLanguage: state.data.activeLanguage,
     languages: state.data.languages,
     errors: state.errors
   }
@@ -531,12 +547,12 @@ const validateSteps = (path, steps, context) => {
 }
 
 const validateStep = (path, step, context) => {
-  if (context.sms && getStepPromptSms(step, context.defaultLanguage).length == 0) {
+  if (context.sms && getStepPromptSms(step, context.activeLanguage).length == 0) {
     addError(context, `${path}.prompt.sms`, 'SMS prompt must not be blank')
   }
 
   if (context.ivr) {
-    let ivr = getStepPromptIvr(step, context.defaultLanguage)
+    let ivr = getStepPromptIvr(step, context.activeLanguage)
     if (ivr.audioSource == 'tts' && isBlank(ivr.text)) {
       addError(context, `${path}.prompt.ivr.text`, 'Voice prompt must not be blank')
     }
@@ -565,13 +581,13 @@ const validateChoices = (path, choices: Choice[], context) => {
       addError(context, `${path}[${i}].value`, 'Value already used in a previous response')
     }
 
-    if (choice.responses.sms && choice.responses.sms[context.defaultLanguage]) {
-      for (let choiceSms of choice.responses.sms[context.defaultLanguage]) {
+    if (choice.responses.sms && choice.responses.sms[context.activeLanguage]) {
+      for (let choiceSms of choice.responses.sms[context.activeLanguage]) {
         if (sms.includes(choiceSms)) {
           addError(context, `${path}[${i}].sms`, `Value "${choiceSms}" already used in a previous response`)
         }
       }
-      sms.push(...choice.responses.sms[context.defaultLanguage])
+      sms.push(...choice.responses.sms[context.activeLanguage])
     }
 
     if (choice.responses.ivr) {
@@ -594,8 +610,8 @@ const validateChoice = (path, choice: Choice, context) => {
 
   if (context.sms &&
       choice.responses.sms &&
-      choice.responses.sms[context.defaultLanguage] &&
-      choice.responses.sms[context.defaultLanguage].length == 0) {
+      choice.responses.sms[context.activeLanguage] &&
+      choice.responses.sms[context.activeLanguage].length == 0) {
     addError(context, `${path}.sms`, 'SMS must not be blank')
   }
 
