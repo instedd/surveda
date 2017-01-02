@@ -18,6 +18,7 @@ defmodule Ask.Survey do
     field :ivr_retry_configuration, :string
     field :quota_vars, Ask.Ecto.Type.JSON, default: []
     field :quotas, Ask.Ecto.Type.JSON, virtual: true
+    field :comparisons, Ask.Ecto.Type.JSON, default: []
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
     has_many :respondents, Ask.Respondent
@@ -34,7 +35,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas, :quota_vars])
+    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas, :quota_vars, :comparisons])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
