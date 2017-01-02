@@ -511,22 +511,17 @@ const setActiveLanguage = (state, action) => {
   }
 }
 
-type ValidationState = {
-  data: Questionnaire,
-  errors: { [path: string]: string[] }
-};
-
 const validateReducer = (reducer) => {
   // React will call this with an undefined the first time for initialization.
   // We mimic that in the specs, so ValidationState needs to become optional here.
-  return (state: ?ValidationState, action: any) => {
+  return (state: ?MetaQuestionnaire, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
 
-const validate = (state: ValidationState) => {
+const validate = (state: MetaQuestionnaire) => {
   if (!state.data) return
   state.errors = {}
   const context = {
