@@ -279,7 +279,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates and recreates translations for other pieces", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
 
       # Multiple additions
 
@@ -372,6 +372,7 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Enum.sort
 
       expected = [
+        {"sms", "en", "EN 1", nil, nil},
         {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 10"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
@@ -423,6 +424,7 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Enum.sort
 
       expected = [
+        {"sms", "en", "EN 1", nil, nil},
         {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 9"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},

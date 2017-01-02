@@ -45,8 +45,8 @@ defmodule Ask.Translation do
     source_texts = source_texts
     |> Enum.reject(fn {mode, text} ->
       new_translations
-      |> Enum.any?(fn {other_mode, other_lang, _, _, _} ->
-        mode == other_mode && lang == other_lang
+      |> Enum.any?(fn {other_mode, other_lang, other_text, _, _} ->
+        mode == other_mode && lang == other_lang && text == other_text
       end)
     end)
 
