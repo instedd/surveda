@@ -206,7 +206,7 @@ defmodule Ask.QuestionnaireControllerTest do
   describe "update translations" do
     test "creates no translations", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
 
       steps = []
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
@@ -216,7 +216,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates translations for one sms prompt", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
 
       steps = [
         multiple_choice_step(
@@ -244,6 +244,37 @@ defmodule Ask.QuestionnaireControllerTest do
       assert t.source_text == "EN 1"
       assert t.target_lang == "es"
       assert t.target_text == "ES 1"
+    end
+
+    test "creates translations when no translation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+            "en" => %{"sms" => "EN 1"},
+          },
+          store: "X",
+          choices: []
+        )
+      ]
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      assert json_response(conn, 200)["data"]["id"]
+
+      translations = Translation |> Repo.all
+      assert (translations |> length) == 1
+
+      t = hd(translations)
+      assert t.project_id == project.id
+      assert t.questionnaire_id == questionnaire.id
+      assert t.mode == "sms"
+      assert t.source_lang == "en"
+      assert t.source_text == "EN 1"
+      assert t.target_lang == nil
+      assert t.target_text == nil
     end
 
     test "creates and recreates translations for other pieces", %{conn: conn, user: user} do
