@@ -143,10 +143,13 @@ defmodule Ask.QuestionnaireControllerTest do
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
     end
 
-    test "creates and creates variables", %{conn: conn, user: user} do
+    test "creates and recreates variables", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = %{name: "some content", modes: ["sms", "ivr"], steps: @dummy_steps}
-      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: questionnaire
+
+      original_conn = conn
+
+      conn = post original_conn, project_questionnaire_path(conn, :create, project.id), questionnaire: questionnaire
       id = json_response(conn, 201)["data"]["id"]
       assert id
 
@@ -154,6 +157,27 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Repo.get!(id)
       |> Repo.preload(:questionnaire_variables)).questionnaire_variables
       assert length(vars) == 4
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+          },
+          store: "Swims",
+          choices: []
+        )
+      ]
+      questionnaire = Questionnaire |> Repo.get!(id)
+
+      conn = put original_conn, project_questionnaire_path(original_conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      id = json_response(conn, 200)["data"]["id"]
+      assert id
+
+      vars = (Questionnaire
+      |> Repo.get!(id)
+      |> Repo.preload(:questionnaire_variables)).questionnaire_variables
+      assert length(vars) == 1
     end
   end
 
