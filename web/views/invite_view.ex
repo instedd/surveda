@@ -1,10 +1,11 @@
 defmodule Ask.InviteView do
   use Ask.Web, :view
 
-  def render("accept_invitation.json", %{project_id: project_id}) do
+  def render("accept_invitation.json", %{level: level, project_id: project_id}) do
     %{data:
       %{
-        project_id: project_id
+        project_id: project_id,
+        level: level
       }
     }
   end

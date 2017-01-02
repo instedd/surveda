@@ -1,9 +1,11 @@
 defmodule Ask.RespondentControllerTest do
 
+  import Ecto.Query
+
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Invite}
+  alias Ask.{Invite, ProjectMembership}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -14,7 +16,7 @@ defmodule Ask.RespondentControllerTest do
     {:ok, conn: conn, user: user}
   end
 
-  test "create invite when inviting user", %{conn: conn, user: user} do
+  test "creates invite when inviting user", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
@@ -39,4 +41,51 @@ defmodule Ask.RespondentControllerTest do
       }
     }
   end
+
+  test "creates membership when accpeting invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    user2 = insert(:user)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => user2.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+    conn = conn
+      |> put_private(:test_user, user2)
+      |> put_req_header("accept", "application/json")
+
+    get conn, accept_invitation_path(conn, :accept_invitation, %{"code" => code})
+    membership = Repo.one(from pm in ProjectMembership, where: pm.user_id == ^user2.id)
+    assert membership.level == level
+    assert membership.project_id == project.id
+  end
+
+  test "accepts invitation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      user2 = insert(:user)
+      code = "ABC1234"
+      level = "reader"
+      invite = %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => user2.email
+      }
+      Invite.changeset(%Invite{}, invite) |> Repo.insert
+      conn = conn
+        |> put_private(:test_user, user2)
+        |> put_req_header("accept", "application/json")
+
+      conn = get conn, accept_invitation_path(conn, :accept_invitation, %{"code" => code})
+      assert json_response(conn, 200) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "level" => level
+        }
+      }
+    end
 end
