@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { CardTable, AddButton, ConfirmationModal } from '../ui'
+import { CardTable, AddButton } from '../ui'
+import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
 
 class CollaboratorIndex extends Component {
@@ -26,7 +27,7 @@ class CollaboratorIndex extends Component {
     return (
       <div>
         <AddButton text='Invite collaborator' onClick={() => this.inviteCollaborator()} />
-        <ConfirmationModal modalId='addCollaborator' modalText='Add Collaborator' header='Invite collaborators' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        <InviteModal modalId='addCollaborator' modalText='Add Collaborator' header='Invite collaborators' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '800px'}} />
         <div>
           <CardTable title={title}>
             <thead>

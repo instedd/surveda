@@ -246,3 +246,7 @@ export const autocompleteVars = (projectId, text) => {
 export const fetchCollaborators = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/collaborators`)
 }
+
+export const invite = (projectId, code, level, email) => {
+  return apiFetchJSON(`projects/${projectId}/invite?code=${code}&emai=${email}&level=${level}`)
+}

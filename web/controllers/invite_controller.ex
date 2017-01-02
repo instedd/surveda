@@ -13,6 +13,9 @@ defmodule Ask.InviteController do
   end
 
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
+    IO.inspect('------------------')
+    IO.inspect('SERVER********SIDE')
+    IO.inspect('------------------')
     {project_id, _} = Integer.parse(project_id)
 
     Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id})
