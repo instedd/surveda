@@ -85,11 +85,14 @@ defmodule Ask.ProjectController do
     |> authorize(conn)
 
     text = text |> String.downcase
+    like_text = "#{text}%"
 
-    vars = (from v in Ask.QuestionnaireVariable, where: v.project_id == ^id)
+    vars = (from v in Ask.QuestionnaireVariable,
+      where: v.project_id == ^id,
+      where: like(v.name, ^like_text),
+      select: v.name
+      )
     |> Repo.all
-    |> Enum.map(&(&1.name))
-    |> Enum.filter(&(&1 |> String.downcase |> String.starts_with?(text)))
     |> Enum.filter(&(&1 != text))
 
     conn |> json(vars)
