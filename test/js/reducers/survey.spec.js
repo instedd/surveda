@@ -647,6 +647,95 @@ describe('survey reducer', () => {
     ])
     expect(state.data.questionnaireIds).toEqual([1])
   })
+
+  it('enabling questionnaire comparison should generate comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison()
+    ])
+    expect(state.data.questionnaireIds).toEqual([1])
+    expect(state.data.comparisons).toEqual([{'questionnaireId': 1, 'mode': ['sms']}])
+  })
+
+  it('disabling questionnaire comparisons should clear comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaireComparison()
+    ])
+    expect(state.data.questionnaireIds).toEqual([1])
+    expect(state.data.comparisons).toEqual([])
+  })
+
+  it('changing questionnaire with comparison should regenerate comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(2)
+    ])
+    expect(state.data.questionnaireIds).toEqual([1, 2])
+    expect(state.data.comparisons).toEqual([{'questionnaireId': 1, 'mode': ['sms']}, {'questionnaireId': 2, 'mode': ['sms']}])
+  })
+
+  it('selecting no questionnaire with comparisons should clear comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(1)
+    ])
+    expect(state.data.questionnaireIds).toEqual([])
+    expect(state.data.comparisons).toEqual([])
+  })
+
+  it('enabling mode comparison should generate comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison()
+    ])
+    expect(state.data.mode).toEqual([['sms']])
+    expect(state.data.comparisons).toEqual([{'mode': ['sms'], 'questionnaireId': 1}])
+  })
+
+  it('disabling mode comparisons should clear comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison(),
+      actions.changeModeComparison()
+    ])
+    expect(state.data.mode).toEqual([['sms']])
+    expect(state.data.comparisons).toEqual([])
+  })
+
+  it('changing mode with comparison should regenerate comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison(),
+      actions.selectMode(['ivr'])
+    ])
+    expect(state.data.mode).toEqual([['sms'], ['ivr']])
+    expect(state.data.comparisons).toEqual([{'mode': ['sms'], 'questionnaireId': 1}, {'mode': ['ivr'], 'questionnaireId': 1}])
+  })
+
+  it('selecting no questionnaire and no mode with mode comparisons enabled should clear comparisons', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(1),
+      actions.changeQuestionnaireComparison(),
+      actions.changeModeComparison(),
+      actions.selectMode(['sms'])
+    ])
+    expect(state.data.mode).toEqual([])
+    expect(state.data.comparisons).toEqual([])
+  })
 })
 
 const survey = deepFreeze({

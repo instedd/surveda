@@ -2,15 +2,11 @@
 export type Survey = {
   name: string,
   cutoff: number,
-  mode: string[],
+  mode: [string[]],
   modeComparison: boolean,
   state: string,
   questionnaireIds: number[],
   questionnaireComparison: boolean,
-  defaultLanguage: string,
-  activeLanguage: string,
-  quotaCompletedMsg: ?Prompt,
-  errorMsg: ?Prompt,
   scheduleDayOfWeek: {
     [weekday: string]: boolean
   },
@@ -22,7 +18,13 @@ export type Survey = {
     vars: string[],
     buckets: Bucket[]
   },
-  mode: [string[]]
+  comparisons: Comparison[]
+};
+
+export type Comparison = {
+  questionnaireId: number,
+  mode: string[],
+  ratio: ?number
 };
 
 export type Bucket = {

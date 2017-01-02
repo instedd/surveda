@@ -211,6 +211,7 @@ const changeQuestionnaire = (state, action) => {
     ...state,
     questionnaireIds: newQuestionnaireIds,
     questionnaireComparison,
+    comparisons: buildComparisons(state.modeComparison, questionnaireComparison, state.mode, newQuestionnaireIds),
     quotas: {
       vars: [],
       buckets: []
@@ -262,7 +263,8 @@ const selectMode = (state, action) => {
   return {
     ...state,
     mode: newMode,
-    modeComparison
+    modeComparison,
+    comparisons: buildComparisons(modeComparison, state.questionnaireComparison, newMode, state.questionnaireIds)
   }
 }
 
@@ -278,6 +280,7 @@ const changeModeComparison = (state, action) => {
   return {
     ...state,
     mode: newMode,
+    comparisons: buildComparisons(newModeComparison, state.questionnaireComparison, newMode, state.questionnaireIds),
     modeComparison: newModeComparison
   }
 }
@@ -294,7 +297,23 @@ const changeQuestionnaireComparison = (state, action) => {
   return {
     ...state,
     questionnaireIds: newQuestionnaireIds,
-    questionnaireComparison: newQuestionnaireComparison
+    questionnaireComparison: newQuestionnaireComparison,
+    comparisons: buildComparisons(state.modeComparison, newQuestionnaireComparison, state.mode, newQuestionnaireIds)
+  }
+}
+
+const buildComparisons = (modeComparison, questionnaireComparison, modes, questionnaires) => {
+  if (modeComparison || questionnaireComparison && modes && questionnaires) {
+    return flatten(map(modes, (mode) => {
+      return map(questionnaires, (questionnaire) => {
+        return ({
+          mode: mode,
+          questionnaireId: questionnaire
+        })
+      })
+    }))
+  } else {
+    return []
   }
 }
 

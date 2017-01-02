@@ -33,7 +33,7 @@ export const createSurvey = (projectId) => (dispatch, getState) =>
     return survey
   })
 
-export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
+export const fetchSurvey = (projectId, id) => (dispatch, getState): Survey => {
   dispatch(fetch(projectId, id))
   return api.fetchSurvey(projectId, id)
     .then(response => {
@@ -50,7 +50,7 @@ export const fetch = (projectId, id) => ({
   projectId
 })
 
-export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState) => {
+export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState): Promise<Survey> => {
   if (shouldFetch(getState().survey, projectId, id)) {
     return dispatch(fetchSurvey(projectId, id))
   } else {
