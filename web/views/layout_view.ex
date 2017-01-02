@@ -4,10 +4,14 @@ defmodule Ask.LayoutView do
   def config(conn) do
     version = Application.get_env(:ask, :version)
     sentry_dsn = Application.get_env(:sentry, :public_dsn)
+    user_email = case current_user(conn) do
+      nil -> nil
+      user -> user.email
+    end
 
     client_config = %{
       version: version,
-      user: current_user(conn).email,
+      user: user_email,
       sentryDsn: sentry_dsn,
       nuntium: Application.get_env(:ask, Nuntium) |> guisso_config,
       verboice: Application.get_env(:ask, Verboice) |> guisso_config

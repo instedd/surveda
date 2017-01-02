@@ -4,6 +4,7 @@ import { InputWithLabel, Card, Dropdown, DropdownItem, ConfirmationModal, AudioD
 import * as actions from '../../actions/questionnaire'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
+import { getPromptSms, getPromptIvr } from '../../step'
 
 class QuestionnaireMsg extends Component {
   static propTypes = {
@@ -27,8 +28,7 @@ class QuestionnaireMsg extends Component {
     const { questionnaire, messageKey } = this.props
 
     const questionnaireMsg = questionnaire[messageKey] || {}
-    const defaultLang = questionnaire.defaultLanguage
-    return (questionnaireMsg[defaultLang] || {}).ivr || {}
+    return getPromptIvr(questionnaireMsg, questionnaire.activeLanguage)
   }
 
   handleClick() {
@@ -110,14 +110,14 @@ class QuestionnaireMsg extends Component {
     const { questionnaire, messageKey, title } = this.props
 
     const questionnaireMsg = questionnaire[messageKey] || {}
-    const defaultLang = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let smsInput = null
     if (sms) {
-      const smsMessage = ((questionnaireMsg || {})[defaultLang] || {}).sms || ''
+      const smsMessage = getPromptSms(questionnaireMsg, activeLanguage)
       smsInput = (
         <div className='row' key={`${decamelize(messageKey, '-')}'-sms'`}>
           <div className='input-field'>

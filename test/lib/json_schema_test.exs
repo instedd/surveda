@@ -178,6 +178,8 @@ defmodule Ask.StepsValidatorTest do
       "en": {},
       "fr": {}
     }) |> valid_prompt
+
+     ~s({}) |> valid_prompt
   end
 
   test "lang prompt" do

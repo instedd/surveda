@@ -952,6 +952,11 @@ i.survey-status {
       box-shadow: none !important;
     }
   }
+  .audio-dropdown {
+    ul i.material-icons {
+      @extend .black-text;
+    }
+  }
 }
 
 
@@ -1147,7 +1152,6 @@ i.survey-status {
 
 .selected-language {
   li {
-    @extend .grey, .lighten-2;
     position: relative;
     line-height: 54px;
     padding-left: 30px;
@@ -1161,6 +1165,9 @@ i.survey-status {
       position: absolute;
       top: 15px;
       right: 0px;
+    }
+    .right-arrow {
+      cursor: pointer;
     }
   }
 }
@@ -1200,6 +1207,7 @@ i.survey-status {
       position: absolute;
       top: 8px;
       right: 0px;
+      cursor: pointer;
     }
     &:hover {
       @extend .grey, .lighten-2;
@@ -1210,7 +1218,10 @@ i.survey-status {
 
     }
   }
+}
 
+.active-language {
+  @extend .grey, .lighten-2;
 }
 
 // ------- helper classes -----------

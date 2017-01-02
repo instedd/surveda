@@ -688,7 +688,69 @@ describe('questionnaire reducer', () => {
         actions.changeStepPromptIvr(languageSelection.id, {text: 'New language prompt', audioSource: 'tts'})
       ])
       const finalLanguageSelection = finalResultState.data.steps[0]
-      expect(finalLanguageSelection.prompt['es'].ivr).toEqual({text: 'New language prompt', audioSource: 'tts'})
+      expect(finalLanguageSelection.prompt.ivr).toEqual({text: 'New language prompt', audioSource: 'tts'})
+    })
+
+    it('should allow edition of sms message for language selection step', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr')
+      ])
+
+      const languageSelection = resultState.data.steps[0]
+      const finalResultState = playActionsFromState(resultState, reducer)([
+        actions.changeStepPromptSms(languageSelection.id, 'New language prompt')
+      ])
+      const finalLanguageSelection = finalResultState.data.steps[0]
+      expect(finalLanguageSelection.prompt.sms).toEqual('New language prompt')
+    })
+
+    it('should update step prompt ivr on a new step', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es'),
+        actions.addStep()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      const finalState = playActionsFromState(resultState, reducer)([
+        actions.changeStepPromptIvr(newStep.id, {text: 'Nuevo prompt', audioSource: 'tts'})]
+      )
+
+      const step = find(finalState.data.steps, s => s.id === newStep.id)
+      expect(step.prompt['es'].ivr).toEqual({text: 'Nuevo prompt', audioSource: 'tts'})
+    })
+
+    it('should update step audioId ivr on a new step', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es'),
+        actions.addStep()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      const finalState = playActionsFromState(resultState, reducer)([
+        actions.changeStepAudioIdIvr(newStep.id, '1234')]
+      )
+
+      const step = find(finalState.data.steps, s => s.id === newStep.id)
+      expect(step.prompt['es'].ivr).toEqual({text: '', audioId: '1234', audioSource: 'upload'})
     })
 
     it('should add a new language last inside the choices of the language selection step', () => {
@@ -852,6 +914,35 @@ describe('questionnaire reducer', () => {
 
       expect(resultState.data.defaultLanguage).toEqual('fr')
     })
+
+    it('should set active language', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr')
+      ])
+
+      expect(resultState.data.activeLanguage).toEqual('fr')
+    })
+
+    it('should set active language to default language when removing active language', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr'),
+        actions.removeLanguage('fr')
+      ])
+
+      expect(resultState.data.activeLanguage).toEqual('en')
+    })
   })
 
   describe('helpers', () => {
@@ -861,6 +952,7 @@ describe('questionnaire reducer', () => {
         modes: ['sms'],
         languages: [],
         defaultLanguage: 'en',
+        activeLanguage: 'en',
         quotaCompletedMsg: null,
         errorMsg: null,
         steps: [

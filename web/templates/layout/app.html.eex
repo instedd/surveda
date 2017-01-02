@@ -16,8 +16,5 @@
     </script>
   </head>
 
-  <body>
-    <div id="root" role="main"></div>
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-  </body>
+  <%= render @view_module, @view_template, assigns %>
 </html>

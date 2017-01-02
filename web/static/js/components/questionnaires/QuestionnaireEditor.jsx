@@ -15,7 +15,7 @@ import * as language from '../../language'
 type State = {
   addingStep: boolean,
   currentStep: ?Step
-}
+};
 
 class QuestionnaireEditor extends Component {
   state: State

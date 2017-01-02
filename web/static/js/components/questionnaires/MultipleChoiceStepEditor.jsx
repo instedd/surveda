@@ -10,9 +10,10 @@ import StepCard from './StepCard'
 import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import StepStoreVariable from './StepStoreVariable'
+import { getStepPromptSms, getStepPromptIvrText } from '../../step'
 
 type Props = {
-  step: Step,
+  step: MultipleChoiceStep,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
@@ -44,14 +45,14 @@ class MultipleChoiceStepEditor extends Component {
   }
 
   stateFromProps(props) {
-    const { step } = props
-    const lang = props.questionnaire.defaultLanguage
+    const { step, questionnaire } = props
+    const lang = questionnaire.activeLanguage
 
     return {
       stepTitle: step.title,
       stepType: step.type,
-      stepPromptSms: (step.prompt[lang] || {}).sms || '',
-      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || ''
+      stepPromptSms: getStepPromptSms(step, lang),
+      stepPromptIvr: getStepPromptIvrText(step, lang)
     }
   }
 
@@ -65,8 +66,7 @@ class MultipleChoiceStepEditor extends Component {
             <StepTypeSelector stepType={step.type} stepId={step.id} />
           } >
           <StepPrompts
-            stepPrompt={step.prompt[this.props.questionnaire.defaultLanguage]}
-            stepId={step.id}
+            step={step}
             errors={errors}
             errorPath={errorPath} />
           <li className='collection-item' key='editor'>

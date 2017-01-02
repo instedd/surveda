@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import 'materialize-autocomplete'
 import iso6393 from 'iso-639-3'
 import AddLanguage from './AddLanguage'
+import classNames from 'classnames/bind'
 
 class LanguagesList extends Component {
 
@@ -20,6 +21,11 @@ class LanguagesList extends Component {
     return language.name
   }
 
+  setActiveLanguage(e, language) {
+    const { dispatch } = this.props
+    dispatch(actions.setActiveLanguage(language))
+  }
+
   render() {
     const { questionnaire, onRemoveLanguage } = this.props
 
@@ -27,11 +33,14 @@ class LanguagesList extends Component {
       return <div>Loading...</div>
     }
 
-    let otherLangugages = questionnaire.languages.filter((lang) => lang !== questionnaire.defaultLanguage)
+    let defaultLanguage = questionnaire.defaultLanguage
+    let activeLanguage = questionnaire.activeLanguage
+
+    let otherLangugages = questionnaire.languages.filter((lang) => lang !== defaultLanguage)
     otherLangugages = otherLangugages.map((lang) => [lang, this.translateLangCode(lang)])
     otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
     otherLangugages = otherLangugages.map((lang) =>
-      <li key={lang[0]}>
+      <li key={lang[0]} className={classNames({'active-language': lang[0] == activeLanguage})}>
         <span className='remove-language' onClick={() => onRemoveLanguage(lang[0])}>
           <i className='material-icons'>highlight_off</i>
         </span>
@@ -41,7 +50,7 @@ class LanguagesList extends Component {
         <span className='set-default-language' onClick={this.defaultLanguageSelected(lang[0])}>
           <i className='material-icons'>arrow_upward</i>
         </span>
-        <span className='right-arrow'>
+        <span href='#' className='right-arrow' onClick={e => this.setActiveLanguage(e, lang[0])}>
           <i className='material-icons'>keyboard_arrow_right</i>
         </span>
       </li>
@@ -66,10 +75,12 @@ class LanguagesList extends Component {
         <div className='row'>
           <div className='col s12'>
             <p className='grey-text'>Primary language:</p>
-            <ul className='selected-language'>
+            <ul className={classNames({'selected-language': true, 'active-language': activeLanguage == defaultLanguage})}>
               <li>
-                <span>{this.translateLangCode(questionnaire.defaultLanguage)}</span>
-                <i className='material-icons'>keyboard_arrow_right</i>
+                <span>{this.translateLangCode(defaultLanguage)}</span>
+                <span href='#' className='right-arrow' onClick={e => this.setActiveLanguage(e, defaultLanguage)}>
+                  <i className='material-icons'>keyboard_arrow_right</i>
+                </span>
               </li>
             </ul>
           </div>
@@ -84,6 +95,7 @@ class LanguagesList extends Component {
 }
 
 LanguagesList.propTypes = {
+  questionnaire: PropTypes.object,
   onRemoveLanguage: PropTypes.func
 }
 

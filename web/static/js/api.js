@@ -215,7 +215,7 @@ export const logout = () => {
   fetch('/logout', {
     method: 'DELETE',
     credentials: 'same-origin'
-  }).then(() => window.location.reload())
+  }).then(() => window.location.href = '/')
 }
 
 export const fetchTimezones = () => {
