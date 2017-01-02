@@ -1,4 +1,5 @@
 /* eslint-env mocha */
+// @flow
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
@@ -529,14 +530,14 @@ describe('survey reducer', () => {
         vars: ['age'],
         buckets: [
           {
-            'condition': {
-              'age': [1, 9]
-            }
+            'condition': [
+              { store: 'age', value: [1, 9] }
+            ]
           },
           {
-            'condition': {
-              'age': [10, 49]
-            }
+            'condition': [
+              { store: 'age', value: [10, 49] }
+            ]
           }
         ]
       }

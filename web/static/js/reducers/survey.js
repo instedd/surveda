@@ -1,15 +1,17 @@
+// @flow
 import * as actions from '../actions/survey'
 import fetchReducer from './fetch'
 import drop from 'lodash/drop'
 import flatten from 'lodash/flatten'
 import map from 'lodash/map'
 import split from 'lodash/split'
+import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
 import some from 'lodash/some'
 
-export const dataReducer = (state, action) => {
+export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
@@ -33,13 +35,20 @@ export const dataReducer = (state, action) => {
   }
 }
 
+type ValidationState = {
+  data: Survey,
+  errors: { [path: string]: string[] }
+};
+
 const validateReducer = (reducer) => {
-  return (state, action) => {
+  return (state: ?ValidationState, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
+
+export default validateReducer(fetchReducer(actions, dataReducer))
 
 const validate = (state) => {
   if (!state.data) return
@@ -99,10 +108,6 @@ const bucketsFor = (storeVars, options) => {
 }
 
 const buildBuckets = (storeVars, options) => {
-  if (storeVars.length == 0) {
-    return [{}]
-  }
-
   const firstVar = options[storeVars[0].var]
 
   let values = firstVar.values
@@ -111,7 +116,14 @@ const buildBuckets = (storeVars, options) => {
   }
 
   return flatten(map(values, (value) => {
-    return map(buildBuckets(drop(storeVars), options), (bucket) => {
+    let buckets = []
+    if (drop(storeVars).length == 0) {
+      buckets = [{}]
+    } else {
+      buckets = buildBuckets(drop(storeVars), options)
+    }
+
+    return map(buckets, (bucket) => {
       let condition = []
       if (bucket.condition && bucket.condition.length > 0) {
         condition = bucket.condition
@@ -160,9 +172,9 @@ const quotaChange = (state, action) => {
   }
 }
 
-export const rebuildInputFromQuotaBuckets = (store, survey) => {
-  const buckets = survey.quotas.buckets.filter((bucket) => Object.keys(bucket.condition).includes(store))
-  let conditions = uniqWith(buckets.map((bucket) => bucket.condition[store]), isEqual)
+export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
+  const buckets = survey.quotas.buckets.filter((bucket) => bucket.condition.map((condition) => condition.store).includes(store))
+  let conditions = uniqWith(buckets.map((bucket) => find(bucket.condition, (condition) => condition.store == store).value), isEqual)
   conditions = conditions.map(x => [x[0], x[1] + 1])
   conditions = flatten(conditions)
   conditions = uniqWith(conditions, isEqual)
@@ -259,12 +271,8 @@ const changeModeComparison = (state, action) => {
   let modeComparison = newMode.length > 1 || state.modeComparison
   let newModeComparison = !modeComparison
 
-  if (!newModeComparison) {
-    if (newMode.length == 0) {
-      newMode = []
-    } else if (newMode.length > 1) {
-      newMode = [newMode[0]]
-    }
+  if (!newModeComparison && newMode.length > 1) {
+    newMode = [newMode[0]]
   }
 
   return {
@@ -279,10 +287,8 @@ const changeQuestionnaireComparison = (state, action) => {
   let questionnaireComparison = newQuestionnaireIds.length > 1 || state.questionnaireComparison
   let newQuestionnaireComparison = !questionnaireComparison
 
-  if (!newQuestionnaireComparison) {
-    if (newQuestionnaireIds.length > 1) {
-      newQuestionnaireIds = [newQuestionnaireIds[0]]
-    }
+  if (!newQuestionnaireComparison && newQuestionnaireIds.length > 1) {
+    newQuestionnaireIds = [newQuestionnaireIds[0]]
   }
 
   return {
@@ -326,5 +332,3 @@ const changeIvrRetryConfiguration = (state, action) => {
     ivrRetryConfiguration: action.ivrRetryConfiguration
   }
 }
-
-export default validateReducer(fetchReducer(actions, dataReducer))

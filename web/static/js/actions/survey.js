@@ -1,3 +1,4 @@
+// @flow weak
 import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
