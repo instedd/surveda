@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.CreateInvite do
   def change do
     create table(:invites) do
       add :code, :string
-      add :role, :string
+      add :level, :string
       add :project_id, references(:projects, on_delete: :delete_all)
       add :email, :string
 
