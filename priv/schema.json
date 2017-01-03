@@ -34,7 +34,7 @@
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
-      "required": ["id", "type", "title", "prompt", "store"]
+      "required": ["id", "type", "title", "prompt"]
     },
     "choices": {
       "type": "array",
