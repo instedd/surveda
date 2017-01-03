@@ -215,7 +215,7 @@ export const logout = () => {
   fetch('/logout', {
     method: 'DELETE',
     credentials: 'same-origin'
-  }).then(() => window.location.href = '/')
+  }).then(() => { window.location.href = '/' })
 }
 
 export const fetchTimezones = () => {
@@ -248,5 +248,5 @@ export const fetchCollaborators = (projectId) => {
 }
 
 export const invite = (projectId, code, level, email) => {
-  return apiFetchJSON(`projects/${projectId}/invite?code=${code}&emai=${email}&level=${level}`)
+  return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
 }

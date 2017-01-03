@@ -33,7 +33,6 @@ export class InviteModal extends Component {
     const code = Crypto.randomBytes(20).toString('hex')
     const { projectId } = this.props
     console.log('Props: ', this.props)
-    console.log('Actions:', this.props.actions)
     this.props.actions.invite(projectId, code, this.state.level, this.state.email)
   }
 
@@ -52,9 +51,6 @@ export class InviteModal extends Component {
     // if (showCancel) {
     //   cancelLink = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
     // }
-
-    console.log('Props en el render: ', this.props)
-    console.log('Actions en el render:', this.props.actions)
 
     return (
       <div>
@@ -101,7 +97,7 @@ InviteModal.propTypes = {
   confirmationText: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
   modalId: PropTypes.string.isRequired,
-  projectId: PropTypes.string,
+  projectId: PropTypes.number,
   style: PropTypes.object
 }
 
@@ -109,4 +105,8 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(InviteModal)
+const mapStateToProps = (state) => ({
+  projectId: state.project.data.id
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(InviteModal)
