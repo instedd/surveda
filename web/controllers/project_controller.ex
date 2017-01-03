@@ -104,7 +104,7 @@ defmodule Ask.ProjectController do
     |> authorize(conn)
 
     text = text |> String.downcase
-    like_text = "#{text}%"
+    like_text = "%#{text}%"
 
     translations = (from t in Ask.Translation,
       where: t.project_id == ^id,

@@ -232,6 +232,8 @@ const autocompleteStepSmsPrompt = (state, action, quiz: Questionnaire): Step[] =
 
     // Then change other languages
     for (let translation of action.item.translations) {
+      if (!translation.language) continue
+
       step = setStepPrompt(step, translation.language, prompt => ({
         ...prompt,
         sms: translation.text.trim()

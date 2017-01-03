@@ -954,7 +954,7 @@ describe('questionnaire reducer', () => {
 
     const resultState = playActionsFromState(preState, reducer)([
       actions.autocompleteStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15',
-        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}]}
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 

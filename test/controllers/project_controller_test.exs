@@ -149,14 +149,18 @@ defmodule Ask.ProjectControllerTest do
     q1 |> Ask.Translation.rebuild
 
     conn = get conn, project_autocomplete_primary_language_path(conn, :autocomplete_primary_language, project.id,
-             %{"mode" => "sms", "language" => "en", "text" => "Do"})
+             %{"mode" => "sms", "language" => "en", "text" => "you"})
     assert json_response(conn, 200) == [
       %{"text" => "Do you exercise? Reply 1 for YES, 2 for NO",
         "translations" => [%{"language" => "es",
            "text" => "Do you exercise? Reply 1 for YES, 2 for NO (Spanish)"}]},
       %{"text" => "Do you smoke? Reply 1 for YES, 2 for NO",
         "translations" => [%{"language" => "es",
-           "text" => "Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"}]}]
+           "text" => "Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"}]},
+      %{"text" => "You have entered an invalid answer",
+        "translations" => [%{"language" => nil, "text" => nil}]}
+    ]
+  end
   end
 
   test "lists collaborators", %{conn: conn, user: user} do
