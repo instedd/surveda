@@ -250,3 +250,7 @@ export const fetchCollaborators = (projectId) => {
 export const invite = (projectId, code, level, email) => {
   return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
 }
+
+export const confirm = (code) => {
+  return apiFetchJSON(`accept_invitation?code=${code}`)
+}

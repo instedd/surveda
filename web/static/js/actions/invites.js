@@ -7,6 +7,10 @@ export const invite = (projectId, code, level, email) => dispatch => {
     // .then(response => dispatch(inviteSent()))
 }
 
+export const confirm = (code) => dispatch => {
+  api.confirm(code)
+}
+
 // const inviteSent = () => ({
 //
 // })

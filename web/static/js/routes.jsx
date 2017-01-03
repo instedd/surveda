@@ -15,7 +15,7 @@ import ProjectTitle from './components/projects/ProjectTitle'
 import SurveyTitle from './components/surveys/SurveyTitle'
 import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
 import CollaboratorIndex from './components/collaborators/CollaboratorIndex'
-import InviteShow from './components/InviteShow'
+import InviteConfirmation from './components/InviteConfirmation'
 
 export default (
   <Route path='/' component={App}>
@@ -51,8 +51,8 @@ export default (
       </Route>
     </Route>
 
-    <Route path='invite'>
-      <IndexRoute component={InviteShow} />
+    <Route path='confirm'>
+      <IndexRoute component={InviteConfirmation} />
     </Route>
 
     <Route path='/channels' title='Channels' >

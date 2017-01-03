@@ -31,8 +31,8 @@ export class InviteModal extends Component {
 
   generateLink() {
     const code = Crypto.randomBytes(20).toString('hex')
+    this.setState({code: code})
     const { projectId } = this.props
-    console.log('Props: ', this.props)
     this.props.actions.invite(projectId, code, this.state.level, this.state.email)
   }
 
@@ -81,6 +81,7 @@ export class InviteModal extends Component {
               &nbsp; single use link
             </a>
           </div>
+          { this.state.code ? <div> {'confirm?code='+this.state.code} </div> : <div></div> }
         </div>
       </div>
     )
