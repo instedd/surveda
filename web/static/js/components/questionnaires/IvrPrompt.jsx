@@ -23,7 +23,7 @@ class IvrPrompt extends Component {
   }
 
   stateFromProps(props) {
-    const { ivrPrompt } = props
+    const { ivrPrompt, customHandlerFileUpload } = props
 
     let audioId = null
 
@@ -33,6 +33,7 @@ class IvrPrompt extends Component {
 
     return {
       audioId: audioId,
+      handleFileUpload: customHandlerFileUpload || this.genericHandlerFileUpload,
       audioSource: ivrPrompt.audioSource || 'tts',
       audioUri: (ivrPrompt.audioId ? `/api/v1/audios/${ivrPrompt.audioId}` : ''),
       audioErrors: ''
@@ -43,7 +44,7 @@ class IvrPrompt extends Component {
     this.setState(this.stateFromProps(newProps))
   }
 
-  handleFileUpload(files) {
+  genericHandlerFileUpload = (files) => {
     const { stepId } = this.props
     createAudio(files)
       .then(response => {
@@ -109,7 +110,7 @@ class IvrPrompt extends Component {
               <audio controls>
                 <source src={this.state.audioUri} type='audio/mpeg' />
               </audio>
-              <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+              <AudioDropzone onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
             </div>
             : ''}
         </div>
@@ -120,6 +121,7 @@ class IvrPrompt extends Component {
 
 IvrPrompt.propTypes = {
   id: PropTypes.string.isRequired,
+  customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
@@ -127,7 +129,7 @@ IvrPrompt.propTypes = {
   changeIvrMode: PropTypes.func.isRequired,
   ivrPrompt: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.any,
-  stepId: PropTypes.string.isRequired
+  stepId: PropTypes.string
 }
 
 const mapDispatchToProps = (dispatch) => ({
