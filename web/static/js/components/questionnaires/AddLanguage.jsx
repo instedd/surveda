@@ -5,11 +5,10 @@ import iso6393 from 'iso-639-3'
 import 'materialize-autocomplete'
 
 class AddLanguage extends Component {
-
   constructor(props) {
     super(props)
     this.state = {
-      editing: false,
+      editing: false
     }
 
     // We want to close the languages popup when clicking outside
@@ -21,8 +20,6 @@ class AddLanguage extends Component {
     // the language is added (languageAdded handler). Clicking outside
     // of the popup will close the popup correctly.
     this.preventClose = false
-    this.handleClick = this.handleClick.bind(this)
-    this.endEdit = this.endEdit.bind(this)
   }
 
   handleClick() {
@@ -55,7 +52,7 @@ class AddLanguage extends Component {
   render() {
     if (!this.state.editing) {
       return (
-        <a className='btn-icon-grey' onClick={this.handleClick}>
+        <a className='btn-icon-grey' onClick={e => this.handleClick(e)}>
           <i className='material-icons'>add</i>
           <span>Add Language</span>
         </a>
@@ -63,7 +60,7 @@ class AddLanguage extends Component {
     } else {
       return (
         <div className='input-field language-selection'>
-          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' placeholder='Start typing a language' onBlur={this.endEdit}/>
+          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' placeholder='Start typing a language' onBlur={e => this.endEdit(e)} />
           <ul className='autocomplete-content dropdown-content language-dropdown' ref='languagesDropdown' id='languageInput' onMouseDown={(e) => this.preventCloseCallback(e)} />
         </div>
       )
