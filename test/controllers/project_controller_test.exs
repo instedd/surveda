@@ -161,6 +161,19 @@ defmodule Ask.ProjectControllerTest do
         "translations" => [%{"language" => nil, "text" => nil}]}
     ]
   end
+
+  test "autocomplete other language", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    q1 = insert(:questionnaire, project: project, steps: @dummy_steps)
+    q1 |> Ask.Translation.rebuild
+
+    conn = get conn, project_autocomplete_other_language_path(conn, :autocomplete_other_language, project.id,
+             %{"mode" => "sms", "primary_language" => "en", "other_language" => "es",
+               "source_text" => "Do you exercise? Reply 1 for YES, 2 for NO",
+               "target_text" => "Do you exercise? Reply 1 for YES, 2 for NO (S"})
+    assert json_response(conn, 200) == [
+      "Do you exercise? Reply 1 for YES, 2 for NO (Spanish)"
+    ]
   end
 
   test "lists collaborators", %{conn: conn, user: user} do

@@ -54,11 +54,13 @@ export class Autocomplete extends Component {
   }
 
   setupAutocomplete() {
-    const { getInput, getData, onSelect } = this.props
+    const { getInput, getData, onSelect, showOnClick } = this.props
     let input = getInput()
     let dropdown = this.refs.dropdown
 
-    $(input).click(() => $(dropdown).show())
+    if (showOnClick) {
+      $(input).click(() => $(dropdown).show())
+    }
 
     $(input).materialize_autocomplete({
       limit: 100,
@@ -84,5 +86,6 @@ Autocomplete.propTypes = {
   getInput: PropTypes.func.isRequired,
   getData: PropTypes.func.isRequired,
   onSelect: PropTypes.func.isRequired,
+  showOnClick: PropTypes.bool,
   className: PropTypes.string
 }

@@ -63,6 +63,7 @@ class AddLanguage extends Component {
             getInput={() => this.refs.languageInput}
             getData={(value, callback) => this.autocompleteGetData(value, callback)}
             onSelect={(item) => this.autocompleteOnSelect(item)}
+            showOnClick
             className='language-dropdown'
             ref='autocomplete'
             />

@@ -56,26 +56,45 @@ class StepPrompts extends Component {
   }
 
   autocompleteSmsPromptGetData(value, callback) {
-    const { questionnaire } = this.props
+    const { step, questionnaire } = this.props
 
-    // Only autocomplete primary language for now
-    if (questionnaire.defaultLanguage != questionnaire.activeLanguage) return
+    const defaultLanguage = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
 
-    const lang = questionnaire.defaultLanguage
+    if (activeLanguage == defaultLanguage) {
+      api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', defaultLanguage, value)
+      .then(response => {
+        const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
+        this.autocompleteItems = items
+        callback(value, items)
+      })
+    } else {
+      let sms = getStepPromptSms(step, defaultLanguage)
+      if (sms.length == 0) return
 
-    api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', lang, value)
-    .then(response => {
-      const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
-      this.autocompleteItems = items
-      callback(value, items)
-    })
+      api.autocompleteOtherLanguage(questionnaire.projectId, 'sms', defaultLanguage, activeLanguage, sms, value)
+      .then(response => {
+        const items = response.map(r => ({id: r, text: r}))
+        this.autocompleteItems = items
+        callback(value, items)
+      })
+    }
   }
 
   autocompleteSmsPromptOnSelect(item) {
-    const { step } = this.props
-    let value = this.autocompleteItems.find(i => i.id == item.id)
-    this.setState({stepPromptSms: value.text})
-    this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
+    const { step, questionnaire } = this.props
+
+    const defaultLanguage = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
+
+    if (activeLanguage == defaultLanguage) {
+      let value = this.autocompleteItems.find(i => i.id == item.id)
+      this.setState({stepPromptSms: value.text})
+      this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
+    } else {
+      this.setState({stepPromptSms: item.text})
+      this.props.questionnaireActions.changeStepPromptSms(step.id, item.text)
+    }
   }
 
   render() {

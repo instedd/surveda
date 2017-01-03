@@ -42,6 +42,7 @@ defmodule Ask.Router do
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
+        get "/autocomplete_other_language", ProjectController, :autocomplete_other_language, as: :autocomplete_other_language
         get "/collaborators", ProjectController, :collaborators, as: :collaborators
       end
       resources "/channels", ChannelController, except: [:new, :edit]
