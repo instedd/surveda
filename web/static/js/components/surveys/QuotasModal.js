@@ -24,7 +24,6 @@ export class QuotasModal extends Component {
       buckets: {},
       steps: {}
     }
-    this.onSubmit = this.onSubmit.bind(this)
   }
 
   componentDidMount() {
@@ -102,7 +101,7 @@ export class QuotasModal extends Component {
             </div>
           </div>
           <div className='card-action'>
-            <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={this.onSubmit}>DONE</a>
+            <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={e => this.onSubmit(e)}>DONE</a>
             <a href='#!' className='modal-action modal-close grey-text btn-link'>Cancel</a>
           </div>
         </div>

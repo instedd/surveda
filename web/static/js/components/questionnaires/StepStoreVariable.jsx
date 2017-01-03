@@ -2,8 +2,9 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
+import { Autocomplete } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { autocompleteVars } from '../../api.js'
+import * as api from '../../api.js'
 
 type Props = {
   step: StoreStep & BaseStep,
@@ -18,24 +19,21 @@ type State = {
 class StepStoreVariable extends Component {
   props: Props
   state: State
-  clickedVarAutocomplete: boolean
 
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
-    this.clickedVarAutocomplete = false
   }
 
   stepStoreChange(e, value) {
-    if (this.clickedVarAutocomplete) return
+    if (this.refs.autocomplete.clickingAutocomplete) return
     if (e) e.preventDefault()
     this.setState({stepStore: value})
   }
 
   stepStoreSubmit(e, value) {
-    if (this.clickedVarAutocomplete) return
-    const varsDropdown = this.refs.varsDropdown
-    $(varsDropdown).hide()
+    if (this.refs.autocomplete.clickingAutocomplete) return
+    this.refs.autocomplete.hide()
 
     if (e) e.preventDefault()
     const { step } = this.props
@@ -54,47 +52,18 @@ class StepStoreVariable extends Component {
     }
   }
 
-  clickedVarAutocompleteCallback(e) {
-    this.clickedVarAutocomplete = true
-  }
-
-  componentDidMount() {
-    this.setupAutocomplete()
-  }
-
-  componentDidUpdate() {
-    this.setupAutocomplete()
-  }
-
-  setupAutocomplete() {
-    const self = this
-    const varInput = this.refs.varInput
-    const varsDropdown = this.refs.varsDropdown
+  autocompleteGetData(value, callback) {
     const { project } = this.props
 
-    $(varInput).click(() => $(varsDropdown).show())
-
-    $(varInput).materialize_autocomplete({
-      limit: 100,
-      multiple: {
-        enable: false
-      },
-      dropdown: {
-        el: varsDropdown,
-        itemTemplate: '<li class="ac-item" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
-      },
-      onSelect: (item) => {
-        self.clickedVarAutocomplete = false
-        self.stepStoreChange(null, item.text)
-        self.stepStoreSubmit(null, item.text)
-      },
-      getData: (value, callback) => {
-        autocompleteVars(project.id, value)
-        .then(response => {
-          callback(value, response.map(x => ({id: x, text: x})))
-        })
-      }
+    api.autocompleteVars(project.id, value)
+    .then(response => {
+      callback(value, response.map(x => ({id: x, text: x})))
     })
+  }
+
+  autocmpleteOnSelect(item) {
+    this.stepStoreChange(null, item.text)
+    this.stepStoreSubmit(null, item.text)
   }
 
   render() {
@@ -112,10 +81,13 @@ class StepStoreVariable extends Component {
               className='autocomplete'
               ref='varInput'
             />
-            <ul className='autocomplete-content dropdown-content var-dropdown'
-              ref='varsDropdown'
-              onMouseDown={(e) => this.clickedVarAutocompleteCallback(e)}
-            />
+            <Autocomplete
+              getInput={() => this.refs.varInput}
+              getData={(value, callback) => this.autocompleteGetData(value, callback)}
+              onSelect={(item) => this.autocmpleteOnSelect(item)}
+              ref='autocomplete'
+              className='var-dropdown'
+              />
           </div>
         </div>
       </div>

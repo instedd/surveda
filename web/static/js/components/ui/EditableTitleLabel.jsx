@@ -15,10 +15,6 @@ export class EditableTitleLabel extends Component {
       editing: false
     }
     this.inputRef = null
-    this.handleClick = this.handleClick.bind(this)
-    this.onKeyDown = this.onKeyDown.bind(this)
-    this.endEdit = this.endEdit.bind(this)
-    this.endAndSubmit = this.endAndSubmit.bind(this)
   }
 
   handleClick() {
@@ -55,7 +51,7 @@ export class EditableTitleLabel extends Component {
 
     if (!this.state.editing) {
       return (
-        <a className='page-title truncate' onClick={this.handleClick}>
+        <a className='page-title truncate' onClick={e => this.handleClick(e)}>
           <span><UntitledIfEmpty text={title} emptyText={emptyText} /></span>
           {icon}
         </a>
@@ -68,8 +64,8 @@ export class EditableTitleLabel extends Component {
           autoFocus
           maxLength='255'
           defaultValue={title}
-          onKeyDown={this.onKeyDown}
-          onBlur={this.endAndSubmit}
+          onKeyDown={e => this.onKeyDown(e)}
+          onBlur={e => this.endAndSubmit(e)}
           />
       )
     }

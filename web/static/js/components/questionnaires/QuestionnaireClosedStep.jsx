@@ -1,18 +1,40 @@
 // @flow
 import React, { Component } from 'react'
+import classNames from 'classnames'
 import { UntitledIfEmpty, Card } from '../ui'
 import DraggableStep from './DraggableStep'
+import { connect } from 'react-redux'
+import { hasErrors } from '../../questionnaireErrors'
 
 type Props = {
   step: Step,
-  onClick: Function
+  onClick: Function,
+  hasErrors: boolean
 }
 
 class QuestionnaireClosedStep extends Component {
   props: Props
 
   render() {
-    const { step, onClick } = this.props
+    const { step, onClick, hasErrors } = this.props
+
+    const stepIconClass = classNames({
+      'material-icons left': true,
+      'sharp': step.type === 'numeric' || step.type == 'explanation',
+      'text-error': hasErrors
+    })
+
+    const stepIconFont = (() => {
+      if (step.type === 'multiple-choice') {
+        return 'list'
+      } else if (step.type === 'numeric') {
+        return 'dialpad'
+      } else if (step.type === 'explanation') {
+        return 'chat_bubble_outline'
+      } else {
+        return 'language'
+      }
+    })()
 
     return (
       <DraggableStep step={step}>
@@ -23,9 +45,9 @@ class QuestionnaireClosedStep extends Component {
                 event.preventDefault()
                 onClick(step.id)
               }}>
-                {step.type == 'multiple-choice' ? <i className='material-icons left'>list</i> : step.type == 'numeric' ? <i className='material-icons sharp left'>dialpad</i> : step.type == 'explanation' ? <i className='material-icons sharp left'>chat_bubble_outline</i> : <i className='material-icons left'>language</i>}
-                <UntitledIfEmpty text={step.title} emptyText='Untitled question' />
-                <i className='material-icons right grey-text'>expand_more</i>
+                <i className={stepIconClass}>{stepIconFont}</i>
+                <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText='Untitled question' />
+                <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
               </a>
             </div>
           </div>
@@ -35,4 +57,8 @@ class QuestionnaireClosedStep extends Component {
   }
 }
 
-export default QuestionnaireClosedStep
+const mapStateToProps = (state, ownProps) => ({
+  hasErrors: hasErrors(state.questionnaire, ownProps.step)
+})
+
+export default connect(mapStateToProps)(QuestionnaireClosedStep)

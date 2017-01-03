@@ -143,7 +143,7 @@ class ChoiceEditor extends Component {
     })
   }
 
-  maybeTooltip(shouldWrap: boolean, elem, tooltipText: string) {
+  maybeTooltip(shouldWrap: any, elem: any, tooltipText: string) {
     if (shouldWrap) {
       return (
         <Tooltip text={tooltipText} position='bottom' className='error'>
@@ -153,6 +153,23 @@ class ChoiceEditor extends Component {
     } else {
       return elem
     }
+  }
+
+  cell(value: string, emptyValue: string, errors: string[], shouldDisplay: boolean, onClick: Function) {
+    const tooltip = (errors || [value]).join(', ')
+    const elem = shouldDisplay
+      ? <div>
+        <UntitledIfEmpty
+          text={value}
+          emptyText={emptyValue}
+          className={classNames({'basic-error tooltip-error': errors})} />
+      </div>
+    : null
+
+    return shouldDisplay
+    ? <td onClick={onClick}>
+      {this.maybeTooltip(errors, elem, tooltip)}
+    </td> : null
   }
 
   render() {
@@ -212,34 +229,14 @@ class ChoiceEditor extends Component {
         </tr>)
     } else {
       let responseErrors = errors[`${errorPath}.value`]
-      let smsErrors = this.state.sms && this.state.sms != '' && errors[`${errorPath}.sms`]
-      let ivrErrors = this.state.ivr && this.state.ivr != '' && errors[`${errorPath}.ivr`]
-
-      const responseTooltip = (responseErrors || [this.state.response]).join(', ')
-
-      const response =
-        <div>
-          <UntitledIfEmpty
-            text={this.state.response}
-            emptyText='No response'
-            className={classNames({'basic-error tooltip-error': responseErrors})} />
-        </div>
+      let smsErrors = errors[`${errorPath}.sms`]
+      let ivrErrors = errors[`${errorPath}.ivr`]
 
       return (
         <tr>
-          <td onClick={e => this.enterEditMode(e, 'response')}>
-            {this.maybeTooltip(responseErrors, response, responseTooltip)}
-          </td>
-          { sms
-          ? <td onClick={e => this.enterEditMode(e, 'sms')} className={classNames({'basic-error': smsErrors})}>
-            <UntitledIfEmpty text={this.state.sms} emptyText='No SMS' />
-          </td> : null
-          }
-          { ivr
-          ? <td onClick={e => this.enterEditMode(e, 'ivr')} className={classNames({'basic-error': ivrErrors})}>
-            <UntitledIfEmpty text={this.state.ivr} emptyText='No IVR' />
-          </td> : null
-          }
+          {this.cell(this.state.response, 'No response', responseErrors, true, e => this.enterEditMode(e, 'response'))}
+          {this.cell(this.state.sms, 'No SMS', smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
+          {this.cell(this.state.ivr, 'No IVR', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
           {skipLogicInput}
           <td>
             <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>

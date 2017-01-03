@@ -65,14 +65,13 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete, errors, errorPath } = this.props
+    const { step, onCollapse, stepsAfter, stepsBefore, onDelete, errors, errorPath } = this.props
 
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
           <StepPrompts
-            stepPrompt={step.prompt[questionnaire.defaultLanguage]}
-            stepId={step.id}
+            step={step}
             errors={errors}
             errorPath={errorPath}
             classes='no-separator'
