@@ -1,3 +1,4 @@
+// @flow
 import deepFreeze from '../../web/static/vendor/js/deepFreeze'
 const bareQuestionnaire: Questionnaire = {
   steps: [
@@ -132,4 +133,4 @@ const bareQuestionnaire: Questionnaire = {
 // Questionnaire fixture for testing here.
 // The limitations of deepFreeze are probably related to sealed objects being used under its hood.
 // See: https://flowtype.org/docs/objects.html#sealed-object-types
-export const questionnaire = deepFreeze(bareQuestionnaire)
+export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)

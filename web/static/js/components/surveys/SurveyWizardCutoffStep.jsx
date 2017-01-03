@@ -19,10 +19,6 @@ class SurveyWizardCutoffStep extends Component {
     this.state = {
       buckets: {}
     }
-    this.cutoffChange = this.cutoffChange.bind(this)
-    this.quotaChange = this.quotaChange.bind(this)
-    this.setQuotaVars = this.setQuotaVars.bind(this)
-    this.toggleQuotas = this.toggleQuotas.bind(this)
   }
 
   cutoffChange(e) {
@@ -89,7 +85,7 @@ class SurveyWizardCutoffStep extends Component {
             <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='Completed results' >
               <input
                 type='text'
-                onChange={this.cutoffChange}
+                onChange={e => this.cutoffChange(e)}
               />
             </InputWithLabel>
           </div>
@@ -98,7 +94,7 @@ class SurveyWizardCutoffStep extends Component {
           ? <div>
             <div className='row quotas'>
               <div className='col s12'>
-                <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={this.toggleQuotas} />
+                <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={() => this.toggleQuotas()} />
                 <label htmlFor='set-quotas'>Quotas for completes</label>
                 <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
               </div>
@@ -106,7 +102,7 @@ class SurveyWizardCutoffStep extends Component {
             <div className='row'>
               <div className='col s12'>
                 <div>
-                  <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={this.setQuotaVars} questionnaire={questionnaire} survey={survey} />
+                  <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
                 </div>
               </div>
             </div>
@@ -120,7 +116,7 @@ class SurveyWizardCutoffStep extends Component {
                 <InputWithLabel value={bucket.quota == null ? 0 : bucket.quota} id={this.bucketLabel(bucket)} label={this.bucketLabel(bucket)} >
                   <input
                     type='text'
-                    onChange={this.quotaChange}
+                    onChange={e => this.quotaChange(e)}
                   />
                 </InputWithLabel>
               </div>

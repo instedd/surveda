@@ -215,7 +215,7 @@ export const logout = () => {
   fetch('/logout', {
     method: 'DELETE',
     credentials: 'same-origin'
-  }).then(() => window.location.href = '/')
+  }).then(() => { window.location.href = '/' })
 }
 
 export const fetchTimezones = () => {
@@ -240,6 +240,16 @@ export const synchronizeChannels = () => {
 
 export const autocompleteVars = (projectId, text) => {
   return apiFetch(`projects/${projectId}/autocomplete_vars?text=${escape(text)}`)
+  .then(response => response.json())
+}
+
+export const autocompletePrimaryLanguage = (projectId, mode, language, text) => {
+  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${escape(text)}`)
+  .then(response => response.json())
+}
+
+export const autocompleteOtherLanguage = (projectId, mode, primaryLanguage, otherLanguage, sourceText, targetText) => {
+  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${escape(sourceText)}&target_text=${escape(targetText)}`)
   .then(response => response.json())
 }
 
