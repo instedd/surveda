@@ -12,6 +12,7 @@ export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
+export const AUTOCOMPLETE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_AUTOCOMPLETE_STEP_PROMPT_SMS'
 export const CHANGE_STEP_PROMPT_IVR = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_IVR'
 export const CHANGE_STEP_AUDIO_ID_IVR = 'QUESTIONNAIRE_CHANGE_STEP_AUDIO_ID_IVR'
 export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
@@ -106,6 +107,12 @@ export const changeStepPromptSms = (stepId, newPrompt) => ({
   type: CHANGE_STEP_PROMPT_SMS,
   stepId,
   newPrompt
+})
+
+export const autocompleteStepPromptSms = (stepId, item) => ({
+  type: AUTOCOMPLETE_STEP_PROMPT_SMS,
+  stepId,
+  item
 })
 
 export const changeStepPromptIvr = (stepId, newPrompt) => ({

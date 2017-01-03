@@ -5,6 +5,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText } from '../../step'
+import * as api from '../../api'
 
 class StepPrompts extends Component {
   constructor(props) {
@@ -54,6 +55,29 @@ class StepPrompts extends Component {
     }
   }
 
+  autocompleteSmsPromptGetData(value, callback) {
+    const { questionnaire } = this.props
+
+    // Only autocomplete primary language for now
+    if (questionnaire.defaultLanguage != questionnaire.activeLanguage) return
+
+    const lang = questionnaire.defaultLanguage
+
+    api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', lang, value)
+    .then(response => {
+      const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
+      this.autocompleteItems = items
+      callback(value, items)
+    })
+  }
+
+  autocompleteSmsPromptOnSelect(item) {
+    const { step } = this.props
+    let value = this.autocompleteItems.find(i => i.id == item.id)
+    this.setState({stepPromptSms: value.text})
+    this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
+  }
+
   render() {
     const { step, questionnaire, errors, errorPath } = this.props
 
@@ -63,7 +87,14 @@ class StepPrompts extends Component {
     let smsInput = null
     if (sms) {
       let smsInputErrors = errors[`${errorPath}.prompt.sms`]
-      smsInput = <SmsPrompt id='step_editor_sms_prompt' value={this.state.stepPromptSms} inputErrors={smsInputErrors} onChange={e => this.stepPromptSmsChange(e)} onBlur={e => this.stepPromptSmsSubmit(e)} />
+      smsInput = <SmsPrompt id='step_editor_sms_prompt'
+        value={this.state.stepPromptSms}
+        inputErrors={smsInputErrors}
+        onChange={e => this.stepPromptSmsChange(e)}
+        onBlur={e => this.stepPromptSmsSubmit(e)}
+        autocompleteGetData={(value, callback) => this.autocompleteSmsPromptGetData(value, callback)}
+        autocompleteOnSelect={item => this.autocompleteSmsPromptOnSelect(item)}
+        />
     }
 
     let ivrInput = null

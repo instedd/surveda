@@ -98,6 +98,37 @@ defmodule Ask.ProjectController do
     conn |> json(vars)
   end
 
+  def autocomplete_primary_language(conn, %{"project_id" => id, "mode" => mode, "language" => language, "text" => text}) do
+    Project
+    |> Repo.get!(id)
+    |> authorize(conn)
+
+    text = text |> String.downcase
+    like_text = "#{text}%"
+
+    translations = (from t in Ask.Translation,
+      where: t.project_id == ^id,
+      where: t.mode == ^mode,
+      where: t.source_lang == ^language,
+      where: like(t.source_text, ^like_text))
+    |> Repo.all
+
+    grouped_translations = translations
+    |> Enum.group_by(&(&1.source_text))
+    |> Enum.to_list
+    |> Enum.map(fn {source_text, translations} ->
+      translations = translations
+      |> Enum.group_by(&(&1.target_lang))
+      |> Enum.to_list
+      |> Enum.map(fn {target_lang, translations} ->
+        %{language: target_lang, text: hd(translations).target_text}
+      end)
+      %{text: source_text, translations: translations}
+    end)
+
+    conn |> json(grouped_translations)
+  end
+
   def collaborators(conn, %{"project_id" => id}) do
     memberships = Project
     |> Repo.get!(id)
