@@ -16,6 +16,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUOTA: return quotaChange(state, action)
+    case actions.CHANGE_COMPARISON_RATIO: return comparisonRatioChange(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
     case actions.TOGGLE_DAY: return toggleDay(state, action)
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
@@ -150,6 +151,23 @@ const intervalsFrom = (valueString) => {
   }
 
   return [[values[0], values[1] - 1], ...intervalsFrom(drop(values))]
+}
+
+const comparisonRatioChange = (state, action) => {
+  const bucketIndex = findIndex(state.comparisons, (bucket) =>
+    bucket.questionnaireId == action.questionnaireId && bucket.mode == action.mode
+  )
+  return {
+    ...state,
+    comparisons: [
+      ...state.comparisons.slice(0, bucketIndex),
+      {
+        ...state.comparisons[bucketIndex],
+        ratio: action.ratio
+      },
+      ...state.comparisons.slice(bucketIndex + 1)
+    ]
+  }
 }
 
 const quotaChange = (state, action) => {
@@ -303,7 +321,7 @@ const changeQuestionnaireComparison = (state, action) => {
 }
 
 const buildComparisons = (modeComparison, questionnaireComparison, modes, questionnaires) => {
-  if (modeComparison || questionnaireComparison && modes && questionnaires) {
+  if ((modeComparison || questionnaireComparison) && modes && questionnaires) {
     return flatten(map(modes, (mode) => {
       return map(questionnaires, (questionnaire) => {
         return ({

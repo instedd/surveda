@@ -736,6 +736,44 @@ describe('survey reducer', () => {
     expect(state.data.mode).toEqual([])
     expect(state.data.comparisons).toEqual([])
   })
+
+  it('should change comparison ratio for a given questionnaire and mode', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(2),
+      actions.changeModeComparison(),
+      actions.selectMode(['ivr']),
+      actions.comparisonRatioChange(2, 'sms', 0.4)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        comparisons: [
+          {
+            'mode': ['sms'],
+            'questionnaireId': 1
+          },
+          {
+            'mode': ['sms'],
+            'questionnaireId': 2,
+            'ratio': 0.4
+          },
+          {
+            'mode': ['ivr'],
+            'questionnaireId': 1
+          },
+          {
+            'mode': ['ivr'],
+            'questionnaireId': 2
+          }
+        ]
+      }
+    })
+  })
 })
 
 const survey = deepFreeze({
