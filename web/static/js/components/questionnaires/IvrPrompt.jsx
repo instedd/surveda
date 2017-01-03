@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { InputWithLabel, ConfirmationModal, AudioDropzone, Dropdown, DropdownItem } from '../ui'
+import { InputWithLabel, ConfirmationModal, AudioDropzone, Dropdown, DropdownItem, Autocomplete } from '../ui'
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import classNames from 'classnames/bind'
@@ -14,7 +14,6 @@ type State = {
 };
 
 class IvrPrompt extends Component {
-
   state: State
 
   constructor(props) {
@@ -37,6 +36,14 @@ class IvrPrompt extends Component {
       audioUri: (ivrPrompt.audioId ? `/api/v1/audios/${ivrPrompt.audioId}` : ''),
       audioErrors: ''
     }
+  }
+
+  onBlur(e) {
+    if (this.refs.autocomplete.clickingAutocomplete) return
+    this.refs.autocomplete.hide()
+
+    const { onBlur } = this.props
+    onBlur(e)
   }
 
   componentWillReceiveProps(newProps) {
@@ -63,7 +70,7 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, onChange, onBlur, changeIvrMode } = this.props
+    const { id, value, inputErrors, onChange, changeIvrMode, autocompleteGetData, autocompleteOnSelect } = this.props
 
     const maybeInvalidClass = classNames({'validate invalid': inputErrors})
 
@@ -75,9 +82,15 @@ class IvrPrompt extends Component {
               <input
                 type='text'
                 onChange={e => onChange(e)}
-                onBlur={e => onBlur(e)}
+                onBlur={e => this.onBlur(e)}
                 className={maybeInvalidClass}
-                ref={ref => { $(ref).addClass(maybeInvalidClass)}}
+                ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
+              />
+              <Autocomplete
+                getInput={() => this.ivrInput}
+                getData={(value, callback) => autocompleteGetData(value, callback)}
+                onSelect={(item) => autocompleteOnSelect(item)}
+                ref='autocomplete'
               />
             </InputWithLabel>
           </div>
@@ -124,6 +137,8 @@ IvrPrompt.propTypes = {
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
+  autocompleteGetData: PropTypes.func.isRequired,
+  autocompleteOnSelect: PropTypes.func.isRequired,
   changeIvrMode: PropTypes.func.isRequired,
   ivrPrompt: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.any,

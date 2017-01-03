@@ -64,6 +64,7 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action, quiz)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action, quiz)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_IVR: return autocompleteStepIvrPrompt(state, action, quiz)
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
@@ -238,6 +239,41 @@ const autocompleteStepSmsPrompt = (state, action, quiz: Questionnaire): Step[] =
         ...prompt,
         sms: translation.text.trim()
       }))
+    }
+
+    return step
+  })
+}
+
+const autocompleteStepIvrPrompt = (state, action, quiz: Questionnaire): Step[] => {
+  return changeStep(state, action.stepId, step => {
+    // First change default language
+    step = setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+      ...prompt,
+      ivr: {
+        ...prompt.ivr,
+        text: action.item.text.trim()
+      }
+    }))
+
+    // Then change other languages
+    for (let translation of action.item.translations) {
+      if (!translation.language) continue
+
+      step = setStepPrompt(step, translation.language, prompt => {
+        const audioSource = (prompt.ivr || {}).audioSource || 'tts'
+        if (audioSource == 'tts') {
+          return {
+            ...prompt,
+            ivr: {
+              ...prompt.ivr,
+              text: translation.text.trim()
+            }
+          }
+        } else {
+          return prompt
+        }
+      })
     }
 
     return step
