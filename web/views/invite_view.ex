@@ -20,4 +20,12 @@ defmodule Ask.InviteView do
       }
     }
   end
+
+  def render("error.json", %{error: error}) do
+    %{data:
+      %{
+        error: error
+      }
+    }
+  end
 end

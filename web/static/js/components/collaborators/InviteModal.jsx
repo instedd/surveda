@@ -4,6 +4,7 @@ import { bindActionCreators } from 'redux'
 import { Dropdown, InputWithLabel, DropdownItem } from '../ui'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
+import * as collaboratorsActions from '../../actions/collaborators'
 import Crypto from 'crypto'
 
 export class InviteModal extends Component {
@@ -21,6 +22,18 @@ export class InviteModal extends Component {
     })
   }
 
+  cancel() {
+    this.setState({email: '', level: '', code: ''})
+  }
+
+  send() {
+    const { projectId } = this.props
+    const code = this.generateCode()
+    this.props.actions.invite(projectId, code, this.state.level, this.state.email)
+    this.props.collaboratorsActions.fetchCollaborators(projectId)
+    this.setState({email: '', level: '', code: ''})
+  }
+
   emailChanged(e) {
     this.setState({email: e.target.value})
   }
@@ -29,32 +42,34 @@ export class InviteModal extends Component {
     this.setState({level: l})
   }
 
-  generateLink() {
-    const code = Crypto.randomBytes(20).toString('hex')
-    this.setState({code: code})
+  generateCode() {
+    let code = this.state.code
+    if (!code) {
+      code = Crypto.randomBytes(20).toString('hex')
+      this.setState({code: code})
+    }
+    return code
+  }
+
+  copyLink() {
     const { projectId } = this.props
+    const code = this.generateCode()
     this.props.actions.invite(projectId, code, this.state.level, this.state.email)
+    this.props.collaboratorsActions.fetchCollaborators(projectId)
   }
 
   render() {
-    // const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId, style, showCancel = false } = this.props
     const { header, modalText, modalId, style } = this.props
 
     if (!this.state) {
       return <div>Loading...</div>
     }
-    let modalLink = null
-    // let cancelLink = null
-    // if (showLink) {
-    //   modalLink = (<a className='modal-trigger' href={`#${modalId}`}>{linkText}</a>)
-    // }
-    // if (showCancel) {
-    //   cancelLink = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
-    // }
+    const cancel = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.cancel()}>Cancel</a>
+
+    const send = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.send()}>Send</a>
 
     return (
       <div>
-        {modalLink}
         <div id={modalId} className='modal' style={style}>
           <div className='modal-content'>
             <h4>{header}</h4>
@@ -67,7 +82,8 @@ export class InviteModal extends Component {
             />
           </InputWithLabel>
           <Dropdown className='step-mode underlined' label={startCase(this.state.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
-            { ['editor', 'reader'].map((level) =>
+            { /* TODO: Level options should also contain reader */ }
+            {['editor'].map((level) =>
               <DropdownItem key={level}>
                 <a onClick={e => this.levelChanged(level)}>
                   {startCase(level)}
@@ -75,13 +91,15 @@ export class InviteModal extends Component {
               </DropdownItem>
             )}
           </Dropdown>
+          {send}
+          {cancel}
           <div>
             Invite to collaborate with a
-            <a onClick={e => this.generateLink()}>
+            <a onClick={e => this.copyLink()}>
               &nbsp; single use link
             </a>
           </div>
-          { this.state.code ? <div> {'confirm?code='+this.state.code} </div> : <div></div> }
+          { this.state.code ? <div> {'confirm?code=' + this.state.code} </div> : <div />}
         </div>
       </div>
     )
@@ -90,6 +108,7 @@ export class InviteModal extends Component {
 
 InviteModal.propTypes = {
   actions: PropTypes.object.isRequired,
+  collaboratorsActions: PropTypes.object.isRequired,
   showLink: PropTypes.bool,
   showCancel: PropTypes.bool,
   linkText: PropTypes.string,
@@ -103,7 +122,8 @@ InviteModal.propTypes = {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+  actions: bindActionCreators(actions, dispatch),
+  collaboratorsActions: bindActionCreators(collaboratorsActions, dispatch)
 })
 
 const mapStateToProps = (state) => ({

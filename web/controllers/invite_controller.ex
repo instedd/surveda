@@ -6,10 +6,14 @@ defmodule Ask.InviteController do
 
   def accept_invitation(conn, %{"code" => code}) do
     invite = Repo.one(from i in Invite, where: i.code == ^code)
-    user = conn |> current_user
-    changeset = %{"user_id" => user.id, "project_id" => invite.project_id, "level" => invite.level}
-    ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert
-    render(conn, "accept_invitation.json", %{"level": invite.level, "project_id": invite.project_id})
+    if !invite do
+      render(conn, "error.json", error: "invitation code is invalid")
+    else
+      user = conn |> current_user
+      changeset = %{"user_id" => user.id, "project_id" => invite.project_id, "level" => invite.level}
+      ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert
+      render(conn, "accept_invitation.json", %{"level": invite.level, "project_id": invite.project_id})
+    end
   end
 
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do

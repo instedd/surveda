@@ -27,7 +27,7 @@ class CollaboratorIndex extends Component {
     return (
       <div>
         <AddButton text='Invite collaborator' onClick={() => this.inviteCollaborator()} />
-        <InviteModal modalId='addCollaborator' modalText='Add Collaborator' header='Invite collaborators' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '800px'}} />
+        <InviteModal modalId='addCollaborator' modalText='The access of project collaborators will be managed through roles' header='Invite collaborators' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '800px'}} />
         <div>
           <CardTable title={title}>
             <thead>
@@ -41,7 +41,7 @@ class CollaboratorIndex extends Component {
                 return (
                   <tr key={c.email}>
                     <td> {c.email} </td>
-                    <td> {c.role} </td>
+                    <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
                   </tr>
                 )
               })}

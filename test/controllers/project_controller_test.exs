@@ -148,7 +148,7 @@ defmodule Ask.ProjectControllerTest do
     conn = get conn, project_collaborators_path(conn, :collaborators, project.id)
 
     assert json_response(conn, 200)["data"]["collaborators"] == [
-      %{"email" => user.email, "role" => "owner"}
+      %{"email" => user.email, "role" => "owner", "invited" => false}
     ]
   end
 
