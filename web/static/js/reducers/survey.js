@@ -199,6 +199,22 @@ export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
   return conditions.join()
 }
 
+export const modeLabel = (mode: string[]) => {
+  if (isEqual(mode, ['sms'])) {
+    return 'SMS'
+  }
+  if (isEqual(mode, ['ivr'])) {
+    return 'Phone call'
+  }
+  if (isEqual(mode, ['ivr', 'sms'])) {
+    return 'Phone call with SMS fallback'
+  }
+  if (isEqual(mode, ['sms', 'ivr'])) {
+    return 'SMS with phone call fallback'
+  }
+  return 'Unknown mode'
+}
+
 const saved = (state, action) => {
   return {
     ...state,

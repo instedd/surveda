@@ -7,6 +7,7 @@ import flatMap from 'lodash/flatMap'
 import uniq from 'lodash/uniq'
 import some from 'lodash/some'
 import isEqual from 'lodash/isEqual'
+import { modeLabel } from '../../reducers/survey'
 
 class SurveyWizardChannelsStep extends Component {
   static propTypes = {
@@ -126,7 +127,7 @@ class SurveyWizardChannelsStep extends Component {
                 defaultChecked={this.modeIncludes(mode, ['ivr'])}
                 onClick={e => this.modeChange(e, ['ivr'])}
                 />
-              <label htmlFor='questionnaire_mode_ivr'>Phone call</label>
+              <label htmlFor='questionnaire_mode_ivr'>{modeLabel(['ivr'])}</label>
             </p>
             <p>
               <input
@@ -138,7 +139,7 @@ class SurveyWizardChannelsStep extends Component {
                 defaultChecked={this.modeIncludes(mode, ['ivr', 'sms'])}
                 onClick={e => this.modeChange(e, ['ivr', 'sms'])}
                 />
-              <label htmlFor='questionnaire_mode_ivr_sms'>Phone call with SMS fallback</label>
+              <label htmlFor='questionnaire_mode_ivr_sms'>{modeLabel(['ivr', 'sms'])}</label>
             </p>
             <p>
               <input
@@ -150,7 +151,7 @@ class SurveyWizardChannelsStep extends Component {
                 defaultChecked={this.modeIncludes(mode, ['sms'])}
                 onClick={e => this.modeChange(e, ['sms'])}
                 />
-              <label htmlFor='questionnaire_mode_sms'>SMS</label>
+              <label htmlFor='questionnaire_mode_sms'>{modeLabel(['sms'])}</label>
             </p>
             <p>
               <input
@@ -162,7 +163,7 @@ class SurveyWizardChannelsStep extends Component {
                 defaultChecked={this.modeIncludes(mode, ['sms', 'ivr'])}
                 onClick={e => this.modeChange(e, ['sms', 'ivr'])}
                 />
-              <label htmlFor='questionnaire_mode_sms_ivr'>SMS with phone call fallback</label>
+              <label htmlFor='questionnaire_mode_sms_ivr'>{modeLabel(['sms', 'ivr'])}</label>
             </p>
           </div>
         </div>

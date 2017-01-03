@@ -6,6 +6,7 @@ import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardChannelsStep from './SurveyWizardChannelsStep'
 import SurveyWizardScheduleStep from './SurveyWizardScheduleStep'
 import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
+import SurveyWizardComparisonsStep from './SurveyWizardComparisonsStep'
 import flatMap from 'lodash/flatMap'
 import uniq from 'lodash/uniq'
 
@@ -49,6 +50,7 @@ class SurveyForm extends Component {
         survey.scheduleDayOfWeek.fri ||
         survey.scheduleDayOfWeek.sat
       ) && validRetryConfiguration
+    const comparisonsStepCompleted = false
 
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
     const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item == true }).length
@@ -73,8 +75,10 @@ class SurveyForm extends Component {
               <CollectionItem path='#channels' icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
               <CollectionItem path='#schedule' icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
               <CollectionItem path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
-              {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} />
-              <CollectionItem className='optional' path={`#`} icon='call_split' text='Experiments' completed={scheduleStepCompleted} /> */}
+              {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} /> */}
+              {survey.comparisons.length > 0
+                ? <CollectionItem path='#comparisons' icon='call_split' text='Comparisons' completed={comparisonsStepCompleted} />
+              : ''}
             </ul>
           </div>
         </div>
@@ -94,6 +98,11 @@ class SurveyForm extends Component {
           <div id='cutoff' className='row scrollspy'>
             <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} />
           </div>
+          {survey.comparisons.length > 0
+            ? <div id='comparisons' className='row scrollspy'>
+              <SurveyWizardComparisonsStep survey={survey} />
+            </div>
+          : ''}
         </div>
       </div>
     )

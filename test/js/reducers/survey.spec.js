@@ -3,7 +3,7 @@
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
-import reducer, {rebuildInputFromQuotaBuckets} from '../../../web/static/js/reducers/survey'
+import reducer, {rebuildInputFromQuotaBuckets, modeLabel} from '../../../web/static/js/reducers/survey'
 import * as actions from '../../../web/static/js/actions/survey'
 import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
@@ -648,7 +648,7 @@ describe('survey reducer', () => {
     expect(state.data.questionnaireIds).toEqual([1])
   })
 
-  it('enabling questionnaire comparison should generate comparisons', () => {
+  it('should generate comparisons when questionnaire comparison is enabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -658,7 +658,7 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([{'questionnaireId': 1, 'mode': ['sms']}])
   })
 
-  it('disabling questionnaire comparisons should clear comparisons', () => {
+  it('should clear comparisons when questionnaire comparisons is disabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -669,7 +669,7 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([])
   })
 
-  it('changing questionnaire with comparison should regenerate comparisons', () => {
+  it('should regenerate comparisons when changing questionnaire with comparison enabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -680,7 +680,7 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([{'questionnaireId': 1, 'mode': ['sms']}, {'questionnaireId': 2, 'mode': ['sms']}])
   })
 
-  it('selecting no questionnaire with comparisons should clear comparisons', () => {
+  it('should clear comparisons if no questionnaire is selected and questionnaireComparison is enabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -691,7 +691,7 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([])
   })
 
-  it('enabling mode comparison should generate comparisons', () => {
+  it('should generate comparisons when mode comparison is enabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -701,7 +701,7 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([{'mode': ['sms'], 'questionnaireId': 1}])
   })
 
-  it('disabling mode comparisons should clear comparisons', () => {
+  it('should clear comparisons when modeComparison is disabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -712,7 +712,33 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([])
   })
 
-  it('changing mode with comparison should regenerate comparisons', () => {
+  it('shouldn\'t clear comparisons when modeComparison is disabled if questionnaireComparison is still enabled', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaire(2),
+      actions.changeModeComparison(),
+      actions.changeModeComparison()
+    ])
+    expect(state.data.mode).toEqual([['sms']])
+    expect(state.data.comparisons).toEqual([{'mode': ['sms'], 'questionnaireId': 1}, {'mode': ['sms'], 'questionnaireId': 2}])
+  })
+
+  it('shouldn\'t clear comparisons when questionnaireComparison is disabled if modeComparison is still enabled', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeModeComparison(),
+      actions.selectMode(['ivr']),
+      actions.changeQuestionnaireComparison(),
+      actions.changeQuestionnaireComparison()
+    ])
+    expect(state.data.mode).toEqual([['sms'], ['ivr']])
+    expect(state.data.comparisons).toEqual([{'mode': ['sms'], 'questionnaireId': 1}, {'mode': ['ivr'], 'questionnaireId': 1}])
+  })
+
+  it('should regenerate comparisons when changing mode with modeComparison enabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -723,7 +749,7 @@ describe('survey reducer', () => {
     expect(state.data.comparisons).toEqual([{'mode': ['sms'], 'questionnaireId': 1}, {'mode': ['ivr'], 'questionnaireId': 1}])
   })
 
-  it('selecting no questionnaire and no mode with mode comparisons enabled should clear comparisons', () => {
+  it('should clear comparisons when selecting no questionnaire and no mode with mode comparisons enabled', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
@@ -773,6 +799,13 @@ describe('survey reducer', () => {
         ]
       }
     })
+  })
+
+  it('should provide proper labels for survey modes', () => {
+    expect(modeLabel(['sms'])).toEqual('SMS')
+    expect(modeLabel(['ivr'])).toEqual('Phone call')
+    expect(modeLabel(['ivr', 'sms'])).toEqual('Phone call with SMS fallback')
+    expect(modeLabel(['sms', 'ivr'])).toEqual('SMS with phone call fallback')
   })
 })
 

@@ -1082,6 +1082,33 @@ i.survey-status {
   }
 }
 
+.comparisons {
+  p.grey-text {
+    padding-right: 20px;
+    margin: 0;
+    max-width: 500px;
+  }
+  .col > div {
+    position: relative;
+    margin-left: 36px;
+    label {
+      margin-left: 60px;
+      @extend .truncate;
+      font-size: 1rem;
+      line-height: 46px;
+      height: 46px;
+      top: 0;
+      left: 0;
+    }
+    input[type='text'] {
+      height: 2rem;
+      border-bottom-color: color('grey', 'lighten-2');
+      position: absolute;
+      width: 40px;
+    }
+  }
+}
+
 .quotas {
   p.grey-text {
     padding-left: 36px;
