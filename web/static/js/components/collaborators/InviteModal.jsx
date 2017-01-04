@@ -5,17 +5,11 @@ import { Dropdown, InputWithLabel, DropdownItem } from '../ui'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
-import Crypto from 'crypto'
+import * as guestActions from '../../actions/guest'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import InviteLink from './InviteLink'
 
 export class InviteModal extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      email: '',
-      level: ''
-    }
-  }
-
   componentDidMount() {
     $(document).ready(function() {
       $('.modal').modal()
@@ -23,7 +17,7 @@ export class InviteModal extends Component {
   }
 
   cancel() {
-    this.setState({email: '', level: '', code: ''})
+    this.props.guestActions.clear()
   }
 
   send() {
@@ -35,35 +29,34 @@ export class InviteModal extends Component {
   }
 
   emailChanged(e) {
-    this.setState({email: e.target.value})
+    Promise.resolve(this.props.guestActions.changeEmail(e.target.value)).then(() => {
+      this.props.guestActions.generateCode()
+    })
   }
 
   levelChanged(l) {
-    this.setState({level: l})
-  }
-
-  generateCode() {
-    let code = this.state.code
-    if (!code) {
-      code = Crypto.randomBytes(20).toString('hex')
-      this.setState({code: code})
-    }
-    return code
+    Promise.resolve(this.props.guestActions.changeLevel(l)).then(() => {
+      this.props.guestActions.generateCode()
+    })
   }
 
   copyLink() {
-    const { projectId } = this.props
-    const code = this.generateCode()
-    this.props.actions.invite(projectId, code, this.state.level, this.state.email)
-    this.props.collaboratorsActions.fetchCollaborators(projectId)
+    Promise.resolve(this.props.guestActions.generateCode()).then(() => {
+      const { projectId, guest } = this.props
+      if (guest.code) {
+        this.props.actions.invite(projectId, guest.code, guest.level, guest.email)
+        this.props.collaboratorsActions.fetchCollaborators(projectId)
+      }
+    })
   }
 
   render() {
-    const { header, modalText, modalId, style } = this.props
+    const { header, modalText, modalId, style, guest } = this.props
 
-    if (!this.state) {
+    if (!guest) {
       return <div>Loading...</div>
     }
+
     const cancel = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.cancel()}>Cancel</a>
 
     const send = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.send()}>Send</a>
@@ -75,13 +68,13 @@ export class InviteModal extends Component {
             <h4>{header}</h4>
             <p>{modalText}</p>
           </div>
-          <InputWithLabel id='email' value={this.state.email} label='email' >
+          <InputWithLabel id='email' value={guest.email} label='email' >
             <input
               type='text'
               onChange={e => this.emailChanged(e)}
             />
           </InputWithLabel>
-          <Dropdown className='step-mode underlined' label={startCase(this.state.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
+          <Dropdown className='step-mode underlined' label={startCase(guest.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
             { /* TODO: Level options should also contain reader */ }
             {['editor'].map((level) =>
               <DropdownItem key={level}>
@@ -93,13 +86,7 @@ export class InviteModal extends Component {
           </Dropdown>
           {send}
           {cancel}
-          <div>
-            Invite to collaborate with a
-            <a onClick={e => this.copyLink()}>
-              &nbsp; single use link
-            </a>
-          </div>
-          { this.state.code ? <div> {'confirm?code=' + this.state.code} </div> : <div />}
+          { guest.code ? <InviteLink /> : <div />}
         </div>
       </div>
     )
@@ -109,6 +96,8 @@ export class InviteModal extends Component {
 InviteModal.propTypes = {
   actions: PropTypes.object.isRequired,
   collaboratorsActions: PropTypes.object.isRequired,
+  guestActions: PropTypes.object.isRequired,
+  guest: PropTypes.object.isRequired,
   showLink: PropTypes.bool,
   showCancel: PropTypes.bool,
   linkText: PropTypes.string,
@@ -123,11 +112,13 @@ InviteModal.propTypes = {
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
-  collaboratorsActions: bindActionCreators(collaboratorsActions, dispatch)
+  collaboratorsActions: bindActionCreators(collaboratorsActions, dispatch),
+  guestActions: bindActionCreators(guestActions, dispatch)
 })
 
 const mapStateToProps = (state) => ({
-  projectId: state.project.data.id
+  projectId: state.project.data.id,
+  guest: state.guest
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(InviteModal)

@@ -25,7 +25,6 @@ describe('collaborators reducer', () => {
     }
     const r1 = reducer(initialState, actions.startFetchingCollaborators(projectId))
     const result = reducer(r1, actions.receiveCollaborators(params, projectId))
-    console.log(result)
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(params.collaborators)
     expect(result.projectId).toEqual(projectId)

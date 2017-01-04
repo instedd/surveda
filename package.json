@@ -15,6 +15,8 @@
     "phoenix": "file:deps/phoenix",
     "phoenix_html": "file:deps/phoenix_html",
     "raven-js": "^3.7.0",
+    "react": "^15.4.1",
+    "react-copy-to-clipboard": "^4.2.3",
     "react-d3-library": "^1.1.7",
     "react-dnd": "^2.1.4",
     "react-dnd-html5-backend": "^2.1.2",
