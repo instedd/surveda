@@ -32,7 +32,7 @@ export class InviteLink extends Component {
         <div>
           Invite to collaborate with a
           <CopyToClipboard text={this.inviteLink()}>
-            <span onClick={(() => this.copyLink())}> single use link </span>
+            <a onClick={(() => this.copyLink())}> single use link </a>
           </CopyToClipboard>
         </div>
         <div>{ this.inviteLink() }</div>

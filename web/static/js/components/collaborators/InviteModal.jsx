@@ -6,7 +6,6 @@ import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
 import * as guestActions from '../../actions/guest'
-import CopyToClipboard from 'react-copy-to-clipboard'
 import InviteLink from './InviteLink'
 
 export class InviteModal extends Component {
