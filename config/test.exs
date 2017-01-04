@@ -42,3 +42,6 @@ config :ask, Verboice,
     client_id: "A_NO_SO_SECRET_CLIENT_ID",
     app_id: "AN_APP_ID"
   ]
+
+config :ask, Ask.Mailer,
+  adapter: Bamboo.TestAdapter

@@ -22,6 +22,10 @@ defmodule Ask.Router do
     #plug Guardian.Plug.LoadResource
   end
 
+  if Mix.env == :dev do
+    forward "/sent_emails", Bamboo.EmailPreviewPlug
+  end
+
   scope "/" do
     addict :routes
   end
@@ -42,6 +46,7 @@ defmodule Ask.Router do
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/collaborators", ProjectController, :collaborators, as: :collaborators
+        get "/email", ProjectController, :email, as: :email
       end
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]
@@ -62,4 +67,5 @@ defmodule Ask.Router do
     get "/oauth_client/callback", OAuthClientController, :callback
     get "/*path", PageController, :index
   end
+
 end
