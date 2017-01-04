@@ -112,9 +112,6 @@ class StepPrompts extends Component {
     }
   }
 
-  autocompleteIvrPromptOnSelect(item) {
-  }
-
   render() {
     const { step, questionnaire, errors, errorPath } = this.props
 
