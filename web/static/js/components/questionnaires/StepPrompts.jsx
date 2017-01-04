@@ -138,6 +138,7 @@ class StepPrompts extends Component {
     if (ivr) {
       let ivrInputErrors = errors[`${errorPath}.prompt.ivr.text`]
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
+        key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
         inputErrors={ivrInputErrors}
         onChange={e => this.stepPromptIvrChange(e)}

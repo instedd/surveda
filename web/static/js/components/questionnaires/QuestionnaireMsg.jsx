@@ -78,6 +78,7 @@ class QuestionnaireMsg extends Component {
       stepPromptIvr: promptIvr,
       stepPromptIvrText: getPromptIvrText(questionnaireMsg, activeLanguage),
       questionnaireMsg: questionnaireMsg,
+      cardId: `${decamelize(messageKey, '-')}-${activeLanguage}-card`,
       activeLanguage: activeLanguage,
       editing: editing
     }
@@ -94,7 +95,7 @@ class QuestionnaireMsg extends Component {
           ...ivr,
           audioId: response.result
         }))
-        $(`#${decamelize(messageKey, '-')}-card audio`)[0].load()
+        $(`#${this.state.cardId} audio`)[0].load()
       })
       .catch((e) => {
         e.json()
@@ -148,6 +149,7 @@ class QuestionnaireMsg extends Component {
 
     if (ivr) {
       ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`}
+        key={this.state.cardId}
         value={this.state.stepPromptIvrText}
         onChange={e => this.promptIvrChange(e)}
         onBlur={e => this.promptIvrSubmit(e)}
@@ -161,7 +163,7 @@ class QuestionnaireMsg extends Component {
 
     return (
       <Card>
-        <ul className='collection collection-card dark' id={`${decamelize(messageKey, '-')}-card`} >
+        <ul className='collection collection-card dark' id={this.state.cardId} >
           <li className='collection-item header'>
             <div className='row'>
               <div className='col s12'>
