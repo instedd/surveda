@@ -590,7 +590,7 @@ describe('survey reducer', () => {
       actions.selectMode(['ivr']),
       actions.changeModeComparison()
     ])
-    expect(state.data.mode).toEqual([['sms']])
+    expect(state.data.mode).toEqual([])
   })
 
   it('changes questionnaireComparison', () => {
@@ -644,7 +644,7 @@ describe('survey reducer', () => {
       actions.changeQuestionnaire(2),
       actions.changeQuestionnaireComparison()
     ])
-    expect(state.data.questionnaireIds).toEqual([1])
+    expect(state.data.questionnaireIds).toEqual([])
   })
 })
 
