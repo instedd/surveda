@@ -14,6 +14,7 @@ class QuestionnaireMsg extends Component {
     questionnaire: PropTypes.object,
     messageKey: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
+    icon: PropTypes.string.isRequired,
     activeLanguage: PropTypes.string,
     questionnaireMsg: PropTypes.string
   }
@@ -108,7 +109,7 @@ class QuestionnaireMsg extends Component {
   }
 
   collapsed() {
-    const { title } = this.props
+    const { title, icon } = this.props
 
     return (
       <ul className='collapsible dark'>
@@ -116,7 +117,7 @@ class QuestionnaireMsg extends Component {
           <Card>
             <div className='card-content closed-step'>
               <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
-                <i className='material-icons left'>pie_chart</i>
+                <i className='material-icons left'>{icon}</i>
                 <span>{title} messages</span>
                 <i className='material-icons right grey-text'>expand_more</i>
               </a>
@@ -128,7 +129,7 @@ class QuestionnaireMsg extends Component {
   }
 
   expanded() {
-    const { questionnaire, messageKey, title } = this.props
+    const { questionnaire, messageKey, title, icon } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -167,7 +168,7 @@ class QuestionnaireMsg extends Component {
           <li className='collection-item header'>
             <div className='row'>
               <div className='col s12'>
-                <i className='material-icons left'>pie_chart</i>
+                <i className='material-icons left'>{icon}</i>
                 <a className='page-title truncate'>
                   <span>{title} messages</span>
                 </a>
