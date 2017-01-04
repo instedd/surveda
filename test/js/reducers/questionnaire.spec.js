@@ -949,7 +949,10 @@ describe('questionnaire reducer', () => {
     const preState = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.addLanguage('es')
+      actions.addLanguage('es'),
+      actions.setActiveLanguage('es'),
+      actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
+      actions.setActiveLanguage('en')
     ])
 
     const resultState = playActionsFromState(preState, reducer)([

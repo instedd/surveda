@@ -235,10 +235,16 @@ const autocompleteStepSmsPrompt = (state, action, quiz: Questionnaire): Step[] =
     for (let translation of action.item.translations) {
       if (!translation.language) continue
 
-      step = setStepPrompt(step, translation.language, prompt => ({
-        ...prompt,
-        sms: translation.text.trim()
-      }))
+      step = setStepPrompt(step, translation.language, prompt => {
+        if ((prompt || {}).sms == '') {
+          return {
+            ...prompt,
+            sms: translation.text.trim()
+          }
+        } else {
+          return prompt
+        }
+      })
     }
 
     return step
@@ -261,12 +267,12 @@ const autocompleteStepIvrPrompt = (state, action, quiz: Questionnaire): Step[] =
       if (!translation.language) continue
 
       step = setStepPrompt(step, translation.language, prompt => {
-        const audioSource = (prompt.ivr || {}).audioSource || 'tts'
-        if (audioSource == 'tts') {
+        let ivr = prompt.ivr || {text: '', audioSource: 'tts'}
+        if (ivr.text == '') {
           return {
             ...prompt,
             ivr: {
-              ...prompt.ivr,
+              ...ivr,
               text: translation.text.trim()
             }
           }
