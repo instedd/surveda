@@ -29,6 +29,8 @@ export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
 export const SET_ACTIVE_LANGUAGE = 'QUESTIONNAIRE_SET_ACTIVE_LANGUAGE'
 export const SET_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_SET_QUESTIONNAIRE_MSG'
 export const SET_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_SET_QUESTIONNAIRE_MSG'
+export const AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_AUTOCOMPLETE_QUESTIONNAIRE_MSG'
+export const AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_AUTOCOMPLETE_QUESTIONNAIRE_MSG'
 export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
 export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
 export const UPLOAD_CSV_FOR_TRANSLATION = 'UPLOAD_CSV_FOR_TRANSLATION'
@@ -216,6 +218,18 @@ export const setIvrQuestionnaireMsg = (msgKey, msg) => ({
   type: SET_IVR_QUESTIONNAIRE_MSG,
   msgKey,
   msg
+})
+
+export const autocompleteSmsQuestionnaireMsg = (msgKey, item) => ({
+  type: AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG,
+  msgKey,
+  item
+})
+
+export const autocompleteIvrQuestionnaireMsg = (msgKey, item) => ({
+  type: AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG,
+  msgKey,
+  item
 })
 
 export const save = () => (dispatch, getState) => {

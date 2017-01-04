@@ -984,6 +984,42 @@ describe('questionnaire reducer', () => {
     expect(step.prompt['es'].ivr.text).toEqual('Nuevo prompt')
   })
 
+  it('should autocomplete msg prompt sms', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('es')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.autocompleteSmsQuestionnaireMsg('questionnaireMsg',
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
+      )]
+    )
+
+    const prompt = resultState.data.questionnaireMsg
+    expect(prompt['en'].sms).toEqual('New prompt')
+    expect(prompt['es'].sms).toEqual('Nuevo prompt')
+  })
+
+  it('should autocomplete msg prompt ivr', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('es')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.autocompleteIvrQuestionnaireMsg('questionnaireMsg',
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
+      )]
+    )
+
+    const prompt = resultState.data.questionnaireMsg
+    expect(prompt['en'].ivr.text).toEqual('New prompt')
+    expect(prompt['es'].ivr.text).toEqual('Nuevo prompt')
+  })
+
   describe('helpers', () => {
     it('should provide valid answers for multiple-choice steps', () => {
       const bareQuestionnaire: Questionnaire = {

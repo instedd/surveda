@@ -7,6 +7,7 @@ import IvrPrompt from './IvrPrompt'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
 import { getPromptSms, getPromptIvr, getPromptIvrText } from '../../step'
+import * as api from '../../api'
 
 class QuestionnaireMsg extends Component {
   static propTypes = {
@@ -108,6 +109,65 @@ class QuestionnaireMsg extends Component {
       })
   }
 
+  autocompleteGetData(value, callback, mode) {
+    const { questionnaire, messageKey } = this.props
+
+    const defaultLanguage = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
+
+    if (activeLanguage == defaultLanguage) {
+      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, defaultLanguage, value)
+      .then(response => {
+        const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
+        this.autocompleteItems = items
+        callback(value, items)
+      })
+    } else {
+      const questionnaireMsg = questionnaire[messageKey] || {}
+
+      let promptValue
+      if (mode == 'sms') {
+        promptValue = getPromptSms(questionnaireMsg, defaultLanguage)
+      } else {
+        promptValue = getPromptIvrText(questionnaireMsg, defaultLanguage)
+      }
+      if (promptValue.length == 0) return
+
+      api.autocompleteOtherLanguage(questionnaire.projectId, mode, defaultLanguage, activeLanguage, promptValue, value)
+      .then(response => {
+        const items = response.map(r => ({id: r, text: r}))
+        this.autocompleteItems = items
+        callback(value, items)
+      })
+    }
+  }
+
+  autocompleteOnSelect(item, mode) {
+    const { questionnaire, messageKey, dispatch } = this.props
+
+    const defaultLanguage = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
+
+    if (activeLanguage == defaultLanguage) {
+      let value = this.autocompleteItems.find(i => i.id == item.id)
+      if (mode == 'sms') {
+        dispatch(actions.autocompleteSmsQuestionnaireMsg(messageKey, value))
+      } else {
+        dispatch(actions.autocompleteIvrQuestionnaireMsg(messageKey, value))
+      }
+    } else {
+      if (mode == 'sms') {
+        dispatch(actions.setSmsQuestionnaireMsg(messageKey, item.text))
+      } else {
+        let ivr = getPromptIvr(questionnaire[messageKey])
+        dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
+          ...ivr,
+          text: item.text
+        }))
+      }
+    }
+  }
+
   collapsed() {
     const { title, icon } = this.props
 
@@ -141,8 +201,8 @@ class QuestionnaireMsg extends Component {
         value={this.state.stepPromptSms}
         onChange={e => this.promptSmsChange(e)}
         onBlur={e => this.promptSmsSubmit(e)}
-        autocompleteGetData={() => {}}
-        autocompleteOnSelect={() => {}}
+        autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'sms')}
+        autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'sms')}
         />
     }
 
@@ -157,8 +217,8 @@ class QuestionnaireMsg extends Component {
         changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
         ivrPrompt={this.state.stepPromptIvr}
         customHandlerFileUpload={this.handleFileUpload}
-        autocompleteGetData={() => {}}
-        autocompleteOnSelect={() => {}}
+        autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'ivr')}
+        autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'ivr')}
         />
     }
 
