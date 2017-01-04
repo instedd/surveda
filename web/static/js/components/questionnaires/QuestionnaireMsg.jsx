@@ -1,79 +1,100 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { InputWithLabel, Card, Dropdown, DropdownItem, ConfirmationModal, AudioDropzone } from '../ui'
+import { Card } from '../ui'
 import * as actions from '../../actions/questionnaire'
+import SmsPrompt from './SmsPrompt'
+import IvrPrompt from './IvrPrompt'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
-import { getPromptSms, getPromptIvr } from '../../step'
+import { getPromptSms, getPromptIvr, getPromptIvrText } from '../../step'
 
 class QuestionnaireMsg extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
     questionnaire: PropTypes.object,
     messageKey: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired
+    title: PropTypes.string.isRequired,
+    activeLanguage: PropTypes.string,
+    questionnaireMsg: PropTypes.string
   }
 
   constructor(props) {
     super(props)
-    this.audioControl = null
-    this.loadAudio = false
-    this.state = {
-      editing: false,
-      audioErrors: null
-    }
+    this.state = this.stateFromProps(props)
   }
 
-  getIvr() {
-    const { questionnaire, messageKey } = this.props
-
-    const questionnaireMsg = questionnaire[messageKey] || {}
-    return getPromptIvr(questionnaireMsg, questionnaire.activeLanguage)
-  }
-
-  handleClick() {
+  handleClick(e) {
+    e.preventDefault()
     this.setState({editing: !this.state.editing})
   }
 
-  changeSmsText(e) {
+  promptSmsChange(e) {
+    e.preventDefault()
+    this.setState({stepPromptSms: e.target.value})
+  }
+
+  promptSmsSubmit(e) {
     const { dispatch, messageKey } = this.props
     dispatch(actions.setSmsQuestionnaireMsg(messageKey, e.target.value))
   }
 
-  changeIvrText(e) {
+  promptIvrChange(e) {
+    e.preventDefault()
+    this.setState({stepPromptIvrText: e.target.value})
+  }
+
+  promptIvrSubmit(e) {
     const { dispatch, messageKey } = this.props
-    const ivr = this.getIvr()
 
     dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
-      ...ivr,
+      ...this.state.stepPromptIvr,
       text: e.target.value
     }))
   }
 
   changeIvrMode(e, mode) {
     e.preventDefault()
-
     const { dispatch, messageKey } = this.props
-    const ivr = this.getIvr()
 
     dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
-      ...ivr,
+      ...this.state.stepPromptIvr,
       audioSource: mode
     }))
   }
 
-  handleFileUpload(files) {
+  componentWillReceiveProps(newProps) {
+    this.setState(this.stateFromProps({...newProps, editing: this.state.editing}))
+  }
+
+  stateFromProps(props) {
+    const { questionnaire, messageKey, editing } = props
+    const activeLanguage = questionnaire.activeLanguage
+    const questionnaireMsg = questionnaire[messageKey] || {}
+
+    const promptIvr = getPromptIvr(questionnaireMsg, activeLanguage)
+
+    return {
+      stepPromptSms: getPromptSms(questionnaireMsg, activeLanguage),
+      stepPromptIvr: promptIvr,
+      stepPromptIvrText: getPromptIvrText(questionnaireMsg, activeLanguage),
+      questionnaireMsg: questionnaireMsg,
+      activeLanguage: activeLanguage,
+      editing: editing
+    }
+  }
+
+  handleFileUpload = (files) => {
     let self = this
 
     createAudio(files)
       .then(response => {
         const { dispatch, messageKey } = self.props
-        const ivr = self.getIvr()
-        self.loadAudio = true
+        const ivr = self.state.stepPromptIvr
         dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
           ...ivr,
           audioId: response.result
         }))
+        $(`#${decamelize(messageKey, '-')}-card audio`)[0].load()
       })
       .catch((e) => {
         e.json()
@@ -99,7 +120,6 @@ class QuestionnaireMsg extends Component {
                 <i className='material-icons right grey-text'>expand_more</i>
               </a>
             </div>
-
           </Card>
         </li>
       </ul>
@@ -109,92 +129,39 @@ class QuestionnaireMsg extends Component {
   expanded() {
     const { questionnaire, messageKey, title } = this.props
 
-    const questionnaireMsg = questionnaire[messageKey] || {}
-    const activeLanguage = questionnaire.activeLanguage
-
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
     let smsInput = null
+
     if (sms) {
-      const smsMessage = getPromptSms(questionnaireMsg, activeLanguage)
-      smsInput = (
-        <div className='row' key={`${decamelize(messageKey, '-')}'-sms'`}>
-          <div className='input-field'>
-            <InputWithLabel value={smsMessage} label='SMS message' id={`${decamelize(messageKey)}'_sms'`}>
-              <input
-                type='text'
-                onChange={e => this.changeSmsText(e)}
-              />
-            </InputWithLabel>
-          </div>
-        </div>
-      )
+      smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`}
+        value={this.state.stepPromptSms}
+        onChange={e => this.promptSmsChange(e)}
+        onBlur={e => this.promptSmsSubmit(e)}
+        autocompleteGetData={() => {}}
+        autocompleteOnSelect={() => {}}
+        />
     }
 
-    let ivrTextInput = null
-    let ivrFileInput = null
+    let ivrInput = null
+
     if (ivr) {
-      const ivrProperty = this.getIvr()
-      const ivrText = ivrProperty.text || ''
-      const ivrAudioSource = ivrProperty.audioSource || 'tts'
-      const ivrAudioUri = ivrProperty.audioId ? `/api/v1/audios/${ivrProperty.audioId}` : ''
-
-      ivrTextInput = (
-        <div className='row' key={`${decamelize(messageKey, '-')}'-ivr'`}>
-          <div className='input-field'>
-            <InputWithLabel value={ivrText} label='Voice message' id={`${decamelize(messageKey, '-')}'-voice'`}>
-              <input
-                type='text'
-                onChange={e => this.changeIvrText(e)}
-              />
-            </InputWithLabel>
-          </div>
-        </div>
-      )
-
-      let uploadComponent = null
-      if (ivrAudioSource == 'upload') {
-        uploadComponent = (
-          <div className='upload-audio'>
-            <audio controls ref={ref => { this.audioControl = ref }}>
-              <source src={ivrAudioUri} type='audio/mpeg' />
-            </audio>
-            <AudioDropzone onDrop={files => this.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
-          </div>
-        )
-      }
-
-      ivrFileInput = (
-        <div className='row audio-section'>
-          <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-          <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors || ''} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-          <div className='audio-dropdown'>
-            <Dropdown className='step-mode underlined' label={ivrAudioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
-              <DropdownItem>
-                <a onClick={e => this.changeIvrMode(e, 'tts')}>
-                  <i className='material-icons left'>record_voice_over</i>
-                  Text to speech
-                  {ivrAudioSource == 'tts' ? <i className='material-icons right'>done</i> : ''}
-                </a>
-              </DropdownItem>
-              <DropdownItem>
-                <a onClick={e => this.changeIvrMode(e, 'upload')}>
-                  <i className='material-icons left'>file_upload</i>
-                  Upload a file
-                  {ivrAudioSource == 'upload' ? <i className='material-icons right'>done</i> : ''}
-                </a>
-              </DropdownItem>
-            </Dropdown>
-          </div>
-          {uploadComponent}
-        </div>
-      )
+      ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`}
+        value={this.state.stepPromptIvrText}
+        onChange={e => this.promptIvrChange(e)}
+        onBlur={e => this.promptIvrSubmit(e)}
+        changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
+        ivrPrompt={this.state.stepPromptIvr}
+        customHandlerFileUpload={this.handleFileUpload}
+        autocompleteGetData={() => {}}
+        autocompleteOnSelect={() => {}}
+        />
     }
 
     return (
       <Card>
-        <ul className='collection collection-card dark'>
+        <ul className='collection collection-card dark' id={`${decamelize(messageKey, '-')}-card`} >
           <li className='collection-item header'>
             <div className='row'>
               <div className='col s12'>
@@ -211,8 +178,7 @@ class QuestionnaireMsg extends Component {
           <li className='collection-item'>
             <div>
               {smsInput}
-              {ivrTextInput}
-              {ivrFileInput}
+              {ivrInput}
             </div>
           </li>
         </ul>
@@ -229,13 +195,6 @@ class QuestionnaireMsg extends Component {
       return this.expanded()
     } else {
       return this.collapsed()
-    }
-  }
-
-  componentDidUpdate() {
-    if (this.loadAudio && this.audioControl) {
-      this.loadAudio = false
-      this.audioControl.load()
     }
   }
 }
