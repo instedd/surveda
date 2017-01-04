@@ -66,6 +66,7 @@ export class Autocomplete extends Component {
 
     $(input).materialize_autocomplete({
       limit: 100,
+      cacheable: false,
       multiple: {
         enable: false
       },
