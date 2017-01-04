@@ -60,7 +60,7 @@ class SurveyWizardQuestionnaireStep extends Component {
     const { questionnaires, projectId, survey } = this.props
 
     const questionnaireIds = survey.questionnaireIds || []
-    const questionnaireComparison = (questionnaireIds.length > 1) ? true : survey.questionnaireComparison
+    const questionnaireComparison = (questionnaireIds.length > 1) ? true : (!!survey.questionnaireComparison)
     const inputType = questionnaireComparison ? 'checkbox' : 'radio'
 
     return (
@@ -79,8 +79,8 @@ class SurveyWizardQuestionnaireStep extends Component {
               <input
                 id='questionnaires_comparison'
                 type='checkbox'
-                defaultChecked={questionnaireComparison}
-                onClick={e => this.questionnaireComparisonChange(e)}
+                checked={questionnaireComparison}
+                onChange={e => this.questionnaireComparisonChange(e)}
                 className='with-gap'
                 />
               <label htmlFor='questionnaires_comparison'>Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)</label>
@@ -96,8 +96,8 @@ class SurveyWizardQuestionnaireStep extends Component {
                     name='questionnaire'
                     className='with-gap'
                     value={questionnaireId}
-                    defaultChecked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
-                    onClick={e => this.questionnaireChange(e)}
+                    checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
+                    onChange={e => this.questionnaireChange(e)}
                   />
                   <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} /></label>
                 </p>
