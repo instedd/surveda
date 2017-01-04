@@ -28,9 +28,11 @@ export class Autocomplete extends Component {
   constructor(props) {
     super(props)
     this.clickingAutocomplete = false
+    this.hidden = false
   }
 
   hide() {
+    this.hidden = true
     $(this.refs.dropdown).hide()
   }
 
@@ -76,7 +78,11 @@ export class Autocomplete extends Component {
         onSelect(item)
       },
       getData: (value, callback) => {
-        getData(value, callback)
+        this.hidden = false
+        getData(value, (v, c) => {
+          if (this.hidden) return
+          callback(v, c)
+        })
       }
     })
   }
