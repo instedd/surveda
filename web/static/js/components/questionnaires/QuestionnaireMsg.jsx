@@ -135,13 +135,28 @@ class QuestionnaireMsg extends Component {
     let smsInput = null
 
     if (sms) {
-      smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`} value={this.state.stepPromptSms} onChange={e => this.promptSmsChange(e)} onBlur={e => this.promptSmsSubmit(e)} />
+      smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`}
+        value={this.state.stepPromptSms}
+        onChange={e => this.promptSmsChange(e)}
+        onBlur={e => this.promptSmsSubmit(e)}
+        autocompleteGetData={() => {}}
+        autocompleteOnSelect={() => {}}
+        />
     }
 
     let ivrInput = null
 
     if (ivr) {
-      ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`} value={this.state.stepPromptIvrText} onChange={e => this.promptIvrChange(e)} onBlur={e => this.promptIvrSubmit(e)} changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)} ivrPrompt={this.state.stepPromptIvr} customHandlerFileUpload={this.handleFileUpload} />
+      ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`}
+        value={this.state.stepPromptIvrText}
+        onChange={e => this.promptIvrChange(e)}
+        onBlur={e => this.promptIvrSubmit(e)}
+        changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
+        ivrPrompt={this.state.stepPromptIvr}
+        customHandlerFileUpload={this.handleFileUpload}
+        autocompleteGetData={() => {}}
+        autocompleteOnSelect={() => {}}
+        />
     }
 
     return (
