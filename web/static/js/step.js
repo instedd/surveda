@@ -63,9 +63,11 @@ export function getChoiceResponseIvrJoined(choice: Choice): string {
 export const newStepPrompt = () => {
   return {
     sms: '',
-    ivr: {
-      text: '',
-      audioSource: 'tts'
-    }
+    ivr: newIvrPrompt()
   }
 }
+
+export const newIvrPrompt = () => ({
+  text: '',
+  audioSource: 'tts'
+})

@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { CollectionItem } from '../ui'
+import { ScrollToTopButton, CollectionItem } from '../ui'
 import SurveyWizardQuestionnaireStep from './SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardChannelsStep from './SurveyWizardChannelsStep'
@@ -94,6 +94,7 @@ class SurveyForm extends Component {
           <div id='cutoff' className='row scrollspy'>
             <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} />
           </div>
+            <ScrollToTopButton/>
         </div>
       </div>
     )

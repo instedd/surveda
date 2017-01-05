@@ -945,6 +945,81 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  it('should autocomplete step prompt sms', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('es'),
+      actions.setActiveLanguage('es'),
+      actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
+      actions.setActiveLanguage('en')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.autocompleteStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
+      )]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.prompt['en'].sms).toEqual('New prompt')
+    expect(step.prompt['es'].sms).toEqual('Nuevo prompt')
+  })
+
+  it('should autocomplete step prompt ivr', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('es')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.autocompleteStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
+      )]
+    )
+
+    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    expect(step.prompt['en'].ivr.text).toEqual('New prompt')
+    expect(step.prompt['es'].ivr.text).toEqual('Nuevo prompt')
+  })
+
+  it('should autocomplete msg prompt sms', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('es')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.autocompleteSmsQuestionnaireMsg('questionnaireMsg',
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
+      )]
+    )
+
+    const prompt = resultState.data.questionnaireMsg
+    expect(prompt['en'].sms).toEqual('New prompt')
+    expect(prompt['es'].sms).toEqual('Nuevo prompt')
+  })
+
+  it('should autocomplete msg prompt ivr', () => {
+    const preState = playActions([
+      actions.fetch(1, 1),
+      actions.receive(questionnaire),
+      actions.addLanguage('es')
+    ])
+
+    const resultState = playActionsFromState(preState, reducer)([
+      actions.autocompleteIvrQuestionnaireMsg('questionnaireMsg',
+        {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
+      )]
+    )
+
+    const prompt = resultState.data.questionnaireMsg
+    expect(prompt['en'].ivr.text).toEqual('New prompt')
+    expect(prompt['es'].ivr.text).toEqual('Nuevo prompt')
+  })
+
   describe('helpers', () => {
     it('should provide valid answers for multiple-choice steps', () => {
       const bareQuestionnaire: Questionnaire = {

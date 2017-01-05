@@ -143,10 +143,13 @@ defmodule Ask.QuestionnaireControllerTest do
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
     end
 
-    test "creates and creates variables", %{conn: conn, user: user} do
+    test "creates and recreates variables", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = %{name: "some content", modes: ["sms", "ivr"], steps: @dummy_steps}
-      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: questionnaire
+
+      original_conn = conn
+
+      conn = post original_conn, project_questionnaire_path(conn, :create, project.id), questionnaire: questionnaire
       id = json_response(conn, 201)["data"]["id"]
       assert id
 
@@ -154,6 +157,27 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Repo.get!(id)
       |> Repo.preload(:questionnaire_variables)).questionnaire_variables
       assert length(vars) == 4
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+          },
+          store: "Swims",
+          choices: []
+        )
+      ]
+      questionnaire = Questionnaire |> Repo.get!(id)
+
+      conn = put original_conn, project_questionnaire_path(original_conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      id = json_response(conn, 200)["data"]["id"]
+      assert id
+
+      vars = (Questionnaire
+      |> Repo.get!(id)
+      |> Repo.preload(:questionnaire_variables)).questionnaire_variables
+      assert length(vars) == 1
     end
   end
 
@@ -206,7 +230,7 @@ defmodule Ask.QuestionnaireControllerTest do
   describe "update translations" do
     test "creates no translations", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
 
       steps = []
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
@@ -216,7 +240,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates translations for one sms prompt", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
 
       steps = [
         multiple_choice_step(
@@ -246,9 +270,40 @@ defmodule Ask.QuestionnaireControllerTest do
       assert t.target_text == "ES 1"
     end
 
+    test "creates translations when no translation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
+
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+            "en" => %{"sms" => "EN 1"},
+          },
+          store: "X",
+          choices: []
+        )
+      ]
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      assert json_response(conn, 200)["data"]["id"]
+
+      translations = Translation |> Repo.all
+      assert (translations |> length) == 1
+
+      t = hd(translations)
+      assert t.project_id == project.id
+      assert t.questionnaire_id == questionnaire.id
+      assert t.mode == "sms"
+      assert t.source_lang == "en"
+      assert t.source_text == "EN 1"
+      assert t.target_lang == nil
+      assert t.target_text == nil
+    end
+
     test "creates and recreates translations for other pieces", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
+      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
 
       # Multiple additions
 
@@ -341,6 +396,7 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Enum.sort
 
       expected = [
+        {"sms", "en", "EN 1", nil, nil},
         {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 10"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
@@ -392,6 +448,7 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Enum.sort
 
       expected = [
+        {"sms", "en", "EN 1", nil, nil},
         {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 9"},
         {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},

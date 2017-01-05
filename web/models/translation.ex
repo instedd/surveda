@@ -32,6 +32,29 @@ defmodule Ask.Translation do
     new_translations = questionnaire.steps
     |> Enum.flat_map(&collect_step_translations(lang, &1))
     |> collect_prompt_entry_translations(lang, questionnaire.quota_completed_msg)
+    |> collect_prompt_entry_translations(lang, questionnaire.error_msg)
+
+    # Also collect all source texts, so later we can know which ones
+    # don't have a translation yet (so we can still use them for autocomplete)
+    source_texts = questionnaire.steps
+    |> Enum.flat_map(&collect_step_source_texts(lang, &1))
+    |> collect_prompt_entry_source_texts(lang, questionnaire.quota_completed_msg)
+    |> collect_prompt_entry_source_texts(lang, questionnaire.error_msg)
+
+    # Only keep source texts that are not already in `new_translations`
+    source_texts = source_texts
+    |> Enum.reject(fn {mode, text} ->
+      new_translations
+      |> Enum.any?(fn {other_mode, other_lang, other_text, _, _} ->
+        mode == other_mode && lang == other_lang && text == other_text
+      end)
+    end)
+
+    # Now add these source texts as new translations, without a target language/text
+    new_translations = source_texts
+    |> Enum.reduce(new_translations, fn {mode, text}, translations ->
+      [{mode, lang, text, nil, nil} | translations]
+    end)
 
     # Next, collect existing translations
     existing_translations = (from t in Translation,
@@ -107,6 +130,10 @@ defmodule Ask.Translation do
   def single_update?(_, _) do
     false
   end
+
+  # ------------ #
+  # Translations #
+  # ------------ #
 
   defp collect_step_translations(lang, step) do
     []
@@ -231,6 +258,94 @@ defmodule Ask.Translation do
         translations
     end
   end
+
+  # ------------ #
+  # Source texts #
+  # ------------ #
+
+  defp collect_step_source_texts(lang, step) do
+    []
+    |> collect_prompt_source_texts(lang, step)
+    |> collect_choices_source_texts(lang, step)
+  end
+
+  defp collect_prompt_source_texts(source_texts, lang, step) do
+    case step do
+      %{"prompt" => prompt} ->
+        source_texts
+        |> collect_prompt_entry_source_texts(lang, prompt)
+      _ ->
+        source_texts
+    end
+  end
+
+  defp collect_prompt_entry_source_texts(source_texts, lang, prompt) do
+    case prompt do
+      %{^lang => lang_prompt} ->
+        source_texts
+        |> collect_prompt_sms_source_texts(lang_prompt)
+        |> collect_prompt_ivr_source_texts(lang_prompt)
+      _ ->
+        source_texts
+    end
+  end
+
+  defp collect_prompt_sms_source_texts(source_texts, lang_prompt) do
+    case lang_prompt do
+      %{"sms" => text} ->
+        if text |> present? do
+          [{"sms", text} | source_texts]
+        else
+          source_texts
+        end
+      _ ->
+        source_texts
+    end
+  end
+
+  defp collect_prompt_ivr_source_texts(source_texts, lang_prompt) do
+    case lang_prompt do
+      %{"ivr" => %{"text" => text}} ->
+        if text |> present? do
+          [{"ivr", text} | source_texts]
+        else
+          source_texts
+        end
+      _ ->
+        source_texts
+    end
+  end
+
+  defp collect_choices_source_texts(source_texts, lang, step) do
+    case step do
+      %{"choices" => choices} when is_list(choices) ->
+        choices
+        |> Enum.reduce(source_texts, fn choice, source_texts ->
+          source_texts
+          |> collect_choice_source_texts(lang, choice)
+        end)
+      _ ->
+        source_texts
+    end
+  end
+
+  defp collect_choice_source_texts(source_texts, lang, choice) do
+    case choice do
+      %{"responses" => %{"sms" => %{^lang => entry}}} ->
+        text = entry |> Enum.join(", ")
+        if text |> present? do
+          [{"sms", text} | source_texts]
+        else
+          source_texts
+        end
+      _ ->
+        source_texts
+    end
+  end
+
+  # ----- #
+  # Utils #
+  # ----- #
 
   defp present?(string) do
     (string |> String.strip |> String.length) > 0

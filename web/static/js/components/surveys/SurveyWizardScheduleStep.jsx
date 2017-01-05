@@ -11,13 +11,6 @@ class SurveyWizardScheduleStep extends Component {
     dispatch: PropTypes.func.isRequired
   }
 
-  constructor(props) {
-    super(props)
-    this.updateTimezone = this.updateTimezone.bind(this)
-    this.updateFrom = this.updateFrom.bind(this)
-    this.updateTo = this.updateTo.bind(this)
-  }
-
   updateFrom(event) {
     const { dispatch } = this.props
     dispatch(actions.setScheduleFrom(event.target.value))
@@ -72,11 +65,11 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} />
+          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={e => this.updateTimezone(e)} />
         </div>
         <div className='row'>
-          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} />
+          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={e => this.updateFrom(e)} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={e => this.updateTo(e)} />
         </div>
         <SurveyWizardRetryAttempts />
       </div>

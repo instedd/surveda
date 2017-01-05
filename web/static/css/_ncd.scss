@@ -88,6 +88,7 @@ textarea.materialize-textarea {
   }
 }
 
+
 // --------- NCD classes ---------------
 
 
@@ -277,6 +278,31 @@ footer {
 .text-error {
   color: #ff5722 !important;
 }
+
+.scrollToTop {
+  background-color: rgba(255,255,255,.3);
+  text-align: center;
+  border-radius: 50%;
+  border: 1px solid color('grey', 'lighten-3');
+  width: 35px;
+  height: 35px;
+  margin-bottom: 4rem;
+  position: fixed;
+  bottom: 1rem;
+  right: 1.5rem;
+  display: none;
+  cursor: pointer;
+  z-index: 100000;
+  i {
+    @extend .grey-text, .text-lighten-1;
+    line-height: 32px;
+  }
+  &:hover i {
+    @extend .grey-text, .text-darken-1;
+  }
+}
+
+
 // ------- Card w/Table ----------
 
 .card {
@@ -1485,4 +1511,8 @@ label {
             vertical-align: top;
         }
     }
+}
+
+.ac-item {
+  padding: 10px;
 }

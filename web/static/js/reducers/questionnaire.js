@@ -9,7 +9,8 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined } from '../step'
+  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  newIvrPrompt } from '../step'
 import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
@@ -23,6 +24,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
     case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
+    case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
+    case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     default: return steps(state, action)
   }
@@ -63,6 +66,8 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action, quiz)
     case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action, quiz)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action, quiz)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_IVR: return autocompleteStepIvrPrompt(state, action, quiz)
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
@@ -218,6 +223,69 @@ const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Que
       ...prompt,
       sms: action.newPrompt.trim()
     }))
+  })
+}
+
+const autocompleteStepSmsPrompt = (state, action, quiz: Questionnaire): Step[] => {
+  return changeStep(state, action.stepId, step => {
+    // First change default language
+    step = setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+      ...prompt,
+      sms: action.item.text.trim()
+    }))
+
+    // Then change other languages
+    for (let translation of action.item.translations) {
+      if (!translation.language) continue
+
+      step = setStepPrompt(step, translation.language, prompt => {
+        if ((prompt || {}).sms == '') {
+          return {
+            ...prompt,
+            sms: translation.text.trim()
+          }
+        } else {
+          return prompt
+        }
+      })
+    }
+
+    return step
+  })
+}
+
+const autocompleteStepIvrPrompt = (state, action, quiz: Questionnaire): Step[] => {
+  return changeStep(state, action.stepId, step => {
+    // First change default language
+    step = setStepPrompt(step, quiz.defaultLanguage, prompt => ({
+      ...prompt,
+      ivr: {
+        ...prompt.ivr,
+        text: action.item.text.trim()
+      }
+    }))
+
+    // Then change other languages
+    for (let translation of action.item.translations) {
+      if (!translation.language) continue
+
+      step = setStepPrompt(step, translation.language, prompt => {
+        let ivr = prompt.ivr || newIvrPrompt()
+        if (ivr.text == '') {
+          return {
+            ...prompt,
+            ivr: {
+              ...ivr,
+              text: translation.text.trim()
+            }
+          }
+        } else {
+          return prompt
+        }
+      })
+    }
+
+    return step
   })
 }
 
@@ -461,6 +529,82 @@ const setSmsQuestionnaireMsg = (state, action) => {
   return setQuestionnaireMsg(state, action, 'sms')
 }
 
+const autocompleteSmsQuestionnaireMsg = (state, action) => {
+  let lang = state.defaultLanguage
+  let msgKey = action.msgKey
+  let item = action.item
+  let msg = Object.assign({}, state[msgKey])
+
+  // First default language
+  let langPrompt = msg[lang] || {}
+  msg[lang] = {
+    ...langPrompt,
+    sms: item.text.trim()
+  }
+
+  // Now translations
+  for (let translation of action.item.translations) {
+    lang = translation.language
+    if (!lang) continue
+
+    let langPrompt = msg[lang] || {}
+    let sms = langPrompt.sms || ''
+    if (sms == '') {
+      msg[lang] = {
+        ...langPrompt,
+        sms: translation.text.trim()
+      }
+    }
+  }
+
+  return {
+    ...state,
+    [msgKey]: msg
+  }
+}
+
+const autocompleteIvrQuestionnaireMsg = (state, action) => {
+  let lang = state.defaultLanguage
+  let msgKey = action.msgKey
+  let item = action.item
+  let msg = Object.assign({}, state[msgKey])
+
+  // First default language
+  let langPrompt = msg[lang] || {}
+  let ivr = langPrompt.ivr || {}
+  msg[lang] = {
+    ...langPrompt,
+    ivr: {
+      ...ivr,
+      text: item.text.trim()
+    }
+  }
+
+  // Now translations
+  for (let translation of action.item.translations) {
+    lang = translation.language
+    if (!lang) continue
+
+    let langPrompt = msg[lang] || {}
+    let ivr = langPrompt.ivr || newIvrPrompt()
+    let text = ivr.text || ''
+    if (text == '') {
+      msg[lang] = {
+        ...langPrompt,
+        ivr: {
+          ...ivr,
+          text: translation.text.trim()
+        }
+      }
+    }
+  }
+
+  return {
+    ...state,
+    [msgKey]: msg
+  }
+}
+
 const addOptionToLanguageSelectionStep = (state, language) => {
   return changeStep(state.steps, state.steps[0].id, (step) => ({
     ...step,
@@ -511,22 +655,17 @@ const setActiveLanguage = (state, action) => {
   }
 }
 
-type ValidationState = {
-  data: Questionnaire,
-  errors: { [path: string]: string[] }
-};
-
 const validateReducer = (reducer) => {
   // React will call this with an undefined the first time for initialization.
   // We mimic that in the specs, so ValidationState needs to become optional here.
-  return (state: ?ValidationState, action: any) => {
+  return (state: ?MetaQuestionnaire, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
 
-const validate = (state: ValidationState) => {
+const validate = (state: MetaQuestionnaire) => {
   if (!state.data) return
   state.errors = {}
   const context = {

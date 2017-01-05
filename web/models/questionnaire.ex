@@ -1,6 +1,8 @@
 defmodule Ask.Questionnaire do
   use Ask.Web, :model
 
+  alias Ask.{QuestionnaireVariable, Repo}
+
   schema "questionnaires" do
     field :name, :string
     field :modes, Ask.Ecto.Type.StringList
@@ -26,26 +28,50 @@ defmodule Ask.Questionnaire do
   end
 
   def recreate_variables!(questionnaire) do
-    # Delete previous variables
-    (from v in Ask.QuestionnaireVariable,
+    # Get existing variables
+    existing_variables = (from v in QuestionnaireVariable,
       where: v.questionnaire_id == ^questionnaire.id)
-    |> Ask.Repo.delete_all
+    |> Repo.all
 
-    # Get step stores
-    stores = questionnaire.steps
+    # # Delete previous variables
+    # (from v in QuestionnaireVariable,
+    #   where: v.questionnaire_id == ^questionnaire.id)
+    # |> Repo.delete_all
+
+    # Get new names
+    new_names = questionnaire.steps
     |> Enum.map(&Map.get(&1, "store"))
     |> Enum.reject(fn store -> store == nil end)
     |> Enum.uniq
 
-    # Create a variable for each store
-    stores
-    |> Enum.each(fn store ->
-      var = %Ask.QuestionnaireVariable{
+    # Compute additions
+    additions = new_names
+    |> Enum.reject(fn name ->
+      existing_variables
+      |> Enum.any?(fn var -> var.name == name end)
+    end)
+
+    # Compute deletions
+    deletions = existing_variables
+    |> Enum.reject(fn var ->
+      new_names
+      |> Enum.any?(fn name -> name == var.name end)
+    end)
+
+    # Insert additions
+    additions |> Enum.each(fn name ->
+      var = %QuestionnaireVariable{
         project_id: questionnaire.project_id,
         questionnaire_id: questionnaire.id,
-        name: store,
+        name: name,
       }
-      var |> Ask.Repo.insert!
+      var |> Repo.insert!
+    end)
+
+    # Delete deletions
+    deletions |> Enum.each(fn var ->
+      var
+      |> Repo.delete!
     end)
   end
 end

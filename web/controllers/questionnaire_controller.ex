@@ -106,6 +106,9 @@ defmodule Ask.QuestionnaireController do
         conn |> assign(:questionnaire, questionnaire)
       errors ->
         json_errors = errors |> JsonSchema.errors_to_json
+        IO.inspect("JSON SCHEMA VALIDATION FAILED")
+        IO.inspect("-----------------------------")
+        IO.inspect(json_errors)
         conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
     end
   end
