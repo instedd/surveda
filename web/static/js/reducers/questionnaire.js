@@ -9,7 +9,8 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined } from '../step'
+  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  newIvrPrompt } from '../step'
 import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
@@ -23,6 +24,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
     case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
+    case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
+    case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     default: return steps(state, action)
   }
@@ -247,10 +250,16 @@ const autocompleteStepSmsPrompt = (state, action, quiz: Questionnaire): Step[] =
     for (let translation of action.item.translations) {
       if (!translation.language) continue
 
-      step = setStepPrompt(step, translation.language, prompt => ({
-        ...prompt,
-        sms: translation.text.trim()
-      }))
+      step = setStepPrompt(step, translation.language, prompt => {
+        if ((prompt || {}).sms == '') {
+          return {
+            ...prompt,
+            sms: translation.text.trim()
+          }
+        } else {
+          return prompt
+        }
+      })
     }
 
     return step
@@ -273,12 +282,12 @@ const autocompleteStepIvrPrompt = (state, action, quiz: Questionnaire): Step[] =
       if (!translation.language) continue
 
       step = setStepPrompt(step, translation.language, prompt => {
-        const audioSource = (prompt.ivr || {}).audioSource || 'tts'
-        if (audioSource == 'tts') {
+        let ivr = prompt.ivr || newIvrPrompt()
+        if (ivr.text == '') {
           return {
             ...prompt,
             ivr: {
-              ...prompt.ivr,
+              ...ivr,
               text: translation.text.trim()
             }
           }
@@ -530,6 +539,82 @@ const setIvrQuestionnaireMsg = (state, action) => {
 
 const setSmsQuestionnaireMsg = (state, action) => {
   return setQuestionnaireMsg(state, action, 'sms')
+}
+
+const autocompleteSmsQuestionnaireMsg = (state, action) => {
+  let lang = state.defaultLanguage
+  let msgKey = action.msgKey
+  let item = action.item
+  let msg = Object.assign({}, state[msgKey])
+
+  // First default language
+  let langPrompt = msg[lang] || {}
+  msg[lang] = {
+    ...langPrompt,
+    sms: item.text.trim()
+  }
+
+  // Now translations
+  for (let translation of action.item.translations) {
+    lang = translation.language
+    if (!lang) continue
+
+    let langPrompt = msg[lang] || {}
+    let sms = langPrompt.sms || ''
+    if (sms == '') {
+      msg[lang] = {
+        ...langPrompt,
+        sms: translation.text.trim()
+      }
+    }
+  }
+
+  return {
+    ...state,
+    [msgKey]: msg
+  }
+}
+
+const autocompleteIvrQuestionnaireMsg = (state, action) => {
+  let lang = state.defaultLanguage
+  let msgKey = action.msgKey
+  let item = action.item
+  let msg = Object.assign({}, state[msgKey])
+
+  // First default language
+  let langPrompt = msg[lang] || {}
+  let ivr = langPrompt.ivr || {}
+  msg[lang] = {
+    ...langPrompt,
+    ivr: {
+      ...ivr,
+      text: item.text.trim()
+    }
+  }
+
+  // Now translations
+  for (let translation of action.item.translations) {
+    lang = translation.language
+    if (!lang) continue
+
+    let langPrompt = msg[lang] || {}
+    let ivr = langPrompt.ivr || newIvrPrompt()
+    let text = ivr.text || ''
+    if (text == '') {
+      msg[lang] = {
+        ...langPrompt,
+        ivr: {
+          ...ivr,
+          text: translation.text.trim()
+        }
+      }
+    }
+  }
+
+  return {
+    ...state,
+    [msgKey]: msg
+  }
 }
 
 const addOptionToLanguageSelectionStep = (state, language) => {

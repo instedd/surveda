@@ -2,7 +2,7 @@
 export type Survey = {
   name: string,
   cutoff: number,
-  mode: [string[]],
+  mode: [?string[]],
   modeComparison: boolean,
   state: string,
   questionnaireIds: number[],

@@ -85,7 +85,7 @@ class SurveyWizardChannelsStep extends Component {
 
     const currentChannels = survey.channels || []
     const mode = survey.mode || []
-    const modeComparison = mode.length > 1 || survey.modeComparison
+    const modeComparison = mode.length > 1 || (!!survey.modeComparison)
 
     let channelsComponent = []
     let allModes = uniq(flatMap(mode))
@@ -111,8 +111,8 @@ class SurveyWizardChannelsStep extends Component {
               <input
                 id='questionnaire_mode_comparison'
                 type='checkbox'
-                defaultChecked={modeComparison}
-                onClick={e => this.modeComparisonChange(e)}
+                checked={modeComparison}
+                onChange={e => this.modeComparisonChange(e)}
                 className='with-gap'
                 />
               <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
@@ -124,8 +124,8 @@ class SurveyWizardChannelsStep extends Component {
                 name='questionnaire_mode'
                 className='with-gap'
                 value='ivr'
-                defaultChecked={this.modeIncludes(mode, ['ivr'])}
-                onClick={e => this.modeChange(e, ['ivr'])}
+                checked={this.modeIncludes(mode, ['ivr'])}
+                onChange={e => this.modeChange(e, ['ivr'])}
                 />
               <label htmlFor='questionnaire_mode_ivr'>{modeLabel(['ivr'])}</label>
             </p>
@@ -136,8 +136,8 @@ class SurveyWizardChannelsStep extends Component {
                 name='questionnaire_mode'
                 className='with-gap'
                 value='ivr_sms'
-                defaultChecked={this.modeIncludes(mode, ['ivr', 'sms'])}
-                onClick={e => this.modeChange(e, ['ivr', 'sms'])}
+                checked={this.modeIncludes(mode, ['ivr', 'sms'])}
+                onChange={e => this.modeChange(e, ['ivr', 'sms'])}
                 />
               <label htmlFor='questionnaire_mode_ivr_sms'>{modeLabel(['ivr', 'sms'])}</label>
             </p>
@@ -148,8 +148,8 @@ class SurveyWizardChannelsStep extends Component {
                 name='questionnaire_mode'
                 className='with-gap'
                 value='sms'
-                defaultChecked={this.modeIncludes(mode, ['sms'])}
-                onClick={e => this.modeChange(e, ['sms'])}
+                checked={this.modeIncludes(mode, ['sms'])}
+                onChange={e => this.modeChange(e, ['sms'])}
                 />
               <label htmlFor='questionnaire_mode_sms'>{modeLabel(['sms'])}</label>
             </p>
@@ -160,8 +160,8 @@ class SurveyWizardChannelsStep extends Component {
                 name='questionnaire_mode'
                 className='with-gap'
                 value='sms_ivr'
-                defaultChecked={this.modeIncludes(mode, ['sms', 'ivr'])}
-                onClick={e => this.modeChange(e, ['sms', 'ivr'])}
+                checked={this.modeIncludes(mode, ['sms', 'ivr'])}
+                onChange={e => this.modeChange(e, ['sms', 'ivr'])}
                 />
               <label htmlFor='questionnaire_mode_sms_ivr'>{modeLabel(['sms', 'ivr'])}</label>
             </p>

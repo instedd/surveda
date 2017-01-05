@@ -28,9 +28,11 @@ export class Autocomplete extends Component {
   constructor(props) {
     super(props)
     this.clickingAutocomplete = false
+    this.hidden = false
   }
 
   hide() {
+    this.hidden = true
     $(this.refs.dropdown).hide()
   }
 
@@ -64,19 +66,24 @@ export class Autocomplete extends Component {
 
     $(input).materialize_autocomplete({
       limit: 100,
+      cacheable: false,
       multiple: {
         enable: false
       },
       dropdown: {
         el: dropdown,
-        itemTemplate: '<li class="ac-item" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
+        itemTemplate: '<li class="ac-item" style="color: black !important" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
       },
       onSelect: (item) => {
         this.clickingAutocomplete = false
         onSelect(item)
       },
       getData: (value, callback) => {
-        getData(value, callback)
+        this.hidden = false
+        getData(value, (v, c) => {
+          if (this.hidden) return
+          callback(v, c)
+        })
       }
     })
   }

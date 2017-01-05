@@ -32,7 +32,7 @@ class ChannelIndex extends Component {
 
     const providerSwitch = (provider) => {
       const disabled = authorizations.fetching
-      const checked = authorizations.items && authorizations.items.includes(provider)
+      const checked = !!(authorizations.items && authorizations.items.includes(provider))
       return <div className='switch'>
         <label>
           <input type='checkbox' disabled={disabled} checked={checked} onChange={() => this.toggleProvider(provider)} />
@@ -72,7 +72,7 @@ class ChannelIndex extends Component {
                 {providerSwitch('verboice')}
                 <span className='channel-description'>
                   <b>Voice channels</b>
-                  <br/>
+                  <br />
                   Callcentric, SIP client, SIP server, Skype, Twillio
                 </span>
                 <i className='material-icons arrow-right'>chevron_right</i>
@@ -83,7 +83,7 @@ class ChannelIndex extends Component {
                 <i className='material-icons arrow-right'>chevron_right</i>
                 <span className='channel-description'>
                   <b>SMS channels</b>
-                  <br/>
+                  <br />
                   Clickatell, DTAC, I-POP, Multimodem iSms and 8 more
                 </span>
               </li>

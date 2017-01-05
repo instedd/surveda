@@ -95,24 +95,18 @@ class StepPrompts extends Component {
     if (activeLanguage == defaultLanguage) {
       let value = this.autocompleteItems.find(i => i.id == item.id)
       if (mode == 'sms') {
-        this.setState({stepPromptSms: value.text})
         this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
       } else {
-        this.setState({stepPromptIvrText: value.text})
         this.props.questionnaireActions.autocompleteStepPromptIvr(step.id, value)
       }
     } else {
       if (mode == 'sms') {
-        this.setState({stepPromptSms: item.text})
         this.props.questionnaireActions.changeStepPromptSms(step.id, item.text)
       } else {
-        this.setState({stepPromptIvrText: item.text})
-        this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: item.text, audioSource: 'tts'})
+        let prompt = getStepPromptIvr(step)
+        this.props.questionnaireActions.changeStepPromptIvr(step.id, {...prompt, text: item.text})
       }
     }
-  }
-
-  autocompleteIvrPromptOnSelect(item) {
   }
 
   render() {
@@ -138,6 +132,7 @@ class StepPrompts extends Component {
     if (ivr) {
       let ivrInputErrors = errors[`${errorPath}.prompt.ivr.text`]
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
+        key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
         inputErrors={ivrInputErrors}
         onChange={e => this.stepPromptIvrChange(e)}

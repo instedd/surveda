@@ -307,8 +307,12 @@ const changeModeComparison = (state, action) => {
   let modeComparison = newMode.length > 1 || state.modeComparison
   let newModeComparison = !modeComparison
 
-  if (!newModeComparison && newMode.length > 1) {
-    newMode = [newMode[0]]
+  if (!newModeComparison) {
+    if (newMode.length == 1) {
+      newMode = [newMode[0]]
+    } else {
+      newMode = []
+    }
   }
 
   return {
@@ -324,8 +328,12 @@ const changeQuestionnaireComparison = (state, action) => {
   let questionnaireComparison = newQuestionnaireIds.length > 1 || state.questionnaireComparison
   let newQuestionnaireComparison = !questionnaireComparison
 
-  if (!newQuestionnaireComparison && newQuestionnaireIds.length > 1) {
-    newQuestionnaireIds = [newQuestionnaireIds[0]]
+  if (!newQuestionnaireComparison) {
+    if (newQuestionnaireIds.length == 1) {
+      newQuestionnaireIds = [newQuestionnaireIds[0]]
+    } else {
+      newQuestionnaireIds = []
+    }
   }
 
   return {

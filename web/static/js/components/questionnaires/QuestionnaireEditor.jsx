@@ -251,10 +251,10 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           <div className='row'>
-            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' />
+            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' icon='pie_chart' />
           </div>
           <div className='row'>
-            <QuestionnaireMsg title='Error' messageKey='errorMsg' />
+            <QuestionnaireMsg title='Error' messageKey='errorMsg' icon='warning' />
           </div>
         </div>
       </div>
