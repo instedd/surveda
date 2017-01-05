@@ -86,6 +86,7 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_CHOICE: return changeChoice(state, action, quiz)
     case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
     case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
+    case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC: return changeExplanationStepSkipLogic(state, action)
   }
 
   return state
@@ -334,21 +335,14 @@ const changeStepTitle = (state, action) => {
   }))
 }
 
-const clearTypeProperties = (step: Step): BaseStep => {
-  return {
-    id: step.id,
-    title: step.title,
-    store: step.store
-  }
-}
-
 const changeStepType = (state, action) => {
   switch (action.stepType) {
     case 'multiple-choice':
       return changeStep(state, action.stepId, step => {
-        let baseStep = clearTypeProperties(step)
         let newStep = {
-          ...baseStep,
+          id: step.id,
+          title: step.title,
+          store: step.store,
           type: action.stepType,
           prompt: step.prompt,
           choices: []
@@ -357,15 +351,27 @@ const changeStepType = (state, action) => {
       })
     case 'numeric':
       return changeStep(state, action.stepId, step => {
-        let baseStep = clearTypeProperties(step)
         let newStep = {
-          ...baseStep,
+          id: step.id,
+          title: step.title,
+          store: step.store,
           type: action.stepType,
           prompt: step.prompt,
           minValue: null,
           maxValue: null,
           rangesDelimiters: null,
           ranges: [{from: null, to: null, skipLogic: null}]
+        }
+        return newStep
+      })
+    case 'explanation':
+      return changeStep(state, action.stepId, step => {
+        let newStep = {
+          id: step.id,
+          type: action.stepType,
+          title: step.title,
+          prompt: step.prompt,
+          skipLogic: null
         }
         return newStep
       })
@@ -974,6 +980,15 @@ const changeRangeSkipLogic = (state, action) => {
         newRange,
         ...step.ranges.slice(action.rangeIndex + 1)
       ]
+    }
+  })
+}
+
+const changeExplanationStepSkipLogic = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    return {
+      ...step,
+      skipLogic: action.skipLogic
     }
   })
 }

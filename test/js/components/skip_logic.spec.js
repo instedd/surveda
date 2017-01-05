@@ -57,4 +57,3 @@ describe('<SkipLogic/>', () => {
     expect(wrapper.state()['value']).toEqual('foo')
   })
 })
-

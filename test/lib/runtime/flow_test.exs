@@ -305,4 +305,29 @@ defmodule Ask.FlowTest do
     assert flow.language == "es"
     assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"]
   end
+
+  describe "explanation steps" do
+
+    test "adds previous explanation steps to prompts" do
+      quiz = build(:questionnaire, steps: @explanation_steps_minimal)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step
+
+      assert {:ok, flow, %{prompts: prompts}} = flow_state
+
+      assert prompts == ["Is this the last question?", "Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == 1
+    end
+
+    test "ends but keeps the prompts" do
+      quiz = build(:questionnaire, steps: @only_explanation_steps)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step
+
+      assert {:end, %{prompts: prompts}} = flow_state
+
+      assert prompts == ["Is this the last question?"]
+    end
+
+  end
 end

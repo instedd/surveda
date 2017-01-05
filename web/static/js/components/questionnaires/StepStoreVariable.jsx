@@ -7,7 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as api from '../../api.js'
 
 type Props = {
-  step: Step,
+  step: StoreStep & BaseStep,
   questionnaireActions: any,
   project: any,
 };

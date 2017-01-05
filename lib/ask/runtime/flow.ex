@@ -55,6 +55,8 @@ defmodule Ask.Runtime.Flow do
           |> Map.get("choices")
           |> Enum.find(fn choice -> choice["value"] == reply_value end)
           |> Map.get("skip_logic")
+        "explanation" ->
+          step["skip_logic"]
         "language-selection" ->
           nil
       end
@@ -80,7 +82,7 @@ defmodule Ask.Runtime.Flow do
   defp advance_current_step(flow, step, reply_value) do
     next_step =
       cond do
-        !reply_value ->
+        !reply_value && !(step["type"] == "explanation") ->
           flow.current_step + 1
         :else ->
           next_step_by_skip_logic(flow, step, reply_value)
@@ -158,8 +160,20 @@ defmodule Ask.Runtime.Flow do
       nil ->
         {:end, state}
       step ->
-        {:ok, flow, %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}}
+        case step["type"] do
+          "explanation" ->
+            add_explanation_step_prompt(flow, state)
+          _ ->
+            {:ok, flow, %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}}
+        end
     end
+  end
+
+  defp add_explanation_step_prompt(flow, state) do
+    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
+    state = %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}
+    flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
+    eval({flow, state})
   end
 
   defp clean_string(nil), do: ""

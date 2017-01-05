@@ -119,15 +119,6 @@ defmodule Ask.StepsValidatorTest do
       "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
       "type": "multiple-choice",
       "title": "Smoke",
-      "prompt": {}
-    })
-    |> invalid_step("Step must have store")
-
-    ~s(
-    {
-      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
-      "type": "multiple-choice",
-      "title": "Smoke",
       "prompt": {},
       "store": {}
     })

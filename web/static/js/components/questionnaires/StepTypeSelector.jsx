@@ -21,19 +21,26 @@ class StepTypeSelector extends Component {
   render() {
     const { stepType } = this.props
     return (<div className='left'>
-      <Dropdown className='step-mode' label={stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : <i className='material-icons sharp'>dialpad</i>} constrainWidth={false} dataBelowOrigin={false}>
+      <Dropdown className='step-mode' label={stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : stepType == 'numeric' ? <i className='material-icons sharp'>dialpad</i> : <i className='material-icons sharp'>chat_bubble_outline</i>} constrainWidth={false} dataBelowOrigin={false}>
         <DropdownItem>
           <a onClick={e => this.changeStepType('multiple-choice')}>
             <i className='material-icons left'>list</i>
-              Multiple choice
+            Multiple choice
             {stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
         <DropdownItem>
           <a onClick={e => this.changeStepType('numeric')}>
             <i className='material-icons left sharp'>dialpad</i>
-              Numeric
+            Numeric
             {stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
+          </a>
+        </DropdownItem>
+        <DropdownItem>
+          <a onClick={e => this.changeStepType('explanation')}>
+            <i className='material-icons left sharp'>chat_bubble_outline</i>
+            Explanation
+            {stepType == 'explanation' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
       </Dropdown>

@@ -6,6 +6,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
 import NumericStepEditor from './NumericStepEditor'
 import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
+import ExplanationStepEditor from './ExplanationStepEditor'
 
 type Props = {
   step: Step,
@@ -41,6 +42,12 @@ class StepEditor extends Component {
         <NumericStepEditor
           {...commonProps}
           onDelete={onDelete}
+          stepsAfter={stepsAfter}
+          stepsBefore={stepsBefore} />
+    } else if (step.type == 'explanation') {
+      editor =
+        <ExplanationStepEditor
+          {...commonProps}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore} />
     } else if (step.type == 'language-selection') {

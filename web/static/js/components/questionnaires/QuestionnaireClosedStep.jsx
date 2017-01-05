@@ -20,7 +20,7 @@ class QuestionnaireClosedStep extends Component {
 
     const stepIconClass = classNames({
       'material-icons left': true,
-      'sharp': step.type === 'numeric',
+      'sharp': step.type === 'numeric' || step.type == 'explanation',
       'text-error': hasErrors
     })
 
@@ -29,6 +29,8 @@ class QuestionnaireClosedStep extends Component {
         return 'list'
       } else if (step.type === 'numeric') {
         return 'dialpad'
+      } else if (step.type === 'explanation') {
+        return 'chat_bubble_outline'
       } else {
         return 'language'
       }
