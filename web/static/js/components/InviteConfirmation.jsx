@@ -15,7 +15,7 @@ class InviteConfirmation extends Component {
   render() {
     return (
       <div>
-        <div> InviteShow </div>
+        <div> You have been invited to collaborate in project </div>
         <a onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
       </div>
     )
