@@ -1,6 +1,6 @@
 // @flow
 import React, { Component } from 'react'
-import { UntitledIfEmpty, Tooltip } from '../ui'
+import { UntitledIfEmpty, Tooltip, Autocomplete } from '../ui'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined } from '../../step'
@@ -16,6 +16,8 @@ type Props = {
   ivr: boolean,
   errors: any,
   errorPath: string,
+  smsAutocompleteGetData: Function,
+  smsAutocompleteOnSelect: Function,
 };
 
 type Focus = null | 'response' | 'sms' | 'ivr';
@@ -50,14 +52,12 @@ class ChoiceEditor extends Component {
     }
   }
 
-  smsChange(event: Event) {
-    event.preventDefault()
-    if (event.target instanceof HTMLInputElement) {
-      this.setState({
-        ...this.state,
-        sms: event.target.value
-      })
-    }
+  smsChange(event: ?Event, sms: string) {
+    if (event) event.preventDefault()
+    this.setState({
+      ...this.state,
+      sms
+    })
   }
 
   ivrChange(event: Event) {
@@ -97,6 +97,9 @@ class ChoiceEditor extends Component {
   }
 
   exitEditMode(autoComplete: boolean = false) {
+    let autocomplete = this.refs.autocomplete
+    if (autocomplete && autocomplete.clickingAutocomplete) return
+
     const { onChoiceChange } = this.props
     if (this.state.doNotClose) {
       this.state.doNotClose = false
@@ -173,7 +176,8 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepsBefore, stepsAfter, sms, ivr, errors, errorPath } = this.props
+    const { onDelete, stepsBefore, stepsAfter, sms, ivr, errors, errorPath,
+      smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     let skipLogicInput =
       <td>
@@ -202,12 +206,19 @@ class ChoiceEditor extends Component {
           ? <td onMouseDown={e => this.setDoNotClose('sms')}>
             <input
               type='text'
+              ref='smsInput'
               placeholder='Valid entries'
               value={this.state.sms}
               autoFocus={this.state.focus == 'sms'}
-              onChange={e => this.smsChange(e)}
+              onChange={e => this.smsChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e, 'ivr')} />
+            <Autocomplete
+              getInput={() => this.refs.smsInput}
+              getData={(value, callback) => smsAutocompleteGetData(value, callback)}
+              onSelect={(item) => smsAutocompleteOnSelect(item)}
+              ref='autocomplete'
+              />
           </td> : null
           }
           { ivr

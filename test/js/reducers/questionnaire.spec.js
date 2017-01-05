@@ -392,6 +392,32 @@ describe('questionnaire reducer', () => {
         ])
       })
 
+      it('should autocomplete choice sms values', () => {
+        const preState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaire),
+          actions.setActiveLanguage('es'),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, '', '', '', 'end')
+        ])
+
+        const resultState = playActionsFromState(preState, reducer)([
+          actions.autocompleteChoiceSmsValues('17141bea-a81c-4227-bdda-f5f69188b0e7', 1,
+            {text: '  M,  MB  , 3  ', translations: [{language: 'es', text: '  A, B , C '}, {language: null, text: null}]})
+        ])
+
+        const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+        expect(step.choices[1].responses.sms['en']).toEqual([
+          'M',
+          'MB',
+          '3'
+        ])
+        expect(step.choices[1].responses.sms['es']).toEqual([
+          'A',
+          'B',
+          'C'
+        ])
+      })
+
       it('should autocomplete choice options when parameter is true', () => {
         const preState = playActions([
           actions.fetch(1, 1),

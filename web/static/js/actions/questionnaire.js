@@ -20,6 +20,7 @@ export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
 export const ADD_CHOICE = 'QUESTIONNAIRE_ADD_CHOICE'
 export const DELETE_CHOICE = 'QUESTIONNAIRE_DELETE_CHOICE'
 export const CHANGE_CHOICE = 'QUESTIONNAIRE_CHANGE_CHOICE'
+export const AUTOCOMPLETE_CHOICE_SMS_VALUES = 'QUESTIONNAIRE_AUTOCOMPLETE_CHOICE_SMS_VALUES'
 export const SAVING = 'QUESTIONNAIRE_SAVING'
 export const SAVED = 'QUESTIONNAIRE_SAVED'
 export const ADD_LANGUAGE = 'QUESTIONNAIRE_ADD_LANGUAGE'
@@ -88,6 +89,13 @@ export const changeChoice = (stepId, index, response, smsValues, ivrValues, skip
   type: CHANGE_CHOICE,
   choiceChange: { index, response, smsValues, ivrValues, skipLogic, autoComplete },
   stepId
+})
+
+export const autocompleteChoiceSmsValues = (stepId, index, item) => ({
+  type: AUTOCOMPLETE_CHOICE_SMS_VALUES,
+  stepId,
+  index,
+  item
 })
 
 export const deleteChoice = (stepId, index) => ({

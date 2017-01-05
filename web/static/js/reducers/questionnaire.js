@@ -84,6 +84,7 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
     case actions.CHANGE_CHOICE: return changeChoice(state, action, quiz)
+    case actions.AUTOCOMPLETE_CHOICE_SMS_VALUES: return autocompleteChoiceSmsValues(state, action, quiz)
     case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
     case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
     case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC: return changeExplanationStepSkipLogic(state, action)
@@ -151,6 +152,44 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
           },
           skipLogic: action.choiceChange.skipLogic
         },
+        ...nextChoices
+      ]
+    })
+  })
+}
+
+const autocompleteChoiceSmsValues = (state, action, quiz: Questionnaire) => {
+  return changeStep(state, action.stepId, (step) => {
+    const previousChoices = step.choices.slice(0, action.index)
+    const choice = step.choices[action.index]
+    const nextChoices = step.choices.slice(action.index + 1)
+
+    let newChoice = {...choice}
+    let responses = newChoice.responses
+    let newResponses = {...responses}
+    newChoice.responses = newResponses
+    let sms = newResponses.sms
+    let newSms = {...sms}
+    newResponses.sms = newSms
+
+    // First change default language
+    newSms[quiz.defaultLanguage] = splitValues(action.item.text)
+
+    // Then change other languages
+    for (let translation of action.item.translations) {
+      if (!translation.language) continue
+
+      let currentSms = sms[translation.language] || []
+      if (currentSms.length == 0) {
+        newSms[translation.language] = splitValues(translation.text)
+      }
+    }
+
+    return ({
+      ...step,
+      choices: [
+        ...previousChoices,
+        newChoice,
         ...nextChoices
       ]
     })

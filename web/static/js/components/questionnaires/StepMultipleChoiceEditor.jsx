@@ -4,6 +4,8 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaire'
 import ChoiceEditor from './ChoiceEditor'
 import { Card } from '../ui'
+import { getChoiceResponseSmsJoined } from '../../step'
+import * as api from '../../api'
 
 class StepMultipleChoiceEditor extends Component {
   addChoice(e) {
@@ -23,6 +25,50 @@ class StepMultipleChoiceEditor extends Component {
     return (response, smsValues, ivrValues, skipLogic, autoComplete = false) => {
       actions.changeChoice(step.id, index, response, smsValues, ivrValues, skipLogic, autoComplete)
     }
+  }
+
+  smsAutocompleteGetData(value, callback, choice, index) {
+    const { questionnaire } = this.props
+
+    const defaultLanguage = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
+
+    if (activeLanguage == defaultLanguage) {
+      api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', defaultLanguage, value)
+      .then(response => {
+        const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
+        this.smsAutocompleteItems = items
+        callback(value, items)
+      })
+    } else {
+      let sms = getChoiceResponseSmsJoined(choice, defaultLanguage)
+      if (sms.length == 0) return
+
+      api.autocompleteOtherLanguage(questionnaire.projectId, 'sms', defaultLanguage, activeLanguage, sms, value)
+      .then(response => {
+        const items = response.map(r => ({id: r, text: r}))
+        this.smsAutocompleteItems = items
+        callback(value, items)
+      })
+    }
+  }
+
+  smsAutocompleteOnSelect(item, choice, index) {
+    const { questionnaire, step, actions } = this.props
+
+    const defaultLanguage = questionnaire.defaultLanguage
+    const activeLanguage = questionnaire.activeLanguage
+    const editor = this.refs[`choiceEditor${index}`]
+
+    if (activeLanguage == defaultLanguage) {
+      let value = this.smsAutocompleteItems.find(i => i.id == item.id)
+      actions.autocompleteChoiceSmsValues(step.id, index, value)
+      editor.smsChange(null, value.text)
+    } else {
+      editor.smsChange(null, item.text)
+    }
+
+    editor.exitEditMode()
   }
 
   render() {
@@ -62,6 +108,7 @@ class StepMultipleChoiceEditor extends Component {
               <tbody>
                 { choices.map((choice, index) =>
                   <ChoiceEditor
+                    ref={`choiceEditor${index}`}
                     key={index}
                     questionnaire={questionnaire}
                     choice={choice}
@@ -73,7 +120,9 @@ class StepMultipleChoiceEditor extends Component {
                     ivr={ivr}
                     errors={errors}
                     errorPath={`${errorPath}.choices[${index}]`}
-                      />
+                    smsAutocompleteGetData={(value, callback) => this.smsAutocompleteGetData(value, callback, choice, index)}
+                    smsAutocompleteOnSelect={item => this.smsAutocompleteOnSelect(item, choice, index)}
+                    />
                   )}
               </tbody>
             </table>
