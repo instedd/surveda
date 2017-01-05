@@ -85,7 +85,7 @@ defmodule Ask.InviteControllerTest do
     assert length(invites) == 0
   end
 
-  test "accepts invitation", %{conn: conn, user: user} do
+  test "accepts invite", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       user2 = insert(:user)
       code = "ABC1234"
@@ -106,6 +106,30 @@ defmodule Ask.InviteControllerTest do
       "data" => %{
         "project_id" => project.id,
         "level" => level
+        }
+      }
+    end
+
+    test "shows invite", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      code = "ABC1234"
+      level = "reader"
+      invite = %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => "user@instedd.org",
+        "inviter_email" => user.email
+      }
+      Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+      conn = get conn, invite_show_path(conn, :show, %{"code" => code})
+
+      assert json_response(conn, 200) == %{
+      "data" => %{
+        "project_name" => project.name,
+        "role" => level,
+        "inviter_email" => user.email
         }
       }
     end

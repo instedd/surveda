@@ -1,7 +1,7 @@
 defmodule Ask.InviteController do
   use Ask.Web, :api_controller
 
-  alias Ask.{ProjectMembership, Invite}
+  alias Ask.{Project, ProjectMembership, Invite}
   import Ecto.Query
 
   def accept_invitation(conn, %{"code" => code}) do
@@ -26,6 +26,12 @@ defmodule Ask.InviteController do
     |> Repo.insert
 
     render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
+  end
+
+  def show(conn, %{"code" => code}) do
+    invite = Invite |> Repo.get_by(code: code)
+    project = Project |> Repo.get(invite.project_id)
+    render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
   end
 
   def invite_mail(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do

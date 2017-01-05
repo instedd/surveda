@@ -21,6 +21,16 @@ defmodule Ask.InviteView do
     }
   end
 
+  def render("show.json", %{project_name: project_name, inviter_email: inviter_email, role: role}) do
+    %{data:
+      %{
+        project_name: project_name,
+        inviter_email: inviter_email,
+        role: role
+      }
+    }
+  end
+
   def render("error.json", %{error: error}) do
     %{data:
       %{
