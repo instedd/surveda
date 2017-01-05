@@ -1,9 +1,11 @@
+// @flow weak
 import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
+export const CHANGE_COMPARISON_RATIO = 'SURVEY_CHANGE_COMPARISON_RATIO'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
@@ -32,7 +34,7 @@ export const createSurvey = (projectId) => (dispatch, getState) =>
     return survey
   })
 
-export const fetchSurvey = (projectId, id) => (dispatch, getState) => {
+export const fetchSurvey = (projectId, id) => (dispatch, getState): Survey => {
   dispatch(fetch(projectId, id))
   return api.fetchSurvey(projectId, id)
     .then(response => {
@@ -49,7 +51,7 @@ export const fetch = (projectId, id) => ({
   projectId
 })
 
-export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState) => {
+export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState): Promise<Survey> => {
   if (shouldFetch(getState().survey, projectId, id)) {
     return dispatch(fetchSurvey(projectId, id))
   } else {
@@ -69,6 +71,13 @@ export const shouldFetch = (state, projectId, id) => {
 export const changeCutoff = (cutoff) => ({
   type: CHANGE_CUTOFF,
   cutoff
+})
+
+export const comparisonRatioChange = (questionnaireId, mode, ratio) => ({
+  type: CHANGE_COMPARISON_RATIO,
+  questionnaireId,
+  mode,
+  ratio
 })
 
 export const quotaChange = (condition, quota) => ({

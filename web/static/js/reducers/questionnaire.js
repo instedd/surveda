@@ -31,6 +31,18 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
   }
 }
 
+const validateReducer = (reducer) => {
+  // React will call this with an undefined the first time for initialization.
+  // We mimic that in the specs, so ValidationState needs to become optional here.
+  return (state: ?MetaQuestionnaire, action: any) => {
+    const newState = reducer(state, action)
+    validate(newState)
+    return newState
+  }
+}
+
+export default validateReducer(fetchReducer(actions, dataReducer))
+
 const steps = (state, action) => {
   // Up to now we've been assuming that all content was under corresponding 'en' keys,
   // now that languages can be added and removed and default language can be
@@ -655,16 +667,6 @@ const setActiveLanguage = (state, action) => {
   }
 }
 
-const validateReducer = (reducer) => {
-  // React will call this with an undefined the first time for initialization.
-  // We mimic that in the specs, so ValidationState needs to become optional here.
-  return (state: ?MetaQuestionnaire, action: any) => {
-    const newState = reducer(state, action)
-    validate(newState)
-    return newState
-  }
-}
-
 const validate = (state: MetaQuestionnaire) => {
   if (!state.data) return
   state.errors = {}
@@ -860,8 +862,6 @@ const addToCsvForTranslation = (text, context, func) => {
     context.rows.push(context.headers.map(func))
   }
 }
-
-export default validateReducer(fetchReducer(actions, dataReducer))
 
 const changeNumericRanges = (state, action) => {
   return changeStep(state, action.stepId, step => {

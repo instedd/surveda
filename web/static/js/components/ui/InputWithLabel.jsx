@@ -9,7 +9,7 @@ export class InputWithLabel extends Component {
     value: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.number ]),
-    label: PropTypes.string,
+    label: PropTypes.node,
     errors: PropTypes.array
   }
 

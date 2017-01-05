@@ -1,19 +1,22 @@
+// @flow
 import * as actions from '../actions/survey'
 import fetchReducer from './fetch'
 import drop from 'lodash/drop'
 import flatten from 'lodash/flatten'
 import map from 'lodash/map'
 import split from 'lodash/split'
+import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
 import some from 'lodash/some'
 
-export const dataReducer = (state, action) => {
+export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.CHANGE_QUOTA: return quotaChange(state, action)
+    case actions.CHANGE_COMPARISON_RATIO: return comparisonRatioChange(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
     case actions.TOGGLE_DAY: return toggleDay(state, action)
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
@@ -33,13 +36,20 @@ export const dataReducer = (state, action) => {
   }
 }
 
+type ValidationState = {
+  data: Survey,
+  errors: { [path: string]: string[] }
+};
+
 const validateReducer = (reducer) => {
-  return (state, action) => {
+  return (state: ?ValidationState, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
+
+export default validateReducer(fetchReducer(actions, dataReducer))
 
 const validate = (state) => {
   if (!state.data) return
@@ -99,10 +109,6 @@ const bucketsFor = (storeVars, options) => {
 }
 
 const buildBuckets = (storeVars, options) => {
-  if (storeVars.length == 0) {
-    return [{}]
-  }
-
   const firstVar = options[storeVars[0].var]
 
   let values = firstVar.values
@@ -111,7 +117,14 @@ const buildBuckets = (storeVars, options) => {
   }
 
   return flatten(map(values, (value) => {
-    return map(buildBuckets(drop(storeVars), options), (bucket) => {
+    let buckets = []
+    if (drop(storeVars).length == 0) {
+      buckets = [{}]
+    } else {
+      buckets = buildBuckets(drop(storeVars), options)
+    }
+
+    return map(buckets, (bucket) => {
       let condition = []
       if (bucket.condition && bucket.condition.length > 0) {
         condition = bucket.condition
@@ -140,6 +153,23 @@ const intervalsFrom = (valueString) => {
   return [[values[0], values[1] - 1], ...intervalsFrom(drop(values))]
 }
 
+const comparisonRatioChange = (state, action) => {
+  const bucketIndex = findIndex(state.comparisons, (bucket) =>
+    bucket.questionnaireId == action.questionnaireId && bucket.mode == action.mode
+  )
+  return {
+    ...state,
+    comparisons: [
+      ...state.comparisons.slice(0, bucketIndex),
+      {
+        ...state.comparisons[bucketIndex],
+        ratio: action.ratio
+      },
+      ...state.comparisons.slice(bucketIndex + 1)
+    ]
+  }
+}
+
 const quotaChange = (state, action) => {
   const bucketIndex = findIndex(state.quotas.buckets, (bucket) =>
     isEqual(bucket.condition, action.condition)
@@ -160,13 +190,29 @@ const quotaChange = (state, action) => {
   }
 }
 
-export const rebuildInputFromQuotaBuckets = (store, survey) => {
-  const buckets = survey.quotas.buckets.filter((bucket) => Object.keys(bucket.condition).includes(store))
-  let conditions = uniqWith(buckets.map((bucket) => bucket.condition[store]), isEqual)
+export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
+  const buckets = survey.quotas.buckets.filter((bucket) => bucket.condition.map((condition) => condition.store).includes(store))
+  let conditions = uniqWith(buckets.map((bucket) => find(bucket.condition, (condition) => condition.store == store).value), isEqual)
   conditions = conditions.map(x => [x[0], x[1] + 1])
   conditions = flatten(conditions)
   conditions = uniqWith(conditions, isEqual)
   return conditions.join()
+}
+
+export const modeLabel = (mode: string[]) => {
+  if (isEqual(mode, ['sms'])) {
+    return 'SMS'
+  }
+  if (isEqual(mode, ['ivr'])) {
+    return 'Phone call'
+  }
+  if (isEqual(mode, ['ivr', 'sms'])) {
+    return 'Phone call with SMS fallback'
+  }
+  if (isEqual(mode, ['sms', 'ivr'])) {
+    return 'SMS with phone call fallback'
+  }
+  return 'Unknown mode'
 }
 
 const saved = (state, action) => {
@@ -199,6 +245,7 @@ const changeQuestionnaire = (state, action) => {
     ...state,
     questionnaireIds: newQuestionnaireIds,
     questionnaireComparison,
+    comparisons: buildComparisons(state.modeComparison, questionnaireComparison, state.mode, newQuestionnaireIds),
     quotas: {
       vars: [],
       buckets: []
@@ -250,7 +297,8 @@ const selectMode = (state, action) => {
   return {
     ...state,
     mode: newMode,
-    modeComparison
+    modeComparison,
+    comparisons: buildComparisons(modeComparison, state.questionnaireComparison, newMode, state.questionnaireIds)
   }
 }
 
@@ -270,6 +318,7 @@ const changeModeComparison = (state, action) => {
   return {
     ...state,
     mode: newMode,
+    comparisons: buildComparisons(newModeComparison, state.questionnaireComparison, newMode, state.questionnaireIds),
     modeComparison: newModeComparison
   }
 }
@@ -290,7 +339,23 @@ const changeQuestionnaireComparison = (state, action) => {
   return {
     ...state,
     questionnaireIds: newQuestionnaireIds,
-    questionnaireComparison: newQuestionnaireComparison
+    questionnaireComparison: newQuestionnaireComparison,
+    comparisons: buildComparisons(state.modeComparison, newQuestionnaireComparison, state.mode, newQuestionnaireIds)
+  }
+}
+
+const buildComparisons = (modeComparison, questionnaireComparison, modes, questionnaires) => {
+  if ((modeComparison || questionnaireComparison) && modes && questionnaires) {
+    return flatten(map(modes, (mode) => {
+      return map(questionnaires, (questionnaire) => {
+        return ({
+          mode: mode,
+          questionnaireId: questionnaire
+        })
+      })
+    }))
+  } else {
+    return []
   }
 }
 
@@ -328,5 +393,3 @@ const changeIvrRetryConfiguration = (state, action) => {
     ivrRetryConfiguration: action.ivrRetryConfiguration
   }
 }
-
-export default validateReducer(fetchReducer(actions, dataReducer))

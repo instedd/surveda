@@ -62,7 +62,8 @@ defmodule Ask.SurveyControllerTest do
         "quotas" => %{
           "vars" => [],
           "buckets" => []
-        }
+        },
+        "comparisons" => []
       }
     end
 
@@ -97,7 +98,8 @@ defmodule Ask.SurveyControllerTest do
         "quotas" => %{
           "vars" => [],
           "buckets" => []
-        }
+        },
+        "comparisons" => []
       }
     end
 
@@ -152,7 +154,8 @@ defmodule Ask.SurveyControllerTest do
               "count" => 0
             },
           ]
-        }
+        },
+        "comparisons" => []
       }
     end
 
@@ -267,7 +270,8 @@ defmodule Ask.SurveyControllerTest do
         "quotas" => %{
           "vars" => [],
           "buckets" => []
-        }
+        },
+        "comparisons" => []
       }
     end
 
