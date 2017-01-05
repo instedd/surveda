@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
-import { UntitledIfEmpty, InputWithLabel } from '../ui'
+import { UntitledIfEmpty, PercentageInput } from '../ui'
 import find from 'lodash/find'
 import { modeLabel } from '../../reducers/survey'
 
@@ -20,17 +20,14 @@ class SurveyWizardComparisonsStep extends Component {
     this.comparisonRatioChange = this.comparisonRatioChange.bind(this)
   }
 
-  comparisonRatioChange(e) {
-    e.preventDefault()
+  comparisonRatioChange(numbers, id) {
     const { dispatch, survey } = this.props
-    var onlyNumbers = e.target.value.replace(/[^0-9.]/g, '')
+    console.log('El id:', id)
 
-    if (onlyNumbers == e.target.value && onlyNumbers < Math.pow(2, 31) - 1) {
-      const bucket = find(survey.comparisons, (bucket) =>
-        this.bucketId(bucket) == e.target.id
-      )
-      dispatch(actions.comparisonRatioChange(bucket.questionnaireId, bucket.mode, onlyNumbers))
-    }
+    const bucket = find(survey.comparisons, (bucket) =>
+      this.bucketId(bucket) == id
+    )
+    dispatch(actions.comparisonRatioChange(bucket.questionnaireId, bucket.mode, numbers))
   }
 
   bucketId(bucket) {
@@ -60,17 +57,17 @@ class SurveyWizardComparisonsStep extends Component {
           ? survey.comparisons.map((bucket, index) =>
             <div className='row comparisons' key={index} >
               <div className='col s12'>
-                <InputWithLabel value={bucket.ratio == null ? 0 : bucket.ratio} id={this.bucketId(bucket)} label={
-                  <span>
-                    {this.questionnaireName(bucket)}
-                    {` - ${modeLabel(bucket.mode)}`}
-                  </span>
-                } >
-                  <input
-                    type='text'
-                    onChange={this.comparisonRatioChange}
-                  />
-                </InputWithLabel>
+                <PercentageInput
+                  value={bucket.ratio == null ? 0 : bucket.ratio}
+                  id={this.bucketId(bucket)}
+                  label={
+                    <span>
+                      {this.questionnaireName(bucket)}
+                      {` - ${modeLabel(bucket.mode)}`}
+                    </span>
+                  }
+                  onChange={this.comparisonRatioChange}
+                />
               </div>
             </div>
           )
