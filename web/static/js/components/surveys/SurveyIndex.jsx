@@ -118,7 +118,7 @@ class SurveyCard extends PureComponent {
               </div>
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>
-                  <UntitledIfEmpty text={survey.name} />
+                  <UntitledIfEmpty text={survey.name} entityName='survey' />
                 </span>
                 <SurveyStatus survey={survey} />
               </div>

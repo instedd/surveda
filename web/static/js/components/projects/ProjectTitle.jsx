@@ -32,7 +32,7 @@ class ProjectTitle extends Component {
     const { project } = this.props
     if (project == null) return null
 
-    return <EditableTitleLabel title={project.name} onSubmit={(value) => { this.handleSubmit(value) }} />
+    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} />
   }
 }
 

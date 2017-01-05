@@ -99,7 +99,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                     checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
                     onChange={e => this.questionnaireChange(e)}
                   />
-                  <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} /></label>
+                  <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} entityName='questionnaire' /></label>
                 </p>
               </div>
             ))}

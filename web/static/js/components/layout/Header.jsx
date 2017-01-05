@@ -10,7 +10,7 @@ const Header = ({ tabs, logout, user, project }) => {
     projectLink = (
       <li className='breadcrumb-item'>
         <Link to={routes.project(project.id)} className=''>
-          <UntitledIfEmpty text={project.name} />
+          <UntitledIfEmpty text={project.name} entityName='project' />
         </Link>
       </li>
     )
@@ -33,7 +33,7 @@ const Header = ({ tabs, logout, user, project }) => {
               </ul>
               <ul className='right user-menu'>
                 <li>
-                  <Dropdown label={<div><span className="user-email">{user}</span><i className="material-icons user-icon">person</i></div>}>
+                  <Dropdown label={<div><span className='user-email'>{user}</span><i className='material-icons user-icon'>person</i></div>}>
                     <DropdownDivider />
                     <DropdownItem className='user-email-dropdown'>
                       <span>{user}</span>

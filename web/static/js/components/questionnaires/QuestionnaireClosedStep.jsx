@@ -10,7 +10,7 @@ type Props = {
   step: Step,
   onClick: Function,
   hasErrors: boolean
-}
+};
 
 class QuestionnaireClosedStep extends Component {
   props: Props
@@ -44,7 +44,7 @@ class QuestionnaireClosedStep extends Component {
                 onClick(step.id)
               }}>
                 <i className={stepIconClass}>{stepIconFont}</i>
-                <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText='Untitled question' />
+                <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} entityName='question' />
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
               </a>
             </div>

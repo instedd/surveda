@@ -88,48 +88,48 @@ class ProjectIndex extends Component {
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0)
           ? <div className='empty-projects'>
-              <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
-              <div className='organize'>
-                <div className='icons'>
-                  <i className='material-icons'>assignment_turned_in</i>
-                  <i className='material-icons'>assignment</i>
-                  <i className='material-icons'>perm_phone_msg</i>
-                  <i className='material-icons'>folder_shared</i>
-                </div>
-                <p>
-                  <b>Organize your work</b><br/>
-                  Manage survey, questionnaires, contents and collaborators under the same context.
-                </p>
-
+            <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
+            <div className='organize'>
+              <div className='icons'>
+                <i className='material-icons'>assignment_turned_in</i>
+                <i className='material-icons'>assignment</i>
+                <i className='material-icons'>perm_phone_msg</i>
+                <i className='material-icons'>folder_shared</i>
               </div>
+              <p>
+                <b>Organize your work</b><br />
+                  Manage survey, questionnaires, contents and collaborators under the same context.
+              </p>
+
             </div>
+          </div>
           : <CardTable title={title} footer={footer} highlight>
-              <colgroup>
-                <col width="60%" />
-                <col width="20%" />
-                <col width="20%" />
-              </colgroup>
+            <colgroup>
+              <col width='60%' />
+              <col width='20%' />
+              <col width='20%' />
+            </colgroup>
             <thead>
               <tr>
                 <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className="right-align" text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className="right-align" text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={-index} className='empty-row'><td colSpan='3'></td></tr>
+                if (!project) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
                 return (
                   <tr key={project.id}>
-                    <td className="project-name" onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} />
+                    <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
+                      <UntitledIfEmpty text={project.name} entityName='project' />
                     </td>
-                    <td className="right-align">
+                    <td className='right-align'>
                       {project.runningSurveys}
                     </td>
-                    <td className="right-align">
+                    <td className='right-align'>
                       <FormattedDate
                         value={Date.parse(project.updatedAt)}
                         day='numeric'
@@ -137,7 +137,8 @@ class ProjectIndex extends Component {
                         year='numeric' />
                     </td>
                   </tr>
-                ) })
+                )
+              })
               }
             </tbody>
           </CardTable>

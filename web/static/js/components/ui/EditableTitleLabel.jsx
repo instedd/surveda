@@ -6,6 +6,7 @@ export class EditableTitleLabel extends Component {
     onSubmit: React.PropTypes.func.isRequired,
     title: React.PropTypes.string,
     emptyText: React.PropTypes.string,
+    entityName: React.PropTypes.string,
     editing: React.PropTypes.bool
   }
 
@@ -42,7 +43,7 @@ export class EditableTitleLabel extends Component {
   }
 
   render() {
-    const { title, emptyText } = this.props
+    const { title, emptyText, entityName } = this.props
 
     let icon = null
     if (!title || title.trim() == '') {
@@ -52,7 +53,7 @@ export class EditableTitleLabel extends Component {
     if (!this.state.editing) {
       return (
         <a className='page-title truncate' onClick={e => this.handleClick(e)}>
-          <span><UntitledIfEmpty text={title} emptyText={emptyText} /></span>
+          <span><UntitledIfEmpty text={title} emptyText={emptyText} entityName={entityName} /></span>
           {icon}
         </a>
       )

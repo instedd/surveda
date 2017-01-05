@@ -119,7 +119,7 @@ class QuestionnaireIndex extends Component {
               return (
                 <tr key={questionnaire.id}>
                   <td onClick={() => this.goTo(questionnaire.id)}>
-                    <UntitledIfEmpty text={questionnaire.name} />
+                    <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
                   </td>
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     { (questionnaire.modes || []).join(', ').toUpperCase() }

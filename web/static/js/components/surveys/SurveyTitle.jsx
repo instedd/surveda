@@ -23,7 +23,7 @@ class SurveyTitle extends Component {
     const { survey } = this.props
     if (survey == null) return null
 
-    return <EditableTitleLabel title={survey.name} onSubmit={(value) => { this.handleSubmit(value) }} />
+    return <EditableTitleLabel title={survey.name} entityName='survey' onSubmit={(value) => { this.handleSubmit(value) }} />
   }
 }
 
