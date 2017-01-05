@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { CardTable } from '../ui'
+import { CardTable, AddButton } from '../ui'
+import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
 
 class CollaboratorIndex extends Component {
@@ -10,6 +11,10 @@ class CollaboratorIndex extends Component {
     if (projectId) {
       this.props.actions.fetchCollaborators(projectId)
     }
+  }
+
+  inviteCollaborator() {
+    $('#addCollaborator').modal('open')
   }
 
   render() {
@@ -21,24 +26,28 @@ class CollaboratorIndex extends Component {
 
     return (
       <div>
-        <CardTable title={title}>
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            { collaborators.map(c => {
-              return (
-                <tr key={c.email}>
-                  <td> {c.email} </td>
-                  <td> {c.role} </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </CardTable>
+        <AddButton text='Invite collaborator' onClick={() => this.inviteCollaborator()} />
+        <InviteModal modalId='addCollaborator' modalText='The access of project collaborators will be managed through roles' header='Invite collaborators' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '800px'}} />
+        <div>
+          <CardTable title={title}>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              { collaborators.map(c => {
+                return (
+                  <tr key={c.email}>
+                    <td> {c.email} </td>
+                    <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </CardTable>
+        </div>
       </div>
     )
   }

@@ -41,3 +41,6 @@ config :ask, Ask.Repo,
   database: "ask_dev",
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool_size: 10
+
+config :ask, Ask.Mailer,
+  adapter: Bamboo.LocalAdapter

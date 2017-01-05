@@ -71,3 +71,13 @@ config :ask, Ask.Repo,
   database: "ask",
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool_size: 20
+
+config :ask, Ask.Mailer,
+  adapter: Bamboo.SMTPAdapter,
+  server: System.get_env("SMTP_SERVER"),
+  port: System.get_env("SMTP_PORT"),
+  username: System.get_env("SMTP_USER"),
+  password: System.get_env("SMTP_PASS"),
+  tls: :always, # can be `:always` or `:never`
+  ssl: false, # can be `true`
+  retries: 1

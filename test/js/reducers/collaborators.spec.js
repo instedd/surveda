@@ -21,11 +21,10 @@ describe('collaborators reducer', () => {
   it('should receive respondents', () => {
     const projectId = 11
     const params = {
-      'collaborators': [{'email': 'user@manas.com.ar', 'level': 'owner'}]
+      'collaborators': [{'email': 'user@instedd.com.ar', 'level': 'owner'}]
     }
     const r1 = reducer(initialState, actions.startFetchingCollaborators(projectId))
     const result = reducer(r1, actions.receiveCollaborators(params, projectId))
-    console.log(result)
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(params.collaborators)
     expect(result.projectId).toEqual(projectId)

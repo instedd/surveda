@@ -90,6 +90,11 @@ defmodule Ask.Factory do
     }
   end
 
+  def invite_factory do
+    %Ask.Invite{
+    }
+  end
+
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
     %Ask.Respondent{
