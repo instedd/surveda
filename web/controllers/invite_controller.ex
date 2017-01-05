@@ -11,7 +11,10 @@ defmodule Ask.InviteController do
     else
       user = conn |> current_user
       changeset = %{"user_id" => user.id, "project_id" => invite.project_id, "level" => invite.level}
-      ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert
+      Ask.Repo.transaction fn ->
+        ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert
+        invite |> Repo.delete!
+      end
       render(conn, "accept_invitation.json", %{"level": invite.level, "project_id": invite.project_id})
     end
   end
