@@ -110,6 +110,7 @@ class StepMultipleChoiceEditor extends Component {
                   <ChoiceEditor
                     ref={`choiceEditor${index}`}
                     key={index}
+                    index={index}
                     questionnaire={questionnaire}
                     choice={choice}
                     onDelete={(e) => this.deleteChoice(e, index)}

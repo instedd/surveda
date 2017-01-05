@@ -7,6 +7,7 @@ import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
 import { questionnaire } from '../fixtures'
+import { filterByPathPrefix } from '../../../web/static/js/questionnaireErrors'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 
 describe('questionnaire reducer', () => {
@@ -507,32 +508,46 @@ describe('questionnaire reducer', () => {
 
   describe('validations', () => {
     it('should validate SMS message must not be blank if "SMS" mode is on', () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
+        actions.addLanguage('es'),
+        actions.addLanguage('fr'),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', ''),
+        actions.setActiveLanguage('es'),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', 'Hola!'),
+        actions.setActiveLanguage('fr'),
         actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
       ])
 
-      expect(resultState.errors).toEqual({
-        'steps[0].prompt.sms': ['SMS prompt must not be blank']
+      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1]')
+
+      expect(resultErrors).toInclude({
+        [`steps[1].prompt['en'].sms`]: ['SMS prompt must not be blank'],
+        [`steps[1].prompt['fr'].sms`]: ['SMS prompt must not be blank']
       })
     })
 
     it('should validate voice message must not be blank if "Phone call" mode is on', () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.toggleMode('sms'),
+        actions.addLanguage('es'),
+        actions.addLanguage('fr'),
+        actions.changeStepPromptIvr('17141bea-a81c-4227-bdda-f5f69188b0e7', {text: '', audioSource: 'tts'}),
+        actions.setActiveLanguage('es'),
+        actions.changeStepPromptIvr('17141bea-a81c-4227-bdda-f5f69188b0e7', {text: 'Hola!', audioSource: 'tts'}),
+        actions.setActiveLanguage('fr'),
         actions.changeStepPromptIvr('17141bea-a81c-4227-bdda-f5f69188b0e7', {text: '', audioSource: 'tts'})
       ])
 
-      expect(resultState.errors).toEqual({
-        'steps[0].prompt.ivr.text': ['Voice prompt must not be blank']
+      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1]')
+
+      expect(resultErrors).toInclude({
+        [`steps[1].prompt['en'].ivr.text`]: ['Voice prompt must not be blank'],
+        [`steps[1].prompt['fr'].ivr.text`]: ['Voice prompt must not be blank']
       })
     })
 
@@ -568,32 +583,45 @@ describe('questionnaire reducer', () => {
     })
 
     it("should validate a response's SMS must not be blank if SMS mode is on", () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', '', '1', null),
+        actions.addLanguage('es'),
+        actions.setActiveLanguage('es'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', '1', null),
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', '', '1', null)
       ])
 
-      expect(resultState.errors).toEqual({
-        'steps[0].choices[0].sms': ['SMS must not be blank']
+      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
+
+      expect(resultErrors).toInclude({
+        [`steps[1].choices[0]['en'].sms`]: ['SMS must not be blank'],
+        [`steps[1].choices[0]['fr'].sms`]: ['SMS must not be blank']
       })
     })
 
     it("should validate a response's Phone call must not be blank if Voice mode is on", () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.toggleMode('sms'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b', '', null),
+        actions.addLanguage('es'),
+        actions.setActiveLanguage('es'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b', '', null),
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b', '', null)
       ])
 
-      expect(resultState.errors).toEqual({
-        'steps[0].choices[0].ivr': ['"Phone call" must not be blank']
+      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
+
+      expect(resultErrors).toEqual({
+        [`steps[1].choices[0].ivr`]: ['"Phone call" must not be blank']
       })
     })
 
@@ -660,7 +688,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toEqual({
-        'steps[0].choices[1].sms': ['Value "c" already used in a previous response']
+        [`steps[0].choices[1]['en'].sms`]: ['Value "c" already used in a previous response']
       })
     })
 

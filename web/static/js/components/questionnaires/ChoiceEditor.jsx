@@ -1,6 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { UntitledIfEmpty, Tooltip, Autocomplete } from '../ui'
+import { connect } from 'react-redux'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined } from '../../step'
@@ -9,12 +10,14 @@ type Props = {
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
+  choiceIndex: number,
+  step: Step,
   stepsBefore: Step[],
   stepsAfter: Step[],
   questionnaire: Questionnaire,
   sms: boolean,
   ivr: boolean,
-  errors: any,
+  errors: QuizErrors,
   errorPath: string,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
@@ -30,7 +33,7 @@ type State = {
   focus: Focus,
   doNotClose: boolean,
   skipLogic: ?string,
-  errors: ?any,
+  errors: ?QuizErrors,
 };
 
 class ChoiceEditor extends Component {
@@ -258,4 +261,7 @@ class ChoiceEditor extends Component {
   }
 }
 
-export default ChoiceEditor
+const mapStateToProps = (state, ownProps) => ({
+})
+
+export default connect(mapStateToProps)(ChoiceEditor)

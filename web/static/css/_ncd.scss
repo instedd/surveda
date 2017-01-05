@@ -1249,6 +1249,23 @@ i.survey-status {
   }
 }
 
+.languages {
+  .tooltip-error {
+    position: relative;
+    &:after {
+      content: '';
+      @extend .back-error;
+      display: block;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      position: absolute;
+      top: 20px;
+      right: 36px;
+    }
+  }
+}
+
 .other-languages-list {
   li {
     position: relative;

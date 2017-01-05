@@ -1,12 +1,25 @@
+// @flow
 import * as actions from '../../actions/questionnaire'
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import 'materialize-autocomplete'
 import iso6393 from 'iso-639-3'
-import AddLanguage from './AddLanguage'
 import classNames from 'classnames/bind'
+import { langHasErrors } from '../../questionnaireErrors'
+import AddLanguage from './AddLanguage'
+
+type Props = {
+  defaultLanguage: string,
+  activeLanguage: string,
+  languages: string[],
+  loading: boolean,
+  langHasErrors: (string) => boolean,
+  onRemoveLanguage: Function,
+  dispatch: Function
+};
 
 class LanguagesList extends Component {
+  props: Props
 
   defaultLanguageSelected(lang) {
     const props = this.props
@@ -27,20 +40,17 @@ class LanguagesList extends Component {
   }
 
   render() {
-    const { questionnaire, onRemoveLanguage } = this.props
+    const { loading, languages, defaultLanguage, activeLanguage, onRemoveLanguage, langHasErrors } = this.props
 
-    if (!questionnaire) {
+    if (loading) {
       return <div>Loading...</div>
     }
 
-    let defaultLanguage = questionnaire.defaultLanguage
-    let activeLanguage = questionnaire.activeLanguage
-
-    let otherLangugages = questionnaire.languages.filter((lang) => lang !== defaultLanguage)
-    otherLangugages = otherLangugages.map((lang) => [lang, this.translateLangCode(lang)])
-    otherLangugages = otherLangugages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
-    otherLangugages = otherLangugages.map((lang) =>
-      <li key={lang[0]} className={classNames({'active-language': lang[0] == activeLanguage})}>
+    let otherLanguages = languages.filter((lang) => lang !== defaultLanguage)
+    otherLanguages = otherLanguages.map((lang: string) => [lang, this.translateLangCode(lang)])
+    otherLanguages = otherLanguages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
+    otherLanguages = otherLanguages.map((lang) =>
+      <li key={lang[0]} className={classNames({'active-language': lang[0] == activeLanguage, 'tooltip-error': langHasErrors(lang[0])})}>
         <span className='remove-language' onClick={() => onRemoveLanguage(lang[0])}>
           <i className='material-icons'>highlight_off</i>
         </span>
@@ -56,27 +66,32 @@ class LanguagesList extends Component {
       </li>
       )
 
-    let otherLangugagesComponent = null
-    if (otherLangugages.length != 0) {
-      otherLangugagesComponent = (
+    let otherLanguagesComponent = null
+    if (otherLanguages.length != 0) {
+      otherLanguagesComponent = (
         <div className='row'>
           <div className='col s12'>
             <p className='grey-text'>Other languages:</p>
             <ul className='other-languages-list'>
-              {otherLangugages}
+              {otherLanguages}
             </ul>
           </div>
         </div>
         )
     }
 
+    const defaultLanguageClassnames = classNames({
+      'selected-language': true,
+      'active-language': activeLanguage == defaultLanguage
+    })
+
     return (
       <div className='languages'>
         <div className='row'>
           <div className='col s12'>
             <p className='grey-text'>Primary language:</p>
-            <ul className={classNames({'selected-language': true, 'active-language': activeLanguage == defaultLanguage})}>
-              <li>
+            <ul className={defaultLanguageClassnames}>
+              <li className={classNames({'tooltip-error': langHasErrors(defaultLanguage)})}>
                 <span>{this.translateLangCode(defaultLanguage)}</span>
                 <span href='#' className='right-arrow' onClick={e => this.setActiveLanguage(e, defaultLanguage)}>
                   <i className='material-icons'>keyboard_arrow_right</i>
@@ -85,7 +100,7 @@ class LanguagesList extends Component {
             </ul>
           </div>
         </div>
-        {otherLangugagesComponent}
+        {otherLanguagesComponent}
         <div className='row'>
           <AddLanguage />
         </div>
@@ -94,14 +109,12 @@ class LanguagesList extends Component {
   }
 }
 
-LanguagesList.propTypes = {
-  questionnaire: PropTypes.object,
-  onRemoveLanguage: PropTypes.func,
-  dispatch: PropTypes.func
-}
-
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  defaultLanguage: (state.questionnaire.data || {}).defaultLanguage,
+  activeLanguage: (state.questionnaire.data || {}).activeLanguage,
+  languages: (state.questionnaire.data || {}).languages,
+  loading: !state.questionnaire.data,
+  langHasErrors: langHasErrors(state.questionnaire)
 })
 
 export default connect(mapStateToProps)(LanguagesList)

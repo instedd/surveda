@@ -14,9 +14,16 @@ export type QuizErrors = {
   [path: string]: string[]
 }
 
+export type ChoiceErrors = {
+  value: string[],
+  sms: string[],
+  ivr: string[]
+}
+
 export type MetaQuestionnaire = {
   data: Questionnaire,
-  errors: QuizErrors
+  errors: QuizErrors,
+  errorsByLang: { [lang: string]: QuizErrors }
 }
 
 export type MetaQuestionnaires = {

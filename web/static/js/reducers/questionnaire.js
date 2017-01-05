@@ -11,6 +11,7 @@ import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt } from '../step'
+import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
@@ -712,9 +713,18 @@ const setActiveLanguage = (state, action) => {
   }
 }
 
+type ValidationContext = {
+  sms: boolean,
+  ivr: boolean,
+  activeLanguage: string,
+  languages: string[],
+  errors: QuizErrors
+};
+
 const validate = (state: MetaQuestionnaire) => {
   if (!state.data) return
   state.errors = {}
+
   const context = {
     sms: state.data.modes.indexOf('sms') != -1,
     ivr: state.data.modes.indexOf('ivr') != -1,
@@ -723,63 +733,85 @@ const validate = (state: MetaQuestionnaire) => {
     errors: state.errors
   }
 
-  validateSteps('steps', state.data.steps, context)
+  validateSteps(state.data.steps, context)
+
+  state.errorsByLang = errorsByLang(state)
 }
 
-const validateSteps = (path, steps, context) => {
+const validateSteps = (steps, context: ValidationContext) => {
   for (let i = 0; i < steps.length; i++) {
-    validateStep(`${path}[${i}]`, steps[i], context)
+    validateStep(steps[i], i, context)
   }
 }
 
-const validateStep = (path, step, context) => {
-  if (context.sms && getStepPromptSms(step, context.activeLanguage).length == 0) {
-    addError(context, `${path}.prompt.sms`, 'SMS prompt must not be blank')
+const validateSmsLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
+  if (getStepPromptSms(step, lang).length == 0) {
+    addError(context, promptTextPath(stepIndex, 'sms', lang), 'SMS prompt must not be blank')
+  }
+}
+
+const validateIvrLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
+  let ivr = getStepPromptIvr(step, lang)
+  if (ivr.audioSource == 'tts' && isBlank(ivr.text)) {
+    addError(context, promptTextPath(stepIndex, 'ivr', lang), 'Voice prompt must not be blank')
+  }
+}
+
+const validateStep = (step: Step, stepIndex: number, context: ValidationContext) => {
+  if (context.sms) {
+    context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
   }
 
   if (context.ivr) {
-    let ivr = getStepPromptIvr(step, context.activeLanguage)
-    if (ivr.audioSource == 'tts' && isBlank(ivr.text)) {
-      addError(context, `${path}.prompt.ivr.text`, 'Voice prompt must not be blank')
-    }
+    context.languages.forEach(lang => validateIvrLangPrompt(step, stepIndex, context, lang))
   }
 
   if (step.type === 'multiple-choice') {
-    validateChoices(`${path}.choices`, step.choices, context)
+    validateChoices(step.choices, stepIndex, context)
   }
 }
 
-const validateChoices = (path, choices: Choice[], context) => {
+const validateSmsResponseDuplicates = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number, lang: string, otherSms) => {
+  if (choice.responses.sms && choice.responses.sms[lang]) {
+    for (let choiceSms of choice.responses.sms[lang]) {
+      if (otherSms[lang] && otherSms[lang].includes(choiceSms)) {
+        addError(context, choiceSmsResponsePath(stepIndex, choiceIndex, lang), `Value "${choiceSms}" already used in a previous response`)
+      }
+    }
+
+    if (!otherSms[lang]) {
+      otherSms[lang] = []
+    }
+
+    otherSms[lang].push(...choice.responses.sms[lang])
+  }
+}
+
+const validateChoices = (choices: Choice[], stepIndex: number, context: ValidationContext) => {
   if (choices.length < 2) {
-    addError(context, path, 'You should define at least two response options')
+    addError(context, choicesPath(stepIndex), 'You should define at least two response options')
   }
 
   for (let i = 0; i < choices.length; i++) {
-    validateChoice(`${path}[${i}]`, choices[i], context)
+    validateChoice(choices[i], context, stepIndex, i)
   }
 
   const values = []
-  let sms = []
+  let sms = {}
   let ivr = []
+
   for (let i = 0; i < choices.length; i++) {
     let choice = choices[i]
     if (values.includes(choice.value)) {
-      addError(context, `${path}[${i}].value`, 'Value already used in a previous response')
+      addError(context, choiceValuePath(stepIndex, i), 'Value already used in a previous response')
     }
 
-    if (choice.responses.sms && choice.responses.sms[context.activeLanguage]) {
-      for (let choiceSms of choice.responses.sms[context.activeLanguage]) {
-        if (sms.includes(choiceSms)) {
-          addError(context, `${path}[${i}].sms`, `Value "${choiceSms}" already used in a previous response`)
-        }
-      }
-      sms.push(...choice.responses.sms[context.activeLanguage])
-    }
+    context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
 
     if (choice.responses.ivr) {
       for (let choiceIvr of choice.responses.ivr) {
         if (ivr.includes(choiceIvr)) {
-          addError(context, `${path}[${i}].ivr`, `Value "${choiceIvr}" already used in a previous response`)
+          addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
         }
       }
       ivr.push(...choice.responses.ivr)
@@ -789,32 +821,41 @@ const validateChoices = (path, choices: Choice[], context) => {
   }
 }
 
-const validateChoice = (path, choice: Choice, context) => {
-  if (isBlank(choice.value)) {
-    addError(context, `${path}.value`, 'Response must not be blank')
-  }
-
-  if (context.sms &&
-      choice.responses.sms &&
-      choice.responses.sms[context.activeLanguage] &&
-      choice.responses.sms[context.activeLanguage].length == 0) {
-    addError(context, `${path}.sms`, 'SMS must not be blank')
-  }
-
-  if (context.ivr) {
-    if (choice.responses.ivr &&
-        choice.responses.ivr.length == 0) {
-      addError(context, `${path}.ivr`, '"Phone call" must not be blank')
-    }
-
-    if (choice.responses.ivr &&
-        choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
-      addError(context, `${path}.ivr`, '"Phone call" must only consist of single digits, "#" or "*"')
-    }
+const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
+  if (choice.responses.sms &&
+      choice.responses.sms[lang] &&
+      choice.responses.sms[lang].length == 0) {
+    addError(context, choiceSmsResponsePath(stepIndex, choiceIndex, lang), 'SMS must not be blank')
   }
 }
 
-const addError = (context, path, error) => {
+const validateChoiceIvrResponse = (choice, context, stepIndex: number, choiceIndex: number) => {
+  if (choice.responses.ivr &&
+      choice.responses.ivr.length == 0) {
+    addError(context, choiceIvrResponsePath(stepIndex, choiceIndex), '"Phone call" must not be blank')
+  }
+
+  if (choice.responses.ivr &&
+      choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
+    addError(context, choiceIvrResponsePath(stepIndex, choiceIndex), '"Phone call" must only consist of single digits, "#" or "*"')
+  }
+}
+
+const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number) => {
+  if (isBlank(choice.value)) {
+    addError(context, choiceValuePath(stepIndex, choiceIndex), 'Response must not be blank')
+  }
+
+  if (context.sms) {
+    context.languages.forEach(lang => validateChoiceSmsResponse(choice, context, stepIndex, choiceIndex, lang))
+  }
+
+  if (context.ivr) {
+    validateChoiceIvrResponse(choice, context, stepIndex, choiceIndex)
+  }
+}
+
+const addError = (context, path: string, error) => {
   context.errors[path] = context.errors[path] || []
   context.errors[path].push(error)
 }
