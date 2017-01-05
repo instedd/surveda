@@ -1,11 +1,11 @@
+// @flow weak
 import * as api from '../api'
 
-export const RECEIVE_QUESTIONNAIRES = 'RECEIVE_QUESTIONNAIRES'
-export const FETCH_QUESTIONNAIRES = 'FETCH_QUESTIONNAIRES'
-export const RECEIVE_QUESTIONNAIRES_ERROR = 'RECEIVE_QUESTIONNAIRES_ERROR'
-export const NEXT_QUESTIONNAIRES_PAGE = 'NEXT_QUESTIONNAIRES_PAGE'
-export const PREVIOUS_QUESTIONNAIRES_PAGE = 'PREVIOUS_QUESTIONNAIRES_PAGE'
-export const SORT_QUESTIONNAIRES = 'SORT_QUESTIONNAIRES'
+export const RECEIVE_QUESTIONNAIRES = 'QUESTIONNAIRES_RECEIVE'
+export const FETCH_QUESTIONNAIRES = 'QUESTIONNAIRES_FETCH'
+export const NEXT_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
+export const PREVIOUS_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
+export const SORT_QUESTIONNAIRES = 'QUESTIONNAIRES_SORT'
 
 export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
   const state = getState()
@@ -33,11 +33,6 @@ export const receiveQuestionnaires = (projectId, questionnaires) => ({
   type: RECEIVE_QUESTIONNAIRES,
   projectId,
   questionnaires
-})
-
-export const receiveQuestionnairesError = (error) => ({
-  type: RECEIVE_QUESTIONNAIRES_ERROR,
-  error
 })
 
 export const nextQuestionnairesPage = () => ({

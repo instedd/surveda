@@ -7,9 +7,7 @@ export type Survey = {
   state: string,
   questionnaireIds: number[],
   questionnaireComparison: boolean,
-  scheduleDayOfWeek: {
-    [weekday: string]: boolean
-  },
+  scheduleDayOfWeek: DayOfWeek,
   scheduleStartTime: string,
   scheduleEndTime: string,
   channels: number[],
@@ -20,6 +18,26 @@ export type Survey = {
   },
   comparisons: Comparison[]
 };
+
+export type DayOfWeek = {
+  [weekday: string]: boolean
+};
+
+export type MetaSurvey = {
+  data: ?Survey,
+  filter: ?Filter,
+  fetching: boolean,
+  dirty: boolean
+}
+
+export type Filter = {
+  id: number,
+  projectId: number
+}
+
+export type MetaSurveys = {
+  items: Survey[]
+}
 
 export type Comparison = {
   questionnaireId: number,
@@ -35,4 +53,9 @@ export type Bucket = {
 export type Condition = {
   store: string,
   value: string
+};
+
+export type QuotaVar = {
+  var: string,
+  steps?: string
 };

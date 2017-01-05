@@ -155,7 +155,7 @@ const intervalsFrom = (valueString) => {
 
 const comparisonRatioChange = (state, action) => {
   const bucketIndex = findIndex(state.comparisons, (bucket) =>
-    bucket.questionnaireId == action.questionnaireId && bucket.mode == action.mode
+    bucket.questionnaireId == action.questionnaireId && isEqual(bucket.mode, action.mode)
   )
   return {
     ...state,

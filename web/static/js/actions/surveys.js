@@ -1,13 +1,13 @@
+// @flow
 import * as api from '../api'
 
-export const RECEIVE_SURVEYS = 'RECEIVE_SURVEYS'
-export const FETCH_SURVEYS = 'FETCH_SURVEYS'
-export const RECEIVE_SURVEYS_ERROR = 'RECEIVE_SURVEYS_ERROR'
-export const NEXT_SURVEYS_PAGE = 'NEXT_SURVEYS_PAGE'
-export const PREVIOUS_SURVEYS_PAGE = 'PREVIOUS_SURVEYS_PAGE'
-export const SORT_SURVEYS = 'SORT_SURVEYS'
+export const RECEIVE = 'SURVEYS_RECEIVE'
+export const FETCH = 'SURVEYS_FETCH'
+export const NEXT_PAGE = 'SURVEYS_NEXT_PAGE'
+export const PREVIOUS_PAGE = 'SURVEYS_PREVIOUS_PAGE'
+export const SORT = 'SURVEYS_SORT'
 
-export const fetchSurveys = (projectId) => (dispatch, getState) => {
+export const fetchSurveys = (projectId: number) => (dispatch: Function, getState: () => (Store)) => {
   const state = getState()
 
   // Don't fetch surveys if they are already being fetched
@@ -24,31 +24,26 @@ export const fetchSurveys = (projectId) => (dispatch, getState) => {
     .then(() => getState().surveys.items)
 }
 
-export const startFetchingSurveys = (projectId) => ({
-  type: FETCH_SURVEYS,
+export const startFetchingSurveys = (projectId: number) => ({
+  type: FETCH,
   projectId
 })
 
-export const receiveSurveys = (projectId, surveys) => ({
-  type: RECEIVE_SURVEYS,
+export const receiveSurveys = (projectId: number, surveys: Survey[]) => ({
+  type: RECEIVE,
   projectId,
   surveys
 })
 
-export const receiveSurveysError = (error) => ({
-  type: RECEIVE_SURVEYS_ERROR,
-  error
-})
-
 export const nextSurveysPage = () => ({
-  type: NEXT_SURVEYS_PAGE
+  type: NEXT_PAGE
 })
 
 export const previousSurveysPage = () => ({
-  type: PREVIOUS_SURVEYS_PAGE
+  type: PREVIOUS_PAGE
 })
 
-export const sortSurveysBy = (property) => ({
-  type: SORT_SURVEYS,
+export const sortSurveysBy = (property: string) => ({
+  type: SORT,
   property
 })

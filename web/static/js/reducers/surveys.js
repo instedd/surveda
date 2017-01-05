@@ -16,11 +16,11 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_SURVEYS: return fetchSurveys(state, action)
-    case actions.RECEIVE_SURVEYS: return receiveSurveys(state, action)
-    case actions.NEXT_SURVEYS_PAGE: return nextPage(state)
-    case actions.PREVIOUS_SURVEYS_PAGE: return previousPage(state)
-    case actions.SORT_SURVEYS: return sortItems(state, action)
+    case actions.FETCH: return fetchSurveys(state, action)
+    case actions.RECEIVE: return receiveSurveys(state, action)
+    case actions.NEXT_PAGE: return nextPage(state)
+    case actions.PREVIOUS_PAGE: return previousPage(state)
+    case actions.SORT: return sortItems(state, action)
     default: return state
   }
 }

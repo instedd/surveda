@@ -19,6 +19,10 @@ export type MetaQuestionnaire = {
   errors: QuizErrors
 }
 
+export type MetaQuestionnaires = {
+  items: Questionnaire[]
+}
+
 export type AudioPrompt = {
     audioSource: 'tts' | 'upload',
     text: string,

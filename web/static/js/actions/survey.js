@@ -1,4 +1,4 @@
-// @flow weak
+// @flow
 import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
@@ -26,7 +26,7 @@ export const SET_QUOTA_VARS = 'SURVEY_SET_QUOTA_VARS'
 export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
 export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
 
-export const createSurvey = (projectId) => (dispatch, getState) =>
+export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId).then(response => {
     const survey = response.result
     dispatch(fetch(projectId, survey.id))
@@ -34,7 +34,7 @@ export const createSurvey = (projectId) => (dispatch, getState) =>
     return survey
   })
 
-export const fetchSurvey = (projectId, id) => (dispatch, getState): Survey => {
+export const fetchSurvey = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Survey => {
   dispatch(fetch(projectId, id))
   return api.fetchSurvey(projectId, id)
     .then(response => {
@@ -45,13 +45,13 @@ export const fetchSurvey = (projectId, id) => (dispatch, getState): Survey => {
     })
 }
 
-export const fetch = (projectId, id) => ({
+export const fetch = (projectId: number, id: number) => ({
   type: FETCH,
   id,
   projectId
 })
 
-export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState): Promise<Survey> => {
+export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Promise<Survey> => {
   if (shouldFetch(getState().survey, projectId, id)) {
     return dispatch(fetchSurvey(projectId, id))
   } else {
@@ -59,45 +59,45 @@ export const fetchSurveyIfNeeded = (projectId, id) => (dispatch, getState): Prom
   }
 }
 
-export const receive = (survey) => ({
+export const receive = (survey: MetaSurvey) => ({
   type: RECEIVE,
   data: survey
 })
 
-export const shouldFetch = (state, projectId, id) => {
+export const shouldFetch = (state: MetaSurvey, projectId: number, id: number) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
-export const changeCutoff = (cutoff) => ({
+export const changeCutoff = (cutoff: string) => ({
   type: CHANGE_CUTOFF,
   cutoff
 })
 
-export const comparisonRatioChange = (questionnaireId, mode, ratio) => ({
+export const comparisonRatioChange = (questionnaireId: number, mode: string[], ratio: number) => ({
   type: CHANGE_COMPARISON_RATIO,
   questionnaireId,
   mode,
   ratio
 })
 
-export const quotaChange = (condition, quota) => ({
+export const quotaChange = (condition: Condition[], quota: number) => ({
   type: CHANGE_QUOTA,
   condition,
   quota
 })
 
-export const toggleDay = (day) => ({
+export const toggleDay = (day: string) => ({
   type: TOGGLE_DAY,
   day
 })
 
-export const setQuotaVars = (vars, questionnaire) => ({
+export const setQuotaVars = (vars: QuotaVar[], questionnaire: Questionnaire) => ({
   type: SET_QUOTA_VARS,
   vars,
   options: optionsFrom(vars, questionnaire)
 })
 
-const optionsFrom = (storeVars, questionnaire) => {
+const optionsFrom = (storeVars: QuotaVar[], questionnaire: Questionnaire) => {
   const storeValues = stepStoreValues(questionnaire)
   let options = {}
 
@@ -107,27 +107,27 @@ const optionsFrom = (storeVars, questionnaire) => {
   return options
 }
 
-export const setState = (state) => ({
+export const setState = (state: string) => ({
   type: SET_STATE,
   state
 })
 
-export const changeName = (newName) => ({
+export const changeName = (newName: string) => ({
   type: CHANGE_NAME,
   newName
 })
 
-export const setScheduleFrom = (hour) => ({
+export const setScheduleFrom = (hour: string) => ({
   type: SET_SCHEDULE_FROM,
   hour
 })
 
-export const selectChannels = (channels) => ({
+export const selectChannels = (channels: number[]) => ({
   type: SELECT_CHANNELS,
   channels
 })
 
-export const selectMode = (mode) => ({
+export const selectMode = (mode: string[]) => ({
   type: SELECT_MODE,
   mode
 })
@@ -140,32 +140,32 @@ export const changeQuestionnaireComparison = () => ({
   type: CHANGE_QUESTIONNAIRE_COMPARISON
 })
 
-export const setScheduleTo = (hour) => ({
+export const setScheduleTo = (hour: string) => ({
   type: SET_SCHEDULE_TO,
   hour
 })
 
-export const changeQuestionnaire = (questionnaire) => ({
+export const changeQuestionnaire = (questionnaire: number) => ({
   type: CHANGE_QUESTIONNAIRE,
   questionnaire
 })
 
-export const updateRespondentsCount = (respondentsCount) => ({
+export const updateRespondentsCount = (respondentsCount: string) => ({
   type: UPDATE_RESPONDENTS_COUNT,
   respondentsCount
 })
 
-export const setTimezone = (timezone) => ({
+export const setTimezone = (timezone: string) => ({
   type: SET_TIMEZONE,
   timezone
 })
 
-export const changeSmsRetryConfiguration = (smsRetryConfiguration) => ({
+export const changeSmsRetryConfiguration = (smsRetryConfiguration: string) => ({
   type: CHANGE_SMS_RETRY_CONFIGURATION,
   smsRetryConfiguration
 })
 
-export const changeIvrRetryConfiguration = (ivrRetryConfiguration) => ({
+export const changeIvrRetryConfiguration = (ivrRetryConfiguration: string) => ({
   type: CHANGE_IVR_RETRY_CONFIGURATION,
   ivrRetryConfiguration
 })
@@ -174,12 +174,12 @@ export const saving = () => ({
   type: SAVING
 })
 
-export const saved = (survey) => ({
+export const saved = (survey: Survey) => ({
   type: SAVED,
   data: survey
 })
 
-export const save = () => (dispatch, getState) => {
+export const save = () => (dispatch: Function, getState: () => Store) => {
   const survey = getState().survey.data
   dispatch(saving())
   api.updateSurvey(survey.projectId, survey)

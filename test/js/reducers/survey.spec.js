@@ -22,11 +22,11 @@ describe('survey reducer', () => {
   })
 
   it('should fetch', () => {
-    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 1, 1))
-    assert(actions.shouldFetch({fetching: true, filter: null}, 1, 1))
-    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}}, 2, 2))
-    assert(actions.shouldFetch({fetching: false, filter: null}, 1, 1))
-    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, id: 1}}, 1, 1))
+    assert(!actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}, dirty: false, data: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: true, filter: null, dirty: false, data: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: true, filter: {projectId: 1, id: 1}, dirty: false, data: null}, 2, 2))
+    assert(actions.shouldFetch({fetching: false, filter: null, dirty: false, data: null}, 1, 1))
+    assert(actions.shouldFetch({fetching: false, filter: {projectId: 1, id: 1}, dirty: false, data: null}, 1, 1))
   })
 
   it('fetches a survey', () => {
@@ -771,7 +771,7 @@ describe('survey reducer', () => {
       actions.changeQuestionnaire(2),
       actions.changeModeComparison(),
       actions.selectMode(['ivr']),
-      actions.comparisonRatioChange(2, 'sms', 0.4)
+      actions.comparisonRatioChange(2, ['sms'], 0.4)
     ])
 
     expect(state).toEqual({
