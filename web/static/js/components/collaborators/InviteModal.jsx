@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Dropdown, InputWithLabel, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem } from '../ui'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
@@ -62,17 +62,12 @@ export class InviteModal extends Component {
 
     return (
       <div>
-        <div id={modalId} className='modal' style={style}>
+        <div id={modalId} className='modal card' style={style}>
           <div className='modal-content'>
             <h4>{header}</h4>
             <p>{modalText}</p>
           </div>
-          <InputWithLabel id='email' value={guest.email} label='email' >
-            <input
-              type='text'
-              onChange={e => this.emailChanged(e)}
-            />
-          </InputWithLabel>
+          <input placeholder="Enter collaborator's email" type='text' onChange={e => { this.emailChanged(e) }} defaultValue={guest.email} />
           <Dropdown className='step-mode underlined' label={startCase(guest.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
             { /* TODO: Level options should also contain reader */ }
             {['editor'].map((level) =>
@@ -83,9 +78,13 @@ export class InviteModal extends Component {
               </DropdownItem>
             )}
           </Dropdown>
-          {send}
-          {cancel}
-          { guest.code ? <InviteLink /> : <div />}
+          <div>
+            { guest.code ? send : <span /> }
+            {cancel}
+          </div>
+          <div className='modal-footer'>
+            { guest.code ? <InviteLink /> : <div />}
+          </div>
         </div>
       </div>
     )

@@ -35,7 +35,6 @@ export class InviteLink extends Component {
             <a onClick={(() => this.copyLink())}> single use link </a>
           </CopyToClipboard>
         </div>
-        <div>{ this.inviteLink() }</div>
       </div>
     )
   }
