@@ -28,4 +28,24 @@ defmodule Ask.InviteController do
     render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
   end
 
+  def invite_mail(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
+    {project_id, _} = Integer.parse(project_id)
+
+    url = Ask.Endpoint.url <> "/confirm?code=#{code}"
+
+    invitation = %Bamboo.Email{
+      from: "noreply@instedd.org",
+      to: email,
+      subject: "Accept invitation",
+      text_body: "You have been invited to collaborate. Follow this link: #{url}",
+      headers: %{}
+    } |> Ask.Mailer.deliver_now
+
+
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id})
+    |> Repo.insert
+
+    render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
+  end
+
 end

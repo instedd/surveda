@@ -13,7 +13,6 @@ class InviteConfirmation extends Component {
   }
 
   render() {
-    // const projectId = this.props.location.query.projectId
     return (
       <div>
         <div> InviteShow </div>

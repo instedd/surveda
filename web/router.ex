@@ -46,7 +46,6 @@ defmodule Ask.Router do
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/collaborators", ProjectController, :collaborators, as: :collaborators
-        get "/email", ProjectController, :email, as: :email
       end
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]
@@ -54,6 +53,7 @@ defmodule Ask.Router do
       get "/authorizations/synchronize", OAuthClientController, :synchronize
       get "/accept_invitation", InviteController, :accept_invitation, as: :accept_invitation
       get "/invite", InviteController, :invite, as: :invite
+      get "/invite_mail", InviteController, :invite_mail, as: :invite_mail
     end
   end
 

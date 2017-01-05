@@ -20,11 +20,12 @@ export class InviteModal extends Component {
   }
 
   send() {
-    const { projectId } = this.props
-    const code = this.generateCode()
-    this.props.actions.invite(projectId, code, this.state.level, this.state.email)
-    this.props.collaboratorsActions.fetchCollaborators(projectId)
-    this.setState({email: '', level: '', code: ''})
+    const { projectId, guest } = this.props
+    if (guest.code) {
+      this.props.actions.inviteMail(projectId, guest.code, guest.level, guest.email)
+      this.props.collaboratorsActions.fetchCollaborators(projectId)
+      this.cancel()
+    }
   }
 
   emailChanged(e) {
