@@ -7,7 +7,7 @@ import { orderedItems } from '../../dataTable'
 import * as actions from '../../actions/questionnaires'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty } from '../ui'
+import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
 
 class QuestionnaireIndex extends Component {
@@ -125,9 +125,11 @@ class QuestionnaireIndex extends Component {
                     { (questionnaire.modes || []).join(', ').toUpperCase() }
                   </td>
                   <td className='duplicate'>
-                    <a onClick={() => this.duplicate(questionnaire)}>
-                      <i className='material-icons'>content_copy</i>
-                    </a>
+                    <Tooltip text='Duplicate questionnaire'>
+                      <a onClick={() => this.duplicate(questionnaire)}>
+                        <i className='material-icons'>content_copy</i>
+                      </a>
+                    </Tooltip>
                   </td>
                 </tr>
               )
