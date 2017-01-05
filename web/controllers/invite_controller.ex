@@ -33,7 +33,7 @@ defmodule Ask.InviteController do
 
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
 
-    invitation = %Bamboo.Email{
+    %Bamboo.Email{
       from: "noreply@instedd.org",
       to: email,
       subject: "Accept invitation",
