@@ -25,6 +25,7 @@ export class InviteModal extends Component {
       this.props.actions.inviteMail(projectId, guest.code, guest.level, guest.email)
       this.props.collaboratorsActions.fetchCollaborators(projectId)
       this.cancel()
+      $('#addCollaborator').modal('close')
     }
   }
 
@@ -68,7 +69,7 @@ export class InviteModal extends Component {
             <h4>{header}</h4>
             <p>{modalText}</p>
           </div>
-          <input placeholder="Enter collaborator's email" type='text' onChange={e => { this.emailChanged(e) }} defaultValue={guest.email} />
+          <input placeholder="Enter collaborator's email" type='text' onChange={e => { this.emailChanged(e) }} value={guest.email} />
           <Dropdown className='step-mode underlined' label={startCase(guest.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
             { /* TODO: Level options should also contain reader */ }
             {['editor'].map((level) =>
