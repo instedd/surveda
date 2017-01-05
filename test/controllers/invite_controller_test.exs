@@ -1,4 +1,4 @@
-defmodule Ask.RespondentControllerTest do
+defmodule Ask.InviteControllerTest do
 
   import Ecto.Query
 
