@@ -114,6 +114,7 @@ class StepPrompts extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
+    const autocomplete = step.type != 'language-selection'
 
     let smsInput = null
     if (sms) {
@@ -123,6 +124,7 @@ class StepPrompts extends Component {
         inputErrors={smsInputErrors}
         onChange={e => this.stepPromptSmsChange(e)}
         onBlur={e => this.stepPromptSmsSubmit(e)}
+        autocomplete={autocomplete}
         autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'sms')}
         autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'sms')}
         />
@@ -137,6 +139,7 @@ class StepPrompts extends Component {
         inputErrors={ivrInputErrors}
         onChange={e => this.stepPromptIvrChange(e)}
         onBlur={e => this.stepPromptIvrSubmit(e)}
+        autocomplete={autocomplete}
         autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'ivr')}
         autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'ivr')}
         changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}

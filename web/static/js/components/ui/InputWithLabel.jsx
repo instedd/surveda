@@ -24,7 +24,11 @@ export class InputWithLabel extends Component {
     }
 
     var childrenWithProps = React.Children.map(children, function(child) {
-      return React.cloneElement(child, { id: id, value: value })
+      if (child) {
+        return React.cloneElement(child, { id: id, value: value })
+      } else {
+        return null
+      }
     })
 
     let errorMessage = null

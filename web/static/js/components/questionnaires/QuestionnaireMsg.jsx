@@ -201,6 +201,7 @@ class QuestionnaireMsg extends Component {
         value={this.state.stepPromptSms}
         onChange={e => this.promptSmsChange(e)}
         onBlur={e => this.promptSmsSubmit(e)}
+        autocomplete
         autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'sms')}
         autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'sms')}
         />
@@ -217,6 +218,7 @@ class QuestionnaireMsg extends Component {
         changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
         ivrPrompt={this.state.stepPromptIvr}
         customHandlerFileUpload={this.handleFileUpload}
+        autocomplete
         autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'ivr')}
         autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'ivr')}
         />

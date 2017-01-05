@@ -40,8 +40,11 @@ class IvrPrompt extends Component {
   }
 
   onBlur(e) {
-    if (this.refs.autocomplete.clickingAutocomplete) return
-    this.refs.autocomplete.hide()
+    const autocomplete = this.refs.autocomplete
+    if (autocomplete) {
+      if (autocomplete.clickingAutocomplete) return
+      autocomplete.hide()
+    }
 
     const { onBlur } = this.props
     onBlur(e)
@@ -71,9 +74,21 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, onChange, changeIvrMode, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, onChange, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
     const maybeInvalidClass = classNames({'validate invalid': inputErrors})
+
+    let autocompleteComponent = null
+    if (autocomplete) {
+      autocompleteComponent = (
+        <Autocomplete
+          getInput={() => this.ivrInput}
+          getData={(value, callback) => autocompleteGetData(value, callback)}
+          onSelect={(item) => autocompleteOnSelect(item)}
+          ref='autocomplete'
+        />
+      )
+    }
 
     return (
       <div>
@@ -87,12 +102,7 @@ class IvrPrompt extends Component {
                 className={maybeInvalidClass}
                 ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
               />
-              <Autocomplete
-                getInput={() => this.ivrInput}
-                getData={(value, callback) => autocompleteGetData(value, callback)}
-                onSelect={(item) => autocompleteOnSelect(item)}
-                ref='autocomplete'
-              />
+              {autocompleteComponent}
             </InputWithLabel>
           </div>
         </div>
@@ -139,6 +149,7 @@ IvrPrompt.propTypes = {
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
+  autocomplete: PropTypes.bool.isRequired,
   autocompleteGetData: PropTypes.func.isRequired,
   autocompleteOnSelect: PropTypes.func.isRequired,
   changeIvrMode: PropTypes.func.isRequired,

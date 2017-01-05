@@ -4,19 +4,34 @@ import classNames from 'classnames/bind'
 
 class SmsPrompt extends Component {
   onBlur(e) {
-    if (this.refs.autocomplete.clickingAutocomplete) return
-    this.refs.autocomplete.hide()
+    let autocomplete = this.refs.autocomplete
+    if (autocomplete) {
+      if (autocomplete.clickingAutocomplete) return
+      autocomplete.hide()
+    }
 
     const { onBlur } = this.props
     onBlur(e)
   }
 
   render() {
-    const { id, value, inputErrors, onChange, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, onChange, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
     const maybeInvalidClass = classNames({
       'validate invalid': inputErrors != null && inputErrors.length > 0
     })
+
+    let autocompleteComponent = null
+    if (autocomplete) {
+      autocompleteComponent = (
+        <Autocomplete
+          getInput={() => this.smsInput}
+          getData={(value, callback) => autocompleteGetData(value, callback)}
+          onSelect={(item) => autocompleteOnSelect(item)}
+          ref='autocomplete'
+              />
+      )
+    }
 
     return (
       <div className='row'>
@@ -34,12 +49,7 @@ class SmsPrompt extends Component {
               }}
               class={maybeInvalidClass}
               />
-            <Autocomplete
-              getInput={() => this.smsInput}
-              getData={(value, callback) => autocompleteGetData(value, callback)}
-              onSelect={(item) => autocompleteOnSelect(item)}
-              ref='autocomplete'
-              />
+            {autocompleteComponent}
           </InputWithLabel>
         </div>
       </div>
@@ -53,8 +63,8 @@ SmsPrompt.propTypes = {
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
-  autocompleteGetData: PropTypes.func.isRequired,
-  autocompleteOnSelect: PropTypes.func.isRequired
-}
+  autocomplete: PropTypes.bool.isRequired,
+  autocompleteGetData: PropTypes.func,
+  autocompleteOnSelect: PropTypes.func}
 
 export default SmsPrompt
