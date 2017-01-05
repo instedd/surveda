@@ -21,7 +21,7 @@ class StepCard extends Component {
             <div className='row'>
               <div className='col s12'>
                 {icon}
-                <EditableTitleLabel className='editable-field' title={stepTitle} emptyText='Untitled question' onSubmit={value => this.stepTitleSubmit(value)} />
+                <EditableTitleLabel className='editable-field' title={stepTitle} entityName='question' onSubmit={value => this.stepTitleSubmit(value)} />
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {

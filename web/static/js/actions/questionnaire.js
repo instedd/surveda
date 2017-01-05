@@ -254,7 +254,7 @@ export const duplicateQuestionnaire = (projectId, questionnaire) => (dispatch) =
   // except for the name
   let copy = {
     ...questionnaire,
-    name: `${questionnaire.name || 'Untitled'} (duplicate)`
+    name: `${questionnaire.name || 'Untitled questionnaire'} (duplicate)`
   }
   return api.createQuestionnaire(projectId, copy)
   .then(response => {

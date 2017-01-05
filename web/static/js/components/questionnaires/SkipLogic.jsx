@@ -58,7 +58,7 @@ class SkipLogic extends Component {
 
       return {
         id: s.id,
-        title: s.title === '' ? 'Untitled' : s.title,
+        title: s.title === '' ? 'Untitled question' : s.title,
         enabled: true
       }
     })
