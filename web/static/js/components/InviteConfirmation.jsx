@@ -2,11 +2,14 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../actions/invites'
+import * as routes from '../routes'
 
 class InviteConfirmation extends Component {
   confirmInvitation() {
     const code = this.props.location.query.code
-    this.props.actions.confirm(code)
+    Promise.resolve(this.props.actions.confirm(code)).then(() => {
+      window.location = routes.projects
+    })
   }
 
   render() {
@@ -21,7 +24,8 @@ class InviteConfirmation extends Component {
 }
 
 InviteConfirmation.propTypes = {
-  location: PropTypes.object.isRequired
+  location: PropTypes.object.isRequired,
+  actions: PropTypes.object.isRequired
 }
 
 const mapDispatchToProps = (dispatch) => ({
