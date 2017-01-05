@@ -96,7 +96,8 @@ class LanguagesList extends Component {
 
 LanguagesList.propTypes = {
   questionnaire: PropTypes.object,
-  onRemoveLanguage: PropTypes.func
+  onRemoveLanguage: PropTypes.func,
+  dispatch: PropTypes.func
 }
 
 const mapStateToProps = (state, ownProps) => ({

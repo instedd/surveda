@@ -1,7 +1,4 @@
 import React, { PureComponent } from 'react'
-import RespondentsChart from '../respondents/RespondentsChart'
-import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
-import * as routes from '../../routes'
 
 export default class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -10,8 +7,6 @@ export default class SurveyStatus extends PureComponent {
 
   render() {
     const { survey } = this.props
-    let cumulativeCount = []
-    let reached = 0
 
     if (!survey) {
       return <p>Loading...</p>

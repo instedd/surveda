@@ -18,7 +18,7 @@ export class Tooltip extends Component {
   componentDidMount() {
     const node = ReactDOM.findDOMNode(this.refs.node)
     const tooltip = $(node).tooltip()[0]
-    const tooltipId = tooltip.getAttribute("data-tooltip-id")
+    const tooltipId = tooltip.getAttribute('data-tooltip-id')
     $(`#${tooltipId}`).addClass(this.props.className)
   }
 

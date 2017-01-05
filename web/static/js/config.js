@@ -1,1 +1,1 @@
-export const config = window.appConfig;
+export const config = window.appConfig

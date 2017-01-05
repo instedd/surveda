@@ -40,7 +40,8 @@ export const DropdownItem = ({children, className}) => (
 )
 
 DropdownItem.propTypes = {
-  children: PropTypes.node
+  children: PropTypes.node,
+  className: PropTypes.string
 }
 
 export const DropdownDivider = () => (
