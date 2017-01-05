@@ -145,10 +145,28 @@ defmodule Ask.ProjectControllerTest do
 
   test "lists collaborators", %{conn: conn, user: user} do
     project = create_project_for_user(user)
+    user2 = insert(:user)
+    user3 = insert(:user)
+    insert(:project_membership, user_id: user2.id, project_id: project.id, level: "editor")
+    insert(:project_membership, user_id: user3.id, project_id: project.id, level: "reader")
     conn = get conn, project_collaborators_path(conn, :collaborators, project.id)
 
     assert json_response(conn, 200)["data"]["collaborators"] == [
-      %{"email" => user.email, "role" => "owner", "invited" => false}
+      %{"email" => user.email, "role" => "owner", "invited" => false},
+      %{"email" => user2.email, "role" => "editor", "invited" => false},
+      %{"email" => user3.email, "role" => "reader", "invited" => false}
+    ]
+  end
+
+  test "collaborators include invited members", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    user2 = insert(:user)
+    insert(:invite, email: user2.email, project_id: project.id, level: "editor")
+    conn = get conn, project_collaborators_path(conn, :collaborators, project.id)
+
+    assert json_response(conn, 200)["data"]["collaborators"] == [
+      %{"email" => user.email, "role" => "owner", "invited" => false},
+      %{"email" => user2.email, "role" => "editor", "invited" => true}
     ]
   end
 
