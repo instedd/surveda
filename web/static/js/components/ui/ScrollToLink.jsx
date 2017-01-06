@@ -11,7 +11,7 @@ export class ScrollToLink extends Component {
     const { target } = this.props
 
     $('html, body').animate({
-        scrollTop: $( target ).offset().top
+      scrollTop: $(target).offset().top
     }, 500)
     event.preventDefault()
   }
@@ -25,5 +25,3 @@ export class ScrollToLink extends Component {
     </a>
   }
 }
-
-
