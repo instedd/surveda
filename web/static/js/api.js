@@ -265,6 +265,10 @@ export const inviteMail = (projectId, code, level, email) => {
   return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
 }
 
+export const fetchInvite = (code) => {
+  return apiFetchJSON(`invite_show?code=${code}`)
+}
+
 export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${code}`)
 }

@@ -5,6 +5,11 @@ import * as actions from '../actions/invites'
 import * as routes from '../routes'
 
 class InviteConfirmation extends Component {
+  componentDidMount() {
+    const code = this.props.location.query.code
+    this.props.actions.fetchInvite(code)
+  }
+
   confirmInvitation() {
     const code = this.props.location.query.code
     Promise.resolve(this.props.actions.confirm(code)).then(() => {
