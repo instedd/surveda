@@ -69,7 +69,7 @@ const parseErrorPath = (errorPath: string): ErrorSubject => {
  * plus those that do not depend on the language. See the comment at the top of
  * this file for a list of the possible validation errors for a questionnaire.
 */
-export const errorsByLang = (quiz: MetaQuestionnaire): {[lang: string]: QuizErrors} => {
+export const errorsByLang = (quiz: QuestionnaireStore): {[lang: string]: QuizErrors} => {
   let initialStruct = reduce(quiz.data.languages, (struct, lang) => {
     struct[lang] = {}
     return struct
@@ -90,7 +90,7 @@ export const errorsByLang = (quiz: MetaQuestionnaire): {[lang: string]: QuizErro
   }, initialStruct)
 }
 
-export const langHasErrors = (quiz: MetaQuestionnaire) => (lang: string): boolean => {
+export const langHasErrors = (quiz: QuestionnaireStore) => (lang: string): boolean => {
   return keys(quiz.errorsByLang[lang] || {}).length > 0
 }
 
