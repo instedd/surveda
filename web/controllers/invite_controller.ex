@@ -29,7 +29,6 @@ defmodule Ask.InviteController do
   end
 
   def show(conn, %{"code" => code}) do
-    IO.inspect("INVITE showing")
     invite = Invite |> Repo.get_by(code: code)
     project = Project |> Repo.get(invite.project_id)
     render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
