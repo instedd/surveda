@@ -17,7 +17,7 @@ export class ScrollToLink extends Component {
   }
 }
 
-export const animatedScrollTo = (e, target) => {
+export const animatedScrollTo = (e: Event, target: String) => {
   e.preventDefault()
 
   $('html, body').animate({
