@@ -13,7 +13,7 @@ type Props = {
   activeLanguage: string,
   languages: string[],
   loading: boolean,
-  langHasErrors: boolean,
+  langHasErrors: Function,
   onRemoveLanguage: Function,
   dispatch: Function
 };
