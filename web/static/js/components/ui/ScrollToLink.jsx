@@ -7,21 +7,20 @@ export class ScrollToLink extends Component {
     children: PropTypes.node
   }
 
-  scrollToLink() {
-    const { target } = this.props
-
-    $('html, body').animate({
-      scrollTop: $(target).offset().top
-    }, 500)
-    event.preventDefault()
-  }
-
   render() {
-    const { children } = this.props
+    const { children, target } = this.props
 
-    return <a href='#' className='scrollToLink' onClick={() => this.scrollToLink()}>
+    return <a href='#' className='scrollToLink' onClick={(e) => animatedScrollTo(e, target)}>
       <i className='material-icons'>keyboard_arrow_down</i>
       <span>{children}</span>
     </a>
   }
+}
+
+export const animatedScrollTo = (e, target) => {
+  e.preventDefault()
+
+  $('html, body').animate({
+    scrollTop: $(target).offset().top
+  }, 500)
 }

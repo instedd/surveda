@@ -1,9 +1,10 @@
 import React, { PropTypes } from 'react'
+import { animatedScrollTo } from '../ui'
 
 export const CollectionItem = ({ path, icon, text, completed, className }) => {
   return (
     <li className={`collection-item ${completed ? 'completed' : ''} ${className || ''}`}>
-      <a href={path}>
+      <a href={path} onClick={(e) => animatedScrollTo(e, path)}>
         <i className='material-icons'>{completed ? 'check_circle' : icon}</i>
         <span>{text}</span>
         <span className='arrowright'>
