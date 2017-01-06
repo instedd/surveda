@@ -120,11 +120,11 @@ defmodule Ask.Runtime.Session do
       store_responses_and_assign_bucket(respondent, stores, buckets)
 
     case step_answer do
-      {:end, %{prompts: prompts}} ->
-        {:end, %{prompt: prompts}}
+      {:end, %{prompts: [prompt | _]}} ->
+        {:end, {:prompt, prompt}}
       {:end, _} ->
         :end
-      {:ok, flow, %{prompts: [prompt]}} ->
+      {:ok, flow, %{prompts: [prompt | _]}} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
             msg = quota_completed_msg(session.flow)
