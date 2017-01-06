@@ -7,14 +7,14 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_INVITE: return fetchInvite(state, action)
+    case actions.RECEIVE_INVITE: return receiveInvite(state, action)
     default: return state
   }
 }
 
-const fetchInvite = (state, action) => {
+const receiveInvite = (state, action) => {
   return {
     ...state,
-    data: state.data
+    data: action.data
   }
 }

@@ -22,7 +22,8 @@ defmodule Ask.InviteController do
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
     {project_id, _} = Integer.parse(project_id)
 
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id})
+    current_user = conn |> current_user
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id, "inviter_email" => current_user.email})
     |> Repo.insert
 
     render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
@@ -38,6 +39,7 @@ defmodule Ask.InviteController do
     {project_id, _} = Integer.parse(project_id)
 
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
+    current_user = conn |> current_user
 
     %Bamboo.Email{
       from: "noreply@instedd.org",
@@ -48,7 +50,7 @@ defmodule Ask.InviteController do
     } |> Ask.Mailer.deliver_now
 
 
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id})
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id, "inviter_email" => current_user.email})
     |> Repo.insert
 
     render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
