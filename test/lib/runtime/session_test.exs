@@ -163,7 +163,7 @@ defmodule Ask.SessionTest do
     {session, _} = Session.start(quiz, respondent, channel)
 
     step_result = Session.sync_step(session, Flow.Message.reply("N"))
-    assert {:ok, %Session{}, {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}, 10} = step_result
+    assert {:ok, %Session{}, {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}, 10} = step_result
 
     assert [response] = respondent |> Ecto.assoc(:responses) |> Ask.Repo.all
     assert response.field_name == "Smokes"
@@ -236,7 +236,7 @@ defmodule Ask.SessionTest do
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
-    {:rejected, {:prompt, "Bye!"}} = Session.sync_step(session, Flow.Message.reply("N"))
+    {:rejected, {:prompts, ["Bye!"]}} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "ends when quota is reached at leaf, with more stores", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -267,7 +267,7 @@ defmodule Ask.SessionTest do
 
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
-    {:rejected, {:prompt, "Quota completed"}} = Session.sync_step(session, Flow.Message.reply("N"))
+    {:rejected, {:prompts, ["Quota completed"]}} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "ends when quota is reached at leaf, numeric", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -313,7 +313,7 @@ defmodule Ask.SessionTest do
     {session, _} = Session.start(quiz, respondent, channel)
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
-    {:rejected, {:prompt, "Quota completed"}} = Session.sync_step(session, Flow.Message.reply("25"))
+    {:rejected, {:prompts, ["Quota completed"]}} = Session.sync_step(session, Flow.Message.reply("25"))
   end
 
   test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -357,7 +357,7 @@ defmodule Ask.SessionTest do
     respondent = Respondent |> Repo.get(respondent.id)
 
     {session, _} = Session.start(quiz, respondent, channel)
-    {:rejected, {:prompt, "Quota completed"}} = Session.sync_step(session, Flow.Message.reply("N"))
+    {:rejected, {:prompts, ["Quota completed"]}} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "assigns respondent to its bucket", %{quiz: quiz, respondent: respondent, channel: channel} do

@@ -113,7 +113,7 @@ defmodule Ask.BrokerTest do
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
     respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
-    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
     assert survey.state == "running"
     assert respondent.state == "active"
     assert hd(respondent.responses).value == "Yes"
@@ -418,15 +418,15 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
-    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
-    assert reply == {:prompt, "Which is the second perfect number??"}
+    assert reply == {:prompts, ["Which is the second perfect number??"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
-    assert reply == {:prompt, "What's the number of this question??"}
+    assert reply == {:prompts, ["What's the number of this question??"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
@@ -481,7 +481,7 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    {:end, {:prompt, "Bye!"}} = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    {:end, {:prompts, ["Bye!"]}} = Broker.sync_step(respondent, Flow.Message.reply("No"))
 
     :ok = broker |> GenServer.stop
   end
@@ -596,15 +596,15 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
-    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
-    assert reply == {:prompt, "Which is the second perfect number??"}
+    assert reply == {:prompts, ["Which is the second perfect number??"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
-    assert reply == {:prompt, "What's the number of this question??"}
+    assert reply == {:prompts, ["What's the number of this question??"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
@@ -637,15 +637,15 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
-    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
-    assert reply == {:prompt, "Which is the second perfect number??"}
+    assert reply == {:prompts, ["Which is the second perfect number??"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("33"))
-    assert reply == {:prompt, "What's the number of this question??"}
+    assert reply == {:prompts, ["What's the number of this question??"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
@@ -676,11 +676,11 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
-    assert reply == {:prompt, "Do you exercise? Reply 1 for YES, 2 for NO"}
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
-    assert reply == {:end, {:prompt, "Quota completed"}}
+    assert reply == {:end, {:prompts, ["Quota completed"]}}
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "rejected"
 

@@ -120,20 +120,20 @@ defmodule Ask.Runtime.Session do
       store_responses_and_assign_bucket(respondent, stores, buckets)
 
     case step_answer do
-      {:end, %{prompts: [prompt | _]}} ->
-        {:end, {:prompt, prompt}}
-      {:end, _} ->
+      {:end, %{prompts: []}} ->
         :end
-      {:ok, flow, %{prompts: [prompt | _]}} ->
+      {:end, %{prompts: prompts}} ->
+        {:end, {:prompts, prompts}}
+      {:ok, flow, %{prompts: prompts}} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
             msg = quota_completed_msg(session.flow)
             if msg do
-              {:rejected, {:prompt, msg}}
+              {:rejected, {:prompts, [msg]}}
             else
               :rejected
             end
-          false -> {:ok, %{session | flow: flow, respondent: respondent}, {:prompt, prompt}, @timeout}
+          false -> {:ok, %{session | flow: flow, respondent: respondent}, {:prompts, prompts}, @timeout}
         end
     end
   end

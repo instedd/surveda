@@ -48,8 +48,20 @@ defmodule Ask.Runtime.VerboiceChannel do
     client.token
   end
 
-  def gather(respondent, prompt) do
-    "<Gather action=\"#{callback_url(respondent)}\">#{say_or_play(prompt)}</Gather>"
+  def gather(respondent, prompts = [prompt, _ | _]) do
+    say_or_play(prompt) <> gather(respondent, tl(prompts))
+  end
+
+  def gather(respondent, prompts) do
+    "<Gather action=\"#{callback_url(respondent)}\">#{say_or_play(prompts)}</Gather>"
+  end
+
+  def say_or_play([prompt]) do
+    say_or_play(prompt)
+  end
+
+  def say_or_play([prompt | prompts]) do
+    say_or_play(prompt) <> say_or_play(prompts)
   end
 
   def say_or_play(%{"audio_source" => "upload", "audio_id" => audio_id}) do
@@ -114,10 +126,10 @@ defmodule Ask.Runtime.VerboiceChannel do
         end
 
         case Broker.sync_step(respondent, response) do
-          {:prompt, prompt} ->
-            "<Response>#{gather(respondent, prompt)}</Response>"
-          {:end, {:prompt, prompt}} ->
-            "<Response>#{say_or_play(prompt)}<Hangup/></Response>"
+          {:prompts, prompts} ->
+            "<Response>#{gather(respondent, prompts)}</Response>"
+          {:end, {:prompts, prompts}} ->
+            "<Response>#{say_or_play(prompts)}<Hangup/></Response>"
           :end ->
             "<Response><Hangup/></Response>"
         end

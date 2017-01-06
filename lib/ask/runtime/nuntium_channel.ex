@@ -54,20 +54,21 @@ defmodule Ask.Runtime.NuntiumChannel do
       order_by: [desc: r.updated_at],
       limit: 1)
 
-    reply = case respondent do
+    prompts = case respondent do
       nil ->
         []
       _ ->
         case Broker.sync_step(respondent, Flow.Message.reply(body)) do
-          {:prompt, prompt} ->
-            [%{"to": from, "body": prompt}]
-          {:end, {:prompt, prompt}} ->
-            [%{"to": from, "body": prompt}]
+          {:prompts, prompts} ->
+            prompts
+          {:end, {:prompts, prompts}} ->
+            prompts
           :end ->
             []
         end
     end
 
+    reply = prompts |> Enum.map(fn prompt -> %{"to": from, "body": prompt} end)
     Phoenix.Controller.json(conn, reply)
   end
 

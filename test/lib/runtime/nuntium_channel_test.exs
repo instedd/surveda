@@ -23,14 +23,14 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     {:ok, conn: conn, respondent: respondent}
   end
 
-  test "callback with :prompt", %{conn: conn, respondent: respondent} do
+  test "callback with :prompts", %{conn: conn, respondent: respondent} do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:prompt, "Do you exercise?"}
+        {:prompts, ["Hello!", "Do you exercise?"]}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
-    assert json_response(conn, 200) == [%{"to" => "sms://123456", "body" => "Do you exercise?"}]
+    assert json_response(conn, 200) == [%{"to" => "sms://123456", "body" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?"}]
   end
 
   test "callback with :end", %{conn: conn, respondent: respondent} do
@@ -47,7 +47,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:end, {:prompt, "Bye!"}}
+        {:end, {:prompts, ["Bye!"]}}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
     assert json_response(conn, 200) == [%{"body" => "Bye!", "to" => "sms://123456"}]
@@ -63,7 +63,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:prompt, "Do you exercise?"}
+        {:prompts, ["Do you exercise?"]}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"})
     assert json_response(conn, 200) == [%{"to" => "sms://123457", "body" => "Do you exercise?"}]
