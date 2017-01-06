@@ -12,6 +12,7 @@ export class InviteLink extends Component {
     if (guest.code) {
       this.props.actions.invite(projectId, guest.code, guest.level, guest.email)
       this.props.collaboratorsActions.fetchCollaborators(projectId)
+      window.Materialize.toast(`Invite link was copied to the clipboard`, 5000)
     }
   }
 
