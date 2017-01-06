@@ -2,7 +2,7 @@
 // @flow
 import expect from 'expect'
 import { questionnaire } from '../fixtures'
-import { hasErrors, langHasErrors } from '../../../web/static/js/questionnaireErrors'
+import { hasErrors } from '../../../web/static/js/questionnaireErrors'
 
 describe('questionnaire error', () => {
   describe('hasErrors', () => {
@@ -35,12 +35,5 @@ describe('questionnaire error', () => {
 
       expect(result).toEqual(false)
     })
-  })
-
-  it('filters questionnaire errors by a lang', () => {
-    let quiz = { data: questionnaire, errors: {}, errorsByLang: {} }
-
-    const result = langHasErrors(quiz)('fr')
-    expect(result).toEqual(false)
   })
 })
