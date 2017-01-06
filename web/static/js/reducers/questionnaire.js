@@ -752,7 +752,7 @@ const validateSmsLangPrompt = (step: Step, stepIndex: number, context: Validatio
 
 const validateIvrLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
   let ivr = getStepPromptIvr(step, lang)
-  if (ivr.audioSource == 'tts' && isBlank(ivr.text)) {
+  if (isBlank(ivr.text)) {
     addError(context, promptTextPath(stepIndex, 'ivr', lang), 'Voice prompt must not be blank')
   }
 }

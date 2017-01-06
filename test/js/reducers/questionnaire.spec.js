@@ -558,6 +558,7 @@ describe('questionnaire reducer', () => {
       ])
 
       const resultState = playActionsFromState(preState, reducer)([
+        actions.toggleMode('ivr'),
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0),
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0)
       ])
@@ -568,16 +569,14 @@ describe('questionnaire reducer', () => {
     })
 
     it("should validate a response's response must not be blank", () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '', 'a', '1', null)
       ])
 
-      expect(resultState.errors).toEqual({
+      expect(state.errors).toEqual({
         'steps[0].choices[0].value': ['Response must not be blank']
       })
     })
@@ -626,13 +625,11 @@ describe('questionnaire reducer', () => {
     })
 
     it("should validate a response's Phone call must only consist of digits or # or *", () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
+        actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: 'Some IVR prompt'}),
         actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
         actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'A', '3, b, #, 22', 'some-other-id', false)
       ])
@@ -661,12 +658,10 @@ describe('questionnaire reducer', () => {
     })
 
     it("should validate a response's 'response' can't appear more than once in a same step", () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'dup', 'b', '1', null),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'dup', 'c', '2', null)
       ])
@@ -677,12 +672,10 @@ describe('questionnaire reducer', () => {
     })
 
     it("should validate a response's SMS value must not overlap other SMS values", () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b, c', '1', null),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'd, c', '2', null)
       ])
@@ -693,12 +686,10 @@ describe('questionnaire reducer', () => {
     })
 
     it("should validate a response's IVR value must not overlap other SMS values", () => {
-      const preState = playActions([
+      const resultState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1, 2', null),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '3, 2', null)
       ])
