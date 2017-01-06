@@ -22,8 +22,6 @@ class SurveyWizardComparisonsStep extends Component {
 
   comparisonRatioChange(numbers, id) {
     const { dispatch, survey } = this.props
-    console.log('El id:', id)
-
     const bucket = find(survey.comparisons, (bucket) =>
       this.bucketId(bucket) == id
     )
