@@ -1,13 +1,35 @@
-import React, { Component, PropTypes } from 'react'
+// @flow
+import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText } from '../../step'
+import { promptTextPath } from '../../questionnaireErrors'
 import * as api from '../../api'
 
+type State = {
+  stepPromptSms: string,
+  stepPromptIvrText: string,
+  stepPromptIvr: AudioPrompt
+};
+
+type Props = {
+  step: Step,
+  stepIndex: number,
+  questionnaireActions: any,
+  inputErrors: boolean,
+  questionnaire: Questionnaire,
+  errors: QuizErrors,
+  classes: string
+};
+
 class StepPrompts extends Component {
+  state: State
+  props: Props
+  autocompleteItems: AutocompleteItem[]
+
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -32,7 +54,10 @@ class StepPrompts extends Component {
   stepPromptIvrSubmit(e) {
     e.preventDefault()
     const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: e.target.value, audioSource: 'tts'})
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {
+      text: e.target.value,
+      audioSource: this.state.stepPromptIvr.audioSource
+    })
   }
 
   changeIvrMode(e, mode) {
@@ -103,22 +128,23 @@ class StepPrompts extends Component {
       if (mode == 'sms') {
         this.props.questionnaireActions.changeStepPromptSms(step.id, item.text)
       } else {
-        let prompt = getStepPromptIvr(step)
+        let prompt = getStepPromptIvr(step, activeLanguage)
         this.props.questionnaireActions.changeStepPromptIvr(step.id, {...prompt, text: item.text})
       }
     }
   }
 
   render() {
-    const { step, questionnaire, errors, errorPath, classes } = this.props
+    const { step, stepIndex, questionnaire, errors, classes } = this.props
 
+    const activeLanguage = questionnaire.activeLanguage
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const autocomplete = step.type != 'language-selection'
 
     let smsInput = null
     if (sms) {
-      let smsInputErrors = errors[`${errorPath}.prompt.sms`]
+      let smsInputErrors = errors[promptTextPath(stepIndex, 'sms', activeLanguage)]
       smsInput = <SmsPrompt id='step_editor_sms_prompt'
         value={this.state.stepPromptSms}
         inputErrors={smsInputErrors}
@@ -132,7 +158,9 @@ class StepPrompts extends Component {
 
     let ivrInput = null
     if (ivr) {
-      let ivrInputErrors = errors[`${errorPath}.prompt.ivr.text`]
+      let ivrInputErrors = errors[promptTextPath(stepIndex, 'ivr', activeLanguage)]
+      console.log(errors)
+      console.log(promptTextPath(stepIndex, 'ivr', activeLanguage))
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
         key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
@@ -159,16 +187,6 @@ class StepPrompts extends Component {
       </li>
     )
   }
-}
-
-StepPrompts.propTypes = {
-  questionnaireActions: PropTypes.any,
-  step: PropTypes.object,
-  inputErrors: PropTypes.bool,
-  questionnaire: PropTypes.object,
-  errors: PropTypes.object,
-  errorPath: PropTypes.string,
-  classes: PropTypes.string
 }
 
 const mapStateToProps = (state, ownProps) => ({

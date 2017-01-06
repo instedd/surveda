@@ -49,8 +49,9 @@ class SmsPrompt extends Component {
               }}
               class={maybeInvalidClass}
               />
-            {autocompleteComponent}
+              class={maybeInvalidClass} />
           </InputWithLabel>
+          {autocompleteComponent}
         </div>
       </div>
     )

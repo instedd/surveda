@@ -7,13 +7,15 @@ import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
 import NumericStepEditor from './NumericStepEditor'
 import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
 import ExplanationStepEditor from './ExplanationStepEditor'
+import { errorsByLang, stepPath } from '../../questionnaireErrors'
 
 type Props = {
   step: Step,
+  stepIndex: number,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
-  errors: any,
+  errors: QuizErrors,
   errorPath: string,
   stepsAfter: Step[],
   stepsBefore: Step[]
@@ -24,11 +26,11 @@ class StepEditor extends Component {
   clickedVarAutocomplete: boolean
 
   render() {
-    const { step, errors, errorPath, stepsAfter, stepsBefore, onCollapse, onDelete } = this.props
+    const { step, stepIndex, errors, stepsAfter, stepsBefore, onCollapse, onDelete } = this.props
 
     let editor
 
-    let commonProps = {step, questionnaireActions, onCollapse, errors, errorPath}
+    let commonProps = {step, stepIndex, questionnaireActions, onCollapse, errors}
 
     if (step.type == 'multiple-choice') {
       editor =
@@ -65,7 +67,8 @@ class StepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  errors: state.questionnaire.errors
+  errors: errorsByLang(state.questionnaire)[state.questionnaire.data.activeLanguage],
+  errorPath: stepPath(ownProps.stepIndex)
 })
 
 const mapDispatchToProps = (dispatch) => ({

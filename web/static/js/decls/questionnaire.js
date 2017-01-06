@@ -8,6 +8,7 @@ export type Questionnaire = {
   activeLanguage: string,
   quotaCompletedMsg: ?Prompt,
   errorMsg: ?Prompt,
+  projectId: number
 };
 
 export type QuizErrors = {
@@ -102,4 +103,15 @@ export type SkipOption = {
   id: string,
   title: string,
   enabled: boolean
+};
+
+export type Translation = {
+  text: string,
+  language: string
+};
+
+export type AutocompleteItem = {
+  id: string,
+  text: string,
+  translations: Translation[]
 };

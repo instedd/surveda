@@ -102,8 +102,8 @@ class IvrPrompt extends Component {
                 className={maybeInvalidClass}
                 ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
               />
-              {autocompleteComponent}
             </InputWithLabel>
+            {autocompleteComponent}
           </div>
         </div>
 

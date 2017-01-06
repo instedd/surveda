@@ -14,12 +14,12 @@ import { getStepPromptSms, getStepPromptIvrText } from '../../step'
 
 type Props = {
   step: NumericStep,
+  stepIndex: number,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: any,
-  errorPath: string,
+  errors: QuizErrors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -57,15 +57,15 @@ class NumericStepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete, errors, errorPath } = this.props
+    const { step, stepIndex, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete, errors } = this.props
 
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
           <StepPrompts
             step={step}
-            errors={errors}
-            errorPath={errorPath} />
+            stepIndex={stepIndex}
+            errors={errors} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>
@@ -86,8 +86,7 @@ class NumericStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
-  errors: state.questionnaire.errors
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({

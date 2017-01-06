@@ -12,12 +12,12 @@ import SkipLogic from './SkipLogic'
 
 type Props = {
   step: ExplanationStep,
+  stepIndex: number,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: any,
-  errorPath: string,
+  errors: QuizErrors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -65,15 +65,15 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, stepsAfter, stepsBefore, onDelete, errors, errorPath } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errors } = this.props
 
     return (
       <DraggableStep step={step}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
           <StepPrompts
             step={step}
+            stepIndex={stepIndex}
             errors={errors}
-            errorPath={errorPath}
             classes='no-separator'
           />
           <li className='collection-item' key='editor'>
@@ -97,8 +97,7 @@ class ExplanationStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
-  errors: state.questionnaire.errors
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({

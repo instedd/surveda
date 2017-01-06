@@ -1,24 +1,23 @@
 // @flow
 import React, { Component } from 'react'
 import { UntitledIfEmpty, Tooltip, Autocomplete } from '../ui'
-import { connect } from 'react-redux'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined } from '../../step'
+import { choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath } from '../../questionnaireErrors'
 
 type Props = {
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
   choiceIndex: number,
-  step: Step,
+  stepIndex: number,
   stepsBefore: Step[],
   stepsAfter: Step[],
-  questionnaire: Questionnaire,
+  lang: string,
   sms: boolean,
   ivr: boolean,
   errors: QuizErrors,
-  errorPath: string,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
 };
@@ -79,8 +78,7 @@ class ChoiceEditor extends Component {
   }
 
   stateFromProps(props: Props) {
-    const { choice } = props
-    const lang = props.questionnaire.activeLanguage
+    const { choice, lang } = props
 
     return {
       response: choice.value,
@@ -179,8 +177,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepsBefore, stepsAfter, sms, ivr, errors, errorPath,
-      smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepIndex, stepsBefore, stepsAfter, choiceIndex, sms, ivr, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     let skipLogicInput =
       <td>
@@ -242,9 +239,9 @@ class ChoiceEditor extends Component {
           </td>
         </tr>)
     } else {
-      let responseErrors = errors[`${errorPath}.value`]
-      let smsErrors = errors[`${errorPath}.sms`]
-      let ivrErrors = errors[`${errorPath}.ivr`]
+      let responseErrors = errors[choiceValuePath(stepIndex, choiceIndex)]
+      let smsErrors = errors[choiceSmsResponsePath(stepIndex, choiceIndex, lang)]
+      let ivrErrors = errors[choiceIvrResponsePath(stepIndex, choiceIndex)]
 
       return (
         <tr>
@@ -261,7 +258,4 @@ class ChoiceEditor extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-})
-
-export default connect(mapStateToProps)(ChoiceEditor)
+export default ChoiceEditor

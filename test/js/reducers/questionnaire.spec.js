@@ -1077,6 +1077,7 @@ describe('questionnaire reducer', () => {
   describe('helpers', () => {
     it('should provide valid answers for multiple-choice steps', () => {
       const bareQuestionnaire: Questionnaire = {
+        projectId: 1,
         name: 'q1',
         modes: ['sms'],
         languages: [],

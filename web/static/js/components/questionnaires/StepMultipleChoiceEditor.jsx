@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+// @flow
+import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/questionnaire'
@@ -6,8 +7,22 @@ import ChoiceEditor from './ChoiceEditor'
 import { Card } from '../ui'
 import { getChoiceResponseSmsJoined } from '../../step'
 import * as api from '../../api'
+import { choicesPath } from '../../questionnaireErrors'
+
+type Props = {
+  actions: any,
+  questionnaire: Questionnaire,
+  step: MultipleChoiceStep,
+  stepIndex: number,
+  stepsBefore: Step[],
+  stepsAfter: Step[],
+  errors: QuizErrors
+};
 
 class StepMultipleChoiceEditor extends Component {
+  props: Props
+  smsAutocompleteItems: AutocompleteItem[]
+
   addChoice(e) {
     const { step, actions } = this.props
     e.preventDefault()
@@ -63,7 +78,7 @@ class StepMultipleChoiceEditor extends Component {
     if (activeLanguage == defaultLanguage) {
       let value = this.smsAutocompleteItems.find(i => i.id == item.id)
       actions.autocompleteChoiceSmsValues(step.id, index, value)
-      editor.smsChange(null, value.text)
+      editor.smsChange(null, (value || {}).text)
     } else {
       editor.smsChange(null, item.text)
     }
@@ -72,13 +87,13 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, step, stepsBefore, stepsAfter, errors, errorPath } = this.props
+    const { questionnaire, step, stepIndex, stepsBefore, stepsAfter, errors } = this.props
     const { choices } = step
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
 
-    let myErrors = errors[`${errorPath}.choices`]
+    let myErrors = errors[choicesPath(stepIndex)]
     if (myErrors) {
       myErrors.join(', ')
     }
@@ -110,8 +125,9 @@ class StepMultipleChoiceEditor extends Component {
                   <ChoiceEditor
                     ref={`choiceEditor${index}`}
                     key={index}
-                    index={index}
-                    questionnaire={questionnaire}
+                    stepIndex={stepIndex}
+                    choiceIndex={index}
+                    lang={questionnaire.activeLanguage}
                     choice={choice}
                     onDelete={(e) => this.deleteChoice(e, index)}
                     onChoiceChange={this.changeChoice(index)}
@@ -120,7 +136,6 @@ class StepMultipleChoiceEditor extends Component {
                     sms={sms}
                     ivr={ivr}
                     errors={errors}
-                    errorPath={`${errorPath}.choices[${index}]`}
                     smsAutocompleteGetData={(value, callback) => this.smsAutocompleteGetData(value, callback, choice, index)}
                     smsAutocompleteOnSelect={item => this.smsAutocompleteOnSelect(item, choice, index)}
                     />
@@ -139,16 +154,6 @@ class StepMultipleChoiceEditor extends Component {
       </div>
     )
   }
-}
-
-StepMultipleChoiceEditor.propTypes = {
-  actions: PropTypes.object.isRequired,
-  questionnaire: PropTypes.object.isRequired,
-  step: PropTypes.object.isRequired,
-  stepsBefore: PropTypes.array,
-  stepsAfter: PropTypes.array,
-  errors: PropTypes.object.isRequired,
-  errorPath: PropTypes.string.isRequired
 }
 
 const mapDispatchToProps = (dispatch) => ({

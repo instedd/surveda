@@ -34,7 +34,7 @@ const questionnaireSteps = (steps, current, onSelectStep, onDeselectStep, onDele
         <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
         <StepEditor
           step={currentStep}
-          errorPath={`steps[${itemIndex}]`}
+          stepIndex={itemIndex}
           onCollapse={() => onDeselectStep()}
           onDelete={() => onDeleteStep()}
           stepsAfter={stepsAfter}
