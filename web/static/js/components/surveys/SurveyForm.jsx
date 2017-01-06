@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { ScrollToTopButton, CollectionItem } from '../ui'
+import { ScrollToTopButton, CollectionItem, ScrollToLink } from '../ui'
 import SurveyWizardQuestionnaireStep from './SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardChannelsStep from './SurveyWizardChannelsStep'
@@ -85,15 +85,19 @@ class SurveyForm extends Component {
         <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} />
+            <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
             <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} />
+            <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
             <SurveyWizardChannelsStep channels={channels} survey={survey} />
+            <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>
             <SurveyWizardScheduleStep survey={survey} />
+            <ScrollToLink target='#cutoff'>NEXT: Setup cutoff rules</ScrollToLink>
           </div>
           <div id='cutoff' className='row scrollspy'>
             <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} />
