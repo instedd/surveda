@@ -70,6 +70,7 @@ class QuestionnaireMsg extends Component {
 
   stateFromProps(props) {
     const { questionnaire, messageKey, editing } = props
+    if (!questionnaire) return
     const activeLanguage = questionnaire.activeLanguage
     const questionnaireMsg = questionnaire[messageKey] || {}
 

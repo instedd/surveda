@@ -32,7 +32,7 @@ type ErrorSubject = {
   stepIndex: ?number,
   choiceIndex: ?number,
   lang: ?string
-}
+};
 
 const parseErrorPath = (errorPath: string): ErrorSubject => {
   let errorSubject = { stepIndex: null, choiceIndex: null, lang: null }
@@ -95,6 +95,7 @@ export const langHasErrors = (quiz: QuestionnaireStore) => (lang: string): boole
 }
 
 export const hasErrors = (quiz: QuestionnaireStore, step: Step) => {
+  if (!quiz.data) return
   const errorPath = (index) => `steps[${index}]`
 
   const stepIndex = findIndex(quiz.data.steps, s => s.id === step.id)
