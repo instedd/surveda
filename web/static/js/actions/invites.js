@@ -23,5 +23,5 @@ export const confirm = (code) => dispatch => {
 
 export const receiveInvite = (data) => ({
   type: RECEIVE_INVITE,
-  data
+  data: data
 })

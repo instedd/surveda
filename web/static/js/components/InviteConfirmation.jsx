@@ -18,9 +18,20 @@ class InviteConfirmation extends Component {
   }
 
   render() {
+    const { invite } = this.props
+
+    if (!invite) {
+      return <div>Loading...</div>
+    }
+
+    const inviteText = <div> { invite.inviter_email + ' has invited to collaborate as ' + invite.role + ' on ' + invite.project_name } </div>
+    const roleAction = invite.role == 'editor' ? 'manage' : 'see'
+    const roleDescription = <div> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </div>
+
     return (
       <div>
-        <div> You have been invited to collaborate in project </div>
+        <div> { inviteText } </div>
+        <div> { roleDescription } </div>
         <a onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
       </div>
     )
@@ -29,11 +40,16 @@ class InviteConfirmation extends Component {
 
 InviteConfirmation.propTypes = {
   location: PropTypes.object.isRequired,
-  actions: PropTypes.object.isRequired
+  actions: PropTypes.object.isRequired,
+  invite: PropTypes.object
 }
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(InviteConfirmation)
+const mapStateToProps = (state) => ({
+  invite: state.invite.data
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(InviteConfirmation)
