@@ -7,7 +7,7 @@ import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
 import NumericStepEditor from './NumericStepEditor'
 import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
 import ExplanationStepEditor from './ExplanationStepEditor'
-import { errorsByLang, stepPath } from '../../questionnaireErrors'
+import { errorsByLang } from '../../questionnaireErrors'
 
 type Props = {
   step: Step,
@@ -16,7 +16,6 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   errors: QuizErrors,
-  errorPath: string,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -67,8 +66,7 @@ class StepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  errors: errorsByLang(state.questionnaire)[state.questionnaire.data.activeLanguage],
-  errorPath: stepPath(ownProps.stepIndex)
+  errors: errorsByLang(state.questionnaire)[state.questionnaire.data.activeLanguage]
 })
 
 const mapDispatchToProps = (dispatch) => ({
