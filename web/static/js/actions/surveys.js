@@ -7,7 +7,7 @@ export const NEXT_PAGE = 'SURVEYS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'SURVEYS_PREVIOUS_PAGE'
 export const SORT = 'SURVEYS_SORT'
 
-export const fetchSurveys = (projectId: number) => (dispatch: Function, getState: () => (Store)) => {
+export const fetchSurveys = (projectId: number) => (dispatch: Function, getState: () => Store) => {
   const state = getState()
 
   // Don't fetch surveys if they are already being fetched
@@ -29,7 +29,7 @@ export const startFetchingSurveys = (projectId: number) => ({
   projectId
 })
 
-export const receiveSurveys = (projectId: number, surveys: Survey[]) => ({
+export const receiveSurveys = (projectId: number, surveys: SurveyPreview[]) => ({
   type: RECEIVE,
   projectId,
   surveys

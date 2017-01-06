@@ -21,13 +21,13 @@ export type ChoiceErrors = {
   ivr: string[]
 }
 
-export type MetaQuestionnaire = {
+export type QuestionnaireStore = {
   data: Questionnaire,
   errors: QuizErrors,
   errorsByLang: { [lang: string]: QuizErrors }
 }
 
-export type MetaQuestionnaires = {
+export type QuestionnaireList = {
   items: Questionnaire[]
 }
 

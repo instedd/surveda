@@ -23,7 +23,7 @@ export type DayOfWeek = {
   [weekday: string]: boolean
 };
 
-export type MetaSurvey = {
+export type SurveyStore = {
   data: ?Survey,
   filter: ?Filter,
   fetching: boolean,
@@ -35,9 +35,20 @@ export type Filter = {
   projectId: number
 }
 
-export type MetaSurveys = {
-  items: Survey[]
+export type SurveyList = {
+  items: SurveyPreview[]
 }
+
+export type SurveyPreview = {
+  id: number,
+  name: string,
+  mode: [?string[]],
+  projectId: number,
+  state: string,
+  questionnaireId: number[],
+  cutoff: number,
+  channels: number[],
+};
 
 export type Comparison = {
   questionnaireId: number,

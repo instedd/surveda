@@ -1,8 +1,7 @@
 // @flow
 export type Store = {
-  questionnaire: MetaQuestionnaire,
-  questionnaires: MetaQuestionnaires,
-  survey: MetaSurvey,
-  surveys: MetaSurveys,
-  channels: MetaChannels
+  questionnaire: QuestionnaireStore,
+  questionnaires: QuestionnaireList,
+  survey: SurveyStore,
+  surveys: SurveyList,
 };

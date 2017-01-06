@@ -59,12 +59,12 @@ export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch:
   }
 }
 
-export const receive = (survey: MetaSurvey) => ({
+export const receive = (survey: SurveyStore) => ({
   type: RECEIVE,
   data: survey
 })
 
-export const shouldFetch = (state: MetaSurvey, projectId: number, id: number) => {
+export const shouldFetch = (state: SurveyStore, projectId: number, id: number) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 

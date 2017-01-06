@@ -35,7 +35,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
 const validateReducer = (reducer) => {
   // React will call this with an undefined the first time for initialization.
   // We mimic that in the specs, so ValidationState needs to become optional here.
-  return (state: ?MetaQuestionnaire, action: any) => {
+  return (state: ?QuestionnaireStore, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
@@ -721,7 +721,7 @@ type ValidationContext = {
   errors: QuizErrors
 };
 
-const validate = (state: MetaQuestionnaire) => {
+const validate = (state: QuestionnaireStore) => {
   if (!state.data) return
   state.errors = {}
 

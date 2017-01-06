@@ -94,7 +94,7 @@ export const langHasErrors = (quiz: MetaQuestionnaire) => (lang: string): boolea
   return keys(quiz.errorsByLang[lang] || {}).length > 0
 }
 
-export const hasErrors = (quiz: MetaQuestionnaire, step: Step) => {
+export const hasErrors = (quiz: QuestionnaireStore, step: Step) => {
   const errorPath = (index) => `steps[${index}]`
 
   const stepIndex = findIndex(quiz.data.steps, s => s.id === step.id)
