@@ -43,6 +43,7 @@ export class Autocomplete extends Component {
       <ul className={`autocomplete-content dropdown-content ${className}`}
         ref='dropdown'
         onMouseDown={(e) => { this.clickingAutocomplete = true }}
+        style={{display: 'none'}}
         />
     )
   }
