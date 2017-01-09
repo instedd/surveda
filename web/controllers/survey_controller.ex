@@ -17,6 +17,7 @@ defmodule Ask.SurveyController do
   def create(conn, params = %{"project_id" => project_id}) do
     project = Project
     |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     props = %{"project_id" => project_id,
               "name" => "",
@@ -27,7 +28,6 @@ defmodule Ask.SurveyController do
     props = Map.merge(props, survey_params)
 
     changeset = project
-    |> authorize(conn)
     |> build_assoc(:surveys)
     |> Survey.changeset(props)
 
@@ -61,9 +61,9 @@ defmodule Ask.SurveyController do
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
     project = Project
     |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     changeset = project
-    |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:channels])
@@ -120,9 +120,9 @@ defmodule Ask.SurveyController do
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
     project = Project
     |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     project
-    |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(id)
     # Here we use delete! (with a bang) because we expect
@@ -139,7 +139,7 @@ defmodule Ask.SurveyController do
 
     project = Project
     |> Repo.get!(survey.project_id)
-    |> authorize(conn)
+    |> authorize_change(conn)
 
     case prepare_channels(conn, survey.channels) do
       :ok ->

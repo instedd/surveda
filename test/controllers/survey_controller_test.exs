@@ -188,6 +188,13 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "forbids creation of survey for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_path(conn, :create, project.id), survey: @valid_attrs
+      end
+    end
+
     test "updates project updated_at when survey is created", %{conn: conn, user: user} do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = create_project_for_user(user)
@@ -412,6 +419,14 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "rejects update for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
+      end
+    end
+
     test "fails if the schedule from is greater or equal to the to", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -472,6 +487,14 @@ defmodule Ask.SurveyControllerTest do
 
     test "forbids delete if the project doesn't belong to the current user", %{conn: conn} do
       survey = insert(:survey)
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_path(conn, :delete, survey.project, survey)
+      end
+    end
+
+    test "forbids delete for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
       assert_error_sent :forbidden, fn ->
         delete conn, project_survey_path(conn, :delete, survey.project, survey)
       end
@@ -757,6 +780,14 @@ defmodule Ask.SurveyControllerTest do
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
+  end
+
+  test "forbids launch for project reader", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "reader")
+    survey = insert(:survey, project: project)
+    assert_error_sent :forbidden, fn ->
+      post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    end
   end
 
   test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
