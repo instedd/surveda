@@ -1,9 +1,19 @@
-import React, { PropTypes, Component } from 'react'
+// @flow
+import React, { Component } from 'react'
 import StepEditor from './StepEditor'
 import StepsList from './StepsList'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
+
+type Props = {
+  steps: Step[],
+  current: ?string,
+  currentStepIsNew: boolean,
+  onSelectStep: Function,
+  onDeselectStep: Function,
+  onDeleteStep: Function
+}
 
 const dummyDropTarget = (steps) => {
   if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
@@ -17,7 +27,7 @@ const dummyDropTarget = (steps) => {
   return <div />
 }
 
-const questionnaireSteps = (steps, current, onSelectStep, onDeselectStep, onDeleteStep) => {
+const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep) => {
   if (current == null) {
     // All collapsed
     return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
@@ -35,6 +45,7 @@ const questionnaireSteps = (steps, current, onSelectStep, onDeselectStep, onDele
         <StepEditor
           step={currentStep}
           stepIndex={itemIndex}
+          isNew={currentStepIsNew}
           onCollapse={() => onDeselectStep()}
           onDelete={() => onDeleteStep()}
           stepsAfter={stepsAfter}
@@ -46,24 +57,18 @@ const questionnaireSteps = (steps, current, onSelectStep, onDeselectStep, onDele
 }
 
 class QuestionnaireSteps extends Component {
+  props: Props
+
   render() {
-    const { steps, current, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+    const { steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep } = this.props
 
     return (
       <div>
         {dummyDropTarget(steps)}
-        {questionnaireSteps(steps, current, onSelectStep, onDeselectStep, onDeleteStep)}
+        {questionnaireSteps(steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep)}
       </div>
     )
   }
-}
-
-QuestionnaireSteps.propTypes = {
-  steps: PropTypes.array.isRequired,
-  current: PropTypes.string,
-  onSelectStep: PropTypes.func.isRequired,
-  onDeselectStep: PropTypes.func.isRequired,
-  onDeleteStep: PropTypes.func.isRequired
 }
 
 export default DragDropContext(HTML5Backend)(QuestionnaireSteps)

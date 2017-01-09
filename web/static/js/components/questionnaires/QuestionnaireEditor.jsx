@@ -1,4 +1,4 @@
-// @flow weak
+// @flow
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { withRouter } from 'react-router'
@@ -14,7 +14,8 @@ import * as language from '../../language'
 
 type State = {
   addingStep: boolean,
-  currentStep: ?Step
+  currentStep: ?Step,
+  currentStepIsNew: boolean
 };
 
 class QuestionnaireEditor extends Component {
@@ -38,7 +39,6 @@ class QuestionnaireEditor extends Component {
   }
 
   questionnaireAddMultipleChoiceStep(e) {
-    e.preventDefault()
     this.questionnaireAddStep('multiple-choice')
   }
 
@@ -47,7 +47,6 @@ class QuestionnaireEditor extends Component {
   }
 
   questionnaireAddStep(e) {
-    e.preventDefault()
     this.setState({
       ...this.state,
       addingStep: true
@@ -68,10 +67,11 @@ class QuestionnaireEditor extends Component {
     })
   }
 
-  internalState(currentStep, addingStep = false) {
+  internalState(currentStep, addingStep = false, currentStepIsNew = false) {
     return {
       currentStep,
-      addingStep
+      addingStep,
+      currentStepIsNew
     }
   }
 
@@ -84,7 +84,7 @@ class QuestionnaireEditor extends Component {
     if (this.state.addingStep && questionnaireData && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
       const newStep = questionnaireData.steps[questionnaireData.steps.length - 1]
       if (newStep != null) {
-        this.setState(this.internalState(newStep.id))
+        this.setState(this.internalState(newStep.id, false, true))
       }
     }
   }
@@ -242,6 +242,7 @@ class QuestionnaireEditor extends Component {
           <QuestionnaireSteps
             steps={questionnaire.steps}
             current={this.state.currentStep}
+            currentStepIsNew={this.state.currentStepIsNew}
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
             onDeleteStep={() => this.deleteStep()} />

@@ -66,7 +66,7 @@ class StepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  errors: errorsByLang(state.questionnaire)[state.questionnaire.data.activeLanguage]
+  errors: ownProps.isNew ? {} : errorsByLang(state.questionnaire)[state.questionnaire.data.activeLanguage]
 })
 
 const mapDispatchToProps = (dispatch) => ({
