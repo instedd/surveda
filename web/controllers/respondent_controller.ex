@@ -7,9 +7,8 @@ defmodule Ask.RespondentController do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
 
-    respondents = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    respondents = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
     |> assoc(:respondents)
@@ -58,9 +57,8 @@ defmodule Ask.RespondentController do
   end
 
   def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    survey = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
@@ -101,9 +99,8 @@ defmodule Ask.RespondentController do
   end
 
   def quotas_stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    survey = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
@@ -228,9 +225,8 @@ defmodule Ask.RespondentController do
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     if Path.extname(file.filename) == ".csv" do
       rows =
@@ -254,9 +250,8 @@ defmodule Ask.RespondentController do
   end
 
   def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     # Check that the survey is in the project
     project
@@ -275,9 +270,8 @@ defmodule Ask.RespondentController do
   end
 
   def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id, "offset" => offset}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    project = conn
+    |> load_project(project_id)
 
     # Check that the survey is in the project
     survey = project

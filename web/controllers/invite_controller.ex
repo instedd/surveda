@@ -20,9 +20,8 @@ defmodule Ask.InviteController do
   end
 
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     current_user = conn |> current_user
     Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
@@ -38,9 +37,8 @@ defmodule Ask.InviteController do
   end
 
   def invite_mail(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
     current_user = conn |> current_user

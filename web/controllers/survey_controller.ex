@@ -4,9 +4,8 @@ defmodule Ask.SurveyController do
   alias Ask.{Project, Channel, Survey, Questionnaire}
 
   def index(conn, %{"project_id" => project_id}) do
-    surveys = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    surveys = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
     |> preload(:channels)
     |> Repo.all
@@ -15,9 +14,8 @@ defmodule Ask.SurveyController do
   end
 
   def create(conn, params = %{"project_id" => project_id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     props = %{"project_id" => project_id,
               "name" => "",
@@ -46,9 +44,8 @@ defmodule Ask.SurveyController do
   end
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
-    survey = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    survey = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:channels])
@@ -59,9 +56,8 @@ defmodule Ask.SurveyController do
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     changeset = project
     |> assoc(:surveys)
@@ -118,9 +114,8 @@ defmodule Ask.SurveyController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     project
     |> assoc(:surveys)
@@ -137,9 +132,8 @@ defmodule Ask.SurveyController do
   def launch(conn, %{"survey_id" => id}) do
     survey = Repo.get!(Survey, id) |> Repo.preload([:channels]) |> Repo.preload([:quota_buckets])
 
-    project = Project
-    |> Repo.get!(survey.project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(survey.project_id)
 
     case prepare_channels(conn, survey.channels) do
       :ok ->

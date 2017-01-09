@@ -1,7 +1,7 @@
 defmodule User.Helper do
   import Ecto
   import Ecto.Query
-  alias Ask.Repo
+  alias Ask.{Repo, Project}
   alias Ask.UnauthorizedError
 
   def current_user(conn) do
@@ -42,6 +42,22 @@ defmodule User.Helper do
       [] -> raise UnauthorizedError, conn: conn
       _ -> project
     end
+  end
+
+  # Loads a project, and checks that the current user belongs to
+  # it with any access level.
+  def load_project(conn, project_id) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize(conn)
+  end
+
+  # Loads a project, and checks that the current user belongs to
+  # it as either and owner or editor, but not as a reader.
+  def load_project_for_change(conn, project_id) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize_change(conn)
   end
 
   def authorize_channel(channel, conn) do

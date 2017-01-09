@@ -45,17 +45,15 @@ defmodule Ask.ProjectController do
   end
 
   def show(conn, %{"id" => id}) do
-    project = Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    project = conn
+    |> load_project(id)
 
     render(conn, "show.json", project: project)
   end
 
   def update(conn, %{"id" => id, "project" => project_params}) do
-    changeset = Project
-    |> Repo.get!(id)
-    |> authorize_change(conn)
+    changeset = conn
+    |> load_project_for_change(id)
     |> Project.changeset(project_params)
 
     case Repo.update(changeset) do
@@ -69,9 +67,8 @@ defmodule Ask.ProjectController do
   end
 
   def delete(conn, %{"id" => id}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize_change(conn)
+    conn
+    |> load_project_for_change(id)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!()
@@ -80,9 +77,8 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_vars(conn, %{"project_id" => id, "text" => text}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project(id)
 
     text = text |> String.downcase
     like_text = "#{text}%"
@@ -99,9 +95,8 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_primary_language(conn, %{"project_id" => id, "mode" => mode, "language" => language, "text" => text}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project(id)
 
     text = text |> String.downcase
     like_text = "%#{text}%"
@@ -130,9 +125,8 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_other_language(conn, %{"project_id" => id, "mode" => mode, "primary_language" => primary_language, "other_language" => other_language, "source_text" => source_text, "target_text" => target_text}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project(id)
 
     target_text = target_text |> String.downcase
     like_text = "#{target_text}%"
@@ -152,9 +146,8 @@ defmodule Ask.ProjectController do
   end
 
   def collaborators(conn, %{"project_id" => id}) do
-    memberships = Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    memberships = conn
+    |> load_project(id)
     |> assoc(:project_memberships)
     |> Repo.all
     |> Repo.preload(:user)

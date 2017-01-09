@@ -8,9 +8,8 @@ defmodule Ask.QuestionnaireController do
   plug :validate_params when action in [:create, :update]
 
   def index(conn, %{"project_id" => project_id}) do
-    questionnaires = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    questionnaires = conn
+    |> load_project(project_id)
     |> assoc(:questionnaires)
     |> Repo.all
 
@@ -18,13 +17,10 @@ defmodule Ask.QuestionnaireController do
   end
 
   def create(conn, %{"project_id" => project_id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     params = conn.assigns[:questionnaire]
-
-    params = params
     |> Map.put_new("languages", ["en"])
     |> Map.put_new("default_language", "en")
 
@@ -48,9 +44,8 @@ defmodule Ask.QuestionnaireController do
   end
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
-    questionnaire = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    questionnaire = conn
+    |> load_project(project_id)
     |> assoc(:questionnaires)
     |> Repo.get!(id)
 
@@ -58,9 +53,8 @@ defmodule Ask.QuestionnaireController do
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     params = conn.assigns[:questionnaire]
 
@@ -83,9 +77,8 @@ defmodule Ask.QuestionnaireController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    project = Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
+    project = conn
+    |> load_project_for_change(project_id)
 
     project
     |> assoc(:questionnaires)
