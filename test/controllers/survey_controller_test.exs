@@ -538,6 +538,21 @@ defmodule Ask.SurveyControllerTest do
       assert new_survey.state == "not_ready"
     end
 
+    test "updates state when selecting mode, missing channel, multiple modes", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
+      add_channel_to(survey, channel)
+      add_respondent_to survey
+
+      attrs = %{mode: [["sms"], ["sms", "ivr"]]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+
     test "updates state when selecting mode, all channels", %{conn: conn, user: user} do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 

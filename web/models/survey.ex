@@ -68,7 +68,9 @@ defmodule Ask.Survey do
 
     ready = length(questionnaires) > 0 && respondents_count && respondents_count > 0
       && length(channels) > 0 && schedule_completed && mode && (length(mode) > 0) && validate_retry_attempts_configuration(changeset)
-      && Enum.all?(hd(mode), fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
+      && Enum.all?(mode, fn(modes) ->
+        Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
+      end)
 
     cond do
       state == "not_ready" && ready ->
