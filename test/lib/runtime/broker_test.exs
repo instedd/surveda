@@ -57,6 +57,35 @@ defmodule Ask.BrokerTest do
     assert respondent.questionnaire_id == questionnaire.id
   end
 
+  test "set the respondent questionnaire and mode with comparisons" do
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    quiz1 = insert(:questionnaire, steps: @dummy_steps)
+    quiz2 = insert(:questionnaire, steps: @dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{
+        state: "running",
+        questionnaires: [quiz1, quiz2],
+        mode: [["sms"], ["ivr"]],
+        comparisons: [
+          %{"mode" => ["sms"], "questionnaire_id" => quiz1.id, "ratio" => 0},
+          %{"mode" => ["sms"], "questionnaire_id" => quiz2.id, "ratio" => 0},
+          %{"mode" => ["ivr"], "questionnaire_id" => quiz1.id, "ratio" => 100},
+          %{"mode" => ["ivr"], "questionnaire_id" => quiz2.id, "ratio" => 0},
+        ]
+        }))
+    |> Repo.preload([:channels])
+    channel_changeset = Ecto.Changeset.change(channel)
+    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+
+    respondent = insert(:respondent, survey: survey)
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.mode == ["ivr"]
+    assert respondent.questionnaire_id == quiz1.id
+  end
+
   test "changes the respondent state from pending to running if neccessary" do
     [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
