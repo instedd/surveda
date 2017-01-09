@@ -20,6 +20,7 @@ defmodule Ask.QuestionnaireController do
   def create(conn, %{"project_id" => project_id}) do
     project = Project
     |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     params = conn.assigns[:questionnaire]
 
@@ -28,7 +29,6 @@ defmodule Ask.QuestionnaireController do
     |> Map.put_new("default_language", "en")
 
     changeset = project
-    |> authorize(conn)
     |> build_assoc(:questionnaires)
     |> Questionnaire.changeset(params)
 
@@ -60,11 +60,11 @@ defmodule Ask.QuestionnaireController do
   def update(conn, %{"project_id" => project_id, "id" => id}) do
     project = Project
     |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     params = conn.assigns[:questionnaire]
 
     changeset = project
-    |> authorize(conn)
     |> assoc(:questionnaires)
     |> Repo.get!(id)
     |> Questionnaire.changeset(params)
@@ -85,9 +85,9 @@ defmodule Ask.QuestionnaireController do
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
     project = Project
     |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     project
-    |> authorize(conn)
     |> assoc(:questionnaires)
     |> Repo.get!(id)
     # Here we use delete! (with a bang) because we expect
