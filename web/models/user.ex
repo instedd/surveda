@@ -4,6 +4,7 @@ defmodule Ask.User do
   schema "users" do
     field :email, :string
     field :encrypted_password, :string
+    field :onboarding, Ask.Ecto.Type.JSON
 
     has_many :channels, Ask.Channel
     has_many :oauth_tokens, Ask.OAuthToken
