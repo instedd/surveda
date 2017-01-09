@@ -221,16 +221,13 @@ describe('questionnaire reducer', () => {
     it('should change step type', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.changeStepType('17141bea-a81c-4227-bdda-f5f69188b0e7', 'numeric')
       ])
 
-      const resultStep = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+      const resultStep = find(preState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
 
-      expect(resultState.data.steps.length).toEqual(preState.data.steps.length)
+      expect(preState.data.steps.length).toEqual(preState.data.steps.length)
       expect(resultStep.type).toEqual('numeric')
       expect(resultStep.title).toEqual('Do you smoke?')
       expect(resultStep.store).toEqual('Smokes')
@@ -240,57 +237,45 @@ describe('questionnaire reducer', () => {
     it('should update step title', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.changeStepTitle('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New title  ')
       ])
 
-      expect(resultState.data.steps.length).toEqual(preState.data.steps.length)
-      const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      expect(preState.data.steps.length).toEqual(preState.data.steps.length)
+      const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
       expect(step.title).toEqual('New title')
     })
 
     it('should update step prompt sms', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New prompt  ')]
       )
 
-      const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
       expect(step.prompt['en'].sms).toEqual('New prompt')
     })
 
     it('should update step prompt ivr', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: '  New prompt  ', audioSource: 'tts'})]
       )
 
-      const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
       expect(step.prompt['en'].ivr).toEqual({text: 'New prompt', audioSource: 'tts'})
     })
 
     it('should update step store', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New store  ')]
       )
 
-      const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
       expect(step.store).toEqual('New store')
     })
 
@@ -343,14 +328,11 @@ describe('questionnaire reducer', () => {
       it('should add choice', () => {
         const preState = playActions([
           actions.fetch(1, 1),
-          actions.receive(questionnaire)
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.receive(questionnaire),
           actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15')]
         )
 
-        const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
         expect(step.choices.length).toEqual(3)
         expect(step.choices[2].value).toEqual('')
         expect(step.choices[2].responses).toEqual({sms: {'en': []}, ivr: []})
@@ -359,14 +341,11 @@ describe('questionnaire reducer', () => {
       it('should delete choice', () => {
         const preState = playActions([
           actions.fetch(1, 1),
-          actions.receive(questionnaire)
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.receive(questionnaire),
           actions.deleteChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 1)]
         )
 
-        const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
         expect(step.choices.length).toEqual(1)
         expect(step.choices[0].value).toEqual('Yes')
       })
@@ -374,14 +353,11 @@ describe('questionnaire reducer', () => {
       it('should modify choice', () => {
         const preState = playActions([
           actions.fetch(1, 1),
-          actions.receive(questionnaire)
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.receive(questionnaire),
           actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, '  Maybe  ', '  M,  MB  , 3  ', '  May  ', 'end')
         ])
 
-        const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+        const step = find(preState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
         expect(step.choices.length).toEqual(2)
         expect(step.choices[1].value).toEqual('Maybe')
         expect(step.choices[1].skipLogic).toEqual('end')
@@ -398,15 +374,12 @@ describe('questionnaire reducer', () => {
           actions.fetch(1, 1),
           actions.receive(questionnaire),
           actions.setActiveLanguage('es'),
-          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, '', '', '', 'end')
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, '', '', '', 'end'),
           actions.autocompleteChoiceSmsValues('17141bea-a81c-4227-bdda-f5f69188b0e7', 1,
             {text: '  M,  MB  , 3  ', translations: [{language: 'es', text: '  A, B , C '}, {language: null, text: null}]})
         ])
 
-        const step = find(resultState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+        const step = find(preState.data.steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
         expect(step.choices[1].responses.sms['en']).toEqual([
           'M',
           'MB',
@@ -422,16 +395,13 @@ describe('questionnaire reducer', () => {
       it('should autocomplete choice options when parameter is true', () => {
         const preState = playActions([
           actions.fetch(1, 1),
-          actions.receive(questionnaire)
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.receive(questionnaire),
           actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
           actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
           actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', 'some-id', true)
         ])
 
-        const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
         expect(step.choices.length).toEqual(3)
         expect(step.choices[2]).toEqual({
           value: 'Maybe',
@@ -452,16 +422,13 @@ describe('questionnaire reducer', () => {
       it('should not autocomplete choice options when not asked to', () => {
         const preState = playActions([
           actions.fetch(1, 1),
-          actions.receive(questionnaire)
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.receive(questionnaire),
           actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
           actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
           actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', 'some-other-id', false)
         ])
 
-        const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
         expect(step.choices.length).toEqual(3)
         expect(step.choices[2]).toEqual({
           value: 'Maybe',
@@ -478,16 +445,13 @@ describe('questionnaire reducer', () => {
       it('should not autocomplete choice options when there are options already set', () => {
         const preState = playActions([
           actions.fetch(1, 1),
-          actions.receive(questionnaire)
-        ])
-
-        const resultState = playActionsFromState(preState, reducer)([
+          actions.receive(questionnaire),
           actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'end'),
           actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
           actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', 'Perhaps', '2, 3', 'some-other-id', true)
         ])
 
-        const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
         expect(step.choices.length).toEqual(3)
 
         expect(step.choices[2]).toEqual({
@@ -704,14 +668,11 @@ describe('questionnaire reducer', () => {
     it('should add language selection step when adding a language', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr')
       ])
 
-      const languageSelection = resultState.data.steps[0]
+      const languageSelection = preState.data.steps[0]
       expect(languageSelection.type).toEqual('language-selection')
       expect(languageSelection.languageChoices).toInclude('fr')
     })
@@ -719,17 +680,14 @@ describe('questionnaire reducer', () => {
     it('should allow edition of ivr message for language selection step when switching default language', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
         actions.setDefaultLanguage('es')
       ])
 
-      const languageSelection = resultState.data.steps[0]
-      const finalResultState = playActionsFromState(resultState, reducer)([
+      const languageSelection = preState.data.steps[0]
+      const finalResultState = playActionsFromState(preState, reducer)([
         actions.changeStepPromptIvr(languageSelection.id, {text: 'New language prompt', audioSource: 'tts'})
       ])
       const finalLanguageSelection = finalResultState.data.steps[0]
