@@ -86,51 +86,51 @@ defmodule Ask.InviteControllerTest do
   end
 
   test "accepts invite", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      user2 = insert(:user)
-      code = "ABC1234"
-      level = "reader"
-      invite = %{
-        "project_id" => project.id,
-        "code" => code,
-        "level" => level,
-        "email" => user2.email
-      }
-      Invite.changeset(%Invite{}, invite) |> Repo.insert
-      conn = conn
-        |> put_private(:test_user, user2)
-        |> put_req_header("accept", "application/json")
+    project = create_project_for_user(user)
+    user2 = insert(:user)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => user2.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+    conn = conn
+      |> put_private(:test_user, user2)
+      |> put_req_header("accept", "application/json")
 
-      conn = get conn, accept_invitation_path(conn, :accept_invitation, %{"code" => code})
-      assert json_response(conn, 200) == %{
-      "data" => %{
-        "project_id" => project.id,
-        "level" => level
-        }
+    conn = get conn, accept_invitation_path(conn, :accept_invitation, %{"code" => code})
+    assert json_response(conn, 200) == %{
+    "data" => %{
+      "project_id" => project.id,
+      "level" => level
       }
-    end
+    }
+  end
 
-    test "shows invite", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      code = "ABC1234"
-      level = "reader"
-      invite = %{
-        "project_id" => project.id,
-        "code" => code,
-        "level" => level,
-        "email" => "user@instedd.org",
-        "inviter_email" => user.email
+  test "shows invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => "user@instedd.org",
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    conn = get conn, invite_show_path(conn, :show, %{"code" => code})
+
+    assert json_response(conn, 200) == %{
+    "data" => %{
+      "project_name" => project.name,
+      "role" => level,
+      "inviter_email" => user.email
       }
-      Invite.changeset(%Invite{}, invite) |> Repo.insert
-
-      conn = get conn, invite_show_path(conn, :show, %{"code" => code})
-
-      assert json_response(conn, 200) == %{
-      "data" => %{
-        "project_name" => project.name,
-        "role" => level,
-        "inviter_email" => user.email
-        }
-      }
-    end
+    }
+  end
 end
