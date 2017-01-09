@@ -230,7 +230,7 @@ defmodule Ask.RespondentController do
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
     project = Project
     |> Repo.get!(project_id)
-    |> authorize(conn)
+    |> authorize_change(conn)
 
     if Path.extname(file.filename) == ".csv" do
       rows =
@@ -256,7 +256,7 @@ defmodule Ask.RespondentController do
   def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = Project
     |> Repo.get!(project_id)
-    |> authorize(conn)
+    |> authorize_change(conn)
 
     # Check that the survey is in the project
     project

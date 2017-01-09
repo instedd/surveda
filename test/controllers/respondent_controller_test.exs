@@ -287,6 +287,18 @@ defmodule Ask.RespondentControllerTest do
     assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
 
+  test "forbids upload for project reader", %{conn: conn, user: user}  do
+    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+    project = insert(:project, updated_at: datetime)
+    insert(:project_membership, user: user, project: project, level: "reader")
+    survey = insert(:survey, project: project)
+
+    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+    assert_error_sent :forbidden, fn ->
+      post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
+    end
+  end
+
   test "deletes all the respondents from a survey", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project)
@@ -337,6 +349,16 @@ defmodule Ask.RespondentControllerTest do
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == respondents_count
+
+    assert_error_sent :forbidden, fn ->
+      delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
+    end
+  end
+
+  test "forbids the deleteion of all the respondents from a survey for project reader", %{conn: conn, user: user} do
+    project = insert(:project)
+    insert(:project_membership, user: user, project: project, level: "reader")
+    survey = insert(:survey, project: project)
 
     assert_error_sent :forbidden, fn ->
       delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
