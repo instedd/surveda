@@ -99,7 +99,7 @@ export const hasErrors = (quiz: QuestionnaireStore, step: Step) => {
   const errorPath = (index) => `steps[${index}]`
 
   const stepIndex = findIndex(quiz.data.steps, s => s.id === step.id)
-  return stepIndex >= 0 && some(keys(quiz.errors), k => startsWith(k, errorPath(stepIndex)))
+  return stepIndex >= 0 && some(keys(quiz.errorsByLang[quiz.data.activeLanguage]), k => startsWith(k, errorPath(stepIndex)))
 }
 
 export const filterByPathPrefix = (errors: QuizErrors, prefix: string) => {

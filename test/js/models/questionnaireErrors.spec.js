@@ -13,7 +13,11 @@ describe('questionnaire error', () => {
         errors: {
           'steps[0].andsomeprefix': ['Some error message']
         },
-        errorsByLang: {}
+        errorsByLang: {
+          'en': {
+            'steps[0].andsomeprefix': ['Some error message']
+          }
+        }
       }
 
       const result = hasErrors(quiz, step)
