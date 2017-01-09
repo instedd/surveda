@@ -2,16 +2,21 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
+import * as surveyActions from '../../actions/survey'
+import * as questionnairesActions from '../../actions/questionnaires'
 import range from 'lodash/range'
 import values from 'lodash/values'
-import { CardTable, Tooltip } from '../ui'
+import { CardTable, Tooltip, UntitledIfEmpty } from '../ui'
 import * as routes from '../../routes'
 import dateformat from 'dateformat'
+import { modeLabel } from '../../reducers/survey'
 
 class RespondentIndex extends Component {
   componentDidMount() {
     const { projectId, surveyId, pageSize } = this.props
     if (projectId && surveyId) {
+      this.props.surveyActions.fetchSurvey(projectId, surveyId)
+      this.props.questionnairesActions.fetchQuestionnaires(projectId)
       this.props.actions.fetchRespondents(projectId, surveyId, pageSize, 1)
     }
   }
@@ -37,11 +42,13 @@ class RespondentIndex extends Component {
   }
 
   render() {
-    if (!this.props.respondents) {
+    if (!this.props.respondents || !this.props.survey || !this.props.questionnaires) {
       return <div>Loading...</div>
     }
 
-    const { totalCount } = this.props
+    const { survey, questionnaires, totalCount } = this.props
+
+    const hasComparisons = survey.comparisons.length > 0
 
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
@@ -98,6 +105,13 @@ class RespondentIndex extends Component {
 
     const respondentsFieldName = allFieldNames(respondents)
 
+    let colspan = respondentsFieldName.length + 2
+    let variantHeader = null
+    if (hasComparisons) {
+      variantHeader = <th>Variant</th>
+      colspan += 1
+    }
+
     return (
       <div className='white'>
         <Tooltip text='Download CSV'>
@@ -111,14 +125,29 @@ class RespondentIndex extends Component {
               <th>Phone number</th>
               {respondentsFieldName.map(field =>
                 <th key={field}>{field}</th>
-            )}
+              )}
+              {variantHeader}
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
             { range(0, pageSize).map(index => {
               const respondent = respondentsList[index]
-              if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={respondentsFieldName.length + 2} /></tr>
+              if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={colspan} /></tr>
+
+              let variantColumn = null
+              if (hasComparisons) {
+                let variantValue
+                let questionnaire
+                if (respondent.questionnaireId && respondent.mode && (questionnaire = questionnaires[respondent.questionnaireId])) {
+                  const questionnaireName = <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
+                  variantValue = <span>{questionnaireName} - {modeLabel(respondent.mode)}</span>
+                } else {
+                  variantValue = '-'
+                }
+
+                variantColumn = <td>{variantValue}</td>
+              }
 
               return (
                 <tr key={respondent.id}>
@@ -126,6 +155,7 @@ class RespondentIndex extends Component {
                   {respondentsFieldName.map(function(field) {
                     return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
                   })}
+                  {variantColumn}
                   <td>
                     {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
                   </td>
@@ -141,8 +171,12 @@ class RespondentIndex extends Component {
 
 RespondentIndex.propTypes = {
   actions: PropTypes.object.isRequired,
+  surveyActions: PropTypes.object.isRequired,
+  questionnairesActions: PropTypes.object.isRequired,
   projectId: PropTypes.any,
   surveyId: PropTypes.any,
+  survey: PropTypes.object,
+  questionnaires: PropTypes.object,
   respondents: PropTypes.object,
   pageNumber: PropTypes.number.isRequired,
   pageSize: PropTypes.number.isRequired,
@@ -165,6 +199,8 @@ const mapStateToProps = (state, ownProps) => {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
     respondents: state.respondents.items,
+    survey: state.survey.data,
+    questionnaires: state.questionnaires.items,
     pageNumber,
     pageSize,
     startIndex,
@@ -176,7 +212,9 @@ const mapStateToProps = (state, ownProps) => {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+  actions: bindActionCreators(actions, dispatch),
+  surveyActions: bindActionCreators(surveyActions, dispatch),
+  questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(RespondentIndex)

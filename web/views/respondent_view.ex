@@ -19,6 +19,8 @@ defmodule Ask.RespondentView do
       id: respondent.id,
       phone_number: respondent.phone_number,
       survey_id: respondent.survey_id,
+      mode: respondent.mode,
+      questionnaire_id: respondent.questionnaire_id,
       responses: render_many(responses, Ask.RespondentView, "response.json", as: :response),
       date: case responses do
         [] -> nil

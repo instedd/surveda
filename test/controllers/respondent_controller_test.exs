@@ -30,13 +30,16 @@ defmodule Ask.RespondentControllerTest do
     test "fetches responses on index", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
-      respondent = insert(:respondent, survey: survey)
+      questionnaire = insert(:questionnaire, project: project)
+      respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id)
       response = insert(:response, respondent: respondent, value: "Yes")
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == [%{
                                                      "id" => respondent.id,
                                                      "phone_number" => Respondent.mask_phone_number(respondent.phone_number),
                                                      "survey_id" => survey.id,
+                                                     "mode" => ["sms"],
+                                                     "questionnaire_id" => questionnaire.id,
                                                      "date" => Ecto.DateTime.to_iso8601(response.updated_at),
                                                      "responses" => [
                                                        %{
