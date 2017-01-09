@@ -1,4 +1,4 @@
-// @flow weak
+// @flow
 import * as api from '../api'
 
 export const RECEIVE_QUESTIONNAIRES = 'QUESTIONNAIRES_RECEIVE'
@@ -7,7 +7,7 @@ export const NEXT_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
 export const PREVIOUS_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
 export const SORT_QUESTIONNAIRES = 'QUESTIONNAIRES_SORT'
 
-export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
+export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store) => {
   const state = getState()
 
   // Don't fetch questionnaires if they are already being fetched
@@ -24,12 +24,12 @@ export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
     .then(() => getState().questionnaires.items)
 }
 
-export const startFetchingQuestionnaires = (projectId) => ({
+export const startFetchingQuestionnaires = (projectId: number) => ({
   type: FETCH_QUESTIONNAIRES,
   projectId
 })
 
-export const receiveQuestionnaires = (projectId, questionnaires) => ({
+export const receiveQuestionnaires = (projectId: number, questionnaires: Questionnaire[]) => ({
   type: RECEIVE_QUESTIONNAIRES,
   projectId,
   questionnaires
@@ -43,7 +43,7 @@ export const previousQuestionnairesPage = () => ({
   type: PREVIOUS_QUESTIONNAIRES_PAGE
 })
 
-export const sortQuestionnairesBy = (property) => ({
+export const sortQuestionnairesBy = (property: string) => ({
   type: SORT_QUESTIONNAIRES,
   property
 })

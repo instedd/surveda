@@ -11,24 +11,10 @@ export type Questionnaire = {
   projectId: number
 };
 
-export type QuizErrors = {
-  [path: string]: string[]
-}
-
 export type ChoiceErrors = {
   value: string[],
   sms: string[],
   ivr: string[]
-}
-
-export type QuestionnaireStore = {
-  data: Questionnaire,
-  errors: QuizErrors,
-  errorsByLang: { [lang: string]: QuizErrors }
-}
-
-export type QuestionnaireList = {
-  items: Questionnaire[]
 }
 
 export type AudioPrompt = {

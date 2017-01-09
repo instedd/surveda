@@ -1,3 +1,4 @@
+// @flow
 import * as actions from '../actions/questionnaires'
 import { itemsOrder, sortItems, nextPage, previousPage } from '../dataTable'
 
@@ -14,7 +15,7 @@ const initialState = {
   }
 }
 
-export default (state = initialState, action) => {
+export default (state: QuestionnaireList = initialState, action: any) => {
   switch (action.type) {
     case actions.FETCH_QUESTIONNAIRES: return fetchQuestionnaires(state, action)
     case actions.RECEIVE_QUESTIONNAIRES: return receiveQuestionnaires(state, action)

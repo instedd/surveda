@@ -1,3 +1,4 @@
+// @flow
 import isEqual from 'lodash/isEqual'
 import toInteger from 'lodash/toInteger'
 
@@ -6,6 +7,8 @@ const initialState = {
   dirty: false,
   filter: null,
   data: null,
+  errors: {},
+  errorsByLang: {},
   saving: false
 }
 
@@ -14,7 +17,8 @@ const defaultFilterProvider = (data) => ({
   id: data.id == null ? null : toInteger(data.id)
 })
 
-export default (actions, dataReducer, filterProvider = defaultFilterProvider) => (state = initialState, action) => {
+export default (actions: any, dataReducer: DataReducer<any>, filterProvider: any = defaultFilterProvider) => (state: ?DataStore<any>, action: any): DataStore<any> => {
+  state = state || initialState
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
     case actions.RECEIVE: return receive(state, action, filterProvider)
@@ -24,20 +28,18 @@ export default (actions, dataReducer, filterProvider = defaultFilterProvider) =>
   }
 }
 
-const data = (state, action, dataReducer) => {
-  const newData = state.data == null ? null : dataReducer(state.data, action)
+const data = (state: DataStore<any>, action, dataReducer): DataStore<any> => {
+  const newData: any = state.data == null ? null : dataReducer(state.data, action)
 
-  return do {
-    if (newData !== state.data) {
-      ({
-        ...state,
-        dirty: true,
-        data: newData
-      })
-    } else {
-      state
-    }
+  if (newData !== state.data) {
+    return ({
+      ...state,
+      dirty: true,
+      data: newData
+    })
   }
+
+  return state
 }
 
 const receive = (state, action, filterProvider) => {

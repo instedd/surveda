@@ -17,7 +17,7 @@ type Props = {
   lang: string,
   sms: boolean,
   ivr: boolean,
-  errors: QuizErrors,
+  errors: Errors,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
 };
@@ -32,7 +32,7 @@ type State = {
   focus: Focus,
   doNotClose: boolean,
   skipLogic: ?string,
-  errors: ?QuizErrors,
+  errors: ?Errors,
 };
 
 class ChoiceEditor extends Component {

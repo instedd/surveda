@@ -16,7 +16,7 @@ type Props = {
   stepIndex: number,
   stepsBefore: Step[],
   stepsAfter: Step[],
-  errors: QuizErrors
+  errors: Errors
 };
 
 class StepMultipleChoiceEditor extends Component {

@@ -15,7 +15,7 @@ type Props = {
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
-  errors: QuizErrors,
+  errors: Errors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };

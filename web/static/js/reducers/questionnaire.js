@@ -32,10 +32,10 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
   }
 }
 
-const validateReducer = (reducer) => {
+const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Questionnaire> => {
   // React will call this with an undefined the first time for initialization.
-  // We mimic that in the specs, so ValidationState needs to become optional here.
-  return (state: ?QuestionnaireStore, action: any) => {
+  // We mimic that in the specs, so DataStore<Questionnaire> needs to become optional here.
+  return (state: ?DataStore<Questionnaire>, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
@@ -718,22 +718,23 @@ type ValidationContext = {
   ivr: boolean,
   activeLanguage: string,
   languages: string[],
-  errors: QuizErrors
+  errors: Errors
 };
 
-const validate = (state: QuestionnaireStore) => {
-  if (!state.data) return
+const validate = (state: DataStore<Questionnaire>) => {
+  const data = state.data
+  if (!data) return
   state.errors = {}
 
   const context = {
-    sms: state.data.modes.indexOf('sms') != -1,
-    ivr: state.data.modes.indexOf('ivr') != -1,
-    activeLanguage: state.data.activeLanguage,
-    languages: state.data.languages,
+    sms: data.modes.indexOf('sms') != -1,
+    ivr: data.modes.indexOf('ivr') != -1,
+    activeLanguage: data.activeLanguage,
+    languages: data.languages,
     errors: state.errors
   }
 
-  validateSteps(state.data.steps, context)
+  validateSteps(data.steps, context)
 
   state.errorsByLang = errorsByLang(state)
 }

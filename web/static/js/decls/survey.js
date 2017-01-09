@@ -7,6 +7,8 @@ export type Survey = {
   state: string,
   questionnaireIds: number[],
   questionnaireComparison: boolean,
+  ivrRetryConfiguration: string,
+  smsRetryConfiguration: string,
   scheduleDayOfWeek: DayOfWeek,
   scheduleStartTime: string,
   scheduleEndTime: string,
@@ -22,22 +24,6 @@ export type Survey = {
 export type DayOfWeek = {
   [weekday: string]: boolean
 };
-
-export type SurveyStore = {
-  data: ?Survey,
-  filter: ?Filter,
-  fetching: boolean,
-  dirty: boolean
-}
-
-export type Filter = {
-  id: number,
-  projectId: number
-}
-
-export type SurveyList = {
-  items: SurveyPreview[]
-}
 
 export type SurveyPreview = {
   id: number,

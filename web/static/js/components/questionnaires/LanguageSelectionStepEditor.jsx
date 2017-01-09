@@ -17,7 +17,7 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: QuizErrors
+  errors: Errors
 };
 
 type State = {

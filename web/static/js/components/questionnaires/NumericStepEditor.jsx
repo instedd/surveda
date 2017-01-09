@@ -19,7 +19,7 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: QuizErrors,
+  errors: Errors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };

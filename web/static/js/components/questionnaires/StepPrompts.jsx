@@ -21,7 +21,7 @@ type Props = {
   questionnaireActions: any,
   inputErrors: boolean,
   questionnaire: Questionnaire,
-  errors: QuizErrors,
+  errors: Errors,
   classes: string
 };
 

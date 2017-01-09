@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
@@ -41,14 +42,13 @@ class ChannelIndex extends Component {
       </div>
     }
 
-    const syncButton = do {
-      if (authorizations.synchronizing) {
-        <Preloader size='small' />
-      } else {
-        <a href='#' className='black-text' onClick={() => this.synchronizeChannels()}>
-          <i className='material-icons container-rotate'>refresh</i>
-        </a>
-      }
+    let syncButton = null
+    if (authorizations.synchronizing) {
+      syncButton = <Preloader size='small' />
+    } else {
+      syncButton = <a href='#' className='black-text' onClick={() => this.synchronizeChannels()}>
+        <i className='material-icons container-rotate'>refresh</i>
+      </a>
     }
 
     const tableTitle =

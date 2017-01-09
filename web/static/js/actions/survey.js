@@ -51,7 +51,7 @@ export const fetch = (projectId: number, id: number) => ({
   projectId
 })
 
-export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Promise<Survey> => {
+export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Promise<?Survey> => {
   if (shouldFetch(getState().survey, projectId, id)) {
     return dispatch(fetchSurvey(projectId, id))
   } else {
@@ -59,12 +59,12 @@ export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch:
   }
 }
 
-export const receive = (survey: SurveyStore) => ({
+export const receive = (survey: DataStore<Survey>) => ({
   type: RECEIVE,
   data: survey
 })
 
-export const shouldFetch = (state: SurveyStore, projectId: number, id: number) => {
+export const shouldFetch = (state: DataStore<Survey>, projectId: number, id: number) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
@@ -181,6 +181,7 @@ export const saved = (survey: Survey) => ({
 
 export const save = () => (dispatch: Function, getState: () => Store) => {
   const survey = getState().survey.data
+  if (!survey) return
   dispatch(saving())
   api.updateSurvey(survey.projectId, survey)
     .then(response => {

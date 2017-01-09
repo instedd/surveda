@@ -69,8 +69,10 @@ const parseErrorPath = (errorPath: string): ErrorSubject => {
  * plus those that do not depend on the language. See the comment at the top of
  * this file for a list of the possible validation errors for a questionnaire.
 */
-export const errorsByLang = (quiz: QuestionnaireStore): {[lang: string]: QuizErrors} => {
-  let initialStruct = reduce(quiz.data.languages, (struct, lang) => {
+export const errorsByLang = (quiz: DataStore<Questionnaire>): {[lang: string]: Errors} => {
+  const data = quiz.data
+  if (!data) return {}
+  let initialStruct = reduce(data.languages, (struct, lang) => {
     struct[lang] = {}
     return struct
   }, {})
@@ -79,7 +81,7 @@ export const errorsByLang = (quiz: QuestionnaireStore): {[lang: string]: QuizErr
     const errorSubject = parseErrorPath(currentErrorPath)
 
     if (!errorSubject.lang) {
-      quiz.data.languages.forEach(lang => {
+      data.languages.forEach(lang => {
         result[lang][currentErrorPath] = currentError
       })
     } else {
@@ -90,19 +92,20 @@ export const errorsByLang = (quiz: QuestionnaireStore): {[lang: string]: QuizErr
   }, initialStruct)
 }
 
-export const langHasErrors = (quiz: QuestionnaireStore) => (lang: string): boolean => {
+export const langHasErrors = (quiz: DataStore<Questionnaire>) => (lang: string): boolean => {
   return keys(quiz.errorsByLang[lang] || {}).length > 0
 }
 
-export const hasErrors = (quiz: QuestionnaireStore, step: Step) => {
-  if (!quiz.data) return
+export const hasErrors = (quiz: DataStore<Questionnaire>, step: Step) => {
+  const data = quiz.data
+  if (!data) return
   const errorPath = (index) => `steps[${index}]`
 
-  const stepIndex = findIndex(quiz.data.steps, s => s.id === step.id)
-  return stepIndex >= 0 && some(keys(quiz.errorsByLang[quiz.data.activeLanguage]), k => startsWith(k, errorPath(stepIndex)))
+  const stepIndex = findIndex(data.steps, s => s.id === step.id)
+  return stepIndex >= 0 && some(keys(quiz.errorsByLang[data.activeLanguage]), k => startsWith(k, errorPath(stepIndex)))
 }
 
-export const filterByPathPrefix = (errors: QuizErrors, prefix: string) => {
+export const filterByPathPrefix = (errors: Errors, prefix: string) => {
   return reduce(errors, (stepErrors, currentError, currentErrorPath) => {
     if (startsWith(currentErrorPath, prefix)) {
       stepErrors[currentErrorPath] = currentError
@@ -131,4 +134,3 @@ export const choicePath = (stepIndex: number, choiceIndex: number) => `${choices
 export const choiceValuePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.value`
 export const choiceSmsResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].sms`
 export const choiceIvrResponsePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.ivr`
-

@@ -1,3 +1,4 @@
+// @flow
 import * as api from '../api'
 import * as guisso from './guisso'
 import * as guissoApi from '../guisso'
@@ -7,12 +8,12 @@ import { config } from '../config'
 export const RECEIVE_CHANNELS = 'RECEIVE_CHANNELS'
 export const CREATE_CHANNEL = 'CREATE_CHANNEL'
 
-export const fetchChannels = () => dispatch => {
+export const fetchChannels = () => (dispatch: Function) => {
   api.fetchChannels()
     .then(channels => dispatch(receiveChannels(channels)))
 }
 
-export const createChannel = channel => dispatch => {
+export const createChannel = (channel: Channel) => (dispatch: Function) => {
   api.createChannel(channel)
     .then(response => dispatch({
       type: CREATE_CHANNEL,
@@ -21,14 +22,14 @@ export const createChannel = channel => dispatch => {
     }))
 }
 
-export const receiveChannels = (response) => ({
+export const receiveChannels = (response: Channel[]) => ({
   type: RECEIVE_CHANNELS,
   response
 })
 
 export const createNuntiumChannel = (() => {
   let references = {guissoSession: null}
-  return () => dispatch => {
+  return () => (dispatch: Function) => {
     if (references.guissoSession && references.guissoSession.isPopupOpen()) {
       return Promise.resolve()
     }

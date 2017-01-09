@@ -1,6 +1,7 @@
+// @flow
 import * as actions from '../actions/channels'
 
-export default (state = {}, action) => {
+export default (state: ChannelList, action: any) => {
   switch (action.type) {
     case actions.RECEIVE_CHANNELS: return receiveChannels(state, action)
     case actions.CREATE_CHANNEL: return createChannel(state, action)
@@ -21,4 +22,3 @@ const createChannel = (state, action) => ({
     ...action.channel
   }
 })
-
