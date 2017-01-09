@@ -138,8 +138,17 @@ defmodule Ask.Runtime.Broker do
 
   defp start(survey, respondent) do
     survey = Repo.preload(survey, [:channels, :questionnaires])
-    primary_channel = Survey.primary_channel(survey)
-    fallback_channel = Survey.fallback_channel(survey)
+
+    questionnaire = select_questionnaire(survey)
+    mode = select_mode(survey)
+
+    # Set respondent questionnaire and mode
+    respondent = respondent
+    |> Respondent.changeset(%{questionnaire_id: questionnaire.id, mode: mode})
+    |> Repo.update!
+
+    primary_channel = Survey.primary_channel(survey, mode)
+    fallback_channel = Survey.fallback_channel(survey, mode)
 
     retries = Survey.retries_configuration(survey, primary_channel.type)
     fallback_retries = case fallback_channel do
@@ -147,13 +156,23 @@ defmodule Ask.Runtime.Broker do
       _ -> Survey.retries_configuration(survey, fallback_channel.type)
     end
 
-    case Session.start((survey |> Survey.questionnaire), respondent, primary_channel, retries, fallback_channel, fallback_retries) do
+    case Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries) do
       :end ->
         update_respondent(respondent, :end)
 
       {session, timeout} ->
         update_respondent(respondent, {:ok, session, timeout})
     end
+  end
+
+  defp select_questionnaire(survey) do
+    questionnaires = survey.questionnaires
+    hd(questionnaires)
+  end
+
+  defp select_mode(survey) do
+    modes = survey.mode
+    hd(modes)
   end
 
   defp do_sync_step(respondent, reply) do

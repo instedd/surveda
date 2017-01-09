@@ -45,6 +45,18 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
   end
 
+  test "set the respondent questionnaire and mode" do
+    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+    mode = hd(survey.mode)
+    questionnaire = hd(survey.questionnaires)
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.mode == mode
+    assert respondent.questionnaire_id == questionnaire.id
+  end
+
   test "changes the respondent state from pending to running if neccessary" do
     [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
@@ -467,7 +479,8 @@ defmodule Ask.BrokerTest do
     |> Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
-    quiz = survey |> Survey.questionnaire
+
+    quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
     quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
 
     {:ok, broker} = Broker.start_link

@@ -18,6 +18,8 @@ defmodule Ask.Respondent do
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
     field :session, Ask.Ecto.Type.JSON
+    field :mode, Ask.Ecto.Type.JSON
+    belongs_to :questionnaire, Ask.Questionnaire
     belongs_to :survey, Ask.Survey
     belongs_to :quota_bucket, Ask.QuotaBucket
     has_many :responses, Ask.Response
@@ -30,7 +32,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at])
+    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode])
     |> validate_required([:phone_number, :state])
   end
 

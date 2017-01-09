@@ -35,33 +35,33 @@ defmodule Ask.SurveyTest do
   test "primary SMS and no fallback channel" do
     survey = %Survey{mode: [["sms"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
-    prim = Survey.primary_channel(survey)
+    prim = Survey.primary_channel(survey, hd(survey.mode))
     assert prim.name == "An SMS Channel"
     assert prim.type == "sms"
 
-    fallback = Survey.fallback_channel(survey)
+    fallback = Survey.fallback_channel(survey, hd(survey.mode))
     assert fallback == nil
   end
 
    test "primary IVR and no fallback channel" do
     survey = %Survey{mode: [["ivr"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
-    prim = Survey.primary_channel(survey)
+    prim = Survey.primary_channel(survey, hd(survey.mode))
     assert prim.name == "An IVR Channel"
     assert prim.type == "ivr"
 
-    fallback = Survey.fallback_channel(survey)
+    fallback = Survey.fallback_channel(survey, hd(survey.mode))
     assert fallback == nil
   end
 
   test "primary SMS and fallback IVR channel" do
     survey = %Survey{mode: [["sms", "ivr"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
-    prim = Survey.primary_channel(survey)
+    prim = Survey.primary_channel(survey, hd(survey.mode))
     assert prim.name == "An SMS Channel"
     assert prim.type == "sms"
 
-    fallback = Survey.fallback_channel(survey)
+    fallback = Survey.fallback_channel(survey, hd(survey.mode))
     assert fallback.name == "An IVR Channel"
     assert fallback.type == "ivr"
   end
@@ -69,11 +69,11 @@ defmodule Ask.SurveyTest do
   test "primary IVR and fallback SMS channel" do
     survey = %Survey{mode: [["ivr", "sms"]], channels: [%Channel{type: "ivr", name: "An IVR Channel"}, %Channel{type: "sms", name: "An SMS Channel"}]}
 
-    prim = Survey.primary_channel(survey)
+    prim = Survey.primary_channel(survey, hd(survey.mode))
     assert prim.name == "An IVR Channel"
     assert prim.type == "ivr"
 
-    fallback = Survey.fallback_channel(survey)
+    fallback = Survey.fallback_channel(survey, hd(survey.mode))
     assert fallback.name == "An SMS Channel"
     assert fallback.type == "sms"
   end

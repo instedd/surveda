@@ -116,15 +116,15 @@ defmodule Ask.Survey do
     parse_retries(retries)
   end
 
-  def primary_channel(survey) do
-    case hd(survey.mode) do
+  def primary_channel(survey, modes) do
+    case modes do
       [mode | _] -> channel(survey, mode)
       _ -> nil
     end
   end
 
-  def fallback_channel(survey) do
-    case hd(survey.mode) do
+  def fallback_channel(survey, modes) do
+    case modes do
       [_, mode] -> channel(survey, mode)
       _ -> nil
     end
@@ -154,9 +154,5 @@ defmodule Ask.Survey do
           _ -> 0
         end
     end
-  end
-
-  def questionnaire(survey = %Ask.Survey{}) do
-    hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
   end
 end
