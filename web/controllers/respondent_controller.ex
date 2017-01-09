@@ -280,9 +280,12 @@ defmodule Ask.RespondentController do
     |> authorize(conn)
 
     # Check that the survey is in the project
-    project
+    survey = project
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
+
+    questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+    has_comparisons = length(survey.comparisons) > 0
 
     {offset, ""} = Integer.parse(offset)
 
@@ -315,6 +318,25 @@ defmodule Ask.RespondentController do
           end
         end)
 
+        questionnaire_id = respondent.questionnaire_id
+        mode = respondent.mode
+
+        row = if has_comparisons do
+          variant = if questionnaire_id && mode do
+            questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
+            if questionnaire do
+              "#{questionnaire_name(questionnaire)} - #{mode_label(mode)}"
+            else
+              "-"
+            end
+          else
+            "-"
+          end
+          row ++ [variant]
+        else
+          row
+        end
+
         date = case responses do
           [] -> nil
           _ -> responses
@@ -333,7 +355,14 @@ defmodule Ask.RespondentController do
     end)
 
     # Add header to csv_rows
-    header = ["Respondent ID"] ++ all_fields ++ ["Date"]
+    header = ["Respondent ID"]
+    header = header ++ all_fields
+    header = if has_comparisons do
+      header ++ ["Variant"]
+    else
+      header
+    end
+    header = header ++ ["Date"]
     rows = Stream.concat([[header], csv_rows])
 
     # # Convert to CSV string
@@ -370,4 +399,17 @@ defmodule Ask.RespondentController do
     masked
   end
 
+  defp questionnaire_name(quiz) do
+    quiz.name || "Untitled questionnaire"
+  end
+
+  defp mode_label(mode) do
+    case mode do
+      ["sms"] -> "SMS"
+      ["ivr"] -> "Phone call"
+      ["ivr", "sms"] -> "Phone call with SMS fallback"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      _ -> "Unknown mode"
+    end
+  end
 end
