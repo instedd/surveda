@@ -1,7 +1,7 @@
-// @flow
+// @flow weak
 import * as actions from '../actions/channels'
 
-export default (state: ChannelList, action: any) => {
+export default (state = {}, action: any) => {
   switch (action.type) {
     case actions.RECEIVE_CHANNELS: return receiveChannels(state, action)
     case actions.CREATE_CHANNEL: return createChannel(state, action)
