@@ -379,7 +379,7 @@ defmodule Ask.RespondentController do
       |> send_resp(200, csv)
   end
 
-  def update_survey_state(survey_id, respondents_count) do
+  defp update_survey_state(survey_id, respondents_count) do
     survey = Repo.get!(Survey, survey_id)
     survey = Map.merge(survey, %{respondents_count: respondents_count})
 
@@ -390,7 +390,7 @@ defmodule Ask.RespondentController do
     |> Repo.update
   end
 
-  def mask_phone_numbers(respondents) do
+  defp mask_phone_numbers(respondents) do
     masked = respondents
     |>
     Enum.map(fn respondent ->
