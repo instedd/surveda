@@ -86,6 +86,14 @@ defmodule Ask.ProjectControllerTest do
       end
     end
 
+    test "shows chosen resource as project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      conn = get conn, project_path(conn, :show, project)
+      assert json_response(conn, 200)["data"] == %{"id" => project.id,
+        "name" => project.name,
+        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at)}
+    end
+
   end
 
   describe "create" do
@@ -114,6 +122,13 @@ defmodule Ask.ProjectControllerTest do
       end
     end
 
+    test "rejects update if the project belong to the current user but as reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      assert_error_sent :forbidden, fn ->
+        put conn, project_path(conn, :update, project), project: @valid_attrs
+      end
+    end
+
   end
 
   describe "delete" do
@@ -127,6 +142,13 @@ defmodule Ask.ProjectControllerTest do
 
     test "rejects delete if the project doesn't belong to the current user", %{conn: conn} do
       project = insert(:project)
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_path(conn, :delete, project)
+      end
+    end
+
+    test "rejects delete if the project belongs to the current user as reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
       assert_error_sent :forbidden, fn ->
         delete conn, project_path(conn, :delete, project)
       end

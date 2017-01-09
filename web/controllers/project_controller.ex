@@ -55,7 +55,7 @@ defmodule Ask.ProjectController do
   def update(conn, %{"id" => id, "project" => project_params}) do
     changeset = Project
     |> Repo.get!(id)
-    |> authorize(conn)
+    |> authorize_change(conn)
     |> Project.changeset(project_params)
 
     case Repo.update(changeset) do
@@ -71,7 +71,7 @@ defmodule Ask.ProjectController do
   def delete(conn, %{"id" => id}) do
     Project
     |> Repo.get!(id)
-    |> authorize(conn)
+    |> authorize_change(conn)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!()
