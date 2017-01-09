@@ -20,13 +20,15 @@ defmodule Ask.InviteController do
   end
 
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
-    {project_id, _} = Integer.parse(project_id)
+    project = Project
+    |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     current_user = conn |> current_user
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id, "inviter_email" => current_user.email})
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
     |> Repo.insert
 
-    render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
+    render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
 
   def show(conn, %{"code" => code}) do
@@ -36,7 +38,9 @@ defmodule Ask.InviteController do
   end
 
   def invite_mail(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
-    {project_id, _} = Integer.parse(project_id)
+    project = Project
+    |> Repo.get!(project_id)
+    |> authorize_change(conn)
 
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
     current_user = conn |> current_user
@@ -50,10 +54,10 @@ defmodule Ask.InviteController do
     } |> Ask.Mailer.deliver_now
 
 
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id, "inviter_email" => current_user.email})
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
     |> Repo.insert
 
-    render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
+    render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
 
 end
