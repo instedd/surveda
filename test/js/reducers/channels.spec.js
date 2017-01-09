@@ -3,7 +3,7 @@
 import expect from 'expect'
 import reducer from '../../../web/static/js/reducers/channels'
 
-describe('questionnaire reducer', () => {
+describe('channels reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('has a sane initial state', () => {
