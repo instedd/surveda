@@ -66,8 +66,8 @@ config :ask, Ask.Endpoint,
 # Configure your database
 config :ask, Ask.Repo,
   adapter: Ecto.Adapters.MySQL,
-  username: "root",
-  password: "",
-  database: "ask",
+  username: System.get_env("DATABASE_USER") || "root",
+  password: System.get_env("DATABASE_PASS") || "",
+  database: System.get_env("DATABASE_NAME") || "ask",
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool_size: 20
