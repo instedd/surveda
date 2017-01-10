@@ -41,6 +41,59 @@ class SurveyWizardComparisonsStep extends Component {
   render() {
     const { survey } = this.props
 
+    let comparisonRows = null
+    let comparisonTotal = null
+    if (survey.comparisons) {
+      let total = 0
+      comparisonRows = survey.comparisons.map((bucket, index) => {
+        let ratio = bucket.ratio == null ? 0 : bucket.ratio
+        total += ratio
+        return (
+          <div className='row comparisons' key={index} >
+            <div className='col s12'>
+              <PercentageInput
+                value={ratio}
+                id={this.bucketId(bucket)}
+                label={
+                  <span>
+                    {this.questionnaireName(bucket)}
+                    {` - ${modeLabel(bucket.mode)}`}
+                  </span>
+                }
+                onChange={this.comparisonRatioChange}
+              />
+            </div>
+          </div>
+        )
+      })
+
+      let totalComponent
+      if (total == 100) {
+        totalComponent = (
+          <div className='green-text'>
+            <div className='col s1' style={{'margin-left': -20}}>{total}%</div>
+            <div className='col s1' style={{'margin-left': 19}}>
+              <i className='material-icons green-text'>check_circle</i>
+            </div>
+          </div>
+        )
+      } else {
+        totalComponent = (
+          <div>
+            <div className='col s1' style={{'margin-left': -11}}>{total}%</div>
+          </div>
+        )
+      }
+
+      comparisonTotal = (
+        <div className='row comparisons'>
+          <div className='col s12'>
+            {totalComponent}
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div>
         <div className='row'>
@@ -51,26 +104,8 @@ class SurveyWizardComparisonsStep extends Component {
             </p>
           </div>
         </div>
-        { survey.comparisons
-          ? survey.comparisons.map((bucket, index) =>
-            <div className='row comparisons' key={index} >
-              <div className='col s12'>
-                <PercentageInput
-                  value={bucket.ratio == null ? 0 : bucket.ratio}
-                  id={this.bucketId(bucket)}
-                  label={
-                    <span>
-                      {this.questionnaireName(bucket)}
-                      {` - ${modeLabel(bucket.mode)}`}
-                    </span>
-                  }
-                  onChange={this.comparisonRatioChange}
-                />
-              </div>
-            </div>
-          )
-          : ''
-        }
+        {comparisonRows}
+        {comparisonTotal}
       </div>
     )
   }
