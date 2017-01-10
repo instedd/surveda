@@ -29,24 +29,28 @@ export type Filter = {
   projectId: number,
 };
 
-export type ListStore = SurveyList | QuestionnaireList
+export type IndexedList<T> = {
+  [entityId: number | string]: T
+}
 
-export type BaseListStore<T> = {
+export type ListStore<T> = {
   fetching: boolean,
   order: ?number,
   sortBy: ?string,
   sortAsc: boolean,
-  items?: ?T[],
+  items?: ?IndexedList<T>,
   page: {
     index: number,
     size: number,
   }
 };
 
-export type SurveyList = BaseListStore<Survey> & {
+export type SurveyList = ListStore<Survey> & {
   projectId: ?number,
 };
 
-export type QuestionnaireList = BaseListStore<Questionnaire> & {
+export type QuestionnaireList = ListStore<Questionnaire> & {
   projectId: ?number,
 };
+
+export type ChannelList = ListStore<Channel>;

@@ -7,6 +7,7 @@ import reducer, {rebuildInputFromQuotaBuckets, modeLabel} from '../../../web/sta
 import * as actions from '../../../web/static/js/actions/survey'
 import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
+import { survey } from '../fixtures'
 
 describe('survey reducer', () => {
   const initialState = reducer(undefined, {})
@@ -807,23 +808,4 @@ describe('survey reducer', () => {
     expect(modeLabel(['ivr', 'sms'])).toEqual('Phone call with SMS fallback')
     expect(modeLabel(['sms', 'ivr'])).toEqual('SMS with phone call fallback')
   })
-})
-
-const survey = deepFreeze({
-  id: 1,
-  projectId: 1,
-  name: 'Foo',
-  cutoff: 123,
-  state: 'ready',
-  questionnaireIds: [1],
-  scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
-  scheduleStartTime: '02:00:00',
-  scheduleEndTime: '06:00:00',
-  channels: [1],
-  respondentsCount: 2,
-  quotas: {
-    vars: [],
-    buckets: []
-  },
-  mode: [['sms']]
 })

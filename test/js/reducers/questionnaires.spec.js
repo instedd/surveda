@@ -1,7 +1,9 @@
+// @flow
 /* eslint-env mocha */
 import expect from 'expect'
 import reducer from '../../../web/static/js/reducers/questionnaires'
 import * as actions from '../../../web/static/js/actions/questionnaires'
+import { questionnaire } from '../fixtures'
 
 describe('questionnaires reducer', () => {
   const initialState = reducer(undefined, {})
@@ -19,7 +21,7 @@ describe('questionnaires reducer', () => {
 
   it('should receive questionnaires', () => {
     const projectId = 100
-    const questionnaires = {1: {id: 1}}
+    const questionnaires = {'1': {...questionnaire, id: 1}}
     const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
     const result = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
     expect(result.fetching).toEqual(false)
@@ -30,7 +32,7 @@ describe('questionnaires reducer', () => {
 
   it('should start fetching questionnaires for a different project', () => {
     const projectId = 100
-    const questionnaires = {1: {id: 1}}
+    const questionnaires = {'1': {...questionnaire, id: 1}}
     const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
     const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
     const r3 = reducer(r2, actions.startFetchingQuestionnaires(projectId + 1))
@@ -39,7 +41,7 @@ describe('questionnaires reducer', () => {
 
   it('should sort questionnaires by name', () => {
     const projectId = 100
-    const questionnaires = {1: {id: 1, name: 'foo'}, 2: {id: 2, name: 'bar'}}
+    const questionnaires = {'1': {...questionnaire, id: 1, name: 'foo'}, '2': {...questionnaire, id: 2, name: 'bar'}}
     const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
     const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
     const r3 = reducer(r2, actions.sortQuestionnairesBy('name'))

@@ -1278,7 +1278,7 @@ describe('questionnaire reducer', () => {
       const quotaMessage = {
         'en': {
           'sms': 'thanks for answering sms',
-          'ivr': 'thanks for answering phone call'
+          'ivr': { audioSource: 'tts', text: 'thanks for answering phone call' }
         }
       }
 

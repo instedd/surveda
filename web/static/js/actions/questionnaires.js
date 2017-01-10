@@ -29,7 +29,7 @@ export const startFetchingQuestionnaires = (projectId: number) => ({
   projectId
 })
 
-export const receiveQuestionnaires = (projectId: number, questionnaires: Questionnaire[]) => ({
+export const receiveQuestionnaires = (projectId: number, questionnaires: IndexedList<Questionnaire>) => ({
   type: RECEIVE_QUESTIONNAIRES,
   projectId,
   questionnaires

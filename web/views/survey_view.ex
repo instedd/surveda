@@ -15,7 +15,7 @@ defmodule Ask.SurveyView do
       mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
-      questionnaire_id: questionnaire_ids(survey),
+      questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
       channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel )
     }

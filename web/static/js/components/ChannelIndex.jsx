@@ -2,9 +2,11 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
+import { orderedItems } from '../dataTable'
 import * as actions from '../actions/channels'
+import range from 'lodash/range'
 import * as authActions from '../actions/authorizations'
-import { AddButton, EmptyPage, CardTable } from './ui'
+import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader } from './ui'
 import { Preloader } from 'react-materialize'
 
 class ChannelIndex extends Component {
@@ -23,13 +25,51 @@ class ChannelIndex extends Component {
     this.props.authActions.toggleAuthorization(provider)
   }
 
+  nextPage(e) {
+    e.preventDefault()
+    this.props.actions.nextChannelsPage()
+  }
+
+  previousPage(e) {
+    e.preventDefault()
+    this.props.actions.previousChannelsPage()
+  }
+
+  sortBy(property) {
+    this.props.actions.sortChannelsBy(property)
+  }
+
   synchronizeChannels() {
     this.props.authActions.synchronizeChannels()
   }
 
   render() {
-    const { channels, authorizations } = this.props
-    const title = `${Object.keys(channels).length} ${(Object.keys(channels).length == 1) ? ' channel' : ' channels'}`
+    const { channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage } = this.props
+
+    if (!channels) {
+      return (
+        <div>
+          <CardTable title='Loading channels...' highlight />
+        </div>
+      )
+    }
+
+    const title = `${totalCount} ${(totalCount == 1) ? ' channel' : ' channels'}`
+    const footer = (
+      <div className='card-action right-align'>
+        <ul className='pagination'>
+          <li><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
+          { hasPreviousPage
+            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
+            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
+          }
+          { hasNextPage
+            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
+            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
+          }
+        </ul>
+      </div>
+    )
 
     const providerSwitch = (provider) => {
       const disabled = authorizations.fetching
@@ -90,23 +130,28 @@ class ChannelIndex extends Component {
             </ul>
           </div>
         </div>
-        { (Object.keys(channels).length == 0)
+        { (channels.length == 0)
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         : (
-          <CardTable title={tableTitle} highlight>
+          <CardTable title={tableTitle} footer={footer} highlight>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Provider</th>
+                <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text='Provider' property='provider' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
-              { Object.keys(channels).map(id =>
-                <tr key={id}>
-                  <td>{channels[id].name}</td>
-                  <td>{channels[id].provider}</td>
-                </tr>
-              )}
+              { range(0, pageSize).map(index => {
+                const channel = channels[index]
+                if (!channel) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
+
+                return (<tr key={channel.id}>
+                  <td>
+                    <UntitledIfEmpty text={channel.name} entityName='channel' />
+                  </td>
+                  <td>{channel.provider}</td>
+                </tr>)
+              }) }
             </tbody>
           </CardTable>
           )
@@ -119,14 +164,46 @@ class ChannelIndex extends Component {
 ChannelIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   authActions: PropTypes.object.isRequired,
-  channels: PropTypes.object,
-  authorizations: PropTypes.object
+  channels: PropTypes.array,
+  authorizations: PropTypes.object,
+  sortBy: PropTypes.string,
+  sortAsc: PropTypes.bool.isRequired,
+  pageSize: PropTypes.number.isRequired,
+  startIndex: PropTypes.number.isRequired,
+  endIndex: PropTypes.number.isRequired,
+  hasPreviousPage: PropTypes.bool.isRequired,
+  hasNextPage: PropTypes.bool.isRequired,
+  totalCount: PropTypes.number.isRequired
 }
 
-const mapStateToProps = (state) => ({
-  channels: state.channels,
-  authorizations: state.authorizations
-})
+const mapStateToProps = (state) => {
+  let channels = orderedItems(state.channels.items, state.channels.order)
+  const sortBy = state.questionnaires.sortBy
+  const sortAsc = state.questionnaires.sortAsc
+
+  const totalCount = channels ? channels.length : 0
+  const pageIndex = state.channels.page.index
+  const pageSize = state.channels.page.size
+  if (channels) {
+    channels = channels.slice(pageIndex, pageIndex + pageSize)
+  }
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  const hasPreviousPage = startIndex > 1
+  const hasNextPage = endIndex < totalCount
+  return {
+    sortBy,
+    sortAsc,
+    channels,
+    pageSize,
+    startIndex,
+    endIndex,
+    hasPreviousPage,
+    hasNextPage,
+    totalCount,
+    authorizations: state.authorizations
+  }
+}
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),

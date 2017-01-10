@@ -17,7 +17,7 @@ class SurveyForm extends Component {
     questionnaires: PropTypes.object,
     questionnaire: PropTypes.object,
     respondents: PropTypes.object,
-    channels: PropTypes.object,
+    channels: PropTypes.object.isRequired,
     errors: PropTypes.object
   }
 

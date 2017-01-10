@@ -15,7 +15,7 @@ const initialState = {
   }
 }
 
-export default (state: QuestionnaireList = initialState, action: any) => {
+export default (state: QuestionnaireList = initialState, action: any): QuestionnaireList => {
   switch (action.type) {
     case actions.FETCH_QUESTIONNAIRES: return fetchQuestionnaires(state, action)
     case actions.RECEIVE_QUESTIONNAIRES: return receiveQuestionnaires(state, action)

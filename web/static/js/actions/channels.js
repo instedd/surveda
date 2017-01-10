@@ -5,27 +5,59 @@ import * as guissoApi from '../guisso'
 import * as pigeon from '../pigeon'
 import { config } from '../config'
 
-export const RECEIVE_CHANNELS = 'RECEIVE_CHANNELS'
-export const CREATE_CHANNEL = 'CREATE_CHANNEL'
+export const RECEIVE = 'CHANNELS_RECEIVE'
+export const FETCH = 'CHANNELS_FETCH'
+export const NEXT_PAGE = 'CHANNELS_NEXT_PAGE'
+export const PREVIOUS_PAGE = 'CHANNELS_PREVIOUS_PAGE'
+export const SORT = 'CHANNELS_SORT'
+export const CREATE = 'CHANNELS_CREATE'
 
-export const fetchChannels = () => (dispatch: Function) => {
-  api.fetchChannels()
-    .then(channels => dispatch(receiveChannels(channels)))
+export const fetchChannels = () => (dispatch: Function, getState: () => Store) => {
+  const state = getState()
+
+  // Don't fetch channels if they are already being fetched
+  if (state.channels.fetching) {
+    return
+  }
+
+  dispatch(startFetchingChannels())
+
+  return api
+    .fetchChannels()
+    .then(response => dispatch(receiveChannels(response.entities.channels || {})))
+    .then(() => getState().surveys.items)
 }
+
+export const startFetchingChannels = () => ({
+  type: FETCH
+})
+
+export const receiveChannels = (channels: IndexedList<Channel>) => ({
+  type: RECEIVE,
+  channels
+})
+
+export const nextChannelsPage = () => ({
+  type: NEXT_PAGE
+})
+
+export const previousChannelsPage = () => ({
+  type: PREVIOUS_PAGE
+})
+
+export const sortChannelsBy = (property: string) => ({
+  type: SORT,
+  property
+})
 
 export const createChannel = (channel: Channel) => (dispatch: Function) => {
   api.createChannel(channel)
     .then(response => dispatch({
-      type: CREATE_CHANNEL,
+      type: CREATE,
       id: response.result,
       channel: response.entities.channels[response.result]
     }))
 }
-
-export const receiveChannels = (response: Channel[]) => ({
-  type: RECEIVE_CHANNELS,
-  response
-})
 
 export const createNuntiumChannel = (() => {
   let references = {guissoSession: null}

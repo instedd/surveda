@@ -29,7 +29,7 @@ export const startFetchingSurveys = (projectId: number) => ({
   projectId
 })
 
-export const receiveSurveys = (projectId: number, surveys: SurveyPreview[]) => ({
+export const receiveSurveys = (projectId: number, surveys: IndexedList<SurveyPreview>) => ({
   type: RECEIVE,
   projectId,
   surveys

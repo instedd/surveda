@@ -59,7 +59,7 @@ export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch:
   }
 }
 
-export const receive = (survey: DataStore<Survey>) => ({
+export const receive = (survey: Survey) => ({
   type: RECEIVE,
   data: survey
 })

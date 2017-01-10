@@ -1,24 +1,65 @@
-// @flow weak
+// @flow
 import * as actions from '../actions/channels'
+import { itemsOrder, sortItems, nextPage, previousPage } from '../dataTable'
 
-export default (state = {}, action: any) => {
+const initialState = {
+  fetching: false,
+  projectId: null,
+  items: null,
+  order: null,
+  sortBy: null,
+  sortAsc: true,
+  page: {
+    index: 0,
+    size: 5
+  }
+}
+
+export default (state: ChannelList = initialState, action: any): ChannelList => {
   switch (action.type) {
-    case actions.RECEIVE_CHANNELS: return receiveChannels(state, action)
-    case actions.CREATE_CHANNEL: return createChannel(state, action)
+    case actions.FETCH: return fetch(state, action)
+    case actions.RECEIVE: return receive(state, action)
+    case actions.NEXT_PAGE: return nextPage(state)
+    case actions.PREVIOUS_PAGE: return previousPage(state)
+    case actions.SORT: return sortItems(state, action)
+    case actions.CREATE: return create(state, action)
     default: return state
   }
 }
 
-const receiveChannels = (state, action) => {
-  if (action.response && action.response.entities) {
-    return action.response.entities.channels || {}
+const fetch = (state, action) => {
+  return {
+    ...state,
+    fetching: true,
+    sortBy: null,
+    sortAsc: true,
+    page: {
+      index: 0,
+      size: 5
+    }
   }
-  return state
 }
 
-const createChannel = (state, action) => ({
-  ...state,
-  [action.id]: {
-    ...action.channel
+const receive = (state, action) => {
+  const channels = action.channels
+
+  let order = itemsOrder(channels, state.sortBy, state.sortAsc)
+  return {
+    ...state,
+    fetching: false,
+    items: channels,
+    order
   }
-})
+}
+
+const create = (state, action) => {
+  return {
+    ...state,
+    items: {
+      ...state.items,
+      [action.id]: {
+        ...action.channel
+      }
+    }
+  }
+}

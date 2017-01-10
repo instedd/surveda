@@ -69,7 +69,7 @@ export const fetchQuestionnaireIfNeeded = (projectId, id) => {
   }
 }
 
-export const receive = (questionnaire) => {
+export const receive = (questionnaire: Questionnaire) => {
   return {
     type: RECEIVE,
     data: questionnaire
