@@ -71,8 +71,8 @@ class SurveyWizardComparisonsStep extends Component {
       if (total == 100) {
         totalComponent = (
           <div className='green-text'>
-            <div className='col s1' style={{'margin-left': -20}}>{total}%</div>
-            <div className='col s1' style={{'margin-left': 19}}>
+            <div className='col s1' style={{marginLeft: -20}}>{total}%</div>
+            <div className='col s1' style={{marginLeft: 19}}>
               <i className='material-icons green-text'>check_circle</i>
             </div>
           </div>
@@ -80,7 +80,7 @@ class SurveyWizardComparisonsStep extends Component {
       } else {
         totalComponent = (
           <div>
-            <div className='col s1' style={{'margin-left': -11}}>{total}%</div>
+            <div className='col s1' style={{marginLeft: -11}}>{total}%</div>
           </div>
         )
       }
