@@ -178,10 +178,34 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire } = this.props
+    const { questionnaire, project } = this.props
 
-    if (questionnaire == null) {
+    let csvButtons = null
+
+    if (questionnaire == null || project == null) {
       return <div>Loading...</div>
+    }
+
+    if (!project.readOnly) {
+      csvButtons = <div>
+        <div className='row'>
+          <div className='col s12'>
+            <a className='btn-icon-grey' href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
+              <i className='material-icons'>file_download</i>
+              <span>Download contents as CSV</span>
+            </a>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
+            <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
+            <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
+              <i className='material-icons'>file_upload</i>
+              <span>Upload contents as CSV</span>
+            </a>
+          </div>
+        </div>
+      </div>
     }
 
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -191,23 +215,7 @@ class QuestionnaireEditor extends Component {
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
           <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} />
-          <div className='row'>
-            <div className='col s12'>
-              <a className='btn-icon-grey' href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
-                <i className='material-icons'>file_download</i>
-                <span>Download contents as CSV</span>
-              </a>
-            </div>
-          </div>
-          <div className='row'>
-            <div className='col s12'>
-              <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
-              <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
-                <i className='material-icons'>file_upload</i>
-                <span>Upload contents as CSV</span>
-              </a>
-            </div>
-          </div>
+          {csvButtons}
           <div className='row'>
             <div className='col s12'>
               <p className='grey-text'>Modes</p>
@@ -219,7 +227,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>SMS</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
+                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={project.readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -231,7 +239,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Phone call</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
+                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={project.readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -267,6 +275,7 @@ QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
+  project: PropTypes.object,
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object
@@ -274,6 +283,7 @@ QuestionnaireEditor.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
+  project: state.project.data,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data
 })

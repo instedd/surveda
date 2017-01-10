@@ -15,7 +15,8 @@ type Props = {
   loading: boolean,
   langHasErrors: (lang: string) => boolean,
   onRemoveLanguage: Function,
-  dispatch: Function
+  dispatch: Function,
+  project: Object
 };
 
 class LanguagesList extends Component {
@@ -40,7 +41,7 @@ class LanguagesList extends Component {
   }
 
   render() {
-    const { loading, languages, defaultLanguage, activeLanguage, onRemoveLanguage, langHasErrors } = this.props
+    const { loading, languages, defaultLanguage, activeLanguage, onRemoveLanguage, langHasErrors, project } = this.props
 
     if (loading) {
       return <div>Loading...</div>
@@ -51,14 +52,18 @@ class LanguagesList extends Component {
     otherLanguages = otherLanguages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
     otherLanguages = otherLanguages.map((lang) =>
       <li key={lang[0]} className={classNames({'active-language': lang[0] == activeLanguage, 'tooltip-error': langHasErrors(lang[0])})}>
-        <span className='remove-language' onClick={() => onRemoveLanguage(lang[0])}>
-          <i className='material-icons'>highlight_off</i>
-        </span>
+        {project && !project.readOnly
+        ? <div>
+          <span className='remove-language' onClick={() => onRemoveLanguage(lang[0])}>
+            <i className='material-icons'>highlight_off</i>
+          </span>
+          <span className='set-default-language' onClick={this.defaultLanguageSelected(lang[0])}>
+            <i className='material-icons'>arrow_upward</i>
+          </span>
+        </div>
+        : null}
         <span className='language-name' title={this.translateLangCode(lang[0])}>
           {this.translateLangCode(lang[0])}
-        </span>
-        <span className='set-default-language' onClick={this.defaultLanguageSelected(lang[0])}>
-          <i className='material-icons'>arrow_upward</i>
         </span>
         <span href='#' className='right-arrow' onClick={e => this.setActiveLanguage(e, lang[0])}>
           <i className='material-icons'>keyboard_arrow_right</i>
@@ -101,9 +106,12 @@ class LanguagesList extends Component {
           </div>
         </div>
         {otherLanguagesComponent}
-        <div className='row'>
+        {project && !project.readOnly
+        ? <div className='row'>
           <AddLanguage />
         </div>
+        : null
+        }
       </div>
     )
   }
@@ -114,7 +122,8 @@ const mapStateToProps = (state, ownProps) => ({
   activeLanguage: (state.questionnaire.data || {}).activeLanguage,
   languages: (state.questionnaire.data || {}).languages,
   loading: !state.questionnaire.data,
-  langHasErrors: langHasErrors(state.questionnaire)
+  langHasErrors: langHasErrors(state.questionnaire),
+  project: state.project.data
 })
 
 export default connect(mapStateToProps)(LanguagesList)

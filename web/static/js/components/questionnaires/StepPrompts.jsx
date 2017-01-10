@@ -21,6 +21,7 @@ type Props = {
   questionnaireActions: any,
   inputErrors: boolean,
   questionnaire: Questionnaire,
+  readOnly: boolean,
   errors: Errors,
   classes: string
 };
@@ -135,7 +136,7 @@ class StepPrompts extends Component {
   }
 
   render() {
-    const { step, stepIndex, questionnaire, errors, classes } = this.props
+    const { step, stepIndex, questionnaire, readOnly, errors, classes } = this.props
 
     const activeLanguage = questionnaire.activeLanguage
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -148,6 +149,7 @@ class StepPrompts extends Component {
       smsInput = <SmsPrompt id='step_editor_sms_prompt'
         value={this.state.stepPromptSms}
         inputErrors={smsInputErrors}
+        readOnly={readOnly}
         onChange={e => this.stepPromptSmsChange(e)}
         onBlur={e => this.stepPromptSmsSubmit(e)}
         autocomplete={autocomplete}
@@ -163,6 +165,7 @@ class StepPrompts extends Component {
         key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
         inputErrors={ivrInputErrors}
+        readOnly={readOnly}
         onChange={e => this.stepPromptIvrChange(e)}
         onBlur={e => this.stepPromptIvrSubmit(e)}
         autocomplete={autocomplete}
@@ -188,7 +191,8 @@ class StepPrompts extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
 })
 
 const mapDispatchToProps = (dispatch) => ({

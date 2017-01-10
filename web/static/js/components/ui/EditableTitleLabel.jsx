@@ -7,7 +7,8 @@ export class EditableTitleLabel extends Component {
     title: React.PropTypes.string,
     emptyText: React.PropTypes.string,
     entityName: React.PropTypes.string,
-    editing: React.PropTypes.bool
+    editing: React.PropTypes.bool,
+    readOnly: React.PropTypes.bool
   }
 
   constructor(props) {
@@ -19,7 +20,7 @@ export class EditableTitleLabel extends Component {
   }
 
   handleClick() {
-    if (!this.state.editing) {
+    if (!this.state.editing && !this.props.readOnly) {
       this.setState({editing: !this.state.editing})
     }
   }
