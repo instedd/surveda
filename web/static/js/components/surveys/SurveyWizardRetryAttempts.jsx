@@ -2,6 +2,8 @@ import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import * as actions from '../../actions/survey'
 import { InputWithLabel } from '../ui'
+import flatMap from 'lodash/flatMap'
+import uniq from 'lodash/uniq'
 
 class SurveyWizardRetryAttempts extends Component {
   componentDidMount() {
@@ -106,11 +108,15 @@ class SurveyWizardRetryAttempts extends Component {
     if (!survey || !this.state) {
       return (<div />)
     }
-    const modes = survey.data.mode
+    let modes = survey.data.mode
 
     if (!modes || modes.length == 0) {
       return null
     } else {
+      // modes will be something like [['sms'], ['sms', 'ivr']]
+      // so we convert it to ['sms', 'ivr']
+      modes = uniq(flatMap(modes, x => x))
+
       const modeRetryConfiguration = (
         modes.map((mode) => {
           const defaultValue = this.defaultValue(mode)
