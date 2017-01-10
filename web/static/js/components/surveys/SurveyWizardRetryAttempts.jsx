@@ -113,7 +113,7 @@ class SurveyWizardRetryAttempts extends Component {
   }
 
   render() {
-    const { survey } = this.props
+    const { survey, readOnly } = this.props
     if (!survey || !this.state) {
       return (<div />)
     }
@@ -139,6 +139,7 @@ class SurveyWizardRetryAttempts extends Component {
                     onChange={e => this.editingRetryConfiguration(mode, e)}
                     onBlur={e => this.retryConfigurationChanged(mode, e)}
                     className={invalid ? 'invalid' : ''}
+                    disabled={readOnly}
                     />
                 </InputWithLabel>
                 <span className='small-text-bellow'>
@@ -165,7 +166,8 @@ const mapStateToProps = (state, ownProps) => ({
 
 SurveyWizardRetryAttempts.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  survey: PropTypes.object
+  survey: PropTypes.object,
+  readOnly: PropTypes.bool
 }
 
 export default connect(mapStateToProps)(SurveyWizardRetryAttempts)

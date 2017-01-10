@@ -7,7 +7,8 @@ export class PercentageInput extends Component {
     value: PropTypes.number.isRequired,
     label: PropTypes.node.isRequired,
     id: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired
+    onChange: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool
   }
 
   constructor(props) {
@@ -64,7 +65,7 @@ export class PercentageInput extends Component {
   }
 
   render() {
-    const { label, id } = this.props
+    const { label, id, readOnly } = this.props
     return (
       <InputWithLabel value={this.state.percentage} id={id} label={label} >
         <input
@@ -72,6 +73,7 @@ export class PercentageInput extends Component {
           onChange={this.valueChange}
           onBlur={this.onBlur}
           onFocus={this.onFocus}
+          disabled={readOnly}
         />
       </InputWithLabel>
     )

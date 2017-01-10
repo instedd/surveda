@@ -13,7 +13,8 @@ class SurveyWizardChannelsStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     channels: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired
   }
 
   channelChange(e, type, allChannels) {
@@ -38,7 +39,7 @@ class SurveyWizardChannelsStep extends Component {
     dispatch(actions.changeModeComparison())
   }
 
-  newChannelComponent(type, allChannels, currentChannels) {
+  newChannelComponent(type, allChannels, currentChannels, readOnly) {
     const currentChannel = currentChannels.find(id => allChannels[id].type == type)
 
     let label
@@ -57,7 +58,8 @@ class SurveyWizardChannelsStep extends Component {
         <div className='input-field col s12'>
           <Input s={12} type='select' label={label}
             value={currentChannel || ''}
-            onChange={e => this.channelChange(e, type, allChannels)}>
+            onChange={e => this.channelChange(e, type, allChannels)}
+            disabled={readOnly}>
             <option value=''>
             Select a channel...
             </option>
@@ -77,7 +79,7 @@ class SurveyWizardChannelsStep extends Component {
   }
 
   render() {
-    const { survey, channels } = this.props
+    const { survey, channels, readOnly } = this.props
 
     if (!survey || !channels || ((survey.channels || []).length > 0 && Object.keys(channels).length == 0)) {
       return <div>Loading...</div>
@@ -90,7 +92,7 @@ class SurveyWizardChannelsStep extends Component {
     let channelsComponent = []
     let allModes = uniq(flatMap(mode))
     for (const targetMode of allModes) {
-      channelsComponent.push(this.newChannelComponent(targetMode, channels, currentChannels))
+      channelsComponent.push(this.newChannelComponent(targetMode, channels, currentChannels, readOnly))
     }
 
     let inputType = modeComparison ? 'checkbox' : 'radio'
@@ -114,6 +116,7 @@ class SurveyWizardChannelsStep extends Component {
                 checked={modeComparison}
                 onChange={e => this.modeComparisonChange(e)}
                 className='with-gap'
+                disabled={readOnly}
                 />
               <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
             </p>
@@ -126,6 +129,7 @@ class SurveyWizardChannelsStep extends Component {
                 value='ivr'
                 checked={this.modeIncludes(mode, ['ivr'])}
                 onChange={e => this.modeChange(e, ['ivr'])}
+                disabled={readOnly}
                 />
               <label htmlFor='questionnaire_mode_ivr'>{modeLabel(['ivr'])}</label>
             </p>
@@ -138,6 +142,7 @@ class SurveyWizardChannelsStep extends Component {
                 value='ivr_sms'
                 checked={this.modeIncludes(mode, ['ivr', 'sms'])}
                 onChange={e => this.modeChange(e, ['ivr', 'sms'])}
+                disabled={readOnly}
                 />
               <label htmlFor='questionnaire_mode_ivr_sms'>{modeLabel(['ivr', 'sms'])}</label>
             </p>
@@ -150,6 +155,7 @@ class SurveyWizardChannelsStep extends Component {
                 value='sms'
                 checked={this.modeIncludes(mode, ['sms'])}
                 onChange={e => this.modeChange(e, ['sms'])}
+                disabled={readOnly}
                 />
               <label htmlFor='questionnaire_mode_sms'>{modeLabel(['sms'])}</label>
             </p>
@@ -162,6 +168,7 @@ class SurveyWizardChannelsStep extends Component {
                 value='sms_ivr'
                 checked={this.modeIncludes(mode, ['sms', 'ivr'])}
                 onChange={e => this.modeChange(e, ['sms', 'ivr'])}
+                disabled={readOnly}
                 />
               <label htmlFor='questionnaire_mode_sms_ivr'>{modeLabel(['sms', 'ivr'])}</label>
             </p>

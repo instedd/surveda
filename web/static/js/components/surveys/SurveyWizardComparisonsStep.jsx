@@ -9,7 +9,8 @@ class SurveyWizardComparisonsStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired
   }
 
   constructor(props) {
@@ -39,7 +40,7 @@ class SurveyWizardComparisonsStep extends Component {
   }
 
   render() {
-    const { survey } = this.props
+    const { survey, readOnly } = this.props
 
     let comparisonRows = null
     let comparisonTotal = null
@@ -53,6 +54,7 @@ class SurveyWizardComparisonsStep extends Component {
             <div className='col s12'>
               <PercentageInput
                 value={ratio}
+                readOnly={readOnly}
                 id={this.bucketId(bucket)}
                 label={
                   <span>

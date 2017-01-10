@@ -10,7 +10,8 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
     respondents: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired
   }
 
   handleSubmit(survey, files) {
@@ -65,13 +66,18 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    let { survey, respondents } = this.props
+    let { survey, respondents, readOnly } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(respondents.invalidRespondents)
     if (!survey) {
       return <div>Loading...</div>
     }
 
     if (survey.respondentsCount != 0) {
+      let removeRespondents = null
+      if (!readOnly) {
+        removeRespondents = <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} showCancel onConfirm={(event) => this.removeRespondents(event)} />
+      }
+
       return (
         <RespondentsContainer>
           <RespondentsList respondentsCount={survey.respondentsCount}>
@@ -79,7 +85,13 @@ class SurveyWizardRespondentsStep extends Component {
               <PhoneNumberRow id={respondentId} phoneNumber={respondents.items[respondentId].phoneNumber} key={respondentId} />
             )}
           </RespondentsList>
-          <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} showCancel onConfirm={(event) => this.removeRespondents(event)} />
+          {removeRespondents}
+        </RespondentsContainer>
+      )
+    } else if (readOnly) {
+      return (
+        <RespondentsContainer>
+          <div />
         </RespondentsContainer>
       )
     } else {

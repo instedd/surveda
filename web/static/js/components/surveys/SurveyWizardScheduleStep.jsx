@@ -8,7 +8,8 @@ import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired
   }
 
   updateFrom(event) {
@@ -32,7 +33,7 @@ class SurveyWizardScheduleStep extends Component {
   }
 
   render() {
-    const { survey } = this.props
+    const { survey, readOnly } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
     // Survey might be loaded without details
@@ -56,22 +57,22 @@ class SurveyWizardScheduleStep extends Component {
         <div className='row'>
           {days.map((day) => (
             <div className='col' key={day}>
-              <button type='button' className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.scheduleDayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`} onClick={() =>
-                this.toggleDay(day)
-              }>
+              <button type='button'
+                className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.scheduleDayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
+                onClick={() => readOnly ? null : this.toggleDay(day)}>
                 {day}
               </button>
             </div>
           ))}
         </div>
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={e => this.updateTimezone(e)} />
+          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={e => this.updateTimezone(e)} readOnly={readOnly} />
         </div>
         <div className='row'>
-          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={e => this.updateFrom(e)} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={e => this.updateTo(e)} />
+          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={e => this.updateFrom(e)} readOnly={readOnly} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={e => this.updateTo(e)} readOnly={readOnly} />
         </div>
-        <SurveyWizardRetryAttempts />
+        <SurveyWizardRetryAttempts readOnly={readOnly} />
       </div>
     )
   }

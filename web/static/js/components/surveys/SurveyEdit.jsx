@@ -51,11 +51,13 @@ class SurveyEdit extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, dispatch, channels, respondents } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondents } = this.props
 
     if (Object.keys(survey).length == 0 || !respondents) {
       return <div>Loading...</div>
     }
+
+    const readOnly = !project || project.readOnly
 
     let questionnaireIds = survey.questionnaireIds || []
     let questionnaire = null
@@ -63,17 +65,21 @@ class SurveyEdit extends Component {
       questionnaire = questionnaires[questionnaireIds[0]]
     }
 
+    let launchComponent = null
+    if (survey.state == 'ready' && !readOnly) {
+      launchComponent = (
+        <Tooltip text='Launch survey'>
+          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.launchSurvey()}>
+            <i className='material-icons'>play_arrow</i>
+          </a>
+        </Tooltip>
+      )
+    }
+
     return (
       <div className='white'>
-        { survey.state == 'ready'
-          ? <Tooltip text='Launch survey'>
-            <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.launchSurvey()}>
-              <i className='material-icons'>play_arrow</i>
-            </a>
-          </Tooltip>
-          : ''
-        }
-        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} />
+        {launchComponent}
+        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
       </div>
     )
   }
@@ -81,7 +87,7 @@ class SurveyEdit extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
-  project: state.projects[ownProps.params.projectId] || {},
+  project: state.project.data,
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items || {},
   questionnaires: state.questionnaires.items || {},

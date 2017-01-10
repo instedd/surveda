@@ -19,7 +19,8 @@ class SurveyForm extends Component {
     questionnaire: PropTypes.object,
     respondents: PropTypes.object,
     channels: PropTypes.object.isRequired,
-    errors: PropTypes.object
+    errors: PropTypes.object,
+    readOnly: PropTypes.bool.isRequired
   }
 
   componentDidMount() {
@@ -35,7 +36,7 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondents, errors, questionnaire } = this.props
+    const { survey, projectId, questionnaires, channels, respondents, errors, questionnaire, readOnly } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
     const respondentsStepCompleted = survey.respondentsCount > 0
     const channelStepCompleted = survey.mode != null && survey.mode.length > 0 && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
@@ -90,27 +91,27 @@ class SurveyForm extends Component {
         </div>
         <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
-            <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} />
+            <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} readOnly={readOnly} />
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardChannelsStep channels={channels} survey={survey} />
+            <SurveyWizardChannelsStep channels={channels} survey={survey} readOnly={readOnly} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>
-            <SurveyWizardScheduleStep survey={survey} />
+            <SurveyWizardScheduleStep survey={survey} readOnly={readOnly} />
             <ScrollToLink target='#cutoff'>NEXT: Setup cutoff rules</ScrollToLink>
           </div>
           <div id='cutoff' className='row scrollspy'>
-            <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} />
+            <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} readOnly={readOnly} />
           </div>
           {survey.comparisons.length > 0
             ? <div id='comparisons' className='row scrollspy'>
-              <SurveyWizardComparisonsStep survey={survey} />
+              <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly} />
             </div>
           : ''}
           <ScrollToTopButton />
