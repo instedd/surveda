@@ -22,6 +22,8 @@ class SurveyWizardRetryAttempts extends Component {
       case 'ivr':
         this.setState({ivrRetryConfiguration: value})
         break
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
@@ -48,6 +50,8 @@ class SurveyWizardRetryAttempts extends Component {
           cssClass = 'ivr-attempts'
           icon = <i className='material-icons v-middle '>phone</i>
           break
+        default:
+          throw new Error(`unknown mode: ${mode}`)
       }
       return (
         <ul className={cssClass}>
@@ -70,36 +74,41 @@ class SurveyWizardRetryAttempts extends Component {
       case 'ivr':
         dispatch(actions.changeIvrRetryConfiguration(this.state.ivrRetryConfiguration))
         break
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   defaultValue(mode) {
-    if (mode == 'sms') {
-      return this.state.smsRetryConfiguration
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        return this.state.smsRetryConfiguration
+      case 'ivr':
         return this.state.ivrRetryConfiguration
-      }
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   invalid(mode, errors) {
-    if (mode == 'sms') {
-      return !!errors.smsRetryConfiguration
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        return !!errors.smsRetryConfiguration
+      case 'ivr':
         return !!errors.ivrRetryConfiguration
-      }
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   errorText(mode, errors) {
-    if (mode == 'sms') {
-      return errors.smsRetryConfiguration
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        return errors.smsRetryConfiguration
+      case 'ivr':
         return errors.ivrRetryConfiguration
-      }
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
