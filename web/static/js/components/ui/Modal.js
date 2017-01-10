@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import uuid from 'node-uuid'
 import classNames from 'classnames/bind'
 
 export class Modal extends Component {
@@ -7,7 +8,8 @@ export class Modal extends Component {
   }
 
   render() {
-    const { showLink, linkText, id, style, children, card = false } = this.props
+    const { showLink, linkText, style, children, card = false } = this.props
+    const id = this.props.id || uuid.v4()
 
     let modalLink = null
     if (showLink) {

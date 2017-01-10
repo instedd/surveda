@@ -14,14 +14,8 @@ export class InputWithLabel extends Component {
   }
 
   render() {
-    let { children, id, value, label, errors } = this.props
-    id = do {
-      if (id) {
-        id
-      } else {
-        uuid.v4()
-      }
-    }
+    const { children, value, label, errors } = this.props
+    const id = this.props.id || uuid.v4()
 
     var childrenWithProps = React.Children.map(children, function(child) {
       if (child) {
