@@ -139,8 +139,7 @@ defmodule Ask.Runtime.Broker do
   defp start(survey, respondent) do
     survey = Repo.preload(survey, [:channels, :questionnaires])
 
-    questionnaire = select_questionnaire(survey)
-    mode = select_mode(survey)
+    {questionnaire, mode} = select_questionnaire_and_mode(survey)
 
     # Set respondent questionnaire and mode
     respondent = respondent
@@ -165,14 +164,47 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp select_questionnaire(survey) do
-    questionnaires = survey.questionnaires
-    hd(questionnaires)
+  defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do
+    {hd(survey.questionnaires), hd(survey.mode)}
   end
 
-  defp select_mode(survey) do
-    modes = survey.mode
-    hd(modes)
+  defp select_questionnaire_and_mode(survey = %Survey{comparisons: comparisons}) do
+    # Get a random value between 0 and 100
+    rand = :rand.uniform() * 100
+
+    # Traverse comparisons:
+    #
+    # - keep the total ratio so far across visited comparisons
+    # - included comparisons are those whose total ratio so far is greater than the rand value
+    # - in the end we keep the first comparison that is included
+    #
+    # For example, if the ratios are [10, 25, 35, 30] and we
+    # get a random value of 45, the result of the map_reduce will
+    # be [{10, false}, {25, false}, {35, true}, {30, true}] because
+    # after the entry with ratio 25 the total accumulated ratio will be
+    # 10 + 25 + 35 = 70 >= 45. Then we keep the first one that's true.
+    {candidates, _} = comparisons
+    |> Enum.map_reduce(0, fn (comparison, total_count) ->
+      ratio = comparison["ratio"]
+      total_count = total_count + ratio
+      included = total_count >= rand
+      {{comparison, included}, total_count}
+    end)
+
+    candidate = candidates
+    |> Enum.find(fn {_, included} -> included end)
+
+    if candidate do
+      {comparison, _} = candidate
+      questionnaire = survey.questionnaires
+      |> Enum.find(fn q -> q.id == comparison["questionnaire_id"] end)
+      mode = comparison["mode"]
+      {questionnaire, mode}
+    else
+      # Fall back to first questionnaire and mode, in case
+      # the comparisons ratios don't add up 100
+      {hd(survey.questionnaires), hd(survey.mode)}
+    end
   end
 
   defp do_sync_step(respondent, reply) do
