@@ -33,6 +33,10 @@ class StepNumericEditor extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.stateFromProps(nextProps))
+  }
+
   delimitersFromRanges(ranges) {
     let delimiters = []
     for (let [index, value] of ranges.entries()) {
@@ -78,6 +82,7 @@ class StepNumericEditor extends Component {
       ...this.state.ranges[rangeIndex],
       skipLogic: skipOption
     }
+
     this.setState({
       ranges: [
         ...this.state.ranges.slice(0, rangeIndex),
