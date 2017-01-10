@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Dropdown, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem, Modal } from '../ui'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
@@ -9,12 +9,6 @@ import * as guestActions from '../../actions/guest'
 import InviteLink from './InviteLink'
 
 export class InviteModal extends Component {
-  componentDidMount() {
-    $(document).ready(function() {
-      $('.modal').modal()
-    })
-  }
-
   cancel() {
     this.props.guestActions.clear()
   }
@@ -64,7 +58,7 @@ export class InviteModal extends Component {
 
     return (
       <div>
-        <div id={modalId} className='modal card' style={style}>
+        <Modal card id={modalId} style={style}>
           <div className='modal-content'>
             <h4>{header}</h4>
             <p>{modalText}</p>
@@ -86,7 +80,7 @@ export class InviteModal extends Component {
           <div className='modal-footer'>
             { guest.code ? <InviteLink /> : <div />}
           </div>
-        </div>
+        </Modal>
       </div>
     )
   }

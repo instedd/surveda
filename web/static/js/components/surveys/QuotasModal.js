@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { stepStoreValues } from '../../reducers/questionnaire'
 import { rebuildInputFromQuotaBuckets } from '../../reducers/survey'
+import { Modal } from '../ui'
 import filter from 'lodash/filter'
 import map from 'lodash/map'
 import join from 'lodash/join'
@@ -24,12 +25,6 @@ export class QuotasModal extends Component {
       buckets: {},
       steps: {}
     }
-  }
-
-  componentDidMount() {
-    $(document).ready(function() {
-      $('.modal').modal()
-    })
   }
 
   onSubmit(e) {
@@ -56,7 +51,7 @@ export class QuotasModal extends Component {
     return (
       <div>
         {modalLink}
-        <div id={modalId} className='modal card' style={style}>
+        <Modal card id={modalId} style={style}>
           <div className='modal-content'>
             <div className='card-title header'>
               <h5>{header}</h5>
@@ -104,7 +99,7 @@ export class QuotasModal extends Component {
             <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={e => this.onSubmit(e)}>DONE</a>
             <a href='#!' className='modal-action modal-close grey-text btn-link'>Cancel</a>
           </div>
-        </div>
+        </Modal>
       </div>
     )
   }
