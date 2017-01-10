@@ -527,7 +527,7 @@ describe('questionnaire reducer', () => {
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0)
       ])
 
-      expect(resultState.errors).toEqual({
+      expect(resultState.errors).toInclude({
         'steps[0].choices': ['You should define at least two response options']
       })
     })
@@ -540,7 +540,7 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '', 'a', '1', null)
       ])
 
-      expect(state.errors).toEqual({
+      expect(state.errors).toInclude({
         'steps[0].choices[0].value': ['Response must not be blank']
       })
     })
@@ -615,7 +615,7 @@ describe('questionnaire reducer', () => {
         },
         skipLogic: 'some-other-id'
       })
-      expect(resultState.errors).toEqual({
+      expect(resultState.errors).toInclude({
         'steps[0].choices[1].ivr': [ '"Phone call" must only consist of single digits, "#" or "*"' ],
         'steps[1].choices[2].ivr': [ '"Phone call" must only consist of single digits, "#" or "*"' ]
       })
@@ -630,7 +630,7 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'dup', 'c', '2', null)
       ])
 
-      expect(resultState.errors).toEqual({
+      expect(resultState.errors).toInclude({
         'steps[0].choices[1].value': ['Value already used in a previous response']
       })
     })
@@ -644,7 +644,7 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'd, c', '2', null)
       ])
 
-      expect(resultState.errors).toEqual({
+      expect(resultState.errors).toInclude({
         [`steps[0].choices[1]['en'].sms`]: ['Value "c" already used in a previous response']
       })
     })
@@ -658,8 +658,56 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '3, 2', null)
       ])
 
-      expect(resultState.errors).toEqual({
+      expect(resultState.errors).toInclude({
         'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+      })
+    })
+
+    it('should validate error message SMS prompt must not be blank if SMS mode is on', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setSmsQuestionnaireMsg('errorMsg', '')
+      ])
+
+      expect(state.errorsByLang['en']).toInclude({
+        [`errorMsg.prompt['en'].sms`]: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('should validate error message IVR prompt must not be blank if IVR mode is on', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setIvrQuestionnaireMsg('errorMsg', '')
+      ])
+
+      expect(state.errorsByLang['en']).toInclude({
+        [`errorMsg.prompt['en'].ivr.text`]: ['Voice prompt must not be blank']
+      })
+    })
+
+    it('should validate quota completed message SMS prompt must not be blank if SMS mode is on', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setSmsQuestionnaireMsg('quotaCompletedMsg', '')
+      ])
+
+      expect(state.errorsByLang['en']).toInclude({
+        [`quotaCompletedMsg.prompt['en'].sms`]: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('should validate quota completed message IVR prompt must not be blank if IVR mode is on', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setSmsQuestionnaireMsg('quotaCompletedMsg', '')
+      ])
+
+      expect(state.errorsByLang['en']).toInclude({
+        [`quotaCompletedMsg.prompt['en'].ivr.text`]: ['Voice prompt must not be blank']
       })
     })
   })
@@ -1032,8 +1080,8 @@ describe('questionnaire reducer', () => {
         languages: [],
         defaultLanguage: 'en',
         activeLanguage: 'en',
-        quotaCompletedMsg: null,
-        errorMsg: null,
+        quotaCompletedMsg: {},
+        errorMsg: {},
         steps: [
           {
             type: 'multiple-choice',

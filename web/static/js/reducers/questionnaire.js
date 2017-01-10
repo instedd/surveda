@@ -9,9 +9,10 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt } from '../step'
-import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, errorsByLang } from '../questionnaireErrors'
+import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
+  choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
@@ -734,9 +735,31 @@ const validate = (state: DataStore<Questionnaire>) => {
     errors: state.errors
   }
 
+  validateMsg('errorMsg', data.errorMsg, context)
+  validateMsg('quotaCompletedMsg', data.quotaCompletedMsg, context)
+
   validateSteps(data.steps, context)
 
   state.errorsByLang = errorsByLang(state)
+}
+
+const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) => {
+  if (context.sms) {
+    context.languages.forEach(lang => {
+      if (getPromptSms(msg, lang).length == 0) {
+        addError(context, msgPromptTextPath(msgKey, 'sms', lang), 'SMS prompt must not be blank')
+      }
+    })
+  }
+
+  if (context.ivr) {
+    context.languages.forEach(lang => {
+      let ivr = getPromptIvr(msg, lang)
+      if (isBlank(ivr.text)) {
+        addError(context, msgPromptTextPath(msgKey, 'ivr', lang), 'Voice prompt must not be blank')
+      }
+    })
+  }
 }
 
 const validateSteps = (steps, context: ValidationContext) => {

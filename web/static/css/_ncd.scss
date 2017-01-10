@@ -279,6 +279,7 @@ footer {
 .back-error {
   background-color: #ff5722 !important;
 }
+
 .text-error {
   color: #ff5722 !important;
 }
@@ -825,6 +826,9 @@ i.survey-status {
       .card-content.closed-step {
         a, i {
           @extend .white-text;
+        }
+        .text-error {
+          @extend .text-error;
         }
       }
     }
