@@ -9,6 +9,7 @@ import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
 import SurveyWizardComparisonsStep from './SurveyWizardComparisonsStep'
 import flatMap from 'lodash/flatMap'
 import uniq from 'lodash/uniq'
+import sumBy from 'lodash/sumBy'
 
 class SurveyForm extends Component {
   static propTypes = {
@@ -50,10 +51,15 @@ class SurveyForm extends Component {
         survey.scheduleDayOfWeek.fri ||
         survey.scheduleDayOfWeek.sat
       ) && validRetryConfiguration
-    const comparisonsStepCompleted = false
+    let comparisonsStepCompleted = false
 
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
-    const numberOfCompletedSteps = mandatorySteps.filter(function(item) { return item == true }).length
+    if (survey.comparisons.length > 0) {
+      comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
+      mandatorySteps.push(comparisonsStepCompleted)
+    }
+
+    const numberOfCompletedSteps = mandatorySteps.filter(item => item == true).length
     const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
     return (
