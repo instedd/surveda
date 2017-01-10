@@ -6,19 +6,18 @@ import { orderedItems } from '../dataTable'
 import * as actions from '../actions/channels'
 import range from 'lodash/range'
 import * as authActions from '../actions/authorizations'
-import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader } from './ui'
+import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal } from './ui'
 import { Preloader } from 'react-materialize'
 
 class ChannelIndex extends Component {
   componentDidMount() {
     this.props.actions.fetchChannels()
-    $(this.refs.popup).modal()
   }
 
   addChannel(event) {
     event.preventDefault()
     this.props.authActions.fetchAuthorizations()
-    $(this.refs.popup).modal('open')
+    $('#add-channel').modal('open')
   }
 
   toggleProvider(provider) {
@@ -100,7 +99,7 @@ class ChannelIndex extends Component {
     return (
       <div>
         <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
-        <div className='modal card' ref='popup'>
+        <Modal card id='add-channel'>
           <div className='modal-content'>
             <div className='card-title header'>
               <h5>Create a channel</h5>
@@ -129,7 +128,7 @@ class ChannelIndex extends Component {
               </li>
             </ul>
           </div>
-        </div>
+        </Modal>
         { (channels.length == 0)
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         : (

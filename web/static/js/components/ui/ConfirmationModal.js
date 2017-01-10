@@ -1,28 +1,18 @@
 import React, { Component, PropTypes } from 'react'
+import { Modal } from '.'
 
 export class ConfirmationModal extends Component {
-  componentDidMount() {
-    $(document).ready(function() {
-      $('.modal').modal()
-    })
-  }
-
   render() {
     const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId, style, showCancel = false } = this.props
 
-    let modalLink = null
     let cancelLink = null
-    if (showLink) {
-      modalLink = (<a className='modal-trigger' href={`#${modalId}`}>{linkText}</a>)
-    }
     if (showCancel) {
       cancelLink = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
     }
 
     return (
       <div>
-        {modalLink}
-        <div id={modalId} className='modal' style={style}>
+        <Modal id={modalId} style={style} showLink={showLink} linkText={linkText}>
           <div className='modal-content'>
             <h4>{header}</h4>
             <p>{modalText}</p>
@@ -31,7 +21,7 @@ export class ConfirmationModal extends Component {
             <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
             {cancelLink}
           </div>
-        </div>
+        </Modal>
       </div>
     )
   }
