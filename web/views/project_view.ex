@@ -4,7 +4,7 @@ defmodule Ask.ProjectView do
   def render("index.json", %{projects: projects, running_surveys_by_project: running_surveys_by_project}) do
     rendered = projects |> Enum.map(fn(project) ->
       one = render_one(project)
-      one |> Map.put(:runningSurveys, Map.get(running_surveys_by_project, project.id, 0))
+      one |> Map.put(:running_surveys, Map.get(running_surveys_by_project, project.id, 0))
     end)
     %{data: rendered}
   end

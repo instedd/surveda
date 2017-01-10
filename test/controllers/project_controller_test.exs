@@ -26,10 +26,13 @@ defmodule Ask.ProjectControllerTest do
       insert(:project)
 
       conn = get conn, project_path(conn, :index)
-      user_project_map = %{"id"      => user_project.id,
-                          "name"    => user_project.name,
-                          "runningSurveys" => 0,
-                          "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at)}
+      user_project_map =
+        %{
+          "id"      => user_project.id,
+          "name"    => user_project.name,
+          "running_surveys" => 0,
+          "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at),
+        }
       assert json_response(conn, 200)["data"] == [user_project_map]
     end
 
@@ -48,15 +51,15 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_path(conn, :index)
       project_map_1 = %{"id"      => project1.id,
                           "name"    => project1.name,
-                          "runningSurveys" => 2,
+                          "running_surveys" => 2,
                           "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at)}
       project_map_2 = %{"id"      => project2.id,
                           "name"    => project2.name,
-                          "runningSurveys" => 1,
+                          "running_surveys" => 1,
                           "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at)}
       project_map_3 = %{"id"      => project3.id,
                           "name"    => project3.name,
-                          "runningSurveys" => 0,
+                          "running_surveys" => 0,
                           "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at)}
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
     end
