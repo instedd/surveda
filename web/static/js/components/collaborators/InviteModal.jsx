@@ -71,8 +71,7 @@ export class InviteModal extends Component {
           </div>
           <input placeholder="Enter collaborator's email" type='text' onChange={e => { this.emailChanged(e) }} value={guest.email} />
           <Dropdown className='step-mode underlined' label={startCase(guest.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
-            { /* TODO: Level options should also contain reader */ }
-            {['editor'].map((level) =>
+            {['editor', 'reader'].map((level) =>
               <DropdownItem key={level}>
                 <a onClick={e => this.levelChanged(level)}>
                   {startCase(level)}
