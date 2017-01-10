@@ -66,8 +66,20 @@ defmodule Ask.Survey do
     channels = get_field(changeset, :channels)
     questionnaires = get_field(changeset, :questionnaires)
 
+    comparisons = get_field(changeset, :comparisons)
+    comparisons_ready =
+      if comparisons && length(comparisons) > 0 do
+        sum = comparisons
+        |> Enum.map(&Map.get(&1, "ratio", 0))
+        |> Enum.sum
+        sum == 100
+      else
+        true
+      end
+
     ready = length(questionnaires) > 0 && respondents_count && respondents_count > 0
       && length(channels) > 0 && schedule_completed && mode && (length(mode) > 0) && validate_retry_attempts_configuration(changeset)
+      && comparisons_ready
       && Enum.all?(mode, fn(modes) ->
         Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
       end)
