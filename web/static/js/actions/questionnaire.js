@@ -53,7 +53,7 @@ export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
     })
 }
 
-export const fetch = (projectId, id) => ({
+export const fetch = (projectId, id): FilteredAction => ({
   type: FETCH,
   projectId,
   id
@@ -69,7 +69,7 @@ export const fetchQuestionnaireIfNeeded = (projectId, id) => {
   }
 }
 
-export const receive = (questionnaire: Questionnaire) => {
+export const receive = (questionnaire: Questionnaire): ReceiveDataAction => {
   return {
     type: RECEIVE,
     data: questionnaire

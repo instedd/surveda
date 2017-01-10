@@ -45,7 +45,7 @@ export const fetchSurvey = (projectId: number, id: number) => (dispatch: Functio
     })
 }
 
-export const fetch = (projectId: number, id: number) => ({
+export const fetch = (projectId: number, id: number): FilteredAction => ({
   type: FETCH,
   id,
   projectId

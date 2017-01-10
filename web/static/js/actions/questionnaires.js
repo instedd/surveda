@@ -7,12 +7,12 @@ export const NEXT_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
 export const PREVIOUS_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
 export const SORT_QUESTIONNAIRES = 'QUESTIONNAIRES_SORT'
 
-export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store) => {
+export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
   const state = getState()
 
   // Don't fetch questionnaires if they are already being fetched
   // for that same project
-  if (state.questionnaires.fetching && state.questionnaires.projectId == projectId) {
+  if (state.questionnaires.fetching && state.questionnaires.filter && state.questionnaires.filter.projectId == projectId) {
     return Promise.resolve(getState().questionnaires.items)
   }
 

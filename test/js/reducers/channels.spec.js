@@ -9,7 +9,7 @@ describe('channels reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, projectId: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 5}})
+    expect(initialState).toEqual({fetching: false, filter: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 5}})
   })
 
   it('should start fetching channels', () => {

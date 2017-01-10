@@ -12,14 +12,14 @@ const initialState = {
   saving: false
 }
 
-const defaultFilterProvider = (data) => ({
-  projectId: toInteger(data.projectId),
-  id: data.id == null ? data.id : toInteger(data.id)
+const defaultFilterProvider = (action: FilteredAction) => ({
+  projectId: toInteger(action.projectId),
+  id: action.id == null ? null : toInteger(action.id)
 })
 
 const defaultDirtyPredicate = (action, oldData, newData) => true
 
-export default (actions: any, dataReducer: DataReducer<any>, filterProvider: any, dirtyPredicate: any) => (state: ?DataStore<any>, action: any): DataStore<any> => {
+export default (actions: any, dataReducer: Reducer<any>, filterProvider: (action: FilteredAction) => Filter, dirtyPredicate: (action: Action, oldData: ?DataStore<any>, newData: ?DataStore<any>) => boolean) => (state: ?DataStore<any>, action: any): DataStore<any> => {
   if (!filterProvider) filterProvider = defaultFilterProvider
   if (!dirtyPredicate) dirtyPredicate = defaultDirtyPredicate
 

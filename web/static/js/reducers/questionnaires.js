@@ -4,7 +4,7 @@ import { itemsOrder, sortItems, nextPage, previousPage } from '../dataTable'
 
 const initialState = {
   fetching: false,
-  projectId: null,
+  filter: null,
   items: null,
   order: null,
   sortBy: null,
@@ -27,12 +27,12 @@ export default (state: QuestionnaireList = initialState, action: any): Questionn
 }
 
 const fetchQuestionnaires = (state, action) => {
-  const items = state.projectId == action.projectId ? state.items : null
+  const items = state.filter && state.filter.projectId == action.projectId ? state.items : null
   return {
     ...state,
     items,
     fetching: true,
-    projectId: action.projectId,
+    filter: { projectId: action.projectId },
     sortBy: null,
     sortAsc: true,
     page: {
@@ -45,7 +45,7 @@ const fetchQuestionnaires = (state, action) => {
 const receiveQuestionnaires = (state, action) => {
   const questionnaires = action.questionnaires
 
-  if (state.projectId != action.projectId) {
+  if (state.filter && state.filter.projectId != action.projectId) {
     return state
   }
 

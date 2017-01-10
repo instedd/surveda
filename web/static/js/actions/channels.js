@@ -32,9 +32,9 @@ export const startFetchingChannels = () => ({
   type: FETCH
 })
 
-export const receiveChannels = (channels: IndexedList<Channel>) => ({
+export const receiveChannels = (items: IndexedList<Channel>): ReceiveItemsAction => ({
   type: RECEIVE,
-  channels
+  items
 })
 
 export const nextChannelsPage = () => ({
