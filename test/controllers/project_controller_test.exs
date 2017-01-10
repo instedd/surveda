@@ -25,15 +25,26 @@ defmodule Ask.ProjectControllerTest do
       user_project = create_project_for_user(user)
       insert(:project)
 
+      project2 = insert(:project)
+      insert(:project_membership, user_id: user.id, project_id: project2.id, level: "reader")
+
       conn = get conn, project_path(conn, :index)
-      user_project_map =
+      assert json_response(conn, 200)["data"] == [
         %{
           "id"      => user_project.id,
           "name"    => user_project.name,
           "running_surveys" => 0,
           "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at),
+          "read_only" => false,
+        },
+        %{
+          "id"      => project2.id,
+          "name"    => project2.name,
+          "running_surveys" => 0,
+          "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
+          "read_only" => true,
         }
-      assert json_response(conn, 200)["data"] == [user_project_map]
+      ]
     end
 
     test "shows running survey count", %{conn: conn, user: user} do
@@ -52,15 +63,18 @@ defmodule Ask.ProjectControllerTest do
       project_map_1 = %{"id"      => project1.id,
                           "name"    => project1.name,
                           "running_surveys" => 2,
-                          "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at)}
+                          "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at),
+                          "read_only" => false}
       project_map_2 = %{"id"      => project2.id,
                           "name"    => project2.name,
                           "running_surveys" => 1,
-                          "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at)}
+                          "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
+                          "read_only" => false}
       project_map_3 = %{"id"      => project3.id,
                           "name"    => project3.name,
                           "running_surveys" => 0,
-                          "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at)}
+                          "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at),
+                          "read_only" => false}
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
     end
 
@@ -73,7 +87,17 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
-        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at)}
+        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
+        "read_only" => false}
+    end
+
+    test "shows chosen resource as read_only", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      conn = get conn, project_path(conn, :show, project)
+      assert json_response(conn, 200)["data"] == %{"id" => project.id,
+        "name" => project.name,
+        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
+        "read_only" => true}
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
@@ -94,7 +118,8 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
-        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at)}
+        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
+        "read_only" => true}
     end
 
   end
@@ -103,7 +128,9 @@ defmodule Ask.ProjectControllerTest do
 
     test "creates and renders resource when data is valid", %{conn: conn} do
       conn = post conn, project_path(conn, :create), project: @valid_attrs
-      assert json_response(conn, 201)["data"]["id"]
+      response = json_response(conn, 201)
+      assert response["data"]["id"]
+      assert response["data"]["read_only"] == false
       assert Repo.get_by(Project, @valid_attrs)
     end
 
@@ -114,7 +141,9 @@ defmodule Ask.ProjectControllerTest do
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       conn = put conn, project_path(conn, :update, project), project: @valid_attrs
-      assert json_response(conn, 200)["data"]["id"]
+      response = json_response(conn, 200)
+      assert response["data"]["id"]
+      assert response["data"]["read_only"] == false
       assert Repo.get_by(Project, @valid_attrs)
     end
 

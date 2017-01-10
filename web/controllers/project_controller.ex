@@ -4,10 +4,23 @@ defmodule Ask.ProjectController do
   alias Ask.{Project, Survey, ProjectMembership, Invite}
 
   def index(conn, _params) do
-    projects = conn
+    memberships = conn
     |> current_user
-    |> assoc(:projects)
+    |> assoc(:project_memberships)
+    |> preload(:project)
     |> Repo.all
+
+    projects = memberships
+    |> Enum.map(&(&1.project))
+    |> Enum.uniq
+
+    editors_by_project = memberships
+    |> Enum.group_by(&(&1.project_id))
+    |> Enum.to_list
+    |> Enum.map(fn {id, memberships} ->
+      {id, memberships |> Enum.any?(&(&1.level == "owner" || &1.level == "editor"))}
+    end)
+    |> Enum.into(%{})
 
     running_surveys_by_project = Repo.all(from p in Project,
       join: s in Survey,
@@ -15,7 +28,10 @@ defmodule Ask.ProjectController do
       where: s.project_id == p.id and s.state == "running",
       group_by: p.id) |> Enum.into(%{})
 
-    render(conn, "index.json", projects: projects, running_surveys_by_project: running_surveys_by_project)
+    render(conn, "index.json",
+      projects: projects,
+      running_surveys_by_project: running_surveys_by_project,
+      editors_by_project: editors_by_project)
   end
 
   def create(conn, %{"project" => project_params}) do
@@ -36,7 +52,7 @@ defmodule Ask.ProjectController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_path(conn, :show, project))
-        |> render("show.json", project: project)
+        |> render("show.json", project: project, read_only: false)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -45,10 +61,26 @@ defmodule Ask.ProjectController do
   end
 
   def show(conn, %{"id" => id}) do
-    project = conn
-    |> load_project(id)
+    # Here we don't use load_project to avoid an extra query,
+    # because we need to get the membership to know whether
+    # the project is read_only.
+    project = Project
+    |> Repo.get!(id)
 
-    render(conn, "show.json", project: project)
+    user = conn
+    |> current_user
+
+    membership = project
+    |> assoc(:project_memberships)
+    |> where([m], m.user_id == ^user.id)
+    |> Repo.one
+
+    if membership do
+      read_only = membership.level == "reader"
+      render(conn, "show.json", project: project, read_only: read_only)
+    else
+      raise Ask.UnauthorizedError, conn: conn
+    end
   end
 
   def update(conn, %{"id" => id, "project" => project_params}) do
@@ -58,7 +90,7 @@ defmodule Ask.ProjectController do
 
     case Repo.update(changeset) do
       {:ok, project} ->
-        render(conn, "show.json", project: project)
+        render(conn, "show.json", project: project, read_only: false)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
