@@ -19,8 +19,8 @@ defmodule Ask.User do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:email, :encrypted_password])
-    |> validate_required([:email, :encrypted_password])
+    |> cast(params, [:email, :encrypted_password, :onboarding])
+    |> validate_required([:email, :encrypted_password, :onboarding])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)
   end

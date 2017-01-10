@@ -57,6 +57,7 @@ defmodule Ask.Router do
       get "/invite", InviteController, :invite, as: :invite
       get "/invite_mail", InviteController, :invite_mail, as: :invite_mail
       get "/invite_show", InviteController, :show, as: :invite_show
+      resources "/users", UserController, only: [:update, :show]
     end
   end
 
