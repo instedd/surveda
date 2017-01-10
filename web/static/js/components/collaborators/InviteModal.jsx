@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Dropdown, DropdownItem, Modal } from '../ui'
+import { Modal } from '../ui'
+import { Input } from 'react-materialize'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
@@ -29,9 +30,10 @@ export class InviteModal extends Component {
     })
   }
 
-  levelChanged(l) {
-    Promise.resolve(this.props.guestActions.changeLevel(l)).then(() => {
-      this.props.guestActions.generateCode()
+  levelChanged(e) {
+    const level = e.target.value
+    Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
+       this.props.guestActions.generateCode()
     })
   }
 
@@ -52,36 +54,51 @@ export class InviteModal extends Component {
       return <div>Loading...</div>
     }
 
-    const cancel = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.cancel()}>Cancel</a>
+    const cancel = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
 
-    const send = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.send()}>Send</a>
+    const send = <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
 
     return (
-      <div>
-        <Modal card id={modalId} style={style}>
-          <div className='modal-content'>
-            <h4>{header}</h4>
+      <Modal card id={modalId} style={style} className='invite-collaborator'>
+        <div className='modal-content'>
+          <div className='card-title header'>
+            <h5>{header}</h5>
             <p>{modalText}</p>
           </div>
-          <input placeholder="Enter collaborator's email" type='text' onChange={e => { this.emailChanged(e) }} value={guest.email} />
-          <Dropdown className='step-mode underlined' label={startCase(guest.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
-            {['editor', 'reader'].map((level) =>
-              <DropdownItem key={level}>
-                <a onClick={e => this.levelChanged(level)}>
-                  {startCase(level)}
-                </a>
-              </DropdownItem>
-            )}
-          </Dropdown>
-          <div>
-            { guest.code ? send : <span /> }
-            {cancel}
+          <div className='card-content'>
+            <div className='row'>
+              <div className='col s8'>
+                <div className='input-field'>
+                  <input id='collaborator_mail' type='text' onChange={e => { this.emailChanged(e) }} value={guest.email} />
+                  <label htmlFor=''>Enter collaborator's email</label>
+                </div>
+              </div>
+              <div className='col s1'></div>
+              <Input s={3} type='select' label='Role'
+                value={guest.level || ''}
+                onChange={e => this.levelChanged(e)}>
+                <option value=''>
+                Select a role
+                </option>
+                { ['editor'].map((role) =>
+                  <option key={role} value={role}>
+                    {startCase(role)}
+                  </option>
+                  )}
+              </Input>
+            </div>
+            <div className='row button-actions'>
+              <div className='col s12'>
+                { guest.code ? send : <a className='btn-medium disabled'>Send</a> }
+                {cancel}
+              </div>
+            </div>
           </div>
-          <div className='modal-footer'>
-            { guest.code ? <InviteLink /> : <div />}
-          </div>
-        </Modal>
-      </div>
+        </div>
+        <div className='card-action'>
+          <InviteLink />
+        </div>
+      </Modal>
     )
   }
 }

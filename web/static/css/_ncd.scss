@@ -46,6 +46,10 @@ nav {
   box-shadow: none;
 }
 
+.btn-flat:hover {
+  background: none;
+}
+
 input[type="checkbox"] + label:before,
 input[type="checkbox"]:checked + label:before {
   border-right-color: black;
@@ -472,7 +476,6 @@ footer {
 
 .modal.card {
   max-height: 70vh;
-  min-height: 350px;
   max-width: 800px !important;
   min-width: 400px;
   overflow-y: initial;
@@ -549,11 +552,12 @@ footer {
 
     .row {
       margin: 0;
-      height: 56px;
-      line-height: 56px;
       .col {
         padding: 0;
       }
+    }
+    .input-field.col label {
+      left: 0;
     }
   }
   .card-action {
@@ -564,6 +568,13 @@ footer {
       line-height: 50px;
       height: 50px;
       padding: 0 1.3rem;
+    }
+  }
+  &#setupQuotas {
+    min-height: 350px;
+    .row {
+      height: 56px;
+      line-height: 56px;
     }
   }
 }
@@ -1017,6 +1028,39 @@ i.survey-status {
 }
 
 
+// ------- Collabotators --------------
+
+
+.colaborate-link {
+  @extend .grey-text;
+  i {
+    vertical-align: middle;
+    margin-right: .5rem;
+  }
+  a {
+    @extend .grey-text;
+    text-transform: lowercase !important;
+    border-bottom: 1px dotted color("grey", "base");
+    cursor: pointer;
+  }
+}
+
+.modal.card.invite-collaborator {
+  .card-content {
+    padding: 1.5rem 2rem;
+  }
+  .button-actions {
+    margin-top: 1rem;
+  }
+  .card-action {
+    font-size: 1.1rem;
+    padding: 1.2rem 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid color('grey', 'lighten-2');
+  }
+}
+
+
 // ------- Forms --------------
 
 .dropfile {
@@ -1370,6 +1414,14 @@ i.survey-status {
 
 .btn-flat-link {
   color: $link-color;
+}
+
+.btn-medium {
+  @extend .btn-large;
+  line-height: 48px;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  height: 48px;
 }
 
 label {

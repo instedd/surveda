@@ -8,7 +8,7 @@ export class Modal extends Component {
   }
 
   render() {
-    const { showLink, linkText, style, children, card = false } = this.props
+    const { className, showLink, linkText, style, children, card = false } = this.props
     const id = this.props.id || uuid.v4()
 
     let modalLink = null
@@ -19,7 +19,7 @@ export class Modal extends Component {
     return (
       <div>
         {modalLink}
-        <div id={id} className={classNames({'modal': true, 'card': card})} style={style} ref='modal'>
+        <div id={id} className={classNames(className, {'modal': true, 'card': card})} style={style} ref='modal'>
           {children}
         </div>
       </div>
@@ -33,5 +33,6 @@ Modal.propTypes = {
   children: PropTypes.node,
   linkText: PropTypes.string,
   id: PropTypes.string.isRequired,
-  style: PropTypes.object
+  style: PropTypes.object,
+  className: PropTypes.string
 }
