@@ -33,7 +33,7 @@ export class InviteModal extends Component {
   levelChanged(e) {
     const level = e.target.value
     Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
-       this.props.guestActions.generateCode()
+      this.props.guestActions.generateCode()
     })
   }
 
@@ -73,7 +73,7 @@ export class InviteModal extends Component {
                   <label htmlFor=''>Enter collaborator's email</label>
                 </div>
               </div>
-              <div className='col s1'></div>
+              <div className='col s1' />
               <Input s={3} type='select' label='Role'
                 value={guest.level || ''}
                 onChange={e => this.levelChanged(e)}>
