@@ -1,9 +1,9 @@
-defmodule Ask.Repo.Migrations.AddOnboardingToUsers do
+defmodule Ask.Repo.Migrations.AddSettingsToUsers do
   use Ecto.Migration
 
   def change do
     alter table(:users) do
-      add :onboarding, :text
+      add :settings, :text
     end
   end
 end

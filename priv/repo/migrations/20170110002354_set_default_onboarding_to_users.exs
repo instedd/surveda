@@ -1,4 +1,4 @@
-defmodule Ask.Repo.Migrations.SetDefaultOnboardingToUsers do
+defmodule Ask.Repo.Migrations.SetDefaultSettingsToUsers do
   use Ecto.Migration
   alias Ask.Repo
 
@@ -6,18 +6,18 @@ defmodule Ask.Repo.Migrations.SetDefaultOnboardingToUsers do
     use Ask.Web, :model
 
     schema "users" do
-      field :onboarding, Ask.Ecto.Type.JSON
+      field :settings, Ask.Ecto.Type.JSON
     end
 
     def changeset(struct, params \\ %{}) do
       struct
-      |> cast(params, [:onboarding])
+      |> cast(params, [:settings])
     end
   end
 
   def change do
     User |> Repo.all |> Enum.each(fn u ->
-      u |> User.changeset(%{onboarding: %{}}) |> Repo.update
+      u |> User.changeset(%{settings: %{}}) |> Repo.update
     end)
   end
 end
