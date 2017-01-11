@@ -17,5 +17,6 @@ export const cumulativeCountFor = (d, completedByDate) => {
 
 export const respondentsReachedPercentage = (completedByDate, targetValue) => {
   const reached = completedByDate.length == 0 ? 0 : cumulativeCountFor(completedByDate[completedByDate.length - 1].date, completedByDate)
-  return Math.round(reached * 100 / targetValue)
+  const percent = Math.round(reached * 100 / targetValue)
+  return percent >= 100 ? 100 : percent
 }
