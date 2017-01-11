@@ -33,7 +33,7 @@ class InviteConfirmation extends Component {
         <div className='col s4 offset-s4 center'>
           <h1><i className='material-icons grey-text xxlarge'>folder_shared</i></h1>
           <p> { inviteText } </p>
-          <div className='divider'></div>
+          <div className='divider' />
           <p className='small-text'> { roleDescription } </p>
           <a className='btn-medium blue' onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
         </div>
