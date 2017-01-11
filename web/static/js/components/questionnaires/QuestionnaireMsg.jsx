@@ -140,7 +140,7 @@ class QuestionnaireMsg extends Component {
       const quizState = this.state.quizState
       createAudio(files)
         .then(response => {
-          const { dispatch, messageKey } = self.props
+          const { dispatch, messageKey } = this.props
           const ivr = quizState.stepPromptIvr
           dispatch(actions.setIvrQuestionnaireMsg(messageKey, {
             ...ivr,
