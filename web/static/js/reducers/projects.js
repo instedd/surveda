@@ -1,6 +1,8 @@
 // @flow
 import * as actions from '../actions/projects'
-import { itemsOrder, sortItems, nextPage, previousPage } from '../dataTable'
+import collectionReducer, { defaultFilterProvider } from './collection'
+
+const itemsReducer = (state: IndexedList<Project>, _): IndexedList<Project> => state
 
 const initialState = {
   fetching: false,
@@ -14,33 +16,5 @@ const initialState = {
     size: 5
   }
 }
-export default (state: ListStore<Project> = initialState, action: any): ListStore<Project> => {
-  switch (action.type) {
-    case actions.FETCH: return fetchProjects(state, action)
-    case actions.RECEIVE: return receiveProjects(state, action)
-    case actions.NEXT_PAGE: return nextPage(state)
-    case actions.PREVIOUS_PAGE: return previousPage(state)
-    case actions.SORT: return sortItems(state, action)
-    default: return state
-  }
-}
 
-const fetchProjects = (state, action) => ({
-  ...state,
-  fetching: true,
-  page: {
-    index: 0,
-    size: 5
-  }
-})
-
-const receiveProjects = (state, action) => {
-  const projects = action.projects
-  let order = itemsOrder(projects, state.sortBy, state.sortAsc)
-  return {
-    ...state,
-    fetching: false,
-    items: projects,
-    order
-  }
-}
+export default collectionReducer(actions, itemsReducer, defaultFilterProvider, initialState)

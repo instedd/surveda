@@ -25,9 +25,9 @@ export const startFetchingProjects = () => ({
   type: FETCH
 })
 
-export const receiveProjects = (projects: IndexedList<Project>) => ({
+export const receiveProjects = (items: IndexedList<Project>): ReceiveItemsAction => ({
   type: RECEIVE,
-  projects
+  items
 })
 
 export const nextProjectsPage = () => ({

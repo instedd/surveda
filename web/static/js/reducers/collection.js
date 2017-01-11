@@ -3,7 +3,7 @@ import isEqual from 'lodash/isEqual'
 import toInteger from 'lodash/toInteger'
 import values from 'lodash/values'
 
-const initialState = {
+const defaultInitialState = {
   fetching: false,
   filter: null,
   items: null,
@@ -20,9 +20,9 @@ export const projectFilterProvider = (action: FilteredAction) => ({
   projectId: toInteger(action.projectId)
 })
 
-const defaultFilterProvider = (_: Action) => ({})
+export const defaultFilterProvider = (_: Action) => ({})
 
-export default (actions: any, itemsReducer: Reducer<any>, filterProvider: (action: FilteredAction) => Filter = defaultFilterProvider) => (state: ?ListStore<any>, action: any): ListStore<any> => {
+export default (actions: any, itemsReducer: Reducer<any>, filterProvider: (action: FilteredAction) => Filter = defaultFilterProvider, initialState: ListStore<any> = defaultInitialState) => (state: ?ListStore<any>, action: any): ListStore<any> => {
   state = state || initialState
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
