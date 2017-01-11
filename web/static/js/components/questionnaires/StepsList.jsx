@@ -12,8 +12,6 @@ class StepsList extends Component {
               <QuestionnaireClosedStep
                 step={step}
                 onClick={stepId => onClick(stepId)}
-                onMoveUnderStep={(sourceStepId, targetStepId) => this.onMoveStep(sourceStepId, targetStepId)}
-                draggable={step.type != 'language-selection'}
                 readOnly={readOnly}
               />
             </li>
