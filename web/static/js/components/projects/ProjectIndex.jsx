@@ -8,7 +8,7 @@ import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty } from '../ui'
 import * as routes from '../../routes'
 import range from 'lodash/range'
-import { orderedItems } from '../../dataTable'
+import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
 
 class ProjectIndex extends Component {

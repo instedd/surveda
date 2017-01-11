@@ -2,7 +2,7 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { orderedItems } from '../dataTable'
+import { orderedItems } from '../reducers/collection'
 import * as actions from '../actions/channels'
 import range from 'lodash/range'
 import * as authActions from '../actions/authorizations'
