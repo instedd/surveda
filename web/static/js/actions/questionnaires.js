@@ -1,11 +1,11 @@
 // @flow
 import * as api from '../api'
 
-export const RECEIVE_QUESTIONNAIRES = 'QUESTIONNAIRES_RECEIVE'
-export const FETCH_QUESTIONNAIRES = 'QUESTIONNAIRES_FETCH'
-export const NEXT_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
-export const PREVIOUS_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
-export const SORT_QUESTIONNAIRES = 'QUESTIONNAIRES_SORT'
+export const RECEIVE = 'QUESTIONNAIRES_RECEIVE'
+export const FETCH = 'QUESTIONNAIRES_FETCH'
+export const NEXT_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
+export const PREVIOUS_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
+export const SORT = 'QUESTIONNAIRES_SORT'
 
 export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
   const state = getState()
@@ -25,25 +25,25 @@ export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, g
 }
 
 export const startFetchingQuestionnaires = (projectId: number) => ({
-  type: FETCH_QUESTIONNAIRES,
+  type: FETCH,
   projectId
 })
 
-export const receiveQuestionnaires = (projectId: number, questionnaires: IndexedList<Questionnaire>) => ({
-  type: RECEIVE_QUESTIONNAIRES,
+export const receiveQuestionnaires = (projectId: number, items: IndexedList<Questionnaire>): ReceiveItemsAction => ({
+  type: RECEIVE,
   projectId,
-  questionnaires
+  items
 })
 
 export const nextQuestionnairesPage = () => ({
-  type: NEXT_QUESTIONNAIRES_PAGE
+  type: NEXT_PAGE
 })
 
 export const previousQuestionnairesPage = () => ({
-  type: PREVIOUS_QUESTIONNAIRES_PAGE
+  type: PREVIOUS_PAGE
 })
 
 export const sortQuestionnairesBy = (property: string) => ({
-  type: SORT_QUESTIONNAIRES,
+  type: SORT,
   property
 })

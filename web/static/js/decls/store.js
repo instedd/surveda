@@ -25,8 +25,8 @@ export type Errors = {
 }
 
 export type Filter = {
-  id: ?number,
-  projectId: number,
+  id?: ?number,
+  projectId?: number,
 };
 
 export type Action = {
@@ -38,6 +38,10 @@ export type ReceiveDataAction = Action & {
   data: any
 };
 export type ReceiveItemsAction = Action & {
+  items: IndexedList<any>
+}
+
+export type ReceiveFilteredItemsAction = FilteredAction & {
   items: IndexedList<any>
 }
 

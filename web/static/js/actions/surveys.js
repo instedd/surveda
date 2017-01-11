@@ -29,10 +29,10 @@ export const startFetchingSurveys = (projectId: number) => ({
   projectId
 })
 
-export const receiveSurveys = (projectId: number, surveys: IndexedList<SurveyPreview>) => ({
+export const receiveSurveys = (projectId: number, items: IndexedList<SurveyPreview>): ReceiveItemsAction => ({
   type: RECEIVE,
   projectId,
-  surveys
+  items
 })
 
 export const nextSurveysPage = () => ({

@@ -16,11 +16,13 @@ const initialState = {
   }
 }
 
-const defaultFilterProvider = (action) => ({
+export const projectFilterProvider = (action: FilteredAction) => ({
   projectId: toInteger(action.projectId)
 })
 
-export default (actions: any, itemsReducer: Reducer<any>, filterProvider: (action: FilteredAction) => any = defaultFilterProvider) => (state: ?ListStore<any>, action: any): ListStore<any> => {
+const defaultFilterProvider = (_: Action) => ({})
+
+export default (actions: any, itemsReducer: Reducer<any>, filterProvider: (action: FilteredAction) => Filter = defaultFilterProvider) => (state: ?ListStore<any>, action: any): ListStore<any> => {
   state = state || initialState
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
@@ -45,9 +47,8 @@ const items = (state, action, itemsReducer) => {
   return state
 }
 
-const receive = (state: ListStore<any>, action: ReceiveItemsAction, filterProvider) => {
-  const items = action.items
-  const itemsFilter = filterProvider(items)
+const receive = (state: ListStore<any>, action: ReceiveFilteredItemsAction, filterProvider) => {
+  const itemsFilter = filterProvider(action)
 
   if (isEqual(state.filter, itemsFilter)) {
     const items = action.items

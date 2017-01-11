@@ -19,7 +19,7 @@ const defaultFilterProvider = (action: FilteredAction) => ({
 
 const defaultDirtyPredicate = (action, oldData, newData) => true
 
-export default (actions: any, dataReducer: Reducer<any>, filterProvider: (action: FilteredAction) => Filter, dirtyPredicate: (action: Action, oldData: ?DataStore<any>, newData: ?DataStore<any>) => boolean) => (state: ?DataStore<any>, action: any): DataStore<any> => {
+export default (actions: any, dataReducer: Reducer<any>, filterProvider: ?(action: FilteredAction) => Filter, dirtyPredicate: ?(action: Action, oldData: ?DataStore<any>, newData: ?DataStore<any>) => boolean) => (state: ?DataStore<any>, action: any): DataStore<any> => {
   if (!filterProvider) filterProvider = defaultFilterProvider
   if (!dirtyPredicate) dirtyPredicate = defaultDirtyPredicate
 
