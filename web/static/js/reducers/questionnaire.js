@@ -1050,7 +1050,7 @@ const changeNumericRanges = (state, action) => {
         const nextFrom = auxValues[i + 1]
         // 4b. Unfortunately, Flow can't make this sort of analysis, so we need to explicitly
         // ensure that `auxValues[i + 1]` is not null.
-        if (nextFrom) {
+        if (nextFrom != null) {
           to = nextFrom - 1
         }
       }

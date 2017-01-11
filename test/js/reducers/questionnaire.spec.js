@@ -9,6 +9,7 @@ import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } f
 import { questionnaire } from '../fixtures'
 import { filterByPathPrefix } from '../../../web/static/js/questionnaireErrors'
 import * as actions from '../../../web/static/js/actions/questionnaire'
+import isEqual from 'lodash/isEqual'
 
 describe('questionnaire reducer', () => {
   const initialState = reducer(undefined, {})
@@ -1413,6 +1414,56 @@ describe('questionnaire reducer', () => {
         actions.changeName('Foo!@#%!     123  []]!!!??')
       ])
       expect(csvTranslationFilename((state.data: Questionnaire))).toEqual('Foo123_translations.csv')
+    })
+
+    it('changes numeric limits without min and max', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '1,3,5')
+      ])
+
+      const step = resultState.data.steps[resultState.data.steps.length - 1]
+      const expected = [
+        { from: null, to: 0, skipLogic: null },
+        { from: 1, to: 2, skipLogic: null },
+        { from: 3, to: 4, skipLogic: null },
+        { from: 5, to: null, skipLogic: null }
+      ]
+
+      expect(isEqual(step.ranges, expected)).toEqual(true)
+    })
+
+    it('changes numeric limits without min and max, with zero in delimiter', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '0,3,5')
+      ])
+
+      const step = resultState.data.steps[resultState.data.steps.length - 1]
+      const expected = [
+        { from: null, to: -1, skipLogic: null },
+        { from: 0, to: 2, skipLogic: null },
+        { from: 3, to: 4, skipLogic: null },
+        { from: 5, to: null, skipLogic: null }
+      ]
+
+      expect(isEqual(step.ranges, expected)).toEqual(true)
     })
   })
 })
