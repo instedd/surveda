@@ -31,7 +31,6 @@ const apiFetch = (url, options) => {
       return handleResponse(response, () =>
         response)
     })
-    .catch(e => { throw e })
 }
 
 const apiFetchJSON = (url, schema, options) => {
