@@ -3,7 +3,7 @@ import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 
 class StepsList extends Component {
   render() {
-    const { steps, onClick } = this.props
+    const { steps, onClick, readOnly } = this.props
     if (steps.length != 0) {
       return (
         <ul className='collapsible'>
@@ -13,7 +13,9 @@ class StepsList extends Component {
                 step={step}
                 onClick={stepId => onClick(stepId)}
                 onMoveUnderStep={(sourceStepId, targetStepId) => this.onMoveStep(sourceStepId, targetStepId)}
-                draggable={step.type != 'language-selection'} />
+                draggable={step.type != 'language-selection'}
+                readOnly={readOnly}
+              />
             </li>
           ))}
         </ul>
@@ -26,7 +28,8 @@ class StepsList extends Component {
 
 StepsList.propTypes = {
   steps: PropTypes.array,
-  onClick: PropTypes.func
+  onClick: PropTypes.func,
+  readOnly: PropTypes.bool
 }
 
 export default StepsList

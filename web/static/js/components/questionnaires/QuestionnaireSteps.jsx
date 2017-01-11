@@ -12,13 +12,14 @@ type Props = {
   currentStepIsNew: boolean,
   onSelectStep: Function,
   onDeselectStep: Function,
-  onDeleteStep: Function
+  onDeleteStep: Function,
+  readOnly: boolean
 }
 
-const dummyDropTarget = (steps) => {
+const dummyDropTarget = (steps, readOnly) => {
   if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
     return (
-      <DraggableStep step={null}>
+      <DraggableStep step={null} readOnly={readOnly}>
         <div style={{borderBottom: 'solid transparent'}} />
       </DraggableStep>
     )
@@ -27,10 +28,10 @@ const dummyDropTarget = (steps) => {
   return <div />
 }
 
-const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep) => {
+const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep, readOnly) => {
   if (current == null) {
     // All collapsed
-    return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
+    return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} readOnly={readOnly} />
   } else {
     const itemIndex = steps.findIndex(step => step.id == current)
 
@@ -41,7 +42,7 @@ const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDe
 
     return (
       <div>
-        <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
+        <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} readOnly={readOnly} />
         <StepEditor
           step={currentStep}
           stepIndex={itemIndex}
@@ -50,7 +51,7 @@ const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDe
           onDelete={() => onDeleteStep()}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore} />
-        <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} />
+        <StepsList steps={stepsAfter} onClick={stepId => onSelectStep(stepId)} readOnly={readOnly} />
       </div>
     )
   }
@@ -60,12 +61,12 @@ class QuestionnaireSteps extends Component {
   props: Props
 
   render() {
-    const { steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+    const { steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep, readOnly } = this.props
 
     return (
       <div>
-        {dummyDropTarget(steps)}
-        {questionnaireSteps(steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep)}
+        {dummyDropTarget(steps, readOnly)}
+        {questionnaireSteps(steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep, readOnly)}
       </div>
     )
   }

@@ -61,7 +61,7 @@ class NumericStepEditor extends Component {
     const { step, stepIndex, onCollapse, questionnaire, readOnly, stepsAfter, stepsBefore, onDelete, errors } = this.props
 
     return (
-      <DraggableStep step={step}>
+      <DraggableStep step={step} readOnly={readOnly}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
           <StepPrompts
             step={step}

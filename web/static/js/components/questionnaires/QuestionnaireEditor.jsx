@@ -186,7 +186,9 @@ class QuestionnaireEditor extends Component {
       return <div>Loading...</div>
     }
 
-    if (!project.readOnly) {
+    const readOnly = !project || project.readOnly
+
+    if (!readOnly) {
       csvButtons = <div>
         <div className='row'>
           <div className='col s12'>
@@ -227,7 +229,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>SMS</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={project.readOnly} />
+                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -239,7 +241,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Phone call</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={project.readOnly} />
+                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -253,8 +255,10 @@ class QuestionnaireEditor extends Component {
             currentStepIsNew={this.state.currentStepIsNew}
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
-            onDeleteStep={() => this.deleteStep()} />
-          {project.readOnly ? null
+            onDeleteStep={() => this.deleteStep()}
+            readOnly={readOnly}
+            />
+          {readOnly ? null
           : <div className='row'>
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>

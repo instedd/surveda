@@ -56,7 +56,7 @@ class LanguageSelectionStepEditor extends Component {
     const { step, stepIndex, onCollapse, errors, readOnly } = this.props
 
     return (
-      <DraggableStep step={step}>
+      <DraggableStep step={step} readOnly={readOnly}>
         <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
           <StepPrompts
             step={step}
