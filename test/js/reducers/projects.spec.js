@@ -17,6 +17,12 @@ describe('projects reducer', () => {
     expect(result.fetching).toEqual(true)
   })
 
+  it('should not reset order when fetching', () => {
+    const result = reducer(initialState, actions.startFetchingProjects())
+    expect(result.sortBy).toEqual('updatedAt')
+    expect(result.sortAsc).toEqual(false)
+  })
+
   it('should receive projects', () => {
     const projects = {'1': {...project, id: 1}}
     const r1 = reducer(initialState, actions.startFetchingProjects())

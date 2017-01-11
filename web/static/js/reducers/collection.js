@@ -78,8 +78,6 @@ const fetch = (state, action, filterProvider) => {
     fetching: true,
     filter: newFilter,
     items: newItems,
-    sortBy: null,
-    sortAsc: true,
     page: {
       index: 0,
       size: 5
