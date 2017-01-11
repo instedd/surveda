@@ -36,11 +36,10 @@ class SmsPrompt extends Component {
     return (
       <div className='row'>
         <div className='col input-field s12'>
-          <InputWithLabel id={id} value={value} label='SMS message' errors={inputErrors} >
+          <InputWithLabel id={id} value={value} readOnly={readOnly} label='SMS message' errors={inputErrors} >
             <input
               type='text'
               is length='140'
-              disabled={readOnly}
               onChange={e => onChange(e)}
               onBlur={e => this.onBlur(e)}
               ref={ref => {
