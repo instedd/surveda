@@ -10,7 +10,8 @@ class ProjectTitle extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.any.isRequired,
-    project: PropTypes.object
+    project: PropTypes.object,
+    readOnly: PropTypes.boolean
   }
 
   componentWillMount() {
@@ -29,17 +30,18 @@ class ProjectTitle extends Component {
   }
 
   render() {
-    const { project } = this.props
+    const { project, readOnly } = this.props
     if (project == null) return null
 
-    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} />
+    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
   }
 }
 
 const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
-    project: state.project.data
+    project: state.project.data,
+    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
   }
 }
 
