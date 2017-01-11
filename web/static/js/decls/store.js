@@ -5,6 +5,7 @@ export type Store = {
   survey: DataStore<Survey>,
   surveys: SurveyList,
   channels: ChannelList,
+  projects: ProjectList
 };
 
 export type DataStore<T> = {
@@ -34,9 +35,11 @@ export type Action = {
 };
 
 export type FilteredAction = Action & Filter;
+
 export type ReceiveDataAction = Action & {
   data: any
 };
+
 export type ReceiveItemsAction = Action & {
   items: IndexedList<any>
 }
@@ -75,3 +78,5 @@ export type QuestionnaireList = ListStore<Questionnaire> & {
 };
 
 export type ChannelList = ListStore<Channel>;
+
+export type ProjectList = ListStore<Project>;

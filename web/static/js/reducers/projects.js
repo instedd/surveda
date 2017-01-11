@@ -1,9 +1,11 @@
+// @flow
 import * as actions from '../actions/projects'
 import { itemsOrder, sortItems, nextPage, previousPage } from '../dataTable'
 
 const initialState = {
   fetching: false,
   items: null,
+  filter: null,
   order: null,
   sortBy: 'updatedAt',
   sortAsc: false,
@@ -12,14 +14,13 @@ const initialState = {
     size: 5
   }
 }
-
-export default (state = initialState, action) => {
+export default (state: ListStore<Project> = initialState, action: any): ListStore<Project> => {
   switch (action.type) {
-    case actions.FETCH_PROJECTS: return fetchProjects(state, action)
-    case actions.RECEIVE_PROJECTS: return receiveProjects(state, action)
-    case actions.NEXT_PROJECTS_PAGE: return nextPage(state)
-    case actions.PREVIOUS_PROJECTS_PAGE: return previousPage(state)
-    case actions.SORT_PROJECTS: return sortItems(state, action)
+    case actions.FETCH: return fetchProjects(state, action)
+    case actions.RECEIVE: return receiveProjects(state, action)
+    case actions.NEXT_PAGE: return nextPage(state)
+    case actions.PREVIOUS_PAGE: return previousPage(state)
+    case actions.SORT: return sortItems(state, action)
     default: return state
   }
 }

@@ -162,6 +162,7 @@ const bareSurvey: Survey = {
 export const survey: Survey = deepFreeze(bareSurvey)
 
 const bareChannel: Channel = {
+  id: 1,
   userId: 1,
   name: 'Channel Name',
   type: 'sms',
@@ -172,3 +173,11 @@ const bareChannel: Channel = {
 }
 
 export const channel: Channel = deepFreeze(bareChannel)
+
+const bareProject: Project = {
+  id: 1,
+  name: 'Project Name',
+  updatedAt: '2017-01-10T21:03:19'
+}
+
+export const project: Project = deepFreeze(bareProject)
