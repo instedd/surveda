@@ -15,7 +15,7 @@ class SmsPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, onChange, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, onChange, readOnly, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
     const maybeInvalidClass = classNames({
       'validate invalid': inputErrors != null && inputErrors.length > 0
@@ -36,7 +36,7 @@ class SmsPrompt extends Component {
     return (
       <div className='row'>
         <div className='col input-field s12'>
-          <InputWithLabel id={id} value={value} label='SMS message' errors={inputErrors} >
+          <InputWithLabel id={id} value={value} readOnly={readOnly} label='SMS message' errors={inputErrors} >
             <input
               type='text'
               is length='140'
@@ -63,6 +63,7 @@ SmsPrompt.propTypes = {
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
   autocomplete: PropTypes.bool.isRequired,
   autocompleteGetData: PropTypes.func,
   autocompleteOnSelect: PropTypes.func}

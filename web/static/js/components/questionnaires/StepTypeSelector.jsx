@@ -7,6 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 
 type Props = {
   stepType: string,
+  readOnly: boolean,
   stepId: any,
   questionnaireActions: any
 };
@@ -19,9 +20,9 @@ class StepTypeSelector extends Component {
   }
 
   render() {
-    const { stepType } = this.props
+    const { stepType, readOnly } = this.props
     return (<div className='left'>
-      <Dropdown className='step-mode' label={stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : stepType == 'numeric' ? <i className='material-icons sharp'>dialpad</i> : <i className='material-icons sharp'>chat_bubble_outline</i>} constrainWidth={false} dataBelowOrigin={false}>
+      <Dropdown className='step-mode' readOnly={readOnly} label={stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : stepType == 'numeric' ? <i className='material-icons sharp'>dialpad</i> : <i className='material-icons sharp'>chat_bubble_outline</i>} constrainWidth={false} dataBelowOrigin={false}>
         <DropdownItem>
           <a onClick={e => this.changeStepType('multiple-choice')}>
             <i className='material-icons left'>list</i>
@@ -53,4 +54,10 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepTypeSelector)
+const mapStateToProps = (state, ownProps) => {
+  return {
+    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(StepTypeSelector)

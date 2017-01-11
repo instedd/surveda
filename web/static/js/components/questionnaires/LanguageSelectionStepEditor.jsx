@@ -16,6 +16,7 @@ type Props = {
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
+  readOnly: boolean,
   questionnaire: Questionnaire,
   errors: Errors
 };
@@ -52,7 +53,7 @@ class LanguageSelectionStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, errors } = this.props
+    const { step, stepIndex, onCollapse, errors, readOnly } = this.props
 
     return (
       <DraggableStep step={step}>
@@ -64,11 +65,11 @@ class LanguageSelectionStepEditor extends Component {
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>
-                <StepLanguageSelection step={step} />
+                <StepLanguageSelection step={step} readOnly={readOnly} />
               </div>
             </div>
           </li>
-          <StepStoreVariable step={step} />
+          <StepStoreVariable step={step} readOnly={readOnly} />
         </StepCard>
       </DraggableStep>
     )
@@ -76,7 +77,8 @@ class LanguageSelectionStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
 })
 
 const mapDispatchToProps = (dispatch) => ({

@@ -12,7 +12,7 @@ class StepCard extends Component {
   }
 
   render() {
-    const { onCollapse, stepId, children, icon, stepTitle } = this.props
+    const { onCollapse, stepId, children, icon, stepTitle, readOnly } = this.props
 
     return (
       <Card key={stepId}>
@@ -21,7 +21,7 @@ class StepCard extends Component {
             <div className='row'>
               <div className='col s12'>
                 {icon}
-                <EditableTitleLabel className='editable-field' title={stepTitle} entityName='question' onSubmit={value => this.stepTitleSubmit(value)} />
+                <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} entityName='question' onSubmit={value => this.stepTitleSubmit(value)} />
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -46,11 +46,16 @@ StepCard.propTypes = {
   stepId: PropTypes.any.isRequired,
   children: PropTypes.node,
   onCollapse: PropTypes.func.isRequired,
-  questionnaireActions: PropTypes.any
+  questionnaireActions: PropTypes.any,
+  readOnly: PropTypes.bool
 }
 
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepCard)
+const mapStateToProps = (state, ownProps) => ({
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(StepCard)

@@ -19,6 +19,7 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
+  readOnly: boolean,
   errors: Errors,
   stepsAfter: Step[],
   stepsBefore: Step[]
@@ -57,7 +58,7 @@ class MultipleChoiceStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, questionnaire, errors, stepsAfter, stepsBefore, onDelete } = this.props
+    const { step, stepIndex, onCollapse, questionnaire, readOnly, errors, stepsAfter, stepsBefore, onDelete } = this.props
 
     return (
       <DraggableStep step={step}>
@@ -78,12 +79,13 @@ class MultipleChoiceStepEditor extends Component {
                   stepIndex={stepIndex}
                   stepsAfter={stepsAfter}
                   stepsBefore={stepsBefore}
+                  readOnly={readOnly}
                   errors={errors} />
               </div>
             </div>
           </li>
-          <StepStoreVariable step={step} />
-          <StepDeleteButton onDelete={onDelete} />
+          <StepStoreVariable step={step} readOnly={readOnly} />
+          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
         </StepCard>
       </DraggableStep>
     )
@@ -91,7 +93,8 @@ class MultipleChoiceStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
 })
 
 const mapDispatchToProps = (dispatch) => ({

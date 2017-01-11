@@ -10,15 +10,19 @@ export class InputWithLabel extends Component {
       PropTypes.string,
       PropTypes.number ]),
     label: PropTypes.node,
-    errors: PropTypes.array
+    errors: PropTypes.array,
+    readOnly: PropTypes.bool
   }
 
   render() {
-    const { children, value, label, errors } = this.props
+    const { children, value, label, errors, readOnly } = this.props
     const id = this.props.id || uuid.v4()
 
     var childrenWithProps = React.Children.map(children, function(child) {
       if (child) {
+        if (readOnly) {
+          return React.cloneElement(child, { id: id, value: value, disabled: readOnly })
+        }
         return React.cloneElement(child, { id: id, value: value })
       } else {
         return null
