@@ -254,11 +254,13 @@ class QuestionnaireEditor extends Component {
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
             onDeleteStep={() => this.deleteStep()} />
-          <div className='row'>
+          {project.readOnly ? null
+          : <div className='row'>
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
           </div>
+          }
           <div className='row'>
             <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' icon='pie_chart' />
           </div>

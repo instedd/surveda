@@ -18,6 +18,7 @@ type Props = {
   onCollapse: Function,
   questionnaire: Questionnaire,
   errors: Errors,
+  readOnly: boolean,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -65,7 +66,7 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errors } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errors, readOnly } = this.props
 
     return (
       <DraggableStep step={step}>
@@ -81,6 +82,7 @@ class ExplanationStepEditor extends Component {
               <div className='col s6'>
                 <SkipLogic
                   onChange={skipOption => this.skipLogicChange(skipOption)}
+                  readOnly={readOnly}
                   value={step.skipLogic}
                   stepsAfter={stepsAfter}
                   stepsBefore={stepsBefore}
@@ -89,7 +91,7 @@ class ExplanationStepEditor extends Component {
               </div>
             </div>
           </li>
-          <StepDeleteButton onDelete={onDelete} />
+          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
         </StepCard>
       </DraggableStep>
     )
@@ -97,7 +99,8 @@ class ExplanationStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
 })
 
 const mapDispatchToProps = (dispatch) => ({
