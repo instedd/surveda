@@ -17,26 +17,38 @@ const defaultFilterProvider = (data) => ({
   id: data.id == null ? null : toInteger(data.id)
 })
 
-export default (actions: any, dataReducer: DataReducer<any>, filterProvider: any = defaultFilterProvider) => (state: ?DataStore<any>, action: any): DataStore<any> => {
+const defaultDirtyPredicate = (action, oldData, newData) => true
+
+export default (actions: any, dataReducer: DataReducer<any>, filterProvider: any, dirtyPredicate: any) => (state: ?DataStore<any>, action: any): DataStore<any> => {
+  if (!filterProvider) filterProvider = defaultFilterProvider
+  if (!dirtyPredicate) dirtyPredicate = defaultDirtyPredicate
+
   state = state || initialState
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
     case actions.RECEIVE: return receive(state, action, filterProvider)
     case actions.SAVING: return saving(state, action, filterProvider)
     case actions.SAVED: return saved(state, action, filterProvider, dataReducer)
-    default: return data(state, action, dataReducer)
+    default: return data(state, action, dataReducer, dirtyPredicate)
   }
 }
 
-const data = (state: DataStore<any>, action, dataReducer): DataStore<any> => {
+const data = (state: DataStore<any>, action, dataReducer, dirtyPredicate): DataStore<any> => {
   const newData: any = state.data == null ? null : dataReducer(state.data, action)
 
   if (newData !== state.data) {
-    return ({
-      ...state,
-      dirty: true,
-      data: newData
-    })
+    if (dirtyPredicate(action, state.data, newData)) {
+      return ({
+        ...state,
+        dirty: true,
+        data: newData
+      })
+    } else {
+      return ({
+        ...state,
+        data: newData
+      })
+    }
   }
 
   return state

@@ -43,7 +43,16 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
   }
 }
 
-export default validateReducer(fetchReducer(actions, dataReducer))
+// We don't want changing the active language to mark the questionnaire
+// as dirty, which will eventually autosave it.
+const dirtyPredicate = (action, oldData, newData) => {
+  switch (action.type) {
+    case actions.SET_ACTIVE_LANGUAGE: return false
+    default: return true
+  }
+}
+
+export default validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))
 
 const steps = (state, action) => {
   // Up to now we've been assuming that all content was under corresponding 'en' keys,
