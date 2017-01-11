@@ -61,7 +61,7 @@ class MultipleChoiceStepEditor extends Component {
     const { step, stepIndex, onCollapse, questionnaire, readOnly, errors, stepsAfter, stepsBefore, onDelete } = this.props
 
     return (
-      <DraggableStep step={step}>
+      <DraggableStep step={step} readOnly={readOnly}>
         <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle}
           icon={
             <StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />

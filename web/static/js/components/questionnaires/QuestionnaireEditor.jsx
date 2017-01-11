@@ -255,6 +255,9 @@ class QuestionnaireEditor extends Component {
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
             onDeleteStep={() => this.deleteStep()} />
+            onDeleteStep={() => this.deleteStep()}
+            readOnly={readOnly}
+            />
           {readOnly ? null
           : <div className='row'>
             <div className='col s12'>
