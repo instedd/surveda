@@ -5,12 +5,13 @@ defmodule Ask.UserController do
 
   def update(conn, %{"user" => user_params}) do
     user = conn |> current_user
-    new_onboarding = case user_params["onboarding"] do
-                        nil -> user.onboarding
-                        _ -> Map.merge(user.onboarding, user_params["onboarding"])
-                     end
-    changeset = User.changeset(user)
-    changeset = User.changeset(changeset, %{onboarding: new_onboarding})
+    # changeset is made in 2 passes because is not posible a deep merge between a %User{} and a map (user_params)
+    settings = %{settings: DeepMerge.deep_merge(user.settings, user_params["settings"] || %{})}
+    user_params = Map.delete(user_params, "settings")
+
+    first_changeset = User.changeset(user, user_params)
+    changeset = User.changeset(first_changeset, settings)
+
     case Repo.update(changeset) do
       {:ok, user} ->
         conn

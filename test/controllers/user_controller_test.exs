@@ -16,10 +16,10 @@ defmodule Ask.UserControllerTest do
     {:ok, conn: conn, user: user}
   end
 
-  test "updates onboarding screen", %{conn: conn, user: user} do
-    attrs = %{settings: %{questionnaire: true}}
+  test "updates settings", %{conn: conn, user: user} do
+    attrs = %{settings: %{onboarding: %{questionnaire: true}}}
     conn = put conn, user_path(conn, :update, user), user: attrs
-    assert json_response(conn, 200)["data"]["onboarding"]["questionnaire"]
+    assert json_response(conn, 200)["data"]["settings"]["onboarding"]["questionnaire"]
   end
 
 end

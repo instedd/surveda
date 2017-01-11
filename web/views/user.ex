@@ -5,7 +5,7 @@ defmodule Ask.UserView do
     %{data:
       %{
         email: user.email,
-        onboarding: user.onboarding
+        settings: user.settings
       }
     }
   end

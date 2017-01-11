@@ -4,7 +4,7 @@ defmodule Ask.User do
   schema "users" do
     field :email, :string
     field :encrypted_password, :string
-    field :onboarding, Ask.Ecto.Type.JSON
+    field :settings, Ask.Ecto.Type.JSON
 
     has_many :channels, Ask.Channel
     has_many :oauth_tokens, Ask.OAuthToken
@@ -19,8 +19,8 @@ defmodule Ask.User do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:email, :encrypted_password, :onboarding])
-    |> validate_required([:email, :encrypted_password, :onboarding])
+    |> cast(params, [:email, :encrypted_password, :settings])
+    |> validate_required([:email, :encrypted_password, :settings])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)
   end

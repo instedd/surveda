@@ -54,7 +54,8 @@ defmodule Ask.Mixfile do
       {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
       {:appsignal, "~> 0.9.2"},
       {:bamboo, "~> 0.7"},
-      {:bamboo_smtp, "~> 1.2.1"}
+      {:bamboo_smtp, "~> 1.2.1"},
+      {:deep_merge, "~> 0.1.0"}
    ]
   end
 

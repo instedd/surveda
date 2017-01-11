@@ -13,7 +13,7 @@ defmodule Ask.Factory do
     %Ask.User{
       email: sequence(:email, &"email-#{&1}@example.com"),
       encrypted_password: Addict.Configs.password_hasher.hashpwsalt("1234"),
-      onboarding: %{}
+      settings: %{}
     }
   end
 
