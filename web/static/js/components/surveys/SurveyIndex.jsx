@@ -18,6 +18,7 @@ class SurveyIndex extends Component {
     dispatch: PropTypes.func,
     router: PropTypes.object,
     projectId: PropTypes.any.isRequired,
+    project: PropTypes.object,
     surveys: PropTypes.array,
     respondentsStats: PropTypes.object.isRequired
   }
@@ -45,7 +46,7 @@ class SurveyIndex extends Component {
   }
 
   render() {
-    const { surveys, respondentsStats } = this.props
+    const { surveys, respondentsStats, project } = this.props
 
     if (!surveys) {
       return (
@@ -53,9 +54,18 @@ class SurveyIndex extends Component {
       )
     }
 
+    const readOnly = !project || project.readOnly
+
+    let addButton = null
+    if (!readOnly) {
+      addButton = (
+        <AddButton text='Add survey' onClick={() => this.newSurvey()} />
+      )
+    }
+
     return (
       <div>
-        <AddButton text='Add survey' onClick={() => this.newSurvey()} />
+        {addButton}
         { surveys.length == 0
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>

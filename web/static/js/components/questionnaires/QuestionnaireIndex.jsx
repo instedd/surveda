@@ -70,7 +70,7 @@ class QuestionnaireIndex extends Component {
   }
 
   render() {
-    const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex,
+    const { questionnaires, project, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage } = this.props
 
     if (!questionnaires) {
@@ -98,9 +98,18 @@ class QuestionnaireIndex extends Component {
       </div>
     )
 
+    const readOnly = !project || project.readOnly
+
+    let addButton = null
+    if (!readOnly) {
+      addButton = (
+        <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
+      )
+    }
+
     return (
       <div>
-        <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
+        {addButton}
         { (questionnaires.length == 0)
           ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' onClick={e => this.newQuestionnaire(e)} />
         : <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
@@ -108,7 +117,7 @@ class QuestionnaireIndex extends Component {
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               <th>Modes</th>
-              <th className='duplicate' />
+              {readOnly ? null : <th className='duplicate' />}
             </tr>
           </thead>
           <tbody>
@@ -124,13 +133,14 @@ class QuestionnaireIndex extends Component {
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     { (questionnaire.modes || []).join(', ').toUpperCase() }
                   </td>
-                  <td className='duplicate'>
-                    <Tooltip text='Duplicate questionnaire'>
-                      <a onClick={() => this.duplicate(questionnaire)}>
-                        <i className='material-icons'>content_copy</i>
-                      </a>
-                    </Tooltip>
-                  </td>
+                  {readOnly ? null
+                    : <td className='duplicate'>
+                      <Tooltip text='Duplicate questionnaire'>
+                        <a onClick={() => this.duplicate(questionnaire)}>
+                          <i className='material-icons'>content_copy</i>
+                        </a>
+                      </Tooltip>
+                    </td>}
                 </tr>
               )
             }
@@ -148,6 +158,7 @@ QuestionnaireIndex.propTypes = {
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   projectId: PropTypes.any,
+  project: PropTypes.object,
   questionnaires: PropTypes.array,
   sortBy: PropTypes.string,
   sortAsc: PropTypes.bool.isRequired,
@@ -176,6 +187,7 @@ const mapStateToProps = (state, ownProps) => {
   const hasNextPage = endIndex < totalCount
   return {
     projectId: ownProps.params.projectId,
+    project: state.project.data,
     sortBy,
     sortAsc,
     questionnaires,
