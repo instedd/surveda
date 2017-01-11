@@ -14,7 +14,7 @@ const initialState = {
 
 const defaultFilterProvider = (data) => ({
   projectId: toInteger(data.projectId),
-  id: data.id == null ? null : toInteger(data.id)
+  id: data.id == null ? data.id : toInteger(data.id)
 })
 
 const defaultDirtyPredicate = (action, oldData, newData) => true
