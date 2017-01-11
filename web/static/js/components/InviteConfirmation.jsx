@@ -24,15 +24,19 @@ class InviteConfirmation extends Component {
       return <div>Loading...</div>
     }
 
-    const inviteText = <div> { invite.inviter_email + ' has invited to collaborate as ' + invite.role + ' on ' + invite.project_name } </div>
+    const inviteText = <div> {`${invite.inviter_email} has invited to collaborate as ${invite.role} on `}<span>{invite.project_name}</span></div>
     const roleAction = invite.role == 'editor' ? 'manage' : 'see'
     const roleDescription = <div> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </div>
 
     return (
-      <div>
-        <div> { inviteText } </div>
-        <div> { roleDescription } </div>
-        <a onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
+      <div className='row accept-invitation'>
+        <div className='col s4 offset-s4 center'>
+          <h1><i className='material-icons grey-text xxlarge'>folder_shared</i></h1>
+          <p> { inviteText } </p>
+          <div className='divider'></div>
+          <p className='small-text'> { roleDescription } </p>
+          <a className='btn-medium blue' onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
+        </div>
       </div>
     )
   }
