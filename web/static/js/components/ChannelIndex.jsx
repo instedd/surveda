@@ -133,6 +133,10 @@ class ChannelIndex extends Component {
         ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
         : (
           <CardTable title={tableTitle} footer={footer} highlight>
+            <colgroup>
+              <col width='70%' />
+              <col width='30%' />
+            </colgroup>
             <thead>
               <tr>
                 <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
@@ -177,8 +181,8 @@ ChannelIndex.propTypes = {
 
 const mapStateToProps = (state) => {
   let channels = orderedItems(state.channels.items, state.channels.order)
-  const sortBy = state.questionnaires.sortBy
-  const sortAsc = state.questionnaires.sortAsc
+  const sortBy = state.channels.sortBy
+  const sortAsc = state.channels.sortAsc
 
   const totalCount = channels ? channels.length : 0
   const pageIndex = state.channels.page.index
