@@ -9,7 +9,8 @@ class SurveyTitle extends Component {
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.any.isRequired,
     surveyId: PropTypes.any.isRequired,
-    survey: PropTypes.object
+    survey: PropTypes.object,
+    readOnly: PropTypes.boolean
   }
 
   handleSubmit(newName) {
@@ -20,10 +21,10 @@ class SurveyTitle extends Component {
   }
 
   render() {
-    const { survey } = this.props
+    const { survey, readOnly } = this.props
     if (survey == null) return null
 
-    return <EditableTitleLabel title={survey.name} entityName='survey' onSubmit={(value) => { this.handleSubmit(value) }} />
+    return <EditableTitleLabel title={survey.name} entityName='survey' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
   }
 }
 
@@ -31,7 +32,8 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
-    survey: state.survey.data
+    survey: state.survey.data,
+    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
   }
 }
 
