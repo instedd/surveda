@@ -57,9 +57,10 @@ class LanguageSelectionStepEditor extends Component {
 
     return (
       <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
           <StepPrompts
             step={step}
+            readOnly={readOnly}
             stepIndex={stepIndex}
             errors={errors} />
           <li className='collection-item' key='editor'>
@@ -77,8 +78,7 @@ class LanguageSelectionStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({

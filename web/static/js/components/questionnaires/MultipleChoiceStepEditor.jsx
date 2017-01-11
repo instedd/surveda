@@ -62,12 +62,13 @@ class MultipleChoiceStepEditor extends Component {
 
     return (
       <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle}
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle}
           icon={
-            <StepTypeSelector stepType={step.type} stepId={step.id} />
+            <StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />
           } >
           <StepPrompts
             step={step}
+            readOnly={readOnly}
             stepIndex={stepIndex}
             errors={errors} />
           <li className='collection-item' key='editor'>
@@ -93,8 +94,7 @@ class MultipleChoiceStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({

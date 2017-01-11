@@ -10,10 +10,11 @@ type Props = {
   steps: Step[],
   current: ?string,
   currentStepIsNew: boolean,
+  readOnly: boolean,
   onSelectStep: Function,
   onDeselectStep: Function,
   onDeleteStep: Function
-}
+};
 
 const dummyDropTarget = (steps) => {
   if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
@@ -27,7 +28,7 @@ const dummyDropTarget = (steps) => {
   return <div />
 }
 
-const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep) => {
+const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep, readOnly) => {
   if (current == null) {
     // All collapsed
     return <StepsList steps={steps} onClick={stepId => onSelectStep(stepId)} />
@@ -44,6 +45,7 @@ const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDe
         <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} />
         <StepEditor
           step={currentStep}
+          readOnly={readOnly}
           stepIndex={itemIndex}
           isNew={currentStepIsNew}
           onCollapse={() => onDeselectStep()}
@@ -60,12 +62,12 @@ class QuestionnaireSteps extends Component {
   props: Props
 
   render() {
-    const { steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+    const { steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep, readOnly } = this.props
 
     return (
       <div>
         {dummyDropTarget(steps)}
-        {questionnaireSteps(steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep)}
+        {questionnaireSteps(steps, current, currentStepIsNew, onSelectStep, onDeselectStep, onDeleteStep, readOnly)}
       </div>
     )
   }

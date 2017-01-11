@@ -178,7 +178,7 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire, project } = this.props
+    const { questionnaire, project, readOnly } = this.props
 
     let csvButtons = null
 
@@ -186,7 +186,7 @@ class QuestionnaireEditor extends Component {
       return <div>Loading...</div>
     }
 
-    if (!project.readOnly) {
+    if (!readOnly) {
       csvButtons = <div>
         <div className='row'>
           <div className='col s12'>
@@ -214,7 +214,7 @@ class QuestionnaireEditor extends Component {
     return (
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
-          <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} />
+          <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
           {csvButtons}
           <div className='row'>
             <div className='col s12'>
@@ -227,7 +227,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>SMS</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={project.readOnly} />
+                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -239,7 +239,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Phone call</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={project.readOnly} />
+                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -251,10 +251,11 @@ class QuestionnaireEditor extends Component {
             steps={questionnaire.steps}
             current={this.state.currentStep}
             currentStepIsNew={this.state.currentStepIsNew}
+            readOnly={readOnly}
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
             onDeleteStep={() => this.deleteStep()} />
-          {project.readOnly ? null
+          {readOnly ? null
           : <div className='row'>
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
@@ -262,10 +263,10 @@ class QuestionnaireEditor extends Component {
           </div>
           }
           <div className='row'>
-            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' icon='pie_chart' />
+            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' readOnly={readOnly} icon='pie_chart' />
           </div>
           <div className='row'>
-            <QuestionnaireMsg title='Error' messageKey='errorMsg' icon='warning' />
+            <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
         </div>
       </div>
@@ -278,6 +279,7 @@ QuestionnaireEditor.propTypes = {
   questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
   project: PropTypes.object,
+  readOnly: PropTypes.bool,
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object
@@ -286,6 +288,7 @@ QuestionnaireEditor.propTypes = {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data
 })
