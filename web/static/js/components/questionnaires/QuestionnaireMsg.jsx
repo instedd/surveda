@@ -295,7 +295,7 @@ class QuestionnaireMsg extends Component {
       }
 
       return (
-        <Card>
+        <Card className='z-depth-0'>
           <ul className='collection collection-card dark' id={quizState.cardId} >
             <li className='collection-item header'>
               <div className='row'>

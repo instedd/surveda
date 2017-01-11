@@ -750,7 +750,7 @@ i.survey-status {
 }
 .wizard-content {
   > div {
-    min-height: calc(100vh - 148px);
+    min-height: 110vh;
   }
 }
 
@@ -830,14 +830,12 @@ i.survey-status {
     }
   }
   &.dark {
+    @extend .z-depth-0;
     border: none;
     li .card {
       border-radius: 3px;
-      @extend .grey;
+      @extend .grey, .lighten-2;
       .card-content.closed-step {
-        a, i {
-          @extend .white-text;
-        }
         .text-error {
           @extend .text-error;
         }
@@ -999,11 +997,10 @@ i.survey-status {
   border: none;
   border-radius: 3px;
   .collection-item {
-    @extend .grey;
+    @extend .grey, .lighten-2;
     &.header {
       border-radius: 3px 3px 0 0;
       a.page-title {
-        @extend .white-text;
         line-height: 1.5;
         margin-left: 0;
       }
@@ -1011,12 +1008,8 @@ i.survey-status {
         line-height: 1.4;
       }
     }
-    label, * {
-      @extend .white-text;
-    }
     input[type='text'] {
-      @extend .white-text;
-      border-bottom-color: color('grey', 'lighten-1')!important;
+      border-bottom-color: color('grey', 'darken-1')!important;
       box-shadow: none !important;
     }
   }
@@ -1024,6 +1017,9 @@ i.survey-status {
     ul i.material-icons {
       @extend .black-text;
     }
+  }
+  .dropfile {
+    border-color: color('grey', 'base');
   }
 }
 
