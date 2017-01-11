@@ -10,7 +10,7 @@ class SurveyTitle extends Component {
     projectId: PropTypes.any.isRequired,
     surveyId: PropTypes.any.isRequired,
     survey: PropTypes.object,
-    readOnly: PropTypes.boolean
+    readOnly: PropTypes.bool
   }
 
   handleSubmit(newName) {

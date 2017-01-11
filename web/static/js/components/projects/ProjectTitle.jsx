@@ -11,7 +11,7 @@ class ProjectTitle extends Component {
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
-    readOnly: PropTypes.boolean
+    readOnly: PropTypes.bool
   }
 
   componentWillMount() {

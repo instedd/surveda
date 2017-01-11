@@ -18,6 +18,7 @@ type Props = {
   messageKey: string,
   title: string,
   icon: string,
+  readOnly: boolean,
   activeLanguage: string,
   questionnaireMsg: string,
   errors: Errors,
@@ -249,7 +250,7 @@ class QuestionnaireMsg extends Component {
   }
 
   expanded() {
-    const { questionnaire, errors, messageKey, title, icon } = this.props
+    const { questionnaire, errors, messageKey, title, icon, readOnly } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -264,6 +265,7 @@ class QuestionnaireMsg extends Component {
         smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`}
           inputErrors={smsInputErrors}
           value={quizState.stepPromptSms}
+          readOnly={readOnly}
           onChange={e => this.promptSmsChange(e)}
           onBlur={e => this.promptSmsSubmit(e)}
           autocomplete
@@ -281,6 +283,7 @@ class QuestionnaireMsg extends Component {
           inputErrors={ivrInputErrors}
           value={quizState.stepPromptIvrText}
           onChange={e => this.promptIvrChange(e)}
+          readOnly={readOnly}
           onBlur={e => this.promptIvrSubmit(e)}
           changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
           ivrPrompt={quizState.stepPromptIvr}
@@ -338,6 +341,7 @@ const mapStateToProps = (state, ownProps: Props) => {
   const quiz = (state.questionnaire: DataStore<Questionnaire>)
   return {
     questionnaire: quiz.data,
+    readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
     errors: quiz.data ? quiz.errorsByLang[quiz.data.activeLanguage] : {},
     hasErrors: quiz.data ? msgHasErrors(quiz, ownProps.messageKey) : false
   }
