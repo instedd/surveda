@@ -78,6 +78,6 @@ config :appsignal, :config,
   env: Mix.env || :dev,
   revision: version
 
-if File.exists?("#{__DIR__}/local.exs") do
+if File.exists?("#{__DIR__}/local.exs") && Mix.env != :test do
   import_config "#{__DIR__}/local.exs"
 end
