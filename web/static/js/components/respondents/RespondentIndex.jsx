@@ -119,7 +119,7 @@ class RespondentIndex extends Component {
             <i className='material-icons'>get_app</i>
           </a>
         </Tooltip>
-        <CardTable title={title} footer={footer}>
+        <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
               <th>Phone number</th>
