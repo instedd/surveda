@@ -11,7 +11,7 @@ defmodule Ask.OAuthClientController do
     render conn, "index.json", authorizations: auths
   end
 
-  def delete(conn, %{"id" => provider}) do
+  def delete(conn, params = %{"id" => provider}) do
     user = get_current_user(conn)
 
     user
@@ -19,11 +19,17 @@ defmodule Ask.OAuthClientController do
     |> Repo.get_by!(provider: provider)
     |> Repo.delete!
 
-    user
-    |> assoc(:channels)
-    |> where([c], c.provider == ^provider)
-    |> Repo.all
-    |> Enum.each(&Repo.delete(&1))
+    keep_channels = params
+    |> Map.get("keep_channels", false)
+    keep_channels = keep_channels == true || keep_channels == "true"
+
+    unless keep_channels do
+      user
+      |> assoc(:channels)
+      |> where([c], c.provider == ^provider)
+      |> Repo.all
+      |> Enum.each(&Repo.delete(&1))
+    end
 
     send_resp(conn, :no_content, "")
   end

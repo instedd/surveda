@@ -3,11 +3,16 @@ import { Modal } from '.'
 
 export class ConfirmationModal extends Component {
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId, style, showCancel = false } = this.props
+    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, showCancel = false } = this.props
 
     let cancelLink = null
     if (showCancel) {
       cancelLink = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
+    }
+
+    let noLink = null
+    if (onNo) {
+      noLink = <a href='#!' onClick={onNo} className=' modal-action modal-close waves-effect waves-green btn-flat'>No</a>
     }
 
     return (
@@ -18,8 +23,9 @@ export class ConfirmationModal extends Component {
             <p>{modalText}</p>
           </div>
           <div className='modal-footer'>
-            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
             {cancelLink}
+            {noLink}
+            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
           </div>
         </Modal>
       </div>
@@ -35,6 +41,7 @@ ConfirmationModal.propTypes = {
   modalText: PropTypes.string.isRequired,
   confirmationText: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
+  onNo: PropTypes.func,
   modalId: PropTypes.string.isRequired,
   style: PropTypes.object
 }
