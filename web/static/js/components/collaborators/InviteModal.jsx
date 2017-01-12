@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Modal } from '../ui'
+import { Modal, InputWithLabel } from '../ui'
 import { Input } from 'react-materialize'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
@@ -69,8 +69,9 @@ export class InviteModal extends Component {
             <div className='row'>
               <div className='col s8'>
                 <div className='input-field'>
-                  <input id='collaborator_mail' type='text' onChange={e => { this.emailChanged(e) }} value={guest.email} />
-                  <label htmlFor=''>Enter collaborator's email</label>
+                  <InputWithLabel id='collaborator_mail' value={guest.email} label={`Enter collaborator's email`} >
+                    <input type='text' onChange={e => { this.emailChanged(e) }} />
+                  </InputWithLabel>
                 </div>
               </div>
               <div className='col s1' />
