@@ -80,7 +80,7 @@ export class InviteModal extends Component {
                 <option value=''>
                 Select a role
                 </option>
-                { ['editor'].map((role) =>
+                { ['editor', 'reader'].map((role) =>
                   <option key={role} value={role}>
                     {startCase(role)}
                   </option>
