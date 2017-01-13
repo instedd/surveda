@@ -15,7 +15,8 @@ class CollaboratorIndex extends Component {
     }
   }
 
-  inviteCollaborator() {
+  inviteCollaborator(e) {
+    e.preventDefault()
     $('#addCollaborator').modal('open')
   }
 
@@ -31,7 +32,7 @@ class CollaboratorIndex extends Component {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text='Invite collaborator' onClick={() => this.inviteCollaborator()} />
+        <AddButton text='Invite collaborator' onClick={(e) => this.inviteCollaborator(e)} />
       )
     }
 
