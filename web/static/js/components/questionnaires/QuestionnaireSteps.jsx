@@ -10,11 +10,12 @@ type Props = {
   steps: Step[],
   current: ?string,
   currentStepIsNew: boolean,
+  readOnly: boolean,
   onSelectStep: Function,
   onDeselectStep: Function,
   onDeleteStep: Function,
   readOnly: boolean
-}
+};
 
 const dummyDropTarget = (steps, readOnly) => {
   if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
@@ -45,6 +46,7 @@ const questionnaireSteps = (steps, current, currentStepIsNew, onSelectStep, onDe
         <StepsList steps={stepsBefore} onClick={stepId => onSelectStep(stepId)} readOnly={readOnly} />
         <StepEditor
           step={currentStep}
+          readOnly={readOnly}
           stepIndex={itemIndex}
           isNew={currentStepIsNew}
           onCollapse={() => onDeselectStep()}

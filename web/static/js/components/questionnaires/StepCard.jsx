@@ -54,8 +54,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-const mapStateToProps = (state, ownProps) => ({
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(StepCard)
+export default connect(null, mapDispatchToProps)(StepCard)

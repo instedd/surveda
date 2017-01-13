@@ -341,7 +341,6 @@ const mapStateToProps = (state, ownProps: Props) => {
   const quiz = (state.questionnaire: DataStore<Questionnaire>)
   return {
     questionnaire: quiz.data,
-    readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
     errors: quiz.data ? quiz.errorsByLang[quiz.data.activeLanguage] : {},
     hasErrors: quiz.data ? msgHasErrors(quiz, ownProps.messageKey) : false
   }

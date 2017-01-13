@@ -62,9 +62,10 @@ class NumericStepEditor extends Component {
 
     return (
       <DraggableStep step={step} readOnly={readOnly}>
-        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} readOnly={readOnly} stepId={step.id} />} >
           <StepPrompts
             step={step}
+            readOnly={readOnly}
             stepIndex={stepIndex}
             errors={errors} />
           <li className='collection-item' key='editor'>
@@ -88,8 +89,7 @@ class NumericStepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({

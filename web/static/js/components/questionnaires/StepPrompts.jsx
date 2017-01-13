@@ -191,8 +191,7 @@ class StepPrompts extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data,
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({
