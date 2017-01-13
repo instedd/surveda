@@ -223,6 +223,10 @@ defmodule Ask.QuestionnaireController do
     end)
   end
 
+  defp collect_prompt_audio_ids(_, audio_ids) do
+    audio_ids
+  end
+
   defp collect_lang_prompt_audio_ids(%{"ivr" => %{"audio_id" => audio_id}}, audio_ids) do
     [audio_id | audio_ids]
   end
