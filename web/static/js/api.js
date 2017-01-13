@@ -230,8 +230,8 @@ export const fetchAuthorizations = () => {
   return apiFetchJSONWithCallback(`authorizations`, null, {}, (json, _) => () => json)
 }
 
-export const deleteAuthorization = (provider) => {
-  return apiDelete(`authorizations/${provider}`)
+export const deleteAuthorization = (provider, keepChannels = false) => {
+  return apiDelete(`authorizations/${provider}?keep_channels=${keepChannels}`)
 }
 
 export const synchronizeChannels = () => {

@@ -71,6 +71,20 @@ export const toggleAuthorization = (provider) => (dispatch, getState) => {
   }
 }
 
+export const removeAuthorization = (provider) => (dispatch, getState) => {
+  const state = getState().authorizations
+
+  if (state.fetching || state.items == null) {
+    return
+  }
+
+  dispatch(deleteAuthorization(provider))
+  api.deleteAuthorization(provider, true)
+    .catch((e) => {
+      dispatch(addAuthorization(provider))
+    })
+}
+
 export const beginSynchronization = () => ({
   type: BEGIN_SYNCHRONIZATION
 })

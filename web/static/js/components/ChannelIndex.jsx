@@ -6,7 +6,7 @@ import { orderedItems } from '../reducers/collection'
 import * as actions from '../actions/channels'
 import range from 'lodash/range'
 import * as authActions from '../actions/authorizations'
-import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal } from './ui'
+import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal, ConfirmationModal } from './ui'
 import { Preloader } from 'react-materialize'
 
 class ChannelIndex extends Component {
@@ -20,7 +20,19 @@ class ChannelIndex extends Component {
     $('#add-channel').modal('open')
   }
 
-  toggleProvider(provider) {
+  toggleProvider(provider, checked) {
+    if (checked) {
+      $(`#${provider}Modal`).modal('open')
+    } else {
+      this.props.authActions.toggleAuthorization(provider)
+    }
+  }
+
+  turnOffProvider(provider) {
+    this.props.authActions.removeAuthorization(provider)
+  }
+
+  deleteProvider(provider) {
     this.props.authActions.toggleAuthorization(provider)
   }
 
@@ -75,10 +87,15 @@ class ChannelIndex extends Component {
       const checked = !!(authorizations.items && authorizations.items.includes(provider))
       return <div className='switch'>
         <label>
-          <input type='checkbox' disabled={disabled} checked={checked} onChange={() => this.toggleProvider(provider)} />
+          <input type='checkbox' disabled={disabled} checked={checked} onChange={() => this.toggleProvider(provider, checked)} />
           <span className='lever' />
         </label>
       </div>
+    }
+
+    const providerModal = (provider) => {
+      const name = `${provider[0].toUpperCase()}${provider.slice(1)}`
+      return <ConfirmationModal modalId={`${provider}Modal`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider)} style={{maxWidth: '600px'}} showCancel onNo={() => this.turnOffProvider(provider)} />
     }
 
     let syncButton = null
@@ -99,6 +116,9 @@ class ChannelIndex extends Component {
     return (
       <div>
         <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
+        {providerModal('nuntium')}
+        {providerModal('verboice')}
+
         <Modal card id='add-channel'>
           <div className='modal-content'>
             <div className='card-title header'>

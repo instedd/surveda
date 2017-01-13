@@ -53,6 +53,15 @@ defmodule Ask.OAuthHelperControllerTest do
     refute Ask.Channel |> Repo.get(channel.id)
   end
 
+  test "doesn't delete channels when an authorization is deleted with keep_channels = true", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "provider")
+    channel = insert(:channel, user: user, provider: "provider")
+
+    delete conn, o_auth_client_path(conn, :delete, "provider"), keep_channels: "true"
+
+    Ask.Channel |> Repo.get!(channel.id)
+  end
+
   test "delete channel even if it's being used by a survey", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "provider")
     channel = insert(:channel, user: user, provider: "provider")
