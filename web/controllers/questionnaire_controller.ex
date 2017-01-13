@@ -150,6 +150,47 @@ defmodule Ask.QuestionnaireController do
     |> send_resp(200, data)
   end
 
+  def import_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id, "file" => file}) do
+    project = Project
+    |> Repo.get!(project_id)
+
+    questionnaire = project
+    |> authorize(conn)
+    |> assoc(:questionnaires)
+    |> Repo.get!(id)
+
+    {:ok, files} = :zip.unzip(to_charlist(file.path), [:memory])
+
+    files = files
+    |> Enum.map(fn {filename, data} -> {to_string(filename), data} end)
+    |> Enum.into(%{})
+
+    json = files |> Map.get("manifest.json")
+    {:ok, manifest} = Poison.decode(json)
+
+    audio_files = manifest |> Map.get("audio_files")
+    audio_files |> Enum.each(fn %{"uuid" => uuid, "filename" => filename, "source" => source, "duration" => duration} ->
+      # Only create audio if it doesn't exist already
+      unless Audio |> Repo.get_by(uuid: uuid) do
+        data = files |> Map.get("audios/#{uuid}")
+        %Audio{uuid: uuid, data: data, filename: filename, source: source, duration: duration} |> Repo.insert!
+      end
+    end)
+
+    questionnaire = questionnaire
+    |> Questionnaire.changeset(%{
+      name: Map.get(manifest, "name"),
+      modes: Map.get(manifest, "modes"),
+      steps: Map.get(manifest, "steps"),
+      quota_completed_msg: Map.get(manifest, "quota_completed_msg"),
+      languages: Map.get(manifest, "languages"),
+      default_language: Map.get(manifest, "default_language"),
+    })
+    |> Repo.update!
+
+    render(conn, "show.json", questionnaire: questionnaire)
+  end
+
   defp validate_params(conn, _params) do
     questionnaire = conn.params["questionnaire"]
 

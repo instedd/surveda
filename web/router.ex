@@ -41,6 +41,7 @@ defmodule Ask.Router do
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
+          post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
         end
       end
       resources "/channels", ChannelController, except: [:new, :edit]

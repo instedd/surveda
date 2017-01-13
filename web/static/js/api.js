@@ -237,3 +237,14 @@ export const deleteAuthorization = (provider) => {
 export const synchronizeChannels = () => {
   return apiFetch(`authorizations/synchronize`)
 }
+
+export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
+  const formData = new FormData()
+  formData.append('file', files[0])
+
+  return apiFetchJSON(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
+    questionnaireSchema, {
+      method: 'POST',
+      body: formData
+    })
+}

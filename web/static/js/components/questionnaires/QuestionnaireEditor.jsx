@@ -11,11 +11,12 @@ import LanguagesList from './LanguagesList'
 import QuotaCompletedMsg from './QuotaCompletedMsg'
 import csvString from 'csv-string'
 import * as routes from '../../routes'
+import * as api from '../../api'
 
 type State = {
   addingStep: boolean,
   currentStep: ?Step
-}
+};
 
 class QuestionnaireEditor extends Component {
   state: State
@@ -162,6 +163,27 @@ class QuestionnaireEditor extends Component {
     window.location = routes.exportQuestionnaireZip(projectId, questionnaireId)
   }
 
+  openImportZipDialog(e) {
+    e.preventDefault()
+
+    $('#questionnaire_import_zip').trigger('click')
+  }
+
+  importZip(e) {
+    e.preventDefault()
+
+    let files = e.target.files
+    if (files.length != 1) return
+
+    const { projectId, questionnaireId } = this.props
+
+    api.importQuestionnaireZip(projectId, questionnaireId, files)
+    .then(response => {
+      const questionnaire = response.entities.questionnaires[response.result]
+      this.props.questionnaireActions.receive(questionnaire)
+    })
+  }
+
   removeLanguage(lang) {
     const { questionnaire } = this.props
 
@@ -213,6 +235,15 @@ class QuestionnaireEditor extends Component {
               <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
                 <i className='material-icons'>file_download</i>
                 <span>Export questionnaire</span>
+              </a>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
+              <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
+                <i className='material-icons'>file_upload</i>
+                <span>Import questionnaire</span>
               </a>
             </div>
           </div>
