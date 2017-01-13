@@ -1,9 +1,7 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.Questionnaire
-  alias Ask.Project
-  alias Ask.JsonSchema
+  alias Ask.{Questionnaire, Project, JsonSchema, Audio}
 
   plug :validate_params when action in [:create, :update]
 
@@ -95,6 +93,63 @@ defmodule Ask.QuestionnaireController do
     send_resp(conn, :no_content, "")
   end
 
+  def export_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
+    project = Project
+    |> Repo.get!(project_id)
+
+    questionnaire = project
+    |> authorize(conn)
+    |> assoc(:questionnaires)
+    |> Repo.get!(id)
+
+    audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
+    audio_ids = collect_prompt_audio_ids(questionnaire.quota_completed_msg, audio_ids)
+    # TODO: uncomment once we merge to master
+    # audio_ids = collect_prompt_audio_ids(questionnaire.error_msg, audio_ids)
+
+    audios =
+      if length(audio_ids) == 0 do
+        []
+      else
+        (from a in Audio, where: a.uuid in ^audio_ids) |> Repo.all
+      end
+
+    audio_files = audios |> Enum.map(fn audio ->
+      %{
+        "uuid" => audio.uuid,
+        "filename" => audio.filename,
+        "source" => audio.source,
+        "duration" => audio.duration,
+      }
+    end)
+    files = audios |> Enum.map(fn audio ->
+      {
+        to_charlist("audios/#{audio.uuid}"),
+        audio.data,
+      }
+    end)
+
+    manifest = %{
+      name: questionnaire.name,
+      modes: questionnaire.modes,
+      steps: questionnaire.steps,
+      quota_completed_msg: questionnaire.quota_completed_msg,
+      languages: questionnaire.languages,
+      default_language: questionnaire.default_language,
+      audio_files: audio_files,
+    }
+
+    {:ok, json} = Poison.encode(manifest)
+
+    files = [{'manifest.json', json}, {'audios/', ""} | files]
+    {:ok, {'mem', data}} = :zip.create('mem', files, [:memory])
+
+    conn
+    |> put_resp_content_type("application/octet-stream")
+    |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}.zip")
+    |> send_resp(200, data)
+  end
+
   defp validate_params(conn, _params) do
     questionnaire = conn.params["questionnaire"]
 
@@ -105,5 +160,33 @@ defmodule Ask.QuestionnaireController do
         json_errors = errors |> JsonSchema.errors_to_json
         conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
     end
+  end
+
+  defp collect_steps_audio_ids(steps, audio_ids) do
+    steps |> Enum.reduce(audio_ids, fn(step, audio_ids) ->
+      collect_step_audio_ids(step, audio_ids)
+    end)
+  end
+
+  defp collect_step_audio_ids(%{"prompt" => prompt}, audio_ids) do
+    collect_prompt_audio_ids(prompt, audio_ids)
+  end
+
+  defp collect_step_audio_ids(_, audio_ids) do
+    audio_ids
+  end
+
+  defp collect_prompt_audio_ids(prompt = %{}, audio_ids) do
+    prompt |> Enum.reduce(audio_ids, fn {_lang, lang_prompt}, audio_ids ->
+      collect_lang_prompt_audio_ids(lang_prompt, audio_ids)
+    end)
+  end
+
+  defp collect_lang_prompt_audio_ids(%{"ivr" => %{"audio_id" => audio_id}}, audio_ids) do
+    [audio_id | audio_ids]
+  end
+
+  defp collect_lang_prompt_audio_ids(_, audio_ids) do
+    audio_ids
   end
 end

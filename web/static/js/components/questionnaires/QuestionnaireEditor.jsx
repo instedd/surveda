@@ -10,6 +10,7 @@ import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuotaCompletedMsg from './QuotaCompletedMsg'
 import csvString from 'csv-string'
+import * as routes from '../../routes'
 
 type State = {
   addingStep: boolean,
@@ -154,6 +155,13 @@ class QuestionnaireEditor extends Component {
     e.target.value = null
   }
 
+  exportZip(e) {
+    e.preventDefault()
+
+    const { projectId, questionnaireId } = this.props
+    window.location = routes.exportQuestionnaireZip(projectId, questionnaireId)
+  }
+
   removeLanguage(lang) {
     const { questionnaire } = this.props
 
@@ -197,6 +205,14 @@ class QuestionnaireEditor extends Component {
               <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
                 <i className='material-icons'>file_upload</i>
                 <span>Upload contents as CSV</span>
+              </a>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
+                <i className='material-icons'>file_download</i>
+                <span>Export questionnaire</span>
               </a>
             </div>
           </div>
