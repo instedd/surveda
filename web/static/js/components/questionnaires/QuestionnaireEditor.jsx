@@ -181,7 +181,15 @@ class QuestionnaireEditor extends Component {
     .then(response => {
       const questionnaire = response.entities.questionnaires[response.result]
       this.props.questionnaireActions.receive(questionnaire)
+      this.setState({
+        ...this.state,
+        currentStep: null
+      })
     })
+
+    // Make sure to clear the input's value so a same file
+    // can be uploaded multiple times
+    e.target.value = null
   }
 
   removeLanguage(lang) {
