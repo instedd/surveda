@@ -1,18 +1,23 @@
 import React, { Component, PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../actions/invites'
 import * as routes from '../routes'
 
 class InviteConfirmation extends Component {
   componentDidMount() {
+    const { dispatch, router } = this.props
     const code = this.props.location.query.code
-    this.props.actions.fetchInvite(code)
+    dispatch(actions.fetchInvite(code)).then((invite) => {
+      if (invite.error) {
+        router.push(routes.project(invite.project_id))
+      }
+    })
   }
 
   confirmInvitation() {
     const code = this.props.location.query.code
-    Promise.resolve(this.props.actions.confirm(code)).then(() => {
+    const { dispatch } = this.props
+    Promise.resolve(dispatch(actions.confirm(code))).then(() => {
       window.location = routes.projects
     })
   }
@@ -44,16 +49,14 @@ class InviteConfirmation extends Component {
 
 InviteConfirmation.propTypes = {
   location: PropTypes.object.isRequired,
-  actions: PropTypes.object.isRequired,
-  invite: PropTypes.object
+  router: PropTypes.object,
+  invite: PropTypes.object,
+  dispatch: PropTypes.any
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+const mapStateToProps = (state, ownProps) => ({
+  invite: state.invite.data,
+  project: state.project.data
 })
 
-const mapStateToProps = (state) => ({
-  invite: state.invite.data
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(InviteConfirmation)
+export default connect(mapStateToProps)(InviteConfirmation)

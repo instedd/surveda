@@ -31,10 +31,11 @@ defmodule Ask.InviteView do
     }
   end
 
-  def render("error.json", %{error: error}) do
+  def render("error.json", %{error: error, project_id: project_id}) do
     %{data:
       %{
-        error: error
+        error: error,
+        project_id: project_id
       }
     }
   end

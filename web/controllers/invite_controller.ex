@@ -33,7 +33,14 @@ defmodule Ask.InviteController do
   def show(conn, %{"code" => code}) do
     invite = Invite |> Repo.get_by(code: code)
     project = Project |> Repo.get(invite.project_id)
-    render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
+    user = conn |> current_user
+    project_membership = ProjectMembership |> Repo.get_by(user_id: user.id, project_id: project.id)
+
+    if project_membership do
+      render(conn, "error.json", %{error: "The user is already a member", project_id: project.id})
+    else
+      render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
+    end
   end
 
   def invite_mail(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do

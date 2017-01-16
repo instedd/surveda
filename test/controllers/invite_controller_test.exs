@@ -131,6 +131,31 @@ defmodule Ask.InviteControllerTest do
   end
 
   test "shows invite", %{conn: conn, user: user} do
+    user2 = insert(:user)
+    project = create_project_for_user(user2)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => "user@instedd.org",
+      "inviter_email" => user2.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    conn = get conn, invite_show_path(conn, :show, %{"code" => code})
+
+    assert json_response(conn, 200) == %{
+    "data" => %{
+      "project_name" => project.name,
+      "role" => level,
+      "inviter_email" => user2.email
+      }
+    }
+  end
+
+  test "returns error when the user is already a member", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
@@ -147,9 +172,8 @@ defmodule Ask.InviteControllerTest do
 
     assert json_response(conn, 200) == %{
     "data" => %{
-      "project_name" => project.name,
-      "role" => level,
-      "inviter_email" => user.email
+      "error" => "The user is already a member",
+      "project_id" => project.id
       }
     }
   end
