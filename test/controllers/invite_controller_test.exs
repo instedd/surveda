@@ -20,7 +20,7 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
-    email = "user@instedd.com.ar"
+    email = "user@instedd.org"
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     invite = Invite |> last |> Repo.one
     assert(invite.level == level && invite.code == code && invite.project_id == project.id && invite.email == email)
@@ -30,7 +30,7 @@ defmodule Ask.InviteControllerTest do
     project = insert(:project)
     code = "ABC1234"
     level = "reader"
-    email = "user@instedd.com.ar"
+    email = "user@instedd.org"
     assert_error_sent :forbidden, fn ->
       get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     end
@@ -40,7 +40,7 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user, level: "reader")
     code = "ABC1234"
     level = "reader"
-    email = "user@instedd.com.ar"
+    email = "user@instedd.org"
     assert_error_sent :forbidden, fn ->
       get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     end
@@ -50,7 +50,7 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
-    email = "user@instedd.com.ar"
+    email = "user@instedd.org"
     conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     assert json_response(conn, 200) == %{
       "data" => %{
@@ -130,7 +130,7 @@ defmodule Ask.InviteControllerTest do
     }
   end
 
-  test "shows invite", %{conn: conn, user: user} do
+  test "shows invite", %{conn: conn} do
     user2 = insert(:user)
     project = create_project_for_user(user2)
     code = "ABC1234"
