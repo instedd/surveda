@@ -78,8 +78,8 @@ class SurveyForm extends Component {
                 </div>
               </li>
               <CollectionItem path='#questionnaire' icon='assignment' text='Select a questionnaire' completed={questionnaireStepCompleted} />
-              <CollectionItem path='#respondents' icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
               <CollectionItem path='#channels' icon='settings_input_antenna' text='Select mode and channels' completed={channelStepCompleted} />
+              <CollectionItem path='#respondents' icon='group' text='Upload your respondents list' completed={respondentsStepCompleted} />
               <CollectionItem path='#schedule' icon='today' text='Setup a schedule' completed={scheduleStepCompleted} />
               <CollectionItem path='#cutoff' icon='remove_circle' text='Setup cutoff rules' completed={cutoffStepCompleted} />
               {/* <CollectionItem path={`#`} icon='attach_money' text='Assign incentives' completed={cutoffStepCompleted} /> */}
@@ -94,13 +94,13 @@ class SurveyForm extends Component {
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
-          <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} readOnly={readOnly} />
-            <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
-          </div>
           <div id='channels' className='row scrollspy'>
             <SurveyWizardChannelsStep channels={channels} survey={survey} readOnly={readOnly} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
+          </div>
+          <div id='respondents' className='row scrollspy'>
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} readOnly={readOnly} />
+            <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>
             <SurveyWizardScheduleStep survey={survey} readOnly={readOnly} />
