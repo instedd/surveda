@@ -251,10 +251,8 @@ class QuestionnaireEditor extends Component {
             steps={questionnaire.steps}
             current={this.state.currentStep}
             currentStepIsNew={this.state.currentStepIsNew}
-            readOnly={readOnly}
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
-            onDeleteStep={() => this.deleteStep()} />
             onDeleteStep={() => this.deleteStep()}
             readOnly={readOnly}
             />
