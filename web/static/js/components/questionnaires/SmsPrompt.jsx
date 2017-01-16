@@ -1,9 +1,12 @@
 import React, { Component, PropTypes } from 'react'
 import { InputWithLabel, Autocomplete } from '../ui'
 import classNames from 'classnames/bind'
+import { splitSmsText, joinSmsPieces } from '../../step'
 
 class SmsPrompt extends Component {
   onBlur(e) {
+    e.preventDefault()
+
     let autocomplete = this.refs.autocomplete
     if (autocomplete) {
       if (autocomplete.clickingAutocomplete) return
@@ -11,15 +14,117 @@ class SmsPrompt extends Component {
     }
 
     const { onBlur } = this.props
-    onBlur(e)
+    onBlur(this.getText())
   }
 
-  render() {
-    const { id, value, inputErrors, onChange, readOnly, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+  onChange(e) {
+    e.preventDefault()
+
+    const { onChange } = this.props
+    onChange(this.getText())
+  }
+
+  checkKeyUp(e, index) {
+    if (e.shiftKey && e.key == 'Enter') {
+      e.preventDefault()
+      this.splitPiece(e, index)
+    }
+  }
+
+  splitPiece(e, index) {
+    let caretIndex = e.target.selectionStart
+    let value = e.target.value || ''
+    let before = value.slice(0, caretIndex)
+    let after = value.slice(caretIndex)
+
+    let pieces = this.allInputs.map(x => (x.value || ''))
+    pieces.splice(index, 1, before, after)
+
+    const text = joinSmsPieces(pieces)
+
+    const { onChange, onBlur } = this.props
+    onChange(text)
+    onBlur(text)
+  }
+
+  joinPieceWithPreviousOne(e, index) {
+    e.preventDefault()
+
+    let pieces = this.allInputs.slice().map(x => x.value || '')
+    pieces[index - 1] = `${pieces[index - 1].trim()} ${pieces[index].trim()}`
+    pieces.splice(index, 1)
+
+    const text = joinSmsPieces(pieces)
+
+    const { onChange, onBlur } = this.props
+    onChange(text)
+    onBlur(text)
+  }
+
+  getText() {
+    return joinSmsPieces(this.allInputs.map(x => (x.value || '')))
+  }
+
+  renderSmsInput(total, index, value, autocompleteComponent) {
+    const { id, inputErrors, readOnly } = this.props
 
     const maybeInvalidClass = classNames({
       'validate invalid': inputErrors != null && inputErrors.length > 0
     })
+
+    const label = total == 1 ? 'SMS message' : `SMS message (part ${index + 1})`
+
+    const inputComponent = (
+      <InputWithLabel id={`${id}-${index}`} value={value} readOnly={readOnly} label={label} errors={inputErrors} >
+        <input
+          type='text'
+          is length='140'
+          onKeyUp={e => this.checkKeyUp(e, index)}
+          onChange={e => this.onChange(e)}
+          onBlur={e => this.onBlur(e)}
+          ref={ref => {
+            if (ref) {
+              this.allInputs.push(ref)
+            }
+            if (index == 0) {
+              this.smsInput = ref
+            }
+            $(ref).characterCounter()
+            $(ref).addClass(maybeInvalidClass)
+          }}
+          class={maybeInvalidClass}
+        />
+      </InputWithLabel>
+    )
+
+    if (total <= 1 || index == 0) {
+      return (
+        <div className='row' key={index}>
+          <div className='col input-field s12'>
+            {inputComponent}
+            {index == 0 ? autocompleteComponent : null}
+          </div>
+        </div>
+      )
+    } else {
+      return (
+        <div className='row' key={index}>
+          <div className='col input-field s11'>
+            {inputComponent}
+            {index == 0 ? autocompleteComponent : null}
+          </div>
+          <div className='col s1'>
+            <a href='#' onClick={e => this.joinPieceWithPreviousOne(e, index)} style={{position: 'relative', top: 38}}>
+              <i className='grey-text material-icons'>highlight_off</i>
+            </a>
+          </div>
+        </div>
+      )
+    }
+  }
+
+  render() {
+    const { value, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
     let autocompleteComponent = null
     if (autocomplete) {
@@ -29,29 +134,22 @@ class SmsPrompt extends Component {
           getData={(value, callback) => autocompleteGetData(value, callback)}
           onSelect={(item) => autocompleteOnSelect(item)}
           ref='autocomplete'
-              />
+        />
       )
     }
 
+    // We store all inputs in the component, so later we
+    // know the whole text by joining the inputs' values
+    this.allInputs = []
+
+    const smsPieces = splitSmsText(value)
+    const inputs = smsPieces.map((piece, index) => {
+      return this.renderSmsInput(smsPieces.length, index, piece, autocompleteComponent)
+    })
+
     return (
-      <div className='row'>
-        <div className='col input-field s12'>
-          <InputWithLabel id={id} value={value} readOnly={readOnly} label='SMS message' errors={inputErrors} >
-            <input
-              type='text'
-              is length='140'
-              onChange={e => onChange(e)}
-              onBlur={e => this.onBlur(e)}
-              ref={ref => {
-                this.smsInput = ref
-                $(ref).characterCounter()
-                $(ref).addClass(maybeInvalidClass)
-              }}
-              class={maybeInvalidClass}
-              />
-          </InputWithLabel>
-          {autocompleteComponent}
-        </div>
+      <div>
+        {inputs}
       </div>
     )
   }

@@ -36,15 +36,13 @@ class StepPrompts extends Component {
     this.state = this.stateFromProps(props)
   }
 
-  stepPromptSmsChange(e) {
-    e.preventDefault()
-    this.setState({stepPromptSms: e.target.value})
+  stepPromptSmsChange(text) {
+    this.setState({stepPromptSms: text})
   }
 
-  stepPromptSmsSubmit(e) {
-    e.preventDefault()
+  stepPromptSmsSubmit(text) {
     const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptSms(step.id, e.target.value)
+    this.props.questionnaireActions.changeStepPromptSms(step.id, text)
   }
 
   stepPromptIvrChange(e) {
@@ -150,8 +148,8 @@ class StepPrompts extends Component {
         value={this.state.stepPromptSms}
         inputErrors={smsInputErrors}
         readOnly={readOnly}
-        onChange={e => this.stepPromptSmsChange(e)}
-        onBlur={e => this.stepPromptSmsSubmit(e)}
+        onChange={text => this.stepPromptSmsChange(text)}
+        onBlur={text => this.stepPromptSmsSubmit(text)}
         autocomplete={autocomplete}
         autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'sms')}
         autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'sms')}
