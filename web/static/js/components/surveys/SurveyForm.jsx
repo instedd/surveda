@@ -92,15 +92,15 @@ class SurveyForm extends Component {
         <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
-            <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
+            <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
             <SurveyWizardChannelsStep channels={channels} survey={survey} readOnly={readOnly} />
-            <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
+            <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
             <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} readOnly={readOnly} />
-            <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
+            <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>
             <SurveyWizardScheduleStep survey={survey} readOnly={readOnly} />
