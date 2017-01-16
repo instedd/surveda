@@ -21,6 +21,7 @@ defmodule Ask.Survey do
     field :comparisons, Ask.Ecto.Type.JSON, default: []
 
     many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
+    has_many :respondent_groups, Ask.RespondentGroup
     has_many :respondents, Ask.Respondent
     has_many :quota_buckets, Ask.QuotaBucket, on_replace: :delete
     many_to_many :questionnaires, Ask.Questionnaire, join_through: Ask.SurveyQuestionnaire, on_replace: :delete

@@ -3,7 +3,7 @@ defmodule Ask.RespondentControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Project, Respondent, QuotaBucket, Survey}
+  alias Ask.{Project, RespondentGroup, Respondent, QuotaBucket, Survey}
 
   @valid_attrs %{phone_number: "some content"}
   @invalid_attrs %{}
@@ -145,11 +145,15 @@ defmodule Ask.RespondentControllerTest do
     assert length(json_response(conn, 201)["data"]["respondents"]) == 5
     assert json_response(conn, 201)["meta"]["count"] == 14
 
+    group = RespondentGroup |> Repo.get_by(survey_id: survey.id)
+    assert group
+
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 14
     assert Enum.at(all, 0).survey_id == survey.id
     assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
     assert Enum.at(all, 0).sanitized_phone_number == "5491142342343"
+    assert Enum.at(all, 0).respondent_group_id == group.id
   end
 
   test "uploads CSV file with phone numbers ignoring additional columns", %{conn: conn, user: user} do
@@ -310,6 +314,8 @@ defmodule Ask.RespondentControllerTest do
       %{phone_number: Enum.at(row, 0), survey_id: survey.id, inserted_at: local_time, updated_at: local_time}
     end)
 
+    %RespondentGroup{name: "Group", survey_id: survey.id} |> Repo.insert!
+
     {respondents_count, _ } = Repo.insert_all(Respondent, entries)
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
@@ -317,6 +323,9 @@ defmodule Ask.RespondentControllerTest do
 
     conn = delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
     assert response(conn, 200)
+
+    group = RespondentGroup |> Repo.get_by(survey_id: survey.id)
+    refute group
 
     all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
     assert length(all) == 0

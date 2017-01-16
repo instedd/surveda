@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Respondent, Response}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Response}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -188,11 +188,16 @@ defmodule Ask.RespondentController do
 
   def render_respondents(conn, survey_id, rows, project) do
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
-    {integer_survey_id, _ } = Integer.parse survey_id
+    {survey_id, _ } = Integer.parse survey_id
+
+    # For now, create a single respondent group for the survey,
+    # so we check if there's already one
+    group = RespondentGroup |> Repo.get_by(survey_id: survey_id)
+    group = group || (%RespondentGroup{name: "Group", survey_id: survey_id} |> Repo.insert!)
 
     entries = rows
       |> Enum.map(fn row ->
-        %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: integer_survey_id, inserted_at: local_time, updated_at: local_time}
+        %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey_id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time}
       end)
 
     respondents_count = entries
@@ -259,6 +264,10 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     from(r in Respondent, where: r.survey_id == ^survey_id)
+    |> Repo.delete_all
+
+    # For now remove the only group that all respondents are associated to
+    from(g in RespondentGroup, where: g.survey_id == ^survey_id)
     |> Repo.delete_all
 
     update_survey_state(survey_id, 0)

@@ -95,10 +95,19 @@ defmodule Ask.Factory do
     }
   end
 
+  def respondent_group_factory do
+    %Ask.RespondentGroup{
+      survey: build(:survey),
+      name: "Respondent Group",
+    }
+  end
+
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
+    respondent_group = build(:respondent_group)
     %Ask.Respondent{
-      survey: build(:survey),
+      respondent_group: respondent_group,
+      survey: (respondent_group |> Ask.Repo.preload(:survey)).survey,
       phone_number: phone_number,
       sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number),
       state: "pending"

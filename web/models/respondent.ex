@@ -21,6 +21,7 @@ defmodule Ask.Respondent do
     field :mode, Ask.Ecto.Type.JSON
     belongs_to :questionnaire, Ask.Questionnaire
     belongs_to :survey, Ask.Survey
+    belongs_to :respondent_group, Ask.RespondentGroup
     belongs_to :quota_bucket, Ask.QuotaBucket
     has_many :responses, Ask.Response
 
