@@ -12,9 +12,8 @@ defmodule Ask.StaticServingTest do
     end
 
     test "when it requests a non-existent file inside a folder that contains statics it returns a 404", %{conn: conn} do
-      assert_error_sent 404, fn ->
-        get conn, "/fonts/NobodyWouldNameAFontLikeThis.tff"
-      end
+      conn = get conn, "/fonts/NobodyWouldNameAFontLikeThis.tff"
+      assert conn.status == 404
     end
 
     test "when it requests anything outside static folders it continues", %{conn: conn} do

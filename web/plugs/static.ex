@@ -19,7 +19,7 @@ defmodule Ask.Static do
     case conn.path_info do
       [] -> conn
       [path | _] -> case Enum.member?(@static_paths, path) do
-        true -> send_resp(conn, 404, "not found")
+        true -> conn |> send_resp(404, "not found") |> halt
         _ -> conn
       end
     end
