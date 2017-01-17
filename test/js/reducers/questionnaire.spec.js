@@ -1407,6 +1407,23 @@ describe('questionnaire reducer', () => {
       expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
     })
 
+    it('should upload csv with quota completed msg that lacks audioSource', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('es'),
+        actions.setIvrQuestionnaireMsg('quotaCompletedMsg', {text: 'Done!'}),
+        actions.uploadCsvForTranslation(
+          [
+            ['English', 'Spanish'],
+            ['Done!', 'Listo!']
+          ]
+        )
+      ])
+
+      expect(state.data.quotaCompletedMsg.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
+    })
+
     it('should compute a valid alphanumeric filename', () => {
       const state = playActions([
         actions.fetch(1, 1),

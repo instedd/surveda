@@ -1154,16 +1154,29 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   }
 
   let ivr = defaultLanguagePrompt.ivr
-  if (ivr && ivr.audioSource == 'tts' && (translations = lookup[ivr.text])) {
+  if (ivr && (translations = lookup[ivr.text])) {
     for (let lang in translations) {
       const text = translations[lang]
-      if (!prompt[lang] || !prompt[lang].ivr || prompt[lang].ivr.audioSource == 'tts') {
-        if (newPrompt[lang]) {
-          newPrompt[lang] = {...newPrompt[lang]}
-        } else {
-          newPrompt[lang] = {}
-        }
-        newPrompt[lang].ivr = {text, audioSource: 'tts'}
+
+      if (newPrompt[lang]) {
+        newPrompt[lang] = {...newPrompt[lang]}
+      } else {
+        newPrompt[lang] = newStepPrompt()
+      }
+
+      if (!newPrompt[lang].ivr) {
+        newPrompt[lang].ivr = newIvrPrompt()
+      }
+
+      // This isn't strictly necessary, but previous code
+      // sometimes didn't add this default value to new prompts
+      if (!newPrompt[lang].ivr.audioSource) {
+        newPrompt[lang].ivr.audioSource = 'tts'
+      }
+
+      newPrompt[lang].ivr = {
+        ...newPrompt[lang].ivr,
+        text
       }
     }
   }
@@ -1177,7 +1190,7 @@ const addTranslations = (obj, translations, funcOrProperty) => {
     if (obj[lang]) {
       obj[lang] = {...obj[lang]}
     } else {
-      obj[lang] = {}
+      obj[lang] = newStepPrompt()
     }
     if (typeof (funcOrProperty) == 'function') {
       funcOrProperty(obj[lang], text)
