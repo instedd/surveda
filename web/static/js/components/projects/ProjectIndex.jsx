@@ -98,9 +98,8 @@ class ProjectIndex extends Component {
               </div>
               <p>
                 <b>Organize your work</b><br />
-                  Manage survey, questionnaires, contents and collaborators under the same context.
+                  Manage surveys, questionnaires, and collaborators for each of your projects.
               </p>
-
             </div>
           </div>
           : <CardTable title={title} footer={footer} highlight>
