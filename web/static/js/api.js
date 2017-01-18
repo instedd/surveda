@@ -6,6 +6,7 @@ const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
 const questionnaireSchema = new Schema('questionnaires')
 const respondentSchema = new Schema('respondents')
+const respondentGroupSchema = new Schema('respondentGroups')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
@@ -154,20 +155,19 @@ export const createAudio = (files) => {
   return apiFetchJSON('audios', audioSchema, request)
 }
 
-export const uploadRespondents = (survey, files) => {
+export const uploadRespondentGroup = (projectId, surveyId, files) => {
   const formData = new FormData()
   formData.append('file', files[0])
 
-  return apiFetchJSONWithCallback(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
-    arrayOf(respondentSchema), {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`,
+    respondentGroupSchema, {
       method: 'POST',
       body: formData
-    },
-    respondentsCallback)
+    })
 }
 
-export const removeRespondents = (survey) => {
-  return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`)
+export const removeRespondentGroup = (projectId, surveyId, groupId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`)
 }
 
 export const fetchRespondents = (projectId, surveyId, limit, page) => {
@@ -180,6 +180,10 @@ export const fetchRespondentsStats = (projectId, surveyId) => {
 
 export const fetchRespondentsQuotasStats = (projectId, surveyId) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, null)
+}
+
+export const fetchRespondentGroups = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`, arrayOf(respondentGroupSchema))
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {

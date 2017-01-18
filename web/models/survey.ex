@@ -1,6 +1,8 @@
 defmodule Ask.Survey do
   use Ask.Web, :model
 
+  alias Ask.{Repo, Survey, Respondent}
+
   @max_int 2147483647
 
   schema "surveys" do
@@ -93,6 +95,18 @@ defmodule Ask.Survey do
       true ->
         changeset
     end
+  end
+
+  def update_state_from_respondents_count(survey) do
+    respondents_count = (from r in Respondent,
+      where: r.survey_id == ^survey.id,
+      select: count(r.id)) |> Repo.all |> hd
+    survey
+    |> Repo.preload(:channels)
+    |> Repo.preload(:questionnaires)
+    |> Survey.changeset(%{respondents_count: respondents_count})
+    |> Survey.update_state
+    |> Repo.update!
   end
 
   def validate_from_less_than_to(changeset) do

@@ -3,6 +3,8 @@ defmodule Ask.RespondentGroup do
 
   schema "respondent_groups" do
     field :name, :string
+    field :sample, Ask.Ecto.Type.JSON
+    field :respondents_count, :integer
     belongs_to :survey, Ask.Survey
     has_many :respondents, Ask.Respondent
 
@@ -14,7 +16,7 @@ defmodule Ask.RespondentGroup do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name])
-    |> validate_required([:name])
+    |> cast(params, [:name, :sample, :respondents_count])
+    |> validate_required([:name, :sample, :respondents_count])
   end
 end

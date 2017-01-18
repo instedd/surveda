@@ -17,7 +17,8 @@ class SurveyForm extends Component {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     questionnaire: PropTypes.object,
-    respondents: PropTypes.object,
+    respondentGroups: PropTypes.object,
+    invalidRespondents: PropTypes.object,
     channels: PropTypes.object.isRequired,
     errors: PropTypes.object,
     readOnly: PropTypes.bool.isRequired
@@ -36,9 +37,9 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondents, errors, questionnaire, readOnly } = this.props
+    const { survey, projectId, questionnaires, channels, respondentGroups, invalidRespondents, errors, questionnaire, readOnly } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
-    const respondentsStepCompleted = survey.respondentsCount > 0
+    const respondentsStepCompleted = respondentGroups.length > 0
     const channelStepCompleted = survey.mode != null && survey.mode.length > 0 && survey.channels && Object.keys(channels).length != 0 && this.allModesHaveAChannel(survey.mode, survey.channels, channels)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration)
@@ -53,6 +54,8 @@ class SurveyForm extends Component {
         survey.scheduleDayOfWeek.sat
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
+
+    console.log(readOnly)
 
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
     if (survey.comparisons.length > 0) {
@@ -99,7 +102,7 @@ class SurveyForm extends Component {
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondents={respondents} readOnly={readOnly} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} readOnly={readOnly} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>

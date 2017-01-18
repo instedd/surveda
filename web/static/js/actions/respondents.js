@@ -4,12 +4,9 @@ export const RECEIVE_RESPONDENTS = 'RECEIVE_RESPONDENTS'
 export const FETCH_RESPONDENTS = 'FETCH_RESPONDENTS'
 export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
-export const REMOVE_RESPONDENTS = 'REMOVE_RESPONDENTS'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 export const RECEIVE_RESPONDENTS_QUOTAS_STATS = 'RECEIVE_RESPONDENTS_QUOTAS_STATS'
-export const INVALID_RESPONDENTS = 'INVALID_RESPONDENTS'
-export const CLEAR_INVALIDS = 'CLEAR_INVALIDS'
 
 export const fetchRespondents = (projectId, surveyId, limit, page = 1) => dispatch => {
   dispatch(startFetchingRespondents(surveyId, page))
@@ -45,11 +42,6 @@ export const receiveRespondents = (surveyId, page, respondents, respondentsCount
   respondentsCount
 })
 
-export const removeRespondents = (response) => ({
-  type: REMOVE_RESPONDENTS,
-  response
-})
-
 export const createRespondent = (response) => ({
   type: CREATE_RESPONDENT,
   id: response.result,
@@ -71,13 +63,4 @@ export const startFetchingRespondents = (surveyId, page) => ({
   type: FETCH_RESPONDENTS,
   surveyId,
   page
-})
-
-export const receiveInvalids = (invalidRespondents) => ({
-  type: INVALID_RESPONDENTS,
-  invalidRespondents: invalidRespondents
-})
-
-export const clearInvalids = () => ({
-  type: CLEAR_INVALIDS
 })

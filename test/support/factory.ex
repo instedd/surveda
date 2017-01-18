@@ -99,6 +99,8 @@ defmodule Ask.Factory do
     %Ask.RespondentGroup{
       survey: build(:survey),
       name: "Respondent Group",
+      sample: [],
+      respondents_count: 0,
     }
   end
 

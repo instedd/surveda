@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Response}
+  alias Ask.{Respondent, Response}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -20,20 +20,19 @@ defmodule Ask.RespondentController do
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> Repo.all
-
-    respondents = mask_phone_numbers(respondents)
+    |> mask_phone_numbers
 
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
 
-  def conditional_limit query, limit do
+  defp conditional_limit query, limit do
     case limit do
       "" -> query
       number -> query |> limit(^number)
     end
   end
 
-  def conditional_page query, limit, page do
+  defp conditional_page query, limit, page do
     limit_number = case limit do
       "" -> 10
       _ ->
@@ -50,7 +49,7 @@ defmodule Ask.RespondentController do
     end
   end
 
-  def responded_on(datetime, by_date) do
+  defp responded_on(datetime, by_date) do
     { date, _ } = datetime
     value = Enum.find(by_date, fn x -> elem(x, 0) == date end)
     if (value), do: value, else: {date, 0}
@@ -152,130 +151,6 @@ defmodule Ask.RespondentController do
     end
 
     %{count: count, percent: percent}
-  end
-
-  defp csv_rows(csv_string) do
-    delimiters = ["\r\n", "\r", "\n"]
-    [{_, delimiter} | _] =
-      delimiters
-      |> Enum.map(fn d ->
-          case :binary.match(csv_string, d) do
-            {index, _} -> {index, d}
-            _ -> {d, -1}
-          end
-        end)
-      |> Enum.filter(fn {index, _} -> index != -1 end)
-      |> Enum.sort
-
-    # If we didn't find a delimiter it probably means
-    # there's just a single line in the file.
-    # In that case any delimiter, like "\n", is good.
-    delimiter = case delimiter do
-      -1 -> "\n"
-      _  -> delimiter
-    end
-
-    csv_string
-    |> String.split(delimiter)
-    |> Enum.filter(fn r ->
-      length = r |> String.trim |> String.split(",") |> Enum.at(0) |> String.length
-      length != 0
-    end)
-    |> Enum.map(fn r ->
-      r |> String.trim |> String.split(",") |> Enum.at(0)
-    end)
-  end
-
-  def render_respondents(conn, survey_id, rows, project) do
-    {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
-    {survey_id, _ } = Integer.parse survey_id
-
-    # For now, create a single respondent group for the survey,
-    # so we check if there's already one
-    group = RespondentGroup |> Repo.get_by(survey_id: survey_id)
-    group = group || (%RespondentGroup{name: "Group", survey_id: survey_id} |> Repo.insert!)
-
-    entries = rows
-      |> Enum.map(fn row ->
-        %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey_id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time}
-      end)
-
-    respondents_count = entries
-    |> Enum.chunk(1_000, 1_000, [])
-    |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
-        {count, _ } = Repo.insert_all(Respondent, chunked_entries)
-        total_count + count
-      end)
-
-    respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
-
-    update_survey_state(survey_id, respondents_count)
-    project |> Project.touch!
-
-    conn
-      |> put_status(:created)
-      |> render("index.json", respondents: respondents |> Repo.preload(:responses), respondents_count: respondents_count)
-  end
-
-  def render_unprocessable_entity(conn) do
-    conn
-      |> put_status(:unprocessable_entity)
-      |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
-  end
-
-  def render_invalid(conn, filename, invalid_entries) do
-    conn
-      |> put_status(:unprocessable_entity)
-      |> render("invalid_entries.json", %{invalid_entries: invalid_entries, filename: filename})
-  end
-
-  def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    if Path.extname(file.filename) == ".csv" do
-      rows =
-        file.path
-        |> File.read!
-        |> csv_rows
-        |> Enum.uniq
-
-      invalid_entries = rows
-      |> Enum.with_index
-      |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-      |> Enum.filter(fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
-
-      case invalid_entries do
-        [] -> render_respondents(conn, survey_id, rows, project)
-        _ -> render_invalid(conn, file.filename, invalid_entries)
-      end
-    else
-      render_unprocessable_entity(conn)
-    end
-  end
-
-  def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    # Check that the survey is in the project
-    project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    from(r in Respondent, where: r.survey_id == ^survey_id)
-    |> Repo.delete_all
-
-    # For now remove the only group that all respondents are associated to
-    from(g in RespondentGroup, where: g.survey_id == ^survey_id)
-    |> Repo.delete_all
-
-    update_survey_state(survey_id, 0)
-    project |> Project.touch!
-
-    conn
-      |> put_status(:ok)
-      |> render("empty.json", respondent: [])
   end
 
   def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id, "offset" => offset}) do
@@ -382,24 +257,10 @@ defmodule Ask.RespondentController do
       |> send_resp(200, csv)
   end
 
-  defp update_survey_state(survey_id, respondents_count) do
-    survey = Repo.get!(Survey, survey_id)
-    survey = Map.merge(survey, %{respondents_count: respondents_count})
-
-    survey
-    |> Repo.preload([:channels, :questionnaires])
-    |> change
-    |> Survey.update_state
-    |> Repo.update
-  end
-
   defp mask_phone_numbers(respondents) do
-    masked = respondents
-    |>
-    Enum.map(fn respondent ->
+    respondents |> Enum.map(fn respondent ->
       %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
     end)
-    masked
   end
 
   defp questionnaire_name(quiz) do

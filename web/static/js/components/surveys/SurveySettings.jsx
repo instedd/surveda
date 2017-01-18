@@ -5,7 +5,7 @@ import * as actions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
-import * as respondentsActions from '../../actions/respondents'
+import * as respondentGroupsActions from '../../actions/respondentGroups'
 import SurveyForm from './SurveyForm'
 
 class SurveySettings extends Component {
@@ -17,7 +17,8 @@ class SurveySettings extends Component {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     channels: PropTypes.object.isRequired,
-    respondents: PropTypes.object
+    respondentGroups: PropTypes.object,
+    invalidRespondents: PropTypes.object
   }
 
   componentWillMount() {
@@ -28,14 +29,14 @@ class SurveySettings extends Component {
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchChannels())
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
-      dispatch(respondentsActions.fetchRespondents(projectId, surveyId, 5, 1))
+      dispatch(respondentGroupsActions.fetchRespondentGroups(projectId, surveyId))
     }
   }
 
   render() {
-    const { survey, projectId, questionnaires, dispatch, channels, respondents } = this.props
+    const { survey, projectId, questionnaires, dispatch, channels, respondentGroups, invalidRespondents } = this.props
 
-    if (Object.keys(survey).length == 0 || !respondents) {
+    if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
     }
 
@@ -47,7 +48,7 @@ class SurveySettings extends Component {
 
     return (
       <div className='white'>
-        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly />
       </div>
     )
   }
@@ -58,7 +59,8 @@ const mapStateToProps = (state, ownProps) => ({
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items || {},
   questionnaires: state.questionnaires.items || {},
-  respondents: state.respondents,
+  respondentGroups: state.respondentGroups.items || {},
+  invalidRespondents: state.respondentGroups.invalidRespondents,
   survey: state.survey.data || {}
 })
 

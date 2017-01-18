@@ -60,11 +60,4 @@ defmodule Ask.RespondentView do
       count: respondents_count
     }
   end
-
-  def render("invalid_entries.json", %{invalid_entries: entries, filename: filename}) do
-    %{
-      invalidEntries: entries,
-      filename: filename
-    }
-  end
 end

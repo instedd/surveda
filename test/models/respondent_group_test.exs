@@ -3,7 +3,7 @@ defmodule Ask.RespondentGroupTest do
 
   alias Ask.RespondentGroup
 
-  @valid_attrs %{name: "some content"}
+  @valid_attrs %{name: "some content", sample: [], respondents_count: 0}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
