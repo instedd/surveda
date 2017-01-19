@@ -81,8 +81,8 @@ defmodule Ask.Factory do
     }
   end
 
-  def survey_channel_factory do
-    %Ask.SurveyChannel{
+  def respondent_group_channel_factory do
+    %Ask.RespondentGroupChannel{
     }
   end
 

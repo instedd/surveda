@@ -166,6 +166,10 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => {
     })
 }
 
+export const updateRespondentGroup = (projectId, surveyId, groupId, data) => {
+  return apiPutJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`, respondentGroupSchema, { respondentGroup: data })
+}
+
 export const removeRespondentGroup = (projectId, surveyId, groupId) => {
   return apiDelete(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`)
 }

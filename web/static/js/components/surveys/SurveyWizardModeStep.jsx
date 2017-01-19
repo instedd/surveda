@@ -1,32 +1,15 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
-import { Input } from 'react-materialize'
 import * as actions from '../../actions/survey'
-import values from 'lodash/values'
-import flatMap from 'lodash/flatMap'
-import uniq from 'lodash/uniq'
 import some from 'lodash/some'
 import isEqual from 'lodash/isEqual'
 import { modeLabel } from '../../reducers/survey'
 
-class SurveyWizardChannelsStep extends Component {
+class SurveyWizardModeStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
-    channels: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired
-  }
-
-  channelChange(e, type, allChannels) {
-    e.preventDefault()
-    const { dispatch, survey } = this.props
-
-    let currentChannels = survey.channels || []
-    currentChannels = currentChannels.filter(id => allChannels[id].type != type)
-    if (e.target.value != '') {
-      currentChannels.push(e.target.value)
-    }
-    dispatch(actions.selectChannels(currentChannels))
   }
 
   modeChange(e, value) {
@@ -39,61 +22,19 @@ class SurveyWizardChannelsStep extends Component {
     dispatch(actions.changeModeComparison())
   }
 
-  newChannelComponent(type, allChannels, currentChannels, readOnly) {
-    const currentChannel = currentChannels.find(id => allChannels[id].type == type)
-
-    let label
-    if (type == 'sms') {
-      label = 'SMS'
-    } else {
-      label = 'Phone'
-    }
-    label += ' channel'
-
-    let channels = values(allChannels)
-    channels = channels.filter(c => c.type == type)
-
-    return (
-      <div className='row' key={type}>
-        <div className='input-field col s12'>
-          <Input s={12} type='select' label={label}
-            value={currentChannel || ''}
-            onChange={e => this.channelChange(e, type, allChannels)}
-            disabled={readOnly}>
-            <option value=''>
-            Select a channel...
-            </option>
-            { channels.map((channel) =>
-              <option key={channel.id} value={channel.id}>
-                {channel.name}
-              </option>
-              )}
-          </Input>
-        </div>
-      </div>
-    )
-  }
-
   modeIncludes(modes, target) {
     return some(modes, ary => isEqual(ary, target))
   }
 
   render() {
-    const { survey, channels, readOnly } = this.props
+    const { survey, readOnly } = this.props
 
-    if (!survey || !channels || ((survey.channels || []).length > 0 && Object.keys(channels).length == 0)) {
+    if (!survey || ((survey.channels || []).length > 0)) {
       return <div>Loading...</div>
     }
 
-    const currentChannels = survey.channels || []
     const mode = survey.mode || []
     const modeComparison = mode.length > 1 || (!!survey.modeComparison)
-
-    let channelsComponent = []
-    let allModes = uniq(flatMap(mode))
-    for (const targetMode of allModes) {
-      channelsComponent.push(this.newChannelComponent(targetMode, channels, currentChannels, readOnly))
-    }
 
     let inputType = modeComparison ? 'checkbox' : 'radio'
 
@@ -101,7 +42,7 @@ class SurveyWizardChannelsStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4>Select mode & channels</h4>
+            <h4>Select mode</h4>
             <p className='flow-text'>
               Select which modes you want to use.
             </p>
@@ -174,10 +115,9 @@ class SurveyWizardChannelsStep extends Component {
             </p>
           </div>
         </div>
-        {channelsComponent}
       </div>
     )
   }
 }
 
-export default connect()(SurveyWizardChannelsStep)
+export default connect()(SurveyWizardModeStep)
