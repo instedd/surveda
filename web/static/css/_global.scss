@@ -1,0 +1,798 @@
+
+// --------- NCD classes ---------------
+
+
+// -----------------------------------------------------------------------------
+// ------- Surveys -------------------------------------------------------------
+
+.survey-chart {
+  padding-top: 6rem;
+}
+.respondent-chart {
+  margin: .5rem 0 2rem;
+}
+
+.question.left {
+  width: 90%;
+  .question-icon-label {
+    float: left;
+    min-width: 100px;
+    width: 20%;
+    i {
+      margin-right: 10px;
+      line-height: 56px;
+    }
+    span {
+      @extend .truncate;
+    }
+  }
+  .question-value {
+    @extend .grey-text;
+    float: left;
+    width: 72%;
+    .input-field {
+      margin-top: 0;
+      input {
+        height: 2rem;
+      }
+    }
+    .small-text-bellow {
+      line-height: 1;
+    }
+  }
+}
+.question.right {
+  label {
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    display: inline-block;
+    height: 25px;
+    line-height: 25px;
+    font-size: 1rem;
+  }
+}
+
+
+.survey-modes { // modes for completed surveys
+  .type {
+    font-size: 12px;
+    color: gray;
+  }
+
+  .mode {
+    margin-top: 15px;
+
+    .name {
+      margin-left: 10px;
+      vertical-align: top;
+    }
+  }
+}
+
+
+.comparisons { // class for last step on surveys when comparison checked
+  p.grey-text {
+    padding-right: 20px;
+    margin: 0;
+    max-width: 500px;
+  }
+  .col > div {
+    position: relative;
+    margin-left: 36px;
+    label {
+      margin-left: 60px;
+      @extend .truncate;
+      font-size: 1rem;
+      line-height: 46px;
+      height: 46px;
+      top: 0;
+      left: 0;
+    }
+    input[type='text'] {
+      height: 2rem;
+      border-bottom-color: color('grey', 'lighten-2');
+      position: absolute;
+      width: 40px;
+    }
+  }
+}
+
+
+// ------- Survey Card index page ----
+
+.survey-card .card {
+  @extend .black-text;
+  padding: 0px;
+  .card-chart {
+    margin: 30px 0 20px;
+  }
+  .card-content {
+    padding: 30px 0;
+    > div {
+      padding-left: 30px;
+      padding-right: 30px;
+    }
+    .card-status {
+      border-top: 1px solid color("grey","lighten-3");
+      padding-top: 20px;
+      padding-bottom: 20px;
+      p {
+        margin-top: 10px;
+      }
+    }
+  }
+}
+
+i.survey-status { // icon for survey status on index
+  vertical-align: top;
+  margin-right: 10px;
+}
+
+
+// ------- Left Survey collection Wizard ----------
+
+.collection.wizard {
+  @extend .z-depth-1;
+  border-radius: 5px;
+  .collection-header {
+    @extend .grey, .lighten-4;
+    position: relative;
+    p {
+      @extend .grey-text
+    }
+    .progress {
+      @extend .grey, .lighten-2;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+      width: 100%;
+      height: 6px;
+      .determinate {
+       @extend .green, .accent-4;
+      }
+    }
+  }
+  .collection-item {
+    padding: 0 !important;
+    border: none;
+    > a {
+      @extend .truncate;
+      @extend .black-text;
+      width: 100%;
+      position: relative;
+      padding: 20px 35px 20px 20px;
+      > i {
+        vertical-align: middle;
+        margin-right: 15px;
+      }
+      .arrowright {
+        @extend .grey-text;
+        position: absolute;
+        right: 10px;
+      }
+    }
+    a.active {
+      @extend .grey.lighten-3;
+      @extend .black-text;
+    }
+    a:hover {
+      @extend .grey.lighten-4;
+    }
+    &.completed {
+      a, a.active {
+        @extend .green-text;
+      }
+    }
+  }
+}
+
+.sidebar.pinned { // width fix when sidebar is pinned on top
+  width: 24.9vw;
+  .wizard {
+    margin-top: 0px;
+  }
+}
+
+
+
+
+  // ------- Respondent Chart SVG classes for completed Surveys -----------
+
+    .line.respondentsData {
+      fill: none;
+      stroke: #4caf50;
+      stroke-width: 2.0px;
+    }
+
+    .line.backgroundData {
+      fill: none;
+      stroke: #999;
+      stroke-width: 0.75px;
+    }
+
+    .axis line, .axis path{
+      fill: none;
+      stroke: #000;
+      stroke-width: 1.0;
+      opacity: 0.25;
+    }
+
+    .axis > path{
+      stroke: none;
+    }
+
+    .y.axis g:first-child text{
+      fill: none;
+    }
+
+    .x.axis .tick line{
+      stroke: none;
+    }
+
+    .axis text {
+      text-transform: uppercase;
+      dominant-baseline:text-after-edge;
+      font-size: 12px;
+      opacity: 0.25;
+    }
+
+  // ------- / Respondent Chart SVG classes for completed Surveys -----------
+
+
+
+// -----------------------------------------------------------------------------
+// ------- Questionnaires ------------------------------------------------------
+
+.questionnaire-modes {
+  .row > .col {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  i {
+    margin-right: 10px;
+  }
+  .mode-label {
+    @extend .truncate;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .switch.right {
+    @include transform(scale(0.85));
+    margin-right: -20px;
+  }
+}
+.wizard-content {
+  > div {
+    min-height: 110vh;
+  }
+}
+
+.step-mode {
+  position: relative;
+
+  .dropdown-button {
+    @extend .black-text;
+  }
+  i.right {
+    @extend .grey-text, .lighten-1;
+    margin: 0;
+  }
+  .dropdown-content.active {
+    @extend .z-depth-4;
+    border-radius: 4px;
+    top: -20px !important;
+    left: -8px !important;
+    min-width: 220px;
+    i {
+      min-width: 22px;
+      &.right {
+        @extend .black-text;
+      }
+    }
+    > li > a {
+      @extend .black-text;
+    }
+  }
+  &.underlined {
+    border-bottom: 1px solid color('grey','lighten-2');
+    display: inline-block;
+    padding-bottom: 5px;
+    span {
+      i {
+        vertical-align: text-bottom;
+      }
+    }
+  }
+}
+
+
+  // ------- Questionnaires language selector ----------
+
+  .language-selection {
+    position: relative;
+    .language-dropdown {
+      position: absolute;
+      width: 100%;
+      max-height: 280px;
+      li {
+        line-height: 3;
+        padding: 0 1rem;
+      }
+    }
+  }
+
+  .var-dropdown {
+    position: absolute;
+    width: 100%;
+    max-height: 280px;
+    li {
+      line-height: 3;
+      padding: 0 1rem;
+    }
+  }
+
+  .selected-language {
+    li {
+      position: relative;
+      line-height: 54px;
+      padding-left: 30px;
+      height: 54px;
+      span {
+        @extend .truncate;
+        width: 70%;
+      }
+      i {
+        @extend .grey-text;
+        position: absolute;
+        top: 15px;
+        right: 0px;
+      }
+      .right-arrow {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .languages {
+    .tooltip-error {
+      position: relative;
+      &:after {
+        content: '';
+        @extend .back-error;
+        display: block;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        top: 20px;
+        right: 36px;
+      }
+    }
+  }
+
+  .other-languages-list {
+    li {
+      position: relative;
+      padding-left: 30px;
+      height: 54px;
+      span {
+        line-height: 54px;
+        i {
+          @extend .grey-text;
+        }
+      }
+      .remove-language {
+        position: absolute;
+        left: 10px;
+        top: 6px;
+        cursor: pointer;
+        opacity: 0;
+      }
+      .language-name {
+        @extend .truncate;
+        padding-left: 15px;
+        width: 70%;
+      }
+      .set-default-language {
+        position: absolute;
+        right: 2rem;
+        top: 8px;
+        cursor: pointer;
+        opacity: 0;
+
+      }
+      .right-arrow {
+        position: absolute;
+        top: 8px;
+        right: 0px;
+        cursor: pointer;
+      }
+      &:hover {
+        @extend .grey, .lighten-2;
+        .set-default-language,
+         .remove-language {
+          opacity: 1;
+        }
+
+      }
+    }
+  }
+
+  .active-language {
+    @extend .grey, .lighten-2;
+  }
+
+  // ------- / Questionnaires language selector ----------
+
+
+.collapsible { // class for collapsed questionnaires
+  @include transition(all ease-in-out .25s);
+  li {
+    border-bottom: 1px solid color("grey", "lighten-2");
+    .card {
+      @extend .z-depth-0;
+      margin: 0;
+      border-radius: 0;
+      .card-content.closed-step {
+        padding: 0;
+        a {
+          @extend .black-text;
+          @extend .clearfix;
+          font-size: 20px;
+          display: block;
+          padding: 25px 15px 25px 20px;
+          i {
+            padding-top: 4px;
+          }
+          span {
+            @extend .truncate;
+            width: 83%;
+            float: left;
+          }
+        }
+      }
+    }
+    &:first-child .card {
+      border-radius: 3px 3px 0 0;
+    }
+    &:last-child {
+      border-bottom: none;
+      .card {
+        border-radius: 0 0 3px 3px;
+      }
+    }
+  }
+  &.dark { // this class 'dark' is for quotas and error cards when collapsed
+    @extend .z-depth-0;
+    border: none;
+    li .card {
+      border-radius: 3px;
+      @extend .grey, .lighten-2;
+      .card-content.closed-step {
+        .text-error {
+          @extend .text-error;
+        }
+      }
+    }
+  }
+}
+
+.collection-item.header {
+  padding: 25px 15px 25px 9px;
+  height: 80px;
+  .material-icons.prefix {
+    @extend .grey-text, .lighten-2;
+    font-size: 1.6rem;
+    top: 1.8rem;
+  }
+  input[type=text] {
+    font-size: 20px;
+    border-bottom: none;
+    width: 78%;
+    margin-bottom: 0px;
+    margin-top: -10px;
+    margin-left: 15px;
+  }
+  .collapse {
+    @extend .grey-text, .lighten-2;
+    margin-right: -10px;
+  }
+  .dropdown-content li a, .dropdown-button {
+    @extend .black-text;
+  }
+  .row , input {
+    margin-bottom: 0;
+  }
+  a.page-title {
+    @extend .black-text;
+    font-size: 20px;
+    line-height: 1.35;
+    max-width: 80%;
+    margin-left: 15px;
+    float: left;
+    i {
+      @extend .grey-text, .lighten-2;
+      font-size: 24px;
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 15px;
+    }
+  }
+}
+
+
+.sms-attempts, .ivr-attempts {
+  li {
+    display: inline-block;
+    vertical-align: text-top;
+    margin-right: 15px;
+    position: relative;
+    span {
+      @extend .grey-text, .lighten-2;
+      font-size: 12px;
+      display: inline-block;
+      padding: 0 15px 0 12px;
+      vertical-align: bottom;
+      border-top: 1px solid color('grey', 'lighten-2');
+      position: relative;
+      &:after {
+        content: 'keyboard_arrow_right';
+        font-family: 'Material Icons';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 11px;
+        line-height: 1.158;
+        letter-spacing: normal;
+        text-transform: none;
+        text-rendering: optimizeLegibility;
+        font-feature-settings: 'liga';
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        opacity: 0.4;
+      }
+    }
+    &:after {
+      @extend .black-text;
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      text-rendering: optimizeLegibility;
+      font-feature-settings: 'liga';
+      margin-left: 10px;
+    }
+    &:first-child {
+      i {
+        margin-right: 10px;
+      }
+      &:after {
+        display: none;
+      }
+    }
+  }
+}
+
+.sms-attempts {
+  li {
+    &:after {
+      content: 'sms';
+    }
+  }
+}
+
+.ivr-attempts {
+  li {
+    &:after {
+      content: 'phone';
+    }
+  }
+}
+
+.audio-section {
+  position: relative;
+  padding-left: 10px;
+  .audio-dropdown {
+    display: inline-block;
+    width: 25%;
+    min-width: 145px;
+  }
+  .upload-audio {
+    padding-top: 20px;
+  }
+  audio {
+    position: absolute;
+    right: 5px;
+    top: 0px;
+    width: 74%;
+  }
+}
+
+
+.collection.dark { // this class 'dark' is for quotas and error cards
+  border: none;
+  border-radius: 3px;
+  .collection-item {
+    @extend .grey, .lighten-2;
+    &.header {
+      border-radius: 3px 3px 0 0;
+      a.page-title {
+        line-height: 1.5;
+        margin-left: 0;
+      }
+      i {
+        line-height: 1.4;
+      }
+    }
+    input[type='text'] {
+      border-bottom-color: color('grey', 'darken-1')!important;
+      box-shadow: none !important;
+    }
+  }
+  .audio-dropdown {
+    ul i.material-icons {
+      @extend .black-text;
+    }
+  }
+  .dropfile {
+    border-color: color('grey', 'base');
+  }
+}
+
+.quotas {
+  p.grey-text {
+    padding-left: 36px;
+    margin: 0;
+    max-width: 500px;
+  }
+  .col > div {
+    position: relative;
+    margin-left: 36px;
+    input[type='text'] {
+      max-width: 90px;
+      margin-left: 250px;
+      height: 2rem;
+      border-bottom-color: color('grey', 'lighten-2');
+    }
+    label {
+      @extend .truncate;
+      font-size: 1rem;
+      line-height: 46px;
+      height: 46px;
+      position: absolute;
+      width: 220px;
+      top: 0;
+      left: 0;
+    }
+  }
+}
+.edit-quotas {
+  padding-left: 36px;
+}
+
+.collection.collection-card {
+  overflow: visible;
+}
+
+
+
+// -----------------------------------------------------------------------------
+// ------- Collaborators -------------------------------------------------------
+
+.colaborate-link {
+  @extend .grey-text;
+  i {
+    vertical-align: middle;
+    margin-right: .5rem;
+  }
+  a {
+    @extend .grey-text;
+    text-transform: lowercase !important;
+    border-bottom: 1px dotted color("grey", "base");
+    cursor: pointer;
+  }
+}
+
+.modal.card.invite-collaborator {
+  .card-content {
+    padding: 1.5rem 2rem;
+  }
+  .button-actions {
+    margin-top: 1rem;
+  }
+  .card-action {
+    font-size: 1.1rem;
+    padding: 1.2rem 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid color('grey', 'lighten-2');
+  }
+}
+.accept-invitation {
+  p {
+    @extend .grey-text;
+    font-weight: 300;
+    font-size: 1.4rem;
+    margin: 1.4rem 0;
+    span {
+      font-weight: 400;
+      display: block;
+    }
+    &.small-text {
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+  }
+  .divider {
+    margin: 3rem 0;
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// ------- Helper classes  -----------------------------------------------------
+
+.mtop {
+  margin-top: -8rem;
+}
+
+.v-middle {
+  vertical-align: middle;
+}
+
+.no-padd {
+  padding: 0;
+}
+
+.empty-projects {
+  @extend .grey-text;
+  text-align: center;
+  width: 350px;
+  margin: 0 auto;
+
+  .icons {
+    border-top: 1px solid color('grey', 'lighten-2');
+    padding-top: 3rem;
+    margin-top: 3rem;
+    i {
+      font-size: 46px;
+      margin: 0 .9rem;
+    }
+  }
+  p {
+    font-size: 16px;
+    line-height: 2;
+  }
+}
+
+.empty_page {
+  @extend .grey-text;
+  text-align: center;
+  i {
+    font-size: 180px;
+  }
+}
+
+
+  // ------- Error classes -----------
+
+  .back-error {
+    background-color: #ff5722 !important;
+  }
+
+  .text-error {
+    color: #ff5722 !important;
+  }
+
+
+
+
+
+
+

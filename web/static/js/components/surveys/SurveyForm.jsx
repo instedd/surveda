@@ -111,6 +111,9 @@ class SurveyForm extends Component {
           </div>
           <div id='cutoff' className='row scrollspy'>
             <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} readOnly={readOnly} />
+            {survey.comparisons.length > 0
+            ? <ScrollToLink target='#comparisons'>NEXT: Comparisons</ScrollToLink>
+            : ''}
           </div>
           {survey.comparisons.length > 0
             ? <div id='comparisons' className='row scrollspy'>
