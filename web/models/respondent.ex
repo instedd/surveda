@@ -4,6 +4,7 @@ defmodule Ask.Respondent do
   schema "respondents" do
     field :phone_number, :string
     field :sanitized_phone_number, :string
+    field :hashed_number, :string
 
     # Valid states are:
     # * pending: the initial state of a respondent, before communication starts
@@ -39,6 +40,10 @@ defmodule Ask.Respondent do
 
   def sanitize_phone_number(text) do
     ~r/[^\d]/ |> Regex.replace(text, "")
+  end
+
+  def hash_phone_number(phone_number, salt) do
+    String.slice(:crypto.hash(:md5, salt <> phone_number) |> Base.encode16(case: :lower), -12, 12)
   end
 
   def mask_phone_number(phone_number) do
