@@ -95,14 +95,11 @@ defmodule Ask.RespondentGroupController do
         %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey_id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time}
       end)
 
-    respondents_count = entries
+    entries
     |> Enum.chunk(1_000, 1_000, [])
-    |> Enum.reduce(0, fn(chunked_entries, total_count)  ->
-        {count, _ } = Repo.insert_all(Respondent, chunked_entries)
-        total_count + count
+    |> Enum.each(fn(chunked_entries)  ->
+        Repo.insert_all(Respondent, chunked_entries)
       end)
-
-    respondents = mask_phone_numbers(Repo.all(from r in Respondent, where: r.survey_id == ^survey_id, limit: 5))
 
     survey |> Survey.update_state_from_respondents_count
     project |> Project.touch!
@@ -122,12 +119,6 @@ defmodule Ask.RespondentGroupController do
     conn
     |> put_status(:unprocessable_entity)
     |> render("invalid_entries.json", %{invalid_entries: invalid_entries, filename: filename})
-  end
-
-  defp mask_phone_numbers(respondents) do
-    respondents |> Enum.map(fn respondent ->
-      %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
-    end)
   end
 
   def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id, "id" => id}) do
