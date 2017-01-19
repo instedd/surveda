@@ -15,6 +15,7 @@ export default (state = initialState, action) => {
     case actions.REMOVE_RESPONDENT_GROUP: return removeRespondentGroup(state, action)
     case actions.INVALID_RESPONDENTS: return receiveInvalids(state, action)
     case actions.CLEAR_INVALIDS: return clearInvalids(state, action)
+    case actions.SELECT_CHANNELS: return selectChannels(state, action)
     default: return state
   }
 }
@@ -78,3 +79,17 @@ const clearInvalids = (state, action) => {
     invalidRespondents: null
   }
 }
+
+const selectChannels = (state, action) => {
+  return {
+    ...state,
+    items: {
+      ...state.items,
+      [action.groupId]: {
+        ...state.items[action.groupId],
+        channels: action.channels
+      }
+    }
+  }
+}
+

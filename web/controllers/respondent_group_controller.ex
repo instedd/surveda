@@ -1,17 +1,20 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Respondent, RespondentGroup}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Channel}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    respondent_groups = conn
+    project = conn
     |> load_project(project_id)
+
+    respondent_groups = project
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
     |> assoc(:respondent_groups)
+    |> preload(:channels)
     |> Repo.all
 
-    render(conn, "index.json", respondent_groups: respondent_groups)
+    render(conn, "index.json", respondent_groups: respondent_groups, project: project)
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
@@ -41,6 +44,49 @@ defmodule Ask.RespondentGroupController do
     else
       render_unprocessable_entity(conn)
     end
+  end
+
+  def update(conn, %{"project_id" => project_id, "survey_id" => survey_id, "id" => id, "respondent_group" => respondent_group_params}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    group = survey
+    |> assoc(:respondent_groups)
+    |> Repo.get!(id)
+    |> Repo.preload(:channels)
+    |> RespondentGroup.changeset(respondent_group_params)
+    |> update_channels(respondent_group_params)
+    |> Repo.update!
+
+    survey
+    |> Repo.preload([:questionnaires])
+    |> Repo.preload([:quota_buckets])
+    |> Repo.preload(respondent_groups: :channels)
+    |> change
+    |> Survey.update_state
+    |> Repo.update!
+
+    project |> Project.touch!
+
+    conn
+    |> render("show.json", respondent_group: group, project: project)
+  end
+
+  defp update_channels(changeset, %{"channels" => channels_params}) do
+    channels_changeset = Enum.map(channels_params, fn ch ->
+      Repo.get!(Channel, ch) |> change
+    end)
+
+    changeset
+    |> put_assoc(:channels, channels_changeset)
+  end
+
+  defp update_channels(changeset, _) do
+    changeset
   end
 
   defp csv_rows(csv_string) do
@@ -89,6 +135,7 @@ defmodule Ask.RespondentGroupController do
       respondents_count: respondents_count
     }
     |> Repo.insert!
+    |> Repo.preload(:channels)
 
     entries = rows
       |> Enum.map(fn row ->
@@ -101,12 +148,19 @@ defmodule Ask.RespondentGroupController do
         Repo.insert_all(Respondent, chunked_entries)
       end)
 
-    survey |> Survey.update_state_from_respondents_count
+    survey
+    |> Repo.preload([:questionnaires])
+    |> Repo.preload([:quota_buckets])
+    |> Repo.preload(respondent_groups: :channels)
+    |> change
+    |> Survey.update_state
+    |> Repo.update!
+
     project |> Project.touch!
 
     conn
     |> put_status(:created)
-    |> render("show.json", respondent_group: group)
+    |> render("show.json", respondent_group: group, project: project)
   end
 
   defp render_unprocessable_entity(conn) do
@@ -141,7 +195,14 @@ defmodule Ask.RespondentGroupController do
     group
     |> Repo.delete!
 
-    survey |> Survey.update_state_from_respondents_count()
+    survey
+    |> Repo.preload([:questionnaires])
+    |> Repo.preload([:quota_buckets])
+    |> Repo.preload(respondent_groups: :channels)
+    |> change
+    |> Survey.update_state
+    |> Repo.update!
+
     project |> Project.touch!
 
     conn

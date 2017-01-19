@@ -2,14 +2,19 @@ import React, { PropTypes, Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
+import { Input } from 'react-materialize'
 import { ConfirmationModal, Card } from '../ui'
 import * as actions from '../../actions/respondentGroups'
+import values from 'lodash/values'
+import uniq from 'lodash/uniq'
+import flatMap from 'lodash/flatMap'
 
 class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
     respondentGroups: PropTypes.object.isRequired,
     invalidRespondents: PropTypes.object,
+    channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
     readOnly: PropTypes.bool.isRequired
   }
@@ -53,7 +58,21 @@ class SurveyWizardRespondentsStep extends Component {
     )
   }
 
-  renderGroup(group, readOnly) {
+  channelChange(e, group, type, allChannels) {
+    e.preventDefault()
+
+    let currentChannels = group.channels || []
+    currentChannels = currentChannels.filter(id => allChannels[id].type != type)
+    if (e.target.value != '') {
+      currentChannels.push(e.target.value)
+    }
+    currentChannels = currentChannels.map(x => parseInt(x))
+
+    const { actions, survey } = this.props
+    actions.selectChannels(survey.projectId, survey.id, group.id, currentChannels)
+  }
+
+  renderGroup(group, channels, allModes, readOnly) {
     let removeRespondents = null
     if (!readOnly) {
       removeRespondents = <ConfirmationModal showLink
@@ -66,8 +85,10 @@ class SurveyWizardRespondentsStep extends Component {
     }
 
     return (
-      <RespondentsList key={group.id} name={group.name} count={group.respondentsCount}
-        remove={removeRespondents}>
+      <RespondentsList key={group.id} group={group} remove={removeRespondents} modes={allModes}
+        channels={channels} readOnly={readOnly}
+        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+        >
         {group.sample.map((respondent, index) =>
           <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
         )}
@@ -76,11 +97,14 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    let { survey, respondentGroups, invalidRespondents, readOnly } = this.props
+    let { survey, channels, respondentGroups, invalidRespondents, readOnly } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
-    if (!survey) {
+    if (!survey || !channels || Object.keys(channels).length == 0) {
       return <div>Loading...</div>
     }
+
+    const mode = survey.mode || []
+    const allModes = uniq(flatMap(mode))
 
     let respondentsDropzone = null
     if (!readOnly) {
@@ -91,7 +115,7 @@ class SurveyWizardRespondentsStep extends Component {
 
     return (
       <RespondentsContainer>
-        {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], readOnly))}
+        {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly))}
 
         <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
         {invalidRespondentsCard || respondentsDropzone}
@@ -115,7 +139,42 @@ RespondentsDropzone.propTypes = {
   onDropRejected: PropTypes.func.isRequired
 }
 
-const RespondentsList = ({ count, name, remove, children }) => {
+const newChannelComponent = (type, allChannels, currentChannels, onChange, readOnly) => {
+  const currentChannel = currentChannels.find(id => allChannels[id].type == type)
+
+  let label
+  if (type == 'sms') {
+    label = 'SMS'
+  } else {
+    label = 'Phone'
+  }
+  label += ' channel'
+
+  let channels = values(allChannels)
+  channels = channels.filter(c => c.type == type)
+
+  return (
+    <div className='row' key={type}>
+      <div className='input-field col s12'>
+        <Input s={12} type='select' label={label}
+          value={currentChannel || ''}
+          onChange={e => onChange(e, type, allChannels)}
+          disabled={readOnly}>
+          <option value=''>
+            Select a channel...
+          </option>
+          { channels.map((channel) =>
+            <option key={channel.id} value={channel.id}>
+              {channel.name}
+            </option>
+              )}
+        </Input>
+      </div>
+    </div>
+  )
+}
+
+const RespondentsList = ({ group, remove, channels, modes, onChannelChange, readOnly, children }) => {
   let footer = null
   if (remove) {
     footer = (
@@ -125,21 +184,43 @@ const RespondentsList = ({ count, name, remove, children }) => {
     )
   }
 
+  let currentChannels = group.channels || []
+  let channelsComponent = []
+  for (const targetMode of modes) {
+    channelsComponent.push(newChannelComponent(targetMode, channels, currentChannels, onChannelChange, readOnly))
+  }
+
   return (
     <Card>
       <div className='card-content'>
-        <table className='ncdtable'>
-          <thead>
-            <tr>
-              <th>
-                {name} ({count} contacts)
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {children}
-          </tbody>
-        </table>
+        <div className='row'>
+          <div className='col s6'>
+            <table className='ncdtable'>
+              <thead>
+                <tr>
+                  <th>{group.name} ({group.respondentsCount} contacts)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {children}
+              </tbody>
+            </table>
+          </div>
+          <div className='col s6'>
+            <table className='ncdtable'>
+              <thead>
+                <tr>
+                  <th>Channels</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{channelsComponent}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
       {footer}
     </Card>
@@ -147,10 +228,13 @@ const RespondentsList = ({ count, name, remove, children }) => {
 }
 
 RespondentsList.propTypes = {
-  count: PropTypes.number.isRequired,
-  name: PropTypes.string.isRequired,
-  children: PropTypes.node,
-  remove: PropTypes.node
+  group: PropTypes.object,
+  modes: PropTypes.any,
+  readOnly: PropTypes.bool,
+  remove: PropTypes.node,
+  channels: PropTypes.any,
+  onChannelChange: PropTypes.func,
+  children: PropTypes.node
 }
 
 const PhoneNumberRow = ({ id, phoneNumber }) => {

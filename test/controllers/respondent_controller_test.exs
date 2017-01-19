@@ -241,15 +241,4 @@ defmodule Ask.RespondentControllerTest do
   def completed_schedule do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end
-
-  def add_channel_to(survey, channel) do
-    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
-
-    changeset = survey
-    |> Repo.preload([:channels])
-    |> Ecto.Changeset.change
-    |> put_assoc(:channels, [channels_changeset])
-
-    Repo.update(changeset)
-  end
 end

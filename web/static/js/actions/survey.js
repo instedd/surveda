@@ -11,7 +11,6 @@ export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
-export const SELECT_CHANNELS = 'SURVEY_SELECT_CHANNELS'
 export const SELECT_MODE = 'SURVEY_SELECT_MODE'
 export const CHANGE_MODE_COMPARISON = 'SURVEY_CHANGE_MODE_COMPARISON'
 export const CHANGE_QUESTIONNAIRE_COMPARISON = 'SURVEY_CHANGE_QUESTIONNAIRE_COMPARISON'
@@ -120,11 +119,6 @@ export const changeName = (newName: string) => ({
 export const setScheduleFrom = (hour: string) => ({
   type: SET_SCHEDULE_FROM,
   hour
-})
-
-export const selectChannels = (channels: number[]) => ({
-  type: SELECT_CHANNELS,
-  channels
 })
 
 export const selectMode = (mode: string[]) => ({

@@ -3,7 +3,7 @@ defmodule Ask.RespondentGroupControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Project, RespondentGroup, Respondent}
+  alias Ask.{Project, RespondentGroup, Respondent, Channel}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -27,8 +27,10 @@ defmodule Ask.RespondentGroupControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       group = insert(:respondent_group, survey: survey, sample: ["12345", "23456"], respondents_count: 3)
+      channel = insert(:channel, name: "test")
+      add_channel_to(group, channel)
 
-      sample = group.sample |> Enum.map(&Respondent.mask_phone_number(&1))
+      sample = group.sample |> Enum.map(&mask(&1, project))
 
       conn = get conn, project_survey_respondent_group_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"] == [%{
@@ -36,6 +38,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "name" => group.name,
         "sample" => sample,
         "respondents_count" => group.respondents_count,
+        "channels" => [channel.id],
       }]
     end
   end
@@ -50,13 +53,14 @@ defmodule Ask.RespondentGroupControllerTest do
       conn = post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
       group = RespondentGroup |> Repo.get_by(survey_id: survey.id)
 
-      sample = group.sample |> Enum.map(&Respondent.mask_phone_number(&1))
+      sample = group.sample |> Enum.map(&mask(&1, project))
 
       assert json_response(conn, 201)["data"] == %{
         "id" => group.id,
         "name" => group.name,
         "sample" => sample,
         "respondents_count" => group.respondents_count,
+        "channels" => [],
       }
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
@@ -174,25 +178,6 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Enum.at(all, 0).phone_number == "15044020205"
     end
 
-    test "updates survey state if the respondents CSV upload is the only remaining step on the survey wizard", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule, mode: [["sms"]])
-      channel = insert(:channel, name: "test")
-
-      add_channel_to(survey, channel)
-
-      assert survey.state == "not_ready"
-
-      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
-
-      post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
-
-      new_survey = Repo.get(Ask.Survey, survey.id)
-
-      assert new_survey.state == "ready"
-    end
-
     test "updates project updated_at when uploading CSV", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = insert(:project, updated_at: datetime)
@@ -216,6 +201,37 @@ defmodule Ask.RespondentGroupControllerTest do
       assert_error_sent :forbidden, fn ->
         post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
       end
+    end
+  end
+
+  describe "update" do
+    test "update group channels", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+      group = insert(:respondent_group, survey: survey, respondents_count: 1)
+      channel = insert(:channel, name: "test")
+
+      sample = group.sample |> Enum.map(&mask(&1, project))
+
+      attrs = %{channels: [channel.id]}
+      conn = put conn, project_survey_respondent_group_path(conn, :update, project.id, survey.id, group.id), respondent_group: attrs
+      assert json_response(conn, 200)["data"] == %{
+        "id" => group.id,
+        "name" => group.name,
+        "sample" => sample,
+        "respondents_count" => group.respondents_count,
+        "channels" => [channel.id],
+      }
+
+      group = RespondentGroup
+      |> Repo.get!(group.id)
+      |> Repo.preload(:channels)
+
+      channel_ids = group.channels
+      |> Enum.map(&(&1.id))
+
+      assert channel_ids == [channel.id]
     end
   end
 
@@ -285,10 +301,10 @@ defmodule Ask.RespondentGroupControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
-      group = insert(:respondent_group, survey: survey)
+      group = insert(:respondent_group, survey: survey, respondents_count: 1)
 
       channel = insert(:channel, name: "test")
-      add_channel_to(survey, channel)
+      add_channel_to(group, channel)
 
       insert(:respondent, phone_number: "12345678", survey: survey, respondent_group: group)
 
@@ -307,14 +323,18 @@ defmodule Ask.RespondentGroupControllerTest do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end
 
-  defp add_channel_to(survey, channel) do
+  defp add_channel_to(group = %RespondentGroup{}, channel = %Channel{}) do
     channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
 
-    changeset = survey
+    changeset = group
     |> Repo.preload([:channels])
     |> Ecto.Changeset.change
     |> put_assoc(:channels, [channels_changeset])
 
     Repo.update(changeset)
+  end
+
+  defp mask(phone_number, project) do
+    Respondent.hash_phone_number(phone_number, project.salt)
   end
 end

@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, QuotaBucket}
+  alias Ask.{Repo, Survey, Respondent, RespondentGroup, QuotaBucket}
   alias Ask.Runtime.Session
   alias Ask.QuotaBucket
   require Logger
@@ -115,12 +115,12 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp start_some(survey, count) do
-    respondents = Repo.all(
-      from r in assoc(survey, :respondents),
+    (from r in assoc(survey, :respondents),
       where: r.state == "pending",
       limit: ^count)
-
-    respondents |> Enum.each(&start(survey, &1))
+    |> preload(respondent_group: :channels)
+    |> Repo.all
+    |> Enum.each(&start(survey, &1))
   end
 
   defp retry_respondent(respondent) do
@@ -137,7 +137,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp start(survey, respondent) do
-    survey = Repo.preload(survey, [:channels, :questionnaires])
+    survey = Repo.preload(survey, [:questionnaires])
+    group = respondent.respondent_group
 
     {questionnaire, mode} = select_questionnaire_and_mode(survey)
 
@@ -146,8 +147,8 @@ defmodule Ask.Runtime.Broker do
     |> Respondent.changeset(%{questionnaire_id: questionnaire.id, mode: mode})
     |> Repo.update!
 
-    primary_channel = Survey.primary_channel(survey, mode)
-    fallback_channel = Survey.fallback_channel(survey, mode)
+    primary_channel = RespondentGroup.primary_channel(group, mode)
+    fallback_channel = RespondentGroup.fallback_channel(group, mode)
 
     retries = Survey.retries_configuration(survey, primary_channel.type)
     fallback_retries = case fallback_channel do

@@ -21,7 +21,6 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.TOGGLE_DAY: return toggleDay(state, action)
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
-    case actions.SELECT_CHANNELS: return selectChannels(state, action)
     case actions.SELECT_MODE: return selectMode(state, action)
     case actions.CHANGE_MODE_COMPARISON: return changeModeComparison(state, action)
     case actions.CHANGE_QUESTIONNAIRE_COMPARISON: return changeQuestionnaireComparison(state, action)
@@ -262,13 +261,6 @@ const setScheduleFrom = (state, action) => {
   return {
     ...state,
     scheduleStartTime: action.hour
-  }
-}
-
-const selectChannels = (state, action) => {
-  return {
-    ...state,
-    channels: action.channels
   }
 }
 
