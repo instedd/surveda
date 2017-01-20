@@ -220,7 +220,7 @@ export const launchSurvey = (projectId, surveyId) => {
 }
 
 export const logout = () => {
-  fetch('/logout', {
+  fetch('/sessions', {
     method: 'DELETE',
     credentials: 'same-origin'
   }).then(() => { window.location.href = '/' })

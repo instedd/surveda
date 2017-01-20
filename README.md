@@ -55,6 +55,12 @@ To setup a channel you need to create it using the console. For that you need to
 
 In order for it to work, that Verboice channel must be associated to a dummy flow of a dummy Verboice project. Otherwise it will fail and won't log anything.
 
+## Upgrading Coherence
+
+We're using Coherence to support registration, authorization, and other user management flows. 
+If you need to upgrade the version of Coherence that Ask uses, there are some steps that you need to mind.
+Please check them out here: https://github.com/smpallen99/coherence#upgrading
+
 ## Learn more
 
 * Phoenix

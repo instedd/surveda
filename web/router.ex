@@ -1,6 +1,6 @@
 defmodule Ask.Router do
   use Ask.Web, :router
-  use Addict.RoutesHelper
+  use Coherence.Router
   use Plug.ErrorHandler
   use Sentry.Plug
 
@@ -10,8 +10,17 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Plug.Static,
-      at: "files/", from: "web/static/assets/files/", gzip: false
+    plug Plug.Static, at: "files/", from: "web/static/assets/files/"
+    plug Coherence.Authentication.Session
+  end
+
+  pipeline :protected do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug Coherence.Authentication.Session, protected: true
   end
 
   pipeline :api do
@@ -22,12 +31,24 @@ defmodule Ask.Router do
     #plug Guardian.Plug.LoadResource
   end
 
-  if Mix.env == :dev do
-    forward "/sent_emails", Bamboo.EmailPreviewPlug
+  scope "/", Ask do
+    pipe_through :browser
+    get "/oauth_client/callback", OAuthClientController, :callback
+
+    coherence_routes
+    
+    get "/*path", PageController, :index      
+    # add public resources below
   end
 
   scope "/" do
-    addict :routes
+    pipe_through :protected
+    coherence_routes :protected
+  end
+
+
+  if Mix.env == :dev do
+    forward "/sent_emails", Bamboo.EmailPreviewPlug
   end
 
   scope "/api" , Ask do
@@ -67,12 +88,4 @@ defmodule Ask.Router do
   get "/audio/:id", Ask.AudioDeliveryController, :show
   get "/callbacks/:provider", Ask.CallbackController, :callback
   post "/callbacks/:provider", Ask.CallbackController, :callback
-
-  scope "/", Ask do
-    pipe_through :browser
-
-    get "/oauth_client/callback", OAuthClientController, :callback
-    get "/*path", PageController, :index
-  end
-
 end

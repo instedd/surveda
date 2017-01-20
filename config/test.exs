@@ -19,8 +19,8 @@ config :ask, Ask.Repo,
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :addict,
-  password_hasher: Ask.Base64Hasher
+# config :addict,
+#   password_hasher: Ask.Base64Hasher
 
 config :ask, :channel,
   providers: %{

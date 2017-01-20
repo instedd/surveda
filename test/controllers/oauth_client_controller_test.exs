@@ -4,7 +4,7 @@ defmodule Ask.OAuthHelperControllerTest do
   setup %{conn: conn} do
     user = insert(:user)
     conn = conn
-      |> post(login_path(conn, :login, %{email: user.email, password: "1234"}))
+      |> post(session_path(conn, :login, %{email: user.email, password: "1234"}))
     {:ok, conn: conn, user: user}
   end
 
