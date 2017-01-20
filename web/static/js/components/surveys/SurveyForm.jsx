@@ -55,8 +55,6 @@ class SurveyForm extends Component {
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
 
-    console.log(readOnly)
-
     const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, channelStepCompleted, scheduleStepCompleted]
     if (survey.comparisons.length > 0) {
       comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
