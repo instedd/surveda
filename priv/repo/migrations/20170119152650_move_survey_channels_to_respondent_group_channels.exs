@@ -20,7 +20,7 @@ defmodule Ask.Repo.Migrations.MoveSurveyChannelsToRespondentGroupChannels do
     end
   end
 
-  def change do
+  def up do
     Repo.query!("select survey_id, channel_id from survey_channels").rows
     |> Enum.each(fn [survey_id, channel_id] ->
       rows = Repo.query!("select id from respondent_groups where survey_id = #{survey_id} limit 1").rows
@@ -32,5 +32,9 @@ defmodule Ask.Repo.Migrations.MoveSurveyChannelsToRespondentGroupChannels do
         } |> Repo.insert!
       end
     end)
+  end
+
+  def down do
+    Repo.query!("delete from respondent_groups")
   end
 end
