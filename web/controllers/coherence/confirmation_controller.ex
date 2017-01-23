@@ -9,7 +9,6 @@ defmodule Ask.Coherence.ConfirmationController do
   require Logger
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
-  alias Coherence.Schema.Confirmable
   alias Ask.Coherence.Helper
 
   plug Coherence.ValidateOption, :confirmable
