@@ -92,7 +92,9 @@ config :coherence,
   email_from_email: "yourname@example.com",
   opts: [:authenticatable, :recoverable, :lockable, :trackable, :unlockable_with_token, :confirmable, :registerable]
 
+config :coherence, Registro.Coherence.Mailer,
+  adapter: Swoosh.Adapters.Local
+
 config :coherence, Ask.Coherence.Mailer,
-  adapter: Swoosh.Adapters.Sendgrid,
-  api_key: "your api key here"
+  adapter: Swoosh.Adapters.Local
 # %% End Coherence Configuration %%

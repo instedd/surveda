@@ -33,22 +33,15 @@ defmodule Ask.Router do
 
   scope "/", Ask do
     pipe_through :browser
-    get "/oauth_client/callback", OAuthClientController, :callback
-
     coherence_routes
-    
-    get "/*path", PageController, :index      
-    # add public resources below
-  end
-
-  scope "/" do
-    pipe_through :protected
-    coherence_routes :protected
-  end
-
+  end  
 
   if Mix.env == :dev do
-    forward "/sent_emails", Bamboo.EmailPreviewPlug
+    # forward "/sent_emails", Bamboo.EmailPreviewPlug
+    scope "/dev" do
+      pipe_through [:browser]
+      forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
+    end
   end
 
   scope "/api" , Ask do
@@ -88,4 +81,16 @@ defmodule Ask.Router do
   get "/audio/:id", Ask.AudioDeliveryController, :show
   get "/callbacks/:provider", Ask.CallbackController, :callback
   post "/callbacks/:provider", Ask.CallbackController, :callback
+
+  scope "/" do
+    pipe_through :protected
+    coherence_routes :protected
+  end
+
+  scope "/", Ask do
+    pipe_through :browser
+    get "/oauth_client/callback", OAuthClientController, :callback    
+    get "/*path", PageController, :index    
+    # add public resources below
+  end  
 end

@@ -10,6 +10,7 @@ defmodule Ask.Coherence.ConfirmationController do
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
   alias Coherence.Schema.Confirmable
+  alias Ask.Coherence.Helper
 
   plug Coherence.ValidateOption, :confirmable
 
@@ -81,7 +82,7 @@ defmodule Ask.Coherence.ConfirmationController do
         |> put_flash(:error, "Invalid confirmation token.")
         |> redirect_to(:confirmation_edit_invalid, params)
       user ->
-        if Confirmable.expired? user do
+        if Ask.Coherence.Helper.confirmable_expired? user do
           conn
           |> put_flash(:error, "Confirmation token expired.")
           |> redirect_to(:confirmation_edit_expired, params)
