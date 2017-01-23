@@ -26,18 +26,14 @@ defmodule Ask.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-
+    plug Coherence.Authentication.Session, protected: true
+    
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
-  end
-
-  scope "/", Ask do
-    pipe_through :browser
-    coherence_routes
   end  
 
   if Mix.env == :dev do
-    # forward "/sent_emails", Bamboo.EmailPreviewPlug
+    #forward "/sent_emails", Bamboo.EmailPreviewPlug
     scope "/dev" do
       pipe_through [:browser]
       forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
@@ -48,6 +44,8 @@ defmodule Ask.Router do
     pipe_through :api
 
     scope "/v1" do
+      delete "/sessions", Coherence.SessionController, :api_delete
+      
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
@@ -83,14 +81,26 @@ defmodule Ask.Router do
   post "/callbacks/:provider", Ask.CallbackController, :callback
 
   scope "/" do
+    pipe_through :browser
+    coherence_routes
+  end
+
+  scope "/" do
     pipe_through :protected
     coherence_routes :protected
   end
 
   scope "/", Ask do
+    pipe_through :protected
+    coherence_routes :protected    
+    # add protected resources below
+  end
+
+  scope "/", Ask do
     pipe_through :browser
-    get "/oauth_client/callback", OAuthClientController, :callback    
-    get "/*path", PageController, :index    
+    
     # add public resources below
+    get "/oauth_client/callback", OAuthClientController, :callback    
+    get "/*path", PageController, :index 
   end  
 end

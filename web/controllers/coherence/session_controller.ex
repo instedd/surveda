@@ -110,6 +110,17 @@ defmodule Ask.Coherence.SessionController do
   @doc """
   Logout the user.
 
+  Delete the user's session, from an API call. Track the logout and delete the rememberable cookie,
+  but don't redirect since that's a responsibility of the SPA.
+  """
+  def api_delete(conn, params) do
+    delete(conn)
+    |> send_resp(204, "")
+  end
+
+  @doc """
+  Logout the user.
+
   Delete the user's session, track the logout and delete the rememberable cookie.
   """
   def delete(conn, params) do

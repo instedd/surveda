@@ -220,10 +220,7 @@ export const launchSurvey = (projectId, surveyId) => {
 }
 
 export const logout = () => {
-  fetch('/sessions', {
-    method: 'DELETE',
-    credentials: 'same-origin'
-  }).then(() => { window.location.href = '/' })
+  apiDelete('sessions').then(() => { window.location.href = '/' })
 }
 
 export const fetchTimezones = () => {
