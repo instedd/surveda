@@ -55,11 +55,19 @@ To setup a channel you need to create it using the console. For that you need to
 
 In order for it to work, that Verboice channel must be associated to a dummy flow of a dummy Verboice project. Otherwise it will fail and won't log anything.
 
-## Upgrading Coherence
+## Coherence
+
+### Upgrading
 
 We're using Coherence to support registration, authorization, and other user management flows. 
 If you need to upgrade the version of Coherence that Ask uses, there are some steps that you need to mind.
 Please check them out here: https://github.com/smpallen99/coherence#upgrading
+
+### Coherence Mails
+
+Coherence uses Swoosh as it's mailer lib. In development, we use Swoosh's local adapter, which
+mounts a mini email client that displays sent emails at `{BASE_URL}/dev/mailbox`. That comes handy
+to test flows which depend on email without having to send them in development.
 
 ## Learn more
 
