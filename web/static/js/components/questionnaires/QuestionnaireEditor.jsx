@@ -11,6 +11,8 @@ import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
 import csvString from 'csv-string'
 import * as language from '../../language'
+import * as routes from '../../routes'
+import * as api from '../../api'
 
 type State = {
   addingStep: boolean,
@@ -162,6 +164,42 @@ class QuestionnaireEditor extends Component {
     e.target.value = null
   }
 
+  exportZip(e) {
+    e.preventDefault()
+
+    const { projectId, questionnaireId } = this.props
+    window.location = routes.exportQuestionnaireZip(projectId, questionnaireId)
+  }
+
+  openImportZipDialog(e) {
+    e.preventDefault()
+
+    $('#questionnaire_import_zip').trigger('click')
+  }
+
+  importZip(e) {
+    e.preventDefault()
+
+    let files = e.target.files
+    if (files.length != 1) return
+
+    const { projectId, questionnaireId } = this.props
+
+    api.importQuestionnaireZip(projectId, questionnaireId, files)
+    .then(response => {
+      const questionnaire = response.entities.questionnaires[response.result]
+      this.props.questionnaireActions.receive(questionnaire)
+      this.setState({
+        ...this.state,
+        currentStep: null
+      })
+    })
+
+    // Make sure to clear the input's value so a same file
+    // can be uploaded multiple times
+    e.target.value = null
+  }
+
   removeLanguage(lang) {
     const { questionnaire } = this.props
 
@@ -216,6 +254,23 @@ class QuestionnaireEditor extends Component {
         <div className='col s12 m3 questionnaire-modes'>
           <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
           {csvButtons}
+          <div className='row'>
+            <div className='col s12'>
+              <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
+                <i className='material-icons'>file_download</i>
+                <span>Export questionnaire</span>
+              </a>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
+              <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
+                <i className='material-icons'>file_upload</i>
+                <span>Import questionnaire</span>
+              </a>
+            </div>
+          </div>
           <div className='row'>
             <div className='col s12'>
               <p className='grey-text'>Modes</p>

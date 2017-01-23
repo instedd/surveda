@@ -76,6 +76,8 @@ export const questionnaireIndex = (projectId) => `${project(projectId)}/question
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
+export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`
+
 export const channels = '/channels'
 
 export const showOrEditSurvey = (s) => {
