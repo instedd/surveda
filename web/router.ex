@@ -80,27 +80,19 @@ defmodule Ask.Router do
   get "/callbacks/:provider", Ask.CallbackController, :callback
   post "/callbacks/:provider", Ask.CallbackController, :callback
 
-  scope "/" do
-    pipe_through :browser
-    coherence_routes
-  end
-
-  scope "/" do
-    pipe_through :protected
-    coherence_routes :protected
-  end
-
-  scope "/", Ask do
-    pipe_through :protected
-    coherence_routes :protected    
-    # add protected resources below
-  end
-
   scope "/", Ask do
     pipe_through :browser
-    
+    coherence_routes :public
+
     # add public resources below
     get "/oauth_client/callback", OAuthClientController, :callback    
     get "/*path", PageController, :index 
-  end  
+  end
+
+  scope "/", Ask do
+    pipe_through :protected
+    coherence_routes :protected
+    
+    # add protected resources below
+  end
 end

@@ -19,7 +19,6 @@ defmodule Ask.Coherence.SessionController do
   @doc false
   def layout_view(conn, _) do
     conn
-    |> put_layout({Coherence.LayoutView, "app.html"})
     |> put_view(Coherence.SessionView)
   end
 
@@ -44,7 +43,6 @@ defmodule Ask.Coherence.SessionController do
     login_field = Config.login_field
     conn
     |> assign(:redirect, params["redirect"])
-    |> put_layout({Coherence.LayoutView, "app.html"})
     |> put_view(Coherence.SessionView)    
     |> render(:new, [{login_field, ""}, remember: rememberable_enabled?])
   end
@@ -75,10 +73,11 @@ defmodule Ask.Coherence.SessionController do
     login = params["session"][login_field_str]
     password = params["session"]["password"]
     user = Config.repo.one(from u in user_schema, where: field(u, ^login_field) == ^login)
-    lockable? = user_schema.lockable?
-    if user != nil and user_schema.checkpw(password, Map.get(user, Config.password_hash)) do
-      if Confirmable.confirmed?(user) || Confirmable.unconfirmed_access?(user) do
-        unless lockable? and user_schema.locked?(user) do
+    lockable? = user_schema.lockable?    
+    
+    if user != nil and user_schema.checkpw(password, Map.get(user, Config.password_hash)) do      
+      if Confirmable.confirmed?(user) || Confirmable.unconfirmed_access?(user) do        
+        unless lockable? and user_schema.locked?(user) do          
           apply(Config.auth_module, Config.create_login, [conn, user, [id_key: Config.schema_key]])
           |> reset_failed_attempts(user, lockable?)
           |> track_login(user, user_schema.trackable?)
@@ -114,7 +113,7 @@ defmodule Ask.Coherence.SessionController do
   Delete the user's session, from an API call. Track the logout and delete the rememberable cookie,
   but don't redirect since that's a responsibility of the SPA.
   """
-  def api_delete(conn, params) do
+  def api_delete(conn, _params) do
     delete(conn)
     |> send_resp(204, "")
   end

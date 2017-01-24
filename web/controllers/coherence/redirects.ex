@@ -45,6 +45,7 @@ defmodule Coherence.Redirects do
   # Uncomment the import below if adding overrides
   import Ask.Router.Helpers
 
+  def session_create(conn, %{"session" => %{"redirect" => ""}}), do: redirect(conn, to: "/")
   def session_create(conn, %{"session" => %{"redirect" => path}}) do
     redirect(conn, to: path)
   end
