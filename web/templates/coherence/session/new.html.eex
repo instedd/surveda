@@ -13,6 +13,7 @@
     <%= required_label f, :password, class: "control-label" %>
     <%= password_input f, :password, class: "form-control", required: "" %>
     <%= error_tag f, :password %>
+    <%= hidden_input f, :redirect, value: @redirect %>
   </div>
 
   <%= if @remember do %>

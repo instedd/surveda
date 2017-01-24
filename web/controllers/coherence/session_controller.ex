@@ -40,11 +40,12 @@ defmodule Ask.Coherence.SessionController do
   @doc """
   Render the login form.
   """
-  def new(conn, _params) do
+  def new(conn, params) do
     login_field = Config.login_field
     conn
+    |> assign(:redirect, params["redirect"])
     |> put_layout({Coherence.LayoutView, "app.html"})
-    |> put_view(Coherence.SessionView)
+    |> put_view(Coherence.SessionView)    
     |> render(:new, [{login_field, ""}, remember: rememberable_enabled?])
   end
 
@@ -83,7 +84,7 @@ defmodule Ask.Coherence.SessionController do
           |> track_login(user, user_schema.trackable?)
           |> save_rememberable(user, remember)
           |> put_flash(:notice, "Signed in successfully.")
-          |> redirect_to(:session_create, params)
+          |> redirect_to(:session_create, params)          
         else
           conn
           |> put_flash(:error, "Too many failed login attempts. Account has been locked.")
