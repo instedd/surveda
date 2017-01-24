@@ -44,7 +44,10 @@ defmodule Ask.Router do
           get "/respondents/quotas_stats", RespondentController, :quotas_stats, as: :respondents_quotas_stats
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
         end
-        resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
+        resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
+          get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
+          post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
+        end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
         get "/autocomplete_other_language", ProjectController, :autocomplete_other_language, as: :autocomplete_other_language

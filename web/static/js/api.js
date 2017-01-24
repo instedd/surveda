@@ -280,3 +280,14 @@ export const fetchInvite = (code) => {
 export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${code}`)
 }
+
+export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
+  const formData = new FormData()
+  formData.append('file', files[0])
+
+  return apiFetchJSON(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
+    questionnaireSchema, {
+      method: 'POST',
+      body: formData
+    })
+}
