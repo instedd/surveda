@@ -15,7 +15,7 @@ export type ChoiceErrors = {
   value: string[],
   sms: string[],
   ivr: string[]
-}
+};
 
 export type AudioPrompt = {
     audioSource: 'tts' | 'upload',
@@ -79,11 +79,11 @@ export type BaseStep = {
 
 export type StoreStep = {
   store: string
-}
+};
 
 export type MultilingualStep = {
   prompt: Prompt
-}
+};
 
 export type SkipOption = {
   id: string,
