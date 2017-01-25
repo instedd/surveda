@@ -13,14 +13,13 @@ defmodule Ask.Repo.Migrations.AddToEachRespondentAHashedNumber do
   end
 
   def up do
-    Repo.query!("SELECT r.id, r.phone_number, r.hashed_number, p.salt
-      FROM respondents AS r
-      INNER JOIN surveys AS s ON s.id = r.survey_id
-      INNER JOIN projects AS p ON p.id = s.project_id").rows |> Enum.each(fn [respondent_id, phone_number, hashed_number, salt] ->
-      if !hashed_number do
-        Repo.query!("update respondents set hashed_number = '#{Respondent.hash_phone_number(phone_number, salt)}' where id = #{respondent_id}")
-      end
-    end)
+    Repo.query!("SELECT s.id, p.salt
+      FROM surveys AS s
+      INNER JOIN projects AS p ON s.project_id = p.id").rows |> Enum.each(fn [survey_id, salt] ->
+        Repo.query!("UPDATE respondents
+          SET hashed_number = right(md5(concat(?, phone_number)), 12)
+          WHERE survey_id = ?", [salt, survey_id])
+      end)
   end
 
   def down do
