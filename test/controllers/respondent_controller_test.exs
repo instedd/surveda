@@ -139,10 +139,10 @@ defmodule Ask.RespondentControllerTest do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
-    respondent_1 = insert(:respondent, survey: survey)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds")
     insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
-    respondent_2 = insert(:respondent, survey: survey)
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
     insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
 
     conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
@@ -151,13 +151,13 @@ defmodule Ask.RespondentControllerTest do
     [line1, line2, line3, _] = csv |> String.split("\r\n")
     assert line1 == "Respondent ID,Smoke,Drink,Date"
 
-    [line_2_id, line_2_smoke, line_2_drink, _] = line2 |> String.split(",", parts: 4)
-    assert line_2_id == respondent_1.id |> to_string
+    [line_2_hashed_number, line_2_smoke, line_2_drink, _] = line2 |> String.split(",", parts: 4)
+    assert line_2_hashed_number == respondent_1.hashed_number
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
 
-    [line_3_id, line_3_smoke, line_3_drink, _] = line3 |> String.split(",", parts: 4)
-    assert line_3_id == respondent_2.id |> to_string
+    [line_3_hashed_number, line_3_smoke, line_3_drink, _] = line3 |> String.split(",", parts: 4)
+    assert line_3_hashed_number == respondent_2.hashed_number
     assert line_3_smoke == "No"
     assert line_3_drink == ""
   end
@@ -184,14 +184,14 @@ defmodule Ask.RespondentControllerTest do
     [line1, line2, line3, _] = csv |> String.split("\r\n")
     assert line1 == "Respondent ID,Smoke,Drink,Variant,Date"
 
-    [line_2_id, line_2_smoke, line_2_drink, line_2_variant, _] = line2 |> String.split(",", parts: 5)
-    assert line_2_id == respondent_1.id |> to_string
+    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_variant, _] = line2 |> String.split(",", parts: 5)
+    assert line_2_hashed_number == respondent_1.hashed_number |> to_string
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
     assert line_2_variant == "test - SMS"
 
-    [line_3_id, line_3_smoke, line_3_drink, line_3_variant, _] = line3 |> String.split(",", parts: 5)
-    assert line_3_id == respondent_2.id |> to_string
+    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_variant, _] = line3 |> String.split(",", parts: 5)
+    assert line_3_hashed_number == respondent_2.hashed_number |> to_string
     assert line_3_smoke == "No"
     assert line_3_drink == ""
     assert line_3_variant == "test 2 - SMS with phone call fallback"

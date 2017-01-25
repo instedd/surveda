@@ -183,7 +183,7 @@ defmodule Ask.RespondentController do
     |> preload(:responses)
     |> Repo.stream
     |> Stream.map(fn respondent ->
-        row = [respondent.id]
+        row = [respondent.hashed_number]
         responses = respondent.responses
 
         # We traverse all fields and see if there's a response for this respondent
