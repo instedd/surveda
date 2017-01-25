@@ -26,9 +26,11 @@ defmodule Ask.Repo.Migrations.FixDefaultAudioSourceForQuestionnaireMessages do
     ivr_prompt
   end
 
-  defp fix_ivr_prompt(ivr_prompt) do
+  defp fix_ivr_prompt(ivr_prompt = %{}) do
     Map.put(ivr_prompt, "audio_source", "tts")
   end
+
+  defp fix_ivr_prompt(ivr_prompt), do: ivr_prompt
 
   defp fix(nil), do: nil
   defp fix(prompt) do
@@ -43,5 +45,8 @@ defmodule Ask.Repo.Migrations.FixDefaultAudioSourceForQuestionnaireMessages do
       |> Questionnaire.changeset(%{quota_completed_msg: fix(q.quota_completed_msg), error_msg: fix(q.error_msg)})
       |> Repo.update!
     end)
+  end
+
+  def down do
   end
 end
