@@ -26,7 +26,7 @@ defmodule Ask.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-    plug Coherence.Authentication.Session, protected: true
+    plug Coherence.Authentication.Session
     
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource

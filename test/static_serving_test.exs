@@ -6,11 +6,8 @@ defmodule Ask.StaticServingTest do
   end
 
   describe "get static file" do
-    # This is breaking the build even though it passes locally,
-    # skipping it until we understand why
-    @tag :skip
     test "when it requests an existing file it returns 200", %{conn: conn} do
-      conn = get conn, "/favicon.ico"
+      conn = get conn, "/robots.txt"
       assert conn.status == 200
     end
 

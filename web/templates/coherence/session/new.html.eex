@@ -63,7 +63,7 @@
                       <%= required_label f, :password %>
                       <%= password_input f, :password, required: "" %>
                       <%= error_tag f, :password %>
-                      <%= hidden_input f, :redirect, value: @redirect %>
+                      <%= hidden_input f, :redirect, value: (assigns[:company] || "/") %>
                     </div>
                   </div>
                 </div>

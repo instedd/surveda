@@ -11,7 +11,7 @@ defmodule Ask.Plugs.ApiAuthenticated do
     conn = case Mix.env do
       :test ->
         test_user = conn.private[:test_user]
-        conn |> put_session(:current_user, test_user)
+        conn |> assign(:current_user, test_user)
       _ ->
         conn
     end

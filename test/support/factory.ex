@@ -13,7 +13,8 @@ defmodule Ask.Factory do
     %Ask.User{
       name: "John",
       email: sequence(:email, &"email-#{&1}@example.com"),
-      password_hash: Comeonin.Bcrypt.hashpwsalt "1234"
+      password_hash: Comeonin.Bcrypt.hashpwsalt("1234"),
+      confirmed_at: Ecto.DateTime.utc
     }
   end
 
