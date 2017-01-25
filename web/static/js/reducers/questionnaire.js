@@ -839,15 +839,19 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
       addError(context, choiceValuePath(stepIndex, i), 'Value already used in a previous response')
     }
 
-    context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
+    if (context.sms) {
+      context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
+    }
 
-    if (choice.responses.ivr) {
-      for (let choiceIvr of choice.responses.ivr) {
-        if (ivr.includes(choiceIvr)) {
-          addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
+    if (context.ivr) {
+      if (choice.responses.ivr) {
+        for (let choiceIvr of choice.responses.ivr) {
+          if (ivr.includes(choiceIvr)) {
+            addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
+          }
         }
+        ivr.push(...choice.responses.ivr)
       }
-      ivr.push(...choice.responses.ivr)
     }
 
     values.push(choice.value)

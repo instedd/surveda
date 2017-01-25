@@ -6,7 +6,9 @@
     "questionnaire": {
       "type": "object",
       "properties": {
-        "steps": { "$ref": "#/definitions/steps"}
+        "steps": { "$ref": "#/definitions/steps" },
+        "quota_completed_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
+        "error_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] }
       },
       "required": ["steps"]
     },

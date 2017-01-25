@@ -28,7 +28,7 @@ type Props = {
 
 type QuizState = {
   stepPromptSms: string,
-  stepPromptIvr: LanguagePrompt,
+  stepPromptIvr: AudioPrompt,
   stepPromptIvrText: string,
   activeLanguage: string,
   cardId: string,
