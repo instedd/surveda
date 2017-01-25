@@ -650,7 +650,22 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it("should validate a response's IVR value must not overlap other SMS values", () => {
+    it("should not validate response's SMS duplicate values if SMS mode is disabled", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('sms'),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b, c', '1', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'd, c', '2', null)
+      ])
+
+      expect(resultState.errors).toNotInclude({
+        [`steps[0].choices[1]['en'].sms`]: ['Value "c" already used in a previous response']
+      })
+    })
+
+    it("should validate a response's IVR value must not overlap other IVR values", () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
@@ -660,6 +675,21 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
+        'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+      })
+    })
+
+    it("should validate a response's IVR duplicate value if IVR mode is disabled", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1, 2', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '3, 2', null)
+      ])
+
+      expect(resultState.errors).toNotInclude({
         'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
       })
     })
