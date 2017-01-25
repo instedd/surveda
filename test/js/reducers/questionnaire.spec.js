@@ -680,7 +680,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.setIvrQuestionnaireMsg('errorMsg', '')
+        actions.setIvrQuestionnaireMsg('errorMsg', {text: '', audioSource: 'tts'})
       ])
 
       expect(state.errorsByLang['en']).toInclude({

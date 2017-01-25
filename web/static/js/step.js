@@ -44,8 +44,8 @@ export function getPromptSms(prompt: ?Prompt, language: string): string {
   return (((prompt || {})[language] || {}).sms || '').trim()
 }
 
-export function getPromptIvr(prompt: ?Prompt, language: string): any {
-  return ((prompt || {})[language] || {}).ivr || {}
+export function getPromptIvr(prompt: ?Prompt, language: string): AudioPrompt {
+  return ((prompt || {})[language] || {}).ivr || {audioSource: 'tts', text: ''}
 }
 
 export function getPromptIvrText(prompt: ?Prompt, language: string): string {

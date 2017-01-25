@@ -223,7 +223,7 @@ export const setSmsQuestionnaireMsg = (msgKey, msg) => ({
   msg
 })
 
-export const setIvrQuestionnaireMsg = (msgKey, msg) => ({
+export const setIvrQuestionnaireMsg = (msgKey, msg: AudioPrompt) => ({
   type: SET_IVR_QUESTIONNAIRE_MSG,
   msgKey,
   msg
