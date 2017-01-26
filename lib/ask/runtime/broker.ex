@@ -261,7 +261,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, :end) do
     respondent
-    |> Respondent.changeset(%{state: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
+    |> Respondent.changeset(%{state: "completed", disposition: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update
 
     responses = respondent |> assoc(:responses) |> Repo.all
