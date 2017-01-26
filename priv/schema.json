@@ -21,23 +21,68 @@
     },
 
     "step": {
+      "oneOf": [
+        { "$ref": "#/definitions/multiple-choice" },
+        { "$ref": "#/definitions/numeric" },
+        { "$ref": "#/definitions/explanation" },
+        { "$ref": "#/definitions/language-selection" }
+      ]
+    },
+
+    "multiple-choice": {
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["multiple-choice", "numeric", "language-selection", "explanation"] },
+        "type": { "enum": ["multiple-choice"] },
         "title": {"type": "string"},
-        "prompt": { "anyOf": [{"$ref": "#/definitions/prompt"}, {"$ref": "#/definitions/lang_prompt"}]},
-        "store": { "type": "string" },
+        "prompt": { "$ref": "#/definitions/prompt"},
         "choices": { "$ref": "#/definitions/choices" },
-        "language_choices": { "type": "array" },
+        "store": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "type", "title", "prompt", "choices", "store"]
+    },
+
+    "numeric": {
+      "properties": {
+        "id": {"type": "string"},
+        "type": { "enum": ["numeric"] },
+        "title": {"type": "string"},
+        "prompt": { "$ref": "#/definitions/prompt"},
         "min_value": {"type": ["integer", "null"]},
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
         "ranges": {"$ref": "#/definitions/ranges"},
+        "store": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "type", "title", "prompt", "store"]
+    },
+
+    "explanation": {
+      "properties": {
+        "id": {"type": "string"},
+        "type": { "enum": ["explanation"] },
+        "title": {"type": "string"},
+        "prompt": { "$ref": "#/definitions/prompt"},
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
-      "required": ["id", "type", "title", "prompt"]
+      "required": ["id", "type", "title", "prompt", "skip_logic"]
     },
+
+    "language-selection": {
+      "properties": {
+        "id": {"type": "string"},
+        "type": { "enum": ["language-selection"] },
+        "title": {"type": "string"},
+        "prompt": { "$ref": "#/definitions/lang_prompt"},
+        "language_choices": { "type": "array" },
+        "store": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "required": ["id", "type", "title", "prompt", "language_choices", "store"]
+    },
+
     "choices": {
       "type": "array",
       "items": {
@@ -61,6 +106,7 @@
         "$ref": "#/definitions/range"
       }
     },
+
     "range": {
       "properties": {
         "from": {"type": ["integer", "null"]},
@@ -76,11 +122,13 @@
         "sms": {
           "type": "object",
           "additionalProperties": {
-            "type": "array"
+            "type": "array",
+            "items": { "type": "string" }
           }
         },
         "ivr": {
-          "type": "array"
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },
@@ -94,12 +142,12 @@
       "type": "object",
       "properties": {
         "sms": {"type": "string" },
-        "ivr": {"$ref": "#/definitions/ivr"}
+        "ivr": {"$ref": "#/definitions/ivr_prompt"}
       },
       "additionalProperties": false
     },
 
-    "ivr": {
+    "ivr_prompt": {
       "type": "object",
       "properties": {
         "text": {"type": "string"},
