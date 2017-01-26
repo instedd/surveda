@@ -6,11 +6,23 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
   @shortdoc """
   Validates that questionnaires the DB conform to the current schema.json definition.
   """
-  defp inspect_result([], _, _), do: []
-  defp inspect_result(validation_result, id, field) do
-    Mix.shell.info "######################################################"
-    Mix.shell.info "Validation failed for quiz #{field} (quiz id: #{id})"
-    validation_result |> inspect |> Mix.shell.info
+  defp inspect_result([], _), do: []
+  defp inspect_result(validation_result, id) do
+    Mix.shell.error "######################################################"
+    Mix.shell.error "Validation failed for questionnaire (id: #{id})"
+    validation_result |> inspect |> Mix.shell.error
+  end
+
+  defp validate_questionnaire(quiz) do
+    quiz_json = %{
+      "steps": quiz.steps,
+      "quota_completed_msg": quiz.quota_completed_msg,
+      "error_msg": quiz.error_msg
+    }
+
+    quiz_json
+    |> JsonSchema.validate(:questionnaire, CustomJsonSchema)
+    |> inspect_result(quiz.id)
   end
 
   def run([]), do: run(["schema.json"])
@@ -19,22 +31,9 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
 
     GenServer.start_link(JsonSchema, [schema_path], name: CustomJsonSchema)
 
-    validate = fn(quiz) ->
-      quiz.steps
-      |> JsonSchema.validate(:steps, CustomJsonSchema)
-      |> inspect_result(quiz.id, "steps")
-
-      if quiz.quota_completed_msg != nil do
-        quiz.quota_completed_msg
-        |> JsonSchema.validate(:prompt, CustomJsonSchema)
-        |> inspect_result(quiz.id, "quota_completed_msg")
-      end
-
-    end
-
     Questionnaire
     |> Repo.all
-    |> Enum.map(validate)
+    |> Enum.each(&validate_questionnaire/1)
 
     Agent.stop(CustomJsonSchema)
   end
