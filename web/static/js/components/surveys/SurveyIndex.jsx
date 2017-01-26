@@ -109,7 +109,7 @@ class SurveyCard extends PureComponent {
 
     if (survey && completedByDate) {
       const data = completedByDate.respondentsByDate
-      const target = completedByDate.cutoff || completedByDate.totalRespondents
+      const target = completedByDate.totalQuota || completedByDate.cutoff || completedByDate.totalRespondents
       cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
       if (survey.state == 'running' || survey.state == 'completed') {
         reached = RespondentsChartCount.respondentsReachedPercentage(data, target)

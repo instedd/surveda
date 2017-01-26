@@ -229,7 +229,7 @@ class SurveyShow extends Component {
                     )) }
                     </td>
                     <td className='right-align'>{quota}</td>
-                    <td className='right-align'>{quota == 0 ? '-' : `${Math.round(stat.count * 100.0 / quota)}%`}</td>
+                    <td className='right-align'>{quota == 0 ? '-' : `${Math.min(Math.round(stat.count * 100.0 / quota), 100)}%`}</td>
                     <td className='right-align'>{quota == 0 ? '-' : stat.full}</td>
                     <td className='right-align'>{quota == 0 ? '-' : stat.partials}</td>
                   </tr>
@@ -256,7 +256,7 @@ const mapStateToProps = (state, ownProps) => {
   if (respondentsStatsRoot) {
     respondentsStats = respondentsStatsRoot.respondentsByState
     completedRespondentsByDate = respondentsStatsRoot.respondentsByDate
-    target = respondentsStatsRoot.cutoff || respondentsStatsRoot.totalRespondents
+    target = respondentsStatsRoot.totalQuota || respondentsStatsRoot.cutoff || totalRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
     contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByState.pending.count
   }

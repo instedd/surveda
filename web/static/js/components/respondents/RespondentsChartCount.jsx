@@ -12,7 +12,11 @@ export const cumulativeCount = (completedByDate, targetValue) => {
 
 export const cumulativeCountFor = (d, completedByDate) => {
   const dateMilliseconds = Date.parse(d)
-  return completedByDate.reduce((pre, cur) => Date.parse(cur.date) <= dateMilliseconds ? pre + cur.count : pre, 0)
+  return completedByDate.reduce((pre, cur) => {
+    return Date.parse(cur.date) <= dateMilliseconds && cur.date >= pre.date
+    ? cur
+    : pre
+  }, {date: '', count: 0}).count
 }
 
 export const respondentsReachedPercentage = (completedByDate, targetValue) => {

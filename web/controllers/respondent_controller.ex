@@ -49,10 +49,54 @@ defmodule Ask.RespondentController do
     end
   end
 
-  defp responded_on(datetime, by_date) do
-    { date, _ } = datetime
-    value = Enum.find(by_date, fn x -> elem(x, 0) == date end)
-    if (value), do: value, else: {date, 0}
+  def responded_on(date, by_date) do
+    value = Enum.filter(by_date, fn x -> elem(x, 0) == date end)
+    {date, value}
+  end
+
+  def cumulative_count_for(date, by_date, buckets) do
+    value = if buckets |> length == 0 do
+      by_date
+      |> Enum.reduce(0, fn respondents_by_date, total ->
+        if(elem(respondents_by_date, 0) <= date) do
+          case elem(respondents_by_date, 1) do
+            [] -> total
+            [{_, _, count}] -> total + count
+          end
+        else
+          total
+        end
+      end)
+    else
+      buckets = buckets |> Enum.map(fn bucket ->
+        {bucket.id, 0, bucket.quota || 0}
+      end)
+      by_date
+      |> Enum.reduce(buckets, fn respondents_by_date, buckets ->
+        {respondents_date, respondents} = respondents_by_date
+        if(respondents_date <= date) do
+          respondents |> Enum.reduce(buckets, fn respondent, buckets ->
+            {_, bucket_id, count} = respondent
+            bucket = buckets |> Enum.find(fn bucket -> elem(bucket, 0) == bucket_id end)
+            case bucket do
+              nil -> buckets
+              {bucket_id, total, quota} ->
+                (buckets -- [bucket]) ++ [{
+                  bucket_id,
+                  min(quota, total + count),
+                  quota
+                }]
+            end
+          end)
+        else
+          buckets
+        end
+      end)
+      |> Enum.reduce(0, fn bucket, total ->
+        total + elem(bucket, 1)
+      end)
+    end
+    {date, value}
   end
 
   def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -68,18 +112,33 @@ defmodule Ask.RespondentController do
 
     by_date = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
-      group_by: fragment("DATE(completed_at)"),
-      select: {fragment("DATE(completed_at)"), count("*")})
+      group_by: fragment("DATE(completed_at), quota_bucket_id"),
+      select: {fragment("DATE(completed_at)"), r.quota_bucket_id, count("*")})
 
     total_respondents = survey |> assoc(:respondents) |> Repo.aggregate(:count, :id)
-    range = Timex.Interval.new(from: survey.started_at, until: Timex.now)
-    respondents_by_date = Enum.map(range, fn datetime -> responded_on(Timex.to_erl(datetime), by_date) end)
+
+    buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
+
+    range =
+      Timex.Interval.new(from: survey.started_at, until: Timex.now)
+      |> Enum.map(fn datetime ->
+        { date, _ } = Timex.to_erl(datetime)
+        date
+      end)
+    respondents_by_date = Enum.map(range, fn datetime -> responded_on(datetime, by_date) end)
+
+    cumulative_count = Enum.map(range, fn datetime -> cumulative_count_for(datetime, respondents_by_date, buckets) end)
 
     active = by_state["active"] || 0
     pending = by_state["pending"] || 0
     completed = by_state["completed"] || 0
     stalled = by_state["stalled"] || 0
     failed = by_state["failed"] || 0
+
+    total_quota = buckets
+    |> Enum.reduce(0, fn bucket, total ->
+      total + (bucket.quota || 0)
+    end)
 
     stats = %{
       id: survey.id,
@@ -90,8 +149,9 @@ defmodule Ask.RespondentController do
         stalled: respondent_by_state(stalled, total_respondents),
         failed: respondent_by_state(failed, total_respondents)
       },
-      respondents_by_date: respondents_by_date,
+      respondents_by_date: cumulative_count,
       cutoff: survey.cutoff,
+      total_quota: total_quota,
       total_respondents: total_respondents
     }
     render(conn, "stats.json", stats: stats)
