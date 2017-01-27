@@ -11,8 +11,10 @@ defmodule Ask.Factory do
 
   def user_factory do
     %Ask.User{
+      name: "John",
       email: sequence(:email, &"email-#{&1}@example.com"),
-      encrypted_password: Addict.Configs.password_hasher.hashpwsalt "1234"
+      password_hash: Comeonin.Bcrypt.hashpwsalt("1234"),
+      confirmed_at: Ecto.DateTime.utc
     }
   end
 

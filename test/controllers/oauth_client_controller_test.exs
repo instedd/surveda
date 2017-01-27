@@ -3,8 +3,9 @@ defmodule Ask.OAuthHelperControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
+
     conn = conn
-      |> post(login_path(conn, :login, %{email: user.email, password: "1234"}))
+      |> post(session_path(conn, :create, %{session: %{email: user.email, password: "1234"}}))
     {:ok, conn: conn, user: user}
   end
 
@@ -30,6 +31,7 @@ defmodule Ask.OAuthHelperControllerTest do
     insert(:oauth_token)
 
     conn = get conn, o_auth_client_path(conn, :index)
+
     assert json_response(conn, 200)["data"] == ["provider1", "provider2"]
   end
 

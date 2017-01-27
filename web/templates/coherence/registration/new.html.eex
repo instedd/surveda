@@ -1,11 +1,11 @@
-<body class="welcome">
+<body class="welcome login">
   <div class='wrapper'>
     <header>
       <nav>
         <div class='nav-wrapper'>
-          <a href="#!" class="brand-logo">
+          <a href="/" class="brand-logo">
             <svg version="1.1"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-               viewBox="0 0 114 60" width="114px">
+                viewBox="0 0 114 60" width="114px">
               <rect x="26" y="14" transform="matrix(-1 -4.183688e-11 4.183688e-11 -1 60 56)" class="st0" width="8" height="28"/>
               <rect x="36" y="23" class="st1" width="8" height="19"/>
               <polygon class="st2" points="36,23 44,31 44,42 36,42 "/>
@@ -44,69 +44,59 @@
         </div>
       </nav>
     </header>
-    <main class="main-welcome">
-      <div class="section main">
-        <div class='row main'>
-          <div class='col s12 m5'>
-            <h3>Collect opinions</h3>
-            <h5>Get better data and run larger surveys anywhere in the world</h5>
-            <p>Ask is a free, open source tool for conducting polls using text messages, voice, web and more. Step-by-step, Ask guides participants through polls and collects real-time results. Ask shrinks the gap between audiences and pollers, taking the pulse of the people anytime and anywhere there's mobile phone service.</p>
-          </div>
-          <div class='col s12 m7'>
-            <img class="right responsive-img" src='/images/welcome-main.png' width='581px' />
+
+    <main role="main" class="main-welcome valign-wrapper">
+      <div class="row">
+        <div class="col s12">
+          <div class="card">
+            <div class="card-content">
+              <%= form_for @changeset, registration_path(@conn, :create), [as: :registration], fn f  -> %>            
+                <div class="row">
+                  <div class="col s12">
+                    <%= if @changeset.action do %>
+                      <div class="alert alert-danger">
+                        <p>Oops, something went wrong! Please check the errors below.</p>
+                      </div>
+                    <% end %>
+                    <span class="card-title">Sign up</span>
+                    <div class="input-field">
+                      <%= text_input f, :name, required: "" %>
+                      <%= label f, :name %>
+                      <%= error_tag f, :name %>
+                    </div>
+                    <div class="input-field">
+                      <%= text_input f, :email, required: "" %>
+                      <%= label f, :email %>
+                      <%= error_tag f, :email %>
+                    </div>
+                    <div class="input-field">
+                      <%= password_input f, :password, required: "" %>
+                      <%= label f, :password %>
+                      <%= error_tag f, :password %>
+                    </div>
+                    <div class="input-field">
+                      <%= password_input f, :password_confirmation, required: "" %>
+                      <%= label f, :password_confirmation %>
+                      <%= error_tag f, :password_confirmation %>
+                    </div>              
+                    <div class="addict errors"></div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col s12">
+                    <button id="btn-register" class="btn-large blue waves-effect waves-light btn-block">SIGN UP</button>
+                  </div>
+                </div>
+              <% end %>              
+              <div class="row">
+                <div class="col s12 right-align">
+                  <a href="/recover_password">Forgot your password?</a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="section right-img">
-        <div class='row'>
-          <div class='col s12 m5'>
-            <h3>Easy questionnaire design</h3>
-            <p>Vestibulum diam mi, malesuada imperdiet lorem eget, vehicula sagittis tellus. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra at. </p>
-          </div>
-          <div class='col s12 m7'>
-            <img class="right responsive-img" src='/images/welcome-img01.png' width='646px' />
-          </div>
-        </div>
-      </div>
-
-      <div class="section left-img">
-        <div class='row'>
-          <div class='col s12 m7'>
-            <img class="left responsive-img" src='/images/welcome-img02.png' width='631px' />
-          </div>
-          <div class='col s12 m5'>
-            <h3>Organize your surveys by projects</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="section right-img">
-        <div class='row'>
-          <div class='col s12 m5'>
-            <h3>Live survey follow up</h3>
-            <p>Vestibulum diam mi, malesuada imperdiet lorem eget, vehicula sagittis tellus. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra at. </p>
-          </div>
-          <div class='col s12 m7'>
-            <img class="right responsive-img" src='/images/welcome-img03.png' width='646px' />
-          </div>
-        </div>
-      </div>
-
-
-      <div class="section left-img">
-        <div class='row'>
-          <div class='col s12 m7'>
-            <img class="left responsive-img" src='/images/welcome-img04.png' width='553px' />
-          </div>
-          <div class='col s12 m5'>
-            <h3>Effortless schedule setup</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra.</p>
-          </div>
-        </div>
-      </div>
-
     </main>
     <footer>
         <div class="row">
@@ -122,12 +112,6 @@
           </div>
         </div>
     </footer>
-  </div>
-  <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-  <script type="text/javascript">
-    $(document).ready(function() {
-      $(".button-collapse").sideNav();
-    });
-  </script>
+  </div>    
 </body>
- 
+<script src="../js/app.js"></script>

@@ -1,7 +1,6 @@
 defmodule Ask.OAuthClientController do
   use Ask.Web, :controller
 
-  plug Addict.Plugs.Authenticated
   plug :put_layout, false
 
   def index(conn, _params) do

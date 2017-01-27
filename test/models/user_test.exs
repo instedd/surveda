@@ -3,7 +3,7 @@ defmodule Ask.UserTest do
 
   alias Ask.{User, Repo}
 
-  @valid_attrs %{email: "some@content", encrypted_password: "some content"}
+  @valid_attrs %{email: "some@content", password: "some content", encrypted_password: "some content"}
   @invalid_email %{email: "some content", encrypted_password: "some content"}
   @invalid_attrs %{}
 

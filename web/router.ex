@@ -1,6 +1,6 @@
 defmodule Ask.Router do
   use Ask.Web, :router
-  use Addict.RoutesHelper
+  use Coherence.Router
   use Plug.ErrorHandler
   use Sentry.Plug
 
@@ -10,30 +10,42 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Plug.Static,
-      at: "files/", from: "web/static/assets/files/", gzip: false
+    plug Plug.Static, at: "files/", from: "web/static/assets/files/"
+    plug Coherence.Authentication.Session
+  end
+
+  pipeline :protected do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug Coherence.Authentication.Session, protected: true
   end
 
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-
+    plug Coherence.Authentication.Session
+    
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
-  end
+  end  
 
   if Mix.env == :dev do
-    forward "/sent_emails", Bamboo.EmailPreviewPlug
-  end
-
-  scope "/" do
-    addict :routes
+    #forward "/sent_emails", Bamboo.EmailPreviewPlug
+    scope "/dev" do
+      pipe_through [:browser]
+      forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
+    end
   end
 
   scope "/api" , Ask do
     pipe_through :api
 
     scope "/v1" do
+      delete "/sessions", Coherence.SessionController, :api_delete
+      
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
@@ -70,9 +82,17 @@ defmodule Ask.Router do
 
   scope "/", Ask do
     pipe_through :browser
+    coherence_routes :public
 
-    get "/oauth_client/callback", OAuthClientController, :callback
-    get "/*path", PageController, :index
+    # add public resources below
+    get "/oauth_client/callback", OAuthClientController, :callback    
+    get "/*path", PageController, :index 
   end
 
+  scope "/", Ask do
+    pipe_through :protected
+    coherence_routes :protected
+    
+    # add protected resources below
+  end
 end
