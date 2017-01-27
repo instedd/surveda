@@ -20,7 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal, 
+                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal,
                     :bamboo, :bamboo_smtp, :coherence]]
   end
 
