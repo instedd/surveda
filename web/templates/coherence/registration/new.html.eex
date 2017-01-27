@@ -31,7 +31,6 @@
                 <%= label f, :password_confirmation %>
                 <%= error_tag f, :password_confirmation %>
               </div>              
-              <div class="addict errors"></div>
             </div>
           </div>
           <div class="row">
@@ -42,7 +41,7 @@
         <% end %>              
         <div class="row">
           <div class="col s12 right-align">
-            <a href="/recover_password">Forgot your password?</a>
+            <%= coherence_links(@conn, :new_session, register: false, confirm: false) %>
           </div>
         </div>
       </div>
