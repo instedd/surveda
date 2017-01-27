@@ -15,6 +15,7 @@ defmodule Ask.Coherence.PasswordController do
   require Logger
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
+  alias Ask.Coherence.Helper
 
   plug :layout_view
   plug :redirect_logged_in when action in [:new, :create, :edit, :update]
@@ -82,7 +83,7 @@ defmodule Ask.Coherence.PasswordController do
         |> put_flash(:error, "Invalid reset token.")
         |> redirect(to: logged_out_url(conn))
       user ->
-        if expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
+        if Ask.Coherence.Helper.expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
           clear_password_params(user, user_schema, %{})
           |> Config.repo.update
 
