@@ -50,6 +50,7 @@ class StepEditor extends Component {
       editor =
         <ExplanationStepEditor
           {...commonProps}
+          onDelete={onDelete}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore} />
     } else if (step.type == 'language-selection') {
