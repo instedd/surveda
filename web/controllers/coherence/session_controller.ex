@@ -19,6 +19,7 @@ defmodule Ask.Coherence.SessionController do
   @doc false
   def layout_view(conn, _) do
     conn
+    |> put_layout({Coherence.LayoutView, "app.html"})
     |> put_view(Coherence.SessionView)
   end
 

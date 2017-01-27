@@ -24,6 +24,7 @@ defmodule Ask.Coherence.RegistrationController do
   @doc false
   def layout_view(conn, _) do
     conn
+    |> put_layout({Coherence.LayoutView, "app.html"})
     |> put_view(Coherence.RegistrationView)
   end
 
