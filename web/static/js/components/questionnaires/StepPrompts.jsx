@@ -19,7 +19,6 @@ type Props = {
   step: Step,
   stepIndex: number,
   questionnaireActions: any,
-  inputErrors: boolean,
   questionnaire: Questionnaire,
   readOnly: boolean,
   errors: Errors,
@@ -30,6 +29,10 @@ class StepPrompts extends Component {
   state: State
   props: Props
   autocompleteItems: AutocompleteItem[]
+
+  static defaultProps = {
+    classes: ''
+  }
 
   constructor(props) {
     super(props)
