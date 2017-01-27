@@ -50,6 +50,13 @@ class IvrPrompt extends Component {
     onBlur(e)
   }
 
+  onFocus() {
+    const { autocomplete } = this.refs
+    if (autocomplete) {
+      autocomplete.unhide()
+    }
+  }
+
   componentWillReceiveProps(newProps) {
     this.setState(this.stateFromProps(newProps))
   }
@@ -102,6 +109,7 @@ class IvrPrompt extends Component {
                 disabled={readOnly}
                 onChange={e => onChange(e)}
                 onBlur={e => this.onBlur(e)}
+                onFocus={e => this.onFocus()}
                 className={maybeInvalidClass}
                 ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
               />

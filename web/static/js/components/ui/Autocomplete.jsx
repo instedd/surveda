@@ -36,6 +36,10 @@ export class Autocomplete extends Component {
     $(this.refs.dropdown).hide()
   }
 
+  unhide() {
+    this.hidden = false
+  }
+
   render() {
     const { className } = this.props
 
@@ -80,7 +84,6 @@ export class Autocomplete extends Component {
         onSelect(item)
       },
       getData: (value, callback) => {
-        this.hidden = false
         getData(value, (v, c) => {
           if (this.hidden) return
           callback(v, c)

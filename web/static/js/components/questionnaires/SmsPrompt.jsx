@@ -14,6 +14,13 @@ class SmsPrompt extends Component {
     onBlur(e)
   }
 
+  onFocus() {
+    const { autocomplete } = this.refs
+    if (autocomplete) {
+      autocomplete.unhide()
+    }
+  }
+
   render() {
     const { id, value, inputErrors, onChange, readOnly, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
@@ -44,6 +51,7 @@ class SmsPrompt extends Component {
               is length='140'
               onChange={e => onChange(e)}
               onBlur={e => this.onBlur(e)}
+              onFocus={e => this.onFocus()}
               ref={ref => {
                 this.smsInput = ref
                 $(ref).characterCounter()
