@@ -76,7 +76,9 @@ class IvrPrompt extends Component {
   render() {
     const { id, value, inputErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
-    const maybeInvalidClass = classNames({'validate invalid': inputErrors})
+    const shouldDisplayErrors = value == this.props.originalValue
+
+    const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
 
     let autocompleteComponent = null
     if (autocomplete) {
@@ -149,6 +151,7 @@ IvrPrompt.propTypes = {
   id: PropTypes.string.isRequired,
   customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,

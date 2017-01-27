@@ -24,6 +24,8 @@ type Props = {
 };
 
 type QuizState = {
+  smsOriginalValue: string,
+  ivrOriginalValue: string,
   stepPromptSms: string,
   stepPromptIvr: AudioPrompt,
   stepPromptIvrText: string,
@@ -122,6 +124,8 @@ class QuestionnaireMsg extends Component {
     return {
       editing: editing,
       quizState: {
+        smsOriginalValue: getPromptSms(questionnaireMsg, activeLanguage),
+        ivrOriginalValue: getPromptIvrText(questionnaireMsg, activeLanguage),
         stepPromptSms: getPromptSms(questionnaireMsg, activeLanguage),
         stepPromptIvr: promptIvr,
         stepPromptIvrText: getPromptIvrText(questionnaireMsg, activeLanguage),
@@ -264,6 +268,7 @@ class QuestionnaireMsg extends Component {
         smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`}
           inputErrors={smsInputErrors}
           value={quizState.stepPromptSms}
+          originalValue={quizState.smsOriginalValue}
           readOnly={readOnly}
           onChange={e => this.promptSmsChange(e)}
           onBlur={e => this.promptSmsSubmit(e)}
@@ -281,6 +286,7 @@ class QuestionnaireMsg extends Component {
           key={quizState.cardId}
           inputErrors={ivrInputErrors}
           value={quizState.stepPromptIvrText}
+          originalValue={quizState.ivrOriginalValue}
           onChange={e => this.promptIvrChange(e)}
           readOnly={readOnly}
           onBlur={e => this.promptIvrSubmit(e)}

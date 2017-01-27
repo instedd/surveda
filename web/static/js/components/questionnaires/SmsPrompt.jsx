@@ -17,8 +17,10 @@ class SmsPrompt extends Component {
   render() {
     const { id, value, inputErrors, onChange, readOnly, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
+    const shouldDisplayErrors = value == this.props.originalValue
+
     const maybeInvalidClass = classNames({
-      'validate invalid': inputErrors != null && inputErrors.length > 0
+      'validate invalid': inputErrors != null && inputErrors.length > 0 && shouldDisplayErrors
     })
 
     let autocompleteComponent = null
@@ -59,6 +61,7 @@ class SmsPrompt extends Component {
 
 SmsPrompt.propTypes = {
   id: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
