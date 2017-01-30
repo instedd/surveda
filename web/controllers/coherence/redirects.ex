@@ -50,4 +50,6 @@ defmodule Coherence.Redirects do
     redirect(conn, to: path)
   end
   def session_create(conn, _), do: redirect(conn, to: "/")
+
+  def registration_create(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_sent))
 end

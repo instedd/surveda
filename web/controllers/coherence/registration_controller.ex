@@ -109,4 +109,8 @@ defmodule Ask.Coherence.RegistrationController do
     Config.repo.delete! user
     redirect_to(conn, :registration_delete, params)
   end
+
+  def confirmation_sent(conn, params) do
+    render(conn, "confirmation_sent.html")
+  end
 end

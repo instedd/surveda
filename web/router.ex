@@ -85,8 +85,9 @@ defmodule Ask.Router do
     coherence_routes :public
 
     # add public resources below
-    get "/oauth_client/callback", OAuthClientController, :callback    
-    get "/*path", PageController, :index 
+    get "/oauth_client/callback", OAuthClientController, :callback
+    get "/registrations/confirmation_sent", Coherence.RegistrationController, :confirmation_sent
+    get "/*path", PageController, :index
   end
 
   scope "/", Ask do

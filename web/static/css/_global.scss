@@ -790,9 +790,9 @@ i.survey-status { // icon for survey status on index
     color: #ff5722 !important;
   }
 
+// ----- Static empty pages ------ 
 
-
-
-
-
-
+.empty_static {
+  flex: 1;
+  padding-top: 15px;
+}
