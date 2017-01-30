@@ -19,6 +19,7 @@ config :ask, Ask.Endpoint,
 config :ask, Ask.Endpoint,
   live_reload: [
     patterns: [
+      ~r{priv/schema.json},
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
       ~r{web/views/.*(ex)$},

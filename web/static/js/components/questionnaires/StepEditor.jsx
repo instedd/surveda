@@ -7,6 +7,7 @@ import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
 import NumericStepEditor from './NumericStepEditor'
 import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
 import ExplanationStepEditor from './ExplanationStepEditor'
+import FlagStepEditor from './FlagStepEditor'
 import { errorsByLang } from '../../questionnaireErrors'
 
 type Props = {
@@ -35,6 +36,8 @@ class StepEditor extends Component {
         return <NumericStepEditor {...commonProps} step={step} />
       case 'explanation':
         return <ExplanationStepEditor {...commonProps} step={step} />
+      case 'flag':
+        return <FlagStepEditor {...commonProps} step={step} />
       case 'language-selection':
         return <LanguageSelectionStepEditor {...commonProps} step={step} />
       default:

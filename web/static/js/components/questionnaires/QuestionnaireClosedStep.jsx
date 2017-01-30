@@ -26,14 +26,19 @@ class QuestionnaireClosedStep extends Component {
     })
 
     const stepIconFont = (() => {
-      if (step.type === 'multiple-choice') {
-        return 'list'
-      } else if (step.type === 'numeric') {
-        return 'dialpad'
-      } else if (step.type === 'explanation') {
-        return 'chat_bubble_outline'
-      } else {
-        return 'language'
+      switch (step.type) {
+        case 'multiple-choice':
+          return 'list'
+        case 'numeric':
+          return 'dialpad'
+        case 'explanation':
+          return 'chat_bubble_outline'
+        case 'flag':
+          return 'flag'
+        case 'language-selection':
+          return 'language'
+        default:
+          throw new Error(`unknown step type: ${step.type}`)
       }
     })()
 

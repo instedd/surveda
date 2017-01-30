@@ -25,7 +25,8 @@
         { "$ref": "#/definitions/multiple-choice" },
         { "$ref": "#/definitions/numeric" },
         { "$ref": "#/definitions/explanation" },
-        { "$ref": "#/definitions/language-selection" }
+        { "$ref": "#/definitions/language-selection" },
+        { "$ref": "#/definitions/flag" }
       ]
     },
 
@@ -81,6 +82,18 @@
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "language_choices", "store"]
+    },
+
+    "flag": {
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"enum": ["flag"]},
+        "title": {"type": "string"},
+        "disposition": { "enum": ["partial", "completed", "ineligible"] },
+        "skip_logic": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false,
+      "required": ["id", "type", "title", "disposition", "skip_logic"]
     },
 
     "choices": {
