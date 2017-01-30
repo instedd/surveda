@@ -3,7 +3,7 @@ defmodule Ask.Invite do
 
   schema "invites" do
     field :code, :string
-    field :level, :string
+    field :level, :string # reader, editor
     field :email, :string
     field :inviter_email, :string
     belongs_to :project, Ask.Survey

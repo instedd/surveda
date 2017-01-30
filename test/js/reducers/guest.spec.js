@@ -14,10 +14,22 @@ describe('guest reducer', () => {
     expect(result.email).toEqual(email)
   })
 
-  it('should change level', () => {
+  it('should change level to editor', () => {
     const level = 'editor'
     const result = playActions([actions.changeLevel(level)])
     expect(result.level).toEqual(level)
+  })
+
+  it('should change level to reader', () => {
+    const level = 'reader'
+    const result = playActions([actions.changeLevel(level)])
+    expect(result.level).toEqual(level)
+  })
+
+  it('should not change level to invalid values', () => {
+    const level = 'invalid_value'
+    const result = playActions([actions.changeLevel(level)])
+    expect(result.level).toEqual('')
   })
 
   it('should clear values', () => {
