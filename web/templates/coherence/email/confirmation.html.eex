@@ -1,11 +1,10 @@
 <div>
   <p>Hello <%= @name %>!<p>
   <p>
-    Your new account is almost ready. Click the link below to confirm you new account.
+    Your new Ask account is almost ready, click the link below to confirm and activate it.
   </p>
   <p>
-    <a href="<%= @url %>">Confirm my Account</a>
+    <a href="<%= @url %>">Confirm my Ask Account</a>
   </p>
   <p>Thank you!</p>
 </div>
-
