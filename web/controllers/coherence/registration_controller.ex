@@ -113,4 +113,8 @@ defmodule Ask.Coherence.RegistrationController do
   def confirmation_sent(conn, params) do
     render(conn, "confirmation_sent.html")
   end
+
+  def confirmation_expired(conn, params) do
+    render(conn, "confirmation_expired.html")
+  end
 end

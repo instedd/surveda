@@ -46,6 +46,8 @@ defmodule Coherence.Redirects do
   def session_create(conn, _), do: redirect(conn, to: "/")
 
   def registration_create(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_sent))
+  def confirmation_create(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_sent))
 
   def confirmation_edit(conn, _), do: redirect(conn, to: session_path(conn, :new))
+  def confirmation_edit_expired(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_expired)) 
 end

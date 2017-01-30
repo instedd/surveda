@@ -10,6 +10,7 @@ defmodule Ask.Coherence.ConfirmationController do
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
   alias Ask.Coherence.Helper
+  import Ask.Router.Helpers
 
   plug Coherence.ValidateOption, :confirmable
 
@@ -53,8 +54,8 @@ defmodule Ask.Coherence.ConfirmationController do
       user ->
         if user_schema.confirmed?(user) do
           conn
-          |> put_flash(:error, "Account already confirmed.")
-          |> render(:new, [email: "", changeset: changeset])
+          |> put_flash(:error, "Account already confirmed")
+          |> redirect(to: session_path(conn, :new))
         else
           conn
           |> send_confirmation(user, user_schema)
