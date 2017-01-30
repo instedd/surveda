@@ -54,9 +54,11 @@ export class InviteModal extends Component {
       return <div>Loading...</div>
     }
 
-    const cancel = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
+    const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
 
-    const send = <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
+    const sendButton = guest.code
+    ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
+    : <a className='btn-medium disabled'>Send</a>
 
     return (
       <Modal card id={modalId} style={style} className='invite-collaborator'>
@@ -90,8 +92,8 @@ export class InviteModal extends Component {
             </div>
             <div className='row button-actions'>
               <div className='col s12'>
-                { guest.code ? send : <a className='btn-medium disabled'>Send</a> }
-                {cancel}
+                {sendButton}
+                {cancelButton}
               </div>
             </div>
           </div>
