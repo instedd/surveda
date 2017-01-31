@@ -33,7 +33,6 @@ defmodule Ask.Router do
   end  
 
   if Mix.env == :dev do
-    #forward "/sent_emails", Bamboo.EmailPreviewPlug
     scope "/dev" do
       pipe_through [:browser]
       forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]

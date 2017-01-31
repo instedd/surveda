@@ -40,7 +40,7 @@ config :ask, Ask.Repo,
   pool_size: 10
 
 config :ask, Ask.Mailer,
-  adapter: Bamboo.LocalAdapter
+  adapter: Swoosh.Adapters.Local
 
 config :coherence,
   email_from_name: "Ask Dev",

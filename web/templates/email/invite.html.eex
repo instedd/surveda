@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <title><%= @email.subject %></title>
+  </head>
+  <body>
+  <div>  
+    <p>
+      <%= @invited_by %> has invited you to collaborate on an Ask project. Click the link below to join.
+      <a href="<%= @url %>">Join Project</a>
+    </p>
+    <p>Thank you!</p>
+  </div>
+  </body>
+</html>

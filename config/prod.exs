@@ -73,8 +73,8 @@ config :ask, Ask.Repo,
   pool_size: 20
 
 config :ask, Ask.Mailer,
-  adapter: Bamboo.SMTPAdapter,
-  server: System.get_env("SMTP_SERVER"),
+  adapter: Swoosh.Adapters.SMTP,
+  relay: System.get_env("SMTP_SERVER"),
   port: System.get_env("SMTP_PORT"),
   username: System.get_env("SMTP_USER"),
   password: System.get_env("SMTP_PASS"),
