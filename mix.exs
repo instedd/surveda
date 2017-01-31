@@ -39,7 +39,7 @@ defmodule Ask.Mixfile do
       {:mariaex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.6"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:gettext, "~> 0.11"},
+      {:gettext, "~> 0.11.0"},
       {:cowboy, "~> 1.0"},
       {:ex_machina, "~> 1.0", only: :test},
       {:csv, "~> 1.4.2"},
@@ -55,7 +55,7 @@ defmodule Ask.Mixfile do
       {:appsignal, "~> 0.9.2"},
       {:bamboo, "~> 0.7"},
       {:bamboo_smtp, "~> 1.2.1"},
-      {:coherence, "~> 0.3"}
+      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"}
    ]
   end
 

@@ -67,7 +67,7 @@ defmodule Ask.Coherence.SessionController do
   create a new cookie and update the database.
   """
   def create(conn, params) do
-    remember = if Config.user_schema.rememberable?, do: params["remember"], else: false
+    remember = Config.user_schema.rememberable?
     user_schema = Config.user_schema
     login_field = Config.login_field
     login_field_str = to_string login_field
