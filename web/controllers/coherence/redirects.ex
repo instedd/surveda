@@ -50,5 +50,5 @@ defmodule Coherence.Redirects do
   def confirmation_edit(conn, _), do: redirect(conn, to: session_path(conn, :new))
   def confirmation_edit_expired(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_expired)) 
   def password_create(conn, _), do: redirect(conn, to: password_path(conn, :password_recovery_sent))
-  def password_update(conn, _), do: redirect(conn, to: password_path(conn, :password_recovery_sent))
+  def password_update(conn, _), do: redirect(conn, to: session_path(conn, :new))
 end
