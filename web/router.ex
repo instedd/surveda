@@ -91,11 +91,4 @@ defmodule Ask.Router do
     get "/passwords/password_recovery_sent", Coherence.PasswordController, :password_recovery_sent
     get "/*path", PageController, :index
   end
-
-  scope "/", Ask do
-    pipe_through :protected
-    coherence_routes :protected
-    
-    # add protected resources below
-  end
 end

@@ -84,7 +84,7 @@ defmodule Ask.Coherence.PasswordController do
         |> put_flash(:error, "Invalid reset token.")
         |> redirect(to: logged_out_url(conn))
       user ->
-        if Ask.Coherence.Helper.expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
+        if Helper.expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
           clear_password_params(user, user_schema, %{})
           |> Config.repo.update
 
@@ -138,7 +138,7 @@ defmodule Ask.Coherence.PasswordController do
     Helpers.changeset(:password, user_schema, user, params)
   end
 
-  def password_recovery_sent(conn, params) do
+  def password_recovery_sent(conn, _) do
     render(conn, "password_recovery_sent.html")
   end
 end

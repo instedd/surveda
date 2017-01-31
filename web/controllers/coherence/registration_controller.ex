@@ -110,11 +110,11 @@ defmodule Ask.Coherence.RegistrationController do
     redirect_to(conn, :registration_delete, params)
   end
 
-  def confirmation_sent(conn, params) do
+  def confirmation_sent(conn, _) do
     render(conn, "confirmation_sent.html")
   end
 
-  def confirmation_expired(conn, params) do
+  def confirmation_expired(conn, _) do
     render(conn, "confirmation_expired.html")
   end
 end
