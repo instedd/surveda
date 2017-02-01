@@ -1,15 +1,18 @@
 defmodule Ask.User do
   use Ask.Web, :model
+  use Coherence.Schema
 
   schema "users" do
+    field :name, :string
     field :email, :string
-    field :encrypted_password, :string
     field :settings, Ask.Ecto.Type.JSON
 
     has_many :channels, Ask.Channel
     has_many :oauth_tokens, Ask.OAuthToken
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectMembership, on_replace: :delete
     has_many :project_memberships, Ask.ProjectMembership
+
+    coherence_schema
 
     timestamps()
   end
@@ -19,9 +22,10 @@ defmodule Ask.User do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:email, :encrypted_password, :settings])
-    |> validate_required([:email, :encrypted_password, :settings])
+    |> cast(params, [:name, :email, :settings] ++ coherence_fields)
+    |> validate_required([:email])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)
+    |> validate_coherence(params)
   end
 end

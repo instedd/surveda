@@ -12,11 +12,12 @@ import { choicesPath } from '../../questionnaireErrors'
 type Props = {
   actions: any,
   questionnaire: Questionnaire,
+  readOnly: boolean,
   step: MultipleChoiceStep,
   stepIndex: number,
   stepsBefore: Step[],
   stepsAfter: Step[],
-  errors: QuizErrors
+  errors: Errors
 };
 
 class StepMultipleChoiceEditor extends Component {
@@ -87,7 +88,7 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, step, stepIndex, stepsBefore, stepsAfter, errors } = this.props
+    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errors } = this.props
     const { choices } = step
 
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -129,6 +130,7 @@ class StepMultipleChoiceEditor extends Component {
                     choiceIndex={index}
                     lang={questionnaire.activeLanguage}
                     choice={choice}
+                    readOnly={readOnly}
                     onDelete={(e) => this.deleteChoice(e, index)}
                     onChoiceChange={this.changeChoice(index)}
                     stepsAfter={stepsAfter}
@@ -143,13 +145,15 @@ class StepMultipleChoiceEditor extends Component {
               </tbody>
             </table>
           </div>
-          <div className='card-action'>
-            <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
-            { myErrors
+          {readOnly ? null
+            : <div className='card-action'>
+              <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
+              { myErrors
             ? <span className='card-error'>{myErrors}</span>
             : null
             }
-          </div>
+            </div>
+          }
         </Card>
       </div>
     )

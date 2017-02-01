@@ -32,8 +32,8 @@ export function getStepPromptSms(step: Step, language: string): string {
   return ((getStepPrompt(step, language) || {}).sms || '').trim()
 }
 
-export function getStepPromptIvr(step: Step, language: string): any {
-  return (getStepPrompt(step, language) || {}).ivr || {}
+export function getStepPromptIvr(step: Step, language: string): AudioPrompt {
+  return (getStepPrompt(step, language) || {}).ivr || {audioSource: 'tts', text: ''}
 }
 
 export function getStepPromptIvrText(step: Step, language: string): string {
@@ -44,8 +44,8 @@ export function getPromptSms(prompt: ?Prompt, language: string): string {
   return (((prompt || {})[language] || {}).sms || '').trim()
 }
 
-export function getPromptIvr(prompt: ?Prompt, language: string): any {
-  return ((prompt || {})[language] || {}).ivr || {}
+export function getPromptIvr(prompt: ?Prompt, language: string): AudioPrompt {
+  return ((prompt || {})[language] || {}).ivr || {audioSource: 'tts', text: ''}
 }
 
 export function getPromptIvrText(prompt: ?Prompt, language: string): string {

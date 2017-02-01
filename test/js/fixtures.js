@@ -122,8 +122,8 @@ const bareQuestionnaire: Questionnaire = {
   defaultLanguage: 'en',
   activeLanguage: 'en',
   languages: ['en'],
-  quotaCompletedMsg: null,
-  errorMsg: null
+  quotaCompletedMsg: {},
+  errorMsg: {}
 }
 
 // TODO: investigate why Flow ignores the result of `deepFreeze`
@@ -134,3 +134,50 @@ const bareQuestionnaire: Questionnaire = {
 // The limitations of deepFreeze are probably related to sealed objects being used under its hood.
 // See: https://flowtype.org/docs/objects.html#sealed-object-types
 export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)
+
+const bareSurvey: Survey = {
+  id: 1,
+  projectId: 1,
+  name: 'Foo',
+  cutoff: 123,
+  state: 'ready',
+  questionnaireIds: [1],
+  scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
+  scheduleStartTime: '02:00:00',
+  scheduleEndTime: '06:00:00',
+  channels: [1],
+  respondentsCount: 2,
+  comparisons: [],
+  ivrRetryConfiguration: '',
+  smsRetryConfiguration: '',
+  modeComparison: false,
+  questionnaireComparison: false,
+  quotas: {
+    vars: [],
+    buckets: []
+  },
+  mode: [['sms']]
+}
+
+export const survey: Survey = deepFreeze(bareSurvey)
+
+const bareChannel: Channel = {
+  id: 1,
+  userId: 1,
+  name: 'Channel Name',
+  type: 'sms',
+  provider: 'nuntium',
+  settings: {
+    nuntiumChannel: 'Nuntium Channel Name'
+  }
+}
+
+export const channel: Channel = deepFreeze(bareChannel)
+
+const bareProject: Project = {
+  id: 1,
+  name: 'Project Name',
+  updatedAt: '2017-01-10T21:03:19'
+}
+
+export const project: Project = deepFreeze(bareProject)

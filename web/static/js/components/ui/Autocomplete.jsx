@@ -36,6 +36,10 @@ export class Autocomplete extends Component {
     $(this.refs.dropdown).hide()
   }
 
+  unhide() {
+    this.hidden = false
+  }
+
   render() {
     const { className } = this.props
 
@@ -73,14 +77,13 @@ export class Autocomplete extends Component {
       },
       dropdown: {
         el: dropdown,
-        itemTemplate: '<li class="ac-item" style="color: black !important" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
+        itemTemplate: '<li class="ac-item black-text" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
       },
       onSelect: (item) => {
         this.clickingAutocomplete = false
         onSelect(item)
       },
       getData: (value, callback) => {
-        this.hidden = false
         getData(value, (v, c) => {
           if (this.hidden) return
           callback(v, c)

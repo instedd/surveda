@@ -2,6 +2,8 @@ import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import * as actions from '../../actions/survey'
 import { InputWithLabel } from '../ui'
+import flatMap from 'lodash/flatMap'
+import uniq from 'lodash/uniq'
 
 class SurveyWizardRetryAttempts extends Component {
   componentDidMount() {
@@ -20,6 +22,8 @@ class SurveyWizardRetryAttempts extends Component {
       case 'ivr':
         this.setState({ivrRetryConfiguration: value})
         break
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
@@ -46,6 +50,8 @@ class SurveyWizardRetryAttempts extends Component {
           cssClass = 'ivr-attempts'
           icon = <i className='material-icons v-middle '>phone</i>
           break
+        default:
+          throw new Error(`unknown mode: ${mode}`)
       }
       return (
         <ul className={cssClass}>
@@ -68,49 +74,58 @@ class SurveyWizardRetryAttempts extends Component {
       case 'ivr':
         dispatch(actions.changeIvrRetryConfiguration(this.state.ivrRetryConfiguration))
         break
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   defaultValue(mode) {
-    if (mode == 'sms') {
-      return this.state.smsRetryConfiguration
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        return this.state.smsRetryConfiguration
+      case 'ivr':
         return this.state.ivrRetryConfiguration
-      }
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   invalid(mode, errors) {
-    if (mode == 'sms') {
-      return !!errors.smsRetryConfiguration
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        return !!errors.smsRetryConfiguration
+      case 'ivr':
         return !!errors.ivrRetryConfiguration
-      }
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   errorText(mode, errors) {
-    if (mode == 'sms') {
-      return errors.smsRetryConfiguration
-    } else {
-      if (mode == 'ivr') {
+    switch (mode) {
+      case 'sms':
+        return errors.smsRetryConfiguration
+      case 'ivr':
         return errors.ivrRetryConfiguration
-      }
+      default:
+        throw new Error(`unknown mode: ${mode}`)
     }
   }
 
   render() {
-    const { survey } = this.props
+    const { survey, readOnly } = this.props
     if (!survey || !this.state) {
       return (<div />)
     }
-    const modes = survey.data.mode
+    let modes = survey.data.mode
 
     if (!modes || modes.length == 0) {
       return null
     } else {
+      // modes will be something like [['sms'], ['sms', 'ivr']]
+      // so we convert it to ['sms', 'ivr']
+      modes = uniq(flatMap(modes, x => x))
+
       const modeRetryConfiguration = (
         modes.map((mode) => {
           const defaultValue = this.defaultValue(mode)
@@ -124,6 +139,7 @@ class SurveyWizardRetryAttempts extends Component {
                     onChange={e => this.editingRetryConfiguration(mode, e)}
                     onBlur={e => this.retryConfigurationChanged(mode, e)}
                     className={invalid ? 'invalid' : ''}
+                    disabled={readOnly}
                     />
                 </InputWithLabel>
                 <span className='small-text-bellow'>
@@ -150,7 +166,8 @@ const mapStateToProps = (state, ownProps) => ({
 
 SurveyWizardRetryAttempts.propTypes = {
   dispatch: PropTypes.func.isRequired,
-  survey: PropTypes.object
+  survey: PropTypes.object,
+  readOnly: PropTypes.bool
 }
 
 export default connect(mapStateToProps)(SurveyWizardRetryAttempts)

@@ -20,7 +20,7 @@ defmodule Ask.Survey do
     field :quotas, Ask.Ecto.Type.JSON, virtual: true
     field :comparisons, Ask.Ecto.Type.JSON, default: []
 
-    many_to_many :channels, Ask.Channel, join_through: Ask.SurveyChannel, on_replace: :delete
+    has_many :respondent_groups, Ask.RespondentGroup
     has_many :respondents, Ask.Respondent
     has_many :quota_buckets, Ask.QuotaBucket, on_replace: :delete
     many_to_many :questionnaires, Ask.Questionnaire, join_through: Ask.SurveyQuestionnaire, on_replace: :delete
@@ -55,22 +55,22 @@ defmodule Ask.Survey do
   end
 
   def update_state(changeset) do
+    ready =
+      mode_ready?(changeset) &&
+      schedule_ready?(changeset) &&
+      retry_attempts_ready?(changeset) &&
+      comparisons_ready?(changeset) &&
+      questionnaires_ready?(changeset) &&
+      respondent_groups_ready?(changeset)
+
+    # IO.inspect(mode_ready?(changeset))
+    # IO.inspect(schedule_ready?(changeset))
+    # IO.inspect(retry_attempts_ready?(changeset))
+    # IO.inspect(comparisons_ready?(changeset))
+    # IO.inspect(questionnaires_ready?(changeset))
+    # IO.inspect(respondent_groups_ready?(changeset))
+
     state = get_field(changeset, :state)
-    mode = get_field(changeset, :mode)
-    respondents_count = get_field(changeset, :respondents_count)
-
-    schedule = get_field(changeset, :schedule_day_of_week)
-    [ _ | values ] = Map.values(schedule)
-    schedule_completed = Enum.reduce(values, fn (x, acc) -> acc || x end)
-
-    channels = get_field(changeset, :channels)
-    questionnaires = get_field(changeset, :questionnaires)
-
-    ready = length(questionnaires) > 0 && respondents_count && respondents_count > 0
-      && length(channels) > 0 && schedule_completed && mode && (length(mode) > 0) && validate_retry_attempts_configuration(changeset)
-      && Enum.all?(mode, fn(modes) ->
-        Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
-      end)
 
     cond do
       state == "not_ready" && ready ->
@@ -94,16 +94,58 @@ defmodule Ask.Survey do
     end
   end
 
-  def validate_retry_attempts_configuration(changeset) do
+  defp questionnaires_ready?(changeset) do
+    questionnaires = get_field(changeset, :questionnaires)
+    length(questionnaires) > 0
+  end
+
+  defp schedule_ready?(changeset) do
+    schedule = get_field(changeset, :schedule_day_of_week)
+
+    [ _ | values ] = Map.values(schedule)
+    Enum.reduce(values, fn (x, acc) -> acc || x end)
+  end
+
+  defp mode_ready?(changeset) do
+    mode = get_field(changeset, :mode)
+    mode && length(mode) > 0
+  end
+
+  def comparisons_ready?(changeset) do
+    comparisons = get_field(changeset, :comparisons)
+    if comparisons && length(comparisons) > 0 do
+      sum = comparisons
+      |> Enum.map(&Map.get(&1, "ratio", 0))
+      |> Enum.sum
+      sum == 100
+    else
+      true
+    end
+  end
+
+  defp respondent_groups_ready?(changeset) do
+    mode = get_field(changeset, :mode)
+    respondent_groups = get_field(changeset, :respondent_groups)
+    respondent_groups &&
+      length(respondent_groups) > 0 &&
+      Enum.all?(respondent_groups, &respondent_group_ready?(&1, mode))
+  end
+
+  defp respondent_group_ready?(respondent_group, mode) do
+    channels = respondent_group.channels
+    Enum.all?(mode, fn(modes) ->
+      Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
+    end)
+  end
+
+  defp retry_attempts_ready?(changeset) do
     sms_retry_configuration = get_field(changeset, :sms_retry_configuration)
     ivr_retry_configuration = get_field(changeset, :ivr_retry_configuration)
-    valid = valid_retry_configuration?(sms_retry_configuration) && valid_retry_configuration?(ivr_retry_configuration)
-    valid
+    valid_retry_configuration?(sms_retry_configuration) && valid_retry_configuration?(ivr_retry_configuration)
   end
 
   def valid_retry_configuration?(retry_configuration) do
-    valid = !retry_configuration || Enum.all?(String.split(retry_configuration), fn s -> Regex.match?(~r/^\d+[mdh]$/, s) end)
-    valid
+    !retry_configuration || Enum.all?(String.split(retry_configuration), fn s -> Regex.match?(~r/^\d+[mdh]$/, s) end)
   end
 
   def retries_configuration(survey, mode) do
@@ -114,24 +156,6 @@ defmodule Ask.Survey do
     end
 
     parse_retries(retries)
-  end
-
-  def primary_channel(survey, modes) do
-    case modes do
-      [mode | _] -> channel(survey, mode)
-      _ -> nil
-    end
-  end
-
-  def fallback_channel(survey, modes) do
-    case modes do
-      [_, mode] -> channel(survey, mode)
-      _ -> nil
-    end
-  end
-
-  defp channel(survey, mode) do
-    survey.channels |> Enum.find(fn c -> c.type == mode end)
   end
 
   defp parse_retries(nil), do: []

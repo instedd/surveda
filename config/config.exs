@@ -50,14 +50,6 @@ config :logger, :console,
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
 
-config :addict,
-  secret_key: "243262243132244543362f4573334a324257346976794e2e7559764675",
-  extra_validation: fn ({valid, errors}, user_params) -> {valid, errors} end, # define extra validation here
-  user_schema: Ask.User,
-  repo: Ask.Repo,
-  from_email: "no-reply@example.com", # CHANGE THIS
-  mail_service: nil
-
 version = case File.read("VERSION") do
   {:ok, version} -> String.trim(version)
   {:error, :enoent} -> "#{Mix.Project.config[:version]}-#{Mix.env}"
@@ -78,6 +70,20 @@ config :appsignal, :config,
   env: Mix.env || :dev,
   revision: version
 
-if File.exists?("#{__DIR__}/local.exs") do
+if File.exists?("#{__DIR__}/local.exs") && Mix.env != :test do
   import_config "#{__DIR__}/local.exs"
 end
+
+# %% Coherence Configuration %%   Don't remove this line
+config :coherence,
+  user_schema: Ask.User,
+  repo: Ask.Repo,
+  module: Ask,
+  logged_out_url: "/",
+  email_from_name: "Your Name",
+  email_from_email: "yourname@example.com",
+  opts: [:authenticatable, :recoverable, :confirmable, :registerable, :rememberable]
+
+config :coherence, Ask.Coherence.Mailer,
+  adapter: Swoosh.Adapters.Local
+# %% End Coherence Configuration %%

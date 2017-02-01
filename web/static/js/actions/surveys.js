@@ -7,13 +7,13 @@ export const NEXT_PAGE = 'SURVEYS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'SURVEYS_PREVIOUS_PAGE'
 export const SORT = 'SURVEYS_SORT'
 
-export const fetchSurveys = (projectId: number) => (dispatch: Function, getState: () => Store) => {
+export const fetchSurveys = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?SurveyList> => {
   const state = getState()
 
   // Don't fetch surveys if they are already being fetched
   // for that same project
-  if (state.surveys.fetching && state.surveys.projectId == projectId) {
-    return
+  if (state.surveys.fetching && state.surveys.filter && state.surveys.filter.projectId == projectId) {
+    return Promise.resolve(getState().surveys.items)
   }
 
   dispatch(startFetchingSurveys(projectId))
@@ -29,10 +29,10 @@ export const startFetchingSurveys = (projectId: number) => ({
   projectId
 })
 
-export const receiveSurveys = (projectId: number, surveys: SurveyPreview[]) => ({
+export const receiveSurveys = (projectId: number, items: IndexedList<SurveyPreview>): ReceiveItemsAction => ({
   type: RECEIVE,
   projectId,
-  surveys
+  items
 })
 
 export const nextSurveysPage = () => ({

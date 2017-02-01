@@ -1,3 +1,4 @@
+// @flow
 import isEqual from 'lodash/isEqual'
 import toInteger from 'lodash/toInteger'
 
@@ -6,38 +7,51 @@ const initialState = {
   dirty: false,
   filter: null,
   data: null,
+  errors: {},
+  errorsByLang: {},
   saving: false
 }
 
-const defaultFilterProvider = (data) => ({
-  projectId: toInteger(data.projectId),
-  id: data.id == null ? null : toInteger(data.id)
+const defaultFilterProvider = (action: FilteredAction) => ({
+  projectId: toInteger(action.projectId),
+  id: action.id == null ? null : toInteger(action.id)
 })
 
-export default (actions, dataReducer, filterProvider = defaultFilterProvider) => (state = initialState, action) => {
+const defaultDirtyPredicate = (action, oldData, newData) => true
+
+export default (actions: any, dataReducer: Reducer<any>, filterProvider: ?(action: FilteredAction) => Filter, dirtyPredicate: ?(action: Action, oldData: ?DataStore<any>, newData: ?DataStore<any>) => boolean) => (state: ?DataStore<any>, action: any): DataStore<any> => {
+  if (!filterProvider) filterProvider = defaultFilterProvider
+  if (!dirtyPredicate) dirtyPredicate = defaultDirtyPredicate
+
+  state = state || initialState
   switch (action.type) {
     case actions.FETCH: return fetch(state, action, filterProvider)
     case actions.RECEIVE: return receive(state, action, filterProvider)
     case actions.SAVING: return saving(state, action, filterProvider)
     case actions.SAVED: return saved(state, action, filterProvider, dataReducer)
-    default: return data(state, action, dataReducer)
+    default: return data(state, action, dataReducer, dirtyPredicate)
   }
 }
 
-const data = (state, action, dataReducer) => {
-  const newData = state.data == null ? null : dataReducer(state.data, action)
+const data = (state: DataStore<any>, action, dataReducer, dirtyPredicate): DataStore<any> => {
+  const newData: any = state.data == null ? null : dataReducer(state.data, action)
 
-  return do {
-    if (newData !== state.data) {
-      ({
+  if (newData !== state.data) {
+    if (dirtyPredicate(action, state.data, newData)) {
+      return ({
         ...state,
         dirty: true,
         data: newData
       })
     } else {
-      state
+      return ({
+        ...state,
+        data: newData
+      })
     }
   }
+
+  return state
 }
 
 const receive = (state, action, filterProvider) => {

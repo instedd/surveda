@@ -33,6 +33,10 @@ class StepNumericEditor extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.stateFromProps(nextProps))
+  }
+
   delimitersFromRanges(ranges) {
     let delimiters = []
     for (let [index, value] of ranges.entries()) {
@@ -78,6 +82,7 @@ class StepNumericEditor extends Component {
       ...this.state.ranges[rangeIndex],
       skipLogic: skipOption
     }
+
     this.setState({
       ranges: [
         ...this.state.ranges.slice(0, rangeIndex),
@@ -93,7 +98,7 @@ class StepNumericEditor extends Component {
   }
 
   render() {
-    const { step, stepsAfter, stepsBefore } = this.props
+    const { step, stepsAfter, stepsBefore, readOnly } = this.props
     const { ranges } = step
 
     let minValue =
@@ -102,6 +107,7 @@ class StepNumericEditor extends Component {
           value={`${this.state.minValue}`}
           label='Min value' >
           <input
+            disabled={readOnly}
             type='number'
             onChange={e => this.minValueChange(e)}
             onBlur={e => this.minValueSubmit(e)} />
@@ -115,6 +121,7 @@ class StepNumericEditor extends Component {
           label='Range delimiters' >
           <input
             type='text'
+            disabled={readOnly}
             onChange={e => this.rangesDelimitersChange(e)}
             onBlur={e => this.rangesDelimitersSubmit(e)} />
         </InputWithLabel>
@@ -127,6 +134,7 @@ class StepNumericEditor extends Component {
           label='Max value' >
           <input
             type='number'
+            disabled={readOnly}
             is length='20'
             onChange={e => this.maxValueChange(e)}
             onBlur={e => this.maxValueSubmit(e)} />
@@ -153,6 +161,7 @@ class StepNumericEditor extends Component {
                   <td>
                     <SkipLogic
                       onChange={skipOption => this.skipLogicChange(skipOption, index)}
+                      readOnly={readOnly}
                       value={range.skipLogic}
                       stepsAfter={stepsAfter}
                       stepsBefore={stepsBefore}
@@ -188,6 +197,7 @@ StepNumericEditor.propTypes = {
   ranges: PropTypes.array,
   rageDelimiters: PropTypes.string,
   questionnaire: PropTypes.object.isRequired,
+  readOnly: PropTypes.bool,
   step: PropTypes.object.isRequired,
   stepsAfter: PropTypes.array.isRequired,
   stepsBefore: PropTypes.array.isRequired

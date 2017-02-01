@@ -3,6 +3,7 @@ defmodule Ask.Project do
 
   schema "projects" do
     field :name, :string
+    field :salt, :string
 
     has_many :questionnaires, Ask.Questionnaire
     has_many :surveys, Ask.Survey
@@ -17,7 +18,7 @@ defmodule Ask.Project do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name])
+    |> cast(params, [:name, :salt])
   end
 
   def touch!(project) do

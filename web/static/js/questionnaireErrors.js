@@ -10,7 +10,7 @@ import startsWith from 'lodash/startsWith'
 Here's a list of current validations on a Questionnaire:
 
 1. For a step, a lang and SMS mode, "blank prompt"
-2. For a step, a lang and a TTS IVR prompt, "blank prompt"
+2. For a step, a lang and IVR mode, "blank prompt"
 
 3. For a multiple choice step, "you should define at least 2 choices"
 
@@ -24,7 +24,13 @@ Here's a list of current validations on a Questionnaire:
 9. For a multiple choice step, a choice, a lang and SMS, "blank response"
 10. For a multiple choice step, a choice, a lang and SMS, "duplicate response"
 
-Errors 1, 2, 9 and 10 depend on language.
+11. For the error message, a lang and SMS mode, "blank response"
+12. For the error message, a lang and IVR mode, "blank response"
+
+13. For the quota completed message, a lang and SMS mode, "blank response"
+14. For the quota completed message, a lang and IVR mode, "blank response"
+
+Errors 1, 2, 9-14 depend on language.
 
 */
 
@@ -35,14 +41,21 @@ type ErrorSubject = {
 };
 
 const parseErrorPath = (errorPath: string): ErrorSubject => {
-  let errorSubject = { stepIndex: null, choiceIndex: null, lang: null }
+  let errorSubject = {
+    stepIndex: null,
+    choiceIndex: null,
+    lang: null,
+    msg: null
+  }
 
   // regex[0] == The whole error path
   // regex[1] == step index
   // regex[2] == lang
   // regex[3] == choice index
   // regex[4] == lang
-  const regex = /steps\[(\d+)]\.(?:prompt\[['"](\w+)['"]]|choices\[(\d+)](?:\[['"](\w+)['"]])?)/g
+  // regex[5] == msgKey
+  // regex[6] == lang
+  const regex = /steps\[(\d+)]\.(?:prompt\[['"](\w+)['"]]|choices\[(\d+)](?:\[['"](\w+)['"]])?)|(errorMsg|quotaCompletedMsg)\.prompt\[['"](\w+)['"]]/g
 
   const parsedPath = regex.exec(errorPath)
 
@@ -51,12 +64,16 @@ const parseErrorPath = (errorPath: string): ErrorSubject => {
       errorSubject.stepIndex = parsedPath[1]
     }
 
-    if (parsedPath[2] || parsedPath[4]) {
-      errorSubject.lang = parsedPath[2] || parsedPath[4]
+    if (parsedPath[2] || parsedPath[4] || parsedPath[6]) {
+      errorSubject.lang = parsedPath[2] || parsedPath[4] || parsedPath[6]
     }
 
     if (parsedPath[3]) {
       errorSubject.choiceIndex = parsedPath[3]
+    }
+
+    if (parsedPath[5]) {
+      errorSubject.msg = parsedPath[5]
     }
   }
 
@@ -69,8 +86,10 @@ const parseErrorPath = (errorPath: string): ErrorSubject => {
  * plus those that do not depend on the language. See the comment at the top of
  * this file for a list of the possible validation errors for a questionnaire.
 */
-export const errorsByLang = (quiz: QuestionnaireStore): {[lang: string]: QuizErrors} => {
-  let initialStruct = reduce(quiz.data.languages, (struct, lang) => {
+export const errorsByLang = (quiz: DataStore<Questionnaire>): {[lang: string]: Errors} => {
+  const data = quiz.data
+  if (!data) return {}
+  let initialStruct = reduce(data.languages, (struct, lang) => {
     struct[lang] = {}
     return struct
   }, {})
@@ -78,31 +97,39 @@ export const errorsByLang = (quiz: QuestionnaireStore): {[lang: string]: QuizErr
   return reduce(quiz.errors, (result, currentError, currentErrorPath) => {
     const errorSubject = parseErrorPath(currentErrorPath)
 
-    if (!errorSubject.lang) {
-      quiz.data.languages.forEach(lang => {
-        result[lang][currentErrorPath] = currentError
-      })
-    } else {
-      result[errorSubject.lang][currentErrorPath] = currentError
+    if (errorSubject.stepIndex || errorSubject.choiceIndex || errorSubject.msg) {
+      if (!errorSubject.lang) {
+        data.languages.forEach(lang => {
+          result[lang][currentErrorPath] = currentError
+        })
+      } else {
+        result[errorSubject.lang][currentErrorPath] = currentError
+      }
     }
 
     return result
   }, initialStruct)
 }
 
-export const langHasErrors = (quiz: QuestionnaireStore) => (lang: string): boolean => {
+export const langHasErrors = (quiz: DataStore<Questionnaire>) => (lang: string): boolean => {
   return keys(quiz.errorsByLang[lang] || {}).length > 0
 }
 
-export const hasErrors = (quiz: QuestionnaireStore, step: Step) => {
-  if (!quiz.data) return
+export const hasErrors = (quiz: DataStore<Questionnaire>, step: Step) => {
+  const data = quiz.data
+  if (!data) return false
   const errorPath = (index) => `steps[${index}]`
 
-  const stepIndex = findIndex(quiz.data.steps, s => s.id === step.id)
-  return stepIndex >= 0 && some(keys(quiz.errorsByLang[quiz.data.activeLanguage]), k => startsWith(k, errorPath(stepIndex)))
+  const stepIndex = findIndex(data.steps, s => s.id === step.id)
+  return stepIndex >= 0 && some(keys(quiz.errorsByLang[data.activeLanguage]), k => startsWith(k, errorPath(stepIndex)))
 }
 
-export const filterByPathPrefix = (errors: QuizErrors, prefix: string) => {
+export const msgHasErrors = (quiz: DataStore<Questionnaire>, msgKey: string) => {
+  if (!quiz.data) return false
+  return some(keys(quiz.errorsByLang[quiz.data.activeLanguage]), k => startsWith(k, msgPath(msgKey)))
+}
+
+export const filterByPathPrefix = (errors: Errors, prefix: string) => {
   return reduce(errors, (stepErrors, currentError, currentErrorPath) => {
     if (startsWith(currentErrorPath, prefix)) {
       stepErrors[currentErrorPath] = currentError
@@ -115,15 +142,21 @@ export const filterByPathPrefix = (errors: QuizErrors, prefix: string) => {
 export const stepsPath = 'steps'
 export const stepPath = (stepIndex: number) => `${stepsPath}[${stepIndex}]`
 
-export const promptTextPath = (stepIndex: number, mode: string, lang: string): string => {
-  let suffix = ''
+const promptTextPathSuffix = (mode: string, lang: string): string => {
   if (mode === 'ivr') {
-    suffix = `prompt['${lang}'].${mode}.text`
+    return `prompt['${lang}'].${mode}.text`
   } else {
-    suffix = `prompt['${lang}'].${mode}`
+    return `prompt['${lang}'].${mode}`
   }
+}
 
-  return `${stepPath(stepIndex)}.${suffix}`
+export const promptTextPath = (stepIndex: number, mode: string, lang: string): string => {
+  return `${stepPath(stepIndex)}.${promptTextPathSuffix(mode, lang)}`
+}
+
+export const msgPath = (msg: string): string => msg
+export const msgPromptTextPath = (msg: string, mode: string, lang: string): string => {
+  return `${msgPath(msg)}.${promptTextPathSuffix(mode, lang)}`
 }
 
 export const choicesPath = (stepIndex: number) => `${stepPath(stepIndex)}.choices`
@@ -131,4 +164,3 @@ export const choicePath = (stepIndex: number, choiceIndex: number) => `${choices
 export const choiceValuePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.value`
 export const choiceSmsResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].sms`
 export const choiceIvrResponsePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.ivr`
-

@@ -3,8 +3,9 @@ defmodule Ask.OAuthHelperControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
+
     conn = conn
-      |> post(login_path(conn, :login, %{email: user.email, password: "1234"}))
+      |> post(session_path(conn, :create, %{session: %{email: user.email, password: "1234"}}))
     {:ok, conn: conn, user: user}
   end
 
@@ -30,6 +31,7 @@ defmodule Ask.OAuthHelperControllerTest do
     insert(:oauth_token)
 
     conn = get conn, o_auth_client_path(conn, :index)
+
     assert json_response(conn, 200)["data"] == ["provider1", "provider2"]
   end
 
@@ -53,16 +55,25 @@ defmodule Ask.OAuthHelperControllerTest do
     refute Ask.Channel |> Repo.get(channel.id)
   end
 
-  test "delete channel even if it's being used by a survey", %{conn: conn, user: user} do
+  test "doesn't delete channels when an authorization is deleted with keep_channels = true", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "provider")
     channel = insert(:channel, user: user, provider: "provider")
-    survey = insert(:survey)
-    insert(:survey_channel, survey: survey, channel: channel)
+
+    delete conn, o_auth_client_path(conn, :delete, "provider"), keep_channels: "true"
+
+    Ask.Channel |> Repo.get!(channel.id)
+  end
+
+  test "delete channel even if it's being used by a respondent group", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "provider")
+    channel = insert(:channel, user: user, provider: "provider")
+    group = insert(:respondent_group)
+    insert(:respondent_group_channel, respondent_group: group, channel: channel)
 
     delete conn, o_auth_client_path(conn, :delete, "provider")
 
     refute Ask.Channel |> Repo.get(channel.id)
-    assert [] = Ask.SurveyChannel |> Repo.all
+    assert [] = Ask.RespondentGroupChannel |> Repo.all
   end
 
   test "synchronize channels", %{conn: conn, user: user} do

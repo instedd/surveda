@@ -1,0 +1,50 @@
+
+// ------- Buttons ----------
+
+
+.btn-flat-link {
+  color: $link-color;
+}
+
+.btn-medium {
+  @extend .btn-large;
+  line-height: 48px;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  height: 48px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-link {
+  padding: 0 1rem;
+  &:hover,
+  &:focus {
+    color: color("grey", "darken-3") !important;
+  }
+}
+i {
+  &.xlarge {
+    font-size: 8rem;
+  }
+  &.xxlarge {
+    font-size: 11.5rem;
+  }
+}
+
+.btn-icon-grey {
+  @extend .grey-text;
+  font-size: 17px;
+  display: inline-block;
+  margin-left: 10px;
+  cursor: pointer;
+  span {
+    vertical-align: middle;
+  }
+  i {
+    font-size: 28px;
+    vertical-align: middle;
+  }
+}

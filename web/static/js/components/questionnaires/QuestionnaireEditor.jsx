@@ -11,6 +11,8 @@ import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
 import csvString from 'csv-string'
 import * as language from '../../language'
+import * as routes from '../../routes'
+import * as api from '../../api'
 
 type State = {
   addingStep: boolean,
@@ -162,6 +164,42 @@ class QuestionnaireEditor extends Component {
     e.target.value = null
   }
 
+  exportZip(e) {
+    e.preventDefault()
+
+    const { projectId, questionnaireId } = this.props
+    window.location = routes.exportQuestionnaireZip(projectId, questionnaireId)
+  }
+
+  openImportZipDialog(e) {
+    e.preventDefault()
+
+    $('#questionnaire_import_zip').trigger('click')
+  }
+
+  importZip(e) {
+    e.preventDefault()
+
+    let files = e.target.files
+    if (files.length != 1) return
+
+    const { projectId, questionnaireId } = this.props
+
+    api.importQuestionnaireZip(projectId, questionnaireId, files)
+    .then(response => {
+      const questionnaire = response.entities.questionnaires[response.result]
+      this.props.questionnaireActions.receive(questionnaire)
+      this.setState({
+        ...this.state,
+        currentStep: null
+      })
+    })
+
+    // Make sure to clear the input's value so a same file
+    // can be uploaded multiple times
+    e.target.value = null
+  }
+
   removeLanguage(lang) {
     const { questionnaire } = this.props
 
@@ -178,10 +216,34 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire } = this.props
+    const { questionnaire, project, readOnly } = this.props
 
-    if (questionnaire == null) {
+    let csvButtons = null
+
+    if (questionnaire == null || project == null) {
       return <div>Loading...</div>
+    }
+
+    if (!readOnly) {
+      csvButtons = <div>
+        <div className='row'>
+          <div className='col s12'>
+            <a className='btn-icon-grey' href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
+              <i className='material-icons'>file_download</i>
+              <span>Download contents as CSV</span>
+            </a>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
+            <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
+            <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
+              <i className='material-icons'>file_upload</i>
+              <span>Upload contents as CSV</span>
+            </a>
+          </div>
+        </div>
+      </div>
     }
 
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -190,21 +252,22 @@ class QuestionnaireEditor extends Component {
     return (
       <div className='row'>
         <div className='col s12 m3 questionnaire-modes'>
-          <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} />
+          <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
+          {csvButtons}
           <div className='row'>
             <div className='col s12'>
-              <a className='btn-icon-grey' href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
+              <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
                 <i className='material-icons'>file_download</i>
-                <span>Download contents as CSV</span>
+                <span>Export questionnaire</span>
               </a>
             </div>
           </div>
           <div className='row'>
             <div className='col s12'>
-              <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
-              <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
+              <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
+              <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
                 <i className='material-icons'>file_upload</i>
-                <span>Upload contents as CSV</span>
+                <span>Import questionnaire</span>
               </a>
             </div>
           </div>
@@ -219,7 +282,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>SMS</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} />
+                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -231,7 +294,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Phone call</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} />
+                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -245,17 +308,21 @@ class QuestionnaireEditor extends Component {
             currentStepIsNew={this.state.currentStepIsNew}
             onSelectStep={stepId => this.selectStep(stepId)}
             onDeselectStep={() => this.deselectStep()}
-            onDeleteStep={() => this.deleteStep()} />
-          <div className='row'>
+            onDeleteStep={() => this.deleteStep()}
+            readOnly={readOnly}
+            />
+          {readOnly ? null
+          : <div className='row'>
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
           </div>
+          }
           <div className='row'>
-            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' icon='pie_chart' />
+            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' readOnly={readOnly} icon='pie_chart' />
           </div>
           <div className='row'>
-            <QuestionnaireMsg title='Error' messageKey='errorMsg' icon='warning' />
+            <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
         </div>
       </div>
@@ -267,6 +334,8 @@ QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   router: PropTypes.object,
+  project: PropTypes.object,
+  readOnly: PropTypes.bool,
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object
@@ -274,6 +343,8 @@ QuestionnaireEditor.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
+  project: state.project.data,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data
 })

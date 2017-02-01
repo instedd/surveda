@@ -6,30 +6,16 @@ export type Questionnaire = {
   languages: string[],
   defaultLanguage: string,
   activeLanguage: string,
-  quotaCompletedMsg: ?Prompt,
-  errorMsg: ?Prompt,
+  quotaCompletedMsg: Prompt,
+  errorMsg: Prompt,
   projectId: number
 };
-
-export type QuizErrors = {
-  [path: string]: string[]
-}
 
 export type ChoiceErrors = {
   value: string[],
   sms: string[],
   ivr: string[]
-}
-
-export type QuestionnaireStore = {
-  data: Questionnaire,
-  errors: QuizErrors,
-  errorsByLang: { [lang: string]: QuizErrors }
-}
-
-export type QuestionnaireList = {
-  items: Questionnaire[]
-}
+};
 
 export type AudioPrompt = {
     audioSource: 'tts' | 'upload',
@@ -93,11 +79,11 @@ export type BaseStep = {
 
 export type StoreStep = {
   store: string
-}
+};
 
 export type MultilingualStep = {
   prompt: Prompt
-}
+};
 
 export type SkipOption = {
   id: string,

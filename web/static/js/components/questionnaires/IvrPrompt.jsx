@@ -50,6 +50,13 @@ class IvrPrompt extends Component {
     onBlur(e)
   }
 
+  onFocus() {
+    const { autocomplete } = this.refs
+    if (autocomplete) {
+      autocomplete.unhide()
+    }
+  }
+
   componentWillReceiveProps(newProps) {
     this.setState(this.stateFromProps(newProps))
   }
@@ -74,9 +81,11 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, onChange, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
-    const maybeInvalidClass = classNames({'validate invalid': inputErrors})
+    const shouldDisplayErrors = value == this.props.originalValue
+
+    const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
 
     let autocompleteComponent = null
     if (autocomplete) {
@@ -97,8 +106,10 @@ class IvrPrompt extends Component {
             <InputWithLabel id={id} value={value} label='Voice message' errors={inputErrors} >
               <input
                 type='text'
+                disabled={readOnly}
                 onChange={e => onChange(e)}
                 onBlur={e => this.onBlur(e)}
+                onFocus={e => this.onFocus()}
                 className={maybeInvalidClass}
                 ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
               />
@@ -111,7 +122,7 @@ class IvrPrompt extends Component {
           <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
           <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
           <div className='audio-dropdown'>
-            <Dropdown className='step-mode underlined' label={this.state.audioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
+            <Dropdown className='step-mode underlined' readOnly={readOnly} label={this.state.audioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
               <DropdownItem>
                 <a onClick={e => changeIvrMode(e, 'tts')}>
                   <i className='material-icons left'>record_voice_over</i>
@@ -133,7 +144,9 @@ class IvrPrompt extends Component {
               <audio controls>
                 <source src={this.state.audioUri} type='audio/mpeg' />
               </audio>
-              <AudioDropzone onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+              {readOnly ? null
+                : <AudioDropzone onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+              }
             </div>
             : ''}
         </div>
@@ -146,6 +159,7 @@ IvrPrompt.propTypes = {
   id: PropTypes.string.isRequired,
   customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
@@ -154,6 +168,7 @@ IvrPrompt.propTypes = {
   autocompleteOnSelect: PropTypes.func.isRequired,
   changeIvrMode: PropTypes.func.isRequired,
   ivrPrompt: PropTypes.object.isRequired,
+  readOnly: PropTypes.bool,
   questionnaireActions: PropTypes.any,
   stepId: PropTypes.string
 }

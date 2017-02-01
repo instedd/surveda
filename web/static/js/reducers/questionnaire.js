@@ -9,9 +9,10 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt } from '../step'
-import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, errorsByLang } from '../questionnaireErrors'
+import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
+  choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
@@ -32,17 +33,26 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
   }
 }
 
-const validateReducer = (reducer) => {
+const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Questionnaire> => {
   // React will call this with an undefined the first time for initialization.
-  // We mimic that in the specs, so ValidationState needs to become optional here.
-  return (state: ?QuestionnaireStore, action: any) => {
+  // We mimic that in the specs, so DataStore<Questionnaire> needs to become optional here.
+  return (state: ?DataStore<Questionnaire>, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
   }
 }
 
-export default validateReducer(fetchReducer(actions, dataReducer))
+// We don't want changing the active language to mark the questionnaire
+// as dirty, which will eventually autosave it.
+const dirtyPredicate = (action, oldData, newData) => {
+  switch (action.type) {
+    case actions.SET_ACTIVE_LANGUAGE: return false
+    default: return true
+  }
+}
+
+export default validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))
 
 const steps = (state, action) => {
   // Up to now we've been assuming that all content was under corresponding 'en' keys,
@@ -718,24 +728,47 @@ type ValidationContext = {
   ivr: boolean,
   activeLanguage: string,
   languages: string[],
-  errors: QuizErrors
+  errors: Errors
 };
 
-const validate = (state: QuestionnaireStore) => {
-  if (!state.data) return
+const validate = (state: DataStore<Questionnaire>) => {
+  const data = state.data
+  if (!data) return
   state.errors = {}
 
   const context = {
-    sms: state.data.modes.indexOf('sms') != -1,
-    ivr: state.data.modes.indexOf('ivr') != -1,
-    activeLanguage: state.data.activeLanguage,
-    languages: state.data.languages,
+    sms: data.modes.indexOf('sms') != -1,
+    ivr: data.modes.indexOf('ivr') != -1,
+    activeLanguage: data.activeLanguage,
+    languages: data.languages,
     errors: state.errors
   }
 
-  validateSteps(state.data.steps, context)
+  validateMsg('errorMsg', data.errorMsg, context)
+  validateMsg('quotaCompletedMsg', data.quotaCompletedMsg, context)
+
+  validateSteps(data.steps, context)
 
   state.errorsByLang = errorsByLang(state)
+}
+
+const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) => {
+  if (context.sms) {
+    context.languages.forEach(lang => {
+      if (getPromptSms(msg, lang).length == 0) {
+        addError(context, msgPromptTextPath(msgKey, 'sms', lang), 'SMS prompt must not be blank')
+      }
+    })
+  }
+
+  if (context.ivr) {
+    context.languages.forEach(lang => {
+      let ivr = getPromptIvr(msg, lang)
+      if (isBlank(ivr.text)) {
+        addError(context, msgPromptTextPath(msgKey, 'ivr', lang), 'Voice prompt must not be blank')
+      }
+    })
+  }
 }
 
 const validateSteps = (steps, context: ValidationContext) => {
@@ -806,15 +839,19 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
       addError(context, choiceValuePath(stepIndex, i), 'Value already used in a previous response')
     }
 
-    context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
+    if (context.sms) {
+      context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
+    }
 
-    if (choice.responses.ivr) {
-      for (let choiceIvr of choice.responses.ivr) {
-        if (ivr.includes(choiceIvr)) {
-          addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
+    if (context.ivr) {
+      if (choice.responses.ivr) {
+        for (let choiceIvr of choice.responses.ivr) {
+          if (ivr.includes(choiceIvr)) {
+            addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
+          }
         }
+        ivr.push(...choice.responses.ivr)
       }
-      ivr.push(...choice.responses.ivr)
     }
 
     values.push(choice.value)
@@ -1017,7 +1054,7 @@ const changeNumericRanges = (state, action) => {
         const nextFrom = auxValues[i + 1]
         // 4b. Unfortunately, Flow can't make this sort of analysis, so we need to explicitly
         // ensure that `auxValues[i + 1]` is not null.
-        if (nextFrom) {
+        if (nextFrom != null) {
           to = nextFrom - 1
         }
       }
@@ -1121,16 +1158,29 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   }
 
   let ivr = defaultLanguagePrompt.ivr
-  if (ivr && ivr.audioSource == 'tts' && (translations = lookup[ivr.text])) {
+  if (ivr && (translations = lookup[ivr.text])) {
     for (let lang in translations) {
       const text = translations[lang]
-      if (!prompt[lang] || !prompt[lang].ivr || prompt[lang].ivr.audioSource == 'tts') {
-        if (newPrompt[lang]) {
-          newPrompt[lang] = {...newPrompt[lang]}
-        } else {
-          newPrompt[lang] = {}
-        }
-        newPrompt[lang].ivr = {text, audioSource: 'tts'}
+
+      if (newPrompt[lang]) {
+        newPrompt[lang] = {...newPrompt[lang]}
+      } else {
+        newPrompt[lang] = newStepPrompt()
+      }
+
+      if (!newPrompt[lang].ivr) {
+        newPrompt[lang].ivr = newIvrPrompt()
+      }
+
+      // This isn't strictly necessary, but previous code
+      // sometimes didn't add this default value to new prompts
+      if (!newPrompt[lang].ivr.audioSource) {
+        newPrompt[lang].ivr.audioSource = 'tts'
+      }
+
+      newPrompt[lang].ivr = {
+        ...newPrompt[lang].ivr,
+        text
       }
     }
   }
@@ -1144,7 +1194,7 @@ const addTranslations = (obj, translations, funcOrProperty) => {
     if (obj[lang]) {
       obj[lang] = {...obj[lang]}
     } else {
-      obj[lang] = {}
+      obj[lang] = newStepPrompt()
     }
     if (typeof (funcOrProperty) == 'function') {
       funcOrProperty(obj[lang], text)

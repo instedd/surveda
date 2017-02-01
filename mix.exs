@@ -3,7 +3,7 @@ defmodule Ask.Mixfile do
 
   def project do
     [app: :ask,
-     version: "0.5.0",
+     version: "0.6.0",
      elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -20,7 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal, :bamboo, :bamboo_smtp]]
+                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal, :coherence]]
   end
 
   # Specifies which paths to compile per environment.
@@ -38,24 +38,22 @@ defmodule Ask.Mixfile do
       {:mariaex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.6"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:gettext, "~> 0.11"},
+      {:gettext, "~> 0.11.0"},
       {:cowboy, "~> 1.0"},
-      {:addict, "~> 0.3"},
       {:ex_machina, "~> 1.0", only: :test},
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
       {:mock, "~> 0.1.1", only: :test},
-      {:timex, "~> 3.0"},
-      {:timex_ecto, "~> 3.0"},
+      {:timex, "~> 3.0", override: true},
+      {:timex_ecto, "~> 3.0", override: true},
       {:sentry, "~> 1.0"},
       {:hackney, "~> 1.0"},
       {:tributary, "~> 0.2.1"},
       {:ex_json_schema, "~> 0.5.2"},
       {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
       {:appsignal, "~> 0.9.2"},
-      {:bamboo, "~> 0.7"},
-      {:bamboo_smtp, "~> 1.2.1"},
-      {:deep_merge, "~> 0.1.0"}
+      {:deep_merge, "~> 0.1.0"},
+      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"}
    ]
   end
 

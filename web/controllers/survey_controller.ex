@@ -1,22 +1,20 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Channel, Survey, Questionnaire}
+  alias Ask.{Project, Survey, Questionnaire}
 
   def index(conn, %{"project_id" => project_id}) do
-    surveys = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    surveys = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
-    |> preload(:channels)
     |> Repo.all
 
     render(conn, "index.json", surveys: surveys)
   end
 
   def create(conn, params = %{"project_id" => project_id}) do
-    project = Project
-    |> Repo.get!(project_id)
+    project = conn
+    |> load_project_for_change(project_id)
 
     props = %{"project_id" => project_id,
               "name" => "",
@@ -27,7 +25,6 @@ defmodule Ask.SurveyController do
     props = Map.merge(props, survey_params)
 
     changeset = project
-    |> authorize(conn)
     |> build_assoc(:surveys)
     |> Survey.changeset(props)
 
@@ -37,7 +34,7 @@ defmodule Ask.SurveyController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey |> Repo.preload([:channels]) |> Repo.preload([:quota_buckets]))
+        |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]))
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -46,12 +43,10 @@ defmodule Ask.SurveyController do
   end
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
-    survey = Project
-    |> Repo.get!(project_id)
-    |> authorize(conn)
+    survey = conn
+    |> load_project(project_id)
     |> assoc(:surveys)
     |> Repo.get!(id)
-    |> Repo.preload([:channels])
     |> Repo.preload([:quota_buckets])
     |> with_respondents_count
 
@@ -59,19 +54,17 @@ defmodule Ask.SurveyController do
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
-    project = Project
-    |> Repo.get!(project_id)
+    project = conn
+    |> load_project_for_change(project_id)
 
     changeset = project
-    |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(id)
-    |> Repo.preload([:channels])
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
     |> with_respondents_count
+    |> Repo.preload(respondent_groups: :channels)
     |> Survey.changeset(survey_params)
-    |> update_channels(survey_params)
     |> update_questionnaires(survey_params)
     |> Survey.update_state
 
@@ -84,19 +77,6 @@ defmodule Ask.SurveyController do
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
-  end
-
-  defp update_channels(changeset, %{"channels" => channels_params}) do
-    channels_changeset = Enum.map(channels_params, fn ch ->
-      Repo.get!(Channel, ch) |> change
-    end)
-
-    changeset
-    |> put_assoc(:channels, channels_changeset)
-  end
-
-  defp update_channels(changeset, _) do
-    changeset
   end
 
   defp update_questionnaires(changeset, %{"questionnaire_ids" => questionnaires_params}) do
@@ -118,11 +98,10 @@ defmodule Ask.SurveyController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    project = Project
-    |> Repo.get!(project_id)
+    project = conn
+    |> load_project_for_change(project_id)
 
     project
-    |> authorize(conn)
     |> assoc(:surveys)
     |> Repo.get!(id)
     # Here we use delete! (with a bang) because we expect
@@ -135,13 +114,18 @@ defmodule Ask.SurveyController do
   end
 
   def launch(conn, %{"survey_id" => id}) do
-    survey = Repo.get!(Survey, id) |> Repo.preload([:channels]) |> Repo.preload([:quota_buckets])
+    survey = Repo.get!(Survey, id)
+    |> Repo.preload([:quota_buckets])
+    |> Repo.preload(respondent_groups: :channels)
 
-    project = Project
-    |> Repo.get!(survey.project_id)
-    |> authorize(conn)
+    project = conn
+    |> load_project_for_change(survey.project_id)
 
-    case prepare_channels(conn, survey.channels) do
+    channels = survey.respondent_groups
+    |> Enum.flat_map(&(&1.channels))
+    |> Enum.uniq
+
+    case prepare_channels(conn, channels) do
       :ok ->
         changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
         case Repo.update(changeset) do

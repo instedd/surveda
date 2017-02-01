@@ -10,6 +10,7 @@ type Props = {
   step: StoreStep & BaseStep,
   questionnaireActions: any,
   project: any,
+  readOnly: boolean
 };
 
 type State = {
@@ -74,6 +75,7 @@ class StepStoreVariable extends Component {
           <div className='input-field inline'>
             <input
               type='text'
+              disabled={this.props.readOnly}
               value={this.state.stepStore}
               onChange={e => this.stepStoreChange(e, e.target.value)}
               onBlur={e => this.stepStoreSubmit(e, e.target.value)}

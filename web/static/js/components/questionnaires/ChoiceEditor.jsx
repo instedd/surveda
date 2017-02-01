@@ -11,13 +11,14 @@ type Props = {
   onChoiceChange: Function,
   choice: Choice,
   choiceIndex: number,
+  readOnly: boolean,
   stepIndex: number,
   stepsBefore: Step[],
   stepsAfter: Step[],
   lang: string,
   sms: boolean,
   ivr: boolean,
-  errors: QuizErrors,
+  errors: Errors,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
 };
@@ -32,7 +33,7 @@ type State = {
   focus: Focus,
   doNotClose: boolean,
   skipLogic: ?string,
-  errors: ?QuizErrors,
+  errors: ?Errors,
 };
 
 class ChoiceEditor extends Component {
@@ -90,11 +91,14 @@ class ChoiceEditor extends Component {
 
   enterEditMode(event: Event, focus: Focus) {
     event.preventDefault()
-    this.setState({
-      ...this.state,
-      editing: true,
-      focus: focus
-    })
+    const {readOnly} = this.props
+    if (!readOnly) {
+      this.setState({
+        ...this.state,
+        editing: true,
+        focus: focus
+      })
+    }
   }
 
   exitEditMode(autoComplete: boolean = false) {
@@ -177,12 +181,13 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepIndex, stepsBefore, stepsAfter, choiceIndex, sms, ivr, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     let skipLogicInput =
       <td>
         <SkipLogic
           onChange={skipOption => this.skipLogicChange(skipOption)}
+          readOnly={readOnly}
           value={this.state.skipLogic}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore}
@@ -249,9 +254,11 @@ class ChoiceEditor extends Component {
           {this.cell(this.state.sms, 'No SMS', smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
           {this.cell(this.state.ivr, 'No IVR', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
           {skipLogicInput}
-          <td>
-            <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
-          </td>
+          { readOnly ? <td />
+            : <td>
+              <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
+            </td>
+          }
         </tr>
       )
     }

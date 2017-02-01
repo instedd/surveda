@@ -6,16 +6,17 @@ export class Dropdown extends Component {
     icon: PropTypes.string,
     children: PropTypes.node,
     constrainWidth: PropTypes.bool,
+    readOnly: PropTypes.bool,
     dataBelowOrigin: PropTypes.bool,
     className: PropTypes.string
   }
 
   componentDidMount() {
-    $(this.refs.node).dropdown()
+    if (!this.props.readOnly) $(this.refs.node).dropdown()
   }
 
   render() {
-    const {label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className} = this.props
+    const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly } = this.props
     const dropdownId = uniqueId('dropdown')
     const onButtonClick = (event) => {
       event.preventDefault()
@@ -25,7 +26,7 @@ export class Dropdown extends Component {
       <span className={className}>
         <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin={dataBelowOrigin} data-activates={dropdownId} data-constrainwidth={constrainWidth} ref='node'>
           {label}
-          <i className='material-icons right'>{icon}</i>
+          {readOnly ? null : <i className='material-icons right'>{icon}</i> }
         </a>
         <ul id={dropdownId} className='dropdown-content'>
           {children}

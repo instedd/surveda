@@ -14,11 +14,20 @@ class SmsPrompt extends Component {
     onBlur(e)
   }
 
+  onFocus() {
+    const { autocomplete } = this.refs
+    if (autocomplete) {
+      autocomplete.unhide()
+    }
+  }
+
   render() {
-    const { id, value, inputErrors, onChange, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, onChange, readOnly, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+
+    const shouldDisplayErrors = value == this.props.originalValue
 
     const maybeInvalidClass = classNames({
-      'validate invalid': inputErrors != null && inputErrors.length > 0
+      'validate invalid': inputErrors != null && inputErrors.length > 0 && shouldDisplayErrors
     })
 
     let autocompleteComponent = null
@@ -36,12 +45,13 @@ class SmsPrompt extends Component {
     return (
       <div className='row'>
         <div className='col input-field s12'>
-          <InputWithLabel id={id} value={value} label='SMS message' errors={inputErrors} >
+          <InputWithLabel id={id} value={value} readOnly={readOnly} label='SMS message' errors={inputErrors} >
             <input
               type='text'
               is length='140'
               onChange={e => onChange(e)}
               onBlur={e => this.onBlur(e)}
+              onFocus={e => this.onFocus()}
               ref={ref => {
                 this.smsInput = ref
                 $(ref).characterCounter()
@@ -59,10 +69,12 @@ class SmsPrompt extends Component {
 
 SmsPrompt.propTypes = {
   id: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
   autocomplete: PropTypes.bool.isRequired,
   autocompleteGetData: PropTypes.func,
   autocompleteOnSelect: PropTypes.func}

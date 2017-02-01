@@ -6,6 +6,7 @@ const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
 const questionnaireSchema = new Schema('questionnaires')
 const respondentSchema = new Schema('respondents')
+const respondentGroupSchema = new Schema('respondentGroups')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
@@ -154,20 +155,23 @@ export const createAudio = (files) => {
   return apiFetchJSON('audios', audioSchema, request)
 }
 
-export const uploadRespondents = (survey, files) => {
+export const uploadRespondentGroup = (projectId, surveyId, files) => {
   const formData = new FormData()
   formData.append('file', files[0])
 
-  return apiFetchJSONWithCallback(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
-    arrayOf(respondentSchema), {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`,
+    respondentGroupSchema, {
       method: 'POST',
       body: formData
-    },
-    respondentsCallback)
+    })
 }
 
-export const removeRespondents = (survey) => {
-  return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`)
+export const updateRespondentGroup = (projectId, surveyId, groupId, data) => {
+  return apiPutJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`, respondentGroupSchema, { respondentGroup: data })
+}
+
+export const removeRespondentGroup = (projectId, surveyId, groupId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`)
 }
 
 export const fetchRespondents = (projectId, surveyId, limit, page) => {
@@ -180,6 +184,10 @@ export const fetchRespondentsStats = (projectId, surveyId) => {
 
 export const fetchRespondentsQuotasStats = (projectId, surveyId) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, null)
+}
+
+export const fetchRespondentGroups = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`, arrayOf(respondentGroupSchema))
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
@@ -212,10 +220,7 @@ export const launchSurvey = (projectId, surveyId) => {
 }
 
 export const logout = () => {
-  fetch('/logout', {
-    method: 'DELETE',
-    credentials: 'same-origin'
-  }).then(() => { window.location.href = '/' })
+  apiDelete('sessions').then(() => { window.location.href = '/' })
 }
 
 export const fetchTimezones = () => {
@@ -230,8 +235,8 @@ export const fetchAuthorizations = () => {
   return apiFetchJSONWithCallback(`authorizations`, null, {}, (json, _) => () => json)
 }
 
-export const deleteAuthorization = (provider) => {
-  return apiDelete(`authorizations/${provider}`)
+export const deleteAuthorization = (provider, keepChannels = false) => {
+  return apiDelete(`authorizations/${provider}?keep_channels=${keepChannels}`)
 }
 
 export const synchronizeChannels = () => {
@@ -271,4 +276,15 @@ export const fetchInvite = (code) => {
 
 export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${code}`)
+}
+
+export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
+  const formData = new FormData()
+  formData.append('file', files[0])
+
+  return apiFetchJSON(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
+    questionnaireSchema, {
+      method: 'POST',
+      body: formData
+    })
 }

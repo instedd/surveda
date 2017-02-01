@@ -1,6 +1,6 @@
 defmodule Ask.Router do
   use Ask.Web, :router
-  use Addict.RoutesHelper
+  use Coherence.Router
   use Plug.ErrorHandler
   use Sentry.Plug
 
@@ -10,40 +10,55 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Plug.Static,
-      at: "files/", from: "web/static/assets/files/", gzip: false
+    plug Plug.Static, at: "files/", from: "web/static/assets/files/"
+    plug Coherence.Authentication.Session
+  end
+
+  pipeline :protected do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug Coherence.Authentication.Session, protected: true
   end
 
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-
+    plug Coherence.Authentication.Session
+    
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
-  end
+  end  
 
   if Mix.env == :dev do
-    forward "/sent_emails", Bamboo.EmailPreviewPlug
-  end
-
-  scope "/" do
-    addict :routes
+    scope "/dev" do
+      pipe_through [:browser]
+      forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
+    end
   end
 
   scope "/api" , Ask do
     pipe_through :api
 
     scope "/v1" do
+      delete "/sessions", Coherence.SessionController, :api_delete
+      
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/launch", SurveyController, :launch
-          resources "/respondents", RespondentController, only: [:create, :index, :delete]
+          resources "/respondents", RespondentController, only: [:index]
+          resources "/respondent_groups", RespondentGroupController, only: [:index, :create, :update, :delete]
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/respondents/quotas_stats", RespondentController, :quotas_stats, as: :respondents_quotas_stats
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
         end
-        resources "/questionnaires", QuestionnaireController, except: [:new, :edit]
+        resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
+          get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
+          post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
+        end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
         get "/autocomplete_other_language", ProjectController, :autocomplete_other_language, as: :autocomplete_other_language
@@ -67,9 +82,13 @@ defmodule Ask.Router do
 
   scope "/", Ask do
     pipe_through :browser
+    coherence_routes :public
 
+    # add public resources below
     get "/oauth_client/callback", OAuthClientController, :callback
+    get "/registrations/confirmation_sent", Coherence.RegistrationController, :confirmation_sent
+    get "/registrations/confirmation_expired", Coherence.RegistrationController, :confirmation_expired
+    get "/passwords/password_recovery_sent", Coherence.PasswordController, :password_recovery_sent
     get "/*path", PageController, :index
   end
-
 end

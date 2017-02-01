@@ -19,7 +19,8 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: QuizErrors,
+  readOnly: boolean,
+  errors: Errors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -57,13 +58,14 @@ class NumericStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, questionnaire, stepsAfter, stepsBefore, onDelete, errors } = this.props
+    const { step, stepIndex, onCollapse, questionnaire, readOnly, stepsAfter, stepsBefore, onDelete, errors } = this.props
 
     return (
-      <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
+      <DraggableStep step={step} readOnly={readOnly}>
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} readOnly={readOnly} stepId={step.id} />} >
           <StepPrompts
             step={step}
+            readOnly={readOnly}
             stepIndex={stepIndex}
             errors={errors} />
           <li className='collection-item' key='editor'>
@@ -71,14 +73,15 @@ class NumericStepEditor extends Component {
               <div className='col s12'>
                 <StepNumericEditor
                   questionnaire={questionnaire}
+                  readOnly={readOnly}
                   step={step}
                   stepsAfter={stepsAfter}
                   stepsBefore={stepsBefore} />
               </div>
             </div>
           </li>
-          <StepStoreVariable step={step} />
-          <StepDeleteButton onDelete={onDelete} />
+          <StepStoreVariable step={step} readOnly={readOnly} />
+          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
         </StepCard>
       </DraggableStep>
     )

@@ -1,37 +1,33 @@
 import React, { Component, PropTypes } from 'react'
+import { Modal } from '.'
 
 export class ConfirmationModal extends Component {
-  componentDidMount() {
-    $(document).ready(function() {
-      $('.modal').modal()
-    })
-  }
-
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onConfirm, modalId, style, showCancel = false } = this.props
+    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, showCancel = false } = this.props
 
-    let modalLink = null
     let cancelLink = null
-    if (showLink) {
-      modalLink = (<a className='modal-trigger' href={`#${modalId}`}>{linkText}</a>)
-    }
     if (showCancel) {
       cancelLink = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
     }
 
+    let noLink = null
+    if (onNo) {
+      noLink = <a href='#!' onClick={onNo} className=' modal-action modal-close waves-effect waves-green btn-flat'>No</a>
+    }
+
     return (
       <div>
-        {modalLink}
-        <div id={modalId} className='modal' style={style}>
+        <Modal id={modalId} style={style} showLink={showLink} linkText={linkText}>
           <div className='modal-content'>
             <h4>{header}</h4>
             <p>{modalText}</p>
           </div>
           <div className='modal-footer'>
-            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
             {cancelLink}
+            {noLink}
+            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
           </div>
-        </div>
+        </Modal>
       </div>
     )
   }
@@ -45,6 +41,7 @@ ConfirmationModal.propTypes = {
   modalText: PropTypes.string.isRequired,
   confirmationText: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
+  onNo: PropTypes.func,
   modalId: PropTypes.string.isRequired,
   style: PropTypes.object
 }

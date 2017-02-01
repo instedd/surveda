@@ -19,7 +19,7 @@ class StepLanguageSelection extends Component {
   }
 
   render() {
-    const { step } = this.props
+    const { step, readOnly } = this.props
     const { languageChoices } = step
 
     let selectOptions = languageChoices.map((choice, index) =>
@@ -52,6 +52,7 @@ class StepLanguageSelection extends Component {
                     </td>
                     <td>
                       <Input s={8} type='select'
+                        disabled={readOnly}
                         onChange={e => this.changeLanguageOrder(choice, e)}
                         defaultValue={index}
                         >
@@ -72,7 +73,8 @@ class StepLanguageSelection extends Component {
 
 StepLanguageSelection.propTypes = {
   dispatch: PropTypes.func,
-  step: PropTypes.object.isRequired
+  step: PropTypes.object.isRequired,
+  readOnly: PropTypes.bool
 }
 
 export default connect()(StepLanguageSelection)

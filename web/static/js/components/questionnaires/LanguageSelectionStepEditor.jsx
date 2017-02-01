@@ -16,8 +16,9 @@ type Props = {
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
+  readOnly: boolean,
   questionnaire: Questionnaire,
-  errors: QuizErrors
+  errors: Errors
 };
 
 type State = {
@@ -52,23 +53,24 @@ class LanguageSelectionStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, errors } = this.props
+    const { step, stepIndex, onCollapse, errors, readOnly } = this.props
 
     return (
-      <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
+      <DraggableStep step={step} readOnly={readOnly}>
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<i className='material-icons left'>language</i>} >
           <StepPrompts
             step={step}
+            readOnly={readOnly}
             stepIndex={stepIndex}
             errors={errors} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>
-                <StepLanguageSelection step={step} />
+                <StepLanguageSelection step={step} readOnly={readOnly} />
               </div>
             </div>
           </li>
-          <StepStoreVariable step={step} />
+          <StepStoreVariable step={step} readOnly={readOnly} />
         </StepCard>
       </DraggableStep>
     )

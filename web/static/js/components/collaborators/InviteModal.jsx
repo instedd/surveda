@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Dropdown, DropdownItem } from '../ui'
+import { Modal, InputWithLabel } from '../ui'
+import { Input } from 'react-materialize'
 import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
@@ -9,12 +10,6 @@ import * as guestActions from '../../actions/guest'
 import InviteLink from './InviteLink'
 
 export class InviteModal extends Component {
-  componentDidMount() {
-    $(document).ready(function() {
-      $('.modal').modal()
-    })
-  }
-
   cancel() {
     this.props.guestActions.clear()
   }
@@ -35,8 +30,9 @@ export class InviteModal extends Component {
     })
   }
 
-  levelChanged(l) {
-    Promise.resolve(this.props.guestActions.changeLevel(l)).then(() => {
+  levelChanged(e) {
+    const level = e.target.value
+    Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
       this.props.guestActions.generateCode()
     })
   }
@@ -58,37 +54,54 @@ export class InviteModal extends Component {
       return <div>Loading...</div>
     }
 
-    const cancel = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.cancel()}>Cancel</a>
+    const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
 
-    const send = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={() => this.send()}>Send</a>
+    const sendButton = guest.code
+    ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
+    : <a className='btn-medium disabled'>Send</a>
 
     return (
-      <div>
-        <div id={modalId} className='modal card' style={style}>
-          <div className='modal-content'>
-            <h4>{header}</h4>
+      <Modal card id={modalId} style={style} className='invite-collaborator'>
+        <div className='modal-content'>
+          <div className='card-title header'>
+            <h5>{header}</h5>
             <p>{modalText}</p>
           </div>
-          <input placeholder="Enter collaborator's email" type='text' onChange={e => { this.emailChanged(e) }} value={guest.email} />
-          <Dropdown className='step-mode underlined' label={startCase(guest.level) || 'Level'} constrainWidth={false} dataBelowOrigin={false}>
-            { /* TODO: Level options should also contain reader */ }
-            {['editor'].map((level) =>
-              <DropdownItem key={level}>
-                <a onClick={e => this.levelChanged(level)}>
-                  {startCase(level)}
-                </a>
-              </DropdownItem>
-            )}
-          </Dropdown>
-          <div>
-            { guest.code ? send : <span /> }
-            {cancel}
-          </div>
-          <div className='modal-footer'>
-            { guest.code ? <InviteLink /> : <div />}
+          <div className='card-content'>
+            <div className='row'>
+              <div className='col s8'>
+                <div className='input-field'>
+                  <InputWithLabel id='collaborator_mail' value={guest.email} label={`Enter collaborator's email`} >
+                    <input type='text' onChange={e => { this.emailChanged(e) }} />
+                  </InputWithLabel>
+                </div>
+              </div>
+              <div className='col s1' />
+              <Input s={3} type='select' label='Role'
+                value={guest.level || ''}
+                onChange={e => this.levelChanged(e)}>
+                <option value=''>
+                Select a role
+                </option>
+                { ['editor', 'reader'].map((role) =>
+                  <option key={role} value={role}>
+                    {startCase(role)}
+                  </option>
+                  )}
+              </Input>
+            </div>
+            <div className='row button-actions'>
+              <div className='col s12'>
+                {sendButton}
+                {cancelButton}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+        <div className='card-action'>
+          <InviteLink />
+        </div>
+      </Modal>
     )
   }
 }

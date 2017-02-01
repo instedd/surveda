@@ -8,6 +8,7 @@ type Props = {
   onChange: Function,
   stepsBefore: Step[],
   stepsAfter: Step[],
+  readOnly?: boolean,
   label?: string
 };
 
@@ -93,13 +94,14 @@ class SkipLogic extends Component {
   }
 
   render() {
-    const { stepsAfter, stepsBefore, label } = this.props
+    const { stepsAfter, stepsBefore, label, readOnly } = this.props
 
     let { skipOptions, currentValueIsValid } = this.skipOptions(this.state.value, stepsAfter, stepsBefore)
 
     return (
       <Input s={12} type='select'
         label={label}
+        disabled={readOnly}
         onChange={e => this.change(e)}
         defaultValue={this.state.value}
         className={currentValueIsValid ? '' : 'invalidValue'}>

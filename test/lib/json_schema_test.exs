@@ -40,8 +40,8 @@ defmodule Ask.StepsValidatorTest do
   defp valid_lang_prompt(json), do: valid_thing(json, :lang_prompt)
   defp invalid_lang_prompt(json, case_desc), do: invalid_thing(json, :lang_prompt, case_desc)
 
-  defp valid_ivr(json), do: valid_thing(json, :ivr)
-  defp invalid_ivr(json, case_desc), do: invalid_thing(json, :ivr, case_desc)
+  defp valid_ivr(json), do: valid_thing(json, :ivr_prompt)
+  defp invalid_ivr(json, case_desc), do: invalid_thing(json, :ivr_prompt, case_desc)
 
   defp valid_choice(json), do: valid_thing(json, :choice)
   defp invalid_choice(json, case_desc), do: invalid_thing(json, :choice, case_desc)
@@ -142,7 +142,7 @@ defmodule Ask.StepsValidatorTest do
       "type": "language-selection",
       "prompt": {},
       "store": "",
-      "choices": ["en", "fr", "es"]
+      "language_choices": [null, "en", "fr", "es"]
     })
     |> valid_step
 
@@ -154,6 +154,16 @@ defmodule Ask.StepsValidatorTest do
       "prompt": {},
       "store": "Smokes",
       "choices": []
+    })
+    |> valid_step
+
+    ~s(
+    {
+      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+      "title": "Explanation",
+      "type": "explanation",
+      "prompt": {},
+      "skip_logic": null
     })
     |> valid_step
   end

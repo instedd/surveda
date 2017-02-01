@@ -12,16 +12,17 @@ type Props = {
   connectDragSource: Function,
   connectDropTarget: Function,
   children: any,
-  questionnaireActions: any
+  questionnaireActions: any,
+  readOnly: boolean
 };
 
 class DraggableStep extends Component {
   props: Props
 
   draggableStep() {
-    const { step, isDragging, isOver, connectDragSource, children } = this.props
+    const { step, isDragging, isOver, connectDragSource, children, readOnly } = this.props
 
-    const draggable = step == null || step.type != 'language-selection'
+    const draggable = !readOnly && (step == null || step.type != 'language-selection')
 
     let draggableStyle: any = {
       opacity: isDragging ? 0.0 : 1,

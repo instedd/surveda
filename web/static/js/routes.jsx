@@ -5,6 +5,7 @@ import ProjectIndex from './components/projects/ProjectIndex'
 import SurveyEdit from './components/surveys/SurveyEdit'
 import SurveyIndex from './components/surveys/SurveyIndex'
 import SurveyShow from './components/surveys/SurveyShow'
+import SurveySettings from './components/surveys/SurveySettings'
 import QuestionnaireIndex from './components/questionnaires/QuestionnaireIndex'
 import QuestionnaireEditor from './components/questionnaires/QuestionnaireEditor'
 import ChannelIndex from './components/ChannelIndex'
@@ -33,6 +34,7 @@ export default (
           <Route path=':surveyId' title={SurveyTitle}>
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
             <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
+            <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} showSavingStatus />
           </Route>
         </Route>
@@ -67,12 +69,15 @@ export const project = (id) => `${projects}/${id}`
 export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
+export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
 export const respondentsCSV = (projectId, surveyId, offset) => `/api/v1${surveyRespondents(projectId, surveyId)}/csv?offset=${offset}`
 export const surveyEdit = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
 export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
+export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`
+
 export const channels = '/channels'
 
 export const showOrEditSurvey = (s) => {

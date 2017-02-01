@@ -1,0 +1,25 @@
+<div class="row">
+  <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+  <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+  <div class="col s12">
+    <div class="card">
+      <div class="card-content">
+        <%= form_for @changeset, confirmation_path(@conn, :create), [as: :confirmation], fn f  -> %>
+          <span class="card-title">Resend account activation instructions</span>
+          <br/>
+          <br/>
+          <div class="row">
+            <%= label f, :email %>
+            <%= text_input f, :email, required: "" %>
+            <%= error_tag f, :email %>
+          </div>
+
+          <div class="row">
+            <%= submit "Resend Email", class: "btn-large blue waves-effect waves-light btn-block" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+<br \>

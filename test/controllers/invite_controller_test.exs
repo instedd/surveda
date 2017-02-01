@@ -20,17 +20,37 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
-    email = "user@instedd.com.ar"
+    email = "user@instedd.org"
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     invite = Invite |> last |> Repo.one
     assert(invite.level == level && invite.code == code && invite.project_id == project.id && invite.email == email)
+  end
+
+  test "forbids user outside a project to invite", %{conn: conn} do
+    project = insert(:project)
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    end
+  end
+
+  test "forbids reader to invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "reader")
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    end
   end
 
   test "invites user", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
-    email = "user@instedd.com.ar"
+    email = "user@instedd.org"
     conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     assert json_response(conn, 200) == %{
       "data" => %{
@@ -86,51 +106,75 @@ defmodule Ask.InviteControllerTest do
   end
 
   test "accepts invite", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      user2 = insert(:user)
-      code = "ABC1234"
-      level = "reader"
-      invite = %{
-        "project_id" => project.id,
-        "code" => code,
-        "level" => level,
-        "email" => user2.email
-      }
-      Invite.changeset(%Invite{}, invite) |> Repo.insert
-      conn = conn
-        |> put_private(:test_user, user2)
-        |> put_req_header("accept", "application/json")
+    project = create_project_for_user(user)
+    user2 = insert(:user)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => user2.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+    conn = conn
+      |> put_private(:test_user, user2)
+      |> put_req_header("accept", "application/json")
 
-      conn = get conn, accept_invitation_path(conn, :accept_invitation, %{"code" => code})
-      assert json_response(conn, 200) == %{
-      "data" => %{
-        "project_id" => project.id,
-        "level" => level
-        }
+    conn = get conn, accept_invitation_path(conn, :accept_invitation, %{"code" => code})
+    assert json_response(conn, 200) == %{
+    "data" => %{
+      "project_id" => project.id,
+      "level" => level
       }
-    end
+    }
+  end
 
-    test "shows invite", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      code = "ABC1234"
-      level = "reader"
-      invite = %{
-        "project_id" => project.id,
-        "code" => code,
-        "level" => level,
-        "email" => "user@instedd.org",
-        "inviter_email" => user.email
+  test "shows invite", %{conn: conn} do
+    user2 = insert(:user)
+    project = create_project_for_user(user2)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => "user@instedd.org",
+      "inviter_email" => user2.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    conn = get conn, invite_show_path(conn, :show, %{"code" => code})
+
+    assert json_response(conn, 200) == %{
+    "data" => %{
+      "project_name" => project.name,
+      "role" => level,
+      "inviter_email" => user2.email
       }
-      Invite.changeset(%Invite{}, invite) |> Repo.insert
+    }
+  end
 
-      conn = get conn, invite_show_path(conn, :show, %{"code" => code})
+  test "returns error when the user is already a member", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "reader"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => level,
+      "email" => "user@instedd.org",
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
 
-      assert json_response(conn, 200) == %{
-      "data" => %{
-        "project_name" => project.name,
-        "role" => level,
-        "inviter_email" => user.email
-        }
+    conn = get conn, invite_show_path(conn, :show, %{"code" => code})
+
+    assert json_response(conn, 200) == %{
+    "data" => %{
+      "error" => "The user is already a member",
+      "project_id" => project.id
       }
-    end
+    }
+  end
 end

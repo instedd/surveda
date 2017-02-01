@@ -1,24 +1,24 @@
+// @flow
 import * as actions from '../actions/channels'
+import collectionReducer from './collection'
 
-export default (state = {}, action) => {
+const itemsReducer = (state: IndexedList<Channel>, action: any): IndexedList<Channel> => {
   switch (action.type) {
-    case actions.RECEIVE_CHANNELS: return receiveChannels(state, action)
-    case actions.CREATE_CHANNEL: return createChannel(state, action)
+    case actions.CREATE: return create(state, action)
     default: return state
   }
 }
 
-const receiveChannels = (state, action) => {
-  if (action.response && action.response.entities) {
-    return action.response.entities.channels || {}
+export default collectionReducer(actions, itemsReducer)
+
+const create = (state, action) => {
+  return {
+    ...state,
+    items: {
+      ...state.items,
+      [action.id]: {
+        ...action.channel
+      }
+    }
   }
-  return state
 }
-
-const createChannel = (state, action) => ({
-  ...state,
-  [action.id]: {
-    ...action.channel
-  }
-})
-

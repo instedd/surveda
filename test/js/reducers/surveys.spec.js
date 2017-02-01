@@ -1,36 +1,38 @@
+// @flow
 /* eslint-env mocha */
 import expect from 'expect'
 import reducer from '../../../web/static/js/reducers/surveys'
 import * as actions from '../../../web/static/js/actions/surveys'
+import { survey } from '../fixtures'
 
 describe('surveys reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, projectId: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 5}})
+    expect(initialState).toEqual({fetching: false, filter: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 5}})
   })
 
   it('should start fetching surveys', () => {
     const projectId = 100
     const result = reducer(initialState, actions.startFetchingSurveys(projectId))
     expect(result.fetching).toEqual(true)
-    expect(result.projectId).toEqual(projectId)
+    expect(result.filter && result.filter.projectId).toEqual(projectId)
   })
 
   it('should receive surveys', () => {
     const projectId = 100
-    const surveys = {1: {id: 1}}
+    const surveys = {'1': {...survey, 'id': 1}}
     const r1 = reducer(initialState, actions.startFetchingSurveys(projectId))
     const result = reducer(r1, actions.receiveSurveys(projectId, surveys))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(surveys)
-    expect(result.projectId).toEqual(projectId)
+    expect(result.filter && result.filter.projectId).toEqual(projectId)
     expect(result.order).toEqual([1])
   })
 
   it('should start fetching surveys for a different project', () => {
     const projectId = 100
-    const surveys = {1: {id: 1}}
+    const surveys = {'1': {...survey, id: 1}}
     const r1 = reducer(initialState, actions.startFetchingSurveys(projectId))
     const r2 = reducer(r1, actions.receiveSurveys(projectId, surveys))
     const r3 = reducer(r2, actions.startFetchingSurveys(projectId + 1))
@@ -39,7 +41,7 @@ describe('surveys reducer', () => {
 
   it('should sort surveys by name', () => {
     const projectId = 100
-    const surveys = {1: {id: 1, name: 'foo'}, 2: {id: 2, name: 'bar'}}
+    const surveys = {'1': {...survey, id: 1, name: 'foo'}, '2': {...survey, id: 2, name: 'bar'}}
     const r1 = reducer(initialState, actions.startFetchingSurveys(projectId))
     const r2 = reducer(r1, actions.receiveSurveys(projectId, surveys))
     const r3 = reducer(r2, actions.sortSurveysBy('name'))

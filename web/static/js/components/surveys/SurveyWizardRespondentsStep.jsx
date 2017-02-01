@@ -1,102 +1,147 @@
 import React, { PropTypes, Component } from 'react'
+import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
+import { Input } from 'react-materialize'
 import { ConfirmationModal, Card } from '../ui'
-import { uploadRespondents, removeRespondents } from '../../api'
-import * as actions from '../../actions/survey'
-import * as respondentsActions from '../../actions/respondents'
+import * as actions from '../../actions/respondentGroups'
+import values from 'lodash/values'
+import uniq from 'lodash/uniq'
+import flatMap from 'lodash/flatMap'
 
 class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
-    respondents: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired
+    respondentGroups: PropTypes.object.isRequired,
+    invalidRespondents: PropTypes.object,
+    channels: PropTypes.object,
+    actions: PropTypes.object.isRequired,
+    readOnly: PropTypes.bool.isRequired
   }
 
-  handleSubmit(survey, files) {
-    const { dispatch } = this.props
-    uploadRespondents(survey, files)
-      .then(response => {
-        dispatch(respondentsActions.receiveRespondents(survey.id, 1, response.entities.respondents || {}, response.respondentsCount))
-        dispatch(actions.updateRespondentsCount(response.respondentsCount))
-      }, (e) => {
-        e.json().then((value) => {
-          dispatch(respondentsActions.receiveInvalids(value))
-        })
-      })
+  handleSubmit(files) {
+    const { survey, actions } = this.props
+    actions.uploadRespondentGroup(survey.projectId, survey.id, files)
   }
 
-  removeRespondents(event) {
-    const { dispatch, survey } = this.props
-    event.preventDefault()
-    removeRespondents(survey)
-      .then(respondents => {
-        dispatch(respondentsActions.removeRespondents(respondents))
-        dispatch(actions.updateRespondentsCount(0))
-      })
+  removeRespondents(event, groupId) {
+    const { survey, actions } = this.props
+    actions.removeRespondentGroup(survey.projectId, survey.id, groupId)
   }
 
-  clearInvalids() {
-    const { dispatch } = this.props
-    dispatch(respondentsActions.clearInvalids())
+  clearInvalids(e) {
+    e.preventDefault()
+
+    this.props.actions.clearInvalids()
   }
 
   invalidRespondentsContent(data) {
-    if (data) {
-      const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
-      const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
-      const extraLinesCount = data.invalidEntries.length - lineNumbers.length
-      const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
-      return (
-        <Card>
-          <div className='card-content card-error'>
-            <div><b>Errors found at '{data.filename}', file was not imported</b></div>
-            <div>{invalidEntriesText} {lineNumbersText}</div>
-            <div>Please fix those errors and upload again.</div>
-          </div>
-          <div className='card-action right-align'>
-            <a className='blue-text' href='#' onClick={() => this.clearInvalids()}>
-              UNDERSTOOD
-            </a>
-          </div>
-        </Card>
-      )
+    if (!data) return null
+
+    const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
+    const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
+    const extraLinesCount = data.invalidEntries.length - lineNumbers.length
+    const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
+    return (
+      <Card>
+        <div className='card-content card-error'>
+          <div><b>Errors found at '{data.filename}', file was not imported</b></div>
+          <div>{invalidEntriesText} {lineNumbersText}</div>
+          <div>Please fix those errors and upload again.</div>
+        </div>
+        <div className='card-action right-align'>
+          <a className='blue-text' href='#' onClick={e => this.clearInvalids(e)}>
+            UNDERSTOOD
+          </a>
+        </div>
+      </Card>
+    )
+  }
+
+  channelChange(e, group, type, allChannels) {
+    e.preventDefault()
+
+    let currentChannels = group.channels || []
+    currentChannels = currentChannels.filter(id => allChannels[id].type != type)
+    if (e.target.value != '') {
+      currentChannels.push(e.target.value)
     }
+    currentChannels = currentChannels.map(x => parseInt(x))
+
+    const { actions, survey } = this.props
+    actions.selectChannels(survey.projectId, survey.id, group.id, currentChannels)
+  }
+
+  renderGroup(group, channels, allModes, readOnly) {
+    let removeRespondents = null
+    if (!readOnly) {
+      removeRespondents = <ConfirmationModal showLink
+        modalId={`removeRespondents${group.id}`} linkText='REMOVE RESPONDENTS'
+        modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one."
+        header='Please confirm that you want to delete the respondents list'
+        confirmationText='DELETE THE RESPONDENTS LIST'
+        style={{maxWidth: '600px'}} showCancel
+        onConfirm={e => this.removeRespondents(e, group.id)} />
+    }
+
+    return (
+      <RespondentsList key={group.id} group={group} remove={removeRespondents} modes={allModes}
+        channels={channels} readOnly={readOnly}
+        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+        >
+        {group.sample.map((respondent, index) =>
+          <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
+        )}
+      </RespondentsList>
+    )
   }
 
   render() {
-    let { survey, respondents } = this.props
-    let invalidRespondentsCard = this.invalidRespondentsContent(respondents.invalidRespondents)
-    if (!survey) {
+    let { survey, channels, respondentGroups, invalidRespondents, readOnly } = this.props
+    let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
+    if (!survey || !channels || Object.keys(channels).length == 0) {
       return <div>Loading...</div>
     }
 
-    if (survey.respondentsCount != 0) {
-      return (
-        <RespondentsContainer>
-          <RespondentsList respondentsCount={survey.respondentsCount}>
-            {Object.keys(respondents.items || {}).map((respondentId) =>
-              <PhoneNumberRow id={respondentId} phoneNumber={respondents.items[respondentId].phoneNumber} key={respondentId} />
-            )}
-          </RespondentsList>
-          <ConfirmationModal showLink modalId='removeRespondents' linkText='REMOVE RESPONDENTS' modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one." header='Please confirm that you want to delete the respondents list' confirmationText='DELETE THE RESPONDENTS LIST' style={{maxWidth: '600px'}} showCancel onConfirm={(event) => this.removeRespondents(event)} />
-        </RespondentsContainer>
-      )
-    } else {
-      return (
-        <RespondentsContainer>
-          <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
-          { invalidRespondentsCard }
-          <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(survey, file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
-        </RespondentsContainer>
+    const mode = survey.mode || []
+    const allModes = uniq(flatMap(mode))
+
+    let respondentsDropzone = null
+    if (!readOnly) {
+      respondentsDropzone = (
+        <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
       )
     }
+
+    return (
+      <RespondentsContainer>
+        {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly))}
+
+        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        {invalidRespondentsCard || respondentsDropzone}
+      </RespondentsContainer>
+    )
   }
 }
 
 const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
+  var isIE = /* @cc_on!@ */false || !!document.documentMode
+
+  // Edge 20+
+  var isEdge = !isIE && !!window.StyleMedia
+
+  let commonProps = {className: 'dropfile', activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, onDrop: onDrop, accept: 'text/csv', onDropRejected: onDropRejected}
+
+  if (isEdge || isIE) {
+    commonProps = {
+      ...commonProps,
+      accept: '.csv',
+      rejectClassName: ''
+    }
+  }
+
   return (
-    <Dropzone className='dropfile' activeClassName='active' multiple={false} onDrop={onDrop} accept='.csv' onDropRejected={onDropRejected} >
+    <Dropzone {...commonProps} >
       <div className='drop-icon' />
       <div className='drop-text csv' />
     </Dropzone>
@@ -109,25 +154,101 @@ RespondentsDropzone.propTypes = {
   onDropRejected: PropTypes.func.isRequired
 }
 
-const RespondentsList = ({ respondentsCount, children }) => {
+const newChannelComponent = (type, allChannels, currentChannels, onChange, readOnly) => {
+  const currentChannel = currentChannels.find(id => allChannels[id].type == type)
+
+  let label
+  if (type == 'sms') {
+    label = 'SMS'
+  } else {
+    label = 'Phone'
+  }
+  label += ' channel'
+
+  let channels = values(allChannels)
+  channels = channels.filter(c => c.type == type)
+
   return (
-    <table className='ncdtable'>
-      <thead>
-        <tr>
-          <th>
-            {`${respondentsCount} contacts imported`}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {children}
-      </tbody>
-    </table>
+    <div className='row' key={type}>
+      <div className='input-field col s12'>
+        <Input s={12} type='select' label={label}
+          value={currentChannel || ''}
+          onChange={e => onChange(e, type, allChannels)}
+          disabled={readOnly}>
+          <option value=''>
+            Select a channel...
+          </option>
+          { channels.map((channel) =>
+            <option key={channel.id} value={channel.id}>
+              {channel.name}
+            </option>
+              )}
+        </Input>
+      </div>
+    </div>
+  )
+}
+
+const RespondentsList = ({ group, remove, channels, modes, onChannelChange, readOnly, children }) => {
+  let footer = null
+  if (remove) {
+    footer = (
+      <div className='card-action'>
+        {remove}
+      </div>
+    )
+  }
+
+  let currentChannels = group.channels || []
+  let channelsComponent = []
+  for (const targetMode of modes) {
+    channelsComponent.push(newChannelComponent(targetMode, channels, currentChannels, onChannelChange, readOnly))
+  }
+
+  return (
+    <Card>
+      <div className='card-content'>
+        <div className='row'>
+          <div className='col s6'>
+            <table className='ncdtable'>
+              <thead>
+                <tr>
+                  <th>{group.name} ({group.respondentsCount} contacts)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {children}
+              </tbody>
+            </table>
+          </div>
+          <div className='col s6'>
+            <table className='ncdtable'>
+              <thead>
+                <tr>
+                  <th>Channels</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{channelsComponent}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {footer}
+    </Card>
   )
 }
 
 RespondentsList.propTypes = {
-  respondentsCount: PropTypes.any.isRequired,
+  group: PropTypes.object,
+  modes: PropTypes.any,
+  readOnly: PropTypes.bool,
+  remove: PropTypes.node,
+  channels: PropTypes.any,
+  onChannelChange: PropTypes.func,
   children: PropTypes.node
 }
 
@@ -172,4 +293,8 @@ RespondentsContainer.propTypes = {
   children: PropTypes.node
 }
 
-export default connect()(SurveyWizardRespondentsStep)
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators(actions, dispatch)
+})
+
+export default connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep)

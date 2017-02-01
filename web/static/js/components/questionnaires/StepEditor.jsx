@@ -13,9 +13,10 @@ type Props = {
   step: Step,
   stepIndex: number,
   questionnaireActions: any,
+  readOnly: boolean,
   onDelete: Function,
   onCollapse: Function,
-  errors: QuizErrors,
+  errors: Errors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -25,43 +26,20 @@ class StepEditor extends Component {
   clickedVarAutocomplete: boolean
 
   render() {
-    const { step, stepIndex, errors, stepsAfter, stepsBefore, onCollapse, onDelete } = this.props
+    const {step, ...commonProps} = this.props
 
-    let editor
-
-    let commonProps = {step, stepIndex, questionnaireActions, onCollapse, errors}
-
-    if (step.type == 'multiple-choice') {
-      editor =
-        <MultipleChoiceStepEditor
-          {...commonProps}
-          onDelete={onDelete}
-          stepsAfter={stepsAfter}
-          stepsBefore={stepsBefore} />
-    } else if (step.type == 'numeric') {
-      editor =
-        <NumericStepEditor
-          {...commonProps}
-          onDelete={onDelete}
-          stepsAfter={stepsAfter}
-          stepsBefore={stepsBefore} />
-    } else if (step.type == 'explanation') {
-      editor =
-        <ExplanationStepEditor
-          {...commonProps}
-          stepsAfter={stepsAfter}
-          stepsBefore={stepsBefore} />
-    } else if (step.type == 'language-selection') {
-      editor =
-        <LanguageSelectionStepEditor
-          {...commonProps} />
-    } else {
-      throw new Error(`unknown step type: ${step.type}`)
+    switch (step.type) {
+      case 'multiple-choice':
+        return <MultipleChoiceStepEditor {...commonProps} step={step} />
+      case 'numeric':
+        return <NumericStepEditor {...commonProps} step={step} />
+      case 'explanation':
+        return <ExplanationStepEditor {...commonProps} step={step} />
+      case 'language-selection':
+        return <LanguageSelectionStepEditor {...commonProps} step={step} />
+      default:
+        throw new Error(`unknown step type: ${step.type}`)
     }
-
-    return (
-      editor
-    )
   }
 }
 

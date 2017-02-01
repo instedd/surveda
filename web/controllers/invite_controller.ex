@@ -20,40 +20,42 @@ defmodule Ask.InviteController do
   end
 
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
-    {project_id, _} = Integer.parse(project_id)
+    project = conn
+    |> load_project_for_change(project_id)
 
     current_user = conn |> current_user
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id, "inviter_email" => current_user.email})
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
     |> Repo.insert
 
-    render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
+    render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
 
   def show(conn, %{"code" => code}) do
     invite = Invite |> Repo.get_by(code: code)
     project = Project |> Repo.get(invite.project_id)
-    render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
+    user = conn |> current_user
+    project_membership = ProjectMembership |> Repo.get_by(user_id: user.id, project_id: project.id)
+
+    if project_membership do
+      render(conn, "error.json", %{error: "The user is already a member", project_id: project.id})
+    else
+      render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
+    end
   end
 
   def invite_mail(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
-    {project_id, _} = Integer.parse(project_id)
+    project = conn
+    |> load_project_for_change(project_id)
 
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
     current_user = conn |> current_user
 
-    %Bamboo.Email{
-      from: "noreply@instedd.org",
-      to: email,
-      subject: "Accept invitation",
-      text_body: "You have been invited to collaborate. Follow this link: #{url}",
-      headers: %{}
-    } |> Ask.Mailer.deliver_now
+    Ask.Email.invite(email, current_user, url) 
+    |> Ask.Mailer.deliver
 
-
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id, "inviter_email" => current_user.email})
+    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
     |> Repo.insert
 
-    render(conn, "invite.json", %{project_id: project_id, code: code, email: email, level: level})
+    render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
-
 end

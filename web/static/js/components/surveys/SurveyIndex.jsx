@@ -18,6 +18,7 @@ class SurveyIndex extends Component {
     dispatch: PropTypes.func,
     router: PropTypes.object,
     projectId: PropTypes.any.isRequired,
+    project: PropTypes.object,
     surveys: PropTypes.array,
     respondentsStats: PropTypes.object.isRequired
   }
@@ -45,7 +46,7 @@ class SurveyIndex extends Component {
   }
 
   render() {
-    const { surveys, respondentsStats } = this.props
+    const { surveys, respondentsStats, project } = this.props
 
     if (!surveys) {
       return (
@@ -53,9 +54,18 @@ class SurveyIndex extends Component {
       )
     }
 
+    const readOnly = !project || project.readOnly
+
+    let addButton = null
+    if (!readOnly) {
+      addButton = (
+        <AddButton text='Add survey' onClick={() => this.newSurvey()} />
+      )
+    }
+
     return (
       <div>
-        <AddButton text='Add survey' onClick={() => this.newSurvey()} />
+        {addButton}
         { surveys.length == 0
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
@@ -77,8 +87,9 @@ const mapStateToProps = (state, ownProps) => {
   }
   return {
     projectId: ownProps.params.projectId,
+    project: state.project.data,
     surveys,
-    channels: state.channels,
+    channels: state.channels.items,
     respondentsStats: state.respondentsStats
   }
 }
@@ -98,7 +109,7 @@ class SurveyCard extends PureComponent {
 
     if (survey && completedByDate) {
       const data = completedByDate.respondentsByDate
-      const target = completedByDate.cutoff || completedByDate.totalRespondents
+      const target = completedByDate.totalQuota || completedByDate.cutoff || completedByDate.totalRespondents
       cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
       if (survey.state == 'running' || survey.state == 'completed') {
         reached = RespondentsChartCount.respondentsReachedPercentage(data, target)

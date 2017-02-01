@@ -1,18 +1,24 @@
 import React, { Component, PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../actions/invites'
 import * as routes from '../routes'
+import { UntitledIfEmpty } from './ui'
 
 class InviteConfirmation extends Component {
   componentDidMount() {
+    const { dispatch, router } = this.props
     const code = this.props.location.query.code
-    this.props.actions.fetchInvite(code)
+    dispatch(actions.fetchInvite(code)).then((invite) => {
+      if (invite.error) {
+        router.push(routes.project(invite.project_id))
+      }
+    })
   }
 
   confirmInvitation() {
     const code = this.props.location.query.code
-    Promise.resolve(this.props.actions.confirm(code)).then(() => {
+    const { dispatch } = this.props
+    Promise.resolve(dispatch(actions.confirm(code))).then(() => {
       window.location = routes.projects
     })
   }
@@ -24,15 +30,19 @@ class InviteConfirmation extends Component {
       return <div>Loading...</div>
     }
 
-    const inviteText = <div> { invite.inviter_email + ' has invited to collaborate as ' + invite.role + ' on ' + invite.project_name } </div>
+    const inviteText = <span> {`${invite.inviter_email} has invited you to collaborate as ${invite.role} on `}<UntitledIfEmpty text={invite.project_name} entityName='project' /></span>
     const roleAction = invite.role == 'editor' ? 'manage' : 'see'
-    const roleDescription = <div> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </div>
+    const roleDescription = <span> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </span>
 
     return (
-      <div>
-        <div> { inviteText } </div>
-        <div> { roleDescription } </div>
-        <a onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
+      <div className='row accept-invitation'>
+        <div className='col s4 offset-s4 center'>
+          <h1><i className='material-icons grey-text xxlarge'>folder_shared</i></h1>
+          <p> { inviteText } </p>
+          <div className='divider' />
+          <p className='small-text'> { roleDescription } </p>
+          <a className='btn-medium blue' onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
+        </div>
       </div>
     )
   }
@@ -40,16 +50,14 @@ class InviteConfirmation extends Component {
 
 InviteConfirmation.propTypes = {
   location: PropTypes.object.isRequired,
-  actions: PropTypes.object.isRequired,
-  invite: PropTypes.object
+  router: PropTypes.object,
+  invite: PropTypes.object,
+  dispatch: PropTypes.any
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+const mapStateToProps = (state, ownProps) => ({
+  invite: state.invite.data,
+  project: state.project.data
 })
 
-const mapStateToProps = (state) => ({
-  invite: state.invite.data
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(InviteConfirmation)
+export default connect(mapStateToProps)(InviteConfirmation)

@@ -1,0 +1,181 @@
+// ---------NCD general layout classes ---------------
+
+
+html, body {
+  @extend .grey, .lighten-3;
+}
+
+
+main:not(.main-welcome) {
+  @include flexbox();
+  flex: 1 0 auto;
+  padding-bottom: 61px;
+  position: relative;
+  > div {
+    flex: 1;
+    padding-top: 90px;
+  }
+}
+
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  min-width: 320px;
+  & > * > * {
+    padding-left: 10%;
+    padding-right: 10%;
+  }
+}
+
+header {
+  @extend .grey, .darken-3;
+
+  .logo {
+    display: inline-block;
+    vertical-align: top;
+    padding-top: 8px;
+    margin-right: 25px;
+    margin-left: -85px;
+    + a.breadcrumb:before {
+      display: none;
+    }
+    svg {
+      .st0{fill:#FF5722;}
+      .st1{fill:#FFC107;}
+      .st2{fill:#FFA000;}
+      .st3{fill:#4CAF50;}
+      .st4{fill:#555555;}
+
+    }
+  }
+}
+
+#TopNav {
+  border-bottom: 1px solid color("shades", "black");
+  min-width: 395px;
+
+  ul {
+    &.breadcrumb-top {
+      margin-left: -15px;
+    }
+    a {
+      @extend .grey-text;
+      i.right {
+        font-size: 1.6rem;
+        margin-left: 5px;
+      }
+      &:hover {
+        @extend .transparent;
+        @extend .white-text;
+      }
+    }
+    .dropdown-content > li >  a {
+      @extend .black-text;
+    }
+    .user-icon {
+      display: none;
+    }
+    .user-email-dropdown {
+      border-bottom: 1px solid color("grey", "lighten-1");
+      cursor: default;
+      display: none;
+      span {
+        @extend .grey-text, .lighten-2;
+      }
+      &:hover {
+        @extend .transparent;
+      }
+    }
+    &.user-menu a {
+      max-height: 64px;
+       > div {
+        display: inline;
+      }
+    }
+  }
+
+  .breadcrumb-top {
+    > li {
+      position: relative;
+      a {
+        @extend .truncate;
+        max-width: 180px;
+      }
+      &.breadcrumb-item:before {
+        content: 'chevron_right';
+        font-family: 'Material Icons';
+        font-weight: 300;
+        font-style: normal;
+        font-size: 15px;
+        line-height: 1.158;
+        letter-spacing: normal;
+        text-transform: none;
+        text-rendering: optimizeLegibility;
+        font-feature-settings: 'liga';
+        color: color("grey", "darken-4");
+        position: absolute;
+        left: -.5rem;
+        top: 38%;
+      }
+      &.channels-tab a {
+        &:before {
+          content: '';
+          @extend .grey, .darken-4;
+          left: 0px;
+          top: 20px;
+          width: 1px;
+          height: 25px;
+          position: absolute;
+        }
+      }
+    }
+  }
+}
+
+#MainNav {
+  height: auto;
+  padding-top: 1rem;
+  padding-bottom: 0.3rem;
+
+  .col {
+    height: 66px;
+  }
+
+  a.page-title {
+    font-size: 20px;
+    max-width: 95%;
+    padding-top: 4px;
+    display: inline-block;
+    i {
+      @extend .grey-text, .lighten-2;
+      font-size: 24px;
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 15px;
+    }
+  }
+  input#questionnaire_name {
+    margin: 0;
+  }
+}
+
+#BottomNav {
+  height: auto;
+  line-height: 1;
+  .row {
+    margin-bottom: 0;
+  }
+}
+
+
+footer {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  padding-top: 1.3rem;
+  padding-bottom: 1.3rem;
+  .row {
+    margin-bottom: 0;
+  }
+}

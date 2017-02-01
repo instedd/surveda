@@ -1,18 +1,18 @@
-// @flow weak
+// @flow
 import * as api from '../api'
 
-export const RECEIVE_QUESTIONNAIRES = 'QUESTIONNAIRES_RECEIVE'
-export const FETCH_QUESTIONNAIRES = 'QUESTIONNAIRES_FETCH'
-export const NEXT_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
-export const PREVIOUS_QUESTIONNAIRES_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
-export const SORT_QUESTIONNAIRES = 'QUESTIONNAIRES_SORT'
+export const RECEIVE = 'QUESTIONNAIRES_RECEIVE'
+export const FETCH = 'QUESTIONNAIRES_FETCH'
+export const NEXT_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
+export const PREVIOUS_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
+export const SORT = 'QUESTIONNAIRES_SORT'
 
-export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
+export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
   const state = getState()
 
   // Don't fetch questionnaires if they are already being fetched
   // for that same project
-  if (state.questionnaires.fetching && state.questionnaires.projectId == projectId) {
+  if (state.questionnaires.fetching && state.questionnaires.filter && state.questionnaires.filter.projectId == projectId) {
     return Promise.resolve(getState().questionnaires.items)
   }
 
@@ -24,26 +24,26 @@ export const fetchQuestionnaires = (projectId) => (dispatch, getState) => {
     .then(() => getState().questionnaires.items)
 }
 
-export const startFetchingQuestionnaires = (projectId) => ({
-  type: FETCH_QUESTIONNAIRES,
+export const startFetchingQuestionnaires = (projectId: number) => ({
+  type: FETCH,
   projectId
 })
 
-export const receiveQuestionnaires = (projectId, questionnaires) => ({
-  type: RECEIVE_QUESTIONNAIRES,
+export const receiveQuestionnaires = (projectId: number, items: IndexedList<Questionnaire>): ReceiveItemsAction => ({
+  type: RECEIVE,
   projectId,
-  questionnaires
+  items
 })
 
 export const nextQuestionnairesPage = () => ({
-  type: NEXT_QUESTIONNAIRES_PAGE
+  type: NEXT_PAGE
 })
 
 export const previousQuestionnairesPage = () => ({
-  type: PREVIOUS_QUESTIONNAIRES_PAGE
+  type: PREVIOUS_PAGE
 })
 
-export const sortQuestionnairesBy = (property) => ({
-  type: SORT_QUESTIONNAIRES,
+export const sortQuestionnairesBy = (property: string) => ({
+  type: SORT,
   property
 })

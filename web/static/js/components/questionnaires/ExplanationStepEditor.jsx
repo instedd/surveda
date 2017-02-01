@@ -17,7 +17,8 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: QuizErrors,
+  errors: Errors,
+  readOnly: boolean,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -65,13 +66,14 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errors } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errors, readOnly } = this.props
 
     return (
-      <DraggableStep step={step}>
-        <StepCard onCollapse={onCollapse} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} />} >
+      <DraggableStep step={step} readOnly={readOnly}>
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />} >
           <StepPrompts
             step={step}
+            readOnly={readOnly}
             stepIndex={stepIndex}
             errors={errors}
             classes='no-separator'
@@ -81,6 +83,7 @@ class ExplanationStepEditor extends Component {
               <div className='col s6'>
                 <SkipLogic
                   onChange={skipOption => this.skipLogicChange(skipOption)}
+                  readOnly={readOnly}
                   value={step.skipLogic}
                   stepsAfter={stepsAfter}
                   stepsBefore={stepsBefore}
@@ -89,7 +92,7 @@ class ExplanationStepEditor extends Component {
               </div>
             </div>
           </li>
-          <StepDeleteButton onDelete={onDelete} />
+          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
         </StepCard>
       </DraggableStep>
     )

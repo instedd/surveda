@@ -11,7 +11,8 @@ class SurveyWizardCutoffStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
     questionnaire: PropTypes.object,
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired
   }
 
   constructor(props) {
@@ -68,7 +69,36 @@ class SurveyWizardCutoffStep extends Component {
   }
 
   render() {
-    const { questionnaire, survey } = this.props
+    const { questionnaire, survey, readOnly } = this.props
+
+    let quotasForCompletes = null
+    if (questionnaire && Object.keys(stepStoreValues(questionnaire)).length) {
+      let quotasModal = null
+      if (!readOnly) {
+        quotasModal = (
+          <div className='row'>
+            <div className='col s12'>
+              <div>
+                <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      quotasForCompletes = (
+        <div>
+          <div className='row quotas'>
+            <div className='col s12'>
+              <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={() => this.toggleQuotas()} disabled={readOnly} />
+              <label htmlFor='set-quotas'>Quotas for completes</label>
+              <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
+            </div>
+          </div>
+          {quotasModal}
+        </div>
+      )
+    }
 
     return (
       <div>
@@ -86,29 +116,12 @@ class SurveyWizardCutoffStep extends Component {
               <input
                 type='text'
                 onChange={e => this.cutoffChange(e)}
+                disabled={readOnly}
               />
             </InputWithLabel>
           </div>
         </div>
-        { questionnaire && Object.keys(stepStoreValues(questionnaire)).length > 0
-          ? <div>
-            <div className='row quotas'>
-              <div className='col s12'>
-                <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={() => this.toggleQuotas()} />
-                <label htmlFor='set-quotas'>Quotas for completes</label>
-                <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
-              </div>
-            </div>
-            <div className='row'>
-              <div className='col s12'>
-                <div>
-                  <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
-                </div>
-              </div>
-            </div>
-          </div>
-        : '' }
-
+        {quotasForCompletes}
         { survey.quotas.buckets
           ? survey.quotas.buckets.map((bucket, index) =>
             <div className='row quotas' key={index} >
@@ -117,6 +130,7 @@ class SurveyWizardCutoffStep extends Component {
                   <input
                     type='text'
                     onChange={e => this.quotaChange(e)}
+                    disabled={readOnly}
                   />
                 </InputWithLabel>
               </div>

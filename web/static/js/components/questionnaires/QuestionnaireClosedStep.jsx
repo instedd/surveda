@@ -9,14 +9,15 @@ import { hasErrors } from '../../questionnaireErrors'
 type Props = {
   step: Step,
   onClick: Function,
-  hasErrors: boolean
+  hasErrors: boolean,
+  readOnly: boolean
 };
 
 class QuestionnaireClosedStep extends Component {
   props: Props
 
   render() {
-    const { step, onClick, hasErrors } = this.props
+    const { step, onClick, hasErrors, readOnly } = this.props
 
     const stepIconClass = classNames({
       'material-icons left': true,
@@ -37,7 +38,7 @@ class QuestionnaireClosedStep extends Component {
     })()
 
     return (
-      <DraggableStep step={step}>
+      <DraggableStep step={step} readOnly={readOnly}>
         <Card>
           <div className='card-content closed-step'>
             <div>

@@ -5,11 +5,12 @@ class TimeDropdown extends PureComponent {
   static propTypes = {
     defaultValue: PropTypes.any,
     onChange: PropTypes.func,
-    label: PropTypes.string
+    label: PropTypes.string,
+    readOnly: PropTypes.bool
   }
 
   render() {
-    const { defaultValue, onChange, label } = this.props
+    const { defaultValue, onChange, label, readOnly } = this.props
     const hours = [
       {label: '12:00 AM', value: '00:00:00'}, {label: '01:00 AM', value: '01:00:00'},
       {label: '02:00 AM', value: '02:00:00'}, {label: '03:00 AM', value: '03:00:00'},
@@ -26,7 +27,7 @@ class TimeDropdown extends PureComponent {
     ]
 
     return (
-      <Input s={12} m={3} type='select' label={label} defaultValue={defaultValue} onChange={onChange}>
+      <Input s={12} m={3} type='select' label={label} defaultValue={defaultValue} onChange={onChange} disabled={readOnly}>
         {hours.map((hour) => (
           <option value={hour.value} key={hour.value}>{hour.label}</option>
         ))}

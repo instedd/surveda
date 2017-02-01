@@ -1,20 +1,17 @@
 defmodule Ask.PageController do
   use Ask.Web, :controller
+  import Ask.Router.Helpers
 
   def index(conn, %{"path" => path}) do
-    user = get_session(conn, :current_user)
+    user = conn.assigns[:current_user]
 
     case {path, user} do
       {[], nil} ->
-        conn
-        |> render("landing.html")
+        conn |> render("landing.html")
       {path, nil} ->
-        conn
-        |> redirect(to: "/login?redirect=/#{Enum.join path, "/"}")
+        conn |> redirect(to: "#{session_path(conn, :new)}?redirect=/#{Enum.join path, "/"}")
       _ ->
-        conn
-        |> assign(:current_user, user)
-        |> render("index.html", user: user)
+        conn |> render("index.html", user: user)
     end
   end
 end

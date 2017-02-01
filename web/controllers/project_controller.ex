@@ -4,10 +4,23 @@ defmodule Ask.ProjectController do
   alias Ask.{Project, Survey, ProjectMembership, Invite}
 
   def index(conn, _params) do
-    projects = conn
+    memberships = conn
     |> current_user
-    |> assoc(:projects)
+    |> assoc(:project_memberships)
+    |> preload(:project)
     |> Repo.all
+
+    projects = memberships
+    |> Enum.map(&(&1.project))
+    |> Enum.uniq
+
+    editors_by_project = memberships
+    |> Enum.group_by(&(&1.project_id))
+    |> Enum.to_list
+    |> Enum.map(fn {id, memberships} ->
+      {id, memberships |> Enum.any?(&(&1.level == "owner" || &1.level == "editor"))}
+    end)
+    |> Enum.into(%{})
 
     running_surveys_by_project = Repo.all(from p in Project,
       join: s in Survey,
@@ -15,7 +28,10 @@ defmodule Ask.ProjectController do
       where: s.project_id == p.id and s.state == "running",
       group_by: p.id) |> Enum.into(%{})
 
-    render(conn, "index.json", projects: projects, running_surveys_by_project: running_surveys_by_project)
+    render(conn, "index.json",
+      projects: projects,
+      running_surveys_by_project: running_surveys_by_project,
+      editors_by_project: editors_by_project)
   end
 
   def create(conn, %{"project" => project_params}) do
@@ -23,12 +39,14 @@ defmodule Ask.ProjectController do
     |> current_user
     |> change
 
+    params = Map.merge(project_params, %{"salt" => Ecto.UUID.generate})
+
     membership_changeset = %ProjectMembership{}
     |> change
     |> put_assoc(:user, user_changeset)
     |> put_change(:level, "owner")
 
-    changeset = Project.changeset(%Project{}, project_params)
+    changeset = Project.changeset(%Project{}, params)
     |> put_assoc(:project_memberships, [membership_changeset])
 
     case Repo.insert(changeset) do
@@ -36,7 +54,7 @@ defmodule Ask.ProjectController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_path(conn, :show, project))
-        |> render("show.json", project: project)
+        |> render("show.json", project: project, read_only: false)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -45,22 +63,36 @@ defmodule Ask.ProjectController do
   end
 
   def show(conn, %{"id" => id}) do
+    # Here we don't use load_project to avoid an extra query,
+    # because we need to get the membership to know whether
+    # the project is read_only.
     project = Project
     |> Repo.get!(id)
-    |> authorize(conn)
 
-    render(conn, "show.json", project: project)
+    user = conn
+    |> current_user
+
+    membership = project
+    |> assoc(:project_memberships)
+    |> where([m], m.user_id == ^user.id)
+    |> Repo.one
+
+    if membership do
+      read_only = membership.level == "reader"
+      render(conn, "show.json", project: project, read_only: read_only)
+    else
+      raise Ask.UnauthorizedError, conn: conn
+    end
   end
 
   def update(conn, %{"id" => id, "project" => project_params}) do
-    changeset = Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    changeset = conn
+    |> load_project_for_change(id)
     |> Project.changeset(project_params)
 
     case Repo.update(changeset) do
       {:ok, project} ->
-        render(conn, "show.json", project: project)
+        render(conn, "show.json", project: project, read_only: false)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -69,9 +101,8 @@ defmodule Ask.ProjectController do
   end
 
   def delete(conn, %{"id" => id}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project_for_change(id)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!()
@@ -80,9 +111,8 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_vars(conn, %{"project_id" => id, "text" => text}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project(id)
 
     text = text |> String.downcase
     like_text = "#{text}%"
@@ -99,9 +129,8 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_primary_language(conn, %{"project_id" => id, "mode" => mode, "language" => language, "text" => text}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project(id)
 
     text = text |> String.downcase
     like_text = "%#{text}%"
@@ -130,9 +159,8 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_other_language(conn, %{"project_id" => id, "mode" => mode, "primary_language" => primary_language, "other_language" => other_language, "source_text" => source_text, "target_text" => target_text}) do
-    Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    conn
+    |> load_project(id)
 
     target_text = target_text |> String.downcase
     like_text = "#{target_text}%"
@@ -152,9 +180,8 @@ defmodule Ask.ProjectController do
   end
 
   def collaborators(conn, %{"project_id" => id}) do
-    memberships = Project
-    |> Repo.get!(id)
-    |> authorize(conn)
+    memberships = conn
+    |> load_project(id)
     |> assoc(:project_memberships)
     |> Repo.all
     |> Repo.preload(:user)

@@ -11,9 +11,10 @@ export const inviteMail = (projectId, code, level, email) => dispatch => {
 }
 
 export const fetchInvite = (code) => dispatch => {
-  api.fetchInvite(code)
+  return api.fetchInvite(code)
     .then(invite => {
       dispatch(receiveInvite(invite))
+      return invite
     })
 }
 

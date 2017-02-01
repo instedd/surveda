@@ -133,6 +133,13 @@ defmodule Ask.QuestionnaireControllerTest do
       end
     end
 
+    test "forbids creation of questionnaire for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      assert_error_sent :forbidden, fn ->
+        post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
+      end
+    end
+
     test "updates project updated_at when questionnaire is created", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = insert(:project, updated_at: datetime)
@@ -192,6 +199,14 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "rejects update if the questionnaire doesn't belong to the current user", %{conn: conn} do
       questionnaire = insert(:questionnaire)
+      assert_error_sent :forbidden, fn ->
+        put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @invalid_attrs
+      end
+    end
+
+    test "rejects update for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      questionnaire = insert(:questionnaire, project: project)
       assert_error_sent :forbidden, fn ->
         put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @invalid_attrs
       end
@@ -472,6 +487,14 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "rejects delete if the questionnaire doesn't belong to the current user", %{conn: conn} do
       questionnaire = insert(:questionnaire)
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, questionnaire)
+      end
+    end
+
+    test "rejects delete for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      questionnaire = insert(:questionnaire, project: project)
       assert_error_sent :forbidden, fn ->
         delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, questionnaire)
       end

@@ -11,15 +11,18 @@ defmodule Ask.Factory do
 
   def user_factory do
     %Ask.User{
+      name: "John",
       email: sequence(:email, &"email-#{&1}@example.com"),
-      encrypted_password: Addict.Configs.password_hasher.hashpwsalt("1234"),
-      settings: %{}
+      settings: %{},
+      password_hash: "$2b$12$m0Ftkllx0UK4/bgtbNlV0eVRbxMzbUVtGtOnihUveAZnqNwSG7y6i", # 1234
+      confirmed_at: Ecto.DateTime.utc
     }
   end
 
   def project_factory do
     %Ask.Project{
-      name: sequence(:project, &"Project #{&1}")
+      name: sequence(:project, &"Project #{&1}"),
+      salt: Ecto.UUID.generate
     }
   end
 
@@ -81,8 +84,8 @@ defmodule Ask.Factory do
     }
   end
 
-  def survey_channel_factory do
-    %Ask.SurveyChannel{
+  def respondent_group_channel_factory do
+    %Ask.RespondentGroupChannel{
     }
   end
 
@@ -96,10 +99,21 @@ defmodule Ask.Factory do
     }
   end
 
+  def respondent_group_factory do
+    %Ask.RespondentGroup{
+      survey: build(:survey),
+      name: "Respondent Group",
+      sample: [],
+      respondents_count: 0,
+    }
+  end
+
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
+    respondent_group = build(:respondent_group)
     %Ask.Respondent{
-      survey: build(:survey),
+      respondent_group: respondent_group,
+      survey: (respondent_group |> Ask.Repo.preload(:survey)).survey,
       phone_number: phone_number,
       sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number),
       state: "pending"

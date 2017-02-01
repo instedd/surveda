@@ -8,7 +8,8 @@ class TimezoneDropdown extends PureComponent {
     dispatch: PropTypes.func.isRequired,
     selectedTz: PropTypes.string,
     timezones: PropTypes.object,
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+    readOnly: PropTypes.bool
   }
 
   componentDidMount() {
@@ -29,7 +30,7 @@ class TimezoneDropdown extends PureComponent {
   }
 
   render() {
-    const { timezones, selectedTz, onChange } = this.props
+    const { timezones, selectedTz, onChange, readOnly } = this.props
 
     if (!timezones || !timezones.items) {
       return (
@@ -38,7 +39,7 @@ class TimezoneDropdown extends PureComponent {
     }
 
     return (
-      <Input s={12} m={6} type='select' label='Timezones' value={selectedTz} onChange={onChange}>
+      <Input s={12} m={6} type='select' label='Timezones' value={selectedTz} onChange={onChange} disabled={readOnly}>
         {timezones.items.map((tz) => (
           <option value={tz} key={tz}>{this.formatTimezone(tz)}</option>
         ))}

@@ -12,7 +12,8 @@ class SurveyWizardQuestionnaireStep extends Component {
     questionnaires: PropTypes.object,
     projectId: PropTypes.any.isRequired,
     dispatch: PropTypes.func.isRequired,
-    router: PropTypes.object
+    router: PropTypes.object,
+    readOnly: PropTypes.bool.isRequired
   }
 
   questionnaireChange(e) {
@@ -57,11 +58,17 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   render() {
-    const { questionnaires, projectId, survey } = this.props
+    const { questionnaires, projectId, survey, readOnly } = this.props
 
     const questionnaireIds = survey.questionnaireIds || []
     const questionnaireComparison = (questionnaireIds.length > 1) ? true : (!!survey.questionnaireComparison)
     const inputType = questionnaireComparison ? 'checkbox' : 'radio'
+
+    let newQuestionnaireComponent = null
+    if (!readOnly) {
+      newQuestionnaireComponent =
+        this.newQuestionnaireButton(projectId, questionnaires)
+    }
 
     return (
       <div>
@@ -82,6 +89,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                 checked={questionnaireComparison}
                 onChange={e => this.questionnaireComparisonChange(e)}
                 className='with-gap'
+                disabled={readOnly}
                 />
               <label htmlFor='questionnaires_comparison'>Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)</label>
             </p>
@@ -98,13 +106,14 @@ class SurveyWizardQuestionnaireStep extends Component {
                     value={questionnaireId}
                     checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
                     onChange={e => this.questionnaireChange(e)}
+                    disabled={readOnly}
                   />
                   <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} entityName='questionnaire' /></label>
                 </p>
               </div>
             ))}
           </div>
-          {this.newQuestionnaireButton(projectId, questionnaires)}
+          {newQuestionnaireComponent}
         </div>
       </div>
     )

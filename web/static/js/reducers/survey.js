@@ -21,7 +21,6 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.TOGGLE_DAY: return toggleDay(state, action)
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
-    case actions.SELECT_CHANNELS: return selectChannels(state, action)
     case actions.SELECT_MODE: return selectMode(state, action)
     case actions.CHANGE_MODE_COMPARISON: return changeModeComparison(state, action)
     case actions.CHANGE_QUESTIONNAIRE_COMPARISON: return changeQuestionnaireComparison(state, action)
@@ -36,13 +35,8 @@ export const dataReducer = (state: Survey, action: any): Survey => {
   }
 }
 
-type ValidationState = {
-  data: Survey,
-  errors: { [path: string]: string[] }
-};
-
-const validateReducer = (reducer) => {
-  return (state: ?ValidationState, action: any) => {
+const validateReducer = (reducer: StoreReducer<Survey>): StoreReducer<Survey> => {
+  return (state: ?DataStore<Survey>, action: any) => {
     const newState = reducer(state, action)
     validate(newState)
     return newState
@@ -52,20 +46,20 @@ const validateReducer = (reducer) => {
 export default validateReducer(fetchReducer(actions, dataReducer))
 
 const validate = (state) => {
-  if (!state.data) return
   state.errors = {}
   validateRetry(state, 'smsRetryConfiguration')
   validateRetry(state, 'ivrRetryConfiguration')
 }
 
-const validateRetry = (state, key) => {
+const validateRetry = (state: DataStore<Survey>, key) => {
+  if (!state.data) return
   const retriesValue = state.data[key]
   if (!retriesValue) return
   let values = retriesValue.split(' ')
   values = values.filter((v) => v)
   const invalid = values.some((v) => !/^\d+[mhd]$/.test(v))
   if (invalid) {
-    state.errors[key] = 'Re-contact configuration is invalid'
+    state.errors[key] = ['Re-contact configuration is invalid']
   }
 }
 
@@ -267,13 +261,6 @@ const setScheduleFrom = (state, action) => {
   return {
     ...state,
     scheduleStartTime: action.hour
-  }
-}
-
-const selectChannels = (state, action) => {
-  return {
-    ...state,
-    channels: action.channels
   }
 }
 

@@ -11,7 +11,6 @@ export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
-export const SELECT_CHANNELS = 'SURVEY_SELECT_CHANNELS'
 export const SELECT_MODE = 'SURVEY_SELECT_MODE'
 export const CHANGE_MODE_COMPARISON = 'SURVEY_CHANGE_MODE_COMPARISON'
 export const CHANGE_QUESTIONNAIRE_COMPARISON = 'SURVEY_CHANGE_QUESTIONNAIRE_COMPARISON'
@@ -45,13 +44,13 @@ export const fetchSurvey = (projectId: number, id: number) => (dispatch: Functio
     })
 }
 
-export const fetch = (projectId: number, id: number) => ({
+export const fetch = (projectId: number, id: number): FilteredAction => ({
   type: FETCH,
   id,
   projectId
 })
 
-export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Promise<Survey> => {
+export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Promise<?Survey> => {
   if (shouldFetch(getState().survey, projectId, id)) {
     return dispatch(fetchSurvey(projectId, id))
   } else {
@@ -59,12 +58,12 @@ export const fetchSurveyIfNeeded = (projectId: number, id: number) => (dispatch:
   }
 }
 
-export const receive = (survey: SurveyStore) => ({
+export const receive = (survey: Survey) => ({
   type: RECEIVE,
   data: survey
 })
 
-export const shouldFetch = (state: SurveyStore, projectId: number, id: number) => {
+export const shouldFetch = (state: DataStore<Survey>, projectId: number, id: number) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
@@ -122,11 +121,6 @@ export const setScheduleFrom = (hour: string) => ({
   hour
 })
 
-export const selectChannels = (channels: number[]) => ({
-  type: SELECT_CHANNELS,
-  channels
-})
-
 export const selectMode = (mode: string[]) => ({
   type: SELECT_MODE,
   mode
@@ -181,6 +175,7 @@ export const saved = (survey: Survey) => ({
 
 export const save = () => (dispatch: Function, getState: () => Store) => {
   const survey = getState().survey.data
+  if (!survey) return
   dispatch(saving())
   api.updateSurvey(survey.projectId, survey)
     .then(response => {
