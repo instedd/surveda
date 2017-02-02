@@ -11,7 +11,7 @@ defmodule Ask.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug Plug.Static, at: "files/", from: "web/static/assets/files/"
-    plug Coherence.Authentication.Session
+    plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
   pipeline :protected do
@@ -20,13 +20,15 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Coherence.Authentication.Session, protected: true
+    plug Coherence.Authentication.Session, db_model: Ask.User, protected: true
   end
 
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-    plug Coherence.Authentication.Session
+    plug :fetch_flash
+    
+    plug Coherence.Authentication.Session, db_model: Ask.User
     
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
