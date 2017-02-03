@@ -3,7 +3,7 @@
     <title><%= @email.subject %></title>
   </head>
   <body style="background-color: rgba(229, 229, 229, 1);font-family: arial, helvetica, verdana, sans-serif;text-align: center;color: rgba(153, 153, 153, 1);padding: 80px">
-    <img src="<%= @logo %>" alt="ASK" width="114px" height="60px"/>
+    <img src="<%= static_url(Ask.Endpoint, "/images/email-logo@2x.png") %>" alt="ASK" width="114px" height="60px"/>
     <div style="background: #fff;padding: 50px 40px;margin: 50px auto;width: 50%;min-width: 500px; max-width: 650px; box-sizing: border-box">
       <h2 style="font-weight: 300;line-height: 2">
         <%= @invited_by %> has invited you to collaborate on <b><%= @project_name %></b>.
