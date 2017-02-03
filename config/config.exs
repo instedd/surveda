@@ -46,10 +46,6 @@ config :logger, :console,
   format: "$dateT$timeZ $metadata[$level] $message\n",
   metadata: [:request_id]
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
-
 version = case File.read("VERSION") do
   {:ok, version} -> String.trim(version)
   {:error, :enoent} -> "#{Mix.Project.config[:version]}-#{Mix.env}"
@@ -83,6 +79,10 @@ config :coherence,
 config :coherence, Ask.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local
 # %% End Coherence Configuration %%
+
+# Import environment specific config. This must remain at the bottom
+# of this file so it overrides the configuration defined above.
+import_config "#{Mix.env}.exs"
 
 if File.exists?("#{__DIR__}/local.exs") && Mix.env != :test do
   import_config "#{__DIR__}/local.exs"
