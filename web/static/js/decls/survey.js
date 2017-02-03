@@ -58,3 +58,19 @@ export type QuotaVar = {
   var: string,
   steps?: string
 };
+
+export type Respondent = {
+  id: number,
+  phoneNumber: string,
+  mode: string[],
+  disposition: Disposition,
+  date: ?string,
+  responses: Response[]
+};
+
+export type Response = {
+  name: string,
+  value: ?string
+}
+
+export type Disposition = null | "completed";
