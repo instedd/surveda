@@ -330,7 +330,19 @@ defmodule Ask.DummySteps do
           ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         )

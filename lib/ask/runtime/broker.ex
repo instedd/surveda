@@ -126,14 +126,7 @@ defmodule Ask.Runtime.Broker do
   defp retry_respondent(respondent) do
     session = respondent.session |> Session.load
 
-    case Session.timeout(session) do
-      {:stalled, session} ->
-        update_respondent(respondent, {:stalled, session})
-      :failed ->
-        update_respondent(respondent, :failed)
-      {:ok, session, _, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout})
-    end
+    handle_session_step(respondent, Session.timeout(session))
   end
 
   defp start(survey, respondent) do
@@ -222,28 +215,37 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp handle_session_step(respondent, step) do
-    case step do
-      {:ok, session, reply, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
-        Reply.prompts(reply)
+  defp handle_session_step(respondent, {:ok, session, reply, timeout}) do
+    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
+    Reply.prompts(reply)
+  end
 
-      {:end, reply} ->
-        update_respondent(respondent, :end)
-        {:end, Reply.prompts(reply)}
+  defp handle_session_step(respondent, {:end, reply}) do
+    update_respondent(respondent, :end)
+    {:end, Reply.prompts(reply)}
+  end
 
-      :end ->
-        update_respondent(respondent, :end)
-        :end
+  defp handle_session_step(respondent, :end) do
+    update_respondent(respondent, :end)
+    :end
+  end
 
-      {:rejected, reply} ->
-        update_respondent(respondent, :rejected)
-        {:end, Reply.prompts(reply)}
+  defp handle_session_step(respondent, {:rejected, reply}) do
+    update_respondent(respondent, :rejected)
+    {:end, Reply.prompts(reply)}
+  end
 
-      :rejected ->
-        update_respondent(respondent, :rejected)
-        :end
-    end
+  defp handle_session_step(respondent, :rejected) do
+    update_respondent(respondent, :rejected)
+    :end
+  end
+
+  defp handle_session_step(respondent, {:stalled, session}) do
+    update_respondent(respondent, {:stalled, session})
+  end
+
+  defp handle_session_step(respondent, :failed) do
+    update_respondent(respondent, :failed)
   end
 
   defp match_condition(responses, bucket) do
@@ -289,17 +291,17 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update
   end
 
+  defp update_respondent(respondent, {:ok, session, timeout}, nil) do
+    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    respondent
+    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
+    |> Repo.update
+  end
+
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
     respondent
     |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
-    |> Repo.update
-  end
-
-  defp update_respondent(respondent, {:ok, session, timeout}) do
-    timeout_at = Timex.shift(Timex.now, minutes: timeout)
-    respondent
-    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
     |> Repo.update
   end
 
