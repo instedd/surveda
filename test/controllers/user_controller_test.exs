@@ -5,8 +5,6 @@ defmodule Ask.UserControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{User}
-
   setup %{conn: conn} do
     user = insert(:user)
     conn = conn

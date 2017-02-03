@@ -26,6 +26,16 @@ defmodule Ask.User do
     |> validate_required([:email])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)
+    |> add_settings_if_needed
     |> validate_coherence(params)
+  end
+
+  defp add_settings_if_needed(changeset) do
+    changeset = if !get_field(changeset, :settings) do
+                  change(changeset, settings: %{})
+                else
+                  changeset
+                end
+    changeset
   end
 end
