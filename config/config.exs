@@ -70,10 +70,6 @@ config :appsignal, :config,
   env: Mix.env || :dev,
   revision: version
 
-if File.exists?("#{__DIR__}/local.exs") && Mix.env != :test do
-  import_config "#{__DIR__}/local.exs"
-end
-
 # %% Coherence Configuration %%   Don't remove this line
 config :coherence,
   user_schema: Ask.User,
@@ -87,3 +83,7 @@ config :coherence,
 config :coherence, Ask.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local
 # %% End Coherence Configuration %%
+
+if File.exists?("#{__DIR__}/local.exs") && Mix.env != :test do
+  import_config "#{__DIR__}/local.exs"
+end
