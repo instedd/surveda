@@ -217,12 +217,12 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step(respondent, {:ok, session, reply, timeout}) do
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
-    Reply.prompts(reply)
+    {:prompts, Reply.prompts(reply)}
   end
 
   defp handle_session_step(respondent, {:end, reply}) do
     update_respondent(respondent, :end)
-    {:end, Reply.prompts(reply)}
+    {:end, {:prompts, Reply.prompts(reply)}}
   end
 
   defp handle_session_step(respondent, :end) do
@@ -232,7 +232,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step(respondent, {:rejected, reply}) do
     update_respondent(respondent, :rejected)
-    {:end, Reply.prompts(reply)}
+    {:end, {:prompts, Reply.prompts(reply)}}
   end
 
   defp handle_session_step(respondent, :rejected) do
