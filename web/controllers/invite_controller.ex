@@ -50,7 +50,7 @@ defmodule Ask.InviteController do
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
     current_user = conn |> current_user
 
-    Ask.Email.invite(email, current_user, url) 
+    Ask.Email.invite(level, email, current_user, url, conn, project) 
     |> Ask.Mailer.deliver
 
     Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
