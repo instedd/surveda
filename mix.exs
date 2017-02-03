@@ -52,7 +52,8 @@ defmodule Ask.Mixfile do
       {:ex_json_schema, "~> 0.5.2"},
       {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
       {:appsignal, "~> 0.9.2"},
-      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"}
+      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"},
+      {:gen_smtp, "~> 0.11"}
    ]
   end
 
