@@ -82,7 +82,7 @@ config :coherence,
   logged_out_url: "/",
   email_from_name: "Your Name",
   email_from_email: "yourname@example.com",
-  opts: [:authenticatable, :recoverable, :confirmable, :registerable]
+  opts: [:authenticatable, :recoverable, :confirmable, :registerable, :rememberable]
 
 config :coherence, Ask.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local

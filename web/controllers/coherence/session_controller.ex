@@ -13,6 +13,8 @@ defmodule Ask.Coherence.SessionController do
   alias Coherence.ControllerHelpers, as: Helpers
   alias Coherence.Schema.{Confirmable}
 
+  import Ask.Router.Helpers
+
   plug :layout_view
   plug :redirect_logged_in when action in [:new, :create]
 
@@ -67,7 +69,7 @@ defmodule Ask.Coherence.SessionController do
   create a new cookie and update the database.
   """
   def create(conn, params) do
-    remember = if Config.user_schema.rememberable?, do: params["remember"], else: false
+    remember = Config.user_schema.rememberable?
     user_schema = Config.user_schema
     login_field = Config.login_field
     login_field_str = to_string login_field
@@ -95,8 +97,7 @@ defmodule Ask.Coherence.SessionController do
       else
         conn
         |> put_flash(:error, "You must confirm your account before you can login.")
-        |> put_status(406)
-        |> render("new.html", [{login_field, login}, remember: rememberable_enabled?])
+        |> redirect(to: confirmation_path(conn, :new))
       end
     else
       conn

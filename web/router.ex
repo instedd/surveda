@@ -11,7 +11,7 @@ defmodule Ask.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug Plug.Static, at: "files/", from: "web/static/assets/files/"
-    plug Coherence.Authentication.Session
+    plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
   pipeline :protected do
@@ -20,20 +20,21 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Coherence.Authentication.Session, protected: true
+    plug Coherence.Authentication.Session, db_model: Ask.User, protected: true
   end
 
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-    plug Coherence.Authentication.Session
+    plug :fetch_flash
+    
+    plug Coherence.Authentication.Session, db_model: Ask.User
     
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
   end  
 
   if Mix.env == :dev do
-    #forward "/sent_emails", Bamboo.EmailPreviewPlug
     scope "/dev" do
       pipe_through [:browser]
       forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
@@ -85,14 +86,10 @@ defmodule Ask.Router do
     coherence_routes :public
 
     # add public resources below
-    get "/oauth_client/callback", OAuthClientController, :callback    
-    get "/*path", PageController, :index 
-  end
-
-  scope "/", Ask do
-    pipe_through :protected
-    coherence_routes :protected
-    
-    # add protected resources below
+    get "/oauth_client/callback", OAuthClientController, :callback
+    get "/registrations/confirmation_sent", Coherence.RegistrationController, :confirmation_sent
+    get "/registrations/confirmation_expired", Coherence.RegistrationController, :confirmation_expired
+    get "/passwords/password_recovery_sent", Coherence.PasswordController, :password_recovery_sent
+    get "/*path", PageController, :index
   end
 end

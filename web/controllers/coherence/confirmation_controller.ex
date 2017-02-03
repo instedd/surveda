@@ -10,6 +10,7 @@ defmodule Ask.Coherence.ConfirmationController do
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
   alias Ask.Coherence.Helper
+  import Ask.Router.Helpers
 
   plug Coherence.ValidateOption, :confirmable
 
@@ -53,8 +54,8 @@ defmodule Ask.Coherence.ConfirmationController do
       user ->
         if user_schema.confirmed?(user) do
           conn
-          |> put_flash(:error, "Account already confirmed.")
-          |> render(:new, [email: "", changeset: changeset])
+          |> put_flash(:error, "Account already confirmed")
+          |> redirect(to: session_path(conn, :new))
         else
           conn
           |> send_confirmation(user, user_schema)
@@ -81,7 +82,7 @@ defmodule Ask.Coherence.ConfirmationController do
         |> put_flash(:error, "Invalid confirmation token.")
         |> redirect_to(:confirmation_edit_invalid, params)
       user ->
-        if Ask.Coherence.Helper.confirmable_expired? user do
+        if Helper.confirmable_expired? user do
           conn
           |> put_flash(:error, "Confirmation token expired.")
           |> redirect_to(:confirmation_edit_expired, params)

@@ -41,4 +41,4 @@ config :ask, Verboice,
   ]
 
 config :ask, Ask.Mailer,
-  adapter: Bamboo.TestAdapter
+  adapter: Swoosh.Adapters.Test

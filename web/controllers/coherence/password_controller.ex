@@ -17,7 +17,7 @@ defmodule Ask.Coherence.PasswordController do
   alias Coherence.ControllerHelpers, as: Helpers
   alias Ask.Coherence.Helper
 
-  plug :layout_view
+  plug :layout_view when action in [:new, :create, :update, :password_recovery_sent]
   plug :redirect_logged_in when action in [:new, :create, :edit, :update]
 
   @doc false
@@ -77,13 +77,14 @@ defmodule Ask.Coherence.PasswordController do
     token = params["id"]
     user = where(user_schema, [u], u.reset_password_token == ^token)
     |> Config.repo.one
+
     case user do
       nil ->
         conn
         |> put_flash(:error, "Invalid reset token.")
         |> redirect(to: logged_out_url(conn))
       user ->
-        if Ask.Coherence.Helper.expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
+        if Helper.expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
           clear_password_params(user, user_schema, %{})
           |> Config.repo.update
 
@@ -93,7 +94,9 @@ defmodule Ask.Coherence.PasswordController do
         else
           changeset = Helpers.changeset(:password, user_schema, user)
           conn
-          |> render("edit.html", changeset: changeset)
+          |> put_layout({Ask.LayoutView, "app.html"})
+          |> put_view(Coherence.PasswordView)  
+          |> render("edit.html", changeset: Ask.User.changeset(user))
         end
     end
   end
@@ -135,4 +138,7 @@ defmodule Ask.Coherence.PasswordController do
     Helpers.changeset(:password, user_schema, user, params)
   end
 
+  def password_recovery_sent(conn, _) do
+    render(conn, "password_recovery_sent.html")
+  end
 end

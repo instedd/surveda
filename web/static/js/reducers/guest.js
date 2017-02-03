@@ -25,9 +25,13 @@ const changeEmail = (state, action) => {
 }
 
 const changeLevel = (state, action) => {
-  return {
-    ...state,
-    level: action.level
+  if (['reader', 'editor'].includes(action.level)) {
+    return {
+      ...state,
+      level: action.level
+    }
+  } else {
+    return state
   }
 }
 

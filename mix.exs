@@ -20,8 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal,
-                    :bamboo, :bamboo_smtp, :coherence]]
+                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :appsignal, :coherence]]
   end
 
   # Specifies which paths to compile per environment.
@@ -39,7 +38,7 @@ defmodule Ask.Mixfile do
       {:mariaex, ">= 0.0.0"},
       {:phoenix_html, "~> 2.6"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:gettext, "~> 0.11"},
+      {:gettext, "~> 0.11.0"},
       {:cowboy, "~> 1.0"},
       {:ex_machina, "~> 1.0", only: :test},
       {:csv, "~> 1.4.2"},
@@ -53,9 +52,7 @@ defmodule Ask.Mixfile do
       {:ex_json_schema, "~> 0.5.2"},
       {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
       {:appsignal, "~> 0.9.2"},
-      {:bamboo, "~> 0.7"},
-      {:bamboo_smtp, "~> 1.2.1"},
-      {:coherence, "~> 0.3"}
+      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"}
    ]
   end
 
