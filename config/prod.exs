@@ -74,10 +74,10 @@ config :ask, Ask.Repo,
 
 smtp_config = [
   adapter: Swoosh.Adapters.SMTP,
-  relay: System.get_env("SMTP_SERVER"),
-  port: System.get_env("SMTP_PORT"),
-  username: System.get_env("SMTP_USER"),
-  password: System.get_env("SMTP_PASS"),
+  relay: {:system, "SMTP_SERVER"},
+  port: {:system, "SMTP_PORT"},
+  username: {:system, "SMTP_USER"},
+  password: {:system, "SMTP_PASS"},
   tls: :always, # can be `:always` or `:never`
   ssl: false, # can be `true`
   retries: 1
