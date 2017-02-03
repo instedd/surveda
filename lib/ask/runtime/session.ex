@@ -15,26 +15,26 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent)
 
-    {flow, disposition} = case runtime_channel |> Channel.can_push_question? do
+    {flow, reply} = case runtime_channel |> Channel.can_push_question? do
       true ->
         case flow |> Flow.step do
-          {:end, %{prompts: prompts, disposition: disposition}} ->
-            if prompts != [] do
-              runtime_channel |> Channel.ask(respondent.sanitized_phone_number, prompts)
+          {:end, reply} ->
+            if Reply.prompts(reply) != [] do
+              runtime_channel |> Channel.ask(respondent.sanitized_phone_number, Reply.prompts(reply))
             end
-            {:end, disposition}
-          {:ok, flow, %Reply{prompts: prompts, disposition: disposition}} ->
-            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, prompts)
-            {flow, disposition}
+            {:end, reply}
+          {:ok, flow, reply} ->
+            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, Reply.prompts(reply))
+            {flow, reply}
         end
 
       false ->
-        {flow, nil}
+        {flow, %Reply{}}
     end
 
     case flow do
       :end ->
-        {:end, %Reply{disposition: disposition}}
+        {:end, reply}
       _ ->
         session = %Session{
           channel: channel,
@@ -43,7 +43,7 @@ defmodule Ask.Runtime.Session do
           flow: flow,
           respondent: respondent
         }
-        {:ok, session, %Reply{disposition: disposition}, current_timeout(session)}
+        {:ok, session, reply, current_timeout(session)}
     end
   end
 
