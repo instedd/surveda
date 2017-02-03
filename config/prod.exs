@@ -72,7 +72,7 @@ config :ask, Ask.Repo,
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool_size: 20
 
-config :ask, Ask.Mailer,
+smtp_config = [
   adapter: Swoosh.Adapters.SMTP,
   relay: System.get_env("SMTP_SERVER"),
   port: System.get_env("SMTP_PORT"),
@@ -81,3 +81,11 @@ config :ask, Ask.Mailer,
   tls: :always, # can be `:always` or `:never`
   ssl: false, # can be `true`
   retries: 1
+]
+
+config :ask, Ask.Mailer, smtp_config
+config :coherence, Ask.Coherence.Mailer, smtp_config
+
+config :coherence,
+  email_from_name: System.get_env("EMAIL_FROM_NAME"),
+  email_from_email: System.get_env("EMAIL_FROM_EMAIL")

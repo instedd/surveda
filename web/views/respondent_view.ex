@@ -22,6 +22,7 @@ defmodule Ask.RespondentView do
       mode: respondent.mode,
       questionnaire_id: respondent.questionnaire_id,
       responses: render_many(responses, Ask.RespondentView, "response.json", as: :response),
+      disposition: respondent.disposition,
       date: case responses do
         [] -> nil
         _ -> responses |>  Enum.map(fn r -> r.updated_at end) |> Enum.max
