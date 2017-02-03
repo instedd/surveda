@@ -164,6 +164,23 @@ defmodule Ask.BrokerTest do
     assert hd(respondent.responses).value == "Yes"
   end
 
+  test "mark disposition as partial" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "partial"
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
   test "respondent answers after stalled with completed survey" do
     [survey, group, _, respondent, _] = create_running_survey_with_channel_and_respondent()
     second_respondent = insert(:respondent, survey: survey, respondent_group: group)

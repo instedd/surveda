@@ -4,7 +4,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Survey, Respondent, RespondentGroup, QuotaBucket}
-  alias Ask.Runtime.Session
+  alias Ask.Runtime.{Session, Reply}
   alias Ask.QuotaBucket
   require Logger
 
@@ -37,9 +37,9 @@ defmodule Ask.Runtime.Broker do
     Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now)
     |> Enum.each(&retry_respondent(&1))
 
-    ischedule = today_schedule()
+    schedule = today_schedule()
 
-    surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^ischedule, ^ischedule))
+    surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^schedule, ^schedule))
 
     surveys |> Enum.filter( fn s ->
                   s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
@@ -131,7 +131,7 @@ defmodule Ask.Runtime.Broker do
         update_respondent(respondent, {:stalled, session})
       :failed ->
         update_respondent(respondent, :failed)
-      {session, timeout} ->
+      {:ok, session, _, timeout} ->
         update_respondent(respondent, {:ok, session, timeout})
     end
   end
@@ -156,13 +156,7 @@ defmodule Ask.Runtime.Broker do
       _ -> Survey.retries_configuration(survey, fallback_channel.type)
     end
 
-    case Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries) do
-      :end ->
-        update_respondent(respondent, :end)
-
-      {session, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout})
-    end
+    handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries))
   end
 
   defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do
@@ -212,27 +206,7 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
 
     try do
-      case Session.sync_step(session, reply) do
-        {:ok, session, step, timeout} ->
-          update_respondent(respondent, {:ok, session, timeout})
-          step
-
-        {:end, data} ->
-          update_respondent(respondent, :end)
-          {:end, data}
-
-        :end ->
-          update_respondent(respondent, :end)
-          :end
-
-        {:rejected, data} ->
-          update_respondent(respondent, :rejected)
-          {:end, data}
-
-        :rejected ->
-          update_respondent(respondent, :rejected)
-          :end
-      end
+      handle_session_step(respondent, Session.sync_step(session, reply))
     rescue
       e ->
         if Mix.env != :test do
@@ -245,6 +219,30 @@ defmodule Ask.Runtime.Broker do
         Survey
         |> Repo.get(respondent.survey_id)
         |> complete
+    end
+  end
+
+  defp handle_session_step(respondent, step) do
+    case step do
+      {:ok, session, reply, timeout} ->
+        update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
+        Reply.prompts(reply)
+
+      {:end, reply} ->
+        update_respondent(respondent, :end)
+        {:end, Reply.prompts(reply)}
+
+      :end ->
+        update_respondent(respondent, :end)
+        :end
+
+      {:rejected, reply} ->
+        update_respondent(respondent, :rejected)
+        {:end, Reply.prompts(reply)}
+
+      :rejected ->
+        update_respondent(respondent, :rejected)
+        :end
     end
   end
 
@@ -291,6 +289,13 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update
   end
 
+  defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
+    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    respondent
+    |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
+    |> Repo.update
+  end
+
   defp update_respondent(respondent, {:ok, session, timeout}) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
     respondent
@@ -308,8 +313,8 @@ defmodule Ask.Runtime.Broker do
       fri: week_day == 5,
       sat: week_day == 6,
       sun: week_day == 7}
-    {:ok, ischedule} = Ask.DayOfWeek.dump(schedule)
-    ischedule
+    {:ok, schedule} = Ask.DayOfWeek.dump(schedule)
+    schedule
   end
 
 end

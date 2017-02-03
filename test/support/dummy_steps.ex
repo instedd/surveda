@@ -32,6 +32,20 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def flag_step(id: id, title: title, disposition: disposition) do
+    flag_step(id: id, title: title, disposition: disposition, skip_logic: nil)
+  end
+
+  def flag_step(id: id, title: title, disposition: disposition, skip_logic: skip_logic) do
+    %{
+      "id" => id,
+      "type" => "flag",
+      "title" => title,
+      "disposition" => disposition,
+      "skip_logic" => skip_logic,
+    }
+  end
+
   def prompt(sms: sms) do
     %{
       "en" => %{
@@ -136,7 +150,6 @@ defmodule Ask.StepBuilder do
       "ranges" => ranges
     }
   end
-
 end
 
 defmodule Ask.DummySteps do
@@ -300,6 +313,34 @@ defmodule Ask.DummySteps do
             sms: sms_prompt("Is this the last question?")
           ),
           skip_logic: nil
+        )
+      ]
+
+      @flag_steps [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
+      ]
+
+      @only_flag_steps [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
         )
       ]
     end
