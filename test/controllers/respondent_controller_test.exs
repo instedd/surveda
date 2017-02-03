@@ -31,7 +31,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       questionnaire = insert(:questionnaire, project: project)
-      respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id)
+      respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id, disposition: "completed")
       response = insert(:response, respondent: respondent, value: "Yes")
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == [%{
@@ -40,6 +40,7 @@ defmodule Ask.RespondentControllerTest do
                                                      "survey_id" => survey.id,
                                                      "mode" => ["sms"],
                                                      "questionnaire_id" => questionnaire.id,
+                                                     "disposition" => "completed",
                                                      "date" => Ecto.DateTime.to_iso8601(response.updated_at),
                                                      "responses" => [
                                                        %{
