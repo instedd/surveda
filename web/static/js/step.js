@@ -1,9 +1,13 @@
 // @flow
 export function getStepPrompt(step: Step, language: string): LanguagePrompt {
-  if (step.type === 'language-selection') {
-    return step.prompt
+  if (step.type !== 'flag') {
+    if (step.type === 'language-selection') {
+      return step.prompt
+    } else {
+      return step.prompt[language]
+    }
   } else {
-    return step.prompt[language]
+    return {}
   }
 }
 
@@ -11,18 +15,22 @@ export function setStepPrompt<T: Step>(step: T, language: string, func: (prompt:
   let prompt = getStepPrompt(step, language) || newStepPrompt()
   prompt = func(prompt)
   let newStep
-  if (step.type == 'language-selection') {
+  if (step.type === 'language-selection') {
     newStep = {
       ...step,
       prompt
     }
   } else {
-    newStep = {
-      ...step,
-      prompt: {
-        ...step.prompt,
-        [language]: prompt
+    if (step.type !== 'flag') {
+      newStep = {
+        ...step,
+        prompt: {
+          ...step.prompt,
+          [language]: prompt
+        }
       }
+    } else {
+      newStep = step
     }
   }
   return ((newStep: any): T)

@@ -307,7 +307,6 @@ defmodule Ask.FlowTest do
   end
 
   describe "explanation steps" do
-
     test "adds previous explanation steps to prompts" do
       quiz = build(:questionnaire, steps: @explanation_steps_minimal)
       flow = Flow.start(quiz, "sms")
@@ -328,6 +327,25 @@ defmodule Ask.FlowTest do
 
       assert prompts == ["Is this the last question?"]
     end
+  end
 
+  describe "flag steps" do
+    test "flag steps and send prompts" do
+      quiz = build(:questionnaire, steps: @flag_steps)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step
+
+      assert {:ok, flow, %{prompts: prompts, disposition: "partial"}} = flow_state
+
+      assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == 1
+    end
+
+    test "ending keeps the last flag" do
+      quiz = build(:questionnaire, steps: @only_flag_steps)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step
+      assert {:end, %{disposition: "partial"}} = flow_state
+    end
   end
 end
