@@ -5,7 +5,7 @@ defmodule Ask.EctoDbSession do
   alias Ask.Session
   alias Ask.Repo
 
-  def get_user_data(repo, user, creds, id_key) do 
+  def get_user_data(repo, _user, creds, _id_key) do 
     Ask.Session
     |> where([s], s.token == ^creds)
     |> Repo.one
