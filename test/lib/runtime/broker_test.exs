@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow}
-  alias Ask.{Repo, Survey, Respondent, TestChannel, QuotaBucket, Questionnaire}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
   @always_schedule %{schedule_day_of_week: @everyday_schedule,
@@ -43,6 +43,28 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "completed"
+  end
+
+  test "set the respondent as complete (disposition) when the questionnaire is empty" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+  end
+
+  test "creates respondent history when the questionnaire is empty" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    Broker.handle_info(:poll, nil)
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "completed"
   end
 
   test "set the respondent questionnaire and mode" do
@@ -179,6 +201,13 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "partial"
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "partial"
   end
 
   test "don't reset disposition after having set it" do

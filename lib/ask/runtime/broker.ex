@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentGroup, QuotaBucket}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket}
   alias Ask.Runtime.{Session, Reply}
   alias Ask.QuotaBucket
   require Logger
@@ -260,9 +260,12 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :end) do
-    respondent
+    old_disposition = respondent.disposition
+
+    respondent = respondent
     |> Respondent.changeset(%{state: "completed", disposition: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update!
+    |> create_disposition_history(old_disposition)
 
     responses = respondent |> assoc(:responses) |> Repo.all
     matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
@@ -300,9 +303,21 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    old_disposition = respondent.disposition
     respondent
     |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
     |> Repo.update!
+    |> create_disposition_history(old_disposition)
+  end
+
+  defp create_disposition_history(respondent, old_disposition) do
+    if respondent.disposition && respondent.disposition != old_disposition do
+      %RespondentDispositionHistory{
+        respondent: respondent,
+        disposition: respondent.disposition}
+      |> Repo.insert!
+    end
+    respondent
   end
 
   defp today_schedule do
