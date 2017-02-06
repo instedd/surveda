@@ -172,7 +172,7 @@ defmodule Ask.RespondentControllerTest do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
-    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds")
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
@@ -182,17 +182,19 @@ defmodule Ask.RespondentControllerTest do
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
-    assert line1 == "Respondent ID,Smoke,Drink,Date"
+    assert line1 == "Respondent ID,Smoke,Drink,Disposition,Date"
 
-    [line_2_hashed_number, line_2_smoke, line_2_drink, _] = line2 |> String.split(",", parts: 4)
+    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_disp, _] = line2 |> String.split(",", parts: 5)
     assert line_2_hashed_number == respondent_1.hashed_number
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
+    assert line_2_disp == "Partial"
 
-    [line_3_hashed_number, line_3_smoke, line_3_drink, _] = line3 |> String.split(",", parts: 4)
+    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_disp,  _] = line3 |> String.split(",", parts: 5)
     assert line_3_hashed_number == respondent_2.hashed_number
     assert line_3_smoke == "No"
     assert line_3_drink == ""
+    assert line_3_disp == ""
   end
 
   test "download csv with comparisons", %{conn: conn, user: user} do
@@ -205,29 +207,31 @@ defmodule Ask.RespondentControllerTest do
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire2.id, "ratio" => 50},
       ]
     )
-    respondent_1 = insert(:respondent, survey: survey, questionnaire_id: questionnaire.id, mode: ["sms"])
+    respondent_1 = insert(:respondent, survey: survey, questionnaire_id: questionnaire.id, mode: ["sms"], disposition: "partial")
     insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
-    respondent_2 = insert(:respondent, survey: survey, questionnaire_id: questionnaire2.id, mode: ["sms", "ivr"])
+    respondent_2 = insert(:respondent, survey: survey, questionnaire_id: questionnaire2.id, mode: ["sms", "ivr"], disposition: "completed")
     insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
 
     conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
-    assert line1 == "Respondent ID,Smoke,Drink,Variant,Date"
+    assert line1 == "Respondent ID,Smoke,Drink,Variant,Disposition,Date"
 
-    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_variant, _] = line2 |> String.split(",", parts: 5)
+    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_variant, line_2_disp, _] = line2 |> String.split(",", parts: 6)
     assert line_2_hashed_number == respondent_1.hashed_number |> to_string
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
     assert line_2_variant == "test - SMS"
+    assert line_2_disp == "Partial"
 
-    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_variant, _] = line3 |> String.split(",", parts: 5)
+    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_variant, line_3_disp, _] = line3 |> String.split(",", parts: 6)
     assert line_3_hashed_number == respondent_2.hashed_number |> to_string
     assert line_3_smoke == "No"
     assert line_3_drink == ""
     assert line_3_variant == "test 2 - SMS with phone call fallback"
+    assert line_3_disp == "Completed"
   end
 
   test "quotas_stats", %{conn: conn, user: user} do

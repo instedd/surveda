@@ -275,6 +275,8 @@ defmodule Ask.RespondentController do
           row
         end
 
+        row = row ++ [Respondent.show_disposition(respondent.disposition)]
+
         date = case responses do
           [] -> nil
           _ -> responses
@@ -300,7 +302,7 @@ defmodule Ask.RespondentController do
     else
       header
     end
-    header = header ++ ["Date"]
+    header = header ++ ["Disposition", "Date"]
     rows = Stream.concat([[header], csv_rows])
 
     # # Convert to CSV string

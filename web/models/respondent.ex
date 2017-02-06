@@ -54,4 +54,8 @@ defmodule Ask.Respondent do
   def replace_numbers_by_hash(string) do
     Regex.replace(~r/[0-9]/, string, "#")
   end
+
+  def show_disposition(disposition) do
+    (disposition || "") |> String.capitalize
+  end
 end
