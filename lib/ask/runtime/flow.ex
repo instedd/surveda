@@ -178,7 +178,6 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp add_disposition_to_next_step(flow, state, step) do
-    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
     state = %{state | disposition: step["disposition"]}
     flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
     eval({flow, state})
