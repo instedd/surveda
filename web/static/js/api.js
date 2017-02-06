@@ -262,6 +262,10 @@ export const fetchCollaborators = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/collaborators`)
 }
 
+export const getInviteByEmailAndProject = (projectId, email) => {
+  return apiFetchJSON(`get_invite_by_email_and_project?project_id=${projectId}&email=${email}`)
+}
+
 export const invite = (projectId, code, level, email) => {
   return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
 }

@@ -24,9 +24,23 @@ export class InviteModal extends Component {
     }
   }
 
-  emailChanged(e) {
+  emailOnChange(e) {
+    this.props.guestActions.changeEmail(e.target.value)
+  }
+
+  emailOnBlur(e) {
+    const { projectId, guest } = this.props
     Promise.resolve(this.props.guestActions.changeEmail(e.target.value)).then(() => {
-      this.props.guestActions.generateCode()
+      Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
+        (dbGuest) => {
+          if (!guest.level) {
+            this.props.guestActions.changeLevel(dbGuest.level)
+          }
+          this.props.guestActions.setCode(dbGuest.code)
+        },
+        (reject) => {
+          this.props.guestActions.generateCode()
+        })
     })
   }
 
@@ -34,16 +48,6 @@ export class InviteModal extends Component {
     const level = e.target.value
     Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
       this.props.guestActions.generateCode()
-    })
-  }
-
-  copyLink() {
-    Promise.resolve(this.props.guestActions.generateCode()).then(() => {
-      const { projectId, guest } = this.props
-      if (guest.code) {
-        this.props.actions.invite(projectId, guest.code, guest.level, guest.email)
-        this.props.collaboratorsActions.fetchCollaborators(projectId)
-      }
     })
   }
 
@@ -72,7 +76,7 @@ export class InviteModal extends Component {
               <div className='col s8'>
                 <div className='input-field'>
                   <InputWithLabel id='collaborator_mail' value={guest.email} label={`Enter collaborator's email`} >
-                    <input type='text' onChange={e => { this.emailChanged(e) }} />
+                    <input type='text' onChange={e => { this.emailOnChange(e) }} onBlur={e => { this.emailOnBlur(e) }} />
                   </InputWithLabel>
                 </div>
               </div>

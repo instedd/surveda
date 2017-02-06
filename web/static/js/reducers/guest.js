@@ -12,6 +12,7 @@ export default (state = initialState, action) => {
     case actions.CHANGE_EMAIL: return changeEmail(state, action)
     case actions.CHANGE_LEVEL: return changeLevel(state, action)
     case actions.GENERATE_CODE: return generateCode(state, action)
+    case actions.SET_CODE: return setCode(state, action)
     case actions.CLEAR: return clear()
     default: return state
   }
@@ -35,8 +36,15 @@ const changeLevel = (state, action) => {
   }
 }
 
+const setCode = (state, action) => {
+  return {
+    ...state,
+    code: action.code
+  }
+}
+
 const generateCode = (state, action) => {
-  if (state.email && state.level) {
+  if (state.email && state.level && !state.code) {
     const code = Crypto.randomBytes(20).toString('hex')
     return {
       ...state,
