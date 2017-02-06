@@ -262,7 +262,7 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, :end) do
     respondent
     |> Respondent.changeset(%{state: "completed", disposition: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
 
     responses = respondent |> assoc(:responses) |> Repo.all
     matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
@@ -276,33 +276,33 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, {:stalled, session}) do
     respondent
     |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, :rejected) do
     respondent
     |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, :failed) do
     respondent
     |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, nil) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
     respondent
     |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
     respondent
     |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp today_schedule do
