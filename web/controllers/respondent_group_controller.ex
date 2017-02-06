@@ -14,7 +14,7 @@ defmodule Ask.RespondentGroupController do
     |> preload(:channels)
     |> Repo.all
 
-    render(conn, "index.json", respondent_groups: respondent_groups, project: project)
+    render(conn, "index.json", respondent_groups: respondent_groups)
   end
 
   def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
@@ -73,7 +73,7 @@ defmodule Ask.RespondentGroupController do
     project |> Project.touch!
 
     conn
-    |> render("show.json", respondent_group: group, project: project)
+    |> render("show.json", respondent_group: group)
   end
 
   defp update_channels(changeset, %{"channels" => channels_params}) do
@@ -160,7 +160,7 @@ defmodule Ask.RespondentGroupController do
 
     conn
     |> put_status(:created)
-    |> render("show.json", respondent_group: group, project: project)
+    |> render("show.json", respondent_group: group)
   end
 
   defp render_unprocessable_entity(conn) do
