@@ -274,6 +274,30 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_disp == "Completed"
   end
 
+  test "download disposition history csv", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
+
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:00:00"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 02:00:00"))
+
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:00:00"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:00:00"))
+
+    conn = get conn, project_survey_respondents_disposition_history_csv_path(conn, :disposition_history_csv, survey.project.id, survey.id)
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == ["Respondent hash,Disposition,Timestamp",
+     "1asd12451eds,partial,2000-01-01 01:00:00 UTC",
+     "1asd12451eds,completed,2000-01-01 02:00:00 UTC",
+     "34y5345tjyet,partial,2000-01-01 03:00:00 UTC",
+     "34y5345tjyet,completed,2000-01-01 04:00:00 UTC"]
+  end
+
   test "quotas_stats", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)

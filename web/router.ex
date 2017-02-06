@@ -27,12 +27,12 @@ defmodule Ask.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug :fetch_flash
-    
+
     plug Coherence.Authentication.Session, db_model: Ask.User
-    
+
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
-  end  
+  end
 
   if Mix.env == :dev do
     scope "/dev" do
@@ -46,7 +46,7 @@ defmodule Ask.Router do
 
     scope "/v1" do
       delete "/sessions", Coherence.SessionController, :api_delete
-      
+
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
@@ -56,6 +56,7 @@ defmodule Ask.Router do
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/respondents/quotas_stats", RespondentController, :quotas_stats, as: :respondents_quotas_stats
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
+          get "/respondents/disposition_history_csv", RespondentController, :disposition_history_csv, as: :respondents_disposition_history_csv
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
