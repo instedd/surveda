@@ -115,7 +115,7 @@ defmodule Ask.RespondentController do
     end)
 
     by_date = Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
+      from r in Respondent, where: r.survey_id == ^survey_id and r.disposition == "completed",
       group_by: fragment("DATE(completed_at), quota_bucket_id"),
       select: {fragment("DATE(completed_at)"), r.quota_bucket_id, count("*")})
 

@@ -66,30 +66,31 @@ defmodule Ask.RespondentControllerTest do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-    insert_list(3, :respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+    insert_list(10, :respondent, survey: survey, disposition: "partial")
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    data = json_response(conn, 200)["data"]
 
-    assert json_response(conn, 200)["data"]["id"] == survey.id
-    assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
-      "pending" => %{"count" => 10, "percent" => 66.66666666666667},
+    assert data["id"] == survey.id
+    assert data["respondents_by_state"] == %{
+      "partial" => %{"count" => 10, "percent" => 66.66666666666667},
       "active" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 5, "percent" => 33.333333333333336},
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
-      "partial" => %{"count" => 0, "percent" => 0.0},
+      "pending" => %{"count" => 0, "percent" => 0.0},
     }
 
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["count"] == 2
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["count"] == 5
-    assert json_response(conn, 200)["data"]["total_respondents"] == 15
-    assert json_response(conn, 200)["data"]["cutoff"] == 10
+    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(data["respondents_by_date"], 0)["count"] == 2
+    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(data["respondents_by_date"], 1)["count"] == 5
+    assert data["total_respondents"] == 15
+    assert data["cutoff"] == 10
   end
 
   test "lists stats for a given survey with quotas", %{conn: conn, user: user} do
@@ -98,30 +99,31 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     bucket_1 = insert(:quota_bucket, survey: survey, quota: 4, count: 2)
     bucket_2 = insert(:quota_bucket, survey: survey, quota: 3, count: 3)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
-    insert_list(4, :respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
+    insert_list(10, :respondent, survey: survey, disposition: "partial")
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
+    insert_list(4, :respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    data = json_response(conn, 200)["data"]
 
-    assert json_response(conn, 200)["data"]["id"] == survey.id
-    assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
-      "pending" => %{"count" => 10, "percent" => 62.5},
+    assert data["id"] == survey.id
+    assert data["respondents_by_state"] == %{
+      "partial" => %{"count" => 10, "percent" => 62.5},
       "active" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 6, "percent" => 37.5},
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
-      "partial" => %{"count" => 0, "percent" => 0.0},
+      "pending" => %{"count" => 0, "percent" => 0.0},
     }
 
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["count"] == 2
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["count"] == 5
-    assert json_response(conn, 200)["data"]["total_respondents"] == 16
-    assert json_response(conn, 200)["data"]["cutoff"] == 10
+    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(data["respondents_by_date"], 0)["count"] == 2
+    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(data["respondents_by_date"], 1)["count"] == 5
+    assert data["total_respondents"] == 16
+    assert data["cutoff"] == 10
   end
 
   test "lists stats for a given survey, with dispositions", %{conn: conn, user: user} do
@@ -130,15 +132,15 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     insert_list(10, :respondent, survey: survey, state: "pending")
     insert(:respondent, survey: survey, state: "completed", disposition: "partial", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
     insert_list(3, :respondent, survey: survey, state: "completed", disposition: "ineligible", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-
+    data = json_response(conn, 200)["data"]
     total = 15.0
 
-    assert json_response(conn, 200)["data"]["id"] == survey.id
-    assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
+    assert data["id"] == survey.id
+    assert data["respondents_by_state"] == %{
       "partial" => %{"count" => 1, "percent" => 100*1/total},
       "ineligible" => %{"count" => 3, "percent" => 100*3/total},
       "completed" => %{"count" => 1, "percent" => 100*1/total},
@@ -148,12 +150,12 @@ defmodule Ask.RespondentControllerTest do
       "stalled" => %{"count" => 0, "percent" => 0.0},
     }
 
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["count"] == 2
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["count"] == 5
-    assert json_response(conn, 200)["data"]["total_respondents"] == 15
-    assert json_response(conn, 200)["data"]["cutoff"] == 10
+    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(data["respondents_by_date"], 0)["count"] == 1
+    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(data["respondents_by_date"], 1)["count"] == 1
+    assert data["total_respondents"] == 15
+    assert data["cutoff"] == 10
   end
 
   test "first value of respondents by date corresponds to started_at date", %{conn: conn, user: user} do
