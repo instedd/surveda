@@ -27,10 +27,10 @@ defmodule Ask.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug Coherence.Authentication.Session
-    
+
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
-  end  
+  end
 
   if Mix.env == :dev do
     scope "/dev" do
@@ -44,7 +44,7 @@ defmodule Ask.Router do
 
     scope "/v1" do
       delete "/sessions", Coherence.SessionController, :api_delete
-      
+
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
@@ -72,7 +72,8 @@ defmodule Ask.Router do
       get "/invite", InviteController, :invite, as: :invite
       get "/invite_mail", InviteController, :invite_mail, as: :invite_mail
       get "/invite_show", InviteController, :show, as: :invite_show
-      resources "/users", UserController, only: [:update, :show]
+      resources "/users", UserController, only: [:update]
+      get "/users/settings", UserController, :settings, as: :settings
     end
   end
 

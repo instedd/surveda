@@ -5,6 +5,7 @@ import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
+import * as userSettingsActions from '../../actions/userSettings'
 import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
@@ -97,6 +98,7 @@ class QuestionnaireEditor extends Component {
     if (projectId && questionnaireId) {
       this.props.projectActions.fetchProject(projectId)
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
+      this.props.userSettingsActions.fetchSettings()
     }
   }
 
@@ -216,11 +218,11 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire, project, readOnly } = this.props
+    const { questionnaire, project, readOnly, userSettings } = this.props
 
     let csvButtons = null
 
-    if (questionnaire == null || project == null) {
+    if (questionnaire == null || project == null || userSettings.settings == null) {
       return <div>Loading...</div>
     }
 
@@ -333,8 +335,10 @@ class QuestionnaireEditor extends Component {
 QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
+  userSettingsActions: PropTypes.object.isRequired,
   router: PropTypes.object,
   project: PropTypes.object,
+  userSettings: PropTypes.object,
   readOnly: PropTypes.bool,
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
@@ -344,6 +348,7 @@ QuestionnaireEditor.propTypes = {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
+  userSettings: state.userSettings,
   readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data
@@ -351,7 +356,8 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
+  userSettingsActions: bindActionCreators(userSettingsActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireEditor))

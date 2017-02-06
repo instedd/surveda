@@ -10,6 +10,14 @@ defmodule Ask.UserView do
     }
   end
 
+  def render("settings.json", %{settings: settings}) do
+    %{data:
+      %{
+        settings: settings
+      }
+    }
+  end
+
   def render("error.json", %{changeset: changeset}) do
     %{data:
       %{

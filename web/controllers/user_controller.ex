@@ -22,4 +22,10 @@ defmodule Ask.UserController do
     end
   end
 
+  def settings(conn, params) do
+    user = conn |> current_user
+    settings = user.settings
+    render(conn, "settings.json", settings: settings)
+  end
+
 end
