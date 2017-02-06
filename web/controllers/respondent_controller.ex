@@ -107,8 +107,12 @@ defmodule Ask.RespondentController do
 
     by_state = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
-      group_by: :state,
-      select: {r.state, count("*")}) |> Enum.into(%{})
+      group_by: [:state, :disposition],
+      select: {r.state, r.disposition, count("*")})
+    |> Enum.reduce(%{}, fn {state, disposition, count}, map ->
+      key = disposition || state
+      map |> Map.put(key, (map[key] || 0) + count)
+    end)
 
     by_date = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
@@ -134,6 +138,8 @@ defmodule Ask.RespondentController do
     completed = by_state["completed"] || 0
     stalled = by_state["stalled"] || 0
     failed = by_state["failed"] || 0
+    partial = by_state["partial"] || 0
+    ineligible = by_state["ineligible"] || 0
 
     total_quota = buckets
     |> Enum.reduce(0, fn bucket, total ->
@@ -147,7 +153,9 @@ defmodule Ask.RespondentController do
         completed: respondent_by_state(completed, total_respondents),
         active: respondent_by_state(active, total_respondents),
         stalled: respondent_by_state(stalled, total_respondents),
-        failed: respondent_by_state(failed, total_respondents)
+        failed: respondent_by_state(failed, total_respondents),
+        partial: respondent_by_state(partial, total_respondents),
+        ineligible: respondent_by_state(ineligible, total_respondents),
       },
       respondents_by_date: cumulative_count,
       cutoff: survey.cutoff,

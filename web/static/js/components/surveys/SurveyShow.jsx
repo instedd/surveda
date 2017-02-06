@@ -8,6 +8,7 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
+import capitalize from 'lodash/capitalize'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -147,6 +148,7 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsStats) {
+    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed']
     return (
       <div className='card'>
         <div className='card-table-title'>
@@ -162,31 +164,16 @@ class SurveyShow extends Component {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Pending</td>
-                <td className='right-align'>{ respondentsStats.pending.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.pending.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Active</td>
-                <td className='right-align'>{ respondentsStats.active.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.active.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Completed</td>
-                <td className='right-align'>{ respondentsStats.completed.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.completed.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Stalled</td>
-                <td className='right-align'>{ respondentsStats.stalled.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.stalled.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Failed</td>
-                <td className='right-align'>{ respondentsStats.failed.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.failed.percent) }%</td>
-              </tr>
+              {dispositions.map(disposition => {
+                let stat = respondentsStats[disposition]
+                return (
+                  <tr>
+                    <td>{capitalize(disposition)}</td>
+                    <td className='right-align'>{ stat.count }</td>
+                    <td className='right-align'>{ Math.round(stat.percent) }%</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

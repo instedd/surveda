@@ -79,7 +79,9 @@ defmodule Ask.RespondentControllerTest do
       "active" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 5, "percent" => 33.333333333333336},
       "failed" => %{"count" => 0, "percent" => 0.0},
-      "stalled" => %{"count" => 0, "percent" => 0.0}
+      "stalled" => %{"count" => 0, "percent" => 0.0},
+      "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "partial" => %{"count" => 0, "percent" => 0.0},
     }
 
     assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -109,7 +111,9 @@ defmodule Ask.RespondentControllerTest do
       "active" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 6, "percent" => 37.5},
       "failed" => %{"count" => 0, "percent" => 0.0},
-      "stalled" => %{"count" => 0, "percent" => 0.0}
+      "stalled" => %{"count" => 0, "percent" => 0.0},
+      "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "partial" => %{"count" => 0, "percent" => 0.0},
     }
 
     assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -117,6 +121,38 @@ defmodule Ask.RespondentControllerTest do
     assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["date"] == "2016-01-02"
     assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["count"] == 5
     assert json_response(conn, 200)["data"]["total_respondents"] == 16
+    assert json_response(conn, 200)["data"]["cutoff"] == 10
+  end
+
+  test "lists stats for a given survey, with dispositions", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
+    insert_list(10, :respondent, survey: survey, state: "pending")
+    insert(:respondent, survey: survey, state: "completed", disposition: "partial", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, state: "completed", disposition: "ineligible", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+
+    total = 15.0
+
+    assert json_response(conn, 200)["data"]["id"] == survey.id
+    assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
+      "partial" => %{"count" => 1, "percent" => 100*1/total},
+      "ineligible" => %{"count" => 3, "percent" => 100*3/total},
+      "completed" => %{"count" => 1, "percent" => 100*1/total},
+      "pending" => %{"count" => 10, "percent" => 100*10/total},
+      "active" => %{"count" => 0, "percent" => 0.0},
+      "failed" => %{"count" => 0, "percent" => 0.0},
+      "stalled" => %{"count" => 0, "percent" => 0.0},
+    }
+
+    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["count"] == 2
+    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["count"] == 5
+    assert json_response(conn, 200)["data"]["total_respondents"] == 15
     assert json_response(conn, 200)["data"]["cutoff"] == 10
   end
 
@@ -159,7 +195,9 @@ defmodule Ask.RespondentControllerTest do
         "completed" => %{"count" => 0, "percent" => 0.0},
         "active" => %{"count" => 0, "percent" => 0.0},
         "failed" => %{"count" => 0, "percent" => 0.0},
-        "stalled" => %{"count" => 0, "percent" => 0.0}
+        "stalled" => %{"count" => 0, "percent" => 0.0},
+        "ineligible" => %{"count" => 0, "percent" => 0.0},
+        "partial" => %{"count" => 0, "percent" => 0.0},
       },
       "respondents_by_date" => [],
       "cutoff" => nil,
