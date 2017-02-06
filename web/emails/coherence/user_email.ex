@@ -14,7 +14,7 @@ defmodule Ask.Coherence.UserEmail do
     |> to(user_email(user))
     |> add_reply_to
     |> subject("#{site_name} - Reset password instructions")
-    |> render_body("password.html", %{url: url, name: first_name(user.name)})
+    |> render_body(:password, %{url: url, name: first_name(user.name)})
   end
 
   def confirmation(user, url) do
@@ -23,7 +23,7 @@ defmodule Ask.Coherence.UserEmail do
     |> to(user_email(user))
     |> add_reply_to
     |> subject("#{site_name} - Confirm your new account")
-    |> render_body("confirmation.html", %{url: url, name: first_name(user.name)})
+    |> render_body(:confirmation, %{url: url, name: first_name(user.name)})
   end
 
   def invitation(invitation, url) do
@@ -32,7 +32,7 @@ defmodule Ask.Coherence.UserEmail do
     |> to(user_email(invitation))
     |> add_reply_to
     |> subject("#{site_name} - Invitation to create a new account")
-    |> render_body("invitation.html", %{url: url, name: first_name(invitation.name)})
+    |> render_body(:invitation, %{url: url, name: first_name(invitation.name)})
   end
 
   def unlock(user, url) do

@@ -15,8 +15,7 @@ defmodule Ask.Email do
     |> to({"", email})
     |> from({"InSTEDD Ask", "noreply@instedd.org"})
     |> subject(subject)
-    |> text_body("#{subject}. Please follow this link to join: #{invite_url}")
-    |> render_body("invite.html", %{
+    |> render_body(:invite, %{
         url: invite_url,
         invited_by: invited_by_name,
         explanation: explanation(level),
