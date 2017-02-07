@@ -30,10 +30,10 @@ class GuissoSession {
     return new Promise((resolve, reject) => {
       const authorizeUrl = this.config.baseUrl + '/oauth2/authorize' +
         '?client_id=' + this.config.clientId +
-        '&scope=' + escape('app=' + this.config.appId) +
+        '&scope=' + encodeURIComponent('app=' + this.config.appId) +
         '&state=' + provider +
         '&response_type=' + responseType +
-        '&redirect_uri=' + escape(window.location.origin + '/oauth_client/callback')
+        '&redirect_uri=' + encodeURIComponent(window.location.origin + '/oauth_client/callback')
 
       const popup = this.showPopup(authorizeUrl)
       const watchdog = window.setInterval(() => {

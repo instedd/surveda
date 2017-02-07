@@ -244,17 +244,17 @@ export const synchronizeChannels = () => {
 }
 
 export const autocompleteVars = (projectId, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${escape(text)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
 export const autocompletePrimaryLanguage = (projectId, mode, language, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${escape(text)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
 export const autocompleteOtherLanguage = (projectId, mode, primaryLanguage, otherLanguage, sourceText, targetText) => {
-  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${escape(sourceText)}&target_text=${escape(targetText)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
   .then(response => response.json())
 }
 
