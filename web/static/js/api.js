@@ -263,23 +263,23 @@ export const fetchCollaborators = (projectId) => {
 }
 
 export const getInviteByEmailAndProject = (projectId, email) => {
-  return apiFetchJSON(`get_invite_by_email_and_project?project_id=${projectId}&email=${email}`)
+  return apiFetchJSON(`get_invite_by_email_and_project?project_id=${projectId}&email=${encodeURIComponent(email)}`)
 }
 
 export const invite = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
+  return apiFetchJSON(`invite?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
 }
 
 export const inviteMail = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
+  return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
 }
 
 export const fetchInvite = (code) => {
-  return apiFetchJSON(`invite_show?code=${code}`)
+  return apiFetchJSON(`invite_show?code=${encodeURIComponent(code)}`)
 }
 
 export const confirm = (code) => {
-  return apiFetchJSON(`accept_invitation?code=${code}`)
+  return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }
 
 export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
