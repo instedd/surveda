@@ -30,11 +30,13 @@ defmodule Ask.RespondentGroupControllerTest do
       channel = insert(:channel, name: "test")
       add_channel_to(group, channel)
 
+      sample = group.sample |> Enum.map(&Respondent.mask_phone_number/1)
+
       conn = get conn, project_survey_respondent_group_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"] == [%{
         "id" => group.id,
         "name" => group.name,
-        "sample" => group.sample,
+        "sample" => sample,
         "respondents_count" => group.respondents_count,
         "channels" => [channel.id],
       }]
@@ -51,10 +53,12 @@ defmodule Ask.RespondentGroupControllerTest do
       conn = post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
       group = RespondentGroup |> Repo.get_by(survey_id: survey.id)
 
+      sample = group.sample |> Enum.map(&Respondent.mask_phone_number/1)
+
       assert json_response(conn, 201)["data"] == %{
         "id" => group.id,
         "name" => group.name,
-        "sample" => group.sample,
+        "sample" => sample,
         "respondents_count" => group.respondents_count,
         "channels" => [],
       }
