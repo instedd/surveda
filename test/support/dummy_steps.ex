@@ -170,6 +170,69 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
           ]
         ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you exercise",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "completed"
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic()
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "completed"
+        ),
+        flag_step( #THIS step is here to make sure we ignore this change
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "What's the number of this question?",
+          prompt: prompt(sms: sms_prompt("What's the number of this question??")),
+          store: "Question",
+          skip_logic: default_numeric_skip_logic()
+        )
+      ]
+
+      @dummy_steps_with_flag [
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+          ]
+        ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you exercise",

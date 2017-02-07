@@ -262,18 +262,11 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, :end) do
     old_disposition = respondent.disposition
 
-    respondent = respondent
+    respondent
     |> Respondent.changeset(%{state: "completed", disposition: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update!
     |> create_disposition_history(old_disposition)
-
-    responses = respondent |> assoc(:responses) |> Repo.all
-    matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
-                    |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
-
-    if matching_bucket do
-      from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
-    end
+    |> update_quota_bucket(old_disposition)
   end
 
   defp update_respondent(respondent, {:stalled, session}) do
@@ -302,12 +295,17 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
-    timeout_at = Timex.shift(Timex.now, minutes: timeout)
     old_disposition = respondent.disposition
-    respondent
-    |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
-    |> Repo.update!
-    |> create_disposition_history(old_disposition)
+    if old_disposition == "completed" do
+      update_respondent(respondent, {:ok, session, timeout}, nil)
+    else
+      timeout_at = Timex.shift(Timex.now, minutes: timeout)
+      respondent
+      |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
+      |> Repo.update!
+      |> create_disposition_history(old_disposition)
+      |> update_quota_bucket(old_disposition)
+    end
   end
 
   defp create_disposition_history(respondent, old_disposition) do
@@ -316,6 +314,20 @@ defmodule Ask.Runtime.Broker do
         respondent: respondent,
         disposition: respondent.disposition}
       |> Repo.insert!
+    end
+    respondent
+  end
+
+  defp update_quota_bucket(respondent, old_disposition) do
+    if respondent.disposition && respondent.disposition != old_disposition && respondent.disposition == "completed" do
+
+      responses = respondent |> assoc(:responses) |> Repo.all
+      matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
+                      |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
+
+      if matching_bucket do
+        from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+      end
     end
     respondent
   end

@@ -737,6 +737,8 @@ defmodule Ask.BrokerTest do
            |> Repo.all
            |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
            |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
 
     :ok = broker |> GenServer.stop
   end
@@ -772,6 +774,8 @@ defmodule Ask.BrokerTest do
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert :end = reply
 
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
     assert QuotaBucket
@@ -807,6 +811,70 @@ defmodule Ask.BrokerTest do
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "increments quota bucket when a respondent is flagged as completed" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+
+    selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "No"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "partial"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    assert reply == {:prompts, ["Which is the second perfect number??"]}
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert reply == {:prompts, ["What's the number of this question??"]}
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    assert :end = reply
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
 
     :ok = broker |> GenServer.stop
   end

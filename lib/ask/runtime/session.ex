@@ -222,7 +222,11 @@ defmodule Ask.Runtime.Session do
       respondent =
         case buckets do
           [bucket] ->
-            respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+            respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+            if respondent.disposition && respondent.disposition == "completed" do
+              from(q in QuotaBucket, where: q.id == ^bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+            end
+            respondent
           _ ->
             respondent
         end
