@@ -7,6 +7,7 @@ import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as userSettingsActions from '../../actions/userSettings'
 import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
+import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
@@ -226,6 +227,9 @@ class QuestionnaireEditor extends Component {
       return <div>Loading...</div>
     }
 
+    const settings = userSettings.settings
+    const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
+
     if (!readOnly) {
       csvButtons = <div>
         <div className='row'>
@@ -303,7 +307,8 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
         </div>
-        <div className='col s12 m8 offset-m1'>
+        {skipOnboarding
+        ? <div className='col s12 m8 offset-m1'>
           <QuestionnaireSteps
             steps={questionnaire.steps}
             current={this.state.currentStep}
@@ -327,6 +332,8 @@ class QuestionnaireEditor extends Component {
             <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
         </div>
+        : <QuestionnaireOnboarding />
+        }
       </div>
     )
   }

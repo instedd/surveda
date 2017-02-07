@@ -266,6 +266,10 @@ export const fetchSettings = () => {
   return apiFetchJSON(`users/settings`)
 }
 
+export const updateSettings = (params) => {
+  return apiPostJSON(`update_settings`, {}, params)
+}
+
 export const invite = (projectId, code, level, email) => {
   return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
 }
