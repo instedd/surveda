@@ -263,7 +263,7 @@ export const fetchCollaborators = (projectId) => {
 }
 
 export const fetchSettings = () => {
-  return apiFetchJSON(`users/settings`)
+  return apiFetchJSON(`settings`)
 }
 
 export const updateSettings = (params) => {

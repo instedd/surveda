@@ -72,8 +72,7 @@ defmodule Ask.Router do
       get "/invite", InviteController, :invite, as: :invite
       get "/invite_mail", InviteController, :invite_mail, as: :invite_mail
       get "/invite_show", InviteController, :show, as: :invite_show
-      resources "/users", UserController, only: [:update]
-      get "/users/settings", UserController, :settings, as: :settings
+      get "/settings", UserController, :settings, as: :settings
       post "/update_settings", UserController, :update_settings, as: :update_settings
     end
   end
