@@ -2,22 +2,24 @@ import React, { PropTypes, Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-// import { config } from '../../config'
 import * as userSettingsActions from '../../actions/userSettings'
+import * as questionnaireActions from '../../actions/questionnaire'
 
 class QuestionnaireOnboarding extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     questionnaire: PropTypes.object,
-    userSettingsActions: PropTypes.object.isRequired
+    userSettingsActions: PropTypes.object.isRequired,
+    questionnaireActions: PropTypes.object.isRequired
   }
 
   hideOnboarding(e) {
     const { userSettingsActions } = this.props
-    Promise.resolve(userSettingsActions.hideOnboarding()).then(() => this.props.userSettingsActions.fetchSettings())
-  }
-
-  componentDidMount() {
+    Promise.resolve(userSettingsActions.hideOnboarding()).then(
+      () => {
+        this.props.userSettingsActions.fetchSettings()
+        this.props.questionnaireActions.addStep()
+      })
   }
 
   render() {
@@ -44,9 +46,6 @@ class QuestionnaireOnboarding extends Component {
         <div>
           <a onClick={e => this.hideOnboarding(e)}>Understood, create the first step</a>
         </div>
-        <div>
-          <a onClick={e => this.showOnboarding(e)}>Show me onboarding again</a>
-        </div>
       </div>
     )
   }
@@ -59,7 +58,8 @@ const mapStateToProps = (state, ownProps) => {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  userSettingsActions: bindActionCreators(userSettingsActions, dispatch)
+  userSettingsActions: bindActionCreators(userSettingsActions, dispatch),
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireOnboarding))
