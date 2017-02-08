@@ -803,6 +803,9 @@ const validateIvrLangPrompt = (step: Step, stepIndex: number, context: Validatio
 }
 
 const validateStep = (step: Step, stepIndex: number, context: ValidationContext) => {
+  if (step.type === 'flag') {
+    return
+  }
   if (context.sms) {
     context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
   }
