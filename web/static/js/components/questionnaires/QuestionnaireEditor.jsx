@@ -40,15 +40,8 @@ class QuestionnaireEditor extends Component {
     this.props.questionnaireActions.toggleMode(mode)
   }
 
-  questionnaireAddMultipleChoiceStep(e) {
-    this.questionnaireAddStep('multiple-choice')
-  }
-
-  questionnaireAddNumericStep(e) {
-    this.questionnaireAddStep('numeric')
-  }
-
   questionnaireAddStep(e) {
+    e.preventDefault()
     this.setState({
       ...this.state,
       addingStep: true
