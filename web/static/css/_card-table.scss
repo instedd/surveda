@@ -1,0 +1,140 @@
+// ------- Card with Table ----------
+
+.card {
+  border-radius: 3px;
+
+  .card-table-title {
+    @extend .black-text;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 25px;
+  }
+
+
+  .card-table {
+    padding: 0;
+    > table {
+      @extend .bordered;
+
+      tr:hover {
+        .duplicate i {
+          display: block;
+        }
+      }
+
+      th {
+        @extend .grey-text, .lighten-2;
+        padding: 25px;
+        white-space: nowrap;
+         a {
+          color: inherit;
+        }
+        &.sortable {
+          i {
+            vertical-align: middle;
+            margin-right: 9px;
+          }
+        }
+        &.duplicate {
+          width: 50px;
+          padding: 5px;
+        }
+      }
+
+      td {
+        @extend .black-text;
+        padding: 25px;
+        a {
+          color: inherit;
+        }
+        &.project-name {
+          word-break: break-all;
+        }
+        &.duplicate {
+          width: 50px;
+          padding: 0;
+          text-align: center;
+          i {
+            @include transition(color ease-in-out .25s);
+            @extend .grey-text, .lighten-2;
+            display: none;
+            &:hover {
+              @extend .black-text;
+            }
+          }
+        }
+      }
+    }
+    table.responses-table {
+      input[type=text] {
+        margin-bottom: 0;
+        height: auto;
+      }
+      .input-field{
+        margin-top: auto;
+      }
+      .select-dropdown {
+        border-bottom: none;
+      }
+    }
+    .basic-error {
+      @extend .text-error;
+      border-bottom: dotted 1px #ff5722 ;
+    }
+    .tooltip-error {
+      position: relative;
+      &:after {
+        content: '';
+        @extend .back-error;
+        display: block;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        top: 5px;
+        right: -28px;
+      }
+    }
+    + .card-action {
+      ul {
+        margin: 0;
+        li {
+          @extend .grey-text;
+          line-height: 2;
+          a {
+            @extend .black-text;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        }
+      }
+    }
+  }
+  .card-action-error {
+    padding-bottom:20px;
+    padding-top:20px;
+    padding-left:0px;
+    border-top: solid 1px transparent;
+    color: red
+  }
+  &.tableScroll {
+    width: 78.5vw;
+    .card-table {
+      overflow-x: auto;
+    }
+  }
+}
+.card-error {
+  @extend .red-text, .darken-1;
+}
+
+.material-tooltip.error {
+  font-size: .8rem;
+  line-height: 1;
+  padding: 6px 10px;
+  min-height: 16px;
+  border-radius: 4px;
+  .backdrop {
+    @extend .back-error;
+  }
+}

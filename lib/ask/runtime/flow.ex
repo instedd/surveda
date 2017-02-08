@@ -1,13 +1,10 @@
 defmodule Ask.Runtime.Flow do
   defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0
   alias Ask.{Repo, Questionnaire}
+  alias Ask.Runtime.Reply
   alias __MODULE__
 
   @max_retries 2
-
-  defmodule Reply do
-    defstruct stores: [], prompts: []
-  end
 
   def start(quiz, mode) do
     %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language}
@@ -24,12 +21,12 @@ defmodule Ask.Runtime.Flow do
   end
 
   def dump(flow) do
-    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language}
+    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language, retries: flow.retries}
   end
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"]}
+    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"], retries: state["retries"]}
   end
 
   defp is_numeric(str) do
@@ -56,6 +53,8 @@ defmodule Ask.Runtime.Flow do
           |> Enum.find(fn choice -> choice["value"] == reply_value end)
           |> Map.get("skip_logic")
         "explanation" ->
+          step["skip_logic"]
+        "flag" ->
           step["skip_logic"]
         "language-selection" ->
           nil
@@ -163,6 +162,8 @@ defmodule Ask.Runtime.Flow do
         case step["type"] do
           "explanation" ->
             add_explanation_step_prompt(flow, state)
+          "flag" ->
+            add_disposition_to_next_step(flow, state, step)
           _ ->
             {:ok, flow, %{state | prompts: (state.prompts || []) ++ fetch(:prompt, flow, step)}}
         end
@@ -172,6 +173,12 @@ defmodule Ask.Runtime.Flow do
   defp add_explanation_step_prompt(flow, state) do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
     state = %{state | prompts: (state.prompts || []) ++ fetch(:prompt, flow, step)}
+    flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
+    eval({flow, state})
+  end
+
+  defp add_disposition_to_next_step(flow, state, step) do
+    state = %{state | disposition: step["disposition"]}
     flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
     eval({flow, state})
   end

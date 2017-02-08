@@ -46,7 +46,7 @@ defmodule Ask.Audio do
   def mime_type(%Ask.Audio{filename: filename}) do
     case Path.extname(filename) do
       ".wav" -> "audio/wav"
-      ".mp3" -> "audio/mpeg3"
+      ".mp3" -> "audio/mpeg"
       _ -> "application/octet-stream"
     end
   end

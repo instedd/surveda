@@ -39,12 +39,14 @@ defmodule Ask.ProjectController do
     |> current_user
     |> change
 
+    params = Map.merge(project_params, %{"salt" => Ecto.UUID.generate})
+
     membership_changeset = %ProjectMembership{}
     |> change
     |> put_assoc(:user, user_changeset)
     |> put_change(:level, "owner")
 
-    changeset = Project.changeset(%Project{}, project_params)
+    changeset = Project.changeset(%Project{}, params)
     |> put_assoc(:project_memberships, [membership_changeset])
 
     case Repo.insert(changeset) do

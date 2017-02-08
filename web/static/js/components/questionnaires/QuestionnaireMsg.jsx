@@ -14,21 +14,20 @@ import * as api from '../../api'
 
 type Props = {
   dispatch: Function,
-  questionnaire: Questionnaire,
+  questionnaire: ?Questionnaire,
   messageKey: string,
   title: string,
   icon: string,
   readOnly: boolean,
-  activeLanguage: string,
-  questionnaireMsg: string,
   errors: Errors,
-  hasErrors: boolean,
-  editing: boolean
+  hasErrors: boolean
 };
 
 type QuizState = {
+  smsOriginalValue: string,
+  ivrOriginalValue: string,
   stepPromptSms: string,
-  stepPromptIvr: LanguagePrompt,
+  stepPromptIvr: AudioPrompt,
   stepPromptIvrText: string,
   activeLanguage: string,
   cardId: string,
@@ -103,11 +102,11 @@ class QuestionnaireMsg extends Component {
   }
 
   componentWillReceiveProps(newProps) {
-    this.setState(this.stateFromProps({...newProps, editing: this.state.editing}))
+    this.setState(this.stateFromProps(newProps, this.state.editing))
   }
 
-  stateFromProps(props: Props): State {
-    const { questionnaire, messageKey, editing } = props
+  stateFromProps(props: Props, editing = false): State {
+    const { questionnaire, messageKey } = props
 
     if (!questionnaire) {
       return {
@@ -124,6 +123,8 @@ class QuestionnaireMsg extends Component {
     return {
       editing: editing,
       quizState: {
+        smsOriginalValue: getPromptSms(questionnaireMsg, activeLanguage),
+        ivrOriginalValue: getPromptIvrText(questionnaireMsg, activeLanguage),
         stepPromptSms: getPromptSms(questionnaireMsg, activeLanguage),
         stepPromptIvr: promptIvr,
         stepPromptIvrText: getPromptIvrText(questionnaireMsg, activeLanguage),
@@ -166,6 +167,7 @@ class QuestionnaireMsg extends Component {
 
   autocompleteGetData(value, callback, mode) {
     const { questionnaire, messageKey } = this.props
+    if (!questionnaire) return
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
@@ -199,6 +201,7 @@ class QuestionnaireMsg extends Component {
 
   autocompleteOnSelect(item, mode) {
     const { questionnaire, messageKey, dispatch } = this.props
+    if (!questionnaire) return
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
@@ -248,8 +251,8 @@ class QuestionnaireMsg extends Component {
     )
   }
 
-  expanded() {
-    const { questionnaire, errors, messageKey, title, icon, readOnly } = this.props
+  expanded(questionnaire: Questionnaire) {
+    const { errors, messageKey, title, icon, readOnly } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -264,6 +267,7 @@ class QuestionnaireMsg extends Component {
         smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`}
           inputErrors={smsInputErrors}
           value={quizState.stepPromptSms}
+          originalValue={quizState.smsOriginalValue}
           readOnly={readOnly}
           onChange={text => this.promptSmsChange(text)}
           onBlur={text => this.promptSmsSubmit(text)}
@@ -281,6 +285,7 @@ class QuestionnaireMsg extends Component {
           key={quizState.cardId}
           inputErrors={ivrInputErrors}
           value={quizState.stepPromptIvrText}
+          originalValue={quizState.ivrOriginalValue}
           onChange={e => this.promptIvrChange(e)}
           readOnly={readOnly}
           onBlur={e => this.promptIvrSubmit(e)}
@@ -324,12 +329,13 @@ class QuestionnaireMsg extends Component {
   }
 
   render() {
-    if (!this.props.questionnaire) {
+    const { questionnaire } = this.props
+    if (!questionnaire) {
       return <div>Loading...</div>
     }
 
     if (this.state.editing) {
-      return this.expanded()
+      return this.expanded(questionnaire)
     } else {
       return this.collapsed()
     }

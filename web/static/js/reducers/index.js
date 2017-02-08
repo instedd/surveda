@@ -13,6 +13,7 @@ import saveStatus from './saveStatus'
 import channels from './channels'
 import guisso from './guisso'
 import respondents from './respondents'
+import respondentGroups from './respondentGroups'
 import respondentsCount from './respondentsCount'
 import timezones from './timezones'
 import collaborators from './collaborators'
@@ -32,6 +33,7 @@ export default combineReducers({
   survey,
   saveStatus,
   respondents,
+  respondentGroups,
   respondentsCount,
   channels,
   guisso,

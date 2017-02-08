@@ -2,7 +2,8 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project}
+  alias Ask.{Survey, Project, RespondentGroup, Channel}
+
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
 
@@ -19,6 +20,15 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == []
+    end
+
+    test "lists surveys", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      conn = get conn, project_survey_path(conn, :index, project.id)
+      assert json_response(conn, 200)["data"] == [
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "questionnaire_ids" => [], "state" => "not_ready"}
+      ]
     end
 
     test "returns 404 when the project does not exist", %{conn: conn} do
@@ -45,43 +55,6 @@ defmodule Ask.SurveyControllerTest do
         "mode" => survey.mode,
         "project_id" => survey.project_id,
         "questionnaire_ids" => [],
-        "channels" => [],
-        "cutoff" => nil,
-        "state" => "not_ready",
-        "respondents_count" => 0,
-        "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
-        },
-        "schedule_start_time" => "09:00:00",
-        "schedule_end_time" => "18:00:00",
-        "timezone" => "UTC",
-        "started_at" => "",
-        "ivr_retry_configuration" => nil,
-        "sms_retry_configuration" => nil,
-        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
-        "quotas" => %{
-          "vars" => [],
-          "buckets" => []
-        },
-        "comparisons" => []
-      }
-    end
-
-    test "shows chosen resource with channels", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      channel = insert(:channel, user: user)
-      survey = insert(:survey, project: project)
-      insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
-      conn = get conn, project_survey_path(conn, :show, project, survey)
-      assert json_response(conn, 200)["data"] == %{"id" => survey.id,
-        "name" => survey.name,
-        "mode" => survey.mode,
-        "project_id" => survey.project_id,
-        "questionnaire_ids" => [],
-        "channels" => [%{
-          "id" => channel.id,
-          "type" => "sms"
-        }],
         "cutoff" => nil,
         "state" => "not_ready",
         "respondents_count" => 0,
@@ -116,7 +89,6 @@ defmodule Ask.SurveyControllerTest do
         "mode" => survey.mode,
         "project_id" => survey.project_id,
         "questionnaire_ids" => [],
-        "channels" => [],
         "cutoff" => nil,
         "state" => "not_ready",
         "respondents_count" => 0,
@@ -228,8 +200,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{cutoff: 4, channels: [channel.id]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -241,45 +212,6 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project)
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
-    end
-
-    test "deletes previous channels associations when updates including channels params", %{conn: conn, user: user} do
-      channel = insert(:channel, user: user)
-      channel2 = insert(:channel, user: user)
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-      insert(:survey_channel, survey_id: survey.id, channel_id: channel.id )
-      conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{channels: [channel2.id]}
-
-      assert json_response(conn, 200)["data"] == %{
-        "id" => survey.id,
-        "mode" => survey.mode,
-        "name" => survey.name,
-        "project_id" => survey.project_id,
-        "questionnaire_ids" => [],
-        "channels" => [%{
-           "id" => channel2.id,
-           "type" => "sms"
-        }],
-        "cutoff" => nil,
-        "state" => "not_ready",
-        "respondents_count" => 0,
-        "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
-        },
-        "schedule_start_time" => "09:00:00",
-        "schedule_end_time" => "18:00:00",
-        "timezone" => "UTC",
-        "started_at" => "",
-        "ivr_retry_configuration" => nil,
-        "sms_retry_configuration" => nil,
-        "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
-        "quotas" => %{
-          "vars" => [],
-          "buckets" => []
-        },
-        "comparisons" => []
-      }
     end
 
     test "saves quota_buckets and quota_vars", %{conn: conn, user: user} do
@@ -516,8 +448,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule)
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{questionnaire_ids: [questionnaire.id]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -535,8 +466,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{mode: [["sms"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -550,8 +480,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -565,8 +494,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{mode: [["sms"], ["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -580,11 +508,11 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, schedule_day_of_week: completed_schedule)
-      add_respondent_to survey
+      group = create_group(survey)
 
       channel2 = insert(:channel, user: user, type: "ivr")
 
-      survey
+      group
       |> Repo.preload([:channels])
       |> Ecto.Changeset.change
       |> put_assoc(:channels, [channel, channel2])
@@ -602,25 +530,9 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule, mode: [["sms"]])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{cutoff: 4}
-      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
-      assert json_response(conn, 200)["data"]["id"]
-      new_survey = Repo.get(Survey, survey.id)
-
-      assert new_survey.state == "ready"
-    end
-
-    test "updates state when adding channel", %{conn: conn, user: user} do
-      [project, questionnaire, channel] = prepare_for_state_update(user)
-
-      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, schedule_day_of_week: completed_schedule, mode: [["sms"]])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
-
-      attrs = %{channels: [channel.id]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -632,8 +544,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [questionnaire])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{sms_retry_configuration: "12j 13p 14q"}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -647,8 +558,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [questionnaire], sms_retry_configuration: "12j 13p 14q")
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       new_survey = Repo.get(Survey, survey.id)
       assert new_survey.state == "not_ready"
@@ -665,8 +575,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, mode: [["sms"]])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{schedule_day_of_week: %{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -680,27 +589,9 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, schedule_day_of_week: completed_schedule)
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{schedule_day_of_week: incomplete_schedule}
-      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
-      assert json_response(conn, 200)["data"]["id"]
-      new_survey = Repo.get(Survey, survey.id)
-
-      assert new_survey.state == "not_ready"
-    end
-
-    test "updates state when removing channel", %{conn: conn, user: user} do
-      [project, questionnaire, channel] = prepare_for_state_update(user)
-
-      survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule)
-      add_respondent_to survey
-      add_channel_to(survey, channel)
-
-      assert survey.state == "ready"
-
-      attrs = %{channels: []}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -712,8 +603,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 4, state: "ready", schedule_day_of_week: completed_schedule)
-      add_respondent_to survey
-      add_channel_to(survey, channel)
+      create_group(survey, channel)
 
       assert survey.state == "ready"
 
@@ -733,8 +623,8 @@ defmodule Ask.SurveyControllerTest do
 
       survey = insert(:survey, project: project, schedule_day_of_week: completed_schedule)
       assert survey.state == "not_ready"
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+
+      create_group(survey, channel)
 
       attrs = %{cutoff: 4}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -745,11 +635,10 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "does not update state when adding cutoff if missing respondents", %{conn: conn, user: user} do
-      [project, questionnaire, channel] = prepare_for_state_update(user)
+      [project, questionnaire, _] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule)
       assert survey.state == "not_ready"
-      add_channel_to(survey, channel)
 
       attrs = %{cutoff: 4}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -763,7 +652,8 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, _] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule)
-      add_respondent_to survey
+      group = insert(:respondent_group, survey: survey)
+      add_respondent_to group
 
       attrs = %{questionnaire_id: questionnaire.id}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -777,8 +667,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, schedule_day_of_week: completed_schedule, mode: [["sms"]])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{comparisons: [%{questionnaire_id: questionnaire.id, mode: ["sms"], ratio: 99}]}
 
@@ -793,8 +682,7 @@ defmodule Ask.SurveyControllerTest do
       [project, questionnaire, channel] = prepare_for_state_update(user)
 
       survey = insert(:survey, project: project, questionnaires: [questionnaire], cutoff: 3, schedule_day_of_week: completed_schedule, mode: [["sms"]])
-      add_channel_to(survey, channel)
-      add_respondent_to survey
+      create_group(survey, channel)
 
       attrs = %{comparisons: [%{questionnaire_id: questionnaire.id, mode: ["sms"], ratio: 100}]}
 
@@ -848,8 +736,8 @@ defmodule Ask.SurveyControllerTest do
     [project, questionnaire, channel]
   end
 
-  def add_respondent_to(survey) do
-    insert(:respondent, phone_number: "12345678", survey: survey)
+  defp add_respondent_to(group = %RespondentGroup{}) do
+    insert(:respondent, phone_number: "12345678", survey: group.survey, respondent_group: group)
   end
 
   def completed_schedule do
@@ -860,14 +748,23 @@ defmodule Ask.SurveyControllerTest do
     %{sun: false, mon: false, tue: false, wed: false, thu: false, fri: false, sat: false}
   end
 
-  def add_channel_to(survey, channel) do
+  defp add_channel_to(group = %RespondentGroup{}, channel = %Channel{}) do
     channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
 
-    changeset = survey
+    changeset = group
     |> Repo.preload([:channels])
     |> Ecto.Changeset.change
     |> put_assoc(:channels, [channels_changeset])
 
     Repo.update(changeset)
+  end
+
+  defp create_group(survey, channel \\ nil) do
+    group = insert(:respondent_group, survey: survey, respondents_count: 1)
+    if channel do
+      add_channel_to(group, channel)
+    end
+    add_respondent_to group
+    group
   end
 end

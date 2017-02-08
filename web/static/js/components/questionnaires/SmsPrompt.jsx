@@ -24,13 +24,6 @@ class SmsPrompt extends Component {
     onChange(this.getText())
   }
 
-  checkKeyUp(e, index) {
-    if (e.shiftKey && e.key == 'Enter') {
-      e.preventDefault()
-      this.splitPiece(e, index)
-    }
-  }
-
   splitPiece(e, index) {
     let caretIndex = e.target.selectionStart
     let value = e.target.value || ''
@@ -65,11 +58,20 @@ class SmsPrompt extends Component {
     return joinSmsPieces(this.allInputs.map(x => (x.value || '')))
   }
 
+  onFocus() {
+    const { autocomplete } = this.refs
+    if (autocomplete) {
+      autocomplete.unhide()
+    }
+  }
+
   renderSmsInput(total, index, value, autocompleteComponent) {
     const { id, inputErrors, readOnly } = this.props
 
+    const shouldDisplayErrors = value == this.props.originalValue
+
     const maybeInvalidClass = classNames({
-      'validate invalid': inputErrors != null && inputErrors.length > 0
+      'validate invalid': inputErrors != null && inputErrors.length > 0 && shouldDisplayErrors
     })
 
     const label = total == 1 ? 'SMS message' : `SMS message (part ${index + 1})`
@@ -79,9 +81,9 @@ class SmsPrompt extends Component {
         <input
           type='text'
           is length='140'
-          onKeyUp={e => this.checkKeyUp(e, index)}
           onChange={e => this.onChange(e)}
           onBlur={e => this.onBlur(e)}
+          onFocus={e => this.onFocus()}
           ref={ref => {
             if (ref) {
               this.allInputs.push(ref)
@@ -157,6 +159,7 @@ class SmsPrompt extends Component {
 
 SmsPrompt.propTypes = {
   id: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,

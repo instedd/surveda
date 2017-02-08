@@ -1,3 +1,4 @@
+// --------- Fonts ---------------
 // Roboto:
 
 @font-face {
@@ -22,16 +23,6 @@
 
 @font-face {
   font-family: "Roboto";
-  src: url("/fonts/roboto/Roboto-Medium.eot");
-  src: url("/fonts/roboto/Roboto-Medium.eot?#iefix") format("embedded-opentype"),
-       url("/fonts/roboto/Roboto-Medium.woff2") format("woff2"),
-       url("/fonts/roboto/Roboto-Medium.woff") format("woff"),
-       url("/fonts/roboto/Roboto-Medium.ttf") format("truetype");
-  font-weight: 500;
-}
-
-@font-face {
-  font-family: "Roboto";
   src: url("/fonts/roboto/Roboto-Bold.eot");
   src: url("/fonts/roboto/Roboto-Bold.eot?#iefix") format("embedded-opentype"),
        url("/fonts/roboto/Roboto-Bold.woff2") format("woff2"),
@@ -39,7 +30,6 @@
        url("/fonts/roboto/Roboto-Bold.ttf") format("truetype");
   font-weight: 700;
 }
-
 
 // Material Icons
 

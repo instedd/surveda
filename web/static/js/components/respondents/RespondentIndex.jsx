@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+// @flow
+import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
@@ -7,11 +8,31 @@ import * as questionnairesActions from '../../actions/questionnaires'
 import range from 'lodash/range'
 import values from 'lodash/values'
 import { CardTable, Tooltip, UntitledIfEmpty } from '../ui'
+import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
-import dateformat from 'dateformat'
 import { modeLabel } from '../../reducers/survey'
 
+type Props = {
+  projectId: number,
+  surveyId: number,
+  survey: Survey,
+  questionnaires: Questionnaire[],
+  respondents: Respondent[],
+  pageSize: number,
+  pageNumber: number,
+  totalCount: number,
+  startIndex: number,
+  endIndex: number,
+  hasPreviousPage: boolean,
+  hasNextPage: boolean,
+  surveyActions: any,
+  questionnairesActions: any,
+  actions: any
+}
+
 class RespondentIndex extends Component {
+  props: Props
+
   componentDidMount() {
     const { projectId, surveyId, pageSize } = this.props
     if (projectId && surveyId) {
@@ -53,7 +74,7 @@ class RespondentIndex extends Component {
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
     const respondents = generateResponsesDictionaryFor($.extend(true, {}, this.props.respondents))
-    const respondentsList = values(respondents)
+    const respondentsList: Respondent[] = values(respondents)
 
     function generateResponsesDictionaryFor(rs) {
       Object.keys(rs).forEach((respondentId, _) => {
@@ -105,7 +126,7 @@ class RespondentIndex extends Component {
 
     const respondentsFieldName = allFieldNames(respondents)
 
-    let colspan = respondentsFieldName.length + 2
+    let colspan = respondentsFieldName.length + 3
     let variantHeader = null
     if (hasComparisons) {
       variantHeader = <th>Variant</th>
@@ -127,6 +148,7 @@ class RespondentIndex extends Component {
                 <th key={field}>{field}</th>
               )}
               {variantHeader}
+              <th>Disposition</th>
               <th>Date</th>
             </tr>
           </thead>
@@ -149,42 +171,25 @@ class RespondentIndex extends Component {
                 variantColumn = <td>{variantValue}</td>
               }
 
-              return (
-                <tr key={respondent.id}>
-                  <td> {respondent.phoneNumber}</td>
-                  {respondentsFieldName.map(function(field) {
-                    return <td key={parseInt(respondent.id) + field}>{responseOf(respondents, respondent.id, field)}</td>
-                  })}
-                  {variantColumn}
-                  <td>
-                    {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
-                  </td>
-                </tr>
-              )
+              const responses = respondentsFieldName.map((field) => {
+                return {
+                  name: field,
+                  value: responseOf(respondents, respondent.id, field)
+                }
+              })
+
+              return <RespondentRow
+                key={index}
+                respondent={respondent}
+                responses={responses}
+                variantColumn={variantColumn}
+                />
             })}
           </tbody>
         </CardTable>
       </div>
     )
   }
-}
-
-RespondentIndex.propTypes = {
-  actions: PropTypes.object.isRequired,
-  surveyActions: PropTypes.object.isRequired,
-  questionnairesActions: PropTypes.object.isRequired,
-  projectId: PropTypes.any,
-  surveyId: PropTypes.any,
-  survey: PropTypes.object,
-  questionnaires: PropTypes.object,
-  respondents: PropTypes.object,
-  pageNumber: PropTypes.number.isRequired,
-  pageSize: PropTypes.number.isRequired,
-  startIndex: PropTypes.number.isRequired,
-  endIndex: PropTypes.number.isRequired,
-  totalCount: PropTypes.number.isRequired,
-  hasPreviousPage: PropTypes.bool.isRequired,
-  hasNextPage: PropTypes.bool.isRequired
 }
 
 const mapStateToProps = (state, ownProps) => {

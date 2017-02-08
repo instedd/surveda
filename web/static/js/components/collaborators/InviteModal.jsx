@@ -24,9 +24,23 @@ export class InviteModal extends Component {
     }
   }
 
-  emailChanged(e) {
+  emailOnChange(e) {
+    this.props.guestActions.changeEmail(e.target.value)
+  }
+
+  emailOnBlur(e) {
+    const { projectId, guest } = this.props
     Promise.resolve(this.props.guestActions.changeEmail(e.target.value)).then(() => {
-      this.props.guestActions.generateCode()
+      Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
+        (dbGuest) => {
+          if (!guest.level) {
+            this.props.guestActions.changeLevel(dbGuest.level)
+          }
+          this.props.guestActions.setCode(dbGuest.code)
+        },
+        (reject) => {
+          this.props.guestActions.generateCode()
+        })
     })
   }
 
@@ -37,16 +51,6 @@ export class InviteModal extends Component {
     })
   }
 
-  copyLink() {
-    Promise.resolve(this.props.guestActions.generateCode()).then(() => {
-      const { projectId, guest } = this.props
-      if (guest.code) {
-        this.props.actions.invite(projectId, guest.code, guest.level, guest.email)
-        this.props.collaboratorsActions.fetchCollaborators(projectId)
-      }
-    })
-  }
-
   render() {
     const { header, modalText, modalId, style, guest } = this.props
 
@@ -54,9 +58,11 @@ export class InviteModal extends Component {
       return <div>Loading...</div>
     }
 
-    const cancel = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
+    const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
 
-    const send = <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
+    const sendButton = guest.code
+    ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
+    : <a className='btn-medium disabled'>Send</a>
 
     return (
       <Modal card id={modalId} style={style} className='invite-collaborator'>
@@ -70,7 +76,7 @@ export class InviteModal extends Component {
               <div className='col s8'>
                 <div className='input-field'>
                   <InputWithLabel id='collaborator_mail' value={guest.email} label={`Enter collaborator's email`} >
-                    <input type='text' onChange={e => { this.emailChanged(e) }} />
+                    <input type='text' onChange={e => { this.emailOnChange(e) }} onBlur={e => { this.emailOnBlur(e) }} />
                   </InputWithLabel>
                 </div>
               </div>
@@ -90,8 +96,8 @@ export class InviteModal extends Component {
             </div>
             <div className='row button-actions'>
               <div className='col s12'>
-                { guest.code ? send : <a className='btn-medium disabled'>Send</a> }
-                {cancel}
+                {sendButton}
+                {cancelButton}
               </div>
             </div>
           </div>

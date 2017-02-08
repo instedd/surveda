@@ -3,7 +3,7 @@ defmodule Ask.Invite do
 
   schema "invites" do
     field :code, :string
-    field :level, :string
+    field :level, :string # reader, editor
     field :email, :string
     field :inviter_email, :string
     belongs_to :project, Ask.Survey
@@ -19,6 +19,7 @@ defmodule Ask.Invite do
     struct
     |> cast(params, [:code, :level, :email, :project_id, :inviter_email])
     |> validate_required([:code, :level])
+    |> unique_constraint(:project_id, name: :project_id)
   end
 
 end

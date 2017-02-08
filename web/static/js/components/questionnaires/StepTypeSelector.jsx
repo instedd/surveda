@@ -21,8 +21,24 @@ class StepTypeSelector extends Component {
 
   render() {
     const { stepType, readOnly } = this.props
+
+    const label = (() => {
+      switch (stepType) {
+        case 'multiple-choice':
+          return <i className='material-icons'>list</i>
+        case 'numeric':
+          return <i className='material-icons sharp'>dialpad</i>
+        case 'explanation':
+          return <i className='material-icons sharp'>chat_bubble_outline</i>
+        case 'flag':
+          return <i className='material-icons sharp'>flag</i>
+        default:
+          throw new Error(`unknown step type: ${stepType}`)
+      }
+    })()
+
     return (<div className='left'>
-      <Dropdown className='step-mode' readOnly={readOnly} label={stepType == 'multiple-choice' ? <i className='material-icons'>list</i> : stepType == 'numeric' ? <i className='material-icons sharp'>dialpad</i> : <i className='material-icons sharp'>chat_bubble_outline</i>} constrainWidth={false} dataBelowOrigin={false}>
+      <Dropdown className='step-mode' readOnly={readOnly} label={label} constrainWidth={false} dataBelowOrigin={false}>
         <DropdownItem>
           <a onClick={e => this.changeStepType('multiple-choice')}>
             <i className='material-icons left'>list</i>
@@ -42,6 +58,13 @@ class StepTypeSelector extends Component {
             <i className='material-icons left sharp'>chat_bubble_outline</i>
             Explanation
             {stepType == 'explanation' ? <i className='material-icons right'>done</i> : ''}
+          </a>
+        </DropdownItem>
+        <DropdownItem>
+          <a onClick={e => this.changeStepType('flag')}>
+            <i className='material-icons left sharp'>flag</i>
+            Flag
+            {stepType == 'flag' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
       </Dropdown>

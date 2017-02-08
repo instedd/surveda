@@ -3,7 +3,7 @@ defmodule Ask.RespondentControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Project, Respondent, QuotaBucket, Survey}
+  alias Ask.{Respondent, QuotaBucket, Survey}
 
   @valid_attrs %{phone_number: "some content"}
   @invalid_attrs %{}
@@ -31,7 +31,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       questionnaire = insert(:questionnaire, project: project)
-      respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id)
+      respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id, disposition: "completed")
       response = insert(:response, respondent: respondent, value: "Yes")
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == [%{
@@ -40,6 +40,7 @@ defmodule Ask.RespondentControllerTest do
                                                      "survey_id" => survey.id,
                                                      "mode" => ["sms"],
                                                      "questionnaire_id" => questionnaire.id,
+                                                     "disposition" => "completed",
                                                      "date" => Ecto.DateTime.to_iso8601(response.updated_at),
                                                      "responses" => [
                                                        %{
@@ -65,27 +66,96 @@ defmodule Ask.RespondentControllerTest do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-    insert_list(3, :respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+    insert_list(10, :respondent, survey: survey, disposition: "partial")
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    data = json_response(conn, 200)["data"]
 
-    assert json_response(conn, 200)["data"]["id"] == survey.id
-    assert json_response(conn, 200)["data"]["respondents_by_state"] == %{
-      "pending" => %{"count" => 10, "percent" => 66.66666666666667},
+    assert data["id"] == survey.id
+    assert data["respondents_by_state"] == %{
+      "partial" => %{"count" => 10, "percent" => 66.66666666666667},
       "active" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 5, "percent" => 33.333333333333336},
       "failed" => %{"count" => 0, "percent" => 0.0},
-      "stalled" => %{"count" => 0, "percent" => 0.0}
+      "stalled" => %{"count" => 0, "percent" => 0.0},
+      "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "pending" => %{"count" => 0, "percent" => 0.0},
     }
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 0)["count"] == 2
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)["count"] == 3
-    assert json_response(conn, 200)["data"]["total_respondents"] == 15
-    assert json_response(conn, 200)["data"]["cutoff"] == 10
+
+    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(data["respondents_by_date"], 0)["count"] == 2
+    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(data["respondents_by_date"], 1)["count"] == 5
+    assert data["total_respondents"] == 15
+    assert data["cutoff"] == 10
+  end
+
+  test "lists stats for a given survey with quotas", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
+    bucket_1 = insert(:quota_bucket, survey: survey, quota: 4, count: 2)
+    bucket_2 = insert(:quota_bucket, survey: survey, quota: 3, count: 3)
+    insert_list(10, :respondent, survey: survey, disposition: "partial")
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
+    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
+    insert_list(4, :respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    data = json_response(conn, 200)["data"]
+
+    assert data["id"] == survey.id
+    assert data["respondents_by_state"] == %{
+      "partial" => %{"count" => 10, "percent" => 62.5},
+      "active" => %{"count" => 0, "percent" => 0.0},
+      "completed" => %{"count" => 6, "percent" => 37.5},
+      "failed" => %{"count" => 0, "percent" => 0.0},
+      "stalled" => %{"count" => 0, "percent" => 0.0},
+      "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "pending" => %{"count" => 0, "percent" => 0.0},
+    }
+
+    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(data["respondents_by_date"], 0)["count"] == 2
+    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(data["respondents_by_date"], 1)["count"] == 5
+    assert data["total_respondents"] == 16
+    assert data["cutoff"] == 10
+  end
+
+  test "lists stats for a given survey, with dispositions", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
+    insert_list(10, :respondent, survey: survey, state: "pending")
+    insert(:respondent, survey: survey, state: "completed", disposition: "partial", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, state: "completed", disposition: "ineligible", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    data = json_response(conn, 200)["data"]
+    total = 15.0
+
+    assert data["id"] == survey.id
+    assert data["respondents_by_state"] == %{
+      "partial" => %{"count" => 1, "percent" => 100*1/total},
+      "ineligible" => %{"count" => 3, "percent" => 100*3/total},
+      "completed" => %{"count" => 1, "percent" => 100*1/total},
+      "pending" => %{"count" => 10, "percent" => 100*10/total},
+      "active" => %{"count" => 0, "percent" => 0.0},
+      "failed" => %{"count" => 0, "percent" => 0.0},
+      "stalled" => %{"count" => 0, "percent" => 0.0},
+    }
+
+    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
+    assert Enum.at(data["respondents_by_date"], 0)["count"] == 1
+    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
+    assert Enum.at(data["respondents_by_date"], 1)["count"] == 1
+    assert data["total_respondents"] == 15
+    assert data["cutoff"] == 10
   end
 
   test "first value of respondents by date corresponds to started_at date", %{conn: conn, user: user} do
@@ -127,288 +197,44 @@ defmodule Ask.RespondentControllerTest do
         "completed" => %{"count" => 0, "percent" => 0.0},
         "active" => %{"count" => 0, "percent" => 0.0},
         "failed" => %{"count" => 0, "percent" => 0.0},
-        "stalled" => %{"count" => 0, "percent" => 0.0}
+        "stalled" => %{"count" => 0, "percent" => 0.0},
+        "ineligible" => %{"count" => 0, "percent" => 0.0},
+        "partial" => %{"count" => 0, "percent" => 0.0},
       },
       "respondents_by_date" => [],
       "cutoff" => nil,
+      "total_quota" => 0,
       "total_respondents" => 5
     }
-  end
-
-  test "uploads CSV file with phone numbers and creates and renders resource when data is valid", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]["respondents"]) == 5
-    assert json_response(conn, 201)["meta"]["count"] == 14
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 14
-    assert Enum.at(all, 0).survey_id == survey.id
-    assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
-    assert Enum.at(all, 0).sanitized_phone_number == "5491142342343"
-  end
-
-  test "uploads CSV file with phone numbers ignoring additional columns", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_additional_columns.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]["respondents"]) == 5
-    assert json_response(conn, 201)["meta"]["count"] == 14
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 14
-    assert Enum.at(all, 0).survey_id == survey.id
-    assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
-  end
-
-  test "uploads CSV file with single line", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_one.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]["respondents"]) == 1
-    assert json_response(conn, 201)["meta"]["count"] == 1
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 1
-    assert Enum.at(all, 0).survey_id == survey.id
-    assert Enum.at(all, 0).phone_number == "123456789"
-  end
-
-  test "uploads CSV file with phone and creates and renders resource when data contains special characters but is valid", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_special_characters.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert conn.status == 201
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 3
-    assert Enum.at(all, 0).phone_number == "+154 11 1213 2345"
-  end
-
-  test "uploads CSV file with phone numbers but does not create and render resource when numbers contains invalid characters", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_invalid.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert conn.status == 422
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 0
-  end
-
-  test "uploads CSV file with phone numbers rejecting duplicated entries", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_duplicated.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]["respondents"]) == 5
-    assert json_response(conn, 201)["meta"]["count"] == 16
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 16
-    assert Enum.at(all, 0).survey_id == survey.id
-    assert Enum.at(all, 0).phone_number == "(549) 11 4234 2343"
-  end
-
-  test "it supports \r as a field separator", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_r.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]["respondents"]) == 4
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 4
-    assert Enum.at(all, 0).survey_id == survey.id
-    assert Enum.at(all, 0).phone_number == "15044020205"
-  end
-
-  test "it supports \n as a field separator", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_newline.csv", filename: "phone_numbers.csv"}
-
-    conn = post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    assert length(json_response(conn, 201)["data"]["respondents"]) == 4
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 4
-    assert Enum.at(all, 0).survey_id == survey.id
-    assert Enum.at(all, 0).phone_number == "15044020205"
-  end
-
-  test "updates survey state if the respondents CSV upload is the only remaining step on the survey wizard", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], schedule_day_of_week: completed_schedule, mode: [["sms"]])
-    channel = insert(:channel, name: "test")
-
-    add_channel_to(survey, channel)
-
-    assert survey.state == "not_ready"
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
-
-    post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-
-    new_survey = Repo.get(Ask.Survey, survey.id)
-
-    assert new_survey.state == "ready"
-  end
-
-  test "updates project updated_at when uploading CSV", %{conn: conn, user: user}  do
-    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = insert(:project, updated_at: datetime)
-    insert(:project_membership, user: user, project: project, level: "owner")
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
-    post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-
-    project = Project |> Repo.get(project.id)
-    assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
-  end
-
-  test "forbids upload for project reader", %{conn: conn, user: user}  do
-    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = insert(:project, updated_at: datetime)
-    insert(:project_membership, user: user, project: project, level: "reader")
-    survey = insert(:survey, project: project)
-
-    file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
-    assert_error_sent :forbidden, fn ->
-      post conn, project_survey_respondent_path(conn, :create, project.id, survey.id), file: file
-    end
-  end
-
-  test "deletes all the respondents from a survey", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
-    {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
-
-    entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
-    CSV.decode(separator: ?\t) |>
-    Enum.map(fn row ->
-      %{phone_number: Enum.at(row, 0), survey_id: survey.id, inserted_at: local_time, updated_at: local_time}
-    end)
-
-    {respondents_count, _ } = Repo.insert_all(Respondent, entries)
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == respondents_count
-
-    conn = delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
-    assert response(conn, 200)
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == 0
-  end
-
-  test "updates project updated_at when deleting", %{conn: conn, user: user}  do
-    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = insert(:project, updated_at: datetime)
-    insert(:project_membership, user: user, project: project, level: "owner")
-    survey = insert(:survey, project: project)
-
-    delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
-
-    project = Project |> Repo.get(project.id)
-    assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
-  end
-
-  test "forbids the deleteion of all the respondents from a survey if the project is from another user", %{conn: conn} do
-    project = insert(:project)
-    survey = insert(:survey, project: project)
-    {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
-
-    entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
-      CSV.decode(separator: ?\t) |>
-      Enum.map(fn row ->
-        %{phone_number: Enum.at(row, 0), survey_id: survey.id, inserted_at: local_time, updated_at: local_time}
-      end)
-
-    {respondents_count, _ } = Repo.insert_all(Respondent, entries)
-
-    all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
-    assert length(all) == respondents_count
-
-    assert_error_sent :forbidden, fn ->
-      delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
-    end
-  end
-
-  test "forbids the deleteion of all the respondents from a survey for project reader", %{conn: conn, user: user} do
-    project = insert(:project)
-    insert(:project_membership, user: user, project: project, level: "reader")
-    survey = insert(:survey, project: project)
-
-    assert_error_sent :forbidden, fn ->
-      delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
-    end
-  end
-
-  test "updates survey state if the respondents are deleted from a 'ready' survey", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
-    channel = insert(:channel, name: "test")
-
-    add_channel_to(survey, channel)
-    insert(:respondent, phone_number: "12345678", survey: survey)
-
-    assert survey.state == "ready"
-
-    conn = delete conn, project_survey_respondent_path(conn, :delete, survey.project.id, survey.id, -1)
-    assert response(conn, 200)
-
-    new_survey = Repo.get(Ask.Survey, survey.id)
-
-    assert new_survey.state == "not_ready"
   end
 
   test "download csv", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
-    respondent_1 = insert(:respondent, survey: survey)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
-    respondent_2 = insert(:respondent, survey: survey)
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
     insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
 
     conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
-    assert line1 == "Respondent ID,Smoke,Drink,Date"
+    assert line1 == "Respondent ID,Smoke,Drink,Disposition,Date"
 
-    [line_2_id, line_2_smoke, line_2_drink, _] = line2 |> String.split(",", parts: 4)
-    assert line_2_id == respondent_1.id |> to_string
+    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_disp, _] = line2 |> String.split(",", parts: 5)
+    assert line_2_hashed_number == respondent_1.hashed_number
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
+    assert line_2_disp == "Partial"
 
-    [line_3_id, line_3_smoke, line_3_drink, _] = line3 |> String.split(",", parts: 4)
-    assert line_3_id == respondent_2.id |> to_string
+    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_disp,  _] = line3 |> String.split(",", parts: 5)
+    assert line_3_hashed_number == respondent_2.hashed_number
     assert line_3_smoke == "No"
     assert line_3_drink == ""
+    assert line_3_disp == ""
   end
 
   test "download csv with comparisons", %{conn: conn, user: user} do
@@ -421,29 +247,55 @@ defmodule Ask.RespondentControllerTest do
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire2.id, "ratio" => 50},
       ]
     )
-    respondent_1 = insert(:respondent, survey: survey, questionnaire_id: questionnaire.id, mode: ["sms"])
+    respondent_1 = insert(:respondent, survey: survey, questionnaire_id: questionnaire.id, mode: ["sms"], disposition: "partial")
     insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
-    respondent_2 = insert(:respondent, survey: survey, questionnaire_id: questionnaire2.id, mode: ["sms", "ivr"])
+    respondent_2 = insert(:respondent, survey: survey, questionnaire_id: questionnaire2.id, mode: ["sms", "ivr"], disposition: "completed")
     insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
 
     conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
-    assert line1 == "Respondent ID,Smoke,Drink,Variant,Date"
+    assert line1 == "Respondent ID,Smoke,Drink,Variant,Disposition,Date"
 
-    [line_2_id, line_2_smoke, line_2_drink, line_2_variant, _] = line2 |> String.split(",", parts: 5)
-    assert line_2_id == respondent_1.id |> to_string
+    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_variant, line_2_disp, _] = line2 |> String.split(",", parts: 6)
+    assert line_2_hashed_number == respondent_1.hashed_number |> to_string
     assert line_2_smoke == "Yes"
     assert line_2_drink == "No"
     assert line_2_variant == "test - SMS"
+    assert line_2_disp == "Partial"
 
-    [line_3_id, line_3_smoke, line_3_drink, line_3_variant, _] = line3 |> String.split(",", parts: 5)
-    assert line_3_id == respondent_2.id |> to_string
+    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_variant, line_3_disp, _] = line3 |> String.split(",", parts: 6)
+    assert line_3_hashed_number == respondent_2.hashed_number |> to_string
     assert line_3_smoke == "No"
     assert line_3_drink == ""
     assert line_3_variant == "test 2 - SMS with phone call fallback"
+    assert line_3_disp == "Completed"
+  end
+
+  test "download disposition history csv", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
+
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:00:00"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 02:00:00"))
+
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:00:00"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:00:00"))
+
+    conn = get conn, project_survey_respondents_disposition_history_csv_path(conn, :disposition_history_csv, survey.project.id, survey.id)
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == ["Respondent hash,Disposition,Timestamp",
+     "1asd12451eds,partial,2000-01-01 01:00:00 UTC",
+     "1asd12451eds,completed,2000-01-01 02:00:00 UTC",
+     "34y5345tjyet,partial,2000-01-01 03:00:00 UTC",
+     "34y5345tjyet,completed,2000-01-01 04:00:00 UTC"]
   end
 
   test "quotas_stats", %{conn: conn, user: user} do
@@ -489,16 +341,5 @@ defmodule Ask.RespondentControllerTest do
 
   def completed_schedule do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
-  end
-
-  def add_channel_to(survey, channel) do
-    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
-
-    changeset = survey
-    |> Repo.preload([:channels])
-    |> Ecto.Changeset.change
-    |> put_assoc(:channels, [channels_changeset])
-
-    Repo.update(changeset)
   end
 end

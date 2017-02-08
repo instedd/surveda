@@ -1,0 +1,7 @@
+<div class='empty_static'>
+  <div class='empty_page'>
+    <i class='material-icons'>warning</i>
+    <h5>Your activation link expired</h5>
+    <a href='<%= confirmation_path @conn, :new %>'>Resend confirmation email</a>
+  </div>
+</div>

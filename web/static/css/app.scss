@@ -1,6 +1,17 @@
 @import "fonts";
 @import "materialize/materialize";
 
+
+@import "reset-materialize";
+
+
 // NCD
-@import "ncd";
+@import "layout";
+@import "card-modal";
+@import "card-table";
+@import "buttons";
+@import "forms";
+@import "scrollto";
+@import "global";
 @import "welcome";
+@import "responsive";

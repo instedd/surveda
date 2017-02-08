@@ -48,4 +48,4 @@ services:
     ports:
       - 4040:4040
     environment:
-      NGROK_PORT: 'app:4000'
+      NGROK_PORT: 'app:80'

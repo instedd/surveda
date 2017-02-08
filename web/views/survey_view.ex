@@ -17,7 +17,6 @@ defmodule Ask.SurveyView do
       state: survey.state,
       questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
-      channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel )
     }
   end
 
@@ -30,7 +29,6 @@ defmodule Ask.SurveyView do
       state: survey.state,
       questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
-      channels: render_many(survey.channels, Ask.SurveyView, "survey_channel.json", as: :channel),
       respondents_count: survey.respondents_count,
       schedule_day_of_week: survey.schedule_day_of_week,
       schedule_start_time: survey.schedule_start_time,
@@ -45,13 +43,6 @@ defmodule Ask.SurveyView do
         vars: survey.quota_vars || []
       },
       comparisons: survey.comparisons || []
-    }
-  end
-
-  def render("survey_channel.json", %{channel: channel}) do
-    %{
-      type: channel.type,
-      id: channel.id
     }
   end
 

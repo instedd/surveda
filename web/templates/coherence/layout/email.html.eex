@@ -1,0 +1,8 @@
+<html>
+  <head>
+    <title><%= @email.subject %></title>
+  </head>
+  <body style="background-color: rgba(229, 229, 229, 1);font-family: arial, helvetica, verdana, sans-serif;text-align: center;color: rgba(153, 153, 153, 1);padding: 80px">
+    <%= render @view_module, @view_template, assigns %>
+  </body>
+</html>

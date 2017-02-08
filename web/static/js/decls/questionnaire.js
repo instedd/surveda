@@ -15,7 +15,7 @@ export type ChoiceErrors = {
   value: string[],
   sms: string[],
   ivr: string[]
-}
+};
 
 export type AudioPrompt = {
     audioSource: 'tts' | 'upload',
@@ -46,6 +46,12 @@ export type ExplanationStep = BaseStep & MultilingualStep & {
   skipLogic: ?string
 };
 
+export type FlagStep = BaseStep & {
+  type: 'flag',
+  disposition: 'completed' | 'partial' | 'ineligible',
+  skipLogic: ?string
+};
+
 export type NumericStep = BaseStep & StoreStep & MultilingualStep & {
   type: 'numeric',
   minValue: ?number,
@@ -71,7 +77,7 @@ export type Choice = {
   }
 };
 
-export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep;
+export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep | FlagStep;
 export type BaseStep = {
   id: string,
   title: string
@@ -79,11 +85,11 @@ export type BaseStep = {
 
 export type StoreStep = {
   store: string
-}
+};
 
 export type MultilingualStep = {
   prompt: Prompt
-}
+};
 
 export type SkipOption = {
   id: string,

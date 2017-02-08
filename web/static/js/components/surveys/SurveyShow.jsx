@@ -8,6 +8,8 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
+import { Tooltip } from '../ui'
+import capitalize from 'lodash/capitalize'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -78,6 +80,11 @@ class SurveyShow extends Component {
     )
   }
 
+  downloadDispositionHistoryCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsDispositionHistoryCSV(projectId, surveyId)
+  }
+
   render() {
     const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
@@ -106,6 +113,11 @@ class SurveyShow extends Component {
 
     return (
       <div className='row'>
+        <Tooltip text='Download disposition history CSV'>
+          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.downloadDispositionHistoryCSV()}>
+            <i className='material-icons'>get_app</i>
+          </a>
+        </Tooltip>
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}
@@ -147,6 +159,7 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsStats) {
+    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed']
     return (
       <div className='card'>
         <div className='card-table-title'>
@@ -162,31 +175,16 @@ class SurveyShow extends Component {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Pending</td>
-                <td className='right-align'>{ respondentsStats.pending.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.pending.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Active</td>
-                <td className='right-align'>{ respondentsStats.active.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.active.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Completed</td>
-                <td className='right-align'>{ respondentsStats.completed.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.completed.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Stalled</td>
-                <td className='right-align'>{ respondentsStats.stalled.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.stalled.percent) }%</td>
-              </tr>
-              <tr>
-                <td>Failed</td>
-                <td className='right-align'>{ respondentsStats.failed.count }</td>
-                <td className='right-align'>{ Math.round(respondentsStats.failed.percent) }%</td>
-              </tr>
+              {dispositions.map(disposition => {
+                let stat = respondentsStats[disposition]
+                return (
+                  <tr>
+                    <td>{capitalize(disposition)}</td>
+                    <td className='right-align'>{ stat.count }</td>
+                    <td className='right-align'>{ Math.round(stat.percent) }%</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -229,7 +227,7 @@ class SurveyShow extends Component {
                     )) }
                     </td>
                     <td className='right-align'>{quota}</td>
-                    <td className='right-align'>{quota == 0 ? '-' : `${Math.round(stat.count * 100.0 / quota)}%`}</td>
+                    <td className='right-align'>{quota == 0 ? '-' : `${Math.min(Math.round(stat.count * 100.0 / quota), 100)}%`}</td>
                     <td className='right-align'>{quota == 0 ? '-' : stat.full}</td>
                     <td className='right-align'>{quota == 0 ? '-' : stat.partials}</td>
                   </tr>
@@ -256,7 +254,7 @@ const mapStateToProps = (state, ownProps) => {
   if (respondentsStatsRoot) {
     respondentsStats = respondentsStatsRoot.respondentsByState
     completedRespondentsByDate = respondentsStatsRoot.respondentsByDate
-    target = respondentsStatsRoot.cutoff || respondentsStatsRoot.totalRespondents
+    target = respondentsStatsRoot.totalQuota || respondentsStatsRoot.cutoff || totalRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
     contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByState.pending.count
   }

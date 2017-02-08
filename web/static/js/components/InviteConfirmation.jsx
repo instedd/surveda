@@ -2,16 +2,25 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/invites'
 import * as routes from '../routes'
+import { UntitledIfEmpty } from './ui'
 
 class InviteConfirmation extends Component {
   componentDidMount() {
     const { dispatch, router } = this.props
     const code = this.props.location.query.code
+
     dispatch(actions.fetchInvite(code)).then((invite) => {
       if (invite.error) {
         router.push(routes.project(invite.project_id))
       }
-    })
+    },
+      (reject) => {
+        if (reject.status == 404) {
+          window.Materialize.toast('WARNING: Invalid invitation code', 15000)
+          router.push(routes.projects)
+        }
+      }
+    )
   }
 
   confirmInvitation() {
@@ -29,9 +38,9 @@ class InviteConfirmation extends Component {
       return <div>Loading...</div>
     }
 
-    const inviteText = <div> {`${invite.inviter_email} has invited to collaborate as ${invite.role} on `}<span>{invite.project_name}</span></div>
+    const inviteText = <span> {`${invite.inviter_email} has invited you to collaborate as ${invite.role} on `}<UntitledIfEmpty text={invite.project_name} entityName='project' /></span>
     const roleAction = invite.role == 'editor' ? 'manage' : 'see'
-    const roleDescription = <div> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </div>
+    const roleDescription = <span> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </span>
 
     return (
       <div className='row accept-invitation'>

@@ -517,18 +517,15 @@ describe('questionnaire reducer', () => {
     })
 
     it('should validate there must be at least two responses', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.toggleMode('ivr'),
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0),
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0)
       ])
 
-      expect(resultState.errors).toInclude({
+      expect(state.errors).toInclude({
         'steps[0].choices': ['You should define at least two response options']
       })
     })
@@ -650,7 +647,22 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it("should validate a response's IVR value must not overlap other SMS values", () => {
+    it("should not validate response's SMS duplicate values if SMS mode is disabled", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('sms'),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b, c', '1', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'd, c', '2', null)
+      ])
+
+      expect(resultState.errors).toNotInclude({
+        [`steps[0].choices[1]['en'].sms`]: ['Value "c" already used in a previous response']
+      })
+    })
+
+    it("should validate a response's IVR value must not overlap other IVR values", () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
@@ -660,6 +672,21 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
+        'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+      })
+    })
+
+    it("should validate a response's IVR duplicate value if IVR mode is disabled", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
+        actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1, 2', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '3, 2', null)
+      ])
+
+      expect(resultState.errors).toNotInclude({
         'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
       })
     })
@@ -680,7 +707,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.setIvrQuestionnaireMsg('errorMsg', '')
+        actions.setIvrQuestionnaireMsg('errorMsg', {text: '', audioSource: 'tts'})
       ])
 
       expect(state.errorsByLang['en']).toInclude({
@@ -744,17 +771,14 @@ describe('questionnaire reducer', () => {
     })
 
     it('should allow edition of sms message for language selection step', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr')
       ])
 
-      const languageSelection = resultState.data.steps[0]
-      const finalResultState = playActionsFromState(resultState, reducer)([
+      const languageSelection = state.data.steps[0]
+      const finalResultState = playActionsFromState(state, reducer)([
         actions.changeStepPromptSms(languageSelection.id, 'New language prompt')
       ])
       const finalLanguageSelection = finalResultState.data.steps[0]
@@ -762,20 +786,17 @@ describe('questionnaire reducer', () => {
     })
 
     it('should update step prompt ivr on a new step', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('es'),
         actions.setDefaultLanguage('es'),
         actions.addStep()
       ])
 
-      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+      const newStep = state.data.steps[state.data.steps.length - 1]
 
-      const finalState = playActionsFromState(resultState, reducer)([
+      const finalState = playActionsFromState(state, reducer)([
         actions.changeStepPromptIvr(newStep.id, {text: 'Nuevo prompt', audioSource: 'tts'})]
       )
 
@@ -784,20 +805,17 @@ describe('questionnaire reducer', () => {
     })
 
     it('should update step audioId ivr on a new step', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('es'),
         actions.setDefaultLanguage('es'),
         actions.addStep()
       ])
 
-      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+      const newStep = state.data.steps[state.data.steps.length - 1]
 
-      const finalState = playActionsFromState(resultState, reducer)([
+      const finalState = playActionsFromState(state, reducer)([
         actions.changeStepAudioIdIvr(newStep.id, '1234')]
       )
 
@@ -806,17 +824,14 @@ describe('questionnaire reducer', () => {
     })
 
     it('should add a new language last inside the choices of the language selection step', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.addLanguage('en')
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('en'),
         actions.addLanguage('de')
       ])
 
-      const languageSelection = resultState.data.steps[0]
+      const languageSelection = state.data.steps[0]
       expect(languageSelection.languageChoices[languageSelection.languageChoices.length - 1]).toEqual('de')
     })
 
@@ -842,20 +857,17 @@ describe('questionnaire reducer', () => {
     })
 
     it('should reorder correctly the languages inside the choices of the language selection step', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('en'),
         actions.addLanguage('es'),
         actions.addLanguage('de'),
-        actions.addLanguage('fr')
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
         actions.reorderLanguages('en', 4)
       ])
 
-      const languageSelection = resultState.data.steps[0]
+      const languageSelection = state.data.steps[0]
       expect(languageSelection.languageChoices[1]).toEqual('es')
       expect(languageSelection.languageChoices[2]).toEqual('de')
       expect(languageSelection.languageChoices[3]).toEqual('fr')
@@ -863,20 +875,17 @@ describe('questionnaire reducer', () => {
     })
 
     it('should reorder correctly the languages inside the choices of the language selection step 2', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('en'),
         actions.addLanguage('es'),
         actions.addLanguage('de'),
-        actions.addLanguage('fr')
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.addLanguage('fr'),
         actions.reorderLanguages('fr', 1)
       ])
 
-      const languageSelection = resultState.data.steps[0]
+      const languageSelection = state.data.steps[0]
       expect(languageSelection.languageChoices[1]).toEqual('fr')
       expect(languageSelection.languageChoices[2]).toEqual('en')
       expect(languageSelection.languageChoices[3]).toEqual('es')
@@ -884,48 +893,39 @@ describe('questionnaire reducer', () => {
     })
 
     it('should add language', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr')
       ])
 
-      const languages = resultState.data.languages
+      const languages = state.data.languages
       expect(languages).toInclude('fr')
     })
 
     it('should not add language if it was already added', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.addLanguage('de'),
         actions.addLanguage('fr')
       ])
 
-      const languages = resultState.data.languages
+      const languages = state.data.languages
       expect(languages.reduce((acum, lang) => (lang == 'fr') ? acum + 1 : acum, 0)).toEqual(1)
     })
 
     it('should remove language', () => {
       const preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const state = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('de'),
         actions.addLanguage('fr'),
         actions.addLanguage('en')
       ])
 
-      const resultState = playActionsFromState(state, reducer)([
+      const resultState = playActionsFromState(preState, reducer)([
         actions.removeLanguage('fr')
       ])
 
@@ -954,120 +954,99 @@ describe('questionnaire reducer', () => {
     })
 
     it('should set default language', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.setDefaultLanguage('fr')
       ])
 
-      expect(resultState.data.defaultLanguage).toEqual('fr')
+      expect(state.data.defaultLanguage).toEqual('fr')
     })
 
     it('should set active language', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.setActiveLanguage('fr')
       ])
 
-      expect(resultState.data.activeLanguage).toEqual('fr')
+      expect(state.data.activeLanguage).toEqual('fr')
     })
 
     it('should set active language to default language when removing active language', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.setActiveLanguage('fr'),
         actions.removeLanguage('fr')
       ])
 
-      expect(resultState.data.activeLanguage).toEqual('en')
+      expect(state.data.activeLanguage).toEqual('en')
     })
   })
 
   it('should autocomplete step prompt sms', () => {
-    const preState = playActions([
+    const state = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
       actions.addLanguage('es'),
       actions.setActiveLanguage('es'),
       actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
-      actions.setActiveLanguage('en')
-    ])
-
-    const resultState = playActionsFromState(preState, reducer)([
+      actions.setActiveLanguage('en'),
       actions.autocompleteStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15',
         {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 
-    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    const step = find(state.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.prompt['en'].sms).toEqual('New prompt')
     expect(step.prompt['es'].sms).toEqual('Nuevo prompt')
   })
 
   it('should autocomplete step prompt ivr', () => {
-    const preState = playActions([
+    const state = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.addLanguage('es')
-    ])
-
-    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('es'),
       actions.autocompleteStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15',
         {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 
-    const step = find(resultState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+    const step = find(state.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
     expect(step.prompt['en'].ivr.text).toEqual('New prompt')
     expect(step.prompt['es'].ivr.text).toEqual('Nuevo prompt')
   })
 
   it('should autocomplete msg prompt sms', () => {
-    const preState = playActions([
+    const state = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.addLanguage('es')
-    ])
-
-    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('es'),
       actions.autocompleteSmsQuestionnaireMsg('questionnaireMsg',
         {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 
-    const prompt = resultState.data.questionnaireMsg
+    const prompt = state.data.questionnaireMsg
     expect(prompt['en'].sms).toEqual('New prompt')
     expect(prompt['es'].sms).toEqual('Nuevo prompt')
   })
 
   it('should autocomplete msg prompt ivr', () => {
-    const preState = playActions([
+    const state = playActions([
       actions.fetch(1, 1),
       actions.receive(questionnaire),
-      actions.addLanguage('es')
-    ])
-
-    const resultState = playActionsFromState(preState, reducer)([
+      actions.addLanguage('es'),
       actions.autocompleteIvrQuestionnaireMsg('questionnaireMsg',
         {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 
-    const prompt = resultState.data.questionnaireMsg
+    const prompt = state.data.questionnaireMsg
     expect(prompt['en'].ivr.text).toEqual('New prompt')
     expect(prompt['es'].ivr.text).toEqual('Nuevo prompt')
   })
@@ -1258,21 +1237,18 @@ describe('questionnaire reducer', () => {
 
   describe('quotas', () => {
     it('should set quota_completed_msg for the first time', () => {
-      const preState = playActions([
-        actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
       const smsText = '  Thanks for participating in the poll  '
       const ivrText = {text: '  Thank you very much  ', audioSource: 'tts'}
 
-      const resultState = playActionsFromState(preState, reducer)([
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
         actions.setSmsQuestionnaireMsg('quotaCompletedMsg', smsText),
         actions.setIvrQuestionnaireMsg('quotaCompletedMsg', ivrText)
       ])
 
-      expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual(smsText.trim())
-      expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual({text: 'Thank you very much', audioSource: 'tts'})
+      expect(state.data.quotaCompletedMsg['en']['sms']).toEqual(smsText.trim())
+      expect(state.data.quotaCompletedMsg['en']['ivr']).toEqual({text: 'Thank you very much', audioSource: 'tts'})
     })
 
     it('should not modify other mode quota message', () => {
@@ -1286,19 +1262,16 @@ describe('questionnaire reducer', () => {
       let q = Object.assign({}, questionnaire)
       q.quotaCompletedMsg = quotaMessage
 
-      const preState = playActions([
-        actions.fetch(1, 1),
-        actions.receive(q)
-      ])
-
       const newIvrText = {text: 'Thank you very much', audioSource: 'tts'}
 
-      const resultState = playActionsFromState(preState, reducer)([
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(q),
         actions.setIvrQuestionnaireMsg('quotaCompletedMsg', newIvrText)
       ])
 
-      expect(resultState.data.quotaCompletedMsg['en']['sms']).toEqual('thanks for answering sms')
-      expect(resultState.data.quotaCompletedMsg['en']['ivr']).toEqual(newIvrText)
+      expect(state.data.quotaCompletedMsg['en']['sms']).toEqual('thanks for answering sms')
+      expect(state.data.quotaCompletedMsg['en']['ivr']).toEqual(newIvrText)
     })
   })
 
@@ -1355,12 +1328,9 @@ describe('questionnaire reducer', () => {
     })
 
     it('should upload csv', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('es'),
         actions.uploadCsvForTranslation(
           [
@@ -1372,22 +1342,19 @@ describe('questionnaire reducer', () => {
         )
       ])
 
-      expect(resultState.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
-      expect(resultState.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
+      expect(state.data.steps[1].prompt.es.sms).toEqual('Cxu vi fumas?')
+      expect(state.data.steps[2].prompt.es.sms).toEqual('Cxu vi ekzercas?')
 
-      expect(resultState.data.steps[1].choices[0].responses.sms.es).toEqual(['Jes', 'J', '1'])
-      expect(resultState.data.steps[1].choices[1].responses.sms.es).toEqual(['No', 'N', '2']) // original preserved
+      expect(state.data.steps[1].choices[0].responses.sms.es).toEqual(['Jes', 'J', '1'])
+      expect(state.data.steps[1].choices[1].responses.sms.es).toEqual(['No', 'N', '2']) // original preserved
 
-      expect(resultState.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
+      expect(state.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
     })
 
     it('should upload csv with quota completed msg', () => {
-      const preState = playActions([
+      const state = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaire)
-      ])
-
-      const resultState = playActionsFromState(preState, reducer)([
+        actions.receive(questionnaire),
         actions.addLanguage('es'),
         actions.setSmsQuestionnaireMsg('quotaCompletedMsg', 'Done'),
         actions.setIvrQuestionnaireMsg('quotaCompletedMsg', {text: 'Done!', audioSource: 'tts'}),
@@ -1403,8 +1370,25 @@ describe('questionnaire reducer', () => {
         )
       ])
 
-      expect(resultState.data.quotaCompletedMsg.es.sms).toEqual('Listo')
-      expect(resultState.data.quotaCompletedMsg.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
+      expect(state.data.quotaCompletedMsg.es.sms).toEqual('Listo')
+      expect(state.data.quotaCompletedMsg.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
+    })
+
+    it('should upload csv with quota completed msg that lacks audioSource', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('es'),
+        actions.setIvrQuestionnaireMsg('quotaCompletedMsg', {text: 'Done!', audioSource: 'tts'}),
+        actions.uploadCsvForTranslation(
+          [
+            ['English', 'Spanish'],
+            ['Done!', 'Listo!']
+          ]
+        )
+      ])
+
+      expect(state.data.quotaCompletedMsg.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
     })
 
     it('should compute a valid alphanumeric filename', () => {

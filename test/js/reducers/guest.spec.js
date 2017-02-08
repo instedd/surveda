@@ -10,49 +10,61 @@ describe('guest reducer', () => {
 
   it('should change email', () => {
     const email = 'user@instedd.org'
-    const result = reducer(initialState, actions.changeEmail(email))
+    const result = playActions([actions.changeEmail(email)])
     expect(result.email).toEqual(email)
   })
 
-  it('should change level', () => {
+  it('should change level to editor', () => {
     const level = 'editor'
-    const result = reducer(initialState, actions.changeLevel(level))
+    const result = playActions([actions.changeLevel(level)])
     expect(result.level).toEqual(level)
   })
 
+  it('should change level to reader', () => {
+    const level = 'reader'
+    const result = playActions([actions.changeLevel(level)])
+    expect(result.level).toEqual(level)
+  })
+
+  it('should not change level to invalid values', () => {
+    const level = 'invalid_value'
+    const result = playActions([actions.changeLevel(level)])
+    expect(result.level).toEqual('')
+  })
+
   it('should clear values', () => {
-    const state = playActions([
+    const result = playActions([
       actions.changeEmail('user@instedd.org'),
-      actions.changeLevel('editor')
+      actions.changeLevel('editor'),
+      actions.clear()
     ])
-    const result = reducer(state, actions.clear())
     expect(result.level).toEqual('')
     expect(result.email).toEqual('')
     expect(result.code).toEqual('')
   })
 
   it('does not generate code if email is not present', () => {
-    const state = playActions([
-      actions.changeLevel('editor')
+    const result = playActions([
+      actions.changeLevel('editor'),
+      actions.generateCode()
     ])
-    const result = reducer(state, actions.generateCode())
     expect(result.code).toEqual('')
   })
 
   it('does not generate code if level is not present', () => {
-    const state = playActions([
-      actions.changeEmail('user@instedd.org')
+    const result = playActions([
+      actions.changeEmail('user@instedd.org'),
+      actions.generateCode()
     ])
-    const result = reducer(state, actions.generateCode())
     expect(result.code).toEqual('')
   })
 
   it('generates code if both email and level are present', () => {
-    const state = playActions([
+    const result = playActions([
       actions.changeEmail('user@instedd.org'),
-      actions.changeLevel('editor')
+      actions.changeLevel('editor'),
+      actions.generateCode()
     ])
-    const result = reducer(state, actions.generateCode())
     expect(result.code).toNotEqual('')
   })
 })

@@ -99,6 +99,7 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
     case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
     case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC: return changeExplanationStepSkipLogic(state, action)
+    case actions.CHANGE_DISPOSITION: return changeDisposition(state, action)
   }
 
   return state
@@ -421,6 +422,17 @@ const changeStepType = (state, action) => {
           type: action.stepType,
           title: step.title,
           prompt: step.prompt,
+          skipLogic: null
+        }
+        return newStep
+      })
+    case 'flag':
+      return changeStep(state, action.stepId, step => {
+        let newStep = {
+          id: step.id,
+          type: action.stepType,
+          disposition: 'partial',
+          title: step.title,
           skipLogic: null
         }
         return newStep
@@ -791,6 +803,9 @@ const validateIvrLangPrompt = (step: Step, stepIndex: number, context: Validatio
 }
 
 const validateStep = (step: Step, stepIndex: number, context: ValidationContext) => {
+  if (step.type === 'flag') {
+    return
+  }
   if (context.sms) {
     context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
   }
@@ -839,15 +854,19 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
       addError(context, choiceValuePath(stepIndex, i), 'Value already used in a previous response')
     }
 
-    context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
+    if (context.sms) {
+      context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms))
+    }
 
-    if (choice.responses.ivr) {
-      for (let choiceIvr of choice.responses.ivr) {
-        if (ivr.includes(choiceIvr)) {
-          addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
+    if (context.ivr) {
+      if (choice.responses.ivr) {
+        for (let choiceIvr of choice.responses.ivr) {
+          if (ivr.includes(choiceIvr)) {
+            addError(context, choiceIvrResponsePath(stepIndex, i), `Value "${choiceIvr}" already used in a previous response`)
+          }
         }
+        ivr.push(...choice.responses.ivr)
       }
-      ivr.push(...choice.responses.ivr)
     }
 
     values.push(choice.value)
@@ -1106,6 +1125,15 @@ const changeExplanationStepSkipLogic = (state, action) => {
   })
 }
 
+const changeDisposition = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    return {
+      ...step,
+      disposition: action.disposition
+    }
+  })
+}
+
 const uploadCsvForTranslation = (state, action) => {
   // Convert CSV into a dictionary:
   // {defaultLanguageText -> {otherLanguage -> otherLanguageText}}
@@ -1132,7 +1160,7 @@ const uploadCsvForTranslation = (state, action) => {
 
 const translateStep = (step, defaultLanguage, lookup): Step => {
   let newStep = {...step}
-  if (step.type !== 'language-selection') {
+  if (step.type !== 'language-selection' && step.type !== 'flag') {
     newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
     if (step.type === 'multiple-choice') {
       newStep.choices = translateChoices(newStep.choices, defaultLanguage, lookup)
@@ -1154,16 +1182,29 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   }
 
   let ivr = defaultLanguagePrompt.ivr
-  if (ivr && ivr.audioSource == 'tts' && (translations = lookup[ivr.text])) {
+  if (ivr && (translations = lookup[ivr.text])) {
     for (let lang in translations) {
       const text = translations[lang]
-      if (!prompt[lang] || !prompt[lang].ivr || prompt[lang].ivr.audioSource == 'tts') {
-        if (newPrompt[lang]) {
-          newPrompt[lang] = {...newPrompt[lang]}
-        } else {
-          newPrompt[lang] = {}
-        }
-        newPrompt[lang].ivr = {text, audioSource: 'tts'}
+
+      if (newPrompt[lang]) {
+        newPrompt[lang] = {...newPrompt[lang]}
+      } else {
+        newPrompt[lang] = newStepPrompt()
+      }
+
+      if (!newPrompt[lang].ivr) {
+        newPrompt[lang].ivr = newIvrPrompt()
+      }
+
+      // This isn't strictly necessary, but previous code
+      // sometimes didn't add this default value to new prompts
+      if (!newPrompt[lang].ivr.audioSource) {
+        newPrompt[lang].ivr.audioSource = 'tts'
+      }
+
+      newPrompt[lang].ivr = {
+        ...newPrompt[lang].ivr,
+        text
       }
     }
   }
@@ -1177,7 +1218,7 @@ const addTranslations = (obj, translations, funcOrProperty) => {
     if (obj[lang]) {
       obj[lang] = {...obj[lang]}
     } else {
-      obj[lang] = {}
+      obj[lang] = newStepPrompt()
     }
     if (typeof (funcOrProperty) == 'function') {
       funcOrProperty(obj[lang], text)

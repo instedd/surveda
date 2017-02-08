@@ -46,13 +46,13 @@ defmodule Ask.InviteControllerTest do
     end
   end
 
-  test "invites user", %{conn: conn, user: user} do
+  test "invites user as reader", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
     email = "user@instedd.org"
     conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
-    assert json_response(conn, 200) == %{
+    assert json_response(conn, 201) == %{
       "data" => %{
         "project_id" => project.id,
         "code" => code,
@@ -62,7 +62,60 @@ defmodule Ask.InviteControllerTest do
     }
   end
 
-  test "creates membership when accpeting invite", %{conn: conn, user: user} do
+  test "invites user as editor", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "editor"
+    email = "user@instedd.org"
+    conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    assert json_response(conn, 201) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => email
+      }
+    }
+  end
+
+  test "if an invite already exists and the same code is sent, it is updated with the new level", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+    get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+
+    conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => "editor", "email" => email, "project_id" => project.id})
+
+    assert json_response(conn, 201) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => "editor",
+        "email" => email
+      }
+    }
+  end
+
+  test "if an invite already exists and a different code is sent, it returns conflict", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    code2 = "ABC1235"
+    level = "reader"
+    email = "user@instedd.org"
+    get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+
+    conn = get conn, invite_path(conn, :invite, %{"code" => code2, "level" => "editor", "email" => email, "project_id" => project.id})
+
+    assert json_response(conn, 409) == %{
+      "data" => %{
+        "code" => code,
+        "email" => email
+      }
+    }
+  end
+
+  test "creates membership when acceepting invite", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     user2 = insert(:user)
     code = "ABC1234"

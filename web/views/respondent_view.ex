@@ -22,6 +22,7 @@ defmodule Ask.RespondentView do
       mode: respondent.mode,
       questionnaire_id: respondent.questionnaire_id,
       responses: render_many(responses, Ask.RespondentView, "response.json", as: :response),
+      disposition: respondent.disposition,
       date: case responses do
         [] -> nil
         _ -> responses |>  Enum.map(fn r -> r.updated_at end) |> Enum.max
@@ -36,12 +37,13 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: %{id: id, respondents_by_state: respondents_by_state, respondents_by_date: respondents_by_date, cutoff: cutoff, total_respondents: total_respondents}}) do
+  def render("stats.json", %{stats: %{id: id, respondents_by_state: respondents_by_state, respondents_by_date: respondents_by_date, total_quota: total_quota, cutoff: cutoff, total_respondents: total_respondents}}) do
     %{
       data: %{
         id: id,
         respondents_by_state: respondents_by_state,
         respondents_by_date: render_many(respondents_by_date, Ask.RespondentView, "completed_by_date.json", as: :completed),
+        total_quota: total_quota,
         cutoff: cutoff,
         total_respondents: total_respondents
       }
@@ -58,13 +60,6 @@ defmodule Ask.RespondentView do
     %{
       date: Ecto.Date.cast!(date) |> Ecto.Date.to_string,
       count: respondents_count
-    }
-  end
-
-  def render("invalid_entries.json", %{invalid_entries: entries, filename: filename}) do
-    %{
-      invalidEntries: entries,
-      filename: filename
     }
   end
 end

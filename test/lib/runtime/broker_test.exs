@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow}
-  alias Ask.{Repo, Survey, Respondent, TestChannel, QuotaBucket, Questionnaire}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire}
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
   @always_schedule %{schedule_day_of_week: @everyday_schedule,
@@ -37,7 +37,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "set the respondent as complete when the questionnaire is empty" do
-    [_, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
     Broker.handle_info(:poll, nil)
 
@@ -45,8 +45,30 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
   end
 
+  test "set the respondent as complete (disposition) when the questionnaire is empty" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+  end
+
+  test "creates respondent history when the questionnaire is empty" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    Broker.handle_info(:poll, nil)
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "completed"
+  end
+
   test "set the respondent questionnaire and mode" do
-    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
     mode = hd(survey.mode)
     questionnaire = hd(survey.questionnaires)
 
@@ -59,7 +81,9 @@ defmodule Ask.BrokerTest do
 
   test "set the respondent questionnaire and mode with comparisons" do
     test_channel = TestChannel.new(false)
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    sms_channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    ivr_channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "ivr")
+
     quiz1 = insert(:questionnaire, steps: @dummy_steps)
     quiz2 = insert(:questionnaire, steps: @dummy_steps)
     survey = insert(:survey, Map.merge(@always_schedule, %{
@@ -73,11 +97,13 @@ defmodule Ask.BrokerTest do
           %{"mode" => ["ivr"], "questionnaire_id" => quiz2.id, "ratio" => 0},
         ]
         }))
-    |> Repo.preload([:channels])
-    channel_changeset = Ecto.Changeset.change(channel)
-    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
-    respondent = insert(:respondent, survey: survey)
+    sms_channel_changeset = Ecto.Changeset.change(sms_channel)
+    ivr_channel_changeset = Ecto.Changeset.change(ivr_channel)
+    group = group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [sms_channel_changeset, ivr_channel_changeset]) |> Repo.update!
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
 
     Broker.handle_info(:poll, nil)
 
@@ -87,7 +113,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "changes the respondent state from pending to running if neccessary" do
-    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
     Broker.handle_info(:poll, nil)
 
@@ -102,7 +128,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "retry respondent (SMS mode)" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
 
     # First poll, activate the respondent
@@ -132,7 +158,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "respondent answers after stalled with active survey" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, _} = Broker.start_link
 
@@ -160,9 +186,60 @@ defmodule Ask.BrokerTest do
     assert hd(respondent.responses).value == "Yes"
   end
 
+  test "mark disposition as partial" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "partial"
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "partial"
+  end
+
+  test "don't reset disposition after having set it" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}]
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "partial"
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    assert reply == {:prompts, ["Is this the last question?"]}
+
+    respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
+    assert survey.state == "running"
+    assert respondent.state == "active"
+    assert respondent.disposition == "partial"
+    assert hd(respondent.responses).value == "Yes"
+  end
+
   test "respondent answers after stalled with completed survey" do
-    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
-    second_respondent = insert(:respondent, survey: survey)
+    [survey, group, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    second_respondent = insert(:respondent, survey: survey, respondent_group: group)
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
     {:ok, _} = Broker.start_link
@@ -193,7 +270,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "retry respondent (IVR mode)" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
     survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
 
     # First poll, activate the respondent
@@ -228,16 +305,17 @@ defmodule Ask.BrokerTest do
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "ivr")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "ivr"]]})) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "ivr"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
 
     channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
+    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update!
 
-    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update
-    respondent = insert(:respondent, survey: survey)
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "1m 50m"}) |> Repo.update
-    survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update
+    survey |> Survey.changeset(%{sms_retry_configuration: "1m 50m"}) |> Repo.update!
+    survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update!
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
@@ -268,16 +346,17 @@ defmodule Ask.BrokerTest do
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "sms")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]})) |> Repo.preload([:channels])
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
 
     channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
+    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update!
 
-    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update
-    respondent = insert(:respondent, survey: survey)
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
-    survey |> Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update
+    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update!
+    survey |> Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update!
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
@@ -300,8 +379,8 @@ defmodule Ask.BrokerTest do
   end
 
   test "marks the survey as completed when the cutoff is reached" do
-    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
-    create_several_respondents(survey, 20)
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
 
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 12}))
 
@@ -337,8 +416,8 @@ defmodule Ask.BrokerTest do
   end
 
   test "marks the survey as completed when all the quotas are reached" do
-    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
-    create_several_respondents(survey, 10)
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 10)
 
     quotas = %{
       "vars" => ["Smokes", "Exercises"],
@@ -405,8 +484,8 @@ defmodule Ask.BrokerTest do
   end
 
   test "always keeps batch_size number of respondents running" do
-    [survey, _, _, _] = create_running_survey_with_channel_and_respondent()
-    create_several_respondents(survey, 20)
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
 
     Broker.handle_info(:poll, nil)
 
@@ -429,7 +508,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "changes running survey state to 'completed' when there are no more running respondents" do
-    [survey, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
     Broker.handle_info(:poll, nil)
 
@@ -445,7 +524,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "respondent flow" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, broker} = Broker.start_link
     Broker.poll
@@ -485,7 +564,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "respondent flow with quota completed msg" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     quotas = %{
       "vars" => ["Smokes"],
@@ -622,7 +701,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "increments quota bucket when a respondent completes the survey" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
@@ -658,12 +737,14 @@ defmodule Ask.BrokerTest do
            |> Repo.all
            |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
            |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
 
     :ok = broker |> GenServer.stop
   end
 
   test "increments quota bucket when a respondent completes the survey, with numeric condition" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
 
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "No", :"Perfect Number" => [20, 30]}, quota: 10, count: 0)
@@ -693,6 +774,8 @@ defmodule Ask.BrokerTest do
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert :end = reply
 
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
     assert QuotaBucket
@@ -704,7 +787,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "marks the respondent as rejected when the bucket is completed" do
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Survey.changeset(survey, %{quota_vars: ["Exercises"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{:Exercises => "Yes"}, quota: 1, count: 1)
@@ -732,6 +815,70 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "increments quota bucket when a respondent is flagged as completed" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+
+    selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "No"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "Yes"}, quota: 10, count: 0)
+    insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    assert reply == {:prompts, ["Do you exercise? Reply 1 for YES, 2 for NO"]}
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "partial"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    assert reply == {:prompts, ["Which is the second perfect number??"]}
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert reply == {:prompts, ["What's the number of this question??"]}
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    assert :end = reply
+
+    selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
+    assert selected_bucket.count == 1
+    assert QuotaBucket
+           |> Repo.all
+           |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
+           |> Enum.all?( fn (b) -> b.count == 0 end)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "stops survey when there's an uncaught exception" do
     # First, we create a quiz with a single step with an invalid skip_logic value for the "Yes" choice
     step = Ask.StepBuilder
@@ -748,7 +895,7 @@ defmodule Ask.BrokerTest do
         ]
       )
 
-    [survey, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent([step])
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent([step])
 
     {:ok, broker} = Broker.start_link
     Broker.poll
@@ -775,22 +922,24 @@ defmodule Ask.BrokerTest do
     test_channel = TestChannel.new(mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
     quiz = insert(:questionnaire, steps: steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [[mode]]})) |> Repo.preload([:channels])
-    channel_changeset = Ecto.Changeset.change(channel)
-    survey |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [[mode]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
-    respondent = insert(:respondent, survey: survey)
+    channel_changeset = Ecto.Changeset.change(channel)
+    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    [survey, test_channel, respondent, phone_number]
+    [survey, group, test_channel, respondent, phone_number]
   end
 
-  def create_several_respondents(survey, n) when n <= 1 do
-    [insert(:respondent, survey: survey)]
+  def create_several_respondents(survey, group, n) when n <= 1 do
+    [insert(:respondent, survey: survey, respondent_group: group)]
   end
 
-  def create_several_respondents(survey, n) do
-    [create_several_respondents(survey, n - 1) | insert(:respondent, survey: survey)]
+  def create_several_respondents(survey, group, n) do
+    [create_several_respondents(survey, group, n - 1) | insert(:respondent, survey: survey, respondent_group: group)]
   end
 
   def assert_respondents_by_state(survey, active, pending) do

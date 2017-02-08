@@ -50,6 +50,13 @@ class IvrPrompt extends Component {
     onBlur(e)
   }
 
+  onFocus() {
+    const { autocomplete } = this.refs
+    if (autocomplete) {
+      autocomplete.unhide()
+    }
+  }
+
   componentWillReceiveProps(newProps) {
     this.setState(this.stateFromProps(newProps))
   }
@@ -76,7 +83,9 @@ class IvrPrompt extends Component {
   render() {
     const { id, value, inputErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
-    const maybeInvalidClass = classNames({'validate invalid': inputErrors})
+    const shouldDisplayErrors = value == this.props.originalValue
+
+    const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
 
     let autocompleteComponent = null
     if (autocomplete) {
@@ -100,6 +109,7 @@ class IvrPrompt extends Component {
                 disabled={readOnly}
                 onChange={e => onChange(e)}
                 onBlur={e => this.onBlur(e)}
+                onFocus={e => this.onFocus()}
                 className={maybeInvalidClass}
                 ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
               />
@@ -149,6 +159,7 @@ IvrPrompt.propTypes = {
   id: PropTypes.string.isRequired,
   customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,

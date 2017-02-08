@@ -1,0 +1,93 @@
+// ---------Materialize reset classes ---------------
+
+.tabs {
+  background-color: transparent;
+  height: 45px;
+  .tab {
+    line-height: 35px;
+    height: 100%;
+    a {
+      @extend .grey-text;
+      font-size: .9rem;
+      padding: 0 25px;
+      &:hover {
+        @extend .white-text;
+        background-color: transparent;
+      }
+      &.active {
+        @extend .white-text;
+        background-color: transparent;
+      }
+    }
+  }
+  .indicator {
+    @extend .green;
+    height: 4px;
+  }
+}
+
+table.highlight > tbody > tr:hover {
+  cursor: pointer;
+}
+table.highlight > tbody > tr.empty-row,
+table > tbody > tr.empty-row {
+  height: 73px;
+  &:hover {
+    @extend .white;
+    cursor: default;
+  }
+}
+
+nav {
+  box-shadow: none;
+}
+
+.btn-flat:hover {
+  background: none;
+}
+
+input[type="checkbox"] + label:before,
+input[type="checkbox"]:checked + label:before {
+  border-right-color: black;
+  border-bottom-color: black;
+}
+[type="checkbox"].filled-in:checked + label:after {
+  @extend .black;
+  border-color: black;
+}
+
+/* Text inputs */
+
+input:not([type]),
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=url],
+input[type=time],
+input[type=date],
+input[type=datetime],
+input[type=datetime-local],
+input[type=tel],
+input[type=number],
+input[type=search],
+textarea.materialize-textarea {
+
+
+  // Form Message Shared Styles
+  & + label:after {
+    display: block;
+    content: "";
+    font-size: 0.8rem;
+    position: absolute;
+    top: 30px;
+    opacity: 0;
+    transition: .2s opacity ease-out, .2s color ease-out;
+  }
+  & + label.active:after {
+    top: 60px;
+  }
+}
+
+.autocomplete-content.dropdown-content.ac-dropdown {
+  position: relative;
+}

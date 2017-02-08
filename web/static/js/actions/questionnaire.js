@@ -32,10 +32,11 @@ export const SET_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_SET_QUESTIONNAIRE_MS
 export const SET_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_SET_QUESTIONNAIRE_MSG'
 export const AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_AUTOCOMPLETE_QUESTIONNAIRE_MSG'
 export const AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_AUTOCOMPLETE_QUESTIONNAIRE_MSG'
-export const CHANGE_NUMERIC_RANGES = 'CHANGE_NUMERIC_RANGES'
-export const CHANGE_RANGE_SKIP_LOGIC = 'CHANGE_RANGE_SKIP_LOGIC'
-export const UPLOAD_CSV_FOR_TRANSLATION = 'UPLOAD_CSV_FOR_TRANSLATION'
-export const CHANGE_EXPLANATION_STEP_SKIP_LOGIC = 'CHANGE_EXPLANATION_STEP_SKIP_LOGIC'
+export const CHANGE_NUMERIC_RANGES = 'QUESTIONNAIRE_CHANGE_NUMERIC_RANGES'
+export const CHANGE_RANGE_SKIP_LOGIC = 'QUESTIONNAIRE_CHANGE_RANGE_SKIP_LOGIC'
+export const UPLOAD_CSV_FOR_TRANSLATION = 'QUESTIONNAIRE_UPLOAD_CSV_FOR_TRANSLATION'
+export const CHANGE_EXPLANATION_STEP_SKIP_LOGIC = 'QUESTIONNAIRE_CHANGE_EXPLANATION_STEP_SKIP_LOGIC'
+export const CHANGE_DISPOSITION = 'QUESTIONNAIRE_CHANGE_DISPOSITION'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -223,7 +224,7 @@ export const setSmsQuestionnaireMsg = (msgKey, msg) => ({
   msg
 })
 
-export const setIvrQuestionnaireMsg = (msgKey, msg) => ({
+export const setIvrQuestionnaireMsg = (msgKey, msg: AudioPrompt) => ({
   type: SET_IVR_QUESTIONNAIRE_MSG,
   msgKey,
   msg
@@ -273,19 +274,19 @@ export const duplicateQuestionnaire = (projectId, questionnaire) => (dispatch) =
   })
 }
 
-export const changeNumericRanges = (stepId, minValue, maxValue, rangeDelimiters) => ({
+export const changeNumericRanges = (stepId, minValue, maxValue, rangesDelimiters) => ({
   type: CHANGE_NUMERIC_RANGES,
-  stepId: stepId,
-  minValue: minValue,
-  maxValue: maxValue,
-  rangesDelimiters: rangeDelimiters
+  stepId,
+  minValue,
+  maxValue,
+  rangesDelimiters
 })
 
 export const changeRangeSkipLogic = (stepId, skipLogic, rangeIndex) => ({
   type: CHANGE_RANGE_SKIP_LOGIC,
-  stepId: stepId,
-  rangeIndex: rangeIndex,
-  skipLogic: skipLogic
+  stepId,
+  rangeIndex,
+  skipLogic
 })
 
 export const uploadCsvForTranslation = (csv) => ({
@@ -295,6 +296,12 @@ export const uploadCsvForTranslation = (csv) => ({
 
 export const changeExplanationStepSkipLogic = (stepId, skipLogic) => ({
   type: CHANGE_EXPLANATION_STEP_SKIP_LOGIC,
-  stepId: stepId,
-  skipLogic: skipLogic
+  stepId,
+  skipLogic
+})
+
+export const changeDisposition = (stepId, disposition) => ({
+  type: CHANGE_DISPOSITION,
+  stepId,
+  disposition
 })

@@ -1,0 +1,7 @@
+Hello <%= @name %>!
+
+Your new Ask account is almost ready, follow the link below to confirm and activate it.
+
+<%= @url %>
+
+Thank you!

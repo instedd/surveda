@@ -6,6 +6,7 @@ const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
 const questionnaireSchema = new Schema('questionnaires')
 const respondentSchema = new Schema('respondents')
+const respondentGroupSchema = new Schema('respondentGroups')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
 const channelSchema = new Schema('channels')
@@ -154,20 +155,23 @@ export const createAudio = (files) => {
   return apiFetchJSON('audios', audioSchema, request)
 }
 
-export const uploadRespondents = (survey, files) => {
+export const uploadRespondentGroup = (projectId, surveyId, files) => {
   const formData = new FormData()
   formData.append('file', files[0])
 
-  return apiFetchJSONWithCallback(`projects/${survey.projectId}/surveys/${survey.id}/respondents`,
-    arrayOf(respondentSchema), {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`,
+    respondentGroupSchema, {
       method: 'POST',
       body: formData
-    },
-    respondentsCallback)
+    })
 }
 
-export const removeRespondents = (survey) => {
-  return apiDelete(`projects/${survey.projectId}/surveys/${survey.id}/respondents/-1`)
+export const updateRespondentGroup = (projectId, surveyId, groupId, data) => {
+  return apiPutJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`, respondentGroupSchema, { respondentGroup: data })
+}
+
+export const removeRespondentGroup = (projectId, surveyId, groupId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`)
 }
 
 export const fetchRespondents = (projectId, surveyId, limit, page) => {
@@ -180,6 +184,10 @@ export const fetchRespondentsStats = (projectId, surveyId) => {
 
 export const fetchRespondentsQuotasStats = (projectId, surveyId) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, null)
+}
+
+export const fetchRespondentGroups = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`, arrayOf(respondentGroupSchema))
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
@@ -212,10 +220,7 @@ export const launchSurvey = (projectId, surveyId) => {
 }
 
 export const logout = () => {
-  fetch('/logout', {
-    method: 'DELETE',
-    credentials: 'same-origin'
-  }).then(() => { window.location.href = '/' })
+  apiDelete('sessions').then(() => { window.location.href = '/' })
 }
 
 export const fetchTimezones = () => {
@@ -239,17 +244,17 @@ export const synchronizeChannels = () => {
 }
 
 export const autocompleteVars = (projectId, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${escape(text)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
 export const autocompletePrimaryLanguage = (projectId, mode, language, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${escape(text)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
 export const autocompleteOtherLanguage = (projectId, mode, primaryLanguage, otherLanguage, sourceText, targetText) => {
-  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${escape(sourceText)}&target_text=${escape(targetText)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
   .then(response => response.json())
 }
 
@@ -257,18 +262,33 @@ export const fetchCollaborators = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/collaborators`)
 }
 
+export const getInviteByEmailAndProject = (projectId, email) => {
+  return apiFetchJSON(`get_invite_by_email_and_project?project_id=${projectId}&email=${encodeURIComponent(email)}`)
+}
+
 export const invite = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
+  return apiFetchJSON(`invite?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
 }
 
 export const inviteMail = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
+  return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
 }
 
 export const fetchInvite = (code) => {
-  return apiFetchJSON(`invite_show?code=${code}`)
+  return apiFetchJSON(`invite_show?code=${encodeURIComponent(code)}`)
 }
 
 export const confirm = (code) => {
-  return apiFetchJSON(`accept_invitation?code=${code}`)
+  return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
+}
+
+export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
+  const formData = new FormData()
+  formData.append('file', files[0])
+
+  return apiFetchJSON(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
+    questionnaireSchema, {
+      method: 'POST',
+      body: formData
+    })
 }

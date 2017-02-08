@@ -5,7 +5,7 @@ import * as actions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
-import * as respondentsActions from '../../actions/respondents'
+import * as respondentGroupsActions from '../../actions/respondentGroups'
 import SurveyForm from './SurveyForm'
 import { Tooltip } from '../ui'
 import { launchSurvey } from '../../api'
@@ -19,9 +19,10 @@ class SurveyEdit extends Component {
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
-    channels: PropTypes.object.isRequired,
+    channels: PropTypes.object,
     project: PropTypes.object,
-    respondents: PropTypes.object
+    respondentGroups: PropTypes.object,
+    invalidRespondents: PropTypes.object
   }
 
   componentWillMount() {
@@ -32,7 +33,7 @@ class SurveyEdit extends Component {
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchChannels())
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
-      dispatch(respondentsActions.fetchRespondents(projectId, surveyId, 5, 1))
+      dispatch(respondentGroupsActions.fetchRespondentGroups(projectId, surveyId))
     }
   }
 
@@ -51,9 +52,9 @@ class SurveyEdit extends Component {
   }
 
   render() {
-    const { survey, projectId, project, questionnaires, dispatch, channels, respondents } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, invalidRespondents } = this.props
 
-    if (Object.keys(survey).length == 0 || !respondents) {
+    if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
     }
 
@@ -79,7 +80,7 @@ class SurveyEdit extends Component {
     return (
       <div className='white'>
         {launchComponent}
-        <SurveyForm survey={survey} respondents={respondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
       </div>
     )
   }
@@ -89,9 +90,10 @@ const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
   surveyId: ownProps.params.surveyId,
-  channels: state.channels.items || {},
+  channels: state.channels.items,
   questionnaires: state.questionnaires.items || {},
-  respondents: state.respondents,
+  respondentGroups: state.respondentGroups.items || {},
+  invalidRespondents: state.respondentGroups.invalidRespondents,
   survey: state.survey.data || {}
 })
 
