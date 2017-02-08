@@ -2,6 +2,7 @@ defmodule Ask.FlowTest do
   use ExUnit.Case
   use Ask.DummySteps
   import Ask.Factory
+  import Ask.StepBuilder
   alias Ask.Runtime.Flow
 
   @quiz build(:questionnaire, steps: @dummy_steps)
@@ -154,15 +155,6 @@ defmodule Ask.FlowTest do
     ]
   end
 
-  test "* is considered a valid answer and will reset retries" do
-    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
-    step = flow |> Flow.step(Flow.Message.reply(nil))
-    assert {:ok, %Flow{retries: 1}, _} = step
-    step = flow |> Flow.step(Flow.Message.reply("*"))
-    assert {:ok, %Flow{retries: 0}, %{prompts: prompts}} = step
-    assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
-  end
-
   test "next step with store, case insensitive, strip space" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
     step = flow |> Flow.step(Flow.Message.reply(" y "))
@@ -214,6 +206,44 @@ defmodule Ask.FlowTest do
     assert flow.current_step == 3
   end
 
+  # refusal skip logic
+  test "when refusal skip_logic is end it ends the flow" do
+    steps = [
+      numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        refusal: %{
+          "enabled" => true,
+          "responses" => %{
+            "sms" => %{
+              "en" => ["skip"],
+            }
+          },
+          "skip_logic" => "end",
+        }
+      ),
+      multiple_choice_step(
+        id: "aaa",
+        title: "Title",
+        prompt: %{
+        },
+        store: "Swims",
+        choices: []
+      ),
+    ]
+
+    {:ok, flow, _} =
+      build(:questionnaire, steps: steps)
+      |> Flow.start("sms")
+      |> Flow.step
+    result = flow |> Flow.step(Flow.Message.reply("skip"))
+
+    assert {:end, _} = result
+  end
+
   describe "numeric steps" do
     test "when value is in a middle range it finds it" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
@@ -251,24 +281,6 @@ defmodule Ask.FlowTest do
         flow
         |> Flow.step(Flow.Message.reply("Y"))
       end
-    end
-  end
-
-  describe "skip question" do
-    test "numeric step continues with next question when skip question key is pressed" do
-      {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(Flow.Message.reply("*"))
-
-      assert {:ok, _, flow_reply} = result
-      assert Enum.at(flow_reply.prompts, 0) == "Is this the last question?"
-    end
-
-    test "multiple choice step continues with next question when skip question key is pressed" do
-      {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
-      result = flow |> Flow.step(Flow.Message.reply("*"))
-
-      assert {:ok, _, flow_reply} = result
-      assert Enum.at(flow_reply.prompts, 0) == "Do you exercise? Reply 1 for YES, 2 for NO"
     end
   end
 

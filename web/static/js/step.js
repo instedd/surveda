@@ -79,3 +79,15 @@ export const newIvrPrompt = () => ({
   text: '',
   audioSource: 'tts'
 })
+
+export const newRefusal = () => ({
+  enabled: false,
+  responses: {
+    ivr: [],
+    sms: {
+      'en': []
+    }
+  },
+  skipLogic: null
+})
+

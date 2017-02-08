@@ -4,6 +4,8 @@ import { connect } from 'react-redux'
 import { InputWithLabel, Card } from '../ui'
 import { bindActionCreators } from 'redux'
 import * as questionnaireActions from '../../actions/questionnaire'
+import { newRefusal } from '../../step'
+import ChoiceEditor from './ChoiceEditor'
 import SkipLogic from './SkipLogic'
 
 type State = {
@@ -97,9 +99,27 @@ class StepNumericEditor extends Component {
     })
   }
 
+  toggleAcceptsRefusals(e) {
+    const { questionnaireActions } = this.props
+    questionnaireActions.toggleAcceptsRefusals(this.state.stepId)
+  }
+
+  changeRefusal() {
+    const { questionnaireActions } = this.props
+    return (response, smsValues, ivrValues, skipLogic, autoComplete = false) => {
+      questionnaireActions.changeRefusal(this.state.stepId, smsValues, ivrValues, skipLogic)
+    }
+  }
+
   render() {
-    const { step, stepsAfter, stepsBefore, readOnly } = this.props
+    const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errors, readOnly } = this.props
     const { ranges } = step
+
+    const sms = questionnaire.modes.indexOf('sms') != -1
+    const ivr = questionnaire.modes.indexOf('ivr') != -1
+
+    const refusal = step.refusal || newRefusal()
+    const acceptsRefusals = !!refusal.enabled
 
     let minValue =
       <div className='col s12 m2 input-field inline'>
@@ -175,6 +195,51 @@ class StepNumericEditor extends Component {
       </Card>
     }
 
+    let refusalComponent = null
+    if (acceptsRefusals) {
+      let smsHeader = null
+      if (sms) {
+        smsHeader = <th style={{width: '30%'}}>SMS</th>
+      }
+
+      let ivrHeader = null
+      if (ivr) {
+        ivrHeader = <th style={{width: '30%'}}>Phone call</th>
+      }
+
+      refusalComponent = <Card>
+        <div className='card-table'>
+          <table className='responses-table'>
+            <thead>
+              <tr>
+                {smsHeader}
+                {ivrHeader}
+                <th style={{width: '30%'}}>Skip logic</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ChoiceEditor
+                stepIndex={stepIndex}
+                choiceIndex={'refusal'}
+                lang={questionnaire.activeLanguage}
+                choice={refusal}
+                readOnly={readOnly}
+                onDelete={e => null}
+                onChoiceChange={this.changeRefusal()}
+                stepsAfter={stepsAfter}
+                stepsBefore={stepsBefore}
+                sms={sms}
+                ivr={ivr}
+                errors={errors}
+                smsAutocompleteGetData={(value, callback) => null}
+                smsAutocompleteOnSelect={item => null}
+              />
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    }
+
     return <div>
       <h5>Responses</h5>
       <p><b>Setup a valid range for user input. Leave min or max empty if not
@@ -185,6 +250,12 @@ class StepNumericEditor extends Component {
         {maxValue}
       </div>
       {skipLogicTable}
+      <br />
+      <p>
+        <input id='accepts_refusals' type='checkbox' defaultChecked={acceptsRefusals} onClick={e => { this.toggleAcceptsRefusals(e) }} disabled={readOnly} />
+        <label htmlFor='accepts_refusals'>Accepts refusals</label>
+      </p>
+      {refusalComponent}
     </div>
   }
 }
@@ -199,8 +270,10 @@ StepNumericEditor.propTypes = {
   questionnaire: PropTypes.object.isRequired,
   readOnly: PropTypes.bool,
   step: PropTypes.object.isRequired,
+  stepIndex: PropTypes.number,
   stepsAfter: PropTypes.array.isRequired,
-  stepsBefore: PropTypes.array.isRequired
+  stepsBefore: PropTypes.array.isRequired,
+  errors: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({})

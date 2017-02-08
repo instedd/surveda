@@ -37,6 +37,8 @@ export const CHANGE_RANGE_SKIP_LOGIC = 'QUESTIONNAIRE_CHANGE_RANGE_SKIP_LOGIC'
 export const UPLOAD_CSV_FOR_TRANSLATION = 'QUESTIONNAIRE_UPLOAD_CSV_FOR_TRANSLATION'
 export const CHANGE_EXPLANATION_STEP_SKIP_LOGIC = 'QUESTIONNAIRE_CHANGE_EXPLANATION_STEP_SKIP_LOGIC'
 export const CHANGE_DISPOSITION = 'QUESTIONNAIRE_CHANGE_DISPOSITION'
+export const TOGGLE_ACCEPT_REFUSALS = 'QUESTIONNAIRE_TOGGLE_ACCEPT_REFUSALS'
+export const CHANGE_REFUSAL = 'QUESTIONNAIRE_CHANGE_REFUSAL'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -304,4 +306,17 @@ export const changeDisposition = (stepId, disposition) => ({
   type: CHANGE_DISPOSITION,
   stepId,
   disposition
+})
+
+export const toggleAcceptsRefusals = (stepId) => ({
+  type: TOGGLE_ACCEPT_REFUSALS,
+  stepId
+})
+
+export const changeRefusal = (stepId, smsValues, ivrValues, skipLogic) => ({
+  type: CHANGE_REFUSAL,
+  stepId,
+  smsValues,
+  ivrValues,
+  skipLogic
 })
