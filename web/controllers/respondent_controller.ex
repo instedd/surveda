@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Respondent, Response}
+  alias Ask.{Respondent, RespondentDispositionHistory, Response}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -107,11 +107,15 @@ defmodule Ask.RespondentController do
 
     by_state = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
-      group_by: :state,
-      select: {r.state, count("*")}) |> Enum.into(%{})
+      group_by: [:state, :disposition],
+      select: {r.state, r.disposition, count("*")})
+    |> Enum.reduce(%{}, fn {state, disposition, count}, map ->
+      key = disposition || state
+      map |> Map.put(key, (map[key] || 0) + count)
+    end)
 
     by_date = Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey_id and r.state == "completed",
+      from r in Respondent, where: r.survey_id == ^survey_id and r.disposition == "completed",
       group_by: fragment("DATE(completed_at), quota_bucket_id"),
       select: {fragment("DATE(completed_at)"), r.quota_bucket_id, count("*")})
 
@@ -134,6 +138,8 @@ defmodule Ask.RespondentController do
     completed = by_state["completed"] || 0
     stalled = by_state["stalled"] || 0
     failed = by_state["failed"] || 0
+    partial = by_state["partial"] || 0
+    ineligible = by_state["ineligible"] || 0
 
     total_quota = buckets
     |> Enum.reduce(0, fn bucket, total ->
@@ -147,7 +153,9 @@ defmodule Ask.RespondentController do
         completed: respondent_by_state(completed, total_respondents),
         active: respondent_by_state(active, total_respondents),
         stalled: respondent_by_state(stalled, total_respondents),
-        failed: respondent_by_state(failed, total_respondents)
+        failed: respondent_by_state(failed, total_respondents),
+        partial: respondent_by_state(partial, total_respondents),
+        ineligible: respondent_by_state(ineligible, total_respondents),
       },
       respondents_by_date: cumulative_count,
       cutoff: survey.cutoff,
@@ -275,6 +283,8 @@ defmodule Ask.RespondentController do
           row
         end
 
+        row = row ++ [Respondent.show_disposition(respondent.disposition)]
+
         date = case responses do
           [] -> nil
           _ -> responses
@@ -300,7 +310,7 @@ defmodule Ask.RespondentController do
     else
       header
     end
-    header = header ++ ["Date"]
+    header = header ++ ["Disposition", "Date"]
     rows = Stream.concat([[header], csv_rows])
 
     # # Convert to CSV string
@@ -310,6 +320,41 @@ defmodule Ask.RespondentController do
     |> to_string
 
     filename = Timex.now |> Timex.format!("respondents_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+
+    conn
+      |> put_resp_content_type("text/csv")
+      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+      |> send_resp(200, csv)
+  end
+
+  def disposition_history_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = conn
+    |> load_project(project_id)
+
+    # Check that the survey is in the project
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    csv_rows = (from h in RespondentDispositionHistory,
+      join: r in Respondent,
+      where: h.respondent_id == r.id and r.survey_id == ^survey.id)
+    |> preload(:respondent)
+    |> Repo.stream
+    |> Stream.map(fn history ->
+      [history.respondent.hashed_number, history.disposition, (history.inserted_at |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime))]
+    end)
+
+    header = ["Respondent hash", "Disposition", "Timestamp"]
+    rows = Stream.concat([[header], csv_rows])
+
+    # Convert to CSV string
+    csv = rows
+    |> CSV.encode
+    |> Enum.to_list
+    |> to_string
+
+    filename = Timex.now |> Timex.format!("respondents_disposition_history_%Y-%m-%d-%H-%M-%S.csv", :strftime)
 
     conn
       |> put_resp_content_type("text/csv")

@@ -5,19 +5,30 @@ defmodule Ask.Email do
   alias Swoosh.Email
   require Logger
 
-  def invite(email, invited_by, invite_url) do
+  def invite(level, email, invited_by, invite_url, project) do
     invited_by_name = name_or_email(invited_by)
+    project_name = project_name(project.name)
+
+    subject = "#{invited_by_name} has invited you to collaborate on #{project_name}."
+
     %Email{}
-    |> to(user_email(invited_by))
+    |> to({"", email})
     |> from({"InSTEDD Ask", "noreply@instedd.org"})
-    |> subject("#{invited_by_name} has invited you to collaborate on an Ask project")
-    |> text_body("#{invited_by_name} has invited you to collaborate on an Ask project. Please follow this link to join: #{invite_url}")
-    |> render_body("invite.html", %{url: invite_url, invited_by: invited_by_name})
+    |> subject(subject)
+    |> render_body(:invite, %{
+        url: invite_url,
+        invited_by: invited_by_name,
+        explanation: explanation(level),
+        project_name: project_name
+      })
   end
 
-  defp user_email(user) do
-    {user.name, user.email}
-  end
+  defp project_name(""), do: "an Ask project"
+  defp project_name(nil), do: "an Ask project"
+  defp project_name(name), do: "#{name}"
+
+  defp explanation("editor"), do: "You'll be able to manage surveys, questionnaires, content and collaborators."
+  defp explanation(_), do: "You'll be able to browse surveys, questionnaires, content and collaborators."
 
   defp name_or_email(user) do
     case {user.name, user.email} do

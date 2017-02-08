@@ -21,7 +21,7 @@ class SurveyForm extends Component {
     questionnaire: PropTypes.object,
     respondentGroups: PropTypes.object,
     invalidRespondents: PropTypes.object,
-    channels: PropTypes.object.isRequired,
+    channels: PropTypes.object,
     errors: PropTypes.object,
     readOnly: PropTypes.bool.isRequired
   }
@@ -43,7 +43,7 @@ class SurveyForm extends Component {
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
-        return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels)
+        return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels || {})
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0

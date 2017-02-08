@@ -19,6 +19,7 @@ defmodule Ask.Invite do
     struct
     |> cast(params, [:code, :level, :email, :project_id, :inviter_email])
     |> validate_required([:code, :level])
+    |> unique_constraint(:project_id, name: :project_id)
   end
 
 end

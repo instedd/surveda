@@ -11,7 +11,7 @@ defmodule Ask.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug Plug.Static, at: "files/", from: "web/static/assets/files/"
-    plug Coherence.Authentication.Session
+    plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
   pipeline :protected do
@@ -20,13 +20,15 @@ defmodule Ask.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug Coherence.Authentication.Session, protected: true
+    plug Coherence.Authentication.Session, db_model: Ask.User, protected: true
   end
 
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
-    plug Coherence.Authentication.Session
+    plug :fetch_flash
+
+    plug Coherence.Authentication.Session, db_model: Ask.User
 
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
@@ -54,6 +56,7 @@ defmodule Ask.Router do
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/respondents/quotas_stats", RespondentController, :quotas_stats, as: :respondents_quotas_stats
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
+          get "/respondents/disposition_history_csv", RespondentController, :disposition_history_csv, as: :respondents_disposition_history_csv
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
@@ -72,6 +75,7 @@ defmodule Ask.Router do
       get "/invite", InviteController, :invite, as: :invite
       get "/invite_mail", InviteController, :invite_mail, as: :invite_mail
       get "/invite_show", InviteController, :show, as: :invite_show
+      get "/get_invite_by_email_and_project", InviteController, :get_by_email_and_project
       get "/settings", UserController, :settings, as: :settings
       post "/update_settings", UserController, :update_settings, as: :update_settings
     end

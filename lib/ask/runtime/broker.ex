@@ -3,8 +3,8 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentGroup, QuotaBucket}
-  alias Ask.Runtime.Session
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket}
+  alias Ask.Runtime.{Session, Reply}
   alias Ask.QuotaBucket
   require Logger
 
@@ -37,9 +37,9 @@ defmodule Ask.Runtime.Broker do
     Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now)
     |> Enum.each(&retry_respondent(&1))
 
-    ischedule = today_schedule()
+    schedule = today_schedule()
 
-    surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^ischedule, ^ischedule))
+    surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^schedule, ^schedule))
 
     surveys |> Enum.filter( fn s ->
                   s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
@@ -126,14 +126,7 @@ defmodule Ask.Runtime.Broker do
   defp retry_respondent(respondent) do
     session = respondent.session |> Session.load
 
-    case Session.timeout(session) do
-      {:stalled, session} ->
-        update_respondent(respondent, {:stalled, session})
-      :failed ->
-        update_respondent(respondent, :failed)
-      {session, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout})
-    end
+    handle_session_step(respondent, Session.timeout(session))
   end
 
   defp start(survey, respondent) do
@@ -156,13 +149,7 @@ defmodule Ask.Runtime.Broker do
       _ -> Survey.retries_configuration(survey, fallback_channel.type)
     end
 
-    case Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries) do
-      :end ->
-        update_respondent(respondent, :end)
-
-      {session, timeout} ->
-        update_respondent(respondent, {:ok, session, timeout})
-    end
+    handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries))
   end
 
   defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do
@@ -212,27 +199,7 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
 
     try do
-      case Session.sync_step(session, reply) do
-        {:ok, session, step, timeout} ->
-          update_respondent(respondent, {:ok, session, timeout})
-          step
-
-        {:end, data} ->
-          update_respondent(respondent, :end)
-          {:end, data}
-
-        :end ->
-          update_respondent(respondent, :end)
-          :end
-
-        {:rejected, data} ->
-          update_respondent(respondent, :rejected)
-          {:end, data}
-
-        :rejected ->
-          update_respondent(respondent, :rejected)
-          :end
-      end
+      handle_session_step(respondent, Session.sync_step(session, reply))
     rescue
       e ->
         if Mix.env != :test do
@@ -248,6 +215,39 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp handle_session_step(respondent, {:ok, session, reply, timeout}) do
+    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
+    {:prompts, Reply.prompts(reply)}
+  end
+
+  defp handle_session_step(respondent, {:end, reply}) do
+    update_respondent(respondent, :end)
+    {:end, {:prompts, Reply.prompts(reply)}}
+  end
+
+  defp handle_session_step(respondent, :end) do
+    update_respondent(respondent, :end)
+    :end
+  end
+
+  defp handle_session_step(respondent, {:rejected, reply}) do
+    update_respondent(respondent, :rejected)
+    {:end, {:prompts, Reply.prompts(reply)}}
+  end
+
+  defp handle_session_step(respondent, :rejected) do
+    update_respondent(respondent, :rejected)
+    :end
+  end
+
+  defp handle_session_step(respondent, {:stalled, session}) do
+    update_respondent(respondent, {:stalled, session})
+  end
+
+  defp handle_session_step(respondent, :failed) do
+    update_respondent(respondent, :failed)
+  end
+
   defp match_condition(responses, bucket) do
     bucket_vars = Map.keys(bucket.condition)
 
@@ -260,42 +260,76 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :end) do
+    old_disposition = respondent.disposition
+
     respondent
     |> Respondent.changeset(%{state: "completed", disposition: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
-    |> Repo.update
-
-    responses = respondent |> assoc(:responses) |> Repo.all
-    matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
-                    |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
-
-    if matching_bucket do
-      from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
-    end
+    |> Repo.update!
+    |> create_disposition_history(old_disposition)
+    |> update_quota_bucket(old_disposition)
   end
 
   defp update_respondent(respondent, {:stalled, session}) do
     respondent
     |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, :rejected) do
     respondent
     |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, :failed) do
     respondent
     |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil})
-    |> Repo.update
+    |> Repo.update!
   end
 
-  defp update_respondent(respondent, {:ok, session, timeout}) do
+  defp update_respondent(respondent, {:ok, session, timeout}, nil) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
     respondent
     |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
-    |> Repo.update
+    |> Repo.update!
+  end
+
+  defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
+    old_disposition = respondent.disposition
+    if old_disposition == "completed" do
+      update_respondent(respondent, {:ok, session, timeout}, nil)
+    else
+      timeout_at = Timex.shift(Timex.now, minutes: timeout)
+      respondent
+      |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
+      |> Repo.update!
+      |> create_disposition_history(old_disposition)
+      |> update_quota_bucket(old_disposition)
+    end
+  end
+
+  defp create_disposition_history(respondent, old_disposition) do
+    if respondent.disposition && respondent.disposition != old_disposition do
+      %RespondentDispositionHistory{
+        respondent: respondent,
+        disposition: respondent.disposition}
+      |> Repo.insert!
+    end
+    respondent
+  end
+
+  defp update_quota_bucket(respondent, old_disposition) do
+    if respondent.disposition && respondent.disposition != old_disposition && respondent.disposition == "completed" do
+
+      responses = respondent |> assoc(:responses) |> Repo.all
+      matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
+                      |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
+
+      if matching_bucket do
+        from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+      end
+    end
+    respondent
   end
 
   defp today_schedule do
@@ -308,8 +342,8 @@ defmodule Ask.Runtime.Broker do
       fri: week_day == 5,
       sat: week_day == 6,
       sun: week_day == 7}
-    {:ok, ischedule} = Ask.DayOfWeek.dump(schedule)
-    ischedule
+    {:ok, schedule} = Ask.DayOfWeek.dump(schedule)
+    schedule
   end
 
 end

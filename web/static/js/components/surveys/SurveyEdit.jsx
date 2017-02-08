@@ -19,7 +19,7 @@ class SurveyEdit extends Component {
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
-    channels: PropTypes.object.isRequired,
+    channels: PropTypes.object,
     project: PropTypes.object,
     respondentGroups: PropTypes.object,
     invalidRespondents: PropTypes.object
@@ -90,7 +90,7 @@ const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
   surveyId: ownProps.params.surveyId,
-  channels: state.channels.items || {},
+  channels: state.channels.items,
   questionnaires: state.questionnaires.items || {},
   respondentGroups: state.respondentGroups.items || {},
   invalidRespondents: state.respondentGroups.invalidRespondents,

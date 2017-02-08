@@ -1,0 +1,5 @@
+<%= @invited_by %> has invited you to collaborate on <%= @project_name %>.
+
+<%= @explanation %>
+
+Follow this link to accept the invitation: <%= @url %>

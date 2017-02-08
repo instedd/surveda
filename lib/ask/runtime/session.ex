@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
-  alias Ask.Runtime.{Flow, Channel, Session}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
   defstruct [:channel, :fallback, :flow, :respondent, :retries]
 
@@ -15,25 +15,26 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent)
 
-    flow = case runtime_channel |> Channel.can_push_question? do
+    {flow, reply} = case runtime_channel |> Channel.can_push_question? do
       true ->
         case flow |> Flow.step do
-          {:end, %{prompts: prompts}} ->
-            if prompts != [] do
-              runtime_channel |> Channel.ask(respondent.sanitized_phone_number, prompts)
+          {:end, reply} ->
+            if Reply.prompts(reply) != [] do
+              runtime_channel |> Channel.ask(respondent.sanitized_phone_number, Reply.prompts(reply))
             end
-            :end
-          {:ok, flow, %{prompts: prompts}} ->
-            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, prompts)
-            flow
+            {:end, reply}
+          {:ok, flow, reply} ->
+            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, Reply.prompts(reply))
+            {flow, reply}
         end
 
       false ->
-        flow
+        {flow, %Reply{}}
     end
 
     case flow do
-      :end -> :end
+      :end ->
+        {:end, reply}
       _ ->
         session = %Session{
           channel: channel,
@@ -42,7 +43,7 @@ defmodule Ask.Runtime.Session do
           flow: flow,
           respondent: respondent
         }
-        {session, current_timeout(session)}
+        {:ok, session, reply, current_timeout(session)}
     end
   end
 
@@ -76,7 +77,7 @@ defmodule Ask.Runtime.Session do
     # a call and wait for the callback to actually execute a step, thus "push").
     case runtime_channel |> Channel.can_push_question? do
       true ->
-        {:ok, _flow, %{prompts: prompts}} = Flow.retry(session.flow)
+        {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
         runtime_channel |> Channel.ask(session.respondent.sanitized_phone_number, prompts)
 
       false ->
@@ -84,7 +85,7 @@ defmodule Ask.Runtime.Session do
     end
     # The new session will timeout as defined by hd(retries)
     session = %{session | retries: retries}
-    {session, current_timeout(session)}
+    {:ok, session, %Reply{}, current_timeout(session)}
   end
 
   defp switch_to_fallback(session) do
@@ -120,21 +121,21 @@ defmodule Ask.Runtime.Session do
       store_responses_and_assign_bucket(respondent, stores, buckets)
 
     case step_answer do
-      {:end, %{prompts: []}} ->
+      {:end, %Reply{prompts: []}} ->
         :end
-      {:end, %{prompts: prompts}} ->
-        {:end, {:prompts, prompts}}
-      {:ok, flow, %{prompts: prompts}} ->
+      {:ok, flow, reply} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
             msg = quota_completed_msg(session.flow)
             if msg do
-              {:rejected, {:prompts, [msg]}}
+              {:rejected, %Reply{prompts: [msg]}}
             else
               :rejected
             end
-          false -> {:ok, %{session | flow: flow, respondent: respondent}, {:prompts, prompts}, @timeout}
+          false -> {:ok, %{session | flow: flow, respondent: respondent}, reply, @timeout}
         end
+      _ ->
+        step_answer
     end
   end
 
@@ -221,7 +222,11 @@ defmodule Ask.Runtime.Session do
       respondent =
         case buckets do
           [bucket] ->
-            respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+            respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+            if respondent.disposition && respondent.disposition == "completed" do
+              from(q in QuotaBucket, where: q.id == ^bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+            end
+            respondent
           _ ->
             respondent
         end

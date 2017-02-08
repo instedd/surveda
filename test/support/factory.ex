@@ -126,6 +126,13 @@ defmodule Ask.Factory do
     }
   end
 
+  def respondent_disposition_history_factory do
+    %Ask.RespondentDispositionHistory{
+      respondent: build(:respondent),
+      disposition: "partial",
+    }
+  end
+
   def oauth_token_factory do
     %Ask.OAuthToken{
       provider: "test",

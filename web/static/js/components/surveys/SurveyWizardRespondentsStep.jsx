@@ -99,7 +99,7 @@ class SurveyWizardRespondentsStep extends Component {
   render() {
     let { survey, channels, respondentGroups, invalidRespondents, readOnly } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
-    if (!survey || !channels || Object.keys(channels).length == 0) {
+    if (!survey || !channels) {
       return <div>Loading...</div>
     }
 

@@ -30,7 +30,7 @@ defmodule Ask.RespondentGroupControllerTest do
       channel = insert(:channel, name: "test")
       add_channel_to(group, channel)
 
-      sample = group.sample |> Enum.map(&mask(&1, project))
+      sample = group.sample |> Enum.map(&Respondent.mask_phone_number/1)
 
       conn = get conn, project_survey_respondent_group_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"] == [%{
@@ -53,7 +53,7 @@ defmodule Ask.RespondentGroupControllerTest do
       conn = post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
       group = RespondentGroup |> Repo.get_by(survey_id: survey.id)
 
-      sample = group.sample |> Enum.map(&mask(&1, project))
+      sample = group.sample |> Enum.map(&Respondent.mask_phone_number/1)
 
       assert json_response(conn, 201)["data"] == %{
         "id" => group.id,
@@ -212,14 +212,12 @@ defmodule Ask.RespondentGroupControllerTest do
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
       channel = insert(:channel, name: "test")
 
-      sample = group.sample |> Enum.map(&mask(&1, project))
-
       attrs = %{channels: [channel.id]}
       conn = put conn, project_survey_respondent_group_path(conn, :update, project.id, survey.id, group.id), respondent_group: attrs
       assert json_response(conn, 200)["data"] == %{
         "id" => group.id,
         "name" => group.name,
-        "sample" => sample,
+        "sample" => group.sample,
         "respondents_count" => group.respondents_count,
         "channels" => [channel.id],
       }
@@ -332,9 +330,5 @@ defmodule Ask.RespondentGroupControllerTest do
     |> put_assoc(:channels, [channels_changeset])
 
     Repo.update(changeset)
-  end
-
-  defp mask(phone_number, project) do
-    Respondent.hash_phone_number(phone_number, project.salt)
   end
 end

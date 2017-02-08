@@ -1,24 +1,34 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
-import * as guestActions from '../../actions/guest'
 import CopyToClipboard from 'react-copy-to-clipboard'
 
 export class InviteLink extends Component {
+
   copyLink() {
-    const { projectId, guest } = this.props
+    const { projectId, guest, dispatch } = this.props
     if (guest.code) {
-      this.props.actions.invite(projectId, guest.code, guest.level, guest.email)
-      this.props.collaboratorsActions.fetchCollaborators(projectId)
-      window.Materialize.toast(`Invite link was copied to the clipboard`, 5000)
+      dispatch(actions.invite(projectId, guest.code, guest.level, guest.email)).then(
+        () => {
+          window.Materialize.toast(`Invite link was copied to the clipboard`, 5000)
+        },
+        (reject) => {
+          reject.json().then(json => {
+            window.Materialize.toast(`Someone else already invited this user. Please try again`, 10000)
+          })
+        }
+      )
+      dispatch(collaboratorsActions.fetchCollaborators(projectId))
     }
   }
 
   inviteLink() {
     const { guest } = this.props
-    return guest.code ? window.location.origin + '/confirm?code=' + guest.code : ''
+    if (guest.code) {
+      return window.location.origin + '/confirm?code=' + guest.code
+    }
+    return ''
   }
 
   render() {
@@ -42,21 +52,13 @@ export class InviteLink extends Component {
 
 InviteLink.propTypes = {
   projectId: PropTypes.number,
-  actions: PropTypes.object.isRequired,
-  collaboratorsActions: PropTypes.object.isRequired,
-  guestActions: PropTypes.object.isRequired,
-  guest: PropTypes.object.isRequired
+  guest: PropTypes.object.isRequired,
+  dispatch: PropTypes.any
 }
-
-const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch),
-  collaboratorsActions: bindActionCreators(collaboratorsActions, dispatch),
-  guestActions: bindActionCreators(guestActions, dispatch)
-})
 
 const mapStateToProps = (state) => ({
   projectId: state.project.data.id,
   guest: state.guest
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(InviteLink)
+export default connect(mapStateToProps)(InviteLink)

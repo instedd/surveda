@@ -15,7 +15,7 @@ defmodule Ask.Respondent do
     #            communication might continue if the respondent replies at any time
     # * rejected: communication ended because the respondent fell in a full quota bucket
     field :state, :string, default: "pending" # pending, active, completed, failed, stalled, rejected
-    field :disposition, :string # NULL, completed
+    field :disposition, :string # NULL, completed, partial, ineligible
 
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
@@ -35,7 +35,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode])
+    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition])
     |> validate_required([:phone_number, :state])
   end
 
@@ -53,5 +53,9 @@ defmodule Ask.Respondent do
 
   def replace_numbers_by_hash(string) do
     Regex.replace(~r/[0-9]/, string, "#")
+  end
+
+  def show_disposition(disposition) do
+    (disposition || "") |> String.capitalize
   end
 end

@@ -29,7 +29,7 @@ class SurveyWizardModeStep extends Component {
   render() {
     const { survey, readOnly } = this.props
 
-    if (!survey || ((survey.channels || []).length > 0)) {
+    if (!survey) {
       return <div>Loading...</div>
     }
 

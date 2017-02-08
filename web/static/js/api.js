@@ -244,17 +244,17 @@ export const synchronizeChannels = () => {
 }
 
 export const autocompleteVars = (projectId, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${escape(text)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
 export const autocompletePrimaryLanguage = (projectId, mode, language, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${escape(text)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
 export const autocompleteOtherLanguage = (projectId, mode, primaryLanguage, otherLanguage, sourceText, targetText) => {
-  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${escape(sourceText)}&target_text=${escape(targetText)}`)
+  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
   .then(response => response.json())
 }
 
@@ -270,20 +270,24 @@ export const updateSettings = (params) => {
   return apiPostJSON(`update_settings`, {}, params)
 }
 
+export const getInviteByEmailAndProject = (projectId, email) => {
+  return apiFetchJSON(`get_invite_by_email_and_project?project_id=${projectId}&email=${encodeURIComponent(email)}`)
+}
+
 export const invite = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
+  return apiFetchJSON(`invite?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
 }
 
 export const inviteMail = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${code}&email=${email}&level=${level}`)
+  return apiFetchJSON(`invite_mail?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
 }
 
 export const fetchInvite = (code) => {
-  return apiFetchJSON(`invite_show?code=${code}`)
+  return apiFetchJSON(`invite_show?code=${encodeURIComponent(code)}`)
 }
 
 export const confirm = (code) => {
-  return apiFetchJSON(`accept_invitation?code=${code}`)
+  return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }
 
 export const importQuestionnaireZip = (projectId, questionnaireId, files) => {

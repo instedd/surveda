@@ -40,7 +40,7 @@ class SurveyWizardQuestionnaireStep extends Component {
   newQuestionnaireButton(projectId, questionnaires) {
     let buttonLabel = 'NEW QUESTIONNAIRE'
     if (Object.keys(questionnaires).length == 0) {
-      buttonLabel = "You still haven't created any questionnaire. Click here to create one."
+      buttonLabel = 'Create a questionnaire'
     }
 
     return (
