@@ -10,7 +10,7 @@ import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
-  newIvrPrompt } from '../step'
+  newIvrPrompt, newRefusal } from '../step'
 import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
   choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
@@ -100,6 +100,8 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
     case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC: return changeExplanationStepSkipLogic(state, action)
     case actions.CHANGE_DISPOSITION: return changeDisposition(state, action)
+    case actions.TOGGLE_ACCEPT_REFUSALS: return toggleAcceptsRefusals(state, action)
+    case actions.CHANGE_REFUSAL: return changeRefusal(state, action, quiz)
   }
 
   return state
@@ -411,7 +413,8 @@ const changeStepType = (state, action) => {
           minValue: null,
           maxValue: null,
           rangesDelimiters: null,
-          ranges: [{from: null, to: null, skipLogic: null}]
+          ranges: [{from: null, to: null, skipLogic: null}],
+          refusal: newRefusal()
         }
         return newStep
       })
@@ -1130,6 +1133,38 @@ const changeDisposition = (state, action) => {
     return {
       ...step,
       disposition: action.disposition
+    }
+  })
+}
+
+const toggleAcceptsRefusals = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    const refusal = step.refusal || newRefusal()
+    return {
+      ...step,
+      refusal: {
+        ...refusal,
+        enabled: !refusal.enabled
+      }
+    }
+  })
+}
+
+const changeRefusal = (state, action, quiz) => {
+  return changeStep(state, action.stepId, step => {
+    return {
+      ...step,
+      refusal: {
+        ...step.refusal,
+        responses: {
+          ivr: splitValues(action.ivrValues),
+          sms: {
+            ...step.refusal.responses.sms,
+            [quiz.activeLanguage]: splitValues(action.smsValues)
+          }
+        },
+        skipLogic: action.skipLogic
+      }
     }
   })
 }

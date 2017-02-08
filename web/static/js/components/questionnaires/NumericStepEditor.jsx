@@ -75,8 +75,11 @@ class NumericStepEditor extends Component {
                   questionnaire={questionnaire}
                   readOnly={readOnly}
                   step={step}
+                  stepIndex={stepIndex}
                   stepsAfter={stepsAfter}
-                  stepsBefore={stepsBefore} />
+                  stepsBefore={stepsBefore}
+                  errors={errors}
+                  />
               </div>
             </div>
           </li>

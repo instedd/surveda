@@ -55,10 +55,22 @@
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
         "ranges": {"$ref": "#/definitions/ranges"},
-        "store": { "type": "string" }
+        "store": { "type": "string" },
+        "refusal": { "oneOf": [{ "$ref": "#/definitions/refusal" }, {"type":"null"}] }
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
+    },
+
+    "refusal": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "responses": {"$ref": "#/definitions/responses"},
+        "skip_logic": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false,
+      "required": ["enabled", "responses", "skip_logic"]
     },
 
     "explanation": {
