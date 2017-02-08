@@ -52,6 +52,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     case state do
       "failed" ->
         Broker.channel_failed(respondent, token)
+      _ -> :ok
     end
 
     conn |> send_resp(200, "")

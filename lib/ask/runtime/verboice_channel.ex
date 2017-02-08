@@ -112,6 +112,17 @@ defmodule Ask.Runtime.VerboiceChannel do
     end)
   end
 
+  def callback(conn, %{"path" => ["status", respondent_id, token], "CallStatus" => status}) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    case status do
+      "failed" ->
+        Broker.channel_failed(respondent, token)
+      _ -> :ok
+    end
+
+    conn |> send_resp(200, "")
+  end
+
   def callback(conn, params = %{"respondent" => respondent_id}) do
     respondent = Respondent |> Repo.get(respondent_id)
 
@@ -150,16 +161,22 @@ defmodule Ask.Runtime.VerboiceChannel do
     Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", respondent: respondent.id)
   end
 
+  def status_callback_url(respondent, token) do
+    respondent_id = respondent.id |> Integer.to_string
+    Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], [])
+  end
+
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def can_push_question?(_), do: false
     def ask(_, _, _, _), do: throw(:not_implemented)
     def prepare(_, _), do: :ok
 
-    def setup(channel, respondent, _token) do
+    def setup(channel, respondent, token) do
       channel.client
       |> Verboice.Client.call(address: respondent.sanitized_phone_number,
                               channel: channel.channel_name,
-                              callback_url: VerboiceChannel.callback_url(respondent))
+                              callback_url: VerboiceChannel.callback_url(respondent),
+                              status_callback_url: VerboiceChannel.status_callback_url(respondent, token))
     end
   end
 end
