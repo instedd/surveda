@@ -82,6 +82,8 @@ defmodule Ask.Router do
   get "/audio/:id", Ask.AudioDeliveryController, :show
   get "/callbacks/:provider", Ask.CallbackController, :callback
   post "/callbacks/:provider", Ask.CallbackController, :callback
+  get "/callbacks/:provider/*path", Ask.CallbackController, :callback
+  post "/callbacks/:provider/*path", Ask.CallbackController, :callback
 
   scope "/", Ask do
     pipe_through :browser

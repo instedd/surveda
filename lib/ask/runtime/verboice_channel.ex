@@ -152,10 +152,10 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def can_push_question?(_), do: false
-    def ask(_, _, _), do: throw(:not_implemented)
+    def ask(_, _, _, _), do: throw(:not_implemented)
     def prepare(_, _), do: :ok
 
-    def setup(channel, respondent) do
+    def setup(channel, respondent, _token) do
       channel.client
       |> Verboice.Client.call(address: respondent.sanitized_phone_number,
                               channel: channel.channel_name,

@@ -4,6 +4,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   alias Ask.Runtime.{Broker, NuntiumChannel, Flow}
   alias Ask.{Repo, Respondent, Channel}
   import Ecto.Query
+  import Plug.Conn
   defstruct [:oauth_token, :name, :settings]
 
   def new(channel) do
@@ -44,6 +45,16 @@ defmodule Ask.Runtime.NuntiumChannel do
       client_secret: guisso_config[:client_secret])
 
     client.token
+  end
+
+  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "session_token" => token, "state" => state}) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    case state do
+      "failed" ->
+        Broker.channel_failed(respondent, token)
+    end
+
+    conn |> send_resp(200, "")
   end
 
   def callback(conn, %{"from" => from, "body" => body}) do
@@ -147,6 +158,10 @@ defmodule Ask.Runtime.NuntiumChannel do
         interface: %{
           type: "http_get_callback",
           url: callback_url
+        },
+        delivery_ack: %{
+          method: "get",
+          url: Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "nuntium", ["status"], [])
         }
       }
 
@@ -167,16 +182,18 @@ defmodule Ask.Runtime.NuntiumChannel do
       end
     end
 
-    def setup(_channel, _respondent), do: :ok
+    def setup(_channel, _respondent, _token), do: :ok
     def can_push_question?(_), do: true
 
-    def ask(channel, phone_number, prompts) do
+    def ask(channel, respondent, token, prompts) do
       nuntium_config = Application.get_env(:ask, Nuntium)
       messages = prompts |> Enum.map(fn prompt ->
         %{
-          to: "sms://#{phone_number}",
+          to: "sms://#{respondent.sanitized_phone_number}",
           body: prompt,
           suggested_channel: channel.settings["nuntium_channel"],
+          respondent_id: respondent.id,
+          session_token: token
         }
       end)
       Nuntium.Client.new(nuntium_config[:base_url], channel.oauth_token)

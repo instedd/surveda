@@ -16,14 +16,13 @@ defmodule Ask.SessionTest do
   end
 
   test "start", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    phone_number = respondent.sanitized_phone_number
-
     {:ok, session, _, timeout} = Session.start(quiz, respondent, channel)
-    assert %Session{} = session
+    assert %Session{token: token} = session
     assert 10 = timeout
+    assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
   end
 
   test "start with channel without push", %{quiz: quiz, respondent: respondent} do
@@ -32,34 +31,65 @@ defmodule Ask.SessionTest do
 
     {:ok, session, _, timeout} = Session.start(quiz, respondent, channel)
 
-    assert %Session{} = session
+    assert %Session{token: token} = session
     assert 10 = timeout
+    assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent]
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
     refute_receive _
   end
 
   test "retry question", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    phone_number = respondent.sanitized_phone_number
+    assert {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, [5])
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
-    assert {:ok, session, _, 5} = Session.start(quiz, respondent, channel, [5])
-    assert_receive [:setup, ^test_channel, ^respondent]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
-
-    assert {:ok, session, _, 10} = Session.timeout(session)
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert {:ok, session = %Session{token: token2}, _, 10} = Session.timeout(session)
+    assert token2 != token
+    assert_receive [:ask, ^test_channel, ^respondent, ^token2, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     assert {:stalled, _} = Session.timeout(session)
   end
 
-  test "last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    phone_number = respondent.sanitized_phone_number
+  test "retry with IVR channel", %{quiz: quiz, respondent: respondent} do
+    test_channel = TestChannel.new(false)
+    channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
-    {:ok, session, _, 10} = Session.start(quiz, respondent, channel)
-    assert_receive [:setup, ^test_channel, ^respondent]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, [5])
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+
+
+    assert {:ok, %Session{token: token2}, _, 10} = Session.timeout(session)
+    assert token2 != token
+    assert_receive [:setup, ^test_channel, ^respondent, ^token2]
+  end
+
+  test "last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    {:ok, session = %Session{token: token}, _, 10} = Session.start(quiz, respondent, channel)
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     assert {:stalled, _} = Session.timeout(session)
+  end
+
+  test "mark respondent as failed when failure notification arrives on last retry", %{quiz: quiz, respondent: respondent, channel: channel} do
+    {:ok, session = %Session{token: token}, _, 10} = Session.start(quiz, respondent, channel)
+    assert :failed = Session.channel_failed(session, token)
+  end
+
+  test "ignore failure notification if token doesn't match", %{quiz: quiz, respondent: respondent, channel: channel} do
+    {:ok, session, _, 10} = Session.start(quiz, respondent, channel)
+    assert :ok = Session.channel_failed(session, "1234")
+  end
+
+  test "ignore failure notification when channel fails but there are retries", %{quiz: quiz, respondent: respondent, channel: channel} do
+    {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, [5])
+    assert :ok = Session.channel_failed(session, token)
+  end
+
+  test "ignore failure notification when channel fails but there is a fallback channel", %{quiz: quiz, respondent: respondent, channel: channel} do
+    {:ok, session = %Session{token: token}, _, 10} = Session.start(quiz, respondent, channel, [], channel)
+    assert :ok = Session.channel_failed(session, token)
   end
 
   # Primary SMS fallbacks to IVR
@@ -68,11 +98,9 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 
-    phone_number = respondent.sanitized_phone_number
-
-    {:ok, session, _, 10} = Session.start(quiz, respondent, channel, [], fallback_channel, fallback_retries)
-    assert_receive [:setup, ^test_channel, ^respondent]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    {:ok, session = %Session{token: token}, _, 10} = Session.start(quiz, respondent, channel, [], fallback_channel, fallback_retries)
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
       channel: fallback_channel,
@@ -81,8 +109,8 @@ defmodule Ask.SessionTest do
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
-    {:ok, result, _, 5} = Session.timeout(session)
-    assert_receive [:setup, ^fallback_runtime_channel, ^respondent]
+    {:ok, result = %Session{token: token}, _, 5} = Session.timeout(session)
+    assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
     assert result.channel == expected_session.channel
     assert result.retries == expected_session.retries
@@ -98,11 +126,9 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [7]
 
-    phone_number = respondent.sanitized_phone_number
-
-    {:ok, session, _, 2} = Session.start(quiz, respondent, channel, [2], fallback_channel, fallback_retries)
-    assert_receive [:setup, ^test_channel, ^respondent]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    {:ok, session = %Session{token: token}, _, 2} = Session.start(quiz, respondent, channel, [2], fallback_channel, fallback_retries)
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
       channel: fallback_channel,
@@ -111,8 +137,8 @@ defmodule Ask.SessionTest do
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
-    {:ok, result, _, 7} = Session.timeout(session)
-    assert_receive [:setup, ^fallback_runtime_channel, ^respondent]
+    {:ok, result = %Session{token: token}, _, 7} = Session.timeout(session)
+    assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
     assert result.channel == expected_session.channel
     assert result.retries == expected_session.retries
@@ -128,11 +154,9 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 
-    phone_number = respondent.sanitized_phone_number
-
-    {:ok, session, _, 2} = Session.start(quiz, respondent, channel, [2, 3], fallback_channel, fallback_retries)
-    assert_receive [:setup, ^test_channel, ^respondent]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    {:ok, session = %Session{token: token}, _, 2} = Session.start(quiz, respondent, channel, [2, 3], fallback_channel, fallback_retries)
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
       channel: fallback_channel,
@@ -141,12 +165,12 @@ defmodule Ask.SessionTest do
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
-    {:ok, session, _, 3} = Session.timeout(session)
+    {:ok, session = %Session{token: token}, _, 3} = Session.timeout(session)
     refute_receive [:setup, _, _]
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
-    {:ok, result, _, 5} = Session.timeout(session)
-    assert_receive [:setup, ^fallback_runtime_channel, ^respondent]
+    {:ok, result = %Session{token: token}, _, 5} = Session.timeout(session)
+    assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
     assert result.channel == expected_session.channel
     assert result.retries == expected_session.retries
@@ -229,13 +253,12 @@ defmodule Ask.SessionTest do
     |> Repo.update!
 
     respondent = Respondent |> Repo.get(respondent.id)
-    phone_number = respondent.sanitized_phone_number
 
-    {:ok, session, _, _} = Session.start(quiz, respondent, channel)
-    assert_receive [:setup, ^test_channel, ^respondent]
+    {:ok, session = %Session{token: token}, _, _} = Session.start(quiz, respondent, channel)
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
-    assert_receive [:ask, ^test_channel, ^phone_number, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     {:rejected, %Reply{prompts: ["Bye!"]}} = Session.sync_step(session, Flow.Message.reply("N"))
   end

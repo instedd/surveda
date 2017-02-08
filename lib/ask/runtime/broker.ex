@@ -22,6 +22,10 @@ defmodule Ask.Runtime.Broker do
     GenServer.call(@server_ref, {:sync_step, respondent, reply})
   end
 
+  def channel_failed(respondent, token) do
+    GenServer.call(@server_ref, {:channel_failed, respondent, token})
+  end
+
   # Makes the borker performs a poll on the surveys.
   # This method is intended to be used by tests.
   def poll do
@@ -56,6 +60,16 @@ defmodule Ask.Runtime.Broker do
 
   def handle_call(:poll, _from, state) do
     handle_info(:poll, state)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:channel_failed, respondent, token}, _from, state) do
+    session = respondent.session |> Session.load
+    case Session.channel_failed(session, token) do
+      :ok -> :ok
+      :failed ->
+        update_respondent(respondent, :failed)
+    end
     {:reply, :ok, state}
   end
 
