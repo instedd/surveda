@@ -31,6 +31,7 @@
     },
 
     "multiple-choice": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["multiple-choice"] },
@@ -44,6 +45,7 @@
     },
 
     "numeric": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["numeric"] },
@@ -60,6 +62,7 @@
     },
 
     "explanation": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["explanation"] },
@@ -72,6 +75,7 @@
     },
 
     "language-selection": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["language-selection"] },
@@ -85,6 +89,7 @@
     },
 
     "flag": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": {"enum": ["flag"]},
@@ -104,6 +109,7 @@
     },
 
     "choice": {
+      "type": "object",
       "properties": {
         "value": {"type": "string"},
         "responses": {"$ref": "#/definitions/responses"},
@@ -121,6 +127,7 @@
     },
 
     "range": {
+      "type": "object",
       "properties": {
         "from": {"type": ["integer", "null"]},
         "to": {"type": ["integer", "null"]},
