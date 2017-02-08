@@ -8,11 +8,19 @@ class InviteConfirmation extends Component {
   componentDidMount() {
     const { dispatch, router } = this.props
     const code = this.props.location.query.code
+
     dispatch(actions.fetchInvite(code)).then((invite) => {
       if (invite.error) {
         router.push(routes.project(invite.project_id))
       }
-    })
+    },
+      (reject) => {
+        if (reject.status == 404) {
+          window.Materialize.toast('WARNING: Invalid invitation code', 15000)
+          router.push(routes.projects)
+        }
+      }
+    )
   }
 
   confirmInvitation() {

@@ -76,14 +76,20 @@ defmodule Ask.InviteController do
 
   def show(conn, %{"code" => code}) do
     invite = Invite |> Repo.get_by(code: code)
-    project = Project |> Repo.get(invite.project_id)
-    user = conn |> current_user
-    project_membership = ProjectMembership |> Repo.get_by(user_id: user.id, project_id: project.id)
-
-    if project_membership do
-      render(conn, "error.json", %{error: "The user is already a member", project_id: project.id})
+    if !invite do
+      conn
+      |> put_status(404)
+      |> render("error.json", %{error: "invitation code is invalid", project_id: nil})
     else
-      render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
+      project = Project |> Repo.get(invite.project_id)
+      user = conn |> current_user
+      project_membership = ProjectMembership |> Repo.get_by(user_id: user.id, project_id: project.id)
+
+      if project_membership do
+        render(conn, "error.json", %{error: "The user is already a member", project_id: project.id})
+      else
+        render(conn, "show.json", %{project_name: project.name, inviter_email: invite.inviter_email, role: invite.level})
+      end
     end
   end
 
