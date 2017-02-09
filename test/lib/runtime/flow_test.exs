@@ -252,18 +252,76 @@ defmodule Ask.FlowTest do
       assert {:end, _} = result
     end
 
-    test "when value is in the first range and it has no min value it finds it" do
-      {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(Flow.Message.reply("-10"))
+    @numeric_steps_no_min_max [
+      numeric_step(
+        id: "ddd",
+        title:
+        "What is the probability that a number has more prime factors than the sum of its digits?",
+        prompt: prompt(
+          sms: sms_prompt("What is the probability that a number has more prime factors than the sum of its digits?")
+        ),
+        store: "Probability",
+        skip_logic: numeric_skip_logic(min_value: nil, max_value: nil,
+          ranges_delimiters: "25,75", ranges: [
+            %{
+              "from" => nil,
+              "to" => 24,
+              "skip_logic" => "end"
+            },
+            %{
+              "from" => 25,
+              "to" => 74,
+              "skip_logic" => "end"
+            },
+            %{
+              "from" => 75,
+              "to" => nil,
+              "skip_logic" => "end"
+            }
+          ]
+        ),
+        refusal: nil
+      ),
+    ]
 
+    test "when value is in the first range and it has no min value it finds it" do
+      {:ok, flow, _} =
+        build(:questionnaire, steps: @numeric_steps_no_min_max)
+        |> Flow.start("sms")
+        |> Flow.step
+      result = flow |> Flow.step(Flow.Message.reply("-10"))
       assert {:end, _} = result
     end
 
     test "when value is in the last range and it has no max value it finds it" do
-      {:ok, flow, _} = init_quiz_and_send_response("S")
+      {:ok, flow, _} =
+        build(:questionnaire, steps: @numeric_steps_no_min_max)
+        |> Flow.start("sms")
+        |> Flow.step
       result = flow |> Flow.step(Flow.Message.reply("999"))
-
       assert {:end, _} = result
+    end
+
+    test "when value is less than min" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("-1"))
+
+      assert {:ok, %Flow{}, %{prompts: prompts}} = result
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
+    end
+
+    test "when value is greater than max" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(Flow.Message.reply("101"))
+
+      assert {:ok, %Flow{}, %{prompts: prompts}} = result
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
     end
   end
 

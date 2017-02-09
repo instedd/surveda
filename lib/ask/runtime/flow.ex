@@ -31,10 +31,16 @@ defmodule Ask.Runtime.Flow do
 
   defp is_numeric(str) do
     case Float.parse(str) do
-      {_num, ""} -> true
+      {num, ""} -> num
       {_num, _r} -> false               # _r : remainder_of_bianry
       :error     -> false
     end
+  end
+
+  defp is_in_numeric_range(step, value) do
+    min_value = step["min_value"]
+    max_value = step["max_value"]
+    !((min_value && value < min_value) || (max_value && value > max_value))
   end
 
   defp has_refusal_option(%{"refusal" => refusal = %{"enabled" => true}}, flow, reply) do
@@ -133,7 +139,8 @@ defmodule Ask.Runtime.Flow do
                       end)
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
-                      if is_numeric(reply) || has_refusal_option(step, flow, reply) do
+                      num = is_numeric(reply)
+                      if (num && is_in_numeric_range(step, num)) || has_refusal_option(step, flow, reply) do
                         reply
                       else
                         nil
