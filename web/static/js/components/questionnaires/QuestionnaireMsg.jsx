@@ -55,19 +55,18 @@ class QuestionnaireMsg extends Component {
     this.setState({editing: !this.state.editing})
   }
 
-  promptSmsChange(e) {
-    e.preventDefault()
+  promptSmsChange(text) {
     this.setState({
       quizState: {
         ...this.state.quizState,
-        stepPromptSms: e.target.value
+        stepPromptSms: text
       }
     })
   }
 
-  promptSmsSubmit(e) {
+  promptSmsSubmit(text) {
     const { dispatch, messageKey } = this.props
-    dispatch(actions.setSmsQuestionnaireMsg(messageKey, e.target.value))
+    dispatch(actions.setSmsQuestionnaireMsg(messageKey, text))
   }
 
   promptIvrChange(e) {
@@ -270,8 +269,8 @@ class QuestionnaireMsg extends Component {
           value={quizState.stepPromptSms}
           originalValue={quizState.smsOriginalValue}
           readOnly={readOnly}
-          onChange={e => this.promptSmsChange(e)}
-          onBlur={e => this.promptSmsSubmit(e)}
+          onChange={text => this.promptSmsChange(text)}
+          onBlur={text => this.promptSmsSubmit(text)}
           autocomplete
           autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'sms')}
           autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'sms')}

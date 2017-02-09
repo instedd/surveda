@@ -318,6 +318,29 @@ defmodule Ask.FlowTest do
     assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"]
   end
 
+  test "first step (sms mode) with multiple messages separated by newline" do
+    steps = [
+      multiple_choice_step(
+        id: Ecto.UUID.generate,
+        title: "Do you smoke?",
+        prompt: prompt(
+          sms: sms_prompt("Do you smoke?\u{1E}Reply 1 for YES, 2 for NO"),
+        ),
+        store: "Smokes",
+        choices: [
+          choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+        ]
+      ),
+    ]
+
+    quiz = build(:questionnaire, steps: steps)
+
+    step = Flow.start(quiz, "sms") |> Flow.step()
+    assert {:ok, %Flow{}, %{prompts: prompts}} = step
+    assert prompts == ["Do you smoke?", "Reply 1 for YES, 2 for NO"]
+  end
+
   describe "explanation steps" do
     test "adds previous explanation steps to prompts" do
       quiz = build(:questionnaire, steps: @explanation_steps_minimal)

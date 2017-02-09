@@ -91,3 +91,12 @@ export const newRefusal = () => ({
   skipLogic: null
 })
 
+export const splitSmsText = (string: string): string[] => {
+  return string.split(smsSplitSeparator)
+}
+
+export const joinSmsPieces = (pieces: string[]): string => {
+  return pieces.join(smsSplitSeparator)
+}
+
+const smsSplitSeparator = '\u001E'

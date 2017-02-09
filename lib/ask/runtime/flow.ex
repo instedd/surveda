@@ -157,7 +157,7 @@ defmodule Ask.Runtime.Flow do
         if flow.retries >=  @max_retries do
           {%{flow | current_step: flow |> end_flow}, %Reply{}}
         else
-          {%{flow | retries: flow.retries + 1}, %Reply{prompts: [fetch(:error_msg, flow, step)]}}
+          {%{flow | retries: flow.retries + 1}, %Reply{prompts: fetch(:error_msg, flow, step)}}
         end
       reply_value ->
         flow = flow |> advance_current_step(step, reply_value)
@@ -177,14 +177,14 @@ defmodule Ask.Runtime.Flow do
           "flag" ->
             add_disposition_to_next_step(flow, state, step)
           _ ->
-            {:ok, flow, %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}}
+            {:ok, flow, %{state | prompts: (state.prompts || []) ++ fetch(:prompt, flow, step)}}
         end
     end
   end
 
   defp add_explanation_step_prompt(flow, state) do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
-    state = %{state | prompts: (state.prompts || []) ++ [fetch(:prompt, flow, step)]}
+    state = %{state | prompts: (state.prompts || []) ++ fetch(:prompt, flow, step)}
     flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
     eval({flow, state})
   end
@@ -211,6 +211,7 @@ defmodule Ask.Runtime.Flow do
     step
     |> Map.get("prompt", %{})
     |> Map.get(flow.mode)
+    |> split_by_newlines(flow.mode)
   end
 
   defp fetch(:prompt, flow, step, language) do
@@ -218,6 +219,7 @@ defmodule Ask.Runtime.Flow do
     |> Map.get("prompt", %{})
     |> Map.get(language, %{})
     |> Map.get(flow.mode)
+    |> split_by_newlines(flow.mode)
   end
 
   defp fetch(:response, flow, step, language) do
@@ -235,6 +237,15 @@ defmodule Ask.Runtime.Flow do
     flow.questionnaire.error_msg
     |> Map.get(language, %{})
     |> Map.get(flow.mode)
+    |> split_by_newlines(flow.mode)
+  end
+
+  defp split_by_newlines(text, mode) do
+    if mode == "sms" && text do
+      text |> String.split(Questionnaire.sms_split_separator)
+    else
+      [text]
+    end
   end
 end
 
