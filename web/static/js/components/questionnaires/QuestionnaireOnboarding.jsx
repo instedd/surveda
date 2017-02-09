@@ -4,22 +4,17 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as userSettingsActions from '../../actions/userSettings'
 import * as questionnaireActions from '../../actions/questionnaire'
+// import * as routes from '../../routes'
 
 class QuestionnaireOnboarding extends Component {
   static propTypes = {
     dispatch: PropTypes.func,
     questionnaire: PropTypes.object,
     userSettingsActions: PropTypes.object.isRequired,
-    questionnaireActions: PropTypes.object.isRequired
-  }
-
-  hideOnboarding(e) {
-    const { userSettingsActions } = this.props
-    Promise.resolve(userSettingsActions.hideOnboarding()).then(
-      () => {
-        this.props.userSettingsActions.fetchSettings()
-        this.props.questionnaireActions.addStep()
-      })
+    projectId: PropTypes.any,
+    questionnaireActions: PropTypes.object.isRequired,
+    router: PropTypes.object,
+    onDismiss: PropTypes.func
   }
 
   componentDidMount() {
@@ -29,11 +24,12 @@ class QuestionnaireOnboarding extends Component {
   }
 
   render() {
+    const { onDismiss } = this.props
     return (
       <div className='col s12 m8 offset-m1'>
         <div className='carousel carousel-slider center' data-indicators='true'>
           <div className='carousel-fixed-item center'>
-            <a onClick={e => this.hideOnboarding(e)}>Understood, create the first step</a>
+            <a onClick={() => onDismiss()}>Understood, create the first step</a>
           </div>
           <div className='carousel-item' href='#one!'>
             <div className='icons'>
@@ -67,7 +63,8 @@ class QuestionnaireOnboarding extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    questionnaire: state.questionnaire.data
+    questionnaire: state.questionnaire.data,
+    projectId: ownProps.params.projectId
   }
 }
 

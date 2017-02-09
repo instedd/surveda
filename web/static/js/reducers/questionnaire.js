@@ -467,7 +467,7 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
   }
 }
 
-const newMultipleChoiceStep = () => {
+export const newMultipleChoiceStep = () => {
   return {
     id: uuid.v4(),
     type: 'multiple-choice',

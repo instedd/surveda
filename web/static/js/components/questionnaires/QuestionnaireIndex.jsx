@@ -40,10 +40,6 @@ class QuestionnaireIndex extends Component {
   newQuestionnaire(e) {
     e.preventDefault()
 
-    const { userSettings } = this.props
-
-    const settings = userSettings.settings
-    const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
     // Prevent multiple clicks to create multiple questionnaires
     if (this.creatingQuestionnaire) return
     this.creatingQuestionnaire = true
@@ -53,8 +49,10 @@ class QuestionnaireIndex extends Component {
     questionnaireActions.createQuestionnaire(projectId)
       .then(questionnaire => {
         this.creatingQuestionnaire = false
-        const event = skipOnboarding ? Promise.resolve(questionnaireActions.addStep()) : Promise.resolve()
-        event.then(() => router.push(routes.questionnaire(projectId, questionnaire.id)))
+        router.push({
+          pathname: routes.questionnaire(projectId, questionnaire.id),
+          state: {isNew: true}
+        })
       })
   }
 

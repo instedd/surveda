@@ -19,7 +19,8 @@ import * as api from '../../api'
 type State = {
   addingStep: boolean,
   currentStep: ?Step,
-  currentStepIsNew: boolean
+  currentStepIsNew: boolean,
+  isNew: boolean
 };
 
 class QuestionnaireEditor extends Component {
@@ -27,7 +28,13 @@ class QuestionnaireEditor extends Component {
 
   constructor(props) {
     super(props)
-    this.state = this.internalState(null)
+    const initialState = props.location.state
+    const isNew = initialState && initialState.isNew
+    if (isNew) {
+      this.state = this.internalState(null, false, false, true)
+    } else {
+      this.state = this.internalState(null)
+    }
   }
 
   selectStep(stepId) {
@@ -60,6 +67,10 @@ class QuestionnaireEditor extends Component {
     })
   }
 
+  onOnboardingDismiss() {
+    this.props.userSettingsActions.hideOnboarding()
+  }
+
   deleteStep() {
     const currentStepId = this.state.currentStep
 
@@ -71,11 +82,12 @@ class QuestionnaireEditor extends Component {
     })
   }
 
-  internalState(currentStep, addingStep = false, currentStepIsNew = false) {
+  internalState(currentStep, addingStep = false, currentStepIsNew = false, isNew = false) {
     return {
       currentStep,
       addingStep,
-      currentStepIsNew
+      currentStepIsNew,
+      isNew
     }
   }
 
@@ -85,11 +97,15 @@ class QuestionnaireEditor extends Component {
     // to the addStep method, without involving additional component state handling
     // or explicit management via Redux reducers.
     const questionnaireData = newProps.questionnaire
+
     if (this.state.addingStep && questionnaireData && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
       const newStep = questionnaireData.steps[questionnaireData.steps.length - 1]
       if (newStep != null) {
         this.setState(this.internalState(newStep.id, false, true))
       }
+    }
+    if (questionnaireData && questionnaireData.steps && this.state.isNew) {
+      this.selectStep(questionnaireData.steps[0].id)
     }
   }
 
@@ -332,7 +348,7 @@ class QuestionnaireEditor extends Component {
             <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
         </div>
-        : <QuestionnaireOnboarding />
+        : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
         }
       </div>
     )
@@ -349,7 +365,8 @@ QuestionnaireEditor.propTypes = {
   readOnly: PropTypes.bool,
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
-  questionnaire: PropTypes.object
+  questionnaire: PropTypes.object,
+  location: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
