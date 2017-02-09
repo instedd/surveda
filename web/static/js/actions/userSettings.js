@@ -13,6 +13,9 @@ export const fetchSettings = () => dispatch => {
 
 export const hideOnboarding = () => dispatch => {
   api.updateSettings({settings: {onboarding: {questionnaire: true}}})
+    .then(response => {
+      dispatch(receiveSettings(response.result))
+    })
 }
 
 export const receiveSettings = (response) => {

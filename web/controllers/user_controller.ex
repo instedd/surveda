@@ -21,7 +21,7 @@ defmodule Ask.UserController do
     case Repo.update(changeset) do
       {:ok, user} ->
         conn
-        |> render("user.json", user: user)
+        |> render("settings.json", settings: user.settings)
       {:error, changeset} ->
         conn
         |> render("error.json", changeset: changeset)
