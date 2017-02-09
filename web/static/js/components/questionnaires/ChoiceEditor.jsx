@@ -248,13 +248,13 @@ class ChoiceEditor extends Component {
           </td>
         </tr>)
     } else {
-      let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : null
+      let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : []
       let smsErrors = errors[choiceSmsResponsePath(stepIndex, choiceIndex, lang)]
       let ivrErrors = errors[choiceIvrResponsePath(stepIndex, choiceIndex)]
 
       return (
         <tr>
-          {!isRefusal && responseErrors
+          {!isRefusal
           ? this.cell(this.state.response, 'No response', responseErrors, true, e => this.enterEditMode(e, 'response'))
           : null
           }
