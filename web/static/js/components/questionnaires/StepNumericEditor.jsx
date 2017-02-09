@@ -155,7 +155,6 @@ class StepNumericEditor extends Component {
           <input
             type='number'
             disabled={readOnly}
-            is length='20'
             onChange={e => this.maxValueChange(e)}
             onBlur={e => this.maxValueSubmit(e)} />
         </InputWithLabel>
