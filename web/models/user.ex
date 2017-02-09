@@ -5,6 +5,7 @@ defmodule Ask.User do
   schema "users" do
     field :name, :string
     field :email, :string
+    field :settings, Ask.Ecto.Type.JSON
 
     has_many :channels, Ask.Channel
     has_many :oauth_tokens, Ask.OAuthToken
@@ -21,10 +22,20 @@ defmodule Ask.User do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :email] ++ coherence_fields)
+    |> cast(params, [:name, :email, :settings] ++ coherence_fields)
     |> validate_required([:email])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)
+    |> add_settings_if_needed
     |> validate_coherence(params)
+  end
+
+  defp add_settings_if_needed(changeset) do
+    changeset = if !get_field(changeset, :settings) do
+                  change(changeset, settings: %{})
+                else
+                  changeset
+                end
+    changeset
   end
 end

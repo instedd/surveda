@@ -6,6 +6,7 @@ import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import * as actions from '../../actions/questionnaires'
 import * as questionnaireActions from '../../actions/questionnaire'
+import * as userSettingsActions from '../../actions/userSettings'
 import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
@@ -19,6 +20,7 @@ class QuestionnaireIndex extends Component {
     // Fetch project for title
     this.props.projectActions.fetchProject(projectId)
     this.props.actions.fetchQuestionnaires(projectId)
+    this.props.userSettingsActions.fetchSettings()
   }
 
   nextPage(e) {
@@ -47,7 +49,10 @@ class QuestionnaireIndex extends Component {
     questionnaireActions.createQuestionnaire(projectId)
       .then(questionnaire => {
         this.creatingQuestionnaire = false
-        router.push(routes.questionnaire(projectId, questionnaire.id))
+        router.push({
+          pathname: routes.questionnaire(projectId, questionnaire.id),
+          state: {isNew: true}
+        })
       })
   }
 
@@ -71,9 +76,9 @@ class QuestionnaireIndex extends Component {
 
   render() {
     const { questionnaires, project, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage } = this.props
+      totalCount, hasPreviousPage, hasNextPage, userSettings } = this.props
 
-    if (!questionnaires) {
+    if (!questionnaires || !userSettings.settings) {
       return (
         <div>
           <CardTable title='Loading questionnaires...' highlight />
@@ -157,6 +162,8 @@ QuestionnaireIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
+  userSettingsActions: PropTypes.object.isRequired,
+  userSettings: PropTypes.object,
   projectId: PropTypes.any,
   project: PropTypes.object,
   questionnaires: PropTypes.array,
@@ -173,6 +180,7 @@ QuestionnaireIndex.propTypes = {
 
 const mapStateToProps = (state, ownProps) => {
   let questionnaires = orderedItems(state.questionnaires.items, state.questionnaires.order)
+  const userSettings = state.userSettings
   const sortBy = state.questionnaires.sortBy
   const sortAsc = state.questionnaires.sortAsc
   const totalCount = questionnaires ? questionnaires.length : 0
@@ -191,6 +199,7 @@ const mapStateToProps = (state, ownProps) => {
     sortBy,
     sortAsc,
     questionnaires,
+    userSettings,
     pageSize,
     startIndex,
     endIndex,
@@ -203,7 +212,8 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
+  userSettingsActions: bindActionCreators(userSettingsActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireIndex))

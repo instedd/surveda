@@ -19,6 +19,7 @@ import timezones from './timezones'
 import collaborators from './collaborators'
 import guest from './guest'
 import invite from './invite'
+import userSettings from './userSettings'
 
 export default combineReducers({
   authorizations,
@@ -40,5 +41,6 @@ export default combineReducers({
   timezones,
   collaborators,
   guest,
-  invite
+  invite,
+  userSettings
 })

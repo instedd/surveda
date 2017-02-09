@@ -26,4 +26,9 @@ defmodule Ask.UserTest do
     User.changeset(%User{}, @valid_attrs) |> Repo.insert!
     {:error, _} = User.changeset(%User{}, @valid_attrs) |> Repo.insert
   end
+
+  test "changeset includes settings field" do
+    changeset = User.changeset(%User{}, @valid_attrs)
+    assert changeset.changes.settings == %{}
+  end
 end

@@ -5,7 +5,9 @@ import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
+import * as userSettingsActions from '../../actions/userSettings'
 import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
+import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
@@ -17,7 +19,8 @@ import * as api from '../../api'
 type State = {
   addingStep: boolean,
   currentStep: ?Step,
-  currentStepIsNew: boolean
+  currentStepIsNew: boolean,
+  isNew: boolean
 };
 
 class QuestionnaireEditor extends Component {
@@ -25,7 +28,13 @@ class QuestionnaireEditor extends Component {
 
   constructor(props) {
     super(props)
-    this.state = this.internalState(null)
+    const initialState = props.location.state
+    const isNew = initialState && initialState.isNew
+    if (isNew) {
+      this.state = this.internalState(null, false, false, true)
+    } else {
+      this.state = this.internalState(null)
+    }
   }
 
   selectStep(stepId) {
@@ -51,6 +60,10 @@ class QuestionnaireEditor extends Component {
     })
   }
 
+  onOnboardingDismiss() {
+    this.props.userSettingsActions.hideOnboarding()
+  }
+
   deleteStep() {
     const currentStepId = this.state.currentStep
 
@@ -62,11 +75,12 @@ class QuestionnaireEditor extends Component {
     })
   }
 
-  internalState(currentStep, addingStep = false, currentStepIsNew = false) {
+  internalState(currentStep, addingStep = false, currentStepIsNew = false, isNew = false) {
     return {
       currentStep,
       addingStep,
-      currentStepIsNew
+      currentStepIsNew,
+      isNew
     }
   }
 
@@ -76,11 +90,15 @@ class QuestionnaireEditor extends Component {
     // to the addStep method, without involving additional component state handling
     // or explicit management via Redux reducers.
     const questionnaireData = newProps.questionnaire
+
     if (this.state.addingStep && questionnaireData && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
       const newStep = questionnaireData.steps[questionnaireData.steps.length - 1]
       if (newStep != null) {
         this.setState(this.internalState(newStep.id, false, true))
       }
+    }
+    if (questionnaireData && questionnaireData.steps && this.state.isNew) {
+      this.selectStep(questionnaireData.steps[0].id)
     }
   }
 
@@ -90,6 +108,7 @@ class QuestionnaireEditor extends Component {
     if (projectId && questionnaireId) {
       this.props.projectActions.fetchProject(projectId)
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
+      this.props.userSettingsActions.fetchSettings()
     }
   }
 
@@ -209,13 +228,16 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire, project, readOnly } = this.props
+    const { questionnaire, project, readOnly, userSettings } = this.props
 
     let csvButtons = null
 
-    if (questionnaire == null || project == null) {
+    if (questionnaire == null || project == null || userSettings.settings == null) {
       return <div>Loading...</div>
     }
+
+    const settings = userSettings.settings
+    const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
 
     if (!readOnly) {
       csvButtons = <div>
@@ -294,7 +316,8 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
         </div>
-        <div className='col s12 m8 offset-m1'>
+        {skipOnboarding
+        ? <div className='col s12 m8 offset-m1'>
           <QuestionnaireSteps
             steps={questionnaire.steps}
             current={this.state.currentStep}
@@ -318,6 +341,8 @@ class QuestionnaireEditor extends Component {
             <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
         </div>
+        : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
+        }
       </div>
     )
   }
@@ -326,17 +351,21 @@ class QuestionnaireEditor extends Component {
 QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
+  userSettingsActions: PropTypes.object.isRequired,
   router: PropTypes.object,
   project: PropTypes.object,
+  userSettings: PropTypes.object,
   readOnly: PropTypes.bool,
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
-  questionnaire: PropTypes.object
+  questionnaire: PropTypes.object,
+  location: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
+  userSettings: state.userSettings,
   readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data
@@ -344,7 +373,8 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
+  userSettingsActions: bindActionCreators(userSettingsActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireEditor))

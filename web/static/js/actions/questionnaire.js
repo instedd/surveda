@@ -1,5 +1,6 @@
 // @flow weak
 import * as api from '../api'
+import { newMultipleChoiceStep } from '../reducers/questionnaire'
 
 export const FETCH = 'QUESTIONNAIRE_FETCH'
 export const RECEIVE = 'QUESTIONNAIRE_RECEIVE'
@@ -44,11 +45,7 @@ export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
   return api.fetchQuestionnaire(projectId, id)
     .then(response => {
-      // When we receive a questionnaire from the server, set the
-      // activeLanguage property to be the same as the defaultLanguage,
-      // so we don't have to do `defaultLanguage || activeLanguage` everywhere
       let questionnaire = response.entities.questionnaires[response.result]
-      questionnaire.activeLanguage = questionnaire.defaultLanguage
       dispatch(receive(questionnaire))
     })
     .then(() => {
@@ -73,9 +70,15 @@ export const fetchQuestionnaireIfNeeded = (projectId, id) => {
 }
 
 export const receive = (questionnaire: Questionnaire): ReceiveDataAction => {
+  // When we receive a questionnaire from the server, set the
+  // activeLanguage property to be the same as the defaultLanguage,
+  // so we don't have to do `defaultLanguage || activeLanguage` everywhere
   return {
     type: RECEIVE,
-    data: questionnaire
+    data: {
+      ...questionnaire,
+      activeLanguage: questionnaire.defaultLanguage
+    }
   }
 }
 
@@ -251,7 +254,7 @@ export const save = () => (dispatch, getState) => {
 }
 
 export const createQuestionnaire = (projectId) => (dispatch) =>
-  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: []})
+  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: [newMultipleChoiceStep()]})
   .then(response => {
     const questionnaire = response.entities.questionnaires[response.result]
     dispatch(fetch(projectId, questionnaire.id))
