@@ -88,4 +88,4 @@ export const joinSmsPieces = (pieces: string[]): string => {
   return pieces.join(smsSplitSeparator)
 }
 
-const smsSplitSeparator = '\n'
+const smsSplitSeparator = '\u001E'

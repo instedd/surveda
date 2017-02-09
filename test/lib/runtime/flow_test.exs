@@ -313,7 +313,7 @@ defmodule Ask.FlowTest do
         id: Ecto.UUID.generate,
         title: "Do you smoke?",
         prompt: prompt(
-          sms: sms_prompt("Do you smoke?\nReply 1 for YES, 2 for NO"),
+          sms: sms_prompt("Do you smoke?\u{1E}Reply 1 for YES, 2 for NO"),
         ),
         store: "Smokes",
         choices: [

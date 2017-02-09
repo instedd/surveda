@@ -230,7 +230,7 @@ defmodule Ask.Runtime.Flow do
 
   defp split_by_newlines(text, mode) do
     if mode == "sms" && text do
-      text |> String.split("\n")
+      text |> String.split(Questionnaire.sms_split_separator)
     else
       [text]
     end

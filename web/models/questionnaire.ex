@@ -74,4 +74,6 @@ defmodule Ask.Questionnaire do
       |> Repo.delete!
     end)
   end
+
+  def sms_split_separator, do: "\u{1E}"
 end
