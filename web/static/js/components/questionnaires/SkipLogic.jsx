@@ -59,7 +59,7 @@ class SkipLogic extends Component {
 
       return {
         id: s.id,
-        title: s.title === '' ? 'Untitled question' : s.title,
+        title: this.stringOrUntitledQuestion(s.title),
         enabled: true
       }
     })
@@ -85,12 +85,16 @@ class SkipLogic extends Component {
 
       skipOptions.unshift({
         id: currentValue,
-        title: stepIndex == -1 ? 'Step missing' : stepsBefore[stepIndex].title,
+        title: stepIndex == -1 ? 'Step missing' : this.stringOrUntitledQuestion(stepsBefore[stepIndex].title),
         enabled: false
       })
     }
 
     return { skipOptions, currentValueIsValid }
+  }
+
+  stringOrUntitledQuestion(string: string) {
+    return string === '' ? 'Untitled question' : string
   }
 
   render() {

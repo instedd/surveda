@@ -80,6 +80,17 @@ export const newIvrPrompt = () => ({
   audioSource: 'tts'
 })
 
+export const newRefusal = () => ({
+  enabled: false,
+  responses: {
+    ivr: [],
+    sms: {
+      'en': []
+    }
+  },
+  skipLogic: null
+})
+
 export const splitSmsText = (string: string): string[] => {
   return string.split(smsSplitSeparator)
 }

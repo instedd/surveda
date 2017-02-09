@@ -10,7 +10,7 @@ type Props = {
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
-  choiceIndex: number,
+  choiceIndex: any,
   readOnly: boolean,
   stepIndex: number,
   stepsBefore: Step[],
@@ -183,6 +183,8 @@ class ChoiceEditor extends Component {
   render() {
     const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
+    const isRefusal = choiceIndex == 'refusal'
+
     let skipLogicInput =
       <td>
         <SkipLogic
@@ -197,7 +199,8 @@ class ChoiceEditor extends Component {
     if (this.state.editing) {
       return (
         <tr>
-          <td onMouseDown={e => this.setDoNotClose('response')}>
+          {!isRefusal
+          ? <td onMouseDown={e => this.setDoNotClose('response')}>
             <input
               type='text'
               placeholder='Response'
@@ -207,6 +210,7 @@ class ChoiceEditor extends Component {
               onBlur={e => this.autoComplete(e)}
               onKeyDown={(e: Event) => this.onKeyDown(e, 'sms', true)} />
           </td>
+          : null }
           { sms
           ? <td onMouseDown={e => this.setDoNotClose('sms')}>
             <input
@@ -244,17 +248,20 @@ class ChoiceEditor extends Component {
           </td>
         </tr>)
     } else {
-      let responseErrors = errors[choiceValuePath(stepIndex, choiceIndex)]
+      let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : null
       let smsErrors = errors[choiceSmsResponsePath(stepIndex, choiceIndex, lang)]
       let ivrErrors = errors[choiceIvrResponsePath(stepIndex, choiceIndex)]
 
       return (
         <tr>
-          {this.cell(this.state.response, 'No response', responseErrors, true, e => this.enterEditMode(e, 'response'))}
+          {!isRefusal && responseErrors
+          ? this.cell(this.state.response, 'No response', responseErrors, true, e => this.enterEditMode(e, 'response'))
+          : null
+          }
           {this.cell(this.state.sms, 'No SMS', smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
           {this.cell(this.state.ivr, 'No IVR', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
           {skipLogicInput}
-          { readOnly ? <td />
+          { readOnly || isRefusal ? <td />
             : <td>
               <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
             </td>

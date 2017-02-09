@@ -58,7 +58,19 @@ export type NumericStep = BaseStep & StoreStep & MultilingualStep & {
   maxValue: ?number,
   rangesDelimiters: ?string,
   ranges: Range[],
+  refusal: ?Refusal
 };
+
+export type Refusal = {
+  enabled: boolean,
+  responses: {
+    ivr?: string[],
+    sms?: {
+      [lang: string]: string[]
+    }
+  },
+  skipLogic: ?string
+}
 
 export type Range = {
   from: ?number,

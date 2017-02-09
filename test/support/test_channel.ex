@@ -52,15 +52,15 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     :ok
   end
 
-  def setup(channel, phone_number) do
-    send channel.pid, [:setup, channel, phone_number]
+  def setup(channel, respondent, token) do
+    send channel.pid, [:setup, channel, respondent, token]
   end
 
   def can_push_question?(channel) do
     channel.push
   end
 
-  def ask(channel, phone_number, prompts) do
-    send channel.pid, [:ask, channel, phone_number, prompts]
+  def ask(channel, respondent, token, prompts) do
+    send channel.pid, [:ask, channel, respondent, token, prompts]
   end
 end

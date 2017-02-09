@@ -2,7 +2,7 @@ defmodule Ask.Runtime.Session do
   import Ecto.Query
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
-  defstruct [:channel, :fallback, :flow, :respondent, :retries]
+  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token]
 
   @timeout 10
 
@@ -12,19 +12,20 @@ defmodule Ask.Runtime.Session do
   end
 
   defp run_flow(flow, respondent, channel, retries, fallback_channel \\ nil, fallback_retries \\ []) do
+    token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
-    runtime_channel |> Channel.setup(respondent)
+    runtime_channel |> Channel.setup(respondent, token)
 
     {flow, reply} = case runtime_channel |> Channel.can_push_question? do
       true ->
         case flow |> Flow.step do
           {:end, reply} ->
             if Reply.prompts(reply) != [] do
-              runtime_channel |> Channel.ask(respondent.sanitized_phone_number, Reply.prompts(reply))
+              runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
             end
             {:end, reply}
           {:ok, flow, reply} ->
-            runtime_channel |> Channel.ask(respondent.sanitized_phone_number, Reply.prompts(reply))
+            runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
             {flow, reply}
         end
 
@@ -41,7 +42,8 @@ defmodule Ask.Runtime.Session do
           retries: retries,
           fallback: channel_tuple(fallback_channel, fallback_retries),
           flow: flow,
-          respondent: respondent
+          respondent: respondent,
+          token: token
         }
         {:ok, session, reply, current_timeout(session)}
     end
@@ -50,25 +52,30 @@ defmodule Ask.Runtime.Session do
   defp channel_tuple(nil, _), do: nil
   defp channel_tuple(channel, retries), do: {channel, retries}
 
+  defp clear_token(session) do
+    %{session | token: nil}
+  end
+
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
   def timeout(session = %Session{retries: [], fallback: nil}) do
     case session.channel |> Ask.Channel.runtime_channel |> Channel.can_push_question? do
-      true -> {:stalled, session}
+      true -> {:stalled, session |> clear_token}
       false -> :failed
     end
   end
 
   # If there is a fallback specified, switch session to use it
-  def timeout(session = %Session{retries: []}), do: switch_to_fallback(session)
+  def timeout(session = %Session{retries: []}), do: switch_to_fallback(session |> clear_token)
 
   #if we have a last timeout, use it to fallback
   def timeout(session = %Session{retries: [_], fallback: fallback}) when not is_nil(fallback) do
-    switch_to_fallback(session)
+    switch_to_fallback(session |> clear_token)
   end
 
   # Let's try again
   def timeout(session = %Session{retries: [_ | retries]}) do
+    token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(session.channel)
 
     # Right now this actually means:
@@ -78,14 +85,22 @@ defmodule Ask.Runtime.Session do
     case runtime_channel |> Channel.can_push_question? do
       true ->
         {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
-        runtime_channel |> Channel.ask(session.respondent.sanitized_phone_number, prompts)
+        runtime_channel |> Channel.ask(session.respondent, token, prompts)
 
       false ->
-        runtime_channel |> Channel.setup(session.respondent)
+        runtime_channel |> Channel.setup(session.respondent, token)
     end
     # The new session will timeout as defined by hd(retries)
-    session = %{session | retries: retries}
+    session = %{session | retries: retries, token: token}
     {:ok, session, %Reply{}, current_timeout(session)}
+  end
+
+  def channel_failed(%Session{retries: [], fallback: nil, token: token}, token) do
+    :failed
+  end
+
+  def channel_failed(_session, _token) do
+    :ok
   end
 
   defp switch_to_fallback(session) do
@@ -146,7 +161,8 @@ defmodule Ask.Runtime.Session do
       respondent_id: session.respondent.id,
       retries: session.retries,
       fallback_channel_id: fallback_channel_id(session.fallback),
-      fallback_retries: fallback_retries(session.fallback)
+      fallback_retries: fallback_retries(session.fallback),
+      token: session.token
     }
   end
 
@@ -167,7 +183,8 @@ defmodule Ask.Runtime.Session do
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       retries: state["retries"],
-      fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"])
+      fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"]),
+      token: state["token"]
     }
   end
 

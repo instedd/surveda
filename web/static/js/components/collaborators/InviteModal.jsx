@@ -17,8 +17,9 @@ export class InviteModal extends Component {
   send() {
     const { projectId, guest } = this.props
     if (guest.code) {
-      this.props.actions.inviteMail(projectId, guest.code, guest.level, guest.email)
-      this.props.collaboratorsActions.fetchCollaborators(projectId)
+      Promise.resolve(this.props.actions.inviteMail(projectId, guest.code, guest.level, guest.email)).then(
+        () => this.props.collaboratorsActions.fetchCollaborators(projectId)
+      )
       this.cancel()
       $('#addCollaborator').modal('close')
     }

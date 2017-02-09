@@ -37,16 +37,29 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
+  defp has_refusal_option(%{"refusal" => refusal = %{"enabled" => true}}, flow, reply) do
+    fetch(:response, flow, refusal)
+    |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+  end
+
+  defp has_refusal_option(_, _, _) do
+    false
+  end
+
   defp next_step_by_skip_logic(flow, step, reply_value) do
     skip_logic =
       case step["type"] do
         "numeric" ->
-          value = String.to_integer(reply_value)
-          step["ranges"]
-          |> Enum.find_value(nil, fn (range) ->
-            if (range["from"] == nil || range["from"] <= value) && (range["to"]
-              == nil || range["to"] >= value), do: range["skip_logic"], else: false
-          end)
+          if is_numeric(reply_value) do
+            value = String.to_integer(reply_value)
+            step["ranges"]
+            |> Enum.find_value(nil, fn (range) ->
+              if (range["from"] == nil || range["from"] <= value) && (range["to"]
+                == nil || range["to"] >= value), do: range["skip_logic"], else: false
+            end)
+          else
+            step["refusal"]["skip_logic"]
+          end
         "multiple-choice" ->
           step
           |> Map.get("choices")
@@ -120,7 +133,11 @@ defmodule Ask.Runtime.Flow do
                       end)
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
-                      if (is_numeric(reply)), do: reply, else: nil
+                      if is_numeric(reply) || has_refusal_option(step, flow, reply) do
+                        reply
+                      else
+                        nil
+                      end
                     "language-selection" ->
                       choices = step["language_choices"]
                       {num, ""} = Integer.parse(reply)
@@ -137,15 +154,10 @@ defmodule Ask.Runtime.Flow do
 
     case reply_value do
       nil ->
-        if reply == "*" do
-          flow = flow |> advance_current_step(step, reply_value)
-          {%{flow | retries: 0}, %Reply{}}
+        if flow.retries >=  @max_retries do
+          {%{flow | current_step: flow |> end_flow}, %Reply{}}
         else
-          if flow.retries >=  @max_retries do
-            {%{flow | current_step: flow |> end_flow}, %Reply{}}
-          else
-            {%{flow | retries: flow.retries + 1}, %Reply{prompts: fetch(:error_msg, flow, step)}}
-          end
+          {%{flow | retries: flow.retries + 1}, %Reply{prompts: fetch(:error_msg, flow, step)}}
         end
       reply_value ->
         flow = flow |> advance_current_step(step, reply_value)

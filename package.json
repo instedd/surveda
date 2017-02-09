@@ -70,7 +70,7 @@
     "redux": "^3.5.0",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
-    "sass-brunch": "^2.6.3",
+    "sass-brunch": "~2.9.0",
     "uglify-js-brunch": "^2.0.1"
   },
   "babel": {

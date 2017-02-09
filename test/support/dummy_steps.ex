@@ -11,13 +11,14 @@ defmodule Ask.StepBuilder do
   end
 
   def numeric_step(id: id, title: title, prompt: prompt, store: store,
-    skip_logic: skip_logic) do
+    skip_logic: skip_logic, refusal: refusal) do
     base = %{
       "id" => id,
       "type" => "numeric",
       "title" => title,
       "prompt" => prompt,
       "store" => store,
+      "refusal" => refusal,
     }
     Map.merge(base, skip_logic)
   end
@@ -198,7 +199,8 @@ defmodule Ask.DummySteps do
           title: "Which is the second perfect number?",
           prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
           store: "Perfect Number",
-          skip_logic: default_numeric_skip_logic()
+          skip_logic: default_numeric_skip_logic(),
+          refusal: nil
         ),
         flag_step(
           id: "aaa",
@@ -215,7 +217,8 @@ defmodule Ask.DummySteps do
           title: "What's the number of this question?",
           prompt: prompt(sms: sms_prompt("What's the number of this question??")),
           store: "Question",
-          skip_logic: default_numeric_skip_logic()
+          skip_logic: default_numeric_skip_logic(),
+          refusal: nil
         )
       ]
 
@@ -251,14 +254,16 @@ defmodule Ask.DummySteps do
           title: "Which is the second perfect number?",
           prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
           store: "Perfect Number",
-          skip_logic: default_numeric_skip_logic()
+          skip_logic: default_numeric_skip_logic(),
+          refusal: nil
         ),
         numeric_step(
           id: Ecto.UUID.generate,
           title: "What's the number of this question?",
           prompt: prompt(sms: sms_prompt("What's the number of this question??")),
           store: "Question",
-          skip_logic: default_numeric_skip_logic()
+          skip_logic: default_numeric_skip_logic(),
+          refusal: nil
         )
       ]
 
@@ -329,7 +334,8 @@ defmodule Ask.DummySteps do
                   "skip_logic" => "end"
                 }
               ]
-            )
+            ),
+            refusal: nil
           ),
           multiple_choice_step(
             id: "eee",

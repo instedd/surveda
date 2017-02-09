@@ -63,13 +63,6 @@ defmodule Ask.Survey do
       questionnaires_ready?(changeset) &&
       respondent_groups_ready?(changeset)
 
-    # IO.inspect(mode_ready?(changeset))
-    # IO.inspect(schedule_ready?(changeset))
-    # IO.inspect(retry_attempts_ready?(changeset))
-    # IO.inspect(comparisons_ready?(changeset))
-    # IO.inspect(questionnaires_ready?(changeset))
-    # IO.inspect(respondent_groups_ready?(changeset))
-
     state = get_field(changeset, :state)
 
     cond do

@@ -31,6 +31,7 @@
     },
 
     "multiple-choice": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["multiple-choice"] },
@@ -44,6 +45,7 @@
     },
 
     "numeric": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["numeric"] },
@@ -53,13 +55,26 @@
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
         "ranges": {"$ref": "#/definitions/ranges"},
-        "store": { "type": "string" }
+        "store": { "type": "string" },
+        "refusal": { "oneOf": [{ "$ref": "#/definitions/refusal" }, {"type":"null"}] }
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
     },
 
+    "refusal": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "responses": {"$ref": "#/definitions/responses"},
+        "skip_logic": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false,
+      "required": ["enabled", "responses", "skip_logic"]
+    },
+
     "explanation": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["explanation"] },
@@ -72,6 +87,7 @@
     },
 
     "language-selection": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": { "enum": ["language-selection"] },
@@ -85,6 +101,7 @@
     },
 
     "flag": {
+      "type": "object",
       "properties": {
         "id": {"type": "string"},
         "type": {"enum": ["flag"]},
@@ -104,6 +121,7 @@
     },
 
     "choice": {
+      "type": "object",
       "properties": {
         "value": {"type": "string"},
         "responses": {"$ref": "#/definitions/responses"},
@@ -121,6 +139,7 @@
     },
 
     "range": {
+      "type": "object",
       "properties": {
         "from": {"type": ["integer", "null"]},
         "to": {"type": ["integer", "null"]},
