@@ -84,6 +84,10 @@ defmodule Ask.Runtime.NuntiumChannel do
     Phoenix.Controller.json(conn, reply)
   end
 
+  def callback(conn, _) do
+    conn |> send_resp(404, "not found")
+  end
+
   def sync_channels(user_id) do
     nuntium_config = Application.get_env(:ask, Nuntium)
     oauth_token = Ask.OAuthTokenServer.get_token "nuntium", user_id
