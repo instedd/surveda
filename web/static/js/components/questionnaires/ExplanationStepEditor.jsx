@@ -77,6 +77,7 @@ class ExplanationStepEditor extends Component {
             stepIndex={stepIndex}
             errors={errors}
             classes='no-separator'
+            title='Message'
           />
           <li className='collection-item' key='editor'>
             <div className='row'>

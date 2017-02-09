@@ -24,7 +24,8 @@ type Props = {
   questionnaire: Questionnaire,
   readOnly: boolean,
   errors: Errors,
-  classes: string
+  classes: string,
+  title?: string
 };
 
 class StepPrompts extends Component {
@@ -141,7 +142,7 @@ class StepPrompts extends Component {
   }
 
   render() {
-    const { step, stepIndex, questionnaire, readOnly, errors, classes } = this.props
+    const { step, stepIndex, questionnaire, readOnly, errors, classes, title } = this.props
 
     const activeLanguage = questionnaire.activeLanguage
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -187,7 +188,7 @@ class StepPrompts extends Component {
       <li className={`collection-item ${classes}`} key='prompts'>
         <div className='row'>
           <div className='col s12'>
-            <h5>Question Prompt</h5>
+            <h5>{title || 'Question Prompt'}</h5>
           </div>
         </div>
         {smsInput}
