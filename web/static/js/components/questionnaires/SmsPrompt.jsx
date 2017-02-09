@@ -24,6 +24,13 @@ class SmsPrompt extends Component {
     onChange(this.getText())
   }
 
+  checkKeyUp(e, index) {
+    if (e.shiftKey && e.key == 'Enter') {
+      e.preventDefault()
+      this.splitPiece(e, index)
+    }
+  }
+
   splitPiece(e, index) {
     let caretIndex = e.target.selectionStart
     let value = e.target.value || ''
@@ -82,6 +89,7 @@ class SmsPrompt extends Component {
           type='text'
           is length='140'
           onChange={e => this.onChange(e)}
+          onKeyUp={e => this.checkKeyUp(e, index)}
           onBlur={e => this.onBlur(e)}
           onFocus={e => this.onFocus()}
           ref={ref => {
