@@ -126,6 +126,14 @@ defmodule Ask.Runtime.Flow do
     {flow, %Reply{}}
   end
 
+  defp accept_reply(flow, :no_reply) do
+    if flow.retries >=  @max_retries do
+      {%{flow | current_step: flow |> end_flow}, %Reply{}}
+    else
+      {%{flow | retries: flow.retries + 1}, %Reply{}}
+    end
+  end
+
   defp accept_reply(flow, {:reply, reply}) do
     reply = reply |> clean_string
 
@@ -259,6 +267,10 @@ end
 defmodule Ask.Runtime.Flow.Message do
   def reply(response) do
     {:reply, response}
+  end
+
+  def no_reply do
+    :no_reply
   end
 
   def answer do

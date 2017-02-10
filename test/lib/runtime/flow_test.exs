@@ -144,13 +144,12 @@ defmodule Ask.FlowTest do
     assert {:end, _} = step
   end
 
-  test "no response is considered an invalid answer and consumes one retry" do
+  test "retry question without the error message when no reply is received" do
     {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
-    step = flow |> Flow.step(Flow.Message.reply(nil))
+    step = flow |> Flow.step(Flow.Message.no_reply)
 
     assert {:ok, %Flow{retries: 1}, %{prompts: prompts}} = step
     assert prompts == [
-      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
       %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
     ]
   end

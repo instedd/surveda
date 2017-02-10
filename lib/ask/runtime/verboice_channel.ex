@@ -5,6 +5,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias Ask.Runtime.{Broker, Flow}
   alias Ask.Router.Helpers
   import Plug.Conn
+  import XmlBuilder
   @behaviour Ask.Runtime.ChannelProvider
   defstruct [:client, :channel_name]
 
@@ -49,27 +50,44 @@ defmodule Ask.Runtime.VerboiceChannel do
   end
 
   def gather(respondent, prompts = [prompt, _ | _]) do
-    say_or_play(prompt) <> gather(respondent, tl(prompts))
+    [say_or_play(prompt) | gather(respondent, tl(prompts))]
   end
 
   def gather(respondent, prompts) do
-    "<Gather action=\"#{callback_url(respondent)}\">#{say_or_play(prompts)}</Gather>"
+    [
+      element(:Gather, %{action: callback_url(respondent)}, [
+        say_or_play(prompts)
+      ]),
+      element(:Redirect, no_reply_callback_url(respondent))
+    ]
   end
 
   def say_or_play([prompt]) do
-    say_or_play(prompt)
+    [say_or_play(prompt)]
   end
 
   def say_or_play([prompt | prompts]) do
-    say_or_play(prompt) <> say_or_play(prompts)
+    [say_or_play(prompt) | say_or_play(prompts)]
   end
 
   def say_or_play(%{"audio_source" => "upload", "audio_id" => audio_id}) do
-    "<Play>#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}</Play>"
+    element(:Play, Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id))
   end
 
   def say_or_play(%{"audio_source" => "tts", "text" => text}) do
-    "<Say>#{text}</Say>"
+    element(:Say, text)
+  end
+
+  defp hangup do
+    element(:Hangup)
+  end
+
+  defp response(content) when is_list(content) do
+    element(:Response, content)
+  end
+
+  defp response(content) do
+    element(:Response, [content])
   end
 
   defp create_client(user_id) do
@@ -126,25 +144,28 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, params = %{"respondent" => respondent_id}) do
     respondent = Respondent |> Repo.get(respondent_id)
 
-    reply = case respondent do
+    response_content = case respondent do
       nil ->
-        "<Response><Hangup/></Response>"
+        hangup
 
       _ ->
         response = case params["Digits"] do
           nil -> Flow.Message.answer()
+          "timeout" -> Flow.Message.no_reply
           digits -> Flow.Message.reply(digits)
         end
 
         case Broker.sync_step(respondent, response) do
           {:prompts, prompts} ->
-            "<Response>#{gather(respondent, prompts)}</Response>"
+            gather(respondent, prompts)
           {:end, {:prompts, prompts}} ->
-            "<Response>#{say_or_play(prompts)}<Hangup/></Response>"
+            say_or_play(prompts) ++ [hangup]
           :end ->
-            "<Response><Hangup/></Response>"
+            hangup
         end
     end
+
+    reply = response(response_content) |> generate
 
     conn
     |> put_resp_content_type("text/xml")
@@ -154,11 +175,15 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, _) do
     conn
     |> put_resp_content_type("text/xml")
-    |> send_resp(200, "<Response><Hangup/></Response>")
+    |> send_resp(200, response(hangup) |> generate)
   end
 
   def callback_url(respondent) do
     Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", respondent: respondent.id)
+  end
+
+  def no_reply_callback_url(respondent) do
+    Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", respondent: respondent.id, Digits: "timeout")
   end
 
   def status_callback_url(respondent, token) do
