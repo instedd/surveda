@@ -8,6 +8,7 @@ import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
 import * as guestActions from '../../actions/guest'
 import InviteLink from './InviteLink'
+import { config } from '../../config'
 
 export class InviteModal extends Component {
   cancel() {
@@ -31,26 +32,37 @@ export class InviteModal extends Component {
 
   emailOnBlur(e) {
     const { projectId, guest } = this.props
-    Promise.resolve(this.props.guestActions.changeEmail(e.target.value)).then(() => {
-      Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
-        (dbGuest) => {
-          if (dbGuest) {
-            if (!guest.level) {
-              this.props.guestActions.changeLevel(dbGuest.level)
+    const newEmail = e.target.value
+    if (newEmail != config.user) {
+      Promise.resolve(this.props.guestActions.changeEmail(newEmail)).then(() => {
+        Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
+          (dbGuest) => {
+            if (dbGuest) {
+              if (!guest.level) {
+                this.props.guestActions.changeLevel(dbGuest.level)
+              }
+              this.props.guestActions.setCode(dbGuest.code)
+            } else {
+              this.props.guestActions.generateCode()
             }
-            this.props.guestActions.setCode(dbGuest.code)
-          } else {
-            this.props.guestActions.generateCode()
-          }
-        })
-    })
+          })
+      })
+    } else {
+      this.props.guestActions.setCode('')
+    }
   }
 
   levelChanged(e) {
+    const { guest } = this.props
     const level = e.target.value
-    Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
-      this.props.guestActions.generateCode()
-    })
+    if (guest.email != config.user) {
+      Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
+        this.props.guestActions.generateCode()
+      })
+    } else {
+      this.props.guestActions.changeLevel(level)
+      this.props.guestActions.setCode('')
+    }
   }
 
   render() {
