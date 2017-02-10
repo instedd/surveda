@@ -3,7 +3,7 @@ defmodule Ask.UserController do
 
   alias Ask.{User}
 
-  def settings(conn, params) do
+  def settings(conn, _params) do
     user = conn |> current_user
     settings = user.settings
     render(conn, "settings.json", settings: settings)

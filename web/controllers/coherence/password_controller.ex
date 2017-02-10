@@ -92,10 +92,9 @@ defmodule Ask.Coherence.PasswordController do
           |> put_flash(:error, "Password reset token expired.")
           |> redirect(to: logged_out_url(conn))
         else
-          changeset = Helpers.changeset(:password, user_schema, user)
           conn
           |> put_layout({Ask.LayoutView, "app.html"})
-          |> put_view(Coherence.PasswordView)  
+          |> put_view(Coherence.PasswordView)
           |> render("edit.html", changeset: Ask.User.changeset(user))
         end
     end
