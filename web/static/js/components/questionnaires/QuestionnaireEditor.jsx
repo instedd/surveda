@@ -200,10 +200,12 @@ class QuestionnaireEditor extends Component {
     api.importQuestionnaireZip(projectId, questionnaireId, files)
     .then(response => {
       const questionnaire = response.entities.questionnaires[response.result]
-      this.props.questionnaireActions.receive(questionnaire)
+      // Make sure to deselect any step before receiving the questionnaire
       this.setState({
         ...this.state,
         currentStep: null
+      }, () => {
+        this.props.questionnaireActions.receive(questionnaire)
       })
     })
 
