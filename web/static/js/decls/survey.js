@@ -73,4 +73,4 @@ export type Response = {
   value: ?string
 }
 
-export type Disposition = null | "completed";
+export type Disposition = null | "completed" | "partial" | "ineligible";
