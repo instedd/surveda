@@ -34,13 +34,14 @@ export class InviteModal extends Component {
     Promise.resolve(this.props.guestActions.changeEmail(e.target.value)).then(() => {
       Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
         (dbGuest) => {
-          if (!guest.level) {
-            this.props.guestActions.changeLevel(dbGuest.level)
+          if (dbGuest) {
+            if (!guest.level) {
+              this.props.guestActions.changeLevel(dbGuest.level)
+            }
+            this.props.guestActions.setCode(dbGuest.code)
+          } else {
+            this.props.guestActions.generateCode()
           }
-          this.props.guestActions.setCode(dbGuest.code)
-        },
-        (reject) => {
-          this.props.guestActions.generateCode()
         })
     })
   }

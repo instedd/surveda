@@ -27,8 +27,7 @@ defmodule Ask.InviteController do
         |> render("invite.json", %{project_id: invite.project_id, code: invite.code, email: invite.email, level: invite.level})
     else
       conn
-      |> put_status(404)
-      |> render("error.json", %{error: "Invitation does not exist", project_id: project_id})
+      |> send_resp(:no_content, "")
     end
   end
 

@@ -40,7 +40,14 @@ const apiFetchJSON = (url, schema, options) => {
 
 const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
   return apiFetch(url, options)
-      .then(response => response.json().then(json => ({ json, response })))
+      .then(response => {
+        if (response.status == 204) {
+          // HTTP 204: No Content
+          return { json: null, response }
+        } else {
+          return response.json().then(json => ({ json, response }))
+        }
+      })
       .then(({ json, response }) => {
         return handleResponse(response, responseCallback(json, schema))
       })
@@ -48,6 +55,7 @@ const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
 
 const commonCallback = (json, schema) => {
   return () => {
+    if (!json) { return null }
     if (schema) {
       return normalize(camelizeKeys(json.data), schema)
     } else {
