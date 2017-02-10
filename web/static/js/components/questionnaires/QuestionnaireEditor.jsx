@@ -97,7 +97,10 @@ class QuestionnaireEditor extends Component {
         this.setState(this.internalState(newStep.id, false, true))
       }
     }
-    if (questionnaireData && questionnaireData.steps && this.state.isNew) {
+    // A questionnaireData.steps.length > 0 check is added because it's possible
+    // having a new questionnaire with 0 steps (deleting the first step and refreshing
+    // the page
+    if (questionnaireData && questionnaireData.steps && questionnaireData.steps.length > 0 && this.state.isNew) {
       this.selectStep(questionnaireData.steps[0].id)
     }
   }
