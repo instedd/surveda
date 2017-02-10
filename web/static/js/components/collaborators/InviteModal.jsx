@@ -66,8 +66,12 @@ export class InviteModal extends Component {
     ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
     : <a className='btn-medium disabled'>Send</a>
 
+    const initOptions = {
+      complete: () => { this.cancel() }
+    }
+
     return (
-      <Modal card id={modalId} style={style} className='invite-collaborator'>
+      <Modal card id={modalId} style={style} className='invite-collaborator' initOptions={initOptions} >
         <div className='modal-content'>
           <div className='card-title header'>
             <h5>{header}</h5>

@@ -4,7 +4,8 @@ import classNames from 'classnames/bind'
 
 export class Modal extends Component {
   componentDidMount() {
-    $(this.refs.modal).modal()
+    const { initOptions = {} } = this.props
+    $(this.refs.modal).modal(initOptions)
   }
 
   render() {
@@ -34,5 +35,6 @@ Modal.propTypes = {
   linkText: PropTypes.string,
   id: PropTypes.string.isRequired,
   style: PropTypes.object,
+  initOptions: PropTypes.object,
   className: PropTypes.string
 }
