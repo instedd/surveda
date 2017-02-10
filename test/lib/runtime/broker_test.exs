@@ -54,6 +54,28 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
   end
 
+  test "don't set the respondent as complete (disposition) if disposition is ineligible" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    respondent |> Respondent.changeset(%{disposition: "ineligible"}) |> Repo.update!
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "ineligible"
+  end
+
+  test "set the respondent as complete (disposition) if disposition is partial" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
+
+    respondent |> Respondent.changeset(%{disposition: "partial"}) |> Repo.update!
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "completed"
+  end
+
   test "creates respondent history when the questionnaire is empty" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 

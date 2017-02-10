@@ -276,8 +276,19 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, :end) do
     old_disposition = respondent.disposition
 
+    # If the current disposition is ineligible we shouldn't mark the respondent
+    # as completed (#639).
+    # If the respondent has partial disposition, or no disposition at all,
+    # then it's OK to mark it as completed.
+    new_disposition =
+      if old_disposition == "ineligible" do
+        old_disposition
+      else
+        "completed"
+      end
+
     respondent
-    |> Respondent.changeset(%{state: "completed", disposition: "completed", session: nil, completed_at: Timex.now, timeout_at: nil})
+    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update!
     |> create_disposition_history(old_disposition)
     |> update_quota_bucket(old_disposition)
