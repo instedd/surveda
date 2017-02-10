@@ -342,7 +342,11 @@ defmodule Ask.RespondentController do
     |> preload(:respondent)
     |> Repo.stream
     |> Stream.map(fn history ->
-      [history.respondent.hashed_number, history.disposition, (history.inserted_at |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime))]
+      date = history.inserted_at
+      |> Ecto.DateTime.to_erl
+      |> Timex.Ecto.DateTime.cast!
+      |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
+      [history.respondent.hashed_number, history.disposition, date]
     end)
 
     header = ["Respondent hash", "Disposition", "Timestamp"]

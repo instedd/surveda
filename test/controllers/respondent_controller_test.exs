@@ -281,21 +281,21 @@ defmodule Ask.RespondentControllerTest do
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
-    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:00:00"))
-    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 02:00:00"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
 
-    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:00:00"))
-    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:00:00"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
 
     conn = get conn, project_survey_respondents_disposition_history_csv_path(conn, :disposition_history_csv, survey.project.id, survey.id)
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert lines == ["Respondent hash,Disposition,Timestamp",
-     "1asd12451eds,partial,2000-01-01 01:00:00 UTC",
-     "1asd12451eds,completed,2000-01-01 02:00:00 UTC",
-     "34y5345tjyet,partial,2000-01-01 03:00:00 UTC",
-     "34y5345tjyet,completed,2000-01-01 04:00:00 UTC"]
+     "1asd12451eds,partial,2000-01-01 01:02:03 UTC",
+     "1asd12451eds,completed,2000-01-01 02:03:04 UTC",
+     "34y5345tjyet,partial,2000-01-01 03:04:05 UTC",
+     "34y5345tjyet,completed,2000-01-01 04:05:06 UTC"]
   end
 
   test "quotas_stats", %{conn: conn, user: user} do
