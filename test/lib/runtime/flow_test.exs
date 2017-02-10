@@ -399,6 +399,15 @@ defmodule Ask.FlowTest do
     assert prompts == ["Do you smoke?", "Reply 1 for YES, 2 for NO"]
   end
 
+  describe "only step with skip logic null" do
+    test "should end despite skip logic for last step being null" do
+      questionnaire = build(:questionnaire, steps: @ony_step_with_null_as_skip_logic)
+      {:ok, flow, _} = Flow.start(questionnaire, "sms") |> Flow.step()
+      flow_state = flow |> Flow.step(Flow.Message.reply("100"))
+      assert {:end, _ } = flow_state
+    end
+  end
+
   describe "explanation steps" do
     test "adds previous explanation steps to prompts" do
       quiz = build(:questionnaire, steps: @explanation_steps_minimal)
