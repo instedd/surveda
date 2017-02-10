@@ -222,6 +222,35 @@ defmodule Ask.DummySteps do
         )
       ]
 
+      @steps_with_duplicate_store [
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+          ]
+        ),
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+          ]
+        )
+      ]
+
       @dummy_steps_with_flag [
         multiple_choice_step(
           id: Ecto.UUID.generate,
