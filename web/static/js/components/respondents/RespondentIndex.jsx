@@ -28,7 +28,7 @@ type Props = {
   surveyActions: any,
   questionnairesActions: any,
   actions: any
-}
+};
 
 class RespondentIndex extends Component {
   props: Props
@@ -60,6 +60,11 @@ class RespondentIndex extends Component {
     const { projectId, surveyId } = this.props
     const offset = new Date().getTimezoneOffset()
     window.location = routes.respondentsCSV(projectId, surveyId, offset)
+  }
+
+  downloadDispositionHistoryCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsDispositionHistoryCSV(projectId, surveyId)
   }
 
   render() {
@@ -136,20 +141,18 @@ class RespondentIndex extends Component {
     return (
       <div className='white'>
         <div className='fixed-action-btn horizontal right mtop'>
-          <Tooltip text='Download'>
-            <a className='btn-floating btn-large waves-effect waves-light green'>
-              <i className='material-icons'>get_app</i>
-            </a>
-          </Tooltip>
+          <a className='btn-floating btn-large green'>
+            <i className='material-icons'>get_app</i>
+          </a>
           <ul>
             <li>
-              <Tooltip text='Download CSV 1'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>get_app</i></a>
+              <Tooltip text='Download results'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>assignment_turned_in</i></a>
               </Tooltip>
             </li>
             <li>
-              <Tooltip text='Download CSV 2'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>get_app</i></a>
+              <Tooltip text='Download disposition history'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadDispositionHistoryCSV()}><i className='material-icons'>description</i></a>
               </Tooltip>
             </li>
           </ul>
