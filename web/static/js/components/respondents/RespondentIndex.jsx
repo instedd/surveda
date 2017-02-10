@@ -135,11 +135,25 @@ class RespondentIndex extends Component {
 
     return (
       <div className='white'>
-        <Tooltip text='Download CSV'>
-          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.downloadCSV()}>
-            <i className='material-icons'>get_app</i>
-          </a>
-        </Tooltip>
+        <div className='fixed-action-btn horizontal right mtop'>
+          <Tooltip text='Download'>
+            <a className='btn-floating btn-large waves-effect waves-light green'>
+              <i className='material-icons'>get_app</i>
+            </a>
+          </Tooltip>
+          <ul>
+            <li>
+              <Tooltip text='Download CSV 1'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>get_app</i></a>
+              </Tooltip>
+            </li>
+            <li>
+              <Tooltip text='Download CSV 2'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>get_app</i></a>
+              </Tooltip>
+            </li>
+          </ul>
+        </div>
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
