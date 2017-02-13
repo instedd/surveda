@@ -8,6 +8,7 @@ import range from 'lodash/range'
 import * as authActions from '../actions/authorizations'
 import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal, ConfirmationModal } from './ui'
 import { Preloader } from 'react-materialize'
+import { config } from '../config'
 
 class ChannelIndex extends Component {
   componentDidMount() {
@@ -134,12 +135,16 @@ class ChannelIndex extends Component {
                   <br />
                   Callcentric, SIP client, SIP server, Skype, Twillio
                 </span>
-                <i className='material-icons arrow-right'>chevron_right</i>
+                <span onClick={() => window.open(config.verboice.baseUrl)}>
+                  <i className='material-icons arrow-right'>chevron_right</i>
+                </span>
               </li>
               <li className='collection-item icon nuntium'>
                 <h5>Nuntium</h5>
                 {providerSwitch('nuntium')}
-                <i className='material-icons arrow-right'>chevron_right</i>
+                <span onClick={() => window.open(config.nuntium.baseUrl)}>
+                  <i className='material-icons arrow-right'>chevron_right</i>
+                </span>
                 <span className='channel-description'>
                   <b>SMS channels</b>
                   <br />

@@ -1,3 +1,4 @@
+// @flow
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
@@ -8,7 +9,6 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
-import { Tooltip } from '../ui'
 import capitalize from 'lodash/capitalize'
 
 class SurveyShow extends Component {
@@ -80,11 +80,6 @@ class SurveyShow extends Component {
     )
   }
 
-  downloadDispositionHistoryCSV() {
-    const { projectId, surveyId } = this.props
-    window.location = routes.respondentsDispositionHistoryCSV(projectId, surveyId)
-  }
-
   render() {
     const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
@@ -113,11 +108,6 @@ class SurveyShow extends Component {
 
     return (
       <div className='row'>
-        <Tooltip text='Download disposition history CSV'>
-          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.downloadDispositionHistoryCSV()}>
-            <i className='material-icons'>get_app</i>
-          </a>
-        </Tooltip>
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}

@@ -392,53 +392,71 @@ const changeStepType = (state, action) => {
   switch (action.stepType) {
     case 'multiple-choice':
       return changeStep(state, action.stepId, step => {
-        let newStep = {
+        let prompt = {
+          'en': newStepPrompt()
+        }
+        let store = ''
+        if (step.type !== 'flag' && step.type !== 'explanation') {
+          store = step.store
+          prompt = step.prompt
+        }
+        return {
           id: step.id,
           title: step.title,
-          store: step.store,
+          store: store,
           type: action.stepType,
-          prompt: step.prompt,
+          prompt: prompt,
           choices: []
         }
-        return newStep
       })
     case 'numeric':
       return changeStep(state, action.stepId, step => {
-        let newStep = {
+        let prompt = {
+          'en': newStepPrompt()
+        }
+        let store = ''
+        if (step.type !== 'flag' && step.type !== 'explanation') {
+          store = step.store
+          prompt = step.prompt
+        }
+        return {
           id: step.id,
           title: step.title,
-          store: step.store,
+          store: store,
           type: action.stepType,
-          prompt: step.prompt,
+          prompt: prompt,
           minValue: null,
           maxValue: null,
           rangesDelimiters: null,
           ranges: [{from: null, to: null, skipLogic: null}],
           refusal: newRefusal()
         }
-        return newStep
       })
     case 'explanation':
       return changeStep(state, action.stepId, step => {
-        let newStep = {
+        let prompt = {
+          'en': newStepPrompt()
+        }
+        if (step.type !== 'flag' && step.type !== 'explanation') {
+          prompt = step.prompt
+        }
+        return {
           id: step.id,
           type: action.stepType,
           title: step.title,
-          prompt: step.prompt,
+          prompt: prompt,
           skipLogic: null
         }
-        return newStep
       })
     case 'flag':
       return changeStep(state, action.stepId, step => {
-        let newStep = {
+        return {
           id: step.id,
           type: action.stepType,
           disposition: 'partial',
           title: step.title,
           skipLogic: null
         }
-        return newStep
       })
     default:
       throw new Error(`unknown step type: ${action.stepType}`)

@@ -28,7 +28,8 @@ defmodule Ask.ProjectView do
   def render("collaborator.json", %{collaborator: collaborator}) do
     %{email: collaborator.email,
       role: collaborator.level,
-      invited: collaborator.invited
+      invited: collaborator.invited,
+      code: collaborator.code
     }
   end
 

@@ -3,7 +3,13 @@
 
 
 .btn-flat-link {
+  @extend .z-depth-0;
+  background: none !important;
   color: $link-color;
+  &:hover,
+  &:focus {
+    color: color("blue", "darken-2") !important;
+  }
 }
 
 .btn-medium {

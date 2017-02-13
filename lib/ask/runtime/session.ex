@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
+  import Ecto
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
   defstruct [:channel, :fallback, :flow, :respondent, :retries, :token]
@@ -191,9 +192,16 @@ defmodule Ask.Runtime.Session do
   defp store_responses_and_assign_bucket(respondent, stores, buckets) do
     # Add response to responses
     stores |> Enum.each(fn {field_name, value} ->
-      respondent
-      |> Ecto.build_assoc(:responses, field_name: field_name, value: value)
-      |> Ask.Repo.insert
+      existing_responses = respondent
+      |> assoc(:responses)
+      |> where([r], r.field_name == ^field_name)
+      |> Repo.aggregate(:count, :id)
+
+      if existing_responses == 0 do
+        respondent
+        |> Ecto.build_assoc(:responses, field_name: field_name, value: value)
+        |> Repo.insert
+      end
     end)
 
     # Try to assign a bucket to the respondent
@@ -241,7 +249,7 @@ defmodule Ask.Runtime.Session do
           [bucket] ->
             respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
             if respondent.disposition && respondent.disposition == "completed" do
-              from(q in QuotaBucket, where: q.id == ^bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+              from(q in QuotaBucket, where: q.id == ^bucket.id) |> Repo.update_all(inc: [count: 1])
             end
             respondent
           _ ->

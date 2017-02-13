@@ -216,6 +216,22 @@ defmodule Ask.SessionTest do
       ] = responses
   end
 
+  test "steps with the same variable overrides previous value", %{respondent: respondent, channel: channel} do
+    quiz = insert(:questionnaire, steps: @steps_with_duplicate_store)
+    {:ok, session, _, _} = Session.start(quiz, respondent, channel)
+
+    {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
+    :end = Session.sync_step(session, Flow.Message.reply("N"))
+
+    responses = respondent
+    |> Ecto.assoc(:responses)
+    |> Ask.Repo.all
+
+    assert [
+      %{field_name: "Smokes", value: "Yes"}
+    ] = responses
+  end
+
   test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel, test_channel: test_channel} do
     quiz = quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
 

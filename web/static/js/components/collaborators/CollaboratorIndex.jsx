@@ -5,6 +5,7 @@ import { CardTable, AddButton } from '../ui'
 import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
 import * as projectActions from '../../actions/project'
+import * as guestActions from '../../actions/guest'
 
 class CollaboratorIndex extends Component {
   componentDidMount() {
@@ -18,6 +19,16 @@ class CollaboratorIndex extends Component {
   inviteCollaborator(e) {
     e.preventDefault()
     $('#addCollaborator').modal('open')
+  }
+
+  loadCollaboratorToEdit(event, collaborator) {
+    event.preventDefault()
+    if (collaborator.invited) {
+      this.props.guestActions.changeEmail(collaborator.email)
+      this.props.guestActions.changeLevel(collaborator.role)
+      this.props.guestActions.setCode(collaborator.code)
+      $('#addCollaborator').modal('open')
+    }
   }
 
   render() {
@@ -51,7 +62,7 @@ class CollaboratorIndex extends Component {
             <tbody>
               { collaborators.map(c => {
                 return (
-                  <tr key={c.email}>
+                  <tr key={c.email} style={c.invited ? {cursor: 'pointer'} : {}} onClick={(e) => this.loadCollaboratorToEdit(e, c)}>
                     <td> {c.email} </td>
                     <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
                   </tr>
@@ -70,12 +81,14 @@ CollaboratorIndex.propTypes = {
   project: PropTypes.object,
   collaborators: PropTypes.array,
   actions: PropTypes.object.isRequired,
+  guestActions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired
 }
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
-  projectActions: bindActionCreators(projectActions, dispatch)
+  projectActions: bindActionCreators(projectActions, dispatch),
+  guestActions: bindActionCreators(guestActions, dispatch)
 })
 
 const mapStateToProps = (state, ownProps) => ({

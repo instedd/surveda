@@ -185,10 +185,10 @@ defmodule Ask.ProjectController do
     |> assoc(:project_memberships)
     |> Repo.all
     |> Repo.preload(:user)
-    |> Enum.map( fn m -> %{email: m.user.email, level: m.level, invited: false} end )
+    |> Enum.map( fn m -> %{email: m.user.email, level: m.level, invited: false, code: nil} end )
 
     invites = Repo.all(from i in Invite, where: i.project_id == ^id)
-    |> Enum.map( fn x -> %{email: x.email, level: x.level, invited: true} end )
+    |> Enum.map( fn x -> %{email: x.email, level: x.level, invited: true, code: x.code} end )
 
     render(conn, "collaborators.json", collaborators: memberships ++ invites)
   end

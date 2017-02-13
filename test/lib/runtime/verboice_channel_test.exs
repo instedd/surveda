@@ -17,6 +17,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     end
   end
 
+  defp trim_xml(xml) do
+    xml |> String.replace("\t", "") |> String.replace("\n", "")
+  end
+
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: Broker.server_ref)
     respondent = insert(:respondent, phone_number: "123", state: "active")
@@ -29,8 +33,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       twiml_map: [
         {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Say>Do you exercise?</Say>"},
         {Flow.Message.reply("8"), {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Hello!"), Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Response><Say>Hello!</Say><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather></Response>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather></Response>"},
+        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Hello!"), Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Response><Say>Hello!</Say><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer, :end, "<Response><Hangup/></Response>"},
         {Flow.Message.answer, {:end, {:prompts, [Ask.StepBuilder.tts_prompt("Bye!")]}}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
         {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Play>http://app.ask.dev/audio/foo</Play>"},
@@ -54,18 +58,19 @@ defmodule Ask.Runtime.VerboiceChannelTest do
         end
 
         conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits})
-        assert response(conn, 200) =~ twiml
+        response_twiml = response(conn, 200) |> trim_xml
+        assert response_twiml =~ twiml
       end)
   end
 
   test "callback respondent not found", %{conn: conn} do
     conn = VerboiceChannel.callback(conn, %{"respondent" => 0})
-    assert response(conn, 200) == "<Response><Hangup/></Response>"
+    assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
   end
 
   test "callback without respondent", %{conn: conn} do
     conn = VerboiceChannel.callback(conn, %{})
-    assert response(conn, 200) == "<Response><Hangup/></Response>"
+    assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
   end
 
   describe "channel sync" do
