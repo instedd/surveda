@@ -33,6 +33,9 @@ export class InviteModal extends Component {
   emailOnBlur(e) {
     const { projectId, guest } = this.props
     const newEmail = e.target.value
+    if (!this.validEmail((newEmail))) {
+      return
+    }
     if (newEmail != config.user) {
       Promise.resolve(this.props.guestActions.changeEmail(newEmail)).then(() => {
         Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
@@ -65,6 +68,11 @@ export class InviteModal extends Component {
     }
   }
 
+  validEmail(email) {
+    // Regex source: http://www.regular-expressions.info/email.html
+    return /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(email)
+  }
+
   render() {
     const { header, modalText, modalId, style, guest } = this.props
 
@@ -74,7 +82,9 @@ export class InviteModal extends Component {
 
     const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
 
-    const sendButton = guest.code
+    const validEmail = this.validEmail(guest.email) || guest.email == ''
+
+    const sendButton = guest.code && validEmail
     ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
     : <a className='btn-medium disabled'>Send</a>
 
@@ -96,6 +106,13 @@ export class InviteModal extends Component {
                   <InputWithLabel id='collaborator_mail' value={guest.email} label={`Enter collaborator's email`} >
                     <input type='text' onChange={e => { this.emailOnChange(e) }} onBlur={e => { this.emailOnBlur(e) }} />
                   </InputWithLabel>
+                  {
+                    !validEmail
+                      ? <span className='small-text-bellow text-error'>
+                        Please enter a valid email
+                      </span>
+                      : <span />
+                  }
                 </div>
               </div>
               <div className='col s1' />
