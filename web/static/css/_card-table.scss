@@ -64,6 +64,9 @@
           }
         }
       }
+      &.noclick tr:hover {
+        cursor: default !important;
+      }
     }
     table.responses-table {
       input[type=text] {
