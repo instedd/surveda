@@ -12,6 +12,11 @@ body.welcome {
     }
   }
 
+  i input.waves-button-input{
+    width: 100%;
+    height: 100%;
+  }
+
   header {
     @extend .white;
     padding-top: 20px;
