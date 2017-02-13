@@ -4,7 +4,6 @@
   max-height: 70vh;
   max-width: 800px !important;
   min-width: 400px;
-  overflow-y: initial;
 
   .modal-content {
     padding: 0;
@@ -98,7 +97,6 @@
     }
   }
   &#setupQuotas {
-    min-height: 350px;
     .row {
       height: 56px;
       line-height: 56px;
