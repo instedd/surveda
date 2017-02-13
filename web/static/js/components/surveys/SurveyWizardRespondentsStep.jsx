@@ -21,7 +21,7 @@ class SurveyWizardRespondentsStep extends Component {
 
   handleSubmit(files) {
     const { survey, actions } = this.props
-    actions.uploadRespondentGroup(survey.projectId, survey.id, files)
+    if (files.length > 0) actions.uploadRespondentGroup(survey.projectId, survey.id, files)
   }
 
   removeRespondents(event, groupId) {
