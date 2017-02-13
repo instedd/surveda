@@ -64,21 +64,17 @@ class SkipLogic extends Component {
       }
     })
 
-    let skipOptionsLength = skipOptions.length
-
     skipOptions.unshift({
       id: 'end',
       title: 'End survey',
       enabled: true
     })
 
-    if (skipOptionsLength != 0) {
-      skipOptions.unshift({
-        id: '',
-        title: 'Next question',
-        enabled: true
-      })
-    }
+    skipOptions.unshift({
+      id: '',
+      title: 'Next question',
+      enabled: true
+    })
 
     if (!currentValueIsValid && currentValue != null && currentValue != 'end') {
       const stepIndex = findIndex(stepsBefore, s => s.id === currentValue)
