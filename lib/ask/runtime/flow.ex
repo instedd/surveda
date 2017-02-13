@@ -81,11 +81,7 @@ defmodule Ask.Runtime.Flow do
 
     case skip_logic do
       nil ->
-        if (flow.current_step == flow.questionnaire.steps) do
-          flow |> end_flow
-        else
-          flow.current_step + 1
-        end
+        flow.current_step + 1
       "end" ->
         flow |> end_flow
       next_id ->

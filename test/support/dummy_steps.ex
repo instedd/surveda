@@ -424,17 +424,6 @@ defmodule Ask.DummySteps do
           disposition: "partial"
         )
       ]
-
-      @ony_step_with_null_as_skip_logic [
-        numeric_step(
-          id: Ecto.UUID.generate,
-          title: "Which is the second perfect number?",
-          prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
-          store: "Perfect Number",
-          skip_logic: default_numeric_skip_logic(),
-          refusal: nil
-        )
-      ]
     end
   end
 end
