@@ -18,7 +18,11 @@ else
 fi
 
 echo "Running Flow tests"
-FLOW_TESTS="$(flow check)"
+if hash flow 2>/dev/null; then
+  FLOW_TESTS="$(flow check)"
+else
+  FLOW_TESTS="$(./node_modules/.bin/flow check)"
+fi
 
 if [ $? -eq 0 ]; then
   echo "OK";
