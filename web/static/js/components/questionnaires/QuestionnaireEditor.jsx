@@ -3,6 +3,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
+import gsm from 'gsm'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as userSettingsActions from '../../actions/userSettings'
@@ -243,6 +244,10 @@ class QuestionnaireEditor extends Component {
 
     const settings = userSettings.settings
     const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
+
+    console.log(gsm)
+    const parts = gsm('Your complex message')
+    console.log(parts)
 
     if (!readOnly) {
       csvButtons = <div>
