@@ -55,7 +55,7 @@ const parseErrorPath = (errorPath: string): ErrorSubject => {
   // regex[4] == lang
   // regex[5] == msgKey
   // regex[6] == lang
-  const regex = /steps\[(\d+)]\.(?:prompt\[['"](\w+)['"]]|choices\[(\d+)](?:\[['"](\w+)['"]])?)|(errorMsg|quotaCompletedMsg)\.prompt\[['"](\w+)['"]]/g
+  const regex = /steps\[(\d+)]\.(?:prompt\[['"](\w+)['"]]|choices\[(\d+)](?:\[['"](\w+)['"]])?|skipLogic)|(errorMsg|quotaCompletedMsg)\.prompt\[['"](\w+)['"]]/g
 
   const parsedPath = regex.exec(errorPath)
 
@@ -141,6 +141,7 @@ export const filterByPathPrefix = (errors: Errors, prefix: string) => {
 
 export const stepsPath = 'steps'
 export const stepPath = (stepIndex: number) => `${stepsPath}[${stepIndex}]`
+export const stepSkipLogicPath = (stepIndex: number) => `${stepPath(stepIndex)}.skipLogic`
 
 const promptTextPathSuffix = (mode: string, lang: string): string => {
   if (mode === 'ivr') {
@@ -164,3 +165,8 @@ export const choicePath = (stepIndex: number, choiceIndex: number) => `${choices
 export const choiceValuePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.value`
 export const choiceSmsResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].sms`
 export const choiceIvrResponsePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.ivr`
+export const choiceSkipLogicPath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.skipLogic`
+
+export const rangesPath = (stepIndex: number) => `${stepPath(stepIndex)}.ranges`
+export const rangePath = (stepIndex: number, rangeFrom: number, rangeTo: number) => `${rangesPath(stepIndex)}[${rangeFrom}-${rangeTo}]`
+export const rangeSkipLogicPath = (stepIndex: number, rangeFrom: number, rangeTo: number) => `${rangePath(stepIndex, rangeFrom, rangeTo)}.skipLogic`

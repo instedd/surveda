@@ -3,6 +3,7 @@ import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
 import reduce from 'lodash/reduce'
 import map from 'lodash/map'
+import each from 'lodash/each'
 import reject from 'lodash/reject'
 import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
@@ -11,8 +12,7 @@ import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal } from '../step'
-import { promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
-  choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
+import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
@@ -806,7 +806,7 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
 
 const validateSteps = (steps, context: ValidationContext) => {
   for (let i = 0; i < steps.length; i++) {
-    validateStep(steps[i], i, context)
+    validateStep(steps[i], i, context, steps)
   }
 }
 
@@ -823,10 +823,43 @@ const validateIvrLangPrompt = (step: Step, stepIndex: number, context: Validatio
   }
 }
 
-const validateStep = (step: Step, stepIndex: number, context: ValidationContext) => {
-  if (step.type === 'flag') {
-    return
+const validateStep = (step: Step, stepIndex: number, context: ValidationContext, steps) => {
+  switch (step.type) {
+    case 'flag':
+      return validateFlagStep(step, stepIndex, context, steps)
+    case 'multiple-choice':
+      return validateMultipleChoiceStep(step, stepIndex, context, steps)
+    case 'numeric':
+      return validateNumericStep(step, stepIndex, context, steps)
+    case 'explanation':
+      return validateExplanationStep(step, stepIndex, context, steps)
+    default:
   }
+}
+
+const validateFlagStep = (step, stepIndex, context, steps) => {
+  validateStepSkipLogic(step, stepIndex, steps, context)
+}
+
+const validateMultipleChoiceStep = (step, stepIndex, context, steps) => {
+  validatePrompts(step, stepIndex, context)
+
+  validateChoices(step.choices, stepIndex, context, steps)
+}
+
+const validateNumericStep = (step, stepIndex, context, steps) => {
+  validatePrompts(step, stepIndex, context)
+
+  validateRanges(step.ranges, stepIndex, context, steps)
+}
+
+const validateExplanationStep = (step, stepIndex, context, steps) => {
+  validateStepSkipLogic(step, stepIndex, steps, context)
+
+  validatePrompts(step, stepIndex, context)
+}
+
+const validatePrompts = (step, stepIndex, context) => {
   if (context.sms) {
     context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
   }
@@ -834,9 +867,38 @@ const validateStep = (step: Step, stepIndex: number, context: ValidationContext)
   if (context.ivr) {
     context.languages.forEach(lang => validateIvrLangPrompt(step, stepIndex, context, lang))
   }
+}
 
-  if (step.type === 'multiple-choice') {
-    validateChoices(step.choices, stepIndex, context)
+const validateSkipLogic = (skipLogic, stepIndex, steps, context) => {
+  if (!skipLogic) {
+    return true
+  }
+  let currentValueIsValid = false
+  steps.slice(stepIndex + 1).map(s => {
+    if (skipLogic === s.id) {
+      currentValueIsValid = true
+    }
+  })
+  return currentValueIsValid
+}
+
+const validateStepSkipLogic = (step, stepIndex, steps, context) => {
+  if (!validateSkipLogic(step.skipLogic, stepIndex, steps, context)) {
+    addError(context, stepSkipLogicPath(stepIndex), `Cannot jump to a previous step`)
+  }
+}
+
+const validateChoiceSkipLogic = (choice, stepIndex, choiceIndex, steps, context) => {
+  if (!validateSkipLogic(choice.skipLogic, stepIndex, steps, context)) {
+    addError(context, stepSkipLogicPath(stepIndex), `Cannot jump to a previous step`)
+    // addError(context, choiceSkipLogicPath(stepIndex, choiceIndex), `Cannot jump to a previous step`)
+  }
+}
+
+const validateRangeSkipLogic = (range, stepIndex, steps, context) => {
+  if (!validateSkipLogic(range.skipLogic, stepIndex, steps, context)) {
+    addError(context, stepSkipLogicPath(stepIndex), `Cannot jump to a previous step`)
+    // addError(context, rangeSkipLogicPath(stepIndex, range.from, range.to), `Cannot jump to a previous step`)
   }
 }
 
@@ -856,13 +918,20 @@ const validateSmsResponseDuplicates = (choice: Choice, context: ValidationContex
   }
 }
 
-const validateChoices = (choices: Choice[], stepIndex: number, context: ValidationContext) => {
+const validateRanges = (ranges, stepIndex, context, steps) => {
+  each(ranges, (range) => {
+    console.log(range)
+    validateRangeSkipLogic(range, stepIndex, steps, context)
+  })
+}
+
+const validateChoices = (choices: Choice[], stepIndex: number, context: ValidationContext, steps) => {
   if (choices.length < 2) {
     addError(context, choicesPath(stepIndex), 'You should define at least two response options')
   }
 
   for (let i = 0; i < choices.length; i++) {
-    validateChoice(choices[i], context, stepIndex, i)
+    validateChoice(choices[i], context, stepIndex, i, steps)
   }
 
   const values = []
@@ -914,7 +983,7 @@ const validateChoiceIvrResponse = (choice, context, stepIndex: number, choiceInd
   }
 }
 
-const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number) => {
+const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number, steps) => {
   if (isBlank(choice.value)) {
     addError(context, choiceValuePath(stepIndex, choiceIndex), 'Response must not be blank')
   }
@@ -926,6 +995,8 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
   if (context.ivr) {
     validateChoiceIvrResponse(choice, context, stepIndex, choiceIndex)
   }
+
+  validateChoiceSkipLogic(choice, stepIndex, choiceIndex, steps, context)
 }
 
 const addError = (context, path: string, error) => {
