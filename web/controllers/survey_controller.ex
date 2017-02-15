@@ -101,16 +101,22 @@ defmodule Ask.SurveyController do
     project = conn
     |> load_project_for_change(project_id)
 
-    project
+    survey = project
     |> assoc(:surveys)
     |> Repo.get!(id)
-    # Here we use delete! (with a bang) because we expect
-    # it to always work (and if it does not, it will raise).
-    |> Repo.delete!
 
-    project |> Project.touch!
+    case survey.state do
+      "running" ->
+        send_resp(conn, :bad_request, "")
 
-    send_resp(conn, :no_content, "")
+      _ ->
+        survey
+        |> Repo.delete!
+
+        project |> Project.touch!
+
+        send_resp(conn, :no_content, "")
+    end
   end
 
   def launch(conn, %{"survey_id" => id}) do

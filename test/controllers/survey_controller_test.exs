@@ -2,7 +2,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project, RespondentGroup, Channel}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory}
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -434,6 +434,14 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "reject delete if the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
+      assert response(conn, :bad_request)
+      assert Survey |> Repo.get(survey.id)
+    end
+
     test "updates project updated_at when survey is deleted", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = create_project_for_user(user)
@@ -442,6 +450,27 @@ defmodule Ask.SurveyControllerTest do
 
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
+
+    test "delete survey and all contents", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      channel = insert(:channel, user: user)
+      group = create_group(survey, channel)
+      respondent = add_respondent_to(group)
+      response = insert(:response, respondent: respondent)
+      questionnaire = insert(:questionnaire, project: project)
+      survey_questionnaire = insert(:survey_questionnaire, survey: survey, questionnaire: questionnaire)
+      history = insert(:respondent_disposition_history, respondent: respondent)
+
+      delete conn, project_survey_path(conn, :delete, survey.project, survey)
+
+      refute Survey |> Repo.get(survey.id)
+      refute RespondentGroup |> Repo.get(group.id)
+      refute Respondent |> Repo.get(respondent.id)
+      refute Response |> Repo.get(response.id)
+      refute SurveyQuestionnaire |> Repo.get(survey_questionnaire.id)
+      refute RespondentDispositionHistory |> Repo.get(history.id)
     end
   end
 

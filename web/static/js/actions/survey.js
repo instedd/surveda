@@ -2,6 +2,7 @@
 import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
+import * as surveysActions from './surveys'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
@@ -164,6 +165,13 @@ export const changeIvrRetryConfiguration = (ivrRetryConfiguration: string) => ({
   type: CHANGE_IVR_RETRY_CONFIGURATION,
   ivrRetryConfiguration
 })
+
+export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
+  api.deleteSurvey(survey.projectId, survey)
+    .then(response => {
+      return dispatch(surveysActions.deleted(survey))
+    })
+}
 
 export const changeFallbackDelay = (fallbackDelay: string) => ({
   type: CHANGE_FALLBACK_DELAY,

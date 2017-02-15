@@ -6,7 +6,7 @@ defmodule Ask.Survey do
   schema "surveys" do
     field :name, :string
     field :mode, Ask.Ecto.Type.JSON
-    field :state, :string, default: "not_ready" # not_ready, ready, pending, active, completed
+    field :state, :string, default: "not_ready" # not_ready, ready, pending, running, completed
     field :cutoff, :integer
     field :respondents_count, :integer, virtual: true
     field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
