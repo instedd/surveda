@@ -26,13 +26,16 @@ const validEmail = (email) => {
 }
 
 const changeEmail = (state, action) => {
-  const newData = {...state.data}
-  newData.email = action.email
-  const newErrors = !validEmail(action.email) ? {'email': true} : {}
   return {
     ...state,
-    data: newData,
-    errors: newErrors
+    data: {
+      ...state.data,
+      email: action.email
+    },
+    errors: {
+      ...state.errors,
+      email: !validEmail(action.email)
+    }
   }
 }
 
@@ -50,22 +53,24 @@ const changeLevel = (state, action) => {
 }
 
 const setCode = (state, action) => {
-  const newData = {...state.data}
-  newData.code = action.code
   return {
     ...state,
-    data: newData
+    data: {
+      ...state.data,
+      action: action.code
+    }
   }
 }
 
 const generateCode = (state, action) => {
-  if (state.data.email && state.data.level && !state.data.code) {
+  if (state.data.email && validEmail(state.data.email) && state.data.level && !state.data.code) {
     const code = Crypto.randomBytes(20).toString('hex')
-    const newData = {...state.data}
-    newData.code = code
     return {
       ...state,
-      data: newData
+      data: {
+        ...state.data,
+        code: code
+      }
     }
   } else {
     return {

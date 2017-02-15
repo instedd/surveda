@@ -60,25 +60,48 @@ describe('guest reducer', () => {
     expect(result.data.code).toEqual('')
   })
 
-  it('generates code if both email and level are present', () => {
+  it('does not generates code if email is invalid', () => {
     const result = playActions([
-      actions.changeEmail('user@instedd.org'),
+      actions.changeEmail('invalid-email.com'),
+      actions.changeLevel('editor'),
+      actions.generateCode()
+    ])
+    expect(result.data.code).toEqual('')
+  })
+
+  it('generates code if email is valid and level is present', () => {
+    const result = playActions([
+      actions.changeEmail('email@instedd.org'),
       actions.changeLevel('editor'),
       actions.generateCode()
     ])
     expect(result.data.code).toNotEqual('')
   })
 
-  it('generates an error if email is invalid', () => {
+  it('generates an error if email is invalid: two consecutive dots', () => {
     const result = playActions([
-      actions.changeEmail('invalid..email@gmail.com')
+      actions.changeEmail('invalid..email@instedd.com')
+    ])
+    assert(result.errors.email)
+  })
+
+  it('generates an error if email is invalid: no @ symbol', () => {
+    const result = playActions([
+      actions.changeEmail('email.com')
+    ])
+    assert(result.errors.email)
+  })
+
+  it('generates an error if email is invalid: finishes with period', () => {
+    const result = playActions([
+      actions.changeEmail('email@instedd.')
     ])
     assert(result.errors.email)
   })
 
   it('does not generate an error if email is valid', () => {
     const result = playActions([
-      actions.changeEmail('valid.email@gmail.com')
+      actions.changeEmail('valid.email@instedd.com')
     ])
     assert(!result.errors.email)
   })
