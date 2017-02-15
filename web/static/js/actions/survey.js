@@ -24,6 +24,7 @@ export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
 export const SET_QUOTA_VARS = 'SURVEY_SET_QUOTA_VARS'
 export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
 export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
+export const CHANGE_FALLBACK_DELAY = 'SURVEY_CHANGE_FALLBACK_DELAY'
 
 export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId).then(response => {
@@ -162,6 +163,11 @@ export const changeSmsRetryConfiguration = (smsRetryConfiguration: string) => ({
 export const changeIvrRetryConfiguration = (ivrRetryConfiguration: string) => ({
   type: CHANGE_IVR_RETRY_CONFIGURATION,
   ivrRetryConfiguration
+})
+
+export const changeFallbackDelay = (fallbackDelay: string) => ({
+  type: CHANGE_FALLBACK_DELAY,
+  fallbackDelay
 })
 
 export const saving = () => ({

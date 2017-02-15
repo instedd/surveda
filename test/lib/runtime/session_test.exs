@@ -25,6 +25,16 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
   end
 
+  test "start with fallback delay", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    {:ok, session, _, timeout} = Session.start(quiz, respondent, channel, [], nil, nil, 123)
+    assert %Session{token: token} = session
+    assert 123 = timeout
+    assert token != nil
+
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+  end
+
   test "start with channel without push", %{quiz: quiz, respondent: respondent} do
     test_channel = TestChannel.new(false)
     channel = build(:channel, settings: test_channel |> TestChannel.settings)

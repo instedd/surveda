@@ -30,6 +30,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.SET_QUOTA_VARS: return setQuotaVars(state, action)
     case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
+    case actions.CHANGE_FALLBACK_DELAY: return changeFallbackDelay(state, action)
     case actions.SAVED: return saved(state, action)
     default: return state
   }
@@ -49,6 +50,7 @@ const validate = (state) => {
   state.errors = {}
   validateRetry(state, 'sms', 'smsRetryConfiguration')
   validateRetry(state, 'ivr', 'ivrRetryConfiguration')
+  validateFallbackDelay(state)
 }
 
 const validateRetry = (state: DataStore<Survey>, mode, key) => {
@@ -64,13 +66,36 @@ const validateRetry = (state: DataStore<Survey>, mode, key) => {
 
   const retriesValue = data[key]
   if (!retriesValue) return
+
   let values = retriesValue.split(' ')
   values = values.filter((v) => v)
-  const invalid = values.some((v) => !/^\d+[mhd]$/.test(v))
+  const invalid = values.some((v) => !timeSpecRegex.test(v))
   if (invalid) {
     state.errors[key] = ['Re-contact configuration is invalid']
   }
 }
+
+const validateFallbackDelay = (state: DataStore<Survey>) => {
+  if (!state.data) return
+
+  const data = state.data
+
+  const modes = data.mode
+  if (!modes) return
+
+  // Don't validate fallback delay if there's no fallback mode
+  if (!some(modes, ms => ms.length > 1)) return
+
+  const fallbackDelay = data.fallbackDelay
+  if (!fallbackDelay) return
+
+  const invalid = !timeSpecRegex.test(fallbackDelay)
+  if (invalid) {
+    state.errors.fallbackDelay = ['Fallback delay is invalid']
+  }
+}
+
+const timeSpecRegex = /^\d+[mhd]$/
 
 const changeName = (state, action) => {
   return {
@@ -387,5 +412,12 @@ const changeIvrRetryConfiguration = (state, action) => {
   return {
     ...state,
     ivrRetryConfiguration: action.ivrRetryConfiguration
+  }
+}
+
+const changeFallbackDelay = (state, action) => {
+  return {
+    ...state,
+    fallbackDelay: action.fallbackDelay
   }
 }

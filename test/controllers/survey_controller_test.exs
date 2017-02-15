@@ -67,6 +67,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => [],
@@ -101,6 +102,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => ["gender", "smokes"],
@@ -547,6 +549,20 @@ defmodule Ask.SurveyControllerTest do
       create_group(survey, channel)
 
       attrs = %{sms_retry_configuration: "12j 13p 14q"}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+
+    test "changes state to not_ready when an invalid fallback delay is passed", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [questionnaire])
+      create_group(survey, channel)
+
+      attrs = %{fallback_delay: "12j"}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)

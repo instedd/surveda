@@ -16,6 +16,7 @@ defmodule Ask.Survey do
     field :started_at, Timex.Ecto.DateTime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
+    field :fallback_delay, :string
     field :quota_vars, Ask.Ecto.Type.JSON, default: []
     field :quotas, Ask.Ecto.Type.JSON, virtual: true
     field :comparisons, Ask.Ecto.Type.JSON, default: []
@@ -35,7 +36,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :started_at, :quotas, :quota_vars, :comparisons])
+    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
@@ -59,6 +60,7 @@ defmodule Ask.Survey do
       mode_ready?(changeset) &&
       schedule_ready?(changeset) &&
       retry_attempts_ready?(changeset) &&
+      fallback_delay_ready?(changeset) &&
       comparisons_ready?(changeset) &&
       questionnaires_ready?(changeset) &&
       respondent_groups_ready?(changeset)
@@ -134,11 +136,20 @@ defmodule Ask.Survey do
   defp retry_attempts_ready?(changeset) do
     sms_retry_configuration = get_field(changeset, :sms_retry_configuration)
     ivr_retry_configuration = get_field(changeset, :ivr_retry_configuration)
-    valid_retry_configuration?(sms_retry_configuration) && valid_retry_configuration?(ivr_retry_configuration)
+    valid_retry_configurations?(sms_retry_configuration) && valid_retry_configurations?(ivr_retry_configuration)
   end
 
-  def valid_retry_configuration?(retry_configuration) do
-    !retry_configuration || Enum.all?(String.split(retry_configuration), fn s -> Regex.match?(~r/^\d+[mdh]$/, s) end)
+  defp fallback_delay_ready?(changeset) do
+    fallback_delay = get_field(changeset, :fallback_delay)
+    valid_retry_configuration?(fallback_delay)
+  end
+
+  defp valid_retry_configurations?(retry_configurations) do
+    !retry_configurations || Enum.all?(String.split(retry_configurations), fn s -> valid_retry_configuration?(s) end)
+  end
+
+  defp valid_retry_configuration?(retry_configuration) do
+    !retry_configuration || Regex.match?(~r/^\d+[mdh]$/, retry_configuration)
   end
 
   def retries_configuration(survey, mode) do
@@ -151,6 +162,14 @@ defmodule Ask.Survey do
     parse_retries(retries)
   end
 
+  def fallback_delay(survey) do
+    if survey.fallback_delay do
+      parse_retry_item(survey.fallback_delay |> String.trim, nil)
+    else
+      nil
+    end
+  end
+
   defp parse_retries(nil), do: []
 
   defp parse_retries(retries) do
@@ -160,15 +179,15 @@ defmodule Ask.Survey do
     |> Enum.reject(fn x -> x == 0 end)
   end
 
-  defp parse_retry_item(value) do
+  defp parse_retry_item(value, on_error \\ 0) do
     case Integer.parse(value) do
-      :error -> 0
+      :error -> on_error
       {value, type} ->
         case type do
           "m" -> value
           "h" -> value * 60
           "d" -> value * 60 * 24
-          _ -> 0
+          _ -> on_error
         end
     end
   end
