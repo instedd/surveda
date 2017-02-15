@@ -134,9 +134,17 @@ class SurveyCard extends PureComponent {
       }
     }
 
-    const onDeleteClick = (e) => {
-      e.preventDefault()
-      onDelete(survey)
+    var deleteButton = null
+    if (survey.state != 'running') {
+      const onDeleteClick = (e) => {
+        e.preventDefault()
+        onDelete(survey)
+      }
+
+      deleteButton =
+        <a onClick={onDeleteClick} className='right card-hover grey-text'>
+          <i className='material-icons'>delete</i>
+        </a>
     }
 
     return (
@@ -153,9 +161,7 @@ class SurveyCard extends PureComponent {
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>
                   <UntitledIfEmpty text={survey.name} entityName='survey' />
-                  <a onClick={onDeleteClick} className='right card-hover grey-text'>
-                    <i className='material-icons'>delete</i>
-                  </a>
+                  {deleteButton}
                 </span>
                 <SurveyStatus survey={survey} />
               </div>

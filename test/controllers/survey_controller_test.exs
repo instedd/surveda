@@ -432,6 +432,14 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "reject delete if the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
+      assert response(conn, :bad_request)
+      assert Survey |> Repo.get(survey.id)
+    end
+
     test "updates project updated_at when survey is deleted", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = create_project_for_user(user)
