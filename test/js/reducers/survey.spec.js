@@ -248,6 +248,7 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
+      actions.selectMode(['ivr']),
       actions.changeIvrRetryConfiguration('12j')
     ])
     expect(state.errors.ivrRetryConfiguration).toEqual('Re-contact configuration is invalid')

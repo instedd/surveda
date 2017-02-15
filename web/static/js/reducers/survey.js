@@ -47,13 +47,22 @@ export default validateReducer(fetchReducer(actions, dataReducer))
 
 const validate = (state) => {
   state.errors = {}
-  validateRetry(state, 'smsRetryConfiguration')
-  validateRetry(state, 'ivrRetryConfiguration')
+  validateRetry(state, 'sms', 'smsRetryConfiguration')
+  validateRetry(state, 'ivr', 'ivrRetryConfiguration')
 }
 
-const validateRetry = (state: DataStore<Survey>, key) => {
+const validateRetry = (state: DataStore<Survey>, mode, key) => {
   if (!state.data) return
-  const retriesValue = state.data[key]
+
+  const data = state.data
+
+  const modes = data.mode
+  if (!modes) return
+
+  // Don't validate retry configuration for a mode that's not active (#655)
+  if (!some(modes, ms => some(ms, m => m == mode))) return
+
+  const retriesValue = data[key]
   if (!retriesValue) return
   let values = retriesValue.split(' ')
   values = values.filter((v) => v)
