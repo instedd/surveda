@@ -73,7 +73,7 @@ describe('guest reducer', () => {
     const result = playActions([
       actions.changeEmail('invalid..email@gmail.com')
     ])
-    expect(result.errors.email).toEqual('invalid email')
+    assert(result.errors.email)
   })
 
   it('does not generate an error if email is valid', () => {

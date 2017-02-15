@@ -6,10 +6,11 @@ const initialState = {
     email: '',
     level: '',
     code: ''
-  }
+  },
+  errors: {}
 }
 
-export const reducer = (state = initialState, action) => {
+export default (state = initialState, action) => {
   switch (action.type) {
     case actions.CHANGE_EMAIL: return changeEmail(state, action)
     case actions.CHANGE_LEVEL: return changeLevel(state, action)
@@ -20,34 +21,18 @@ export const reducer = (state = initialState, action) => {
   }
 }
 
-const validateReducer = (state) => {
-  return (state, action) => {
-    const newState = reducer(state, action)
-    validate(newState)
-    return newState
-  }
+const validEmail = (email) => {
+  return /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(email)
 }
-
-const validate = (state) => {
-  state.errors = {}
-  validateEmail(state)
-}
-
-const validateEmail = (state) => {
-  const valid = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(state.data.email)
-  if (!valid) {
-    state.errors = {...state.errors, email: 'invalid email'}
-  }
-}
-
-export default validateReducer(reducer)
 
 const changeEmail = (state, action) => {
   const newData = {...state.data}
   newData.email = action.email
+  const newErrors = !validEmail(action.email) ? {'email': true} : {}
   return {
     ...state,
-    data: newData
+    data: newData,
+    errors: newErrors
   }
 }
 
@@ -65,9 +50,11 @@ const changeLevel = (state, action) => {
 }
 
 const setCode = (state, action) => {
+  const newData = {...state.data}
+  newData.code = action.code
   return {
     ...state,
-    code: action.code
+    data: newData
   }
 }
 
