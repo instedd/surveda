@@ -74,6 +74,13 @@ defmodule Ask.Factory do
     }
   end
 
+  def survey_questionnaire_factory do
+    %Ask.SurveyQuestionnaire{
+      survey: build(:survey),
+      questionnaire: build(:questionnaire)
+    }
+  end
+
   def channel_factory do
     %Ask.Channel{
       user: build(:user),
