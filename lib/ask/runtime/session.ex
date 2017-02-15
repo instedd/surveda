@@ -3,16 +3,20 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
-  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token]
+  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay]
 
-  @timeout 10
+  @default_fallback_delay 10
 
-  def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ []) do
+  def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay) do
     flow = Flow.start(questionnaire, channel.type)
-    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries)
+    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay)
   end
 
-  defp run_flow(flow, respondent, channel, retries, fallback_channel \\ nil, fallback_retries \\ []) do
+  def default_fallback_delay do
+    @default_fallback_delay
+  end
+
+  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
     runtime_channel |> Channel.setup(respondent, token)
@@ -44,7 +48,8 @@ defmodule Ask.Runtime.Session do
           fallback: channel_tuple(fallback_channel, fallback_retries),
           flow: flow,
           respondent: respondent,
-          token: token
+          token: token,
+          fallback_delay: fallback_delay,
         }
         {:ok, session, reply, current_timeout(session)}
     end
@@ -106,7 +111,7 @@ defmodule Ask.Runtime.Session do
 
   defp switch_to_fallback(session) do
     {fallback_channel, fallback_retries} = session.fallback
-    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries)
+    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay)
   end
 
   def sync_step(session, reply) do
@@ -148,7 +153,8 @@ defmodule Ask.Runtime.Session do
             else
               :rejected
             end
-          false -> {:ok, %{session | flow: flow, respondent: respondent}, reply, @timeout}
+          false ->
+            {:ok, %{session | flow: flow, respondent: respondent}, reply, session.fallback_delay}
         end
       _ ->
         step_answer
@@ -163,7 +169,8 @@ defmodule Ask.Runtime.Session do
       retries: session.retries,
       fallback_channel_id: fallback_channel_id(session.fallback),
       fallback_retries: fallback_retries(session.fallback),
-      token: session.token
+      token: session.token,
+      fallback_delay: session.fallback_delay,
     }
   end
 
@@ -185,7 +192,8 @@ defmodule Ask.Runtime.Session do
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       retries: state["retries"],
       fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"]),
-      token: state["token"]
+      token: state["token"],
+      fallback_delay: state["fallback_delay"],
     }
   end
 
@@ -208,8 +216,8 @@ defmodule Ask.Runtime.Session do
     assign_bucket(respondent, buckets)
   end
 
-  defp current_timeout(%Session{retries: []}) do
-    @timeout
+  defp current_timeout(%Session{retries: [], fallback_delay: fallback_delay}) do
+    fallback_delay
   end
 
   defp current_timeout(%Session{retries: [next_retry | _]}) do
