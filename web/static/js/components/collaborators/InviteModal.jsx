@@ -102,7 +102,7 @@ export class InviteModal extends Component {
                     <input type='text' onChange={e => { this.emailOnChange(e) }} onBlur={e => { this.emailOnBlur(e) }} />
                   </InputWithLabel>
                   {
-                    guest.data.email && !validEmail
+                    !validEmail
                       ? <span className='small-text-bellow text-error'>
                         Please enter a valid email
                       </span>
