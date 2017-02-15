@@ -147,6 +147,10 @@ export const createSurvey = (projectId) => {
   return apiPostJSON(`projects/${projectId}/surveys`, surveySchema, data)
 }
 
+export const deleteSurvey = (projectId, survey) => {
+  return apiDelete(`projects/${projectId}/surveys/${survey.id}`)
+}
+
 const getTimezone = () => {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone

@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PureComponent, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
@@ -45,6 +46,11 @@ class SurveyIndex extends Component {
     )
   }
 
+  deleteSurvey = (survey: Survey) => {
+    const { dispatch } = this.props
+    dispatch(surveyActions.deleteSurvey(survey))
+  }
+
   render() {
     const { surveys, respondentsStats, project } = this.props
 
@@ -70,7 +76,7 @@ class SurveyIndex extends Component {
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
           { surveys.map(survey => (
-            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} key={survey.id} />
+            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} />
           )) }
         </div>
         }
@@ -97,13 +103,14 @@ const mapStateToProps = (state, ownProps) => {
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 class SurveyCard extends PureComponent {
-  static propTypes = {
-    completedByDate: React.PropTypes.object,
-    survey: React.PropTypes.object
-  }
+  props: {
+    completedByDate: Object,
+    survey: Survey,
+    onDelete: (Survey => void)
+  };
 
   render() {
-    const { survey, completedByDate } = this.props
+    const { survey, completedByDate, onDelete } = this.props
     let cumulativeCount = []
     let reached = 0
 
@@ -114,6 +121,11 @@ class SurveyCard extends PureComponent {
       if (survey.state == 'running' || survey.state == 'completed') {
         reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
       }
+    }
+
+    const onDeleteClick = (e) => {
+      e.preventDefault()
+      onDelete(survey)
     }
 
     return (
@@ -130,6 +142,9 @@ class SurveyCard extends PureComponent {
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>
                   <UntitledIfEmpty text={survey.name} entityName='survey' />
+                  <a onClick={onDeleteClick} className='right card-hover grey-text'>
+                    <i className='material-icons'>delete</i>
+                  </a>
                 </span>
                 <SurveyStatus survey={survey} />
               </div>

@@ -6,6 +6,7 @@ export const FETCH = 'SURVEYS_FETCH'
 export const NEXT_PAGE = 'SURVEYS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'SURVEYS_PREVIOUS_PAGE'
 export const SORT = 'SURVEYS_SORT'
+export const DELETED = 'SURVEY_DELETED'
 
 export const fetchSurveys = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?SurveyList> => {
   const state = getState()
@@ -33,6 +34,11 @@ export const receiveSurveys = (projectId: number, items: IndexedList<SurveyPrevi
   type: RECEIVE,
   projectId,
   items
+})
+
+export const deleted = (survey: Survey) => ({
+  type: DELETED,
+  id: survey.id
 })
 
 export const nextSurveysPage = () => ({
