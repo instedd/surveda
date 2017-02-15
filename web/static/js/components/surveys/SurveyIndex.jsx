@@ -7,6 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty } from '../ui'
+import { ConfirmationModal } from '../ui/ConfirmationModal'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -47,8 +48,17 @@ class SurveyIndex extends Component {
   }
 
   deleteSurvey = (survey: Survey) => {
-    const { dispatch } = this.props
-    dispatch(surveyActions.deleteSurvey(survey))
+    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+    deleteConfirmationModal.open({
+      modalText: <span>
+        <p>Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
+        <p>All the respondent information will be lost and cannot be undone.</p>
+      </span>,
+      onConfirm: () => {
+        const { dispatch } = this.props
+        dispatch(surveyActions.deleteSurvey(survey))
+      }
+    })
   }
 
   render() {
@@ -80,6 +90,7 @@ class SurveyIndex extends Component {
           )) }
         </div>
         }
+        <ConfirmationModal ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete survey' showCancel />
       </div>
     )
   }

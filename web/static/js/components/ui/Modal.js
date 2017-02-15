@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import uuid from 'node-uuid'
 import classNames from 'classnames/bind'
@@ -6,6 +7,10 @@ export class Modal extends Component {
   componentDidMount() {
     const { initOptions = {} } = this.props
     $(this.refs.modal).modal(initOptions)
+  }
+
+  open() {
+    $(this.refs.modal).modal('open')
   }
 
   render() {
