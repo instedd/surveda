@@ -17,8 +17,8 @@ export class InviteModal extends Component {
 
   send() {
     const { projectId, guest } = this.props
-    if (guest.code) {
-      Promise.resolve(this.props.actions.inviteMail(projectId, guest.code, guest.level, guest.email)).then(
+    if (guest.data.code) {
+      Promise.resolve(this.props.actions.inviteMail(projectId, guest.data.code, guest.data.level, guest.data.email)).then(
         () => this.props.collaboratorsActions.fetchCollaborators(projectId)
       )
       this.cancel()
@@ -33,15 +33,15 @@ export class InviteModal extends Component {
   emailOnBlur(e) {
     const { projectId, guest } = this.props
     const newEmail = e.target.value
-    if (!this.validEmail((newEmail))) {
+    if (guest.errors.email) {
       return
     }
     if (newEmail != config.user) {
       Promise.resolve(this.props.guestActions.changeEmail(newEmail)).then(() => {
-        Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.email)).then(
+        Promise.resolve(this.props.actions.getInviteByEmailAndProject(projectId, guest.data.email)).then(
           (dbGuest) => {
             if (dbGuest) {
-              if (!guest.level) {
+              if (!guest.data.level) {
                 this.props.guestActions.changeLevel(dbGuest.level)
               }
               this.props.guestActions.setCode(dbGuest.code)
@@ -58,7 +58,7 @@ export class InviteModal extends Component {
   levelChanged(e) {
     const { guest } = this.props
     const level = e.target.value
-    if (guest.email != config.user) {
+    if (guest.data.email != config.user) {
       Promise.resolve(this.props.guestActions.changeLevel(level)).then(() => {
         this.props.guestActions.generateCode()
       })
@@ -66,11 +66,6 @@ export class InviteModal extends Component {
       this.props.guestActions.changeLevel(level)
       this.props.guestActions.setCode('')
     }
-  }
-
-  validEmail(email) {
-    // Regex source: http://www.regular-expressions.info/email.html
-    return /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(email)
   }
 
   render() {
@@ -82,9 +77,9 @@ export class InviteModal extends Component {
 
     const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
 
-    const validEmail = this.validEmail(guest.email) || guest.email == ''
+    const validEmail = guest.data.email && !guest.errors.email
 
-    const sendButton = guest.code && validEmail
+    const sendButton = guest.data.code && validEmail
     ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
     : <a className='btn-medium disabled'>Send</a>
 
@@ -103,11 +98,11 @@ export class InviteModal extends Component {
             <div className='row'>
               <div className='col s8'>
                 <div className='input-field'>
-                  <InputWithLabel id='collaborator_mail' value={guest.email} label={`Enter collaborator's email`} >
+                  <InputWithLabel id='collaborator_mail' value={guest.data.email} label={`Enter collaborator's email`} >
                     <input type='text' onChange={e => { this.emailOnChange(e) }} onBlur={e => { this.emailOnBlur(e) }} />
                   </InputWithLabel>
                   {
-                    !validEmail
+                    guest.data.email && !validEmail
                       ? <span className='small-text-bellow text-error'>
                         Please enter a valid email
                       </span>
@@ -117,7 +112,7 @@ export class InviteModal extends Component {
               </div>
               <div className='col s1' />
               <Input s={3} type='select' label='Role'
-                value={guest.level || ''}
+                value={guest.data.level || ''}
                 onChange={e => this.levelChanged(e)}>
                 <option value=''>
                 Select a role
