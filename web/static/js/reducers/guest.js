@@ -2,9 +2,12 @@ import * as actions from '../actions/guest'
 import Crypto from 'crypto'
 
 const initialState = {
-  email: '',
-  level: '',
-  code: ''
+  data: {
+    email: '',
+    level: '',
+    code: ''
+  },
+  errors: {}
 }
 
 export default (state = initialState, action) => {
@@ -18,10 +21,21 @@ export default (state = initialState, action) => {
   }
 }
 
+const validEmail = (email) => {
+  return /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(email)
+}
+
 const changeEmail = (state, action) => {
   return {
     ...state,
-    email: action.email
+    data: {
+      ...state.data,
+      email: action.email
+    },
+    errors: {
+      ...state.errors,
+      email: !validEmail(action.email)
+    }
   }
 }
 
@@ -29,7 +43,10 @@ const changeLevel = (state, action) => {
   if (['reader', 'editor'].includes(action.level)) {
     return {
       ...state,
-      level: action.level
+      data: {
+        ...state.data,
+        level: action.level
+      }
     }
   } else {
     return state
@@ -39,16 +56,22 @@ const changeLevel = (state, action) => {
 const setCode = (state, action) => {
   return {
     ...state,
-    code: action.code
+    data: {
+      ...state.data,
+      action: action.code
+    }
   }
 }
 
 const generateCode = (state, action) => {
-  if (state.email && state.level && !state.code) {
+  if (state.data.email && validEmail(state.data.email) && state.data.level && !state.data.code) {
     const code = Crypto.randomBytes(20).toString('hex')
     return {
       ...state,
-      code: code
+      data: {
+        ...state.data,
+        code: code
+      }
     }
   } else {
     return {
