@@ -117,7 +117,7 @@ class SurveyCard extends PureComponent {
   props: {
     completedByDate: Object,
     survey: Survey,
-    onDelete: Function
+    onDelete: ((survey: Survey) => void)
   };
 
   render() {
