@@ -1,6 +1,6 @@
 defprotocol Ask.Runtime.Channel do
   def prepare(channel, callback_url)
-  def setup(channel, respondent, token)
+  def setup(channel, respondent, token, channel_state)
   def can_push_question?(channel)
   def ask(channel, respondent, token, prompts)
 end

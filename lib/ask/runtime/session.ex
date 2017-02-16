@@ -3,23 +3,25 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
-  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay]
+  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay, :channel_state]
 
   @default_fallback_delay 10
 
   def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay) do
     flow = Flow.start(questionnaire, channel.type)
-    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay)
+    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay, nil)
   end
 
   def default_fallback_delay do
     @default_fallback_delay
   end
 
-  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay) do
+  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay, channel_state) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
-    runtime_channel |> Channel.setup(respondent, token)
+
+    setup_response = runtime_channel |> Channel.setup(respondent, token, channel_state)
+    channel_state = handle_setup_response(setup_response, channel_state)
 
     {flow, reply} = case runtime_channel |> Channel.can_push_question? do
       true ->
@@ -50,8 +52,19 @@ defmodule Ask.Runtime.Session do
           respondent: respondent,
           token: token,
           fallback_delay: fallback_delay,
+          channel_state: channel_state,
         }
         {:ok, session, reply, current_timeout(session)}
+    end
+  end
+
+  defp handle_setup_response(setup_response, channel_state) do
+    case setup_response do
+      {:ok, new_state} ->
+        new_state
+      _ ->
+        # TODO: handle Channel.setup errors
+        channel_state
     end
   end
 
@@ -80,7 +93,7 @@ defmodule Ask.Runtime.Session do
   end
 
   # Let's try again
-  def timeout(session = %Session{retries: [_ | retries]}) do
+  def timeout(session = %Session{retries: [_ | retries], channel_state: channel_state}) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(session.channel)
 
@@ -88,16 +101,21 @@ defmodule Ask.Runtime.Session do
     # If we can push a question, it is Nuntium.
     # If we can't push a question, it is Verboice (so we need to schedule
     # a call and wait for the callback to actually execute a step, thus "push").
-    case runtime_channel |> Channel.can_push_question? do
-      true ->
-        {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
-        runtime_channel |> Channel.ask(session.respondent, token, prompts)
 
-      false ->
-        runtime_channel |> Channel.setup(session.respondent, token)
-    end
+    channel_state =
+      case runtime_channel |> Channel.can_push_question? do
+        true ->
+          {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
+          runtime_channel |> Channel.ask(session.respondent, token, prompts)
+          channel_state
+
+        false ->
+          setup_response = runtime_channel |> Channel.setup(session.respondent, token, channel_state)
+          handle_setup_response(setup_response, channel_state)
+      end
+
     # The new session will timeout as defined by hd(retries)
-    session = %{session | retries: retries, token: token}
+    session = %{session | retries: retries, token: token, channel_state: channel_state}
     {:ok, session, %Reply{}, current_timeout(session)}
   end
 
@@ -111,7 +129,7 @@ defmodule Ask.Runtime.Session do
 
   defp switch_to_fallback(session) do
     {fallback_channel, fallback_retries} = session.fallback
-    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay)
+    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay, session.channel_state)
   end
 
   def sync_step(session, reply) do
@@ -171,6 +189,7 @@ defmodule Ask.Runtime.Session do
       fallback_retries: fallback_retries(session.fallback),
       token: session.token,
       fallback_delay: session.fallback_delay,
+      channel_state: session.channel_state,
     }
   end
 
@@ -194,6 +213,7 @@ defmodule Ask.Runtime.Session do
       fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"]),
       token: state["token"],
       fallback_delay: state["fallback_delay"],
+      channel_state: state["channel_state"],
     }
   end
 
