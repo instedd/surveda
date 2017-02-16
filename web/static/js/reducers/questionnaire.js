@@ -920,7 +920,6 @@ const validateSmsResponseDuplicates = (choice: Choice, context: ValidationContex
 
 const validateRanges = (ranges, stepIndex, context, steps) => {
   each(ranges, (range) => {
-    console.log(range)
     validateRangeSkipLogic(range, stepIndex, steps, context)
   })
 }
