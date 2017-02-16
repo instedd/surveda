@@ -26,6 +26,7 @@ export const SET_QUOTA_VARS = 'SURVEY_SET_QUOTA_VARS'
 export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
 export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
 export const CHANGE_FALLBACK_DELAY = 'SURVEY_CHANGE_FALLBACK_DELAY'
+export const TOGGLE_COUNT_PARTIAL_RESULTS = 'SURVEY_TOGGLE_COUNT_PARTIAL_RESULTS'
 
 export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId).then(response => {
@@ -130,6 +131,10 @@ export const selectMode = (mode: string[]) => ({
 
 export const changeModeComparison = () => ({
   type: CHANGE_MODE_COMPARISON
+})
+
+export const toggleCountPartialResults = () => ({
+  type: TOGGLE_COUNT_PARTIAL_RESULTS
 })
 
 export const changeQuestionnaireComparison = () => ({

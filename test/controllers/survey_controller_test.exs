@@ -56,6 +56,7 @@ defmodule Ask.SurveyControllerTest do
         "project_id" => survey.project_id,
         "questionnaire_ids" => [],
         "cutoff" => nil,
+        "count_partial_results" => false,
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
@@ -91,6 +92,7 @@ defmodule Ask.SurveyControllerTest do
         "project_id" => survey.project_id,
         "questionnaire_ids" => [],
         "cutoff" => nil,
+        "count_partial_results" => false,
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{

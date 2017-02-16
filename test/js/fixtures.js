@@ -140,6 +140,7 @@ const bareSurvey: Survey = {
   projectId: 1,
   name: 'Foo',
   cutoff: 123,
+  countPartialResults: false,
   state: 'ready',
   questionnaireIds: [1],
   scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
