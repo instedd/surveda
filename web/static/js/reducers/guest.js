@@ -41,11 +41,12 @@ const changeEmail = (state, action) => {
 
 const changeLevel = (state, action) => {
   if (['reader', 'editor'].includes(action.level)) {
-    const newData = {...state.data}
-    newData.level = action.level
     return {
       ...state,
-      data: newData
+      data: {
+        ...state.data,
+        level: action.level
+      }
     }
   } else {
     return state
