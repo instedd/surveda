@@ -108,4 +108,21 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert [^channel] = channels
     end
   end
+
+  describe "update_channel_state" do
+    test "creates new state" do
+      new_state = VerboiceChannel.update_channel_state({:ok, %{"call_id" => 123}}, nil)
+      assert new_state == {:ok, [123]}
+    end
+
+    test "creates new state from existing state" do
+      new_state = VerboiceChannel.update_channel_state({:ok, %{"call_id" => 456}}, [123])
+      assert new_state == {:ok, [456, 123]}
+    end
+
+    test "returns previous state on response error" do
+      new_state = VerboiceChannel.update_channel_state(:error, [123])
+      assert new_state == {:error, :error}
+    end
+  end
 end
