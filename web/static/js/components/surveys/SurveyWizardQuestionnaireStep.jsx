@@ -88,7 +88,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                 type='checkbox'
                 checked={questionnaireComparison}
                 onChange={e => this.questionnaireComparisonChange(e)}
-                className='with-gap'
+                className='filled-in'
                 disabled={readOnly}
                 />
               <label htmlFor='questionnaires_comparison'>Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)</label>
@@ -102,7 +102,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                     id={questionnaireId}
                     type={inputType}
                     name='questionnaire'
-                    className='with-gap'
+                    className={questionnaireComparison ? 'filled-in' : 'with-gap'}
                     value={questionnaireId}
                     checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
                     onChange={e => this.questionnaireChange(e)}
