@@ -1,6 +1,5 @@
 import React, { PropTypes, Component } from 'react'
 import { InputWithLabel } from '../ui'
-import debounce from '../../debounce'
 
 export class PercentageInput extends Component {
   static propTypes = {
@@ -20,7 +19,7 @@ export class PercentageInput extends Component {
     this.valueChange = this.valueChange.bind(this)
     this.onFocus = this.onFocus.bind(this)
     this.onBlur = this.onBlur.bind(this)
-    this.onChange = debounce(this.props.onChange, 1000)
+    this.onChange = this.props.onChange.bind(this)
   }
 
   valueChange(e) {
