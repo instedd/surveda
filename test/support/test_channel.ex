@@ -52,17 +52,9 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     :ok
   end
 
-  def setup(channel, respondent, token, channel_state) do
-    send channel.pid, [:setup, channel, respondent, token, channel_state]
-
-    # To simulate that the channel produces new state, we simply transform
-    # nil to 0 and then increment from there.
-    new_state = case channel_state do
-      nil -> 0
-      num -> num + 1
-    end
-
-    {:ok, new_state}
+  def setup(channel, respondent, token) do
+    send channel.pid, [:setup, channel, respondent, token]
+    {:ok, 0}
   end
 
   def can_push_question?(channel) do

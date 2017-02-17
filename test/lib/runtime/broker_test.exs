@@ -155,7 +155,7 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token, nil]
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
@@ -186,7 +186,7 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token, nil]
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
@@ -215,7 +215,7 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token, nil]
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -239,7 +239,7 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token, nil]
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -297,14 +297,14 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, nil]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, 0]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
@@ -341,7 +341,7 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token, nil]
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
@@ -357,7 +357,7 @@ defmodule Ask.BrokerTest do
 
     # Third poll, this time fallback to IVR channel
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, 0]
+    assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
   end
 
   test "fallback respondent (IVR => SMS)" do
@@ -382,21 +382,21 @@ defmodule Ask.BrokerTest do
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, nil]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, 0]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time fallback to SMS channel
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_fallback_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token, 1]
+    assert_received [:setup, ^test_fallback_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_fallback_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
   end
 

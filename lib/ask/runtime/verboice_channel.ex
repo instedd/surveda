@@ -191,18 +191,10 @@ defmodule Ask.Runtime.VerboiceChannel do
     Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], [])
   end
 
-  def update_channel_state(response, channel_state) do
+  def process_call_response(response) do
     case response do
       {:ok, %{"call_id" => call_id}} ->
-        case channel_state do
-          nil ->
-            {:ok, [call_id]}
-          list when is_list(list) ->
-            {:ok, [call_id | list]}
-          _ ->
-            # The state should be a list, this probably can't happen
-            {:ok, channel_state}
-        end
+        {:ok, %{verboice_call_id: call_id}}
       _ ->
         {:error, response}
     end
@@ -213,13 +205,13 @@ defmodule Ask.Runtime.VerboiceChannel do
     def ask(_, _, _, _), do: throw(:not_implemented)
     def prepare(_, _), do: :ok
 
-    def setup(channel, respondent, token, channel_state) do
+    def setup(channel, respondent, token) do
       channel.client
       |> Verboice.Client.call(address: respondent.sanitized_phone_number,
                               channel: channel.channel_name,
                               callback_url: VerboiceChannel.callback_url(respondent),
                               status_callback_url: VerboiceChannel.status_callback_url(respondent, token))
-      |> Ask.Runtime.VerboiceChannel.update_channel_state(channel_state)
+      |> Ask.Runtime.VerboiceChannel.process_call_response
     end
   end
 end
