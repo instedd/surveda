@@ -99,4 +99,8 @@ export const joinSmsPieces = (pieces: string[]): string => {
   return pieces.join(smsSplitSeparator)
 }
 
-const smsSplitSeparator = '\u001E'
+export const containsSeparator = (text: string): boolean => {
+  return text.includes(smsSplitSeparator)
+}
+
+export const smsSplitSeparator = '\u001E'

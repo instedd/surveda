@@ -11,9 +11,10 @@ import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
-  newIvrPrompt, newRefusal } from '../step'
+  newIvrPrompt, newRefusal, splitSmsText } from '../step'
 import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
+import * as characterCounter from '../characterCounter'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -813,6 +814,11 @@ const validateSteps = (steps, context: ValidationContext) => {
 const validateSmsLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
   if (getStepPromptSms(step, lang).length == 0) {
     addError(context, promptTextPath(stepIndex, 'sms', lang), 'SMS prompt must not be blank')
+  } else {
+    const parts = splitSmsText(getStepPromptSms(step, lang))
+    if (parts.some(p => characterCounter.limitExceeded(p))) {
+      addError(context, promptTextPath(stepIndex, 'sms', lang), 'SMS prompt is too long')
+    }
   }
 }
 
