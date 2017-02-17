@@ -739,9 +739,9 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
-  test "launch survey", %{conn: conn, user: user} do
+  test "when launching a survey, it sets the state to running", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
@@ -749,25 +749,25 @@ defmodule Ask.SurveyControllerTest do
 
   test "forbids launch for project reader", %{conn: conn, user: user} do
     project = create_project_for_user(user, level: "reader")
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     assert_error_sent :forbidden, fn ->
       post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     end
   end
 
-  test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
+  test "sets started_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do
     now = Timex.now
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     started_at = Repo.get(Survey, survey.id).started_at
     assert (Timex.between?(started_at, Timex.shift(now, seconds: -3), Timex.shift(now, seconds: 3)))
   end
 
-  test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
+  test "updates project updated_at when a survey is launched", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     project = Project |> Repo.get(project.id)

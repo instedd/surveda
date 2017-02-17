@@ -124,30 +124,36 @@ defmodule Ask.SurveyController do
     |> Repo.preload([:quota_buckets])
     |> Repo.preload(respondent_groups: :channels)
 
-    project = conn
-    |> load_project_for_change(survey.project_id)
-
-    channels = survey.respondent_groups
-    |> Enum.flat_map(&(&1.channels))
-    |> Enum.uniq
-
-    case prepare_channels(conn, channels) do
-      :ok ->
-        changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
-        case Repo.update(changeset) do
-          {:ok, survey} ->
-            project |> Project.touch!
-            render(conn, "show.json", survey: survey)
-          {:error, changeset} ->
-            conn
-            |> put_status(:unprocessable_entity)
-            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-        end
-
-      {:error, _reason} ->
-        conn
+    if survey.state != "ready" do
+      conn
         |> put_status(:unprocessable_entity)
         |> render("show.json", survey: survey)
+    else
+      project = conn
+      |> load_project_for_change(survey.project_id)
+
+      channels = survey.respondent_groups
+      |> Enum.flat_map(&(&1.channels))
+      |> Enum.uniq
+
+      case prepare_channels(conn, channels) do
+        :ok ->
+          changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
+          case Repo.update(changeset) do
+            {:ok, survey} ->
+              project |> Project.touch!
+              render(conn, "show.json", survey: survey)
+            {:error, changeset} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+          end
+
+        {:error, _reason} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render("show.json", survey: survey)
+      end
     end
   end
 
