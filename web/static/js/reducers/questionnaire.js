@@ -38,7 +38,9 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
   // We mimic that in the specs, so DataStore<Questionnaire> needs to become optional here.
   return (state: ?DataStore<Questionnaire>, action: any) => {
     const newState = reducer(state, action)
-    validate(newState)
+    if (state !== newState) {
+      validate(newState)
+    }
     return newState
   }
 }
