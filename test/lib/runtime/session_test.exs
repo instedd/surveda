@@ -83,6 +83,19 @@ defmodule Ask.SessionTest do
     assert {:stalled, _} = Session.timeout(session)
   end
 
+  test "doesn't retry if has queued message" do
+    quiz = insert(:questionnaire, steps: @dummy_steps)
+    respondent = insert(:respondent)
+    test_channel = TestChannel.new(true, true)
+    channel = build(:channel, settings: test_channel |> TestChannel.settings)
+
+    assert {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, [5])
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
+
+    assert {:ok, ^session, %Reply{}, 5} = Session.timeout(session)
+  end
+
   test "mark respondent as failed when failure notification arrives on last retry", %{quiz: quiz, respondent: respondent, channel: channel} do
     {:ok, session = %Session{token: token}, _, 10} = Session.start(quiz, respondent, channel)
     assert :failed = Session.channel_failed(session, token)

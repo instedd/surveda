@@ -213,5 +213,20 @@ defmodule Ask.Runtime.VerboiceChannel do
                               status_callback_url: VerboiceChannel.status_callback_url(respondent, token))
       |> Ask.Runtime.VerboiceChannel.process_call_response
     end
+
+    def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do
+      response = channel.client
+      |> Verboice.Client.call_state(call_id)
+      case response do
+        {:ok, %{"state" => "completed"}} -> false
+        {:ok, %{"state" => "failed"}} -> false
+        {:ok, %{"state" => _}} -> true
+        _ -> false
+      end
+    end
+
+    def has_queued_message?(_, _) do
+      false
+    end
   end
 end

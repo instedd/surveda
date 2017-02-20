@@ -204,5 +204,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       Nuntium.Client.new(nuntium_config[:base_url], channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
     end
+
+    def has_queued_message?(_, _), do: false
   end
 end
