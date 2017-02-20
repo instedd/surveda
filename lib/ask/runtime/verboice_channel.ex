@@ -191,6 +191,15 @@ defmodule Ask.Runtime.VerboiceChannel do
     Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], [])
   end
 
+  def process_call_response(response) do
+    case response do
+      {:ok, %{"call_id" => call_id}} ->
+        {:ok, %{verboice_call_id: call_id}}
+      _ ->
+        {:error, response}
+    end
+  end
+
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def can_push_question?(_), do: false
     def ask(_, _, _, _), do: throw(:not_implemented)
@@ -202,6 +211,7 @@ defmodule Ask.Runtime.VerboiceChannel do
                               channel: channel.channel_name,
                               callback_url: VerboiceChannel.callback_url(respondent),
                               status_callback_url: VerboiceChannel.status_callback_url(respondent, token))
+      |> Ask.Runtime.VerboiceChannel.process_call_response
     end
   end
 end

@@ -8,8 +8,8 @@ export class InviteLink extends Component {
 
   copyLink() {
     const { projectId, guest, dispatch } = this.props
-    if (guest.code) {
-      dispatch(actions.invite(projectId, guest.code, guest.level, guest.email)).then(
+    if (guest.data.code) {
+      dispatch(actions.invite(projectId, guest.data.code, guest.data.level, guest.data.email)).then(
         () => {
           window.Materialize.toast(`Invite link was copied to the clipboard`, 5000)
         },
@@ -25,8 +25,8 @@ export class InviteLink extends Component {
 
   inviteLink() {
     const { guest } = this.props
-    if (guest.code) {
-      return window.location.origin + '/confirm?code=' + guest.code
+    if (guest.data.code) {
+      return window.location.origin + '/confirm?code=' + guest.data.code
     }
     return ''
   }

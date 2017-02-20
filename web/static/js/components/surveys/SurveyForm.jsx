@@ -48,7 +48,7 @@ class SurveyForm extends Component {
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
-    const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration)
+    const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
       survey.scheduleDayOfWeek != null && (
         survey.scheduleDayOfWeek.sun ||

@@ -2,7 +2,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project, RespondentGroup, Channel}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -67,6 +67,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => [],
@@ -101,6 +102,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => ["gender", "smokes"],
@@ -432,6 +434,14 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "reject delete if the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
+      assert response(conn, :bad_request)
+      assert Survey |> Repo.get(survey.id)
+    end
+
     test "updates project updated_at when survey is deleted", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = create_project_for_user(user)
@@ -440,6 +450,27 @@ defmodule Ask.SurveyControllerTest do
 
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
+
+    test "delete survey and all contents", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      channel = insert(:channel, user: user)
+      group = create_group(survey, channel)
+      respondent = add_respondent_to(group)
+      response = insert(:response, respondent: respondent)
+      questionnaire = insert(:questionnaire, project: project)
+      survey_questionnaire = insert(:survey_questionnaire, survey: survey, questionnaire: questionnaire)
+      history = insert(:respondent_disposition_history, respondent: respondent)
+
+      delete conn, project_survey_path(conn, :delete, survey.project, survey)
+
+      refute Survey |> Repo.get(survey.id)
+      refute RespondentGroup |> Repo.get(group.id)
+      refute Respondent |> Repo.get(respondent.id)
+      refute Response |> Repo.get(response.id)
+      refute SurveyQuestionnaire |> Repo.get(survey_questionnaire.id)
+      refute RespondentDispositionHistory |> Repo.get(history.id)
     end
   end
 
@@ -547,6 +578,20 @@ defmodule Ask.SurveyControllerTest do
       create_group(survey, channel)
 
       attrs = %{sms_retry_configuration: "12j 13p 14q"}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+
+    test "changes state to not_ready when an invalid fallback delay is passed", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [questionnaire])
+      create_group(survey, channel)
+
+      attrs = %{fallback_delay: "12j"}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
@@ -694,9 +739,16 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
-  test "launch survey", %{conn: conn, user: user} do
+  test "prevents launching a survey that is not in the ready state", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "not_ready")
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert response(conn, 422)
+  end
+
+  test "when launching a survey, it sets the state to running", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "ready")
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
@@ -704,25 +756,40 @@ defmodule Ask.SurveyControllerTest do
 
   test "forbids launch for project reader", %{conn: conn, user: user} do
     project = create_project_for_user(user, level: "reader")
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     assert_error_sent :forbidden, fn ->
       post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     end
   end
 
-  test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
+  test "launches a survey with channel", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "ready")
+
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    create_group(survey, channel)
+
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "running"
+
+    assert_received [:prepare, ^test_channel, "http://app.ask.dev/callbacks/test"]
+  end
+
+  test "sets started_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do
     now = Timex.now
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     started_at = Repo.get(Survey, survey.id).started_at
     assert (Timex.between?(started_at, Timex.shift(now, seconds: -3), Timex.shift(now, seconds: 3)))
   end
 
-  test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
+  test "updates project updated_at when a survey is launched", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     project = Project |> Repo.get(project.id)

@@ -1,47 +1,95 @@
-import React, { Component, PropTypes } from 'react'
-import { Modal } from '.'
+// @flow
+import React, { Component } from 'react'
+import { Modal } from './Modal'
+
+type Props = {
+  showLink?: boolean,
+  showCancel?: boolean,
+  linkText?: string,
+  header?: string,
+  modalText?: any,
+  confirmationText?: string,
+  onConfirm?: Function,
+  onNo?: Function,
+  modalId?: string,
+  style?: Object
+};
 
 export class ConfirmationModal extends Component {
+  props: Props
+  state: Props
+
+  constructor(props: Props) {
+    super()
+    this.state = props
+  }
+
+  componentWillReceiveProps(nextProps: Props) {
+    var newState: $Shape<Props> = {}
+    for (var variable in nextProps) {
+      if (nextProps.hasOwnProperty(variable) && nextProps[variable]) {
+        newState[variable] = nextProps[variable]
+      }
+    }
+    this.setState(newState)
+  }
+
+  open(props: ?$Shape<Props>) {
+    const modal: Modal = this.refs.modal
+
+    if (props) {
+      this.setState(props)
+    }
+
+    modal.open()
+  }
+
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, showCancel = false } = this.props
+    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, showCancel = false } = this.state
 
     let cancelLink = null
     if (showCancel) {
-      cancelLink = <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
+      const onCancelClick = (e) => {
+        e.preventDefault()
+      }
+      cancelLink = <a href='#!' onClick={onCancelClick} className='modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
     }
 
     let noLink = null
     if (onNo) {
-      noLink = <a href='#!' onClick={onNo} className=' modal-action modal-close waves-effect waves-green btn-flat'>No</a>
+      const onNoClick = (e) => {
+        e.preventDefault()
+        onNo()
+      }
+      noLink = <a href='#!' onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>No</a>
+    }
+
+    const onConfirmClick = (e) => {
+      e.preventDefault()
+      if (onConfirm) {
+        onConfirm()
+      }
+    }
+
+    var content
+    if (typeof modalText === 'string') {
+      content = <p>{modalText}</p>
+    } else {
+      content = modalText
     }
 
     return (
-      <div>
-        <Modal id={modalId} style={style} showLink={showLink} linkText={linkText}>
-          <div className='modal-content'>
-            <h4>{header}</h4>
-            <p>{modalText}</p>
-          </div>
-          <div className='modal-footer'>
-            {cancelLink}
-            {noLink}
-            <a href='#!' className=' modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirm}>{confirmationText}</a>
-          </div>
-        </Modal>
-      </div>
+      <Modal id={modalId} ref='modal' style={style} showLink={showLink} linkText={linkText}>
+        <div className='modal-content'>
+          <h4>{header}</h4>
+          {content}
+        </div>
+        <div className='modal-footer'>
+          {cancelLink}
+          {noLink}
+          <a href='#!' className='modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
+        </div>
+      </Modal>
     )
   }
-}
-
-ConfirmationModal.propTypes = {
-  showLink: PropTypes.bool,
-  showCancel: PropTypes.bool,
-  linkText: PropTypes.string,
-  header: PropTypes.string.isRequired,
-  modalText: PropTypes.string.isRequired,
-  confirmationText: PropTypes.string.isRequired,
-  onConfirm: PropTypes.func.isRequired,
-  onNo: PropTypes.func,
-  modalId: PropTypes.string.isRequired,
-  style: PropTypes.object
 }

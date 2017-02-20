@@ -56,7 +56,7 @@ class SurveyWizardModeStep extends Component {
                 type='checkbox'
                 checked={modeComparison}
                 onChange={e => this.modeComparisonChange(e)}
-                className='with-gap'
+                className='filled-in'
                 disabled={readOnly}
                 />
               <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
@@ -66,7 +66,7 @@ class SurveyWizardModeStep extends Component {
                 id='questionnaire_mode_ivr'
                 type={inputType}
                 name='questionnaire_mode'
-                className='with-gap'
+                className={modeComparison ? 'filled-in' : 'with-gap'}
                 value='ivr'
                 checked={this.modeIncludes(mode, ['ivr'])}
                 onChange={e => this.modeChange(e, ['ivr'])}
@@ -79,7 +79,7 @@ class SurveyWizardModeStep extends Component {
                 id='questionnaire_mode_ivr_sms'
                 type={inputType}
                 name='questionnaire_mode'
-                className='with-gap'
+                className={modeComparison ? 'filled-in' : 'with-gap'}
                 value='ivr_sms'
                 checked={this.modeIncludes(mode, ['ivr', 'sms'])}
                 onChange={e => this.modeChange(e, ['ivr', 'sms'])}
@@ -92,7 +92,7 @@ class SurveyWizardModeStep extends Component {
                 id='questionnaire_mode_sms'
                 type={inputType}
                 name='questionnaire_mode'
-                className='with-gap'
+                className={modeComparison ? 'filled-in' : 'with-gap'}
                 value='sms'
                 checked={this.modeIncludes(mode, ['sms'])}
                 onChange={e => this.modeChange(e, ['sms'])}
@@ -105,7 +105,7 @@ class SurveyWizardModeStep extends Component {
                 id='questionnaire_mode_sms_ivr'
                 type={inputType}
                 name='questionnaire_mode'
-                className='with-gap'
+                className={modeComparison ? 'filled-in' : 'with-gap'}
                 value='sms_ivr'
                 checked={this.modeIncludes(mode, ['sms', 'ivr'])}
                 onChange={e => this.modeChange(e, ['sms', 'ivr'])}

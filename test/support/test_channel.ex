@@ -48,12 +48,14 @@ defmodule Ask.TestChannel do
 end
 
 defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
-  def prepare(_, _) do
+  def prepare(channel, callback_url) do
+    send channel.pid, [:prepare, channel, callback_url]
     :ok
   end
 
   def setup(channel, respondent, token) do
     send channel.pid, [:setup, channel, respondent, token]
+    {:ok, 0}
   end
 
   def can_push_question?(channel) do

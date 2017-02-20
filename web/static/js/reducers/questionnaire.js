@@ -39,7 +39,9 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
   // We mimic that in the specs, so DataStore<Questionnaire> needs to become optional here.
   return (state: ?DataStore<Questionnaire>, action: any) => {
     const newState = reducer(state, action)
-    validate(newState)
+    if (state !== newState) {
+      validate(newState)
+    }
     return newState
   }
 }
@@ -926,7 +928,6 @@ const validateSmsResponseDuplicates = (choice: Choice, context: ValidationContex
 
 const validateRanges = (ranges, stepIndex, context, steps) => {
   each(ranges, (range) => {
-    console.log(range)
     validateRangeSkipLogic(range, stepIndex, steps, context)
   })
 }

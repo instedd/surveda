@@ -38,6 +38,7 @@ defmodule Ask.SurveyView do
       updated_at: survey.updated_at,
       sms_retry_configuration: survey.sms_retry_configuration,
       ivr_retry_configuration: survey.ivr_retry_configuration,
+      fallback_delay: survey.fallback_delay,
       quotas: %{
         buckets: render_many(survey.quota_buckets, Ask.SurveyView, "survey_bucket.json", as: :bucket),
         vars: survey.quota_vars || []

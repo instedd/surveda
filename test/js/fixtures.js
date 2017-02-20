@@ -150,6 +150,7 @@ const bareSurvey: Survey = {
   comparisons: [],
   ivrRetryConfiguration: '',
   smsRetryConfiguration: '',
+  fallbackDelay: '',
   modeComparison: false,
   questionnaireComparison: false,
   quotas: {

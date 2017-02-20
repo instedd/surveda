@@ -108,4 +108,16 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert [^channel] = channels
     end
   end
+
+  describe "process_call_response" do
+    test "creates new state" do
+      new_state = VerboiceChannel.process_call_response({:ok, %{"call_id" => 123}})
+      assert new_state == {:ok, %{verboice_call_id: 123}}
+    end
+
+    test "returns error on response error" do
+      new_state = VerboiceChannel.process_call_response(:error)
+      assert new_state == {:error, :error}
+    end
+  end
 end

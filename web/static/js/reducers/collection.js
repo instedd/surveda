@@ -38,9 +38,11 @@ const items = (state, action, itemsReducer) => {
   const newItems: any = state.items == null ? null : itemsReducer(state.items, action)
 
   if (newItems !== state.items) {
+    let order = itemsOrder(newItems, state.sortBy, state.sortAsc)
     return ({
       ...state,
-      items: newItems
+      items: newItems,
+      order
     })
   }
 

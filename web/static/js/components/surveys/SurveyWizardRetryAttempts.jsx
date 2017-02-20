@@ -4,12 +4,17 @@ import * as actions from '../../actions/survey'
 import { InputWithLabel } from '../ui'
 import flatMap from 'lodash/flatMap'
 import uniq from 'lodash/uniq'
+import some from 'lodash/some'
 
 class SurveyWizardRetryAttempts extends Component {
   componentDidMount() {
     const { survey } = this.props
     if (survey.data) {
-      this.setState({smsRetryConfiguration: survey.data.smsRetryConfiguration, ivrRetryConfiguration: survey.data.ivrRetryConfiguration})
+      this.setState({
+        smsRetryConfiguration: survey.data.smsRetryConfiguration,
+        ivrRetryConfiguration: survey.data.ivrRetryConfiguration,
+        fallbackDelay: survey.data.fallbackDelay
+      })
     }
   }
 
@@ -21,6 +26,9 @@ class SurveyWizardRetryAttempts extends Component {
         break
       case 'ivr':
         this.setState({ivrRetryConfiguration: value})
+        break
+      case 'fallbackDelay':
+        this.setState({fallbackDelay: value})
         break
       default:
         throw new Error(`unknown mode: ${mode}`)
@@ -74,6 +82,9 @@ class SurveyWizardRetryAttempts extends Component {
       case 'ivr':
         dispatch(actions.changeIvrRetryConfiguration(this.state.ivrRetryConfiguration))
         break
+      case 'fallbackDelay':
+        dispatch(actions.changeFallbackDelay(this.state.fallbackDelay))
+        break
       default:
         throw new Error(`unknown mode: ${mode}`)
     }
@@ -85,6 +96,8 @@ class SurveyWizardRetryAttempts extends Component {
         return this.state.smsRetryConfiguration
       case 'ivr':
         return this.state.ivrRetryConfiguration
+      case 'fallbackDelay':
+        return this.state.fallbackDelay
       default:
         throw new Error(`unknown mode: ${mode}`)
     }
@@ -96,6 +109,8 @@ class SurveyWizardRetryAttempts extends Component {
         return !!errors.smsRetryConfiguration
       case 'ivr':
         return !!errors.ivrRetryConfiguration
+      case 'fallbackDelay':
+        return !!errors.fallbackDelay
       default:
         throw new Error(`unknown mode: ${mode}`)
     }
@@ -107,6 +122,8 @@ class SurveyWizardRetryAttempts extends Component {
         return errors.smsRetryConfiguration
       case 'ivr':
         return errors.ivrRetryConfiguration
+      case 'fallbackDelay':
+        return errors.fallbackDelay
       default:
         throw new Error(`unknown mode: ${mode}`)
     }
@@ -122,9 +139,35 @@ class SurveyWizardRetryAttempts extends Component {
     if (!modes || modes.length == 0) {
       return null
     } else {
+      const hasFallbackMode = some(modes, x => x.length > 1)
+
       // modes will be something like [['sms'], ['sms', 'ivr']]
       // so we convert it to ['sms', 'ivr']
       modes = uniq(flatMap(modes, x => x))
+
+      let fallbackDelayComponent = null
+      if (hasFallbackMode) {
+        const defaultValue = this.defaultValue('fallbackDelay')
+        const invalid = this.invalid('fallbackDelay', survey.errors)
+        fallbackDelayComponent = (
+          <div className='row'>
+            <div className='input-field col s12'>
+              <InputWithLabel value={defaultValue || ''} label='Fallback delay'>
+                <input
+                  type='text'
+                  onChange={e => this.editingRetryConfiguration('fallbackDelay', e)}
+                  onBlur={e => this.retryConfigurationChanged('fallbackDelay', e)}
+                  className={invalid ? 'invalid' : ''}
+                  disabled={readOnly}
+                />
+              </InputWithLabel>
+              <span className='small-text-bellow'>
+                Enter delays like 5m 2h to express time units
+              </span>
+            </div>
+          </div>
+        )
+      }
 
       const modeRetryConfiguration = (
         modes.map((mode) => {
@@ -143,7 +186,7 @@ class SurveyWizardRetryAttempts extends Component {
                     />
                 </InputWithLabel>
                 <span className='small-text-bellow'>
-                  Enter delays like 5m 2h to express time units
+                  Enter a delay like 5m 2h to express time units
                 </span>
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
@@ -154,6 +197,7 @@ class SurveyWizardRetryAttempts extends Component {
       return (
         <div>
           {modeRetryConfiguration}
+          {fallbackDelayComponent}
         </div>
       )
     }

@@ -2,6 +2,7 @@
 import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
+import * as surveysActions from './surveys'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
@@ -24,6 +25,7 @@ export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
 export const SET_QUOTA_VARS = 'SURVEY_SET_QUOTA_VARS'
 export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
 export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
+export const CHANGE_FALLBACK_DELAY = 'SURVEY_CHANGE_FALLBACK_DELAY'
 
 export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId).then(response => {
@@ -162,6 +164,18 @@ export const changeSmsRetryConfiguration = (smsRetryConfiguration: string) => ({
 export const changeIvrRetryConfiguration = (ivrRetryConfiguration: string) => ({
   type: CHANGE_IVR_RETRY_CONFIGURATION,
   ivrRetryConfiguration
+})
+
+export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
+  api.deleteSurvey(survey.projectId, survey)
+    .then(response => {
+      return dispatch(surveysActions.deleted(survey))
+    })
+}
+
+export const changeFallbackDelay = (fallbackDelay: string) => ({
+  type: CHANGE_FALLBACK_DELAY,
+  fallbackDelay
 })
 
 export const saving = () => ({

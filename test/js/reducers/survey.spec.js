@@ -248,9 +248,29 @@ describe('survey reducer', () => {
     const state = playActions([
       actions.fetch(1, 1),
       actions.receive(survey),
+      actions.selectMode(['ivr']),
       actions.changeIvrRetryConfiguration('12j')
     ])
     expect(state.errors.ivrRetryConfiguration).toEqual('Re-contact configuration is invalid')
+  })
+
+  it('should validate fallback delay', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.selectMode(['sms', 'ivr']),
+      actions.changeFallbackDelay('12j')
+    ])
+    expect(state.errors.fallbackDelay).toEqual('Fallback delay is invalid')
+  })
+
+  it('should not validate fallback delay if only one mode is selected', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeFallbackDelay('12j')
+    ])
+    expect(state.errors.fallbackDelay).toEqual(null)
   })
 
   it('should not add retries errors if both sms and ivr configurations are valid', () => {

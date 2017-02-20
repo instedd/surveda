@@ -30,4 +30,14 @@ defmodule Ask.SurveyTest do
     survey = %Survey{sms_retry_configuration: "5m foo . 2 1h"}
     assert [5, 60] = Survey.retries_configuration(survey, "sms")
   end
+
+  test "parse fallback delay" do
+    survey = %Survey{fallback_delay: "2h"}
+    assert Survey.fallback_delay(survey) == 120
+  end
+
+  test "returns nil fallback delay on parse failure" do
+    survey = %Survey{fallback_delay: "foo"}
+    assert Survey.fallback_delay(survey) == nil
+  end
 end

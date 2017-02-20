@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PureComponent, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
@@ -6,6 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty } from '../ui'
+import { ConfirmationModal } from '../ui/ConfirmationModal'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -45,6 +47,20 @@ class SurveyIndex extends Component {
     )
   }
 
+  deleteSurvey = (survey: Survey) => {
+    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+    deleteConfirmationModal.open({
+      modalText: <span>
+        <p>Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
+        <p>All the respondent information will be lost and cannot be undone.</p>
+      </span>,
+      onConfirm: () => {
+        const { dispatch } = this.props
+        dispatch(surveyActions.deleteSurvey(survey))
+      }
+    })
+  }
+
   render() {
     const { surveys, respondentsStats, project } = this.props
 
@@ -70,10 +86,11 @@ class SurveyIndex extends Component {
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
           { surveys.map(survey => (
-            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} key={survey.id} />
+            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} />
           )) }
         </div>
         }
+        <ConfirmationModal ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete survey' showCancel />
       </div>
     )
   }
@@ -97,13 +114,14 @@ const mapStateToProps = (state, ownProps) => {
 export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 class SurveyCard extends PureComponent {
-  static propTypes = {
-    completedByDate: React.PropTypes.object,
-    survey: React.PropTypes.object
-  }
+  props: {
+    completedByDate: Object,
+    survey: Survey,
+    onDelete: (survey: Survey) => void
+  };
 
   render() {
-    const { survey, completedByDate } = this.props
+    const { survey, completedByDate, onDelete } = this.props
     let cumulativeCount = []
     let reached = 0
 
@@ -114,6 +132,19 @@ class SurveyCard extends PureComponent {
       if (survey.state == 'running' || survey.state == 'completed') {
         reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
       }
+    }
+
+    var deleteButton = null
+    if (survey.state != 'running') {
+      const onDeleteClick = (e) => {
+        e.preventDefault()
+        onDelete(survey)
+      }
+
+      deleteButton =
+        <a onClick={onDeleteClick} className='right card-hover grey-text'>
+          <i className='material-icons'>delete</i>
+        </a>
     }
 
     return (
@@ -130,6 +161,7 @@ class SurveyCard extends PureComponent {
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>
                   <UntitledIfEmpty text={survey.name} entityName='survey' />
+                  {deleteButton}
                 </span>
                 <SurveyStatus survey={survey} />
               </div>
