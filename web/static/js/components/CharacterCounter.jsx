@@ -6,10 +6,11 @@ class CharacterCounter extends Component {
   render() {
     const { text } = this.props
     const errorClass = characterCounter.limitExceeded(text) ? ' text-error' : ''
+    const counter = characterCounter.count(text)
     return (
       <div>
         <span className={'character-counter' + errorClass}>
-          {characterCounter.characterCount(text)}/{characterCounter.characterLimit(text)}
+          {counter.count}/{counter.limit}
         </span>
       </div>
     )
