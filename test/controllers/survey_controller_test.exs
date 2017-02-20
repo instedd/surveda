@@ -739,6 +739,13 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  test "prevents launching a survey that is not in the ready state", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "not_ready")
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert response(conn, 422)
+  end
+
   test "when launching a survey, it sets the state to running", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, state: "ready")
