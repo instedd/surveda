@@ -2,7 +2,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -760,6 +760,21 @@ defmodule Ask.SurveyControllerTest do
     assert_error_sent :forbidden, fn ->
       post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     end
+  end
+
+  test "launches a survey with channel", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "ready")
+
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    create_group(survey, channel)
+
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "running"
+
+    assert_received [:prepare, ^test_channel, "http://app.ask.dev/callbacks/test"]
   end
 
   test "sets started_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do
