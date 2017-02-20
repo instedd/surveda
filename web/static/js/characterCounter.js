@@ -20,7 +20,6 @@ export const count = (text) => {
   if (isUnicode(text)) {
     return { limit: unicodeLimit, count: text.length }
   } else {
-    // return getTotalLengthGSM({ limit: gsm0338Limit, count: getTotalLengthGSM(text) })
     return { limit: gsm0338Limit, count: getTotalLengthGSM(text) }
   }
 }
