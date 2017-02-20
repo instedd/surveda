@@ -505,7 +505,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].prompt['en'].sms`]: ['SMS prompt is too long']
+        [`steps[0].prompt['en'].sms`]: 'limit exceeded'
       })
     })
 
@@ -518,7 +518,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].prompt['en'].sms`]: ['SMS prompt is too long']
+        [`steps[0].prompt['en'].sms`]: 'limit exceeded'
       })
     })
 

@@ -817,7 +817,7 @@ const validateSmsLangPrompt = (step: Step, stepIndex: number, context: Validatio
   } else {
     const parts = splitSmsText(getStepPromptSms(step, lang))
     if (parts.some(p => characterCounter.limitExceeded(p))) {
-      addError(context, promptTextPath(stepIndex, 'sms', lang), 'SMS prompt is too long')
+      addError(context, promptTextPath(stepIndex, 'sms', lang), 'limit exceeded')
     }
   }
 }
