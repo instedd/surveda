@@ -3,20 +3,55 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
-  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay, :channel_state, :count_partial_results]
+  defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results]
+
+  defmodule ModeInfo do
+    defstruct [:mode, :channel, :retries]
+
+    def new(nil, _retries), do: nil
+    def new(channel, retries) when not is_nil(channel) and is_list(retries) do
+      %ModeInfo{mode: channel.type, channel: channel, retries: retries}
+    end
+
+    def dump(nil), do: nil
+    def dump(%ModeInfo{mode: mode, channel: channel, retries: retries}) do
+      %{
+        mode: mode,
+        channel_id: channel.id,
+        retries: retries
+      }
+    end
+
+    def load(nil), do: nil
+    def load(mode_dump) do
+      %ModeInfo{
+        mode: mode_dump["mode"],
+        channel: Ask.Channel |> Repo.get(mode_dump["channel_id"]),
+        retries: mode_dump["retries"]
+      }
+    end
+  end
 
   @default_fallback_delay 10
 
   def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
     flow = Flow.start(questionnaire, channel.type)
-    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay, count_partial_results)
+    session = %Session{
+      current_mode: ModeInfo.new(channel, retries),
+      fallback_mode: ModeInfo.new(fallback_channel, fallback_retries),
+      flow: flow,
+      respondent: respondent,
+      fallback_delay: fallback_delay,
+      count_partial_results: count_partial_results
+    }
+    run_flow(session)
   end
 
   def default_fallback_delay do
     @default_fallback_delay
   end
 
-  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay, count_partial_results) do
+  defp run_flow(session = %Session{flow: flow, respondent: respondent, current_mode: %ModeInfo{channel: channel}}) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
@@ -44,17 +79,7 @@ defmodule Ask.Runtime.Session do
       :end ->
         {:end, reply}
       _ ->
-        session = %Session{
-          channel: channel,
-          retries: retries,
-          fallback: channel_tuple(fallback_channel, fallback_retries),
-          flow: flow,
-          respondent: respondent,
-          token: token,
-          fallback_delay: fallback_delay,
-          channel_state: channel_state,
-          count_partial_results: count_partial_results
-        }
+        session = %{session | flow: flow, token: token, channel_state: channel_state}
         {:ok, session, reply, current_timeout(session)}
     end
   end
@@ -69,33 +94,31 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp channel_tuple(nil, _), do: nil
-  defp channel_tuple(channel, retries), do: {channel, retries}
-
   defp clear_token(session) do
     %{session | token: nil}
   end
 
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
-  def timeout(session = %Session{retries: [], fallback: nil}) do
-    case session.channel |> Ask.Channel.runtime_channel |> Channel.can_push_question? do
+  def timeout(session = %Session{current_mode: %{retries: []}, fallback_mode: nil}) do
+    case session.current_mode.channel |> Ask.Channel.runtime_channel |> Channel.can_push_question? do
       true -> {:stalled, session |> clear_token}
       false -> :failed
     end
   end
 
   # If there is a fallback specified, switch session to use it
-  def timeout(session = %Session{retries: []}), do: switch_to_fallback(session |> clear_token)
+  def timeout(session = %Session{current_mode: %{retries: []}}), do: switch_to_fallback(session |> clear_token)
 
   #if we have a last timeout, use it to fallback
-  def timeout(session = %Session{retries: [_], fallback: fallback}) when not is_nil(fallback) do
+  # TODO: this should use fallback_delay
+  def timeout(session = %Session{current_mode: %{retries: [_]}, fallback_mode: fallback}) when not is_nil(fallback) do
     switch_to_fallback(session |> clear_token)
   end
 
   # Let's try again
-  def timeout(session = %Session{retries: [_ | retries], channel_state: channel_state}) do
-    runtime_channel = Ask.Channel.runtime_channel(session.channel)
+  def timeout(session = %Session{current_mode: %{retries: [_ | retries]}, channel_state: channel_state}) do
+    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     # First, check if there's already a queued message in the channel, to
     # avoid queueing another one before even trying to send the first one.
@@ -122,12 +145,12 @@ defmodule Ask.Runtime.Session do
         end
 
       # The new session will timeout as defined by hd(retries)
-      session = %{session | retries: retries, token: token, channel_state: channel_state}
+      session = %{session | current_mode: %{session.current_mode | retries: retries}, token: token, channel_state: channel_state}
       {:ok, session, %Reply{}, current_timeout(session)}
     end
   end
 
-  def channel_failed(%Session{retries: [], fallback: nil, token: token}, token) do
+  def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil, token: token}, token) do
     :failed
   end
 
@@ -136,8 +159,16 @@ defmodule Ask.Runtime.Session do
   end
 
   defp switch_to_fallback(session) do
-    {fallback_channel, fallback_retries} = session.fallback
-    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay, session.count_partial_results)
+    run_flow(%{
+      session |
+      current_mode: session.fallback_mode,
+      fallback_mode: nil,
+      channel_state: nil,
+      flow: %{
+        session.flow |
+        mode: session.fallback_mode.mode
+      }
+    })
   end
 
   def sync_step(session, reply) do
@@ -189,12 +220,10 @@ defmodule Ask.Runtime.Session do
 
   def dump(session) do
     %{
-      channel_id: session.channel.id,
+      current_mode: session.current_mode |> ModeInfo.dump,
+      fallback_mode: session.fallback_mode |> ModeInfo.dump,
       flow: session.flow |> Flow.dump,
       respondent_id: session.respondent.id,
-      retries: session.retries,
-      fallback_channel_id: fallback_channel_id(session.fallback),
-      fallback_retries: fallback_retries(session.fallback),
       token: session.token,
       fallback_delay: session.fallback_delay,
       channel_state: session.channel_state,
@@ -202,24 +231,12 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  defp fallback_channel(nil), do: nil
-  defp fallback_channel(id) do
-    Repo.get(Ask.Channel, id)
-  end
-
-  defp fallback_channel_id(nil), do: nil
-  defp fallback_channel_id({channel, _}), do: channel.id
-
-  defp fallback_retries(nil), do: nil
-  defp fallback_retries({_, retries}), do: retries
-
   def load(state) do
     %Session{
-      channel: Repo.get(Ask.Channel, state["channel_id"]),
+      current_mode: ModeInfo.load(state["current_mode"]),
+      fallback_mode: ModeInfo.load(state["fallback_mode"]),
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
-      retries: state["retries"],
-      fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"]),
       token: state["token"],
       fallback_delay: state["fallback_delay"],
       channel_state: state["channel_state"],
@@ -246,11 +263,11 @@ defmodule Ask.Runtime.Session do
     assign_bucket(respondent, buckets, session)
   end
 
-  defp current_timeout(%Session{retries: [], fallback_delay: fallback_delay}) do
+  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
     fallback_delay
   end
 
-  defp current_timeout(%Session{retries: [next_retry | _]}) do
+  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
     next_retry
   end
 

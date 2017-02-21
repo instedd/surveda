@@ -3,6 +3,7 @@ defmodule Ask.SessionTest do
   use Ask.DummySteps
   import Ask.Factory
   alias Ask.Runtime.Session
+  alias Ask.Runtime.Session.ModeInfo
   alias Ask.TestChannel
   alias Ask.Runtime.{Flow, Reply}
   alias Ask.{Survey, Respondent, QuotaBucket, Questionnaire}
@@ -127,18 +128,16 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
-      channel: fallback_channel,
-      retries: fallback_retries,
-      fallback: nil,
+      current_mode: %ModeInfo{mode: "ivr", channel: fallback_channel, retries: fallback_retries},
+      fallback_mode: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
     {:ok, result = %Session{token: token}, _, 5} = Session.timeout(session)
     assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
-    assert result.channel == expected_session.channel
-    assert result.retries == expected_session.retries
-    assert result.fallback == expected_session.fallback
+    assert result.current_mode == expected_session.current_mode
+    assert result.fallback_mode == expected_session.fallback_mode
     assert result.flow.questionnaire == expected_session.flow.questionnaire
     assert result.flow.mode == expected_session.flow.mode
     assert result.flow.current_step == expected_session.flow.current_step
@@ -155,18 +154,16 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
-      channel: fallback_channel,
-      retries: fallback_retries,
-      fallback: nil,
+      current_mode: %ModeInfo{mode: "ivr", channel: fallback_channel, retries: fallback_retries},
+      fallback_mode: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
     {:ok, result = %Session{token: token}, _, 7} = Session.timeout(session)
     assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
-    assert result.channel == expected_session.channel
-    assert result.retries == expected_session.retries
-    assert result.fallback == expected_session.fallback
+    assert result.current_mode == expected_session.current_mode
+    assert result.fallback_mode == expected_session.fallback_mode
     assert result.flow.questionnaire == expected_session.flow.questionnaire
     assert result.flow.mode == expected_session.flow.mode
     assert result.flow.current_step == expected_session.flow.current_step
@@ -183,9 +180,8 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
-      channel: fallback_channel,
-      retries: fallback_retries,
-      fallback: nil,
+      current_mode: %ModeInfo{mode: "ivr", channel: fallback_channel, retries: fallback_retries},
+      fallback_mode: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
@@ -196,9 +192,8 @@ defmodule Ask.SessionTest do
     {:ok, result = %Session{token: token}, _, 5} = Session.timeout(session)
     assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
-    assert result.channel == expected_session.channel
-    assert result.retries == expected_session.retries
-    assert result.fallback == expected_session.fallback
+    assert result.current_mode == expected_session.current_mode
+    assert result.fallback_mode == expected_session.fallback_mode
     assert result.flow.questionnaire == expected_session.flow.questionnaire
     assert result.flow.mode == expected_session.flow.mode
     assert result.flow.current_step == expected_session.flow.current_step
