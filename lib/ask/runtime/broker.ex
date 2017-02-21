@@ -165,7 +165,7 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
 
-    handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries, fallback_delay))
+    handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries, fallback_delay, survey.count_partial_results))
   end
 
   defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do
@@ -293,7 +293,7 @@ defmodule Ask.Runtime.Broker do
     |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update!
     |> create_disposition_history(old_disposition)
-    |> update_quota_bucket(old_disposition)
+    |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
   end
 
   defp update_respondent(respondent, {:stalled, session}) do
@@ -323,7 +323,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     old_disposition = respondent.disposition
-    if old_disposition == "completed" do
+    if shouldnt_update_disposition(old_disposition, disposition) do
       update_respondent(respondent, {:ok, session, timeout}, nil)
     else
       timeout_at = Timex.shift(Timex.now, minutes: timeout)
@@ -331,8 +331,14 @@ defmodule Ask.Runtime.Broker do
       |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
       |> create_disposition_history(old_disposition)
-      |> update_quota_bucket(old_disposition)
+      |> update_quota_bucket(old_disposition, session.count_partial_results)
     end
+  end
+
+  defp shouldnt_update_disposition(old_disposition, new_disposition) do
+    (old_disposition == "completed"
+    || old_disposition == "ineligible"
+    || (new_disposition == "ineligible" && old_disposition == "partial"))
   end
 
   defp create_disposition_history(respondent, old_disposition) do
@@ -345,9 +351,8 @@ defmodule Ask.Runtime.Broker do
     respondent
   end
 
-  defp update_quota_bucket(respondent, old_disposition) do
-    if respondent.disposition && respondent.disposition != old_disposition && respondent.disposition == "completed" do
-
+  defp update_quota_bucket(respondent, old_disposition, count_partial_results) do
+    if should_update_quota_bucket(respondent.disposition, old_disposition, count_partial_results) do
       responses = respondent |> assoc(:responses) |> Repo.all
       matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
                       |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
@@ -357,6 +362,15 @@ defmodule Ask.Runtime.Broker do
       end
     end
     respondent
+  end
+
+  defp should_update_quota_bucket(new_disposition, old_disposition, false) do
+    new_disposition != old_disposition && new_disposition == "completed"
+  end
+
+  defp should_update_quota_bucket(new_disposition, old_disposition, true) do
+    (new_disposition != old_disposition && new_disposition == "partial")
+    || (new_disposition == "completed" && old_disposition != "partial" && old_disposition != "completed")
   end
 
   defp today_schedule do

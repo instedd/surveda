@@ -171,11 +171,6 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
           ]
         ),
-        flag_step(
-          id: "aaa",
-          title: "Let there be rock",
-          disposition: "partial"
-        ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you exercise",
@@ -189,11 +184,6 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         ),
-        flag_step(
-          id: "aaa",
-          title: "Let there be rock",
-          disposition: "completed"
-        ),
         numeric_step(
           id: Ecto.UUID.generate,
           title: "Which is the second perfect number?",
@@ -201,16 +191,6 @@ defmodule Ask.DummySteps do
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
           refusal: nil
-        ),
-        flag_step(
-          id: "aaa",
-          title: "Let there be rock",
-          disposition: "completed"
-        ),
-        flag_step( #THIS step is here to make sure we ignore this change
-          id: "aaa",
-          title: "Let there be rock",
-          disposition: "partial"
         ),
         numeric_step(
           id: Ecto.UUID.generate,
@@ -265,6 +245,11 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
           ]
         ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you exercise",
@@ -278,6 +263,11 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "completed"
+        ),
         numeric_step(
           id: Ecto.UUID.generate,
           title: "Which is the second perfect number?",
@@ -285,6 +275,16 @@ defmodule Ask.DummySteps do
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
           refusal: nil
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "completed"
+        ),
+        flag_step( # This step is here to make sure we ignore this change
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
         ),
         numeric_step(
           id: Ecto.UUID.generate,
@@ -446,11 +446,167 @@ defmodule Ask.DummySteps do
         )
       ]
 
-      @only_flag_steps [
+      @partial_step [
         flag_step(
           id: "aaa",
           title: "Let there be rock",
           disposition: "partial"
+        )
+      ]
+
+      @ineligible_step [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "ineligible"
+        )
+      ]
+
+      @invalid_ineligible_after_partial_steps [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "ineligible"
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
+      ]
+
+      @invalid_ineligible_after_completed_steps [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "completed"
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "ineligible"
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
+      ]
+
+      @invalid_partial_after_ineligible_steps [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "ineligible"
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
+      ]
+
+      @invalid_completed_after_ineligible_steps [
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "ineligible"
+        ),
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "completed"
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?")
+          ),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
         )
       ]
     end
