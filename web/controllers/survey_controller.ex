@@ -161,12 +161,16 @@ defmodule Ask.SurveyController do
     survey = Repo.get!(Survey, id)
     |> Repo.preload([:quota_buckets])
 
+    project = conn
+      |> load_project_for_change(survey.project_id)
+
     from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
     |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
 
     changeset = Survey.changeset(survey, %{"state": "cancelled"})
     case Repo.update(changeset) do
       {:ok, survey} ->
+        project |> Project.touch!
         render(conn, "show.json", survey: survey)
       {:error, changeset} ->
         conn
