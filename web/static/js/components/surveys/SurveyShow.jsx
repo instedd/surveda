@@ -9,12 +9,15 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
+import { Tooltip } from '../ui'
+import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 
 class SurveyShow extends Component {
   static propTypes = {
     dispatch: React.PropTypes.func,
     router: React.PropTypes.object,
+    project: React.PropTypes.object,
     projectId: React.PropTypes.string.isRequired,
     surveyId: React.PropTypes.string.isRequired,
     survey: React.PropTypes.object,
@@ -44,6 +47,13 @@ class SurveyShow extends Component {
     if (survey && survey.state == 'not_ready') {
       router.replace(routes.surveyEdit(survey.projectId, survey.id))
     }
+  }
+
+  stopSurvey() {
+    const { dispatch, projectId, surveyId, router } = this.props
+    stopSurvey(projectId, surveyId)
+      .then(survey => dispatch(actions.receive(survey)))
+      .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 
   iconForMode(mode) {
@@ -81,7 +91,7 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire } = this.props
+    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire, project } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
     if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats || !respondentsStats) {
@@ -106,8 +116,22 @@ class SurveyShow extends Component {
       table = this.dispositions(respondentsStats)
     }
 
+    const readOnly = !project || project.readOnly
+
+    let stopComponent = null
+    if (!readOnly && survey.state == 'running') {
+      stopComponent = (
+        <Tooltip text='Stop survey'>
+          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.stopSurvey()}>
+            <i className='material-icons'>stop</i>
+          </a>
+        </Tooltip>
+      )
+    }
+
     return (
       <div className='row'>
+        {stopComponent}
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}
@@ -149,7 +173,7 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsStats) {
-    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed']
+    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed', 'cancelled']
     return (
       <div className='card'>
         <div className='card-table-title'>

@@ -140,6 +140,7 @@ defmodule Ask.RespondentController do
     failed = by_state["failed"] || 0
     partial = by_state["partial"] || 0
     ineligible = by_state["ineligible"] || 0
+    cancelled = by_state["cancelled"] || 0
 
     total_quota = buckets
     |> Enum.reduce(0, fn bucket, total ->
@@ -156,6 +157,7 @@ defmodule Ask.RespondentController do
         failed: respondent_by_state(failed, total_respondents),
         partial: respondent_by_state(partial, total_respondents),
         ineligible: respondent_by_state(ineligible, total_respondents),
+        cancelled: respondent_by_state(cancelled, total_respondents)
       },
       respondents_by_date: cumulative_count,
       cutoff: survey.cutoff,

@@ -51,6 +51,7 @@ defmodule Ask.Router do
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/launch", SurveyController, :launch
+          post "/stop", SurveyController, :stop
           resources "/respondents", RespondentController, only: [:index]
           resources "/respondent_groups", RespondentGroupController, only: [:index, :create, :update, :delete]
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats

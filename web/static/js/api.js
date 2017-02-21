@@ -231,6 +231,10 @@ export const launchSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/launch`, surveySchema)
 }
 
+export const stopSurvey = (projectId, surveyId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop`, surveySchema)
+}
+
 export const logout = () => {
   apiDelete('sessions').then(() => { window.location.href = '/' })
 }

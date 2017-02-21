@@ -31,6 +31,11 @@ export default class SurveyStatus extends PureComponent {
         color = 'black-text'
         text = 'Completed'
         break
+      case 'cancelled':
+        icon = 'error'
+        color = 'black-text'
+        text = 'Cancelled'
+        break
     }
     return (
       <p className={color}>

@@ -157,6 +157,26 @@ defmodule Ask.SurveyController do
     end
   end
 
+  def stop(conn, %{"survey_id" => id}) do
+    survey = Repo.get!(Survey, id)
+    |> Repo.preload([:quota_buckets])
+
+    respondents = from(r in Ask.Respondent, where: (r.state == "active") or (r.state == "stalled")) |> Repo.all
+
+    from(r in Ask.Respondent, where: (r.state == "active") or (r.state == "stalled"))
+    |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
+
+    changeset = Survey.changeset(survey, %{"state": "cancelled"})
+    case Repo.update(changeset) do
+      {:ok, survey} ->
+        render(conn, "show.json", survey: survey)
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
   defp prepare_channels(_, []), do: :ok
   defp prepare_channels(conn, [channel | rest]) do
     runtime_channel = Ask.Channel.runtime_channel(channel)

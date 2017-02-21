@@ -796,6 +796,22 @@ defmodule Ask.SurveyControllerTest do
     assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
   end
 
+  test "stops survey", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "running")
+
+    insert_list(10, :respondent, survey: survey, state: "pending")
+    insert_list(5, :respondent, survey: survey, state: "active", session: "{'asd': 123}")
+    insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+
+    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "cancelled"
+
+    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 8
+  end
+
   def prepare_for_state_update(user) do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
