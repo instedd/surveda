@@ -2,7 +2,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -741,9 +741,16 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
-  test "launch survey", %{conn: conn, user: user} do
+  test "prevents launching a survey that is not in the ready state", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "not_ready")
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert response(conn, 422)
+  end
+
+  test "when launching a survey, it sets the state to running", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "ready")
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
@@ -751,29 +758,79 @@ defmodule Ask.SurveyControllerTest do
 
   test "forbids launch for project reader", %{conn: conn, user: user} do
     project = create_project_for_user(user, level: "reader")
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     assert_error_sent :forbidden, fn ->
       post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     end
   end
 
-  test "set started_at with proper datetime value when survey is launched", %{conn: conn, user: user} do
+  test "launches a survey with channel", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "ready")
+
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    create_group(survey, channel)
+
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "running"
+
+    assert_received [:prepare, ^test_channel, "http://app.ask.dev/callbacks/test"]
+  end
+
+  test "sets started_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do
     now = Timex.now
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     started_at = Repo.get(Survey, survey.id).started_at
     assert (Timex.between?(started_at, Timex.shift(now, seconds: -3), Timex.shift(now, seconds: 3)))
   end
 
-  test "updates project updated_at when survey is launched", %{conn: conn, user: user}  do
+  test "updates project updated_at when a survey is launched", %{conn: conn, user: user}  do
     datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project)
+    survey = insert(:survey, project: project, state: "ready")
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     project = Project |> Repo.get(project.id)
     assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+  end
+
+  test "stops survey", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "running")
+
+    insert_list(10, :respondent, survey: survey, state: "pending")
+    insert_list(5, :respondent, survey: survey, state: "active", session: "{'asd': 123}")
+    insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+
+    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "cancelled"
+
+    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 8
+  end
+
+
+  test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey  = insert(:survey, project: project, state: "running")
+    survey2 = insert(:survey, project: project, state: "running")
+
+    insert_list(5, :respondent, survey: survey, state: "active", session: "{'asd': 123}")
+    insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+    insert_list(4, :respondent, survey: survey2, state: "active", session: "{'asd': 1234}")
+    insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
+
+    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey2.id).state == "running"
+
+    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
   end
 
   def prepare_for_state_update(user) do

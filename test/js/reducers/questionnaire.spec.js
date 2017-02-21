@@ -10,6 +10,7 @@ import { questionnaire } from '../fixtures'
 import { filterByPathPrefix } from '../../../web/static/js/questionnaireErrors'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
+import { smsSplitSeparator } from '../../../web/static/js/step'
 
 describe('questionnaire reducer', () => {
   const initialState = reducer(undefined, {})
@@ -491,6 +492,46 @@ describe('questionnaire reducer', () => {
       expect(resultErrors).toInclude({
         [`steps[1].prompt['en'].sms`]: ['SMS prompt must not be blank'],
         [`steps[1].prompt['fr'].sms`]: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('should include an error error if SMS prompt exceeds the character limit', () => {
+      const smsPropmpt = new Array(200).join('a')
+
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', smsPropmpt)
+      ])
+
+      expect(resultState.errors).toInclude({
+        [`steps[0].prompt['en'].sms`]: 'limit exceeded'
+      })
+    })
+
+    it('should include an error if a part of the SMS prompt exceeds the character limit', () => {
+      const smsPrompt = new Array(200).join('a') + smsSplitSeparator + new Array(30).join('b')
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', smsPrompt)
+      ])
+
+      expect(resultState.errors).toInclude({
+        [`steps[0].prompt['en'].sms`]: 'limit exceeded'
+      })
+    })
+
+    it('should not include an error if none of the parts of the SMS prompt exceed the character limit', () => {
+      const smsPrompt = new Array(50).join('a') + smsSplitSeparator + new Array(30).join('b')
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', smsPrompt)
+      ])
+
+      expect(resultState.errors).toExclude({
+        [`steps[0].prompt['en'].sms`]: ['SMS prompt is too long']
       })
     })
 

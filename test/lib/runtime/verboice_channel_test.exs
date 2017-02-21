@@ -109,19 +109,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     end
   end
 
-  describe "update_channel_state" do
+  describe "process_call_response" do
     test "creates new state" do
-      new_state = VerboiceChannel.update_channel_state({:ok, %{"call_id" => 123}}, nil)
-      assert new_state == {:ok, [123]}
+      new_state = VerboiceChannel.process_call_response({:ok, %{"call_id" => 123}})
+      assert new_state == {:ok, %{verboice_call_id: 123}}
     end
 
-    test "creates new state from existing state" do
-      new_state = VerboiceChannel.update_channel_state({:ok, %{"call_id" => 456}}, [123])
-      assert new_state == {:ok, [456, 123]}
-    end
-
-    test "returns previous state on response error" do
-      new_state = VerboiceChannel.update_channel_state(:error, [123])
+    test "returns error on response error" do
+      new_state = VerboiceChannel.process_call_response(:error)
       assert new_state == {:error, :error}
     end
   end

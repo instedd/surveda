@@ -47,8 +47,8 @@ class SurveyEdit extends Component {
   launchSurvey() {
     const { dispatch, projectId, surveyId, router } = this.props
     launchSurvey(projectId, surveyId)
-        .then(survey => dispatch(actions.receive(survey)))
-        .then(() => router.push(routes.survey(projectId, surveyId)))
+      .then(survey => dispatch(actions.receive(survey)))
+      .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 
   render() {

@@ -33,7 +33,9 @@ services:
       - 4000:80
 
   brunch:
-    image: node:6.3.1
+    build:
+      context: ./
+      dockerfile: Dockerfile.brunch
     command: node_modules/brunch/bin/brunch watch
     restart: always
     working_dir: /app

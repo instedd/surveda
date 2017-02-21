@@ -83,6 +83,7 @@ defmodule Ask.RespondentControllerTest do
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
       "pending" => %{"count" => 0, "percent" => 0.0},
+      "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -116,6 +117,7 @@ defmodule Ask.RespondentControllerTest do
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
       "pending" => %{"count" => 0, "percent" => 0.0},
+      "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -148,6 +150,7 @@ defmodule Ask.RespondentControllerTest do
       "active" => %{"count" => 0, "percent" => 0.0},
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
+      "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -200,6 +203,7 @@ defmodule Ask.RespondentControllerTest do
         "stalled" => %{"count" => 0, "percent" => 0.0},
         "ineligible" => %{"count" => 0, "percent" => 0.0},
         "partial" => %{"count" => 0, "percent" => 0.0},
+        "cancelled" => %{"count" => 0, "percent" => 0.0}
       },
       "respondents_by_date" => [],
       "cutoff" => nil,

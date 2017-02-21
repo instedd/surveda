@@ -2,6 +2,9 @@ import React, { Component, PropTypes } from 'react'
 import { InputWithLabel, Autocomplete } from '../ui'
 import classNames from 'classnames/bind'
 import { splitSmsText, joinSmsPieces } from '../../step'
+import CharacterCounter from '../CharacterCounter'
+import {limitExceeded} from '../../characterCounter'
+import filter from 'lodash/filter'
 
 class SmsPrompt extends Component {
   onBlur(e) {
@@ -75,38 +78,45 @@ class SmsPrompt extends Component {
   renderSmsInput(total, index, value, autocompleteComponent) {
     const { id, inputErrors, readOnly } = this.props
 
-    const shouldDisplayErrors = value == this.props.originalValue
+    const shouldDisplayReducerErrors = (value == this.props.originalValue)
+    const reducerErrors = filter(inputErrors, (err) => err !== 'limit exceeded')
+
+    const errors = [
+      (shouldDisplayReducerErrors ? reducerErrors : []) +
+      (limitExceeded(value) ? ['SMS is too long. Use SHIFT+ENTER to split in multiple parts'] : [])
+    ]
 
     const maybeInvalidClass = classNames({
-      'validate invalid': inputErrors != null && inputErrors.length > 0 && shouldDisplayErrors
+      'validate invalid': (inputErrors != null && inputErrors.length > 0 && shouldDisplayReducerErrors) || limitExceeded(value)
     })
 
     const label = total == 1 ? 'SMS message' : `SMS message (part ${index + 1})`
 
     const inputComponent = (
-      <InputWithLabel id={`${id}-${index}`} value={value} readOnly={readOnly} label={label} errors={inputErrors} >
-        <input
-          type='text'
-          is length='140'
-          onChange={e => this.onChange(e)}
-          onKeyUp={e => this.checkKeyUp(e, index)}
-          onBlur={e => this.onBlur(e)}
-          onFocus={e => this.onFocus()}
-          ref={ref => {
-            if (ref) {
-              this.allInputs.push(ref)
-            }
-            if (index == 0) {
-              this.smsInput = ref
-            }
-            $(ref).characterCounter()
-            $(ref).addClass(maybeInvalidClass)
-          }}
-          class={maybeInvalidClass}
-        />
-      </InputWithLabel>
+      <div>
+        <InputWithLabel id={`${id}-${index}`} value={value} readOnly={readOnly} label={label} errors={[errors]} >
+          <input
+            type='text'
+            onChange={e => this.onChange(e)}
+            onKeyUp={e => this.checkKeyUp(e, index)}
+            onBlur={e => this.onBlur(e)}
+            onFocus={e => this.onFocus()}
+            ref={ref => {
+              if (ref) {
+                this.allInputs.push(ref)
+              }
+              if (index == 0) {
+                this.smsInput = ref
+              }
+              $(ref).characterCounter()
+              $(ref).addClass(maybeInvalidClass)
+            }}
+            className={maybeInvalidClass}
+          />
+        </InputWithLabel>
+        <CharacterCounter text={value} />
+      </div>
     )
-
     if (total <= 1 || index == 0) {
       return (
         <div className='row' key={index}>
