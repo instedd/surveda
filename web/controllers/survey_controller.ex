@@ -161,9 +161,7 @@ defmodule Ask.SurveyController do
     survey = Repo.get!(Survey, id)
     |> Repo.preload([:quota_buckets])
 
-    respondents = from(r in Ask.Respondent, where: (r.state == "active") or (r.state == "stalled")) |> Repo.all
-
-    from(r in Ask.Respondent, where: (r.state == "active") or (r.state == "stalled"))
+    from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
     |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
 
     changeset = Survey.changeset(survey, %{"state": "cancelled"})
