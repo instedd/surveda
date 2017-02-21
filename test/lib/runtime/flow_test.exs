@@ -434,7 +434,7 @@ defmodule Ask.FlowTest do
     end
 
     test "ending keeps the last flag" do
-      quiz = build(:questionnaire, steps: @only_flag_steps)
+      quiz = build(:questionnaire, steps: @partial_step)
       flow = Flow.start(quiz, "sms")
       flow_state = flow |> Flow.step
       assert {:end, %{disposition: "partial"}} = flow_state

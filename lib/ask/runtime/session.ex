@@ -3,20 +3,20 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
-  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay, :channel_state]
+  defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay, :channel_state, :count_partial_results]
 
   @default_fallback_delay 10
 
-  def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay) do
+  def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
     flow = Flow.start(questionnaire, channel.type)
-    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay)
+    run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay, count_partial_results)
   end
 
   def default_fallback_delay do
     @default_fallback_delay
   end
 
-  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay) do
+  defp run_flow(flow, respondent, channel, retries, fallback_channel, fallback_retries, fallback_delay, count_partial_results) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
@@ -53,6 +53,7 @@ defmodule Ask.Runtime.Session do
           token: token,
           fallback_delay: fallback_delay,
           channel_state: channel_state,
+          count_partial_results: count_partial_results
         }
         {:ok, session, reply, current_timeout(session)}
     end
@@ -129,7 +130,7 @@ defmodule Ask.Runtime.Session do
 
   defp switch_to_fallback(session) do
     {fallback_channel, fallback_retries} = session.fallback
-    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay)
+    run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay, session.count_partial_results)
   end
 
   def sync_step(session, reply) do
@@ -157,7 +158,7 @@ defmodule Ask.Runtime.Session do
     # we return them here and reuse them in `falls_in_quota_already_completed`
     # to avoid executing this query twice.
     {respondent, responses} =
-      store_responses_and_assign_bucket(respondent, stores, buckets)
+      store_responses_and_assign_bucket(respondent, stores, buckets, session)
 
     case step_answer do
       {:end, %Reply{prompts: []}} ->
@@ -190,6 +191,7 @@ defmodule Ask.Runtime.Session do
       token: session.token,
       fallback_delay: session.fallback_delay,
       channel_state: session.channel_state,
+      count_partial_results: session.count_partial_results
     }
   end
 
@@ -214,10 +216,11 @@ defmodule Ask.Runtime.Session do
       token: state["token"],
       fallback_delay: state["fallback_delay"],
       channel_state: state["channel_state"],
+      count_partial_results: state["count_partial_results"],
     }
   end
 
-  defp store_responses_and_assign_bucket(respondent, stores, buckets) do
+  defp store_responses_and_assign_bucket(respondent, stores, buckets, session) do
     # Add response to responses
     stores |> Enum.each(fn {field_name, value} ->
       existing_responses = respondent
@@ -233,7 +236,7 @@ defmodule Ask.Runtime.Session do
     end)
 
     # Try to assign a bucket to the respondent
-    assign_bucket(respondent, buckets)
+    assign_bucket(respondent, buckets, session)
   end
 
   defp current_timeout(%Session{retries: [], fallback_delay: fallback_delay}) do
@@ -244,11 +247,11 @@ defmodule Ask.Runtime.Session do
     next_retry
   end
 
-  defp assign_bucket(respondent, []) do
+  defp assign_bucket(respondent, [], _session) do
     {respondent, nil}
   end
 
-  defp assign_bucket(respondent, buckets) do
+  defp assign_bucket(respondent, buckets, session) do
     # Nothing to do if the respondent already has a bucket
     if respondent.quota_bucket_id do
       {respondent, []}
@@ -276,7 +279,7 @@ defmodule Ask.Runtime.Session do
         case buckets do
           [bucket] ->
             respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
-            if respondent.disposition && respondent.disposition == "completed" do
+            if (session.count_partial_results && respondent.disposition && respondent.disposition == "partial") || (respondent.disposition && respondent.disposition == "completed") do
               from(q in QuotaBucket, where: q.id == ^bucket.id) |> Repo.update_all(inc: [count: 1])
             end
             respondent

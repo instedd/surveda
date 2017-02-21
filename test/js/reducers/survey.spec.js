@@ -828,4 +828,18 @@ describe('survey reducer', () => {
     expect(modeLabel(['ivr', 'sms'])).toEqual('Phone call with SMS fallback')
     expect(modeLabel(['sms', 'ivr'])).toEqual('SMS with phone call fallback')
   })
+
+  it('should toggle count partial results', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.toggleCountPartialResults()
+    ])
+    expect(state.data.countPartialResults).toEqual(true)
+
+    const state2 = playActionsFromState(state, reducer)([
+      actions.toggleCountPartialResults()
+    ])
+    expect(state2.data.countPartialResults).toEqual(false)
+  })
 })

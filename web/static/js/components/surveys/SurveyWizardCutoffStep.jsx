@@ -20,6 +20,7 @@ class SurveyWizardCutoffStep extends Component {
     this.state = {
       buckets: {}
     }
+    this.toggleCountPartialResults = this.toggleCountPartialResults.bind(this)
   }
 
   cutoffChange(e) {
@@ -66,6 +67,11 @@ class SurveyWizardCutoffStep extends Component {
     } else {
       $('#setupQuotas').modal('open')
     }
+  }
+
+  toggleCountPartialResults() {
+    const { dispatch } = this.props
+    dispatch(actions.toggleCountPartialResults())
   }
 
   render() {
@@ -119,6 +125,19 @@ class SurveyWizardCutoffStep extends Component {
                 disabled={readOnly}
               />
             </InputWithLabel>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
+            <input
+              id='toggle_count_partial_results'
+              type='checkbox'
+              checked={survey.countPartialResults}
+              disabled={readOnly}
+              className='filled-in'
+              onChange={this.toggleCountPartialResults}
+            />
+            <label htmlFor='toggle_count_partial_results'>Count partial results towards cutoff</label>
           </div>
         </div>
         {quotasForCompletes}

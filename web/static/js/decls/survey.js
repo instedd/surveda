@@ -6,6 +6,7 @@ export type Survey = {
   channels: number[],
   name: string,
   cutoff: number,
+  countPartialResults: boolean,
   mode: [?string[]],
   modeComparison: boolean,
   state: string,

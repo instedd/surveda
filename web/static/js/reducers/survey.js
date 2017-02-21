@@ -15,6 +15,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
+    case actions.TOGGLE_COUNT_PARTIAL_RESULTS: return toggleCountPartialResults(state, action)
     case actions.CHANGE_QUOTA: return quotaChange(state, action)
     case actions.CHANGE_COMPARISON_RATIO: return comparisonRatioChange(state, action)
     case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
@@ -108,6 +109,13 @@ const changeCutoff = (state, action) => {
   return {
     ...state,
     cutoff: action.cutoff
+  }
+}
+
+const toggleCountPartialResults = (state, action) => {
+  return {
+    ...state,
+    countPartialResults: !state.countPartialResults
   }
 }
 

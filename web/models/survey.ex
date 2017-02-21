@@ -8,6 +8,7 @@ defmodule Ask.Survey do
     field :mode, Ask.Ecto.Type.JSON
     field :state, :string, default: "not_ready" # not_ready, ready, pending, running, completed, cancelled
     field :cutoff, :integer
+    field :count_partial_results, :boolean, default: false
     field :respondents_count, :integer, virtual: true
     field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
     field :schedule_start_time, Ecto.Time
@@ -36,7 +37,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons])
+    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to

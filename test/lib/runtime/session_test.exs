@@ -567,7 +567,7 @@ defmodule Ask.SessionTest do
   end
 
   test "flag and end", %{respondent: respondent, channel: channel} do
-    quiz = build(:questionnaire, steps: @only_flag_steps)
+    quiz = build(:questionnaire, steps: @partial_step)
     {:end, %{disposition: disposition}} = Session.start(quiz, respondent, channel)
 
     assert disposition == "partial"
