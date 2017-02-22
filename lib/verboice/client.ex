@@ -15,6 +15,13 @@ defmodule Verboice.Client do
     |> parse_response
   end
 
+  def call_state(client, call_id) do
+    url = "#{URI.merge(client.base_url, "api/calls/#{call_id}/state.json")}"
+    client.oauth2_client
+    |> OAuth2.Client.get(url)
+    |> parse_response
+  end
+
   def get_channels(client) do
     url = URI.merge(client.base_url, "/api/channels") |> URI.to_string
 

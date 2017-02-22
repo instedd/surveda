@@ -95,29 +95,36 @@ defmodule Ask.Runtime.Session do
 
   # Let's try again
   def timeout(session = %Session{retries: [_ | retries], channel_state: channel_state}) do
-    token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(session.channel)
 
-    # Right now this actually means:
-    # If we can push a question, it is Nuntium.
-    # If we can't push a question, it is Verboice (so we need to schedule
-    # a call and wait for the callback to actually execute a step, thus "push").
+    # First, check if there's already a queued message in the channel, to
+    # avoid queueing another one before even trying to send the first one.
+    if Channel.has_queued_message?(runtime_channel, channel_state) do
+      {:ok, session, %Reply{}, current_timeout(session)}
+    else
+      token = Ecto.UUID.generate
 
-    channel_state =
-      case runtime_channel |> Channel.can_push_question? do
-        true ->
-          {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
-          runtime_channel |> Channel.ask(session.respondent, token, prompts)
-          channel_state
+      # Right now this actually means:
+      # If we can push a question, it is Nuntium.
+      # If we can't push a question, it is Verboice (so we need to schedule
+      # a call and wait for the callback to actually execute a step, thus "push").
 
-        false ->
-          setup_response = runtime_channel |> Channel.setup(session.respondent, token)
-          handle_setup_response(setup_response)
-      end
+      channel_state =
+        case runtime_channel |> Channel.can_push_question? do
+          true ->
+            {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
+            runtime_channel |> Channel.ask(session.respondent, token, prompts)
+            channel_state
 
-    # The new session will timeout as defined by hd(retries)
-    session = %{session | retries: retries, token: token, channel_state: channel_state}
-    {:ok, session, %Reply{}, current_timeout(session)}
+          false ->
+            setup_response = runtime_channel |> Channel.setup(session.respondent, token)
+            handle_setup_response(setup_response)
+        end
+
+      # The new session will timeout as defined by hd(retries)
+      session = %{session | retries: retries, token: token, channel_state: channel_state}
+      {:ok, session, %Reply{}, current_timeout(session)}
+    end
   end
 
   def channel_failed(%Session{retries: [], fallback: nil, token: token}, token) do
