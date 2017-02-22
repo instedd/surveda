@@ -44,6 +44,18 @@ defmodule User.Helper do
     end
   end
 
+  def authorize_owner(project, conn) do
+    user_id = current_user(conn).id
+    memberships = project
+                  |> assoc(:project_memberships)
+                  |> where([m], m.user_id == ^user_id and m.level == "owner")
+                  |> Repo.all
+    case memberships do
+      [] -> raise UnauthorizedError, conn: conn
+      _ -> project
+    end
+  end
+
   # Loads a project, and checks that the current user belongs to
   # it with any access level.
   def load_project(conn, project_id) do
@@ -58,6 +70,13 @@ defmodule User.Helper do
     Project
     |> Repo.get!(project_id)
     |> authorize_change(conn)
+  end
+
+  # Loads a project, and checks that the current user its owner.
+  def load_project_for_owner(conn, project_id) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize_owner(conn)
   end
 
   def authorize_channel(channel, conn) do

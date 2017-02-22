@@ -4,6 +4,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
 import * as surveyActions from '../../actions/survey'
+import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
 import range from 'lodash/range'
 import values from 'lodash/values'
@@ -16,6 +17,7 @@ type Props = {
   projectId: number,
   surveyId: number,
   survey: Survey,
+  project: Project,
   questionnaires: Questionnaire[],
   respondents: Respondent[],
   pageSize: number,
@@ -26,6 +28,7 @@ type Props = {
   hasPreviousPage: boolean,
   hasNextPage: boolean,
   surveyActions: any,
+  projectActions: any,
   questionnairesActions: any,
   actions: any
 };
@@ -36,6 +39,7 @@ class RespondentIndex extends Component {
   componentDidMount() {
     const { projectId, surveyId, pageSize } = this.props
     if (projectId && surveyId) {
+      this.props.projectActions.fetchProject(projectId)
       this.props.surveyActions.fetchSurvey(projectId, surveyId)
       this.props.questionnairesActions.fetchQuestionnaires(projectId)
       this.props.actions.fetchRespondents(projectId, surveyId, pageSize, 1)
@@ -67,12 +71,17 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsDispositionHistoryCSV(projectId, surveyId)
   }
 
+  downloadIncentivesCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
+  }
+
   render() {
-    if (!this.props.respondents || !this.props.survey || !this.props.questionnaires) {
+    if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
       return <div>Loading...</div>
     }
 
-    const { survey, questionnaires, totalCount } = this.props
+    const { survey, questionnaires, project, totalCount } = this.props
 
     const hasComparisons = survey.comparisons.length > 0
 
@@ -138,6 +147,17 @@ class RespondentIndex extends Component {
       colspan += 1
     }
 
+    let incentivesCsvButton = null
+    if (project.owner) {
+      incentivesCsvButton = (
+        <li>
+          <Tooltip text='Download CSV for incentives'>
+            <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadIncentivesCSV()}><i className='material-icons'>description</i></a>
+          </Tooltip>
+        </li>
+      )
+    }
+
     return (
       <div className='white'>
         <div className='fixed-action-btn horizontal right mtop'>
@@ -155,6 +175,7 @@ class RespondentIndex extends Component {
                 <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadDispositionHistoryCSV()}><i className='material-icons'>description</i></a>
               </Tooltip>
             </li>
+            {incentivesCsvButton}
           </ul>
         </div>
         <CardTable title={title} footer={footer} tableScroll>
@@ -222,6 +243,7 @@ const mapStateToProps = (state, ownProps) => {
     surveyId: ownProps.params.surveyId,
     respondents: state.respondents.items,
     survey: state.survey.data,
+    project: state.project.data,
     questionnaires: state.questionnaires.items,
     pageNumber,
     pageSize,
@@ -236,6 +258,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   surveyActions: bindActionCreators(surveyActions, dispatch),
+  projectActions: bindActionCreators(projectActions, dispatch),
   questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
 })
 

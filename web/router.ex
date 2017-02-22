@@ -58,6 +58,7 @@ defmodule Ask.Router do
           get "/respondents/quotas_stats", RespondentController, :quotas_stats, as: :respondents_quotas_stats
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
           get "/respondents/disposition_history_csv", RespondentController, :disposition_history_csv, as: :respondents_disposition_history_csv
+          get "/respondents/incentives_csv", RespondentController, :incentives_csv, as: :respondents_incentives_csv
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
