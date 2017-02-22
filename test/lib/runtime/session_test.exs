@@ -40,7 +40,7 @@ defmodule Ask.SessionTest do
     test_channel = TestChannel.new(false)
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
-    {:ok, session, _, timeout} = Session.start(quiz, respondent, channel, "sms")
+    {:ok, session, _, timeout} = Session.start(quiz, respondent, channel, "ivr")
 
     assert %Session{token: token} = session
     assert 10 = timeout
@@ -68,7 +68,7 @@ defmodule Ask.SessionTest do
     test_channel = TestChannel.new(false)
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
-    {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, "sms", [5])
+    {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, "ivr", [5])
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
     assert {:ok, %Session{token: token2}, _, 10} = Session.timeout(session)

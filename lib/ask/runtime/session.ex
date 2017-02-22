@@ -51,15 +51,15 @@ defmodule Ask.Runtime.Session do
     @default_fallback_delay
   end
 
-  defp run_flow(session = %Session{flow: flow, respondent: respondent, current_mode: %ModeInfo{channel: channel}}) do
+  defp run_flow(session = %Session{flow: flow, respondent: respondent, current_mode: %ModeInfo{channel: channel, mode: mode}}) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     setup_response = runtime_channel |> Channel.setup(respondent, token)
     channel_state = handle_setup_response(setup_response)
 
-    {flow, reply} = case runtime_channel |> Channel.can_push_question? do
-      true ->
+    {flow, reply} = case mode do
+      "sms" ->
         case flow |> Flow.step do
           {:end, reply} ->
             if Reply.prompts(reply) != [] do
@@ -71,7 +71,7 @@ defmodule Ask.Runtime.Session do
             {flow, reply}
         end
 
-      false ->
+      "ivr" ->
         {flow, %Reply{}}
     end
 
@@ -100,10 +100,10 @@ defmodule Ask.Runtime.Session do
 
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
-  def timeout(session = %Session{current_mode: %{retries: []}, fallback_mode: nil}) do
-    case session.current_mode.channel |> Ask.Channel.runtime_channel |> Channel.can_push_question? do
-      true -> {:stalled, session |> clear_token}
-      false -> :failed
+  def timeout(session = %Session{current_mode: %{retries: [], mode: mode}, fallback_mode: nil}) do
+    case mode do
+      "sms" -> {:stalled, session |> clear_token}
+      "ivr" -> :failed
     end
   end
 
@@ -117,7 +117,7 @@ defmodule Ask.Runtime.Session do
   end
 
   # Let's try again
-  def timeout(session = %Session{current_mode: %{retries: [_ | retries]}, channel_state: channel_state}) do
+  def timeout(session = %Session{current_mode: %{retries: [_ | retries], mode: mode}, channel_state: channel_state}) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     # First, check if there's already a queued message in the channel, to
@@ -126,20 +126,14 @@ defmodule Ask.Runtime.Session do
       {:ok, session, %Reply{}, current_timeout(session)}
     else
       token = Ecto.UUID.generate
-
-      # Right now this actually means:
-      # If we can push a question, it is Nuntium.
-      # If we can't push a question, it is Verboice (so we need to schedule
-      # a call and wait for the callback to actually execute a step, thus "push").
-
       channel_state =
-        case runtime_channel |> Channel.can_push_question? do
-          true ->
+        case mode do
+          "sms" ->
             {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
             runtime_channel |> Channel.ask(session.respondent, token, prompts)
             channel_state
 
-          false ->
+          "ivr" ->
             setup_response = runtime_channel |> Channel.setup(session.respondent, token)
             handle_setup_response(setup_response)
         end
