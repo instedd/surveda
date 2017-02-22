@@ -26,6 +26,7 @@ export type AudioPrompt = {
 export type LanguagePrompt = {
   sms?: string,
   ivr?: AudioPrompt,
+  mobileWeb?: string
 };
 
 export type Prompt = { [lang: string]: LanguagePrompt };

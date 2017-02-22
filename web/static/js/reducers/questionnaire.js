@@ -90,6 +90,7 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action, quiz)
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action, quiz)
+    case actions.CHANGE_STEP_PROMPT_MOBILE_WEB: return changeStepMobileWebPrompt(state, action, quiz)
     case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action, quiz)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action, quiz)
@@ -291,6 +292,15 @@ const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Que
     return setStepPrompt(step, quiz.activeLanguage, prompt => ({
       ...prompt,
       sms: action.newPrompt.trim()
+    }))
+  })
+}
+
+const changeStepMobileWebPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Questionnaire): Step[] => {
+  return changeStep(state, action.stepId, step => {
+    return setStepPrompt(step, quiz.activeLanguage, prompt => ({
+      ...prompt,
+      mobileWeb: action.newPrompt.trim()
     }))
   })
 }

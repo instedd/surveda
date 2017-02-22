@@ -40,6 +40,10 @@ export function getStepPromptSms(step: Step, language: string): string {
   return ((getStepPrompt(step, language) || {}).sms || '').trim()
 }
 
+export function getStepPromptMobileWeb(step: Step, language: string): string {
+  return ((getStepPrompt(step, language) || {}).mobileWeb || '').trim()
+}
+
 export function getStepPromptIvr(step: Step, language: string): AudioPrompt {
   return (getStepPrompt(step, language) || {}).ivr || {audioSource: 'tts', text: ''}
 }
