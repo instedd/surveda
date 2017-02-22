@@ -32,6 +32,10 @@ class SmsPrompt extends Component {
       e.preventDefault()
       this.splitPiece(e, index)
     }
+    // This is due to a materialize css bug. The onChange event doesn't get fired when erasing the last character of the input, so a manual trigger is needed in that case
+    if (!e.target.value) {
+      this.onChange(e)
+    }
   }
 
   splitPiece(e, index) {
