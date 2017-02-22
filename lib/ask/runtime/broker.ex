@@ -165,7 +165,12 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
 
-    handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries, fallback_delay, survey.count_partial_results))
+    {primary_mode, fallback_mode} = case mode do
+      [primary] -> {primary, nil}
+      [primary, fallback] -> {primary, fallback}
+    end
+
+    handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, primary_mode, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
   end
 
   defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do

@@ -8,9 +8,9 @@ defmodule Ask.Runtime.Session do
   defmodule ModeInfo do
     defstruct [:mode, :channel, :retries]
 
-    def new(nil, _retries), do: nil
-    def new(channel, retries) when not is_nil(channel) and is_list(retries) do
-      %ModeInfo{mode: channel.type, channel: channel, retries: retries}
+    def new(nil, _channel, _retries), do: nil
+    def new(mode, channel, retries) when not is_nil(channel) and is_list(retries) do
+      %ModeInfo{mode: mode, channel: channel, retries: retries}
     end
 
     def dump(nil), do: nil
@@ -34,11 +34,11 @@ defmodule Ask.Runtime.Session do
 
   @default_fallback_delay 10
 
-  def start(questionnaire, respondent, channel, retries \\ [], fallback_channel \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
+  def start(questionnaire, respondent, channel, mode, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
     flow = Flow.start(questionnaire, channel.type)
     session = %Session{
-      current_mode: ModeInfo.new(channel, retries),
-      fallback_mode: ModeInfo.new(fallback_channel, fallback_retries),
+      current_mode: ModeInfo.new(mode, channel, retries),
+      fallback_mode: ModeInfo.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
       respondent: respondent,
       fallback_delay: fallback_delay,
