@@ -1,0 +1,52 @@
+import React, { Component, PropTypes } from 'react'
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import { InputWithLabel } from '../ui'
+import * as questionnaireActions from '../../actions/questionnaire'
+// import classNames from 'classnames/bind'
+
+class MobileWebPrompt extends Component {
+  state: State
+
+  onBlur(e) {
+    const { onBlur } = this.props
+    onBlur(e)
+  }
+
+  render() {
+    const { id, value, onChange, readOnly, onBlur } = this.props
+
+    return (
+      <div>
+        <div className='row'>
+          <div className='col input-field s12'>
+            <InputWithLabel id={id} value={value} label='Mobile Web Message'>
+              <input
+                type='text'
+                disabled={readOnly}
+                onChange={e => onChange(e.target.value)}
+                onBlur={e => onBlur(e.target.value)}
+              />
+            </InputWithLabel>
+          </div>
+        </div>
+      </div>
+    )
+  }
+}
+
+MobileWebPrompt.propTypes = {
+  id: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  originalValue: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onBlur: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
+  stepId: PropTypes.string
+}
+
+const mapDispatchToProps = (dispatch) => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default connect(null, mapDispatchToProps)(MobileWebPrompt)

@@ -201,6 +201,25 @@ describe('questionnaire reducer', () => {
       expect(result.data.modes.length).toEqual(1)
       expect(result.data.modes).toEqual(['sms'])
     })
+
+    it('should toggle mobile-web mode on', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobile-web')
+      ])
+      expect(result.data.modes).toInclude(['mobile-web'])
+    })
+
+    it('should toggle mobile-web mode off', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobile-web'),
+        actions.toggleMode('mobile-web')
+      ])
+      expect(result.data.modes).toExclude(['mobile-web'])
+    })
   })
 
   describe('steps', () => {
