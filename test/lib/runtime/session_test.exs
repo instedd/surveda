@@ -37,7 +37,7 @@ defmodule Ask.SessionTest do
   end
 
   test "start with channel without push", %{quiz: quiz, respondent: respondent} do
-    test_channel = TestChannel.new(false)
+    test_channel = TestChannel.new
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
     {:ok, session, _, timeout} = Session.start(quiz, respondent, channel, "ivr")
@@ -65,7 +65,7 @@ defmodule Ask.SessionTest do
   end
 
   test "retry with IVR channel", %{quiz: quiz, respondent: respondent} do
-    test_channel = TestChannel.new(false)
+    test_channel = TestChannel.new
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
     {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, "ivr", [5])
@@ -87,7 +87,7 @@ defmodule Ask.SessionTest do
   test "doesn't retry if has queued message" do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
-    test_channel = TestChannel.new(true, true)
+    test_channel = TestChannel.new(true)
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
     assert {:ok, session = %Session{token: token}, _, 5} = Session.start(quiz, respondent, channel, "sms", [5])
@@ -119,7 +119,7 @@ defmodule Ask.SessionTest do
 
   # Primary SMS fallbacks to IVR
   test "switch to fallback after last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    fallback_runtime_channel = TestChannel.new(false)
+    fallback_runtime_channel = TestChannel.new
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 
@@ -145,7 +145,7 @@ defmodule Ask.SessionTest do
 
   # Primary SMS retries SMS and then fallbacks to IVR
   test "switch to fallback after specified time", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    fallback_runtime_channel = TestChannel.new(false)
+    fallback_runtime_channel = TestChannel.new
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [7]
 
@@ -171,7 +171,7 @@ defmodule Ask.SessionTest do
 
   # Primary SMS retries SMS and then fallbacks to IVR
   test "switch to fallback after retrying twice", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    fallback_runtime_channel = TestChannel.new(false)
+    fallback_runtime_channel = TestChannel.new
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 

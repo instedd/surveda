@@ -768,7 +768,7 @@ defmodule Ask.SurveyControllerTest do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, state: "ready")
 
-    test_channel = TestChannel.new(false)
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     create_group(survey, channel)
 

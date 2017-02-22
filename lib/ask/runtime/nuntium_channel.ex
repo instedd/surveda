@@ -188,7 +188,6 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
 
     def setup(_channel, _respondent, _token), do: :ok
-    def can_push_question?(_), do: true
 
     def ask(channel, respondent, token, prompts) do
       nuntium_config = Application.get_env(:ask, Nuntium)
