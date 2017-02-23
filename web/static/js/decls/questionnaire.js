@@ -68,6 +68,9 @@ export type Refusal = {
     ivr?: string[],
     sms?: {
       [lang: string]: string[]
+    },
+    mobileWeb?: {
+      [lang: string]: string[]
     }
   },
   skipLogic: ?string
@@ -86,6 +89,9 @@ export type Choice = {
     ivr?: string[],
     sms?: {
       [lang: string]: string[]
+    },
+    mobileWeb?: {
+      [lang: string]: ?string
     }
   }
 };

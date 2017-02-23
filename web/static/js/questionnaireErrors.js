@@ -164,6 +164,7 @@ export const choicesPath = (stepIndex: number) => `${stepPath(stepIndex)}.choice
 export const choicePath = (stepIndex: number, choiceIndex: number) => `${choicesPath(stepIndex)}[${choiceIndex}]`
 export const choiceValuePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.value`
 export const choiceSmsResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].sms`
+export const choiceMobileWebResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].mobileWeb`
 export const choiceIvrResponsePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.ivr`
 export const choiceSkipLogicPath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.skipLogic`
 
