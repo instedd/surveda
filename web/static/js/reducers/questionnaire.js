@@ -144,6 +144,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
   let response = action.choiceChange.response.trim()
   let smsValues = action.choiceChange.smsValues.trim()
   let ivrValues = action.choiceChange.ivrValues.trim()
+  let mobileWebValues = action.choiceChange.mobileWebValues.trim()
 
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
     [smsValues, ivrValues] = autoComplete(state, response, quiz)
@@ -166,6 +167,10 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
             sms: {
               ...choice.responses.sms,
               [quiz.activeLanguage]: splitValues(smsValues)
+            },
+            mobileWeb: {
+              ...choice.responses.mobileWeb,
+              [quiz.activeLanguage]: mobileWebValues
             }
           },
           skipLogic: action.choiceChange.skipLogic

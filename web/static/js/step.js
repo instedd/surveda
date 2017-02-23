@@ -72,6 +72,10 @@ export function getChoiceResponseIvrJoined(choice: Choice): string {
   return (choice.responses.ivr || []).join(', ')
 }
 
+export function getChoiceResponseMobileWebJoined(choice: Choice, language: string): string {
+  return (choice.responses.mobileWeb || {})[language] || ''
+}
+
 export const newStepPrompt = () => {
   return {
     sms: '',
