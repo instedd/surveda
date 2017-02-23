@@ -225,9 +225,16 @@ defmodule Ask.Runtime.VerboiceChannel do
         _ -> false
       end
     end
-
     def has_queued_message?(_, _) do
       false
+    end
+
+    def cancel_message(channel, %{"verboice_call_id" => call_id}) do
+      channel.client
+      |> Verboice.Client.cancel(call_id)
+    end
+    def cancel_message(_, _) do
+      :ok
     end
   end
 end

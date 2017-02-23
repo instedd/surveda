@@ -4,6 +4,7 @@ defprotocol Ask.Runtime.Channel do
   def can_push_question?(channel)
   def ask(channel, respondent, token, prompts)
   def has_queued_message?(channel, channel_state)
+  def cancel_message(channel, channel_state)
 end
 
 defmodule Ask.Runtime.ChannelProvider do

@@ -2,6 +2,7 @@ defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
   alias Ask.{Project, Survey, Questionnaire}
+  alias Ask.Runtime.Session
 
   def index(conn, %{"project_id" => project_id}) do
     surveys = conn
@@ -164,6 +165,8 @@ defmodule Ask.SurveyController do
     project = conn
       |> load_project_for_change(survey.project_id)
 
+    cancel_messages(survey)
+
     from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
     |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
 
@@ -186,5 +189,22 @@ defmodule Ask.SurveyController do
       {:ok, _} -> prepare_channels(conn, rest)
       error -> error
     end
+  end
+
+  defp cancel_messages(survey) do
+    # Need to save sessions in memory because they are set to nil
+    # by the stop function above
+    sessions = (from r in Ask.Respondent,
+      where: r.survey_id == ^survey.id and not is_nil(r.session))
+    |> Repo.all
+    |> Enum.map(&(&1.session))
+
+    spawn(fn ->
+      sessions |> Enum.each(fn session ->
+        session
+        |> Session.load
+        |> Session.cancel
+      end)
+    end)
   end
 end

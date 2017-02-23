@@ -75,4 +75,9 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
   def has_queued_message?(channel, channel_state) do
     channel.has_queued_message
   end
+
+  def cancel_message(channel, channel_state) do
+    send channel.pid, [:cancel_message, channel, channel_state]
+    :ok
+  end
 end

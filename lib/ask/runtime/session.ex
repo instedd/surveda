@@ -202,6 +202,11 @@ defmodule Ask.Runtime.Session do
     }
   end
 
+  def cancel(session) do
+    Ask.Channel.runtime_channel(session.channel)
+    |> Channel.cancel_message(session.channel_state)
+  end
+
   defp fallback_channel(nil), do: nil
   defp fallback_channel(id) do
     Repo.get(Ask.Channel, id)
