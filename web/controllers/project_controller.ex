@@ -14,11 +14,21 @@ defmodule Ask.ProjectController do
     |> Enum.map(&(&1.project))
     |> Enum.uniq
 
-    editors_by_project = memberships
+    levels_by_project = memberships
     |> Enum.group_by(&(&1.project_id))
     |> Enum.to_list
     |> Enum.map(fn {id, memberships} ->
-      {id, memberships |> Enum.any?(&(&1.level == "owner" || &1.level == "editor"))}
+      level =
+        if Enum.any?(memberships, &(&1.level == "owner")) do
+          "owner"
+        else
+          if Enum.any?(memberships, &(&1.level == "editor")) do
+            "editor"
+          else
+            "reader"
+          end
+        end
+      {id, level}
     end)
     |> Enum.into(%{})
 
@@ -31,7 +41,7 @@ defmodule Ask.ProjectController do
     render(conn, "index.json",
       projects: projects,
       running_surveys_by_project: running_surveys_by_project,
-      editors_by_project: editors_by_project)
+      levels_by_project: levels_by_project)
   end
 
   def create(conn, %{"project" => project_params}) do
@@ -54,7 +64,7 @@ defmodule Ask.ProjectController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_path(conn, :show, project))
-        |> render("show.json", project: project, read_only: false)
+        |> render("show.json", project: project, read_only: false, owner: true)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -79,20 +89,32 @@ defmodule Ask.ProjectController do
 
     if membership do
       read_only = membership.level == "reader"
-      render(conn, "show.json", project: project, read_only: read_only)
+      owner = membership.level == "owner"
+      render(conn, "show.json", project: project, read_only: read_only, owner: owner)
     else
       raise Ask.UnauthorizedError, conn: conn
     end
   end
 
   def update(conn, %{"id" => id, "project" => project_params}) do
-    changeset = conn
+    project = conn
     |> load_project_for_change(id)
+
+    changeset = project
     |> Project.changeset(project_params)
 
     case Repo.update(changeset) do
       {:ok, project} ->
-        render(conn, "show.json", project: project, read_only: false)
+        user = conn
+        |> current_user
+
+        membership = project
+        |> assoc(:project_memberships)
+        |> where([m], m.user_id == ^user.id)
+        |> Repo.one
+
+        owner = membership.level == "owner"
+        render(conn, "show.json", project: project, read_only: false, owner: owner)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)

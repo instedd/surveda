@@ -36,6 +36,7 @@ defmodule Ask.ProjectControllerTest do
           "running_surveys" => 0,
           "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at),
           "read_only" => false,
+          "owner" => true,
         },
         %{
           "id"      => project2.id,
@@ -43,6 +44,7 @@ defmodule Ask.ProjectControllerTest do
           "running_surveys" => 0,
           "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
           "read_only" => true,
+          "owner" => false,
         }
       ]
     end
@@ -64,17 +66,20 @@ defmodule Ask.ProjectControllerTest do
                           "name"    => project1.name,
                           "running_surveys" => 2,
                           "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at),
-                          "read_only" => false}
+                          "read_only" => false,
+                          "owner" => true}
       project_map_2 = %{"id"      => project2.id,
                           "name"    => project2.name,
                           "running_surveys" => 1,
                           "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
-                          "read_only" => false}
+                          "read_only" => false,
+                          "owner" => true}
       project_map_3 = %{"id"      => project3.id,
                           "name"    => project3.name,
                           "running_surveys" => 0,
                           "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at),
-                          "read_only" => false}
+                          "read_only" => false,
+                          "owner" => true}
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
     end
 
@@ -88,7 +93,8 @@ defmodule Ask.ProjectControllerTest do
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
         "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
-        "read_only" => false}
+        "read_only" => false,
+        "owner" => true}
     end
 
     test "shows chosen resource as read_only", %{conn: conn, user: user} do
@@ -97,7 +103,8 @@ defmodule Ask.ProjectControllerTest do
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
         "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
-        "read_only" => true}
+        "read_only" => true,
+        "owner" => false}
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
@@ -119,7 +126,8 @@ defmodule Ask.ProjectControllerTest do
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
         "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
-        "read_only" => true}
+        "read_only" => true,
+        "owner" => false}
     end
 
   end
@@ -131,6 +139,7 @@ defmodule Ask.ProjectControllerTest do
       response = json_response(conn, 201)
       assert response["data"]["id"]
       assert response["data"]["read_only"] == false
+      assert response["data"]["owner"] == true
       assert Repo.get_by(Project, @valid_attrs)
     end
 
@@ -144,6 +153,7 @@ defmodule Ask.ProjectControllerTest do
       response = json_response(conn, 200)
       assert response["data"]["id"]
       assert response["data"]["read_only"] == false
+      assert response["data"]["owner"] == true
       assert Repo.get_by(Project, @valid_attrs)
     end
 

@@ -273,7 +273,7 @@ defmodule Ask.RespondentController do
           variant = if questionnaire_id && mode do
             questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
             if questionnaire do
-              "#{questionnaire_name(questionnaire)} - #{mode_label(mode)}"
+              experiment_name(questionnaire, mode)
             else
               "-"
             end
@@ -368,10 +368,48 @@ defmodule Ask.RespondentController do
       |> send_resp(200, csv)
   end
 
+  def incentives_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = conn
+    |> load_project_for_owner(project_id)
+
+    # Check that the survey is in the project
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    csv_rows = (from r in Respondent,
+      where: r.survey_id == ^survey.id and r.disposition == "completed")
+    |> preload(:questionnaire)
+    |> Repo.stream
+    |> Stream.map(fn r ->
+      [r.phone_number, experiment_name(r.questionnaire, r.mode)]
+    end)
+
+    header = ["Telephone number", "Survey/experiment version"]
+    rows = Stream.concat([[header], csv_rows])
+
+    # Convert to CSV string
+    csv = rows
+    |> CSV.encode
+    |> Enum.to_list
+    |> to_string
+
+    filename = Timex.now |> Timex.format!("respondents_incentives_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+
+    conn
+      |> put_resp_content_type("text/csv")
+      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+      |> send_resp(200, csv)
+  end
+
   defp mask_phone_numbers(respondents) do
     respondents |> Enum.map(fn respondent ->
       %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
     end)
+  end
+
+  defp experiment_name(quiz, mode) do
+    "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
   end
 
   defp questionnaire_name(quiz) do
