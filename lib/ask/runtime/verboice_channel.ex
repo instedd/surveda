@@ -220,6 +220,7 @@ defmodule Ask.Runtime.VerboiceChannel do
       case response do
         {:ok, %{"state" => "completed"}} -> false
         {:ok, %{"state" => "failed"}} -> false
+        {:ok, %{"state" => "canceled"}} -> false
         {:ok, %{"state" => _}} -> true
         _ -> false
       end
