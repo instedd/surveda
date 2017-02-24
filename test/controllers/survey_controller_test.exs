@@ -4,7 +4,7 @@ defmodule Ask.SurveyControllerTest do
 
   alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
   alias Ask.Runtime.{Flow, Session}
-  alias Ask.Runtime.Session.ModeInfo
+  alias Ask.Runtime.SessionModeProvider
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -815,7 +815,7 @@ defmodule Ask.SurveyControllerTest do
 
     channel_state = %{"call_id" => 123}
     session = %Session{
-      current_mode: ModeInfo.new("sms", channel, []),
+      current_mode: SessionModeProvider.new("sms", channel, []),
       channel_state: channel_state,
       respondent: r1,
       flow: %Flow{questionnaire: questionnaire},
@@ -849,7 +849,7 @@ defmodule Ask.SurveyControllerTest do
 
     channel_state = %{"call_id" => 123}
     session = %Session{
-      current_mode: ModeInfo.new("sms", channel, []),
+      current_mode: SessionModeProvider.new("sms", channel, []),
       channel_state: channel_state,
       respondent: r1,
       flow: %Flow{questionnaire: questionnaire},

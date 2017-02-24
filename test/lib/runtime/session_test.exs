@@ -3,7 +3,7 @@ defmodule Ask.SessionTest do
   use Ask.DummySteps
   import Ask.Factory
   alias Ask.Runtime.Session
-  alias Ask.Runtime.Session.ModeInfo
+  alias Ask.Runtime.SessionModeProvider
   alias Ask.TestChannel
   alias Ask.Runtime.{Flow, Reply}
   alias Ask.{Survey, Respondent, QuotaBucket, Questionnaire}
@@ -128,7 +128,7 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
-      current_mode: %ModeInfo{mode: "ivr", channel: fallback_channel, retries: fallback_retries},
+      current_mode: SessionModeProvider.new("ivr", fallback_channel, fallback_retries),
       fallback_mode: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
@@ -154,7 +154,7 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
-      current_mode: %ModeInfo{mode: "ivr", channel: fallback_channel, retries: fallback_retries},
+      current_mode: SessionModeProvider.new("ivr", fallback_channel, fallback_retries),
       fallback_mode: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
@@ -180,7 +180,7 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     expected_session = %Session{
-      current_mode: %ModeInfo{mode: "ivr", channel: fallback_channel, retries: fallback_retries},
+      current_mode: SessionModeProvider.new("ivr", fallback_channel, fallback_retries),
       fallback_mode: nil,
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }

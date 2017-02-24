@@ -4,42 +4,16 @@ defmodule Ask.Runtime.Session do
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
   alias Ask.Runtime.Flow.TextVisitor
+  alias Ask.Runtime.{SessionMode, SessionModeProvider, SMSMode, IVRMode}
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results]
-
-  defmodule ModeInfo do
-    defstruct [:mode, :channel, :retries]
-
-    def new(nil, _channel, _retries), do: nil
-    def new(mode, channel, retries) when not is_nil(channel) and is_list(retries) do
-      %ModeInfo{mode: mode, channel: channel, retries: retries}
-    end
-
-    def dump(nil), do: nil
-    def dump(%ModeInfo{mode: mode, channel: channel, retries: retries}) do
-      %{
-        mode: mode,
-        channel_id: channel.id,
-        retries: retries
-      }
-    end
-
-    def load(nil), do: nil
-    def load(mode_dump) do
-      %ModeInfo{
-        mode: mode_dump["mode"],
-        channel: Ask.Channel |> Repo.get(mode_dump["channel_id"]),
-        retries: mode_dump["retries"]
-      }
-    end
-  end
 
   @default_fallback_delay 10
 
   def start(questionnaire, respondent, channel, mode, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
     flow = Flow.start(questionnaire, channel.type)
     session = %Session{
-      current_mode: ModeInfo.new(mode, channel, retries),
-      fallback_mode: ModeInfo.new(fallback_mode, fallback_channel, fallback_retries),
+      current_mode: SessionModeProvider.new(mode, channel, retries),
+      fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
       respondent: respondent,
       fallback_delay: fallback_delay,
@@ -52,37 +26,36 @@ defmodule Ask.Runtime.Session do
     @default_fallback_delay
   end
 
-  defp run_flow(%Session{flow: flow, respondent: respondent, current_mode: %ModeInfo{channel: channel, mode: mode}} = session) do
-    token = Ecto.UUID.generate
+  defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %SMSMode{channel: channel}} = session) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    setup_response = runtime_channel |> Channel.setup(respondent, token)
-    channel_state = handle_setup_response(setup_response)
+    # Is this really necessary?
+    Channel.setup(runtime_channel, respondent, token)
 
-    {flow, reply} = case mode do
-      "sms" ->
-        case flow |> Flow.step(TextVisitor.new("sms")) do
-          {:end, reply} ->
-            if Reply.prompts(reply) != [] do
-              runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
-            end
-            {:end, reply}
-          {:ok, flow, reply} ->
-            runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
-            {flow, reply}
+    case flow |> Flow.step(TextVisitor.new("sms")) do
+      {:end, reply} ->
+        if Reply.prompts(reply) != [] do
+          runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
         end
-
-      "ivr" ->
-        {flow, %Reply{}}
-    end
-
-    case flow do
-      :end ->
         {:end, reply}
-      _ ->
-        session = %{session | flow: flow, token: token, channel_state: channel_state}
-        {:ok, session, reply, current_timeout(session)}
+      {:ok, flow, reply} ->
+        runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
+        {:ok, %{session | flow: flow}, reply, current_timeout(session)}
     end
+  end
+
+  defp mode_start(%Session{current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token} = session) do
+    channel_state = channel
+    |> Ask.Channel.runtime_channel
+    |> Channel.setup(respondent, token)
+    |> handle_setup_response
+
+    session = %{session| channel_state: channel_state}
+    {:ok, session, %Reply{}, current_timeout(session)}
+  end
+
+  defp run_flow(session) do
+    mode_start(%{session | token: Ecto.UUID.generate})
   end
 
   defp handle_setup_response(setup_response) do
@@ -101,7 +74,7 @@ defmodule Ask.Runtime.Session do
 
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
-  def timeout(%Session{current_mode: %{retries: [], mode: mode}, fallback_mode: nil} = session) do
+  def timeout(%{current_mode: %{retries: [], mode: mode}, fallback_mode: nil} = session) do
     case mode do
       "sms" -> {:stalled, session |> clear_token}
       "ivr" -> :failed
@@ -109,16 +82,16 @@ defmodule Ask.Runtime.Session do
   end
 
   # If there is a fallback specified, switch session to use it
-  def timeout(%Session{current_mode: %{retries: []}} = session), do: switch_to_fallback(session |> clear_token)
+  def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session |> clear_token)
 
   #if we have a last timeout, use it to fallback
   # TODO: this should use fallback_delay
-  def timeout(%Session{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
+  def timeout(%{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
     switch_to_fallback(session |> clear_token)
   end
 
   # Let's try again
-  def timeout(%Session{current_mode: %{retries: [_ | retries], mode: mode}, channel_state: channel_state} = session) do
+  def timeout(%{current_mode: %{retries: [_ | retries], mode: mode}, channel_state: channel_state} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     # First, check if there's already a queued message in the channel, to
@@ -154,20 +127,20 @@ defmodule Ask.Runtime.Session do
   end
 
   defp switch_to_fallback(session) do
-    run_flow(%{
+    run_flow(%Session{
       session |
       current_mode: session.fallback_mode,
       fallback_mode: nil,
       channel_state: nil,
       flow: %{
         session.flow |
-        mode: session.fallback_mode.mode
+        mode: session.fallback_mode |> SessionModeProvider.mode
       }
     })
   end
 
   def sync_step(session, reply) do
-    step_answer = Flow.step(session.flow, TextVisitor.new(session.current_mode.mode), reply)
+    step_answer = Flow.step(session.flow, session.current_mode |> SessionModeProvider.visitor, reply)
 
     respondent = session.respondent
     survey = (respondent |> Repo.preload(:survey)).survey
@@ -215,8 +188,8 @@ defmodule Ask.Runtime.Session do
 
   def dump(session) do
     %{
-      current_mode: session.current_mode |> ModeInfo.dump,
-      fallback_mode: session.fallback_mode |> ModeInfo.dump,
+      current_mode: session.current_mode |> SessionMode.dump,
+      fallback_mode: session.fallback_mode |> SessionMode.dump,
       flow: session.flow |> Flow.dump,
       respondent_id: session.respondent.id,
       token: session.token,
@@ -233,8 +206,8 @@ defmodule Ask.Runtime.Session do
 
   def load(state) do
     %Session{
-      current_mode: ModeInfo.load(state["current_mode"]),
-      fallback_mode: ModeInfo.load(state["fallback_mode"]),
+      current_mode: SessionModeProvider.load(state["current_mode"]),
+      fallback_mode: SessionModeProvider.load(state["fallback_mode"]),
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       token: state["token"],
