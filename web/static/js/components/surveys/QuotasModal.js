@@ -58,41 +58,48 @@ export class QuotasModal extends Component {
               <p>Choose the questionnaire answers you want to use to define quotas</p>
             </div>
             <div className='card-content'>
-              {Object.keys(storeValues).map((storeValue) =>
-                <div className='row' key={storeValue} >
-                  <div className='col s12'>
-                    { storeValues[storeValue].type == 'numeric'
-                      ? <div className='question left'>
-                        <div className='question-icon-label'>
-                          <i className='material-icons v-middle left'>dialpad</i>
-                          <span>{storeValue}</span>
-                        </div>
-                        <div className='question-value'>
-                          <div className='input-field'>
-                            <input type='text' ref={node => { this.state.steps[storeValue] = node }} defaultValue={rebuildInputFromQuotaBuckets(storeValue, survey)} />
-                            <span className='small-text-bellow'>
-                              Enter comma-separated values to create ranges like 5,10,20
-                            </span>
+              {Object.keys(storeValues).map((storeValue) => {
+                let type = storeValues[storeValue].type
+                if (type != 'numeric' && type != 'multiple-choice') {
+                  return null
+                } else {
+                  return (
+                    <div className='row' key={storeValue} >
+                      <div className='col s12'>
+                        { type == 'numeric'
+                        ? <div className='question left'>
+                          <div className='question-icon-label'>
+                            <i className='material-icons v-middle left'>dialpad</i>
+                            <span>{storeValue}</span>
+                          </div>
+                          <div className='question-value'>
+                            <div className='input-field'>
+                              <input type='text' ref={node => { this.state.steps[storeValue] = node }} defaultValue={rebuildInputFromQuotaBuckets(storeValue, survey)} />
+                              <span className='small-text-bellow'>
+                                Enter comma-separated values to create ranges like 5,10,20
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      : <div className='question left'>
-                        <div className='question-icon-label'>
-                          <i className='material-icons v-middle left'>list</i>
-                          <span>{storeValue}</span>
+                        : <div className='question left'>
+                          <div className='question-icon-label'>
+                            <i className='material-icons v-middle left'>list</i>
+                            <span>{storeValue}</span>
+                          </div>
+                          <div className='question-value'>
+                            {join(storeValues[storeValue].values, ', ')}
+                          </div>
                         </div>
-                        <div className='question-value'>
-                          {join(storeValues[storeValue].values, ', ')}
+                      }
+                        <div className='question right'>
+                          <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
+                          <label htmlFor={storeValue} />
                         </div>
                       </div>
-                    }
-                    <div className='question right'>
-                      <input type='checkbox' className='filled-in' id={storeValue} defaultChecked={includes(survey.quotas.vars, storeValue)} ref={node => { this.state.buckets[storeValue] = node }} />
-                      <label htmlFor={storeValue} />
                     </div>
-                  </div>
-                </div>
-              )}
+                  )
+                }
+              })}
             </div>
           </div>
           <div className='card-action'>
