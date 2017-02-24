@@ -1,0 +1,10 @@
+<body>
+  <div id="root" role="main"> THIS IS A TEST ON INDEX HTML EEX!! </div>
+  <script src="<%= static_path(@conn, "/js/mobileSurvey.js") %>"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+      root = document.getElementById('root');
+      console.log(root)
+    });
+  </script>
+</body>

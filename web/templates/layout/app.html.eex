@@ -10,6 +10,7 @@
 
     <title>InSTEDD Ask</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/mobileSurvey.css") %>">
     <script>
       window.mixEnv = "<%= Mix.env %>"
       window.appConfig = <%= raw(config(@conn)) %>

@@ -2,7 +2,10 @@ exports.config = {
   // See http://brunch.io/#documentation for docs.
   files: {
     javascripts: {
-      joinTo: 'js/app.js'
+      joinTo: {
+        'js/app.js': /^(web\/static\/js)|(web\/static\/vendor)|(node_modules)|(deps)/,
+        'js/mobileSurvey.js': /^(web\/static\/mobile_survey)|(node_modules\/process.*)|(node_modules\/react\/)|(node_modules\/react-dom)|(node_modules\/object-assign)|(node_modules\/fbjs)/
+      }
 
       // To use a separate vendor.js bundle, specify two files path
       // http://brunch.io/docs/config#-files-
@@ -20,7 +23,10 @@ exports.config = {
       // }
     },
     stylesheets: {
-      joinTo: 'css/app.css',
+      joinTo: {
+        'css/app.css': /^(web\/static\/css)|(web\/static\/vendor\/css)/,
+        'css/mobileSurvey.css': /^(web\/static\/mobile_survey)/
+      },
       order: {
         after: ['web/static/css/app.css'] // concat app.css last
       }
@@ -66,7 +72,8 @@ exports.config = {
 
   modules: {
     autoRequire: {
-      'js/app.js': ['web/static/js/app']
+      'js/app.js': ['web/static/js/app'],
+      'js/mobileSurvey.js': ['web/static/mobile_survey/mobileSurvey']
     }
   },
 

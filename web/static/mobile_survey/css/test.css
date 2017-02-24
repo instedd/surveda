@@ -1,0 +1,51 @@
+// ------- Scroll to Top & Scroll to Link --------------
+
+
+/* THIS FILE IS ONLY FOR TESTING PURPOSES. TO CHECK THAT EVERYTHING WRITTEN HERE IS COMPILED AS SPECIFIED ON brunch-config.js */
+.scrollToTop {
+  @include transition(all ease-in-out .26s);
+  background-color: rgba(255,255,255,.3);
+  text-align: center;
+  border-radius: 50%;
+  border: 1px solid color('grey', 'lighten-1');
+  width: 35px;
+  height: 35px;
+  margin-bottom: 4rem;
+  position: fixed;
+  bottom: 1rem;
+  right: 1.5rem;
+  display: none;
+  cursor: pointer;
+  z-index: 100000;
+  i {
+    @include transition(all ease-in-out .26s);
+    @extend .grey-text, .text-lighten-1;
+    line-height: 32px;
+  }
+  &:hover {
+    border-color: color('grey', 'darken-1');
+    i {
+      @extend .grey-text, .text-darken-1;
+    }
+  }
+}
+.scrollToLink {
+  @include transition(all ease-in-out .26s);
+  @extend .grey-text;
+  text-transform: uppercase;
+  border-radius: 2px;
+  border: 2px solid color('grey', 'base');
+  display: inline-block;
+  padding: .8rem 1rem .8rem .7rem;
+  margin: 1rem 0;
+  i {
+    vertical-align: middle;
+    margin-right: .4rem;
+  }
+  &:hover {
+    @extend .grey-text, .text-darken-1;
+    border-color: color('grey', 'darken-1');
+  }
+
+}
+
