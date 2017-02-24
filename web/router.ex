@@ -88,6 +88,7 @@ defmodule Ask.Router do
   post "/callbacks/:provider", Ask.CallbackController, :callback
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback
   post "/callbacks/:provider/*path", Ask.CallbackController, :callback
+  get "/mobile_survey", Ask.MobileSurveyController, :index
 
   scope "/", Ask do
     pipe_through :browser
@@ -98,7 +99,6 @@ defmodule Ask.Router do
     get "/registrations/confirmation_sent", Coherence.RegistrationController, :confirmation_sent
     get "/registrations/confirmation_expired", Coherence.RegistrationController, :confirmation_expired
     get "/passwords/password_recovery_sent", Coherence.PasswordController, :password_recovery_sent
-    get "/mobile_survey", MobileSurveyController, :index
     get "/*path", PageController, :index
   end
 end
