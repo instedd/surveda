@@ -289,6 +289,17 @@ describe('questionnaire reducer', () => {
       expect(step.prompt['en'].ivr).toEqual({text: 'New prompt', audioSource: 'tts'})
     })
 
+    it('should update step prompt mobileWeb', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptMobileWeb('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  New prompt  ')]
+      )
+
+      const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      expect(step.prompt['en'].mobileWeb).toEqual('New prompt')
+    })
+
     it('should update step store', () => {
       const preState = playActions([
         actions.fetch(1, 1),
@@ -388,6 +399,7 @@ describe('questionnaire reducer', () => {
           'MB',
           '3'
         ])
+        expect(step.choices[1].responses.mobileWeb['en']).toEqual('M')
       })
 
       it('should autocomplete choice sms values', () => {
@@ -523,6 +535,18 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should validate mobileWeb message must not be blank if mobileWeb mode is on', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileWeb')
+      ])
+
+      expect(resultState.errors).toInclude({
+        [`steps[0].prompt['en'].mobileWeb`]: ['Mobile web prompt must not be blank']
+      })
+    })
+
     it('should include an error error if SMS prompt exceeds the character limit', () => {
       const smsPropmpt = new Array(200).join('a')
 
@@ -633,6 +657,19 @@ describe('questionnaire reducer', () => {
         [`steps[1].choices[0]['fr'].sms`]: ['SMS must not be blank']
       })
     })
+
+    // it("should validate a response's Mobile Web must not be blank if Mobile Web mode is on", () => {
+    //   const resultState = playActions([
+    //     actions.fetch(1, 1),
+    //     actions.receive(questionnaire),
+    //     actions.toggleMode('mobileWeb'),
+    //     actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', '', '', null)
+    //   ])
+    //
+    //   expect(resultState.errors).toInclude({
+    //     [`steps[1].choices[0]['en'].mobileWeb`]: ['Mobile web must not be blank']
+    //   })
+    // })
 
     it("should validate a response's Phone call must not be blank if Voice mode is on", () => {
       const resultState = playActions([
@@ -857,6 +894,21 @@ describe('questionnaire reducer', () => {
       expect(finalLanguageSelection.prompt.sms).toEqual('New language prompt')
     })
 
+    it('should allow edition of mobile web message for language selection step', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('fr')
+      ])
+
+      const languageSelection = state.data.steps[0]
+      const finalResultState = playActionsFromState(state, reducer)([
+        actions.changeStepPromptMobileWeb(languageSelection.id, 'New language prompt')
+      ])
+      const finalLanguageSelection = finalResultState.data.steps[0]
+      expect(finalLanguageSelection.prompt.mobileWeb).toEqual('New language prompt')
+    })
+
     it('should update step prompt ivr on a new step', () => {
       const state = playActions([
         actions.fetch(1, 1),
@@ -874,6 +926,25 @@ describe('questionnaire reducer', () => {
 
       const step = find(finalState.data.steps, s => s.id === newStep.id)
       expect(step.prompt['es'].ivr).toEqual({text: 'Nuevo prompt', audioSource: 'tts'})
+    })
+
+    it('should update step prompt mobile web on a new step', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es'),
+        actions.addStep()
+      ])
+
+      const newStep = state.data.steps[state.data.steps.length - 1]
+
+      const finalState = playActionsFromState(state, reducer)([
+        actions.changeStepPromptMobileWeb(newStep.id, 'nuevo prompt')
+      ])
+
+      const step = find(finalState.data.steps, s => s.id === newStep.id)
+      expect(step.prompt['es'].mobileWeb).toEqual('nuevo prompt')
     })
 
     it('should update step audioId ivr on a new step', () => {
@@ -1323,6 +1394,18 @@ describe('questionnaire reducer', () => {
 
       expect(state.data.quotaCompletedMsg['en']['sms']).toEqual(smsText.trim())
       expect(state.data.quotaCompletedMsg['en']['ivr']).toEqual({text: 'Thank you very much', audioSource: 'tts'})
+    })
+
+    it('should set quota_completed_msg for mobile web', () => {
+      const mobileWebText = 'Thanks for participating in the poll'
+
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setMobileWebQuestionnaireMsg('quotaCompletedMsg', mobileWebText)
+      ])
+
+      expect(state.data.quotaCompletedMsg['en']['mobileWeb']).toEqual(mobileWebText)
     })
 
     it('should not modify other mode quota message', () => {
