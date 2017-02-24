@@ -77,7 +77,7 @@ export class Autocomplete extends Component {
       },
       dropdown: {
         el: dropdown,
-        itemTemplate: '<li class="ac-item black-text" data-id="<%= item.id %>" data-text=\'<%= item.text %>\'><%= item.text %></li>'
+        itemTemplate: '<li class="ac-item black-text" data-id="<%= item.id %>" data-text=\'<%= $("<div/>").text(item.text).html() %>\'><%= $("<div/>").text(item.text).html() %></li>'
       },
       onSelect: (item) => {
         this.clickingAutocomplete = false
