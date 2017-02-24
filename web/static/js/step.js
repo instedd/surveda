@@ -56,6 +56,10 @@ export function getPromptSms(prompt: ?Prompt, language: string): string {
   return (((prompt || {})[language] || {}).sms || '').trim()
 }
 
+export function getPromptMobileWeb(prompt: ?Prompt, language: string): string {
+  return (((prompt || {})[language] || {}).mobileWeb || '').trim()
+}
+
 export function getPromptIvr(prompt: ?Prompt, language: string): AudioPrompt {
   return ((prompt || {})[language] || {}).ivr || {audioSource: 'tts', text: ''}
 }

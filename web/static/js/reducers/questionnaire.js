@@ -27,6 +27,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
     case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
+    case actions.SET_MOBILE_WEB_QUESTIONNAIRE_MSG: return setMobileWebQuestionnaireMsg(state, action)
     case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
     case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
@@ -646,6 +647,10 @@ const setIvrQuestionnaireMsg = (state, action) => {
 
 const setSmsQuestionnaireMsg = (state, action) => {
   return setQuestionnaireMsg(state, action, 'sms')
+}
+
+const setMobileWebQuestionnaireMsg = (state, action) => {
+  return setQuestionnaireMsg(state, action, 'mobileWeb')
 }
 
 const autocompleteSmsQuestionnaireMsg = (state, action) => {
