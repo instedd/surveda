@@ -3,6 +3,8 @@ defmodule Ask.SurveyControllerTest do
   use Ask.TestHelpers
 
   alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
+  alias Ask.Runtime.{Flow, Session}
+  alias Ask.Runtime.Session.ModeInfo
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -800,30 +802,60 @@ defmodule Ask.SurveyControllerTest do
 
   test "stops survey", %{conn: conn, user: user} do
     project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, state: "running")
 
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    group = create_group(survey, channel)
+
     insert_list(10, :respondent, survey: survey, state: "pending")
-    insert_list(5, :respondent, survey: survey, state: "active", session: "{'asd': 123}")
+    r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
     insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+
+    channel_state = %{"call_id" => 123}
+    session = %Session{
+      current_mode: ModeInfo.new("sms", channel, []),
+      channel_state: channel_state,
+      respondent: r1,
+      flow: %Flow{questionnaire: questionnaire},
+    }
+    session = Session.dump(session)
+    r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "cancelled"
 
-    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 8
+    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
+    assert_receive [:cancel_message, ^test_channel, ^channel_state]
   end
-
 
   test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
     project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
     survey  = insert(:survey, project: project, state: "running")
     survey2 = insert(:survey, project: project, state: "running")
 
-    insert_list(5, :respondent, survey: survey, state: "active", session: "{'asd': 123}")
-    insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
-    insert_list(4, :respondent, survey: survey2, state: "active", session: "{'asd': 1234}")
+    test_channel = TestChannel.new(false)
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    group = create_group(survey, channel)
+
+    r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
+    insert_list(3, :respondent, survey: survey, state: "stalled", respondent_group: group, timeout_at: Timex.now)
+    insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
     insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
+
+    channel_state = %{"call_id" => 123}
+    session = %Session{
+      current_mode: ModeInfo.new("sms", channel, []),
+      channel_state: channel_state,
+      respondent: r1,
+      flow: %Flow{questionnaire: questionnaire},
+    }
+    session = Session.dump(session)
+    r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
@@ -831,6 +863,7 @@ defmodule Ask.SurveyControllerTest do
     assert Repo.get(Survey, survey2.id).state == "running"
 
     assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
+    assert_receive [:cancel_message, ^test_channel, ^channel_state]
   end
 
   def prepare_for_state_update(user) do

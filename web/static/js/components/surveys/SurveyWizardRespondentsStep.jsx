@@ -24,7 +24,7 @@ class SurveyWizardRespondentsStep extends Component {
     if (files.length > 0) actions.uploadRespondentGroup(survey.projectId, survey.id, files)
   }
 
-  removeRespondents(event, groupId) {
+  removeRespondents(groupId) {
     const { survey, actions } = this.props
     actions.removeRespondentGroup(survey.projectId, survey.id, groupId)
   }
@@ -81,7 +81,7 @@ class SurveyWizardRespondentsStep extends Component {
         header='Please confirm that you want to delete the respondents list'
         confirmationText='DELETE THE RESPONDENTS LIST'
         style={{maxWidth: '600px'}} showCancel
-        onConfirm={e => this.removeRespondents(e, group.id)} />
+        onConfirm={() => this.removeRespondents(group.id)} />
     }
 
     return (
@@ -117,7 +117,7 @@ class SurveyWizardRespondentsStep extends Component {
       <RespondentsContainer>
         {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly))}
 
-        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '600px'}} />
+        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' style={{maxWidth: '600px'}} />
         {invalidRespondentsCard || respondentsDropzone}
       </RespondentsContainer>
     )

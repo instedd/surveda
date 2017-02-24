@@ -14,7 +14,7 @@ const App = ({ children, tabs, body }) => (
         {body || children}
         <Footer />
       </main>
-      <ConfirmationModal modalId='unhandledError' modalText='Please go to the home page' header='Sorry, something went wrong' confirmationText='Click to go to the home page' onConfirm={(event) => onConfirm(event)} />
+      <ConfirmationModal modalId='unhandledError' modalText='Please go to the home page' header='Sorry, something went wrong' confirmationText='Click to go to the home page' onConfirm={() => onConfirm()} />
     </div>
   </IntlProvider>
 )
@@ -25,8 +25,7 @@ App.propTypes = {
   body: PropTypes.node
 }
 
-const onConfirm = (event) => {
-  event.preventDefault()
+const onConfirm = () => {
   window.location.href = '/'
 }
 

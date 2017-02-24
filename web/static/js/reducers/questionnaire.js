@@ -675,7 +675,7 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
 
   // First default language
   let langPrompt = msg[lang] || {}
-  let ivr = langPrompt.ivr || {}
+  let ivr = langPrompt.ivr || newIvrPrompt()
   msg[lang] = {
     ...langPrompt,
     ivr: {

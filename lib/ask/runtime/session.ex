@@ -225,6 +225,11 @@ defmodule Ask.Runtime.Session do
     }
   end
 
+  def cancel(session) do
+    Ask.Channel.runtime_channel(session.current_mode.channel)
+    |> Channel.cancel_message(session.channel_state)
+  end
+
   def load(state) do
     %Session{
       current_mode: ModeInfo.load(state["current_mode"]),

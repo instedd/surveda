@@ -1089,7 +1089,9 @@ describe('questionnaire reducer', () => {
 
     const prompt = state.data.questionnaireMsg
     expect(prompt['en'].ivr.text).toEqual('New prompt')
+    expect(prompt['en'].ivr.audioSource).toEqual('tts')
     expect(prompt['es'].ivr.text).toEqual('Nuevo prompt')
+    expect(prompt['es'].ivr.audioSource).toEqual('tts')
   })
 
   describe('helpers', () => {

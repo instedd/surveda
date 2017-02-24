@@ -205,5 +205,6 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
 
     def has_queued_message?(_, _), do: false
+    def cancel_message(_, _), do: :ok
   end
 end
