@@ -65,7 +65,7 @@ defmodule Ask.Runtime.Flow do
     length(flow.questionnaire.steps)
   end
 
-  defp accept_reply(flow = %Flow{current_step: nil}, :answer) do
+  defp accept_reply(%Flow{current_step: nil} = flow, :answer) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}}
   end

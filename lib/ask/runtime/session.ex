@@ -51,7 +51,7 @@ defmodule Ask.Runtime.Session do
     @default_fallback_delay
   end
 
-  defp run_flow(session = %Session{flow: flow, respondent: respondent, current_mode: %ModeInfo{channel: channel, mode: mode}}) do
+  defp run_flow(%Session{flow: flow, respondent: respondent, current_mode: %ModeInfo{channel: channel, mode: mode}} = session) do
     token = Ecto.UUID.generate
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
@@ -100,7 +100,7 @@ defmodule Ask.Runtime.Session do
 
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
-  def timeout(session = %Session{current_mode: %{retries: [], mode: mode}, fallback_mode: nil}) do
+  def timeout(%Session{current_mode: %{retries: [], mode: mode}, fallback_mode: nil} = session) do
     case mode do
       "sms" -> {:stalled, session |> clear_token}
       "ivr" -> :failed
@@ -108,16 +108,16 @@ defmodule Ask.Runtime.Session do
   end
 
   # If there is a fallback specified, switch session to use it
-  def timeout(session = %Session{current_mode: %{retries: []}}), do: switch_to_fallback(session |> clear_token)
+  def timeout(%Session{current_mode: %{retries: []}} = session), do: switch_to_fallback(session |> clear_token)
 
   #if we have a last timeout, use it to fallback
   # TODO: this should use fallback_delay
-  def timeout(session = %Session{current_mode: %{retries: [_]}, fallback_mode: fallback}) when not is_nil(fallback) do
+  def timeout(%Session{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
     switch_to_fallback(session |> clear_token)
   end
 
   # Let's try again
-  def timeout(session = %Session{current_mode: %{retries: [_ | retries], mode: mode}, channel_state: channel_state}) do
+  def timeout(%Session{current_mode: %{retries: [_ | retries], mode: mode}, channel_state: channel_state} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     # First, check if there's already a queued message in the channel, to

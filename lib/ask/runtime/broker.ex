@@ -173,11 +173,11 @@ defmodule Ask.Runtime.Broker do
     handle_session_step(respondent, Session.start(questionnaire, respondent, primary_channel, primary_mode, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
   end
 
-  defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do
+  defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
     {hd(survey.questionnaires), hd(survey.mode)}
   end
 
-  defp select_questionnaire_and_mode(survey = %Survey{comparisons: comparisons}) do
+  defp select_questionnaire_and_mode(%Survey{comparisons: comparisons} = survey) do
     # Get a random value between 0 and 100
     rand = :rand.uniform() * 100
 

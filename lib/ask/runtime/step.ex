@@ -7,7 +7,7 @@ defmodule Ask.Runtime.Step do
     !((min_value && value < min_value) || (max_value && value > max_value))
   end
 
-  def has_refusal_option(%{"refusal" => refusal = %{"enabled" => true}}, reply, mode, language, default_language) do
+  def has_refusal_option(%{"refusal" => %{"enabled" => true} = refusal}, reply, mode, language, default_language) do
     fetch(:response, refusal, mode, language, default_language)
     |> Enum.any?(fn r -> (r |> clean_string) == reply end)
   end
