@@ -126,5 +126,4 @@ defmodule Ask.Runtime.Step do
       :error     -> false
     end
   end
-
 end

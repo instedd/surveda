@@ -2,7 +2,7 @@ defmodule Ask.Runtime.Flow do
   defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0
   alias Ask.{Repo, Questionnaire}
   alias Ask.Runtime.{Reply, Step}
-  alias Ask.Runtime.Flow.{Visitor, TextVisitor}
+  alias Ask.Runtime.Flow.Visitor
   alias __MODULE__
 
   @max_retries 2
@@ -11,14 +11,14 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language}
   end
 
-  def step(flow, reply \\ :answer) do
+  def step(flow, visitor, reply \\ :answer) do
     flow
-    |> accept_reply(reply, TextVisitor.new(flow.mode))
+    |> accept_reply(reply, visitor)
     |> eval
   end
 
-  def retry(flow) do
-    {flow, %Reply{}, TextVisitor.new(flow.mode)} |> eval
+  def retry(flow, visitor) do
+    {flow, %Reply{}, visitor} |> eval
   end
 
   def dump(flow) do

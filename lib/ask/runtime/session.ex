@@ -3,6 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
+  alias Ask.Runtime.Flow.TextVisitor
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results]
 
   defmodule ModeInfo do
@@ -60,7 +61,7 @@ defmodule Ask.Runtime.Session do
 
     {flow, reply} = case mode do
       "sms" ->
-        case flow |> Flow.step do
+        case flow |> Flow.step(TextVisitor.new("sms")) do
           {:end, reply} ->
             if Reply.prompts(reply) != [] do
               runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
@@ -129,7 +130,7 @@ defmodule Ask.Runtime.Session do
       channel_state =
         case mode do
           "sms" ->
-            {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
+            {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow, TextVisitor.new("sms"))
             runtime_channel |> Channel.ask(session.respondent, token, prompts)
             channel_state
 
@@ -166,7 +167,7 @@ defmodule Ask.Runtime.Session do
   end
 
   def sync_step(session, reply) do
-    step_answer = Flow.step(session.flow, reply)
+    step_answer = Flow.step(session.flow, TextVisitor.new(session.current_mode.mode), reply)
 
     respondent = session.respondent
     survey = (respondent |> Repo.preload(:survey)).survey
