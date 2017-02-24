@@ -11,7 +11,9 @@ defmodule Ask.MobileSurveyController do
     #   {path, nil} ->
     #     conn |> redirect(to: "#{session_path(conn, :new)}?redirect=/#{Enum.join path, "/"}")
     #   _ ->
-    conn |> render("index.html", user: nil)
+    conn
+    |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+    |> render("index.html", user: nil)
     # end
   end
 end
