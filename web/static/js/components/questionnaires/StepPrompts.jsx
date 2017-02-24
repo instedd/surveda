@@ -199,10 +199,12 @@ class StepPrompts extends Component {
 
     let mobileWebInput = null
     if (mobileWeb) {
+      let mobileWebInputErrors = errors[promptTextPath(stepIndex, 'mobileWeb', activeLanguage)]
       mobileWebInput = <MobileWebPrompt id='step_editor_mobile_web_prompt'
         key={`${questionnaire.activeLanguage}-mobile-web-prompt`}
         value={this.state.stepPromptMobileWeb}
         originalValue={this.state.mobileWebOriginalValue}
+        inputErrors={mobileWebInputErrors}
         readOnly={readOnly}
         onChange={text => this.stepPromptMobileWebChange(text)}
         onBlur={text => this.stepPromptMobileWebSubmit(text)}

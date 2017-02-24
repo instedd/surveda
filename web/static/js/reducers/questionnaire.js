@@ -10,9 +10,9 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  getPromptSms, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal, splitSmsText } from '../step'
-import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
+import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 import * as characterCounter from '../characterCounter'
 
@@ -795,6 +795,7 @@ const validate = (state: DataStore<Questionnaire>) => {
   const context = {
     sms: data.modes.indexOf('sms') != -1,
     ivr: data.modes.indexOf('ivr') != -1,
+    mobileWeb: data.modes.indexOf('mobileWeb') != -1,
     activeLanguage: data.activeLanguage,
     languages: data.languages,
     errors: state.errors
@@ -844,6 +845,12 @@ const validateSmsLangPrompt = (step: Step, stepIndex: number, context: Validatio
   }
 }
 
+const validateMobileWebLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
+  if (getStepPromptMobileWeb(step, lang).length == 0) {
+    addError(context, promptTextPath(stepIndex, 'mobileWeb', lang), 'Mobile web prompt must not be blank')
+  }
+}
+
 const validateIvrLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
   let ivr = getStepPromptIvr(step, lang)
   if (isBlank(ivr.text)) {
@@ -890,6 +897,10 @@ const validateExplanationStep = (step, stepIndex, context, steps) => {
 const validatePrompts = (step, stepIndex, context) => {
   if (context.sms) {
     context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
+  }
+
+  if (context.mobileWeb) {
+    context.languages.forEach(lang => validateMobileWebLangPrompt(step, stepIndex, context, lang))
   }
 
   if (context.ivr) {
@@ -998,6 +1009,14 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
   }
 }
 
+const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
+  if (choice.responses.mobileWeb &&
+      choice.responses.mobileWeb[lang] &&
+      choice.responses.mobileWeb[lang].length == 0) {
+    addError(context, choiceMobileWebResponsePath(stepIndex, choiceIndex, lang), 'Mobile web must not be blank')
+  }
+}
+
 const validateChoiceIvrResponse = (choice, context, stepIndex: number, choiceIndex: number) => {
   if (choice.responses.ivr &&
       choice.responses.ivr.length == 0) {
@@ -1017,6 +1036,10 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
 
   if (context.sms) {
     context.languages.forEach(lang => validateChoiceSmsResponse(choice, context, stepIndex, choiceIndex, lang))
+  }
+
+  if (context.mobileWeb) {
+    context.languages.forEach(lang => validateChoiceMobileWebResponse(choice, context, stepIndex, choiceIndex, lang))
   }
 
   if (context.ivr) {
