@@ -77,7 +77,13 @@ export class Autocomplete extends Component {
       },
       dropdown: {
         el: dropdown,
-        itemTemplate: '<li class="ac-item black-text" data-id="<%= item.id %>" data-text=\'<%= $("<div/>").text(item.text).html() %>\'><%= $("<div/>").text(item.text).html() %></li>'
+        // We replace \u001E with <br/> so messages split into several pieces
+        // are shown in separate lines. Maybe this Autocomplete component shouldn't
+        // be aware of this detail, but this unicode character shouldn't appear
+        // in texts other than because of splitted message, so this is safe
+        // and much easier than escaping it everywhere (plus it's hard to do because
+        // a newline will show as a blank space, but here we want a <br/>)
+        itemTemplate: '<li class="ac-item black-text" data-id="<%= item.id %>" data-text=\'<%= $("<div/>").text(item.text).html() %>\'><%= $("<div/>").text(item.text).html().replace("\u001E", "<br/>") %></li>'
       },
       onSelect: (item) => {
         this.clickingAutocomplete = false
