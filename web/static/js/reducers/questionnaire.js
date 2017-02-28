@@ -1010,9 +1010,7 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
 }
 
 const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
-  if (choice.responses.mobileWeb &&
-      choice.responses.mobileWeb[lang] &&
-      choice.responses.mobileWeb[lang].length == 0) {
+  if (choice.responses.mobileWeb && !choice.responses.mobileWeb[lang]) {
     addError(context, choiceMobileWebResponsePath(stepIndex, choiceIndex, lang), 'Mobile web must not be blank')
   }
 }

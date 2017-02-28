@@ -4,7 +4,7 @@ import { UntitledIfEmpty, Tooltip, Autocomplete } from '../ui'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined, getChoiceResponseMobileWebJoined } from '../../step'
-import { choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath } from '../../questionnaireErrors'
+import { choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, choiceMobileWebResponsePath } from '../../questionnaireErrors'
 
 type Props = {
   onDelete: Function,
@@ -275,6 +275,7 @@ class ChoiceEditor extends Component {
       let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : []
       let smsErrors = errors[choiceSmsResponsePath(stepIndex, choiceIndex, lang)]
       let ivrErrors = errors[choiceIvrResponsePath(stepIndex, choiceIndex)]
+      let mobileWebErrors = errors[choiceMobileWebResponsePath(stepIndex, choiceIndex, lang)]
 
       return (
         <tr>
@@ -284,7 +285,7 @@ class ChoiceEditor extends Component {
           }
           {this.cell(this.state.sms, 'No SMS', smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
           {this.cell(this.state.ivr, 'No IVR', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
-          {this.cell(this.state.mobileWeb, 'No MOBILE WEB', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
+          {this.cell(this.state.mobileWeb, 'No MOBILE WEB', mobileWebErrors, mobileWeb, e => this.enterEditMode(e, 'mobileWeb'))}
           {skipLogicInput}
           { readOnly || isRefusal ? <td />
             : <td>

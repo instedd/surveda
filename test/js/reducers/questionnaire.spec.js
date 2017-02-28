@@ -658,18 +658,18 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    // it("should validate a response's Mobile Web must not be blank if Mobile Web mode is on", () => {
-    //   const resultState = playActions([
-    //     actions.fetch(1, 1),
-    //     actions.receive(questionnaire),
-    //     actions.toggleMode('mobileWeb'),
-    //     actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', '', '', null)
-    //   ])
-    //
-    //   expect(resultState.errors).toInclude({
-    //     [`steps[1].choices[0]['en'].mobileWeb`]: ['Mobile web must not be blank']
-    //   })
-    // })
+    it("should validate a response's Mobile Web must not be blank if Mobile Web mode is on", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileWeb'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', '', '', null)
+      ])
+
+      expect(resultState.errors).toInclude({
+        [`steps[0].choices[0]['en'].mobileWeb`]: ['Mobile web must not be blank']
+      })
+    })
 
     it("should validate a response's Phone call must not be blank if Voice mode is on", () => {
       const resultState = playActions([
