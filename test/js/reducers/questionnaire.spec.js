@@ -836,6 +836,18 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should validate quota completed message Mobile Web prompt must not be blank if Mobile Web mode is on', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileWeb')
+      ])
+
+      expect(state.errorsByLang['en']).toInclude({
+        [`quotaCompletedMsg.prompt['en'].mobileWeb`]: ['Mobile web prompt must not be blank']
+      })
+    })
+
     it('should validate quota completed message IVR prompt must not be blank if IVR mode is on', () => {
       const state = playActions([
         actions.fetch(1, 1),

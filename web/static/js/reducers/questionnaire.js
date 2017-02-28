@@ -10,7 +10,7 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal, splitSmsText } from '../step'
 import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
@@ -814,6 +814,14 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
     context.languages.forEach(lang => {
       if (getPromptSms(msg, lang).length == 0) {
         addError(context, msgPromptTextPath(msgKey, 'sms', lang), 'SMS prompt must not be blank')
+      }
+    })
+  }
+
+  if (context.mobileWeb) {
+    context.languages.forEach(lang => {
+      if (getPromptMobileWeb(msg, lang).length == 0) {
+        addError(context, msgPromptTextPath(msgKey, 'mobileWeb', lang), 'Mobile web prompt must not be blank')
       }
     })
   }

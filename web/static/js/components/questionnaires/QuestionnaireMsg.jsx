@@ -321,8 +321,10 @@ class QuestionnaireMsg extends Component {
       let mobileWebInput = null
 
       if (mobileWeb) {
+        let mobileWebInputErrors = errors[msgPromptTextPath(messageKey, 'mobileWeb', questionnaire.activeLanguage)]
         mobileWebInput = <MobileWebPrompt id={`${decamelize(messageKey, '-')}-mobile-web`}
           value={quizState.stepPromptMobileWeb}
+          inputErrors={mobileWebInputErrors}
           originalValue={quizState.mobileWebOriginalValue}
           onChange={e => this.promptMobileWebChange(e)}
           readOnly={readOnly}

@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import { InputWithLabel } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import classNames from 'classnames/bind'
-// import classNames from 'classnames/bind'
 
 class MobileWebPrompt extends Component {
   state: State
