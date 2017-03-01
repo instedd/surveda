@@ -308,6 +308,7 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
     insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
     insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+    insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
     conn = get conn, project_survey_respondents_incentives_csv_path(conn, :incentives_csv, survey.project.id, survey.id)
     csv = response(conn, 200)

@@ -378,7 +378,7 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     csv_rows = (from r in Respondent,
-      where: r.survey_id == ^survey.id and r.disposition == "completed")
+      where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id))
     |> preload(:questionnaire)
     |> Repo.stream
     |> Stream.map(fn r ->
