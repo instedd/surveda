@@ -181,8 +181,6 @@ defmodule Ask.Runtime.Session do
           false ->
             {:ok, %{session | flow: flow, respondent: respondent}, reply, session.fallback_delay}
         end
-      _ ->
-        step_answer
     end
   end
 
