@@ -10,7 +10,7 @@ defmodule Ask.Runtime.Session do
   @default_fallback_delay 10
 
   def start(questionnaire, respondent, channel, mode, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
-    flow = Flow.start(questionnaire, channel.type)
+    flow = Flow.start(questionnaire, mode)
     session = %Session{
       current_mode: SessionModeProvider.new(mode, channel, retries),
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
@@ -74,10 +74,10 @@ defmodule Ask.Runtime.Session do
 
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
-  def timeout(%{current_mode: %{retries: [], mode: mode}, fallback_mode: nil} = session) do
-    case mode do
-      "sms" -> {:stalled, session |> clear_token}
-      "ivr" -> :failed
+  def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session) do
+    case session.current_mode do
+      %SMSMode{} -> {:stalled, session |> clear_token}
+      %IVRMode{} -> :failed
     end
   end
 
@@ -91,7 +91,7 @@ defmodule Ask.Runtime.Session do
   end
 
   # Let's try again
-  def timeout(%{current_mode: %{retries: [_ | retries], mode: mode}, channel_state: channel_state} = session) do
+  def timeout(%{current_mode: %{retries: [_ | retries]}, channel_state: channel_state} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     # First, check if there's already a queued message in the channel, to
@@ -101,13 +101,13 @@ defmodule Ask.Runtime.Session do
     else
       token = Ecto.UUID.generate
       channel_state =
-        case mode do
-          "sms" ->
+        case session.current_mode do
+          %SMSMode{} ->
             {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow, TextVisitor.new("sms"))
             runtime_channel |> Channel.ask(session.respondent, token, prompts)
             channel_state
 
-          "ivr" ->
+          %IVRMode{} ->
             setup_response = runtime_channel |> Channel.setup(session.respondent, token)
             handle_setup_response(setup_response)
         end
@@ -134,13 +134,13 @@ defmodule Ask.Runtime.Session do
       channel_state: nil,
       flow: %{
         session.flow |
-        mode: session.fallback_mode |> SessionModeProvider.mode
+        mode: session.fallback_mode |> SessionMode.mode
       }
     })
   end
 
   def sync_step(session, reply) do
-    step_answer = Flow.step(session.flow, session.current_mode |> SessionModeProvider.visitor, reply)
+    step_answer = Flow.step(session.flow, session.current_mode |> SessionMode.visitor, reply)
 
     respondent = session.respondent
     survey = (respondent |> Repo.preload(:survey)).survey
@@ -188,8 +188,8 @@ defmodule Ask.Runtime.Session do
 
   def dump(session) do
     %{
-      current_mode: session.current_mode |> SessionMode.dump,
-      fallback_mode: session.fallback_mode |> SessionMode.dump,
+      current_mode: session.current_mode |> SessionModeProvider.dump,
+      fallback_mode: session.fallback_mode |> SessionModeProvider.dump,
       flow: session.flow |> Flow.dump,
       respondent_id: session.respondent.id,
       token: session.token,
