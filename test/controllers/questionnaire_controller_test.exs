@@ -357,15 +357,15 @@ defmodule Ask.QuestionnaireControllerTest do
 
       translations = Translation
       |> Repo.all
-      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.map(&{&1.mode, &1.scope, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
       |> Enum.sort
 
       expected = [
-        {"sms", "en", "EN 1", "es", "ES 1"},
-        {"ivr", "en", "EN 2", "fr", "FR 2"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
-        {"sms", "en", "EN 5", "es", "ES 5"},
-        {"ivr", "en", "EN 6", "fr", "FR 6"},
+        {"sms", "prompt", "en", "EN 1", "es", "ES 1"},
+        {"ivr", "prompt", "en", "EN 2", "fr", "FR 2"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "quota_completed", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "quota_completed", "en", "EN 6", "fr", "FR 6"},
       ] |> Enum.sort
 
       assert translations == expected
@@ -407,17 +407,17 @@ defmodule Ask.QuestionnaireControllerTest do
 
       translations = Translation
       |> Repo.all
-      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.map(&{&1.mode, &1.scope, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
       |> Enum.sort
 
       expected = [
-        {"sms", "en", "EN 1", nil, nil},
-        {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 10"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
-        {"sms", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
-        {"sms", "en", "EN 5", "es", "ES 5"},
-        {"ivr", "en", "EN 6", "fr", "FR 6"},
+        {"sms", "prompt", "en", "EN 1", nil, nil},
+        {"ivr", "prompt", "en", "EN 2", "fr", "FR 2 (NEW)"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 10"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "response", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
+        {"sms", "quota_completed", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "quota_completed", "en", "EN 6", "fr", "FR 6"},
       ] |> Enum.sort
 
       assert translations == expected
@@ -459,17 +459,17 @@ defmodule Ask.QuestionnaireControllerTest do
 
       translations = Translation
       |> Repo.all
-      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.map(&{&1.mode, &1.scope, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
       |> Enum.sort
 
       expected = [
-        {"sms", "en", "EN 1", nil, nil},
-        {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 9"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
-        {"sms", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
-        {"sms", "en", "EN 5", "es", "ES 5"},
-        {"ivr", "en", "EN 6", "fr", "FR 6"},
+        {"sms", "prompt", "en", "EN 1", nil, nil},
+        {"ivr", "prompt", "en", "EN 2", "fr", "FR 2 (NEW)"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 9"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "response", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
+        {"sms", "quota_completed", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "quota_completed", "en", "EN 6", "fr", "FR 6"},
       ] |> Enum.sort
 
       assert translations == expected
