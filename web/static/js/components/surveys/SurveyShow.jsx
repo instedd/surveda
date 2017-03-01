@@ -50,10 +50,9 @@ class SurveyShow extends Component {
   }
 
   stopSurvey() {
-    const { dispatch, projectId, surveyId, router } = this.props
+    const { projectId, surveyId, router } = this.props
     stopSurvey(projectId, surveyId)
-      .then(survey => dispatch(actions.receive(survey)))
-      .then(() => router.push(routes.survey(projectId, surveyId)))
+      .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
   }
 
   iconForMode(mode) {

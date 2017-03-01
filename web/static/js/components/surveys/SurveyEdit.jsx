@@ -39,7 +39,7 @@ class SurveyEdit extends Component {
 
   componentDidUpdate() {
     const { survey, router } = this.props
-    if (survey && survey.state === 'running') {
+    if (survey && survey.state && survey.state != 'not_ready' && survey.state != 'ready') {
       router.replace(routes.survey(survey.projectId, survey.id))
     }
   }
