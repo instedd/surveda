@@ -171,9 +171,10 @@ class QuestionnaireMsg extends Component {
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
+    const scope = messageKey == 'quotaCompletedMsg' ? 'quota_completed' : 'error'
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, defaultLanguage, value)
+      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, scope, defaultLanguage, value)
       .then(response => {
         const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
         this.autocompleteItems = items
@@ -190,7 +191,7 @@ class QuestionnaireMsg extends Component {
       }
       if (promptValue.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, mode, defaultLanguage, activeLanguage, promptValue, value)
+      api.autocompleteOtherLanguage(questionnaire.projectId, mode, scope, defaultLanguage, activeLanguage, promptValue, value)
       .then(response => {
         const items = response.map(r => ({id: r, text: r}))
         this.autocompleteItems = items

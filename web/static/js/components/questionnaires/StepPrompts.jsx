@@ -94,7 +94,7 @@ class StepPrompts extends Component {
     const activeLanguage = questionnaire.activeLanguage
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, defaultLanguage, value)
+      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, 'prompt', defaultLanguage, value)
       .then(response => {
         const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
         this.autocompleteItems = items
@@ -109,7 +109,7 @@ class StepPrompts extends Component {
       }
       if (promptValue.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, mode, defaultLanguage, activeLanguage, promptValue, value)
+      api.autocompleteOtherLanguage(questionnaire.projectId, mode, 'prompt', defaultLanguage, activeLanguage, promptValue, value)
       .then(response => {
         const items = response.map(r => ({id: r, text: r}))
         this.autocompleteItems = items

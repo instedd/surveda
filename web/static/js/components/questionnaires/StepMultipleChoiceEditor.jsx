@@ -50,7 +50,7 @@ class StepMultipleChoiceEditor extends Component {
     const activeLanguage = questionnaire.activeLanguage
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', defaultLanguage, value)
+      api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', 'response', defaultLanguage, value)
       .then(response => {
         const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
         this.smsAutocompleteItems = items
@@ -60,7 +60,7 @@ class StepMultipleChoiceEditor extends Component {
       let sms = getChoiceResponseSmsJoined(choice, defaultLanguage)
       if (sms.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, 'sms', defaultLanguage, activeLanguage, sms, value)
+      api.autocompleteOtherLanguage(questionnaire.projectId, 'sms', 'response', defaultLanguage, activeLanguage, sms, value)
       .then(response => {
         const items = response.map(r => ({id: r, text: r}))
         this.smsAutocompleteItems = items

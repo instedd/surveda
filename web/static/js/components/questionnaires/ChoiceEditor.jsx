@@ -141,6 +141,13 @@ class ChoiceEditor extends Component {
     }
   }
 
+  smsCheckEmptyString(event: Event) {
+    // This is due to a materialize css bug. Analogous to SmsPrompt
+    if (!event.target.value) {
+      this.smsChange(event, '')
+    }
+  }
+
   skipLogicChange(skipOption: ?string) {
     const { onChoiceChange } = this.props
     this.setState({
@@ -221,6 +228,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
+              onKeyUp={e => this.smsCheckEmptyString(e)}
               onKeyDown={e => this.onKeyDown(e, 'ivr')} />
             <Autocomplete
               getInput={() => this.refs.smsInput}

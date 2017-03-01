@@ -5,6 +5,7 @@ defmodule Ask.Translation do
 
   schema "translations" do
     field :mode, :string
+    field :scope, :string
     field :source_lang, :string
     field :source_text, :string
     field :target_lang, :string
@@ -20,40 +21,40 @@ defmodule Ask.Translation do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:mode, :source_lang, :source_text, :target_lang, :target_text])
-    |> validate_required([:mode, :source_lang, :source_text, :target_lang, :target_text])
+    |> cast(params, [:mode, :scope, :source_lang, :source_text, :target_lang, :target_text])
+    |> validate_required([:mode, :scope, :source_lang, :source_text, :target_lang, :target_text])
   end
 
   def rebuild(questionnaire) do
     lang = questionnaire.default_language
 
     # First, collect questionnaire translations as
-    # {mode, source_lang, source_text, target_lang, target_text}
+    # {mode, scope, source_lang, source_text, target_lang, target_text}
     new_translations = questionnaire.steps
     |> Enum.flat_map(&collect_step_translations(lang, &1))
-    |> collect_prompt_entry_translations(lang, questionnaire.quota_completed_msg)
-    |> collect_prompt_entry_translations(lang, questionnaire.error_msg)
+    |> collect_prompt_entry_translations("quota_completed", lang, questionnaire.quota_completed_msg)
+    |> collect_prompt_entry_translations("error", lang, questionnaire.error_msg)
 
     # Also collect all source texts, so later we can know which ones
     # don't have a translation yet (so we can still use them for autocomplete)
     source_texts = questionnaire.steps
     |> Enum.flat_map(&collect_step_source_texts(lang, &1))
-    |> collect_prompt_entry_source_texts(lang, questionnaire.quota_completed_msg)
-    |> collect_prompt_entry_source_texts(lang, questionnaire.error_msg)
+    |> collect_prompt_entry_source_texts("quota_completed", lang, questionnaire.quota_completed_msg)
+    |> collect_prompt_entry_source_texts("error", lang, questionnaire.error_msg)
 
     # Only keep source texts that are not already in `new_translations`
     source_texts = source_texts
-    |> Enum.reject(fn {mode, text} ->
+    |> Enum.reject(fn {mode, scope, text} ->
       new_translations
-      |> Enum.any?(fn {other_mode, other_lang, other_text, _, _} ->
-        mode == other_mode && lang == other_lang && text == other_text
+      |> Enum.any?(fn {other_mode, other_scope, other_lang, other_text, _, _} ->
+        mode == other_mode && scope == other_scope && lang == other_lang && text == other_text
       end)
     end)
 
     # Now add these source texts as new translations, without a target language/text
     new_translations = source_texts
-    |> Enum.reduce(new_translations, fn {mode, text}, translations ->
-      [{mode, lang, text, nil, nil} | translations]
+    |> Enum.reduce(new_translations, fn {mode, scope, text}, translations ->
+      [{mode, scope, lang, text, nil, nil} | translations]
     end)
 
     # Next, collect existing translations
@@ -75,7 +76,7 @@ defmodule Ask.Translation do
     if single_update do
       hd(deletions)
       |> Translation.changeset(%{target_text: single_update})
-      |> Repo.update
+      |> Repo.update!
     else
       # Delete deletions
       deletions
@@ -86,16 +87,17 @@ defmodule Ask.Translation do
 
       # Insert additions
       additions
-      |> Enum.each(fn {mode, source_lang, source_text, target_lang, target_text} ->
+      |> Enum.each(fn {mode, scope, source_lang, source_text, target_lang, target_text} ->
         %Translation{
           project_id: questionnaire.project_id,
           questionnaire_id: questionnaire.id,
           mode: mode,
+          scope: scope,
           source_lang: source_lang,
           source_text: source_text,
           target_lang: target_lang,
           target_text: target_text,
-        } |> Repo.insert
+        } |> Repo.insert!
       end)
     end
   end
@@ -103,7 +105,7 @@ defmodule Ask.Translation do
   defp compute_additions(existing_translations, new_translations) do
     existing_translations = existing_translations
     |> Enum.map(fn a ->
-      {a.mode, a.source_lang, a.source_text, a.target_lang, a.target_text}
+      {a.mode, a.scope, a.source_lang, a.source_text, a.target_lang, a.target_text}
     end)
 
     new_translations
@@ -117,12 +119,12 @@ defmodule Ask.Translation do
     existing_translations
     |> Enum.reject(fn a ->
       new_translations |>
-      Enum.member?({a.mode, a.source_lang, a.source_text, a.target_lang, a.target_text})
+      Enum.member?({a.mode, a.scope, a.source_lang, a.source_text, a.target_lang, a.target_text})
     end)
   end
 
-  def single_update?([{mode, source_lang, source_text, target_lang, target_text}],
-    [%Translation{mode: mode, source_lang: source_lang, source_text: source_text,
+  def single_update?([{mode, scope, source_lang, source_text, target_lang, target_text}],
+    [%Translation{mode: mode, scope: scope, source_lang: source_lang, source_text: source_text,
     target_lang: target_lang}]) do
     target_text
   end
@@ -145,24 +147,24 @@ defmodule Ask.Translation do
     case step do
       %{"prompt" => prompt} ->
         translations
-        |> collect_prompt_entry_translations(lang, prompt)
+        |> collect_prompt_entry_translations("prompt", lang, prompt)
       _ ->
         translations
     end
   end
 
-  defp collect_prompt_entry_translations(translations, lang, prompt) do
+  defp collect_prompt_entry_translations(translations, scope, lang, prompt) do
     case prompt do
       %{^lang => lang_prompt} ->
         translations
-        |> collect_prompt_sms_translations(lang, prompt, lang_prompt)
-        |> collect_prompt_ivr_translations(lang, prompt, lang_prompt)
+        |> collect_prompt_sms_translations(scope, lang, prompt, lang_prompt)
+        |> collect_prompt_ivr_translations(scope, lang, prompt, lang_prompt)
       _ ->
         translations
     end
   end
 
-  defp collect_prompt_sms_translations(translations, lang, prompt, lang_prompt) do
+  defp collect_prompt_sms_translations(translations, scope, lang, prompt, lang_prompt) do
     case lang_prompt do
       %{"sms" => text} ->
         if text |> present? do
@@ -174,7 +176,7 @@ defmodule Ask.Translation do
                   if other_text |> String.strip |> String.length == 0 do
                     translations
                   else
-                    [{"sms", lang, text, other_lang, other_text} | translations]
+                    [{"sms", scope, lang, text, other_lang, other_text} | translations]
                   end
                 _ ->
                   translations
@@ -191,7 +193,7 @@ defmodule Ask.Translation do
     end
   end
 
-  defp collect_prompt_ivr_translations(translations, lang, prompt, lang_prompt) do
+  defp collect_prompt_ivr_translations(translations, scope, lang, prompt, lang_prompt) do
     case lang_prompt do
       %{"ivr" => %{"text" => text}} ->
         if text |> present? do
@@ -201,7 +203,7 @@ defmodule Ask.Translation do
               case other_prompt do
                 %{"ivr" => %{"text" => other_text}} ->
                   if other_text |> present? do
-                    [{"ivr", lang, text, other_lang, other_text} | translations]
+                    [{"ivr", scope, lang, text, other_lang, other_text} | translations]
                   else
                     translations
                   end
@@ -243,7 +245,7 @@ defmodule Ask.Translation do
             if other_lang != lang do
               other_text = other_entry |> Enum.join(", ")
               if other_text |> present? do
-                [{"sms", lang, text, other_lang, other_text} | translations]
+                [{"sms", "response", lang, text, other_lang, other_text} | translations]
               else
                 translations
               end
@@ -273,28 +275,28 @@ defmodule Ask.Translation do
     case step do
       %{"prompt" => prompt} ->
         source_texts
-        |> collect_prompt_entry_source_texts(lang, prompt)
+        |> collect_prompt_entry_source_texts("prompt", lang, prompt)
       _ ->
         source_texts
     end
   end
 
-  defp collect_prompt_entry_source_texts(source_texts, lang, prompt) do
+  defp collect_prompt_entry_source_texts(source_texts, scope, lang, prompt) do
     case prompt do
       %{^lang => lang_prompt} ->
         source_texts
-        |> collect_prompt_sms_source_texts(lang_prompt)
-        |> collect_prompt_ivr_source_texts(lang_prompt)
+        |> collect_prompt_sms_source_texts(scope, lang_prompt)
+        |> collect_prompt_ivr_source_texts(scope, lang_prompt)
       _ ->
         source_texts
     end
   end
 
-  defp collect_prompt_sms_source_texts(source_texts, lang_prompt) do
+  defp collect_prompt_sms_source_texts(source_texts, scope, lang_prompt) do
     case lang_prompt do
       %{"sms" => text} ->
         if text |> present? do
-          [{"sms", text} | source_texts]
+          [{"sms", scope, text} | source_texts]
         else
           source_texts
         end
@@ -303,11 +305,11 @@ defmodule Ask.Translation do
     end
   end
 
-  defp collect_prompt_ivr_source_texts(source_texts, lang_prompt) do
+  defp collect_prompt_ivr_source_texts(source_texts, scope, lang_prompt) do
     case lang_prompt do
       %{"ivr" => %{"text" => text}} ->
         if text |> present? do
-          [{"ivr", text} | source_texts]
+          [{"ivr", scope, text} | source_texts]
         else
           source_texts
         end
@@ -334,7 +336,7 @@ defmodule Ask.Translation do
       %{"responses" => %{"sms" => %{^lang => entry}}} ->
         text = entry |> Enum.join(", ")
         if text |> present? do
-          [{"sms", text} | source_texts]
+          [{"sms", "response", text} | source_texts]
         else
           source_texts
         end

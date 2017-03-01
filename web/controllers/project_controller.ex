@@ -150,7 +150,7 @@ defmodule Ask.ProjectController do
     conn |> json(vars)
   end
 
-  def autocomplete_primary_language(conn, %{"project_id" => id, "mode" => mode, "language" => language, "text" => text}) do
+  def autocomplete_primary_language(conn, %{"project_id" => id, "mode" => mode, "scope" => scope, "language" => language, "text" => text}) do
     conn
     |> load_project(id)
 
@@ -160,6 +160,7 @@ defmodule Ask.ProjectController do
     translations = (from t in Ask.Translation,
       where: t.project_id == ^id,
       where: t.mode == ^mode,
+      where: t.scope == ^scope,
       where: t.source_lang == ^language,
       where: like(t.source_text, ^like_text))
     |> Repo.all
@@ -180,7 +181,7 @@ defmodule Ask.ProjectController do
     conn |> json(grouped_translations)
   end
 
-  def autocomplete_other_language(conn, %{"project_id" => id, "mode" => mode, "primary_language" => primary_language, "other_language" => other_language, "source_text" => source_text, "target_text" => target_text}) do
+  def autocomplete_other_language(conn, %{"project_id" => id, "mode" => mode, "scope" => scope, "primary_language" => primary_language, "other_language" => other_language, "source_text" => source_text, "target_text" => target_text}) do
     conn
     |> load_project(id)
 
@@ -190,6 +191,7 @@ defmodule Ask.ProjectController do
     translations = (from t in Ask.Translation,
       where: t.project_id == ^id,
       where: t.mode == ^mode,
+      where: t.scope== ^scope,
       where: t.source_lang == ^primary_language,
       where: t.target_lang == ^other_language,
       where: t.source_text == ^source_text,
