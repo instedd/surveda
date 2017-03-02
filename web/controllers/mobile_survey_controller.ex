@@ -16,4 +16,10 @@ defmodule Ask.MobileSurveyController do
     |> render("index.html", user: nil)
     # end
   end
+
+  def get_step(conn, _params) do
+    questionnaire = Repo.get!(Ask.Questionnaire, 95)
+    step = Enum.at(questionnaire.steps,2)
+    render(conn, "show_step.json", step: step)
+  end
 end

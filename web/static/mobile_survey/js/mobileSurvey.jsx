@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 // import { render } from 'react-dom'
 // // import { browserHistory } from 'react-router'
 // // import { syncHistoryWithStore } from 'react-router-redux'
-// // import Root from './components/layout/Root'
+import Step from './components/Step'
 // // import configureStore from './store/configureStore'
 
 // // const store = configureStore()
@@ -17,6 +17,9 @@ import ReactDOM from 'react-dom'
 console.log('Inside MobileSurvey.jsx')
 
 ReactDOM.render(
-  <h1>RENDERING FROM THE JSX!</h1>,
+  <div>
+    <h1>RENDERING FROM THE JSX!</h1>
+    <Step />
+  </div>,
   document.getElementById('root')
 )
