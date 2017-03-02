@@ -8,14 +8,35 @@ defmodule Ask.MobileSurveyController do
   end
 
   def get_step(conn, params) do
-    # For now we show the first step of a random questionnaire
-    questionnaire = Ask.Questionnaire |> Repo.all |> Enum.shuffle |> hd
-    steps = questionnaire.steps
-    if length(steps) == 0 do
-      get_step(conn, params)
-    else
-      step = steps |> hd
-      render(conn, "show_step.json", step: step)
+    step_type = "numeric"
+
+    step = case step_type do
+      "language-selection" ->
+        %{
+          type: "language-selection",
+          prompt: "Select a language",
+          choices: ["English", "Spanish"]
+        }
+      "explanation" ->
+        %{
+          type: "explanation",
+          prompt: "This is an explanation step",
+        }
+      "multiple-choice" ->
+        %{
+          type: "multiple-choice",
+          prompt: "What's your favorite color?",
+          choices: ["Red", "Green", "Blue"]
+        }
+      "numeric" ->
+        %{
+          type: "numeric",
+          prompt: "What's your favorite number (1-10)?",
+          min: 1,
+          max: 10,
+        }
     end
+
+    render(conn, "show_step.json", step: step)
   end
 end
