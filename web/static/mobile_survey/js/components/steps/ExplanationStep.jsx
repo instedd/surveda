@@ -1,7 +1,12 @@
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
+import * as actions from '../../actions/step'
 
 class ExplanationStep extends Component {
+  getValue() {
+    return ''
+  }
+
   render() {
     const { step } = this.props
     return (

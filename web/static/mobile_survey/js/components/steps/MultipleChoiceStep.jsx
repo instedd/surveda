@@ -2,6 +2,10 @@ import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
 class MultipleChoiceStep extends Component {
+  getValue() {
+    return this.refs.select.value
+  }
+
   render() {
     const { step } = this.props
     return (
@@ -9,7 +13,7 @@ class MultipleChoiceStep extends Component {
         <Prompt text={step.prompt} />
         <br />
         <div>
-          <select>
+          <select ref='select'>
             {step.choices.map(choice => {
               return <option value={choice}>{choice}</option>
             })}
