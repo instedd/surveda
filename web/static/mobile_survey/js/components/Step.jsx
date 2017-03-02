@@ -1,24 +1,20 @@
-import React, { Component, PropTypes } from 'react'
-import 'isomorphic-fetch'
-import { Provider } from 'react-redux'
-// import routes from '../../routes'
-// import { Router } from 'react-router'
+import React, { Component } from 'react'
+// import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
 
-export default class Step extends Component {
-  static propTypes = {
-    step: PropTypes.object.isRequired
-    // history: PropTypes.object.isRequired
-  }
-
-  componentWillMount() {
-
-  }
-
+class Step extends Component {
   render() {
-    const { store, history } = this.props
     return (
-      <div />
+      <div>Step</div>
     )
   }
-
 }
+
+const mapStateToProps = (state) => ({
+})
+
+const mapDispatchToProps = (dispatch) => ({
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Step)
+
