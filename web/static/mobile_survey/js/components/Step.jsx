@@ -1,20 +1,39 @@
-import React, { Component } from 'react'
-// import { bindActionCreators } from 'redux'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
+import * as actions from '../actions/step'
+import * as api from '../api'
 
 class Step extends Component {
+  componentDidMount() {
+    const { dispatch } = this.props
+
+    api.fetchStep().then(response => {
+      response.json().then(json => {
+        dispatch(actions.receiveStep(json.step))
+      })
+    })
+  }
+
   render() {
+    const { step } = this.props
+    if (!step) {
+      return <div>Loading...</div>
+    }
+
     return (
-      <div>Step</div>
+      <div>{step.type} step</div>
     )
   }
 }
 
+Step.propTypes = {
+  dispatch: PropTypes.any,
+  step: PropTypes.object
+}
+
 const mapStateToProps = (state) => ({
+  step: state.step.current
 })
 
-const mapDispatchToProps = (dispatch) => ({
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(Step)
+export default connect(mapStateToProps)(Step)
 
