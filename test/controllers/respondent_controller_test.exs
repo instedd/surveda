@@ -318,6 +318,24 @@ defmodule Ask.RespondentControllerTest do
      "5678,test - SMS with phone call fallback"]
   end
 
+  test "download interactions_csv", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+    channel = insert(:channel, name: "test_channel")
+    insert(:survey_log_entry, survey: survey, mode: "sms", respondent: "1234", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:survey_log_entry, survey: survey, mode: "ivr", respondent: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+
+    conn = get conn, project_survey_respondents_interactions_csv_path(conn, :interactions_csv, survey.project.id, survey.id)
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
+     "1234,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+     "5678,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
+   ]
+  end
+
   test "quotas_stats", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
