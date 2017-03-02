@@ -86,24 +86,9 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
   }
 
-  selectCsvType(type) {
-    this.setState({ csvType: type })
-  }
-
-  performCSVDownload() {
-    const { csvType } = this.state
-    switch (csvType) {
-      case 'results':
-        this.downloadCSV()
-        break
-      case 'disposition':
-        this.downloadDispositionHistoryCSV()
-        break
-      case 'incentives':
-        this.downloadIncentivesCSV()
-        break
-    }
-    $('#downloadCSV').modal('close')
+  downloadInteractionsCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
   }
 
   render() {
@@ -200,6 +185,24 @@ class RespondentIndex extends Component {
           <a className='btn-floating btn-large green' href='#' onClick={(e) => { e.preventDefault(); $('#downloadCSV').modal('open') }}>
             <i className='material-icons'>get_app</i>
           </a>
+          <ul>
+            <li>
+              <Tooltip text='Download results'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>assignment_turned_in</i></a>
+              </Tooltip>
+            </li>
+            <li>
+              <Tooltip text='Download disposition history'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadDispositionHistoryCSV()}><i className='material-icons'>description</i></a>
+              </Tooltip>
+            </li>
+            {incentivesCsvButton}
+            <li>
+              <Tooltip text='Download interactions'>
+                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadInteractionsCSV()}><i className='material-icons'>description</i></a>
+              </Tooltip>
+            </li>
+          </ul>
         </div>
         <ConfirmationModal modalId='downloadCSV' header='Download CSV' confirmationText='Download CSV' onConfirm={() => this.performCSVDownload()}>
           Select one of the following:
