@@ -3,7 +3,9 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   use Ask.DummySteps
 
   alias Ask.Respondent
-  alias Ask.Runtime.{Broker, NuntiumChannel}
+  alias Ask.Runtime.{Broker, NuntiumChannel, Reply}
+
+  require Ask.Runtime.Reply
 
   defmodule BrokerStub do
     use GenServer
@@ -27,10 +29,10 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:prompts, ["Hello!", "Do you exercise?"]}
+        {:reply, Reply.multiple(["Hello!", "Do you exercise?"])}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
-    assert json_response(conn, 200) == [%{"to" => "sms://123456", "body" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?"}]
+    assert [%{"to" => "sms://123456", "body" => "Hello!", "step_title" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
   end
 
   test "callback with :end", %{conn: conn, respondent: respondent} do
@@ -47,10 +49,10 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:end, {:prompts, ["Bye!"]}}
+        {:end, {:reply, Reply.quota_completed("Bye!")}}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
-    assert json_response(conn, 200) == [%{"body" => "Bye!", "to" => "sms://123456"}]
+    assert [%{"body" => "Bye!", "to" => "sms://123456", "step_title" => "Quota completed"}] = json_response(conn, 200)
   end
 
   test "callback respondent not found", %{conn: conn} do
@@ -63,9 +65,9 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:prompts, ["Do you exercise?"]}
+        {:reply, Reply.simple("Do you exercise?")}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"})
-    assert json_response(conn, 200) == [%{"to" => "sms://123457", "body" => "Do you exercise?"}]
+    assert [%{"to" => "sms://123457", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
   end
 end

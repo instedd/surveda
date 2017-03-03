@@ -21,8 +21,16 @@ defmodule Ask.Runtime.Broker do
     GenServer.call(@server_ref, {:sync_step, respondent, reply})
   end
 
-  def channel_failed(respondent, token) do
-    GenServer.call(@server_ref, {:channel_failed, respondent, token})
+  # def channel_success(respondent, token, status) do
+  #   GenServer.call(@server_ref, {:channel_success, respondent, token, status})
+  # end
+
+  def channel_failed(respondent, token, reason \\ "failed") do
+    GenServer.call(@server_ref, {:channel_failed, respondent, token, reason})
+  end
+
+  def delivery_confirm(respondent, token, title, disposition) do
+    GenServer.call(@server_ref, {:delivery_confirm, respondent, token, title, disposition})
   end
 
   # Makes the borker performs a poll on the surveys.
@@ -62,13 +70,23 @@ defmodule Ask.Runtime.Broker do
     {:reply, :ok, state}
   end
 
-  def handle_call({:channel_failed, respondent, token}, _from, state) do
+  # def handle_call({:channel_success, respondent, token, status}, _from, state) do
+  #   respondent.session |> Session.load |> Session.channel_success(status, token)
+  #   {:reply, :ok, state}
+  # end
+
+  def handle_call({:channel_failed, respondent, token, reason}, _from, state) do
     session = respondent.session |> Session.load
-    case Session.channel_failed(session, token) do
+    case Session.channel_failed(session, token, reason) do
       :ok -> :ok
       :failed ->
         update_respondent(respondent, :failed)
     end
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:delivery_confirm, respondent, _token, title, disposition}, _from, state) do
+    respondent.session |> Session.load |> Session.delivery_confirm(title, disposition)
     {:reply, :ok, state}
   end
 
@@ -232,12 +250,12 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step(respondent, {:ok, session, reply, timeout}) do
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
-    {:prompts, Reply.prompts(reply)}
+    {:reply, reply}
   end
 
   defp handle_session_step(respondent, {:end, reply}) do
     update_respondent(respondent, :end)
-    {:end, {:prompts, Reply.prompts(reply)}}
+    {:end, {:reply, reply}}
   end
 
   defp handle_session_step(respondent, :end) do
@@ -247,7 +265,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step(respondent, {:rejected, reply}) do
     update_respondent(respondent, :rejected)
-    {:end, {:prompts, Reply.prompts(reply)}}
+    {:end, {:reply, reply}}
   end
 
   defp handle_session_step(respondent, :rejected) do

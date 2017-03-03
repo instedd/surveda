@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.Runtime.{Flow, Channel, Session, Reply}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger}
   alias Ask.{Repo, QuotaBucket, Respondent}
   defstruct [:channel, :fallback, :flow, :respondent, :retries, :token, :fallback_delay, :channel_state, :count_partial_results]
 
@@ -28,11 +28,13 @@ defmodule Ask.Runtime.Session do
         case flow |> Flow.step do
           {:end, reply} ->
             if Reply.prompts(reply) != [] do
-              runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
+              log_prompts(reply, channel, respondent)
+              runtime_channel |> Channel.ask(respondent, token, reply)
             end
             {:end, reply}
           {:ok, flow, reply} ->
-            runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
+            log_prompts(reply, channel, respondent)
+            runtime_channel |> Channel.ask(respondent, token, reply)
             {flow, reply}
         end
 
@@ -57,6 +59,37 @@ defmodule Ask.Runtime.Session do
         }
         {:ok, session, reply, current_timeout(session)}
     end
+  end
+
+  defp log_prompts(reply, channel, respondent) do
+    unless channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation? do
+      disposition = Reply.disposition(reply) || respondent.disposition
+      Enum.each Reply.steps(reply), fn(step) ->
+        step[:prompts] |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
+          SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition, :prompt, Reply.step_title_with_index(step, index))
+        end)
+      end
+    end
+  end
+
+  defp log_confirmation(title, disposition, channel, respondent) do
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition, :prompt, title)
+  end
+
+  defp log_contact(status, channel, respondent, disposition \\ nil) do
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition || respondent.disposition, :contact, status)
+  end
+
+  defp log_response(:answer, channel, respondent, disposition) do
+    log_contact("Answer", channel, respondent, disposition)
+  end
+
+  defp log_response(:no_reply, channel, respondent, disposition) do
+    log_contact("Timeout", channel, respondent, disposition)
+  end
+
+  defp log_response({:reply, response}, channel, respondent, disposition) do
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
   end
 
   defp handle_setup_response(setup_response) do
@@ -112,8 +145,9 @@ defmodule Ask.Runtime.Session do
       channel_state =
         case runtime_channel |> Channel.can_push_question? do
           true ->
-            {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow)
-            runtime_channel |> Channel.ask(session.respondent, token, prompts)
+            {:ok, _flow, reply} = Flow.retry(session.flow)
+            log_prompts(reply, session.channel, session.respondent)
+            runtime_channel |> Channel.ask(session.respondent, token, reply)
             channel_state
 
           false ->
@@ -127,12 +161,25 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def channel_failed(%Session{retries: [], fallback: nil, token: token}, token) do
+  # def channel_success(session, _token, status) do
+  #   log_contact(status, session.channel, session.respondent)
+  #   :ok
+  # end
+
+  def channel_failed(session, token, reason \\ "Failed")
+
+  def channel_failed(session = %Session{retries: [], fallback: nil, token: token}, token, reason) do
+    log_contact(reason, session.channel, session.respondent)
     :failed
   end
 
-  def channel_failed(_session, _token) do
+  def channel_failed(session, _token, reason) do
+    log_contact(reason, session.channel, session.respondent)
     :ok
+  end
+
+  def delivery_confirm(session, title, disposition) do
+    log_confirmation(title, disposition, session.channel, session.respondent)
   end
 
   defp switch_to_fallback(session) do
@@ -140,10 +187,17 @@ defmodule Ask.Runtime.Session do
     run_flow(%{session.flow | mode: fallback_channel.type}, session.respondent, fallback_channel, fallback_retries, nil, [], session.fallback_delay, session.count_partial_results)
   end
 
-  def sync_step(session, reply) do
-    step_answer = Flow.step(session.flow, reply)
-
+  def sync_step(session, response) do
+    step_answer = Flow.step(session.flow, response)
     respondent = session.respondent
+
+    # Log raw response from user including new disposition
+    case step_answer do
+      {:end, reply} -> log_response(response, session.channel, respondent, Reply.disposition(reply))
+      {:ok, flow, reply} -> log_response(response, session.channel, respondent, Reply.disposition(reply))
+      _ -> :ok
+    end
+
     survey = (respondent |> Repo.preload(:survey)).survey
 
     # Get all quota buckets, if any
@@ -168,18 +222,24 @@ defmodule Ask.Runtime.Session do
       store_responses_and_assign_bucket(respondent, stores, buckets, session)
 
     case step_answer do
-      {:end, %Reply{prompts: []}} ->
+      {:end, %Reply{steps: []}} ->
         :end
+      {:end, reply} ->
+        log_prompts(reply, session.channel, respondent)
+        {:end, reply}
       {:ok, flow, reply} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
             msg = quota_completed_msg(session.flow)
             if msg do
-              {:rejected, %Reply{prompts: [msg]}}
+              reply = %Reply{steps: [%{prompts: [msg], title: "Quota completed"}]}
+              log_prompts(reply, session.channel, respondent)
+              {:rejected, reply}
             else
               :rejected
             end
           false ->
+            log_prompts(reply, session.channel, respondent)
             {:ok, %{session | flow: flow, respondent: respondent}, reply, session.fallback_delay}
         end
       _ ->

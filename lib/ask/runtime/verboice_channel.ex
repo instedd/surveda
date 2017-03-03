@@ -2,7 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
   alias Ask.{Repo, Respondent, Channel}
-  alias Ask.Runtime.{Broker, Flow}
+  alias Ask.Runtime.{Broker, Flow, Reply}
   alias Ask.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -133,8 +133,8 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, %{"path" => ["status", respondent_id, token], "CallStatus" => status}) do
     respondent = Repo.get!(Respondent, respondent_id)
     case status do
-      "failed" ->
-        Broker.channel_failed(respondent, token)
+      s when s in ["failed", "busy", "no-answer"] ->
+        Broker.channel_failed(respondent, token, status)
       _ -> :ok
     end
 
@@ -156,9 +156,11 @@ defmodule Ask.Runtime.VerboiceChannel do
         end
 
         case Broker.sync_step(respondent, response) do
-          {:prompts, prompts} ->
+          {:reply, reply} ->
+            prompts = Reply.prompts(reply)
             gather(respondent, prompts)
-          {:end, {:prompts, prompts}} ->
+          {:end, {:reply, reply}} ->
+            prompts = Reply.prompts(reply)
             say_or_play(prompts) ++ [hangup]
           :end ->
             hangup
@@ -202,6 +204,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def can_push_question?(_), do: false
+    def has_delivery_confirmation?(_), do: false
     def ask(_, _, _, _), do: throw(:not_implemented)
     def prepare(_, _), do: :ok
 

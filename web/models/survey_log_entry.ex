@@ -20,7 +20,7 @@ defmodule Ask.SurveyLogEntry do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:survey_id, :mode, :respondent, :channel_id, :disposition, :action_type, :action_data, :timestamp])
-    |> validate_required([:survey_id, :mode, :respondent, :channel_id, :disposition, :action_type, :action_data, :timestamp])
+    |> validate_required([:survey_id, :mode, :respondent, :channel_id, :action_type, :timestamp])
     |> foreign_key_constraint(:survey_id)
     |> foreign_key_constraint(:channel_id)
   end

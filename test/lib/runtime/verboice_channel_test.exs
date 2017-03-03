@@ -3,7 +3,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.DummySteps
 
   alias Ask.Respondent
-  alias Ask.Runtime.{Broker, VerboiceChannel, Flow}
+  alias Ask.Runtime.{Broker, VerboiceChannel, Flow, Reply}
+
+  require Ask.Runtime.Reply
 
   defmodule BrokerStub do
     use GenServer
@@ -31,14 +33,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       tts_step: {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]},
       # Triple of "digits", step spec, and expected TwiML output
       twiml_map: [
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.reply("8"), {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Hello!"), Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Response><Say>Hello!</Say><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, Reply.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}, "<Say>Do you exercise?</Say>"},
+        {Flow.Message.reply("8"), {:reply, Reply.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}, "<Say>Do you exercise?</Say>"},
+        {Flow.Message.answer, {:reply, Reply.multiple([{"Hello!", Ask.StepBuilder.tts_prompt("Hello!")}, {"Do you exercise", Ask.StepBuilder.tts_prompt("Do you exercise?")}])}, "<Response><Say>Hello!</Say><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, Reply.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer, :end, "<Response><Hangup/></Response>"},
-        {Flow.Message.answer, {:end, {:prompts, [Ask.StepBuilder.tts_prompt("Bye!")]}}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Play>http://app.ask.dev/audio/foo</Play>"},
-        {Flow.Message.reply("8"), {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Play>http://app.ask.dev/audio/foo</Play>"},
+        {Flow.Message.answer, {:end, {:reply, Reply.quota_completed(Ask.StepBuilder.tts_prompt("Bye!"))}}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
+        {Flow.Message.answer, {:reply, Reply.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Play>http://app.ask.dev/audio/foo</Play>"},
+        {Flow.Message.reply("8"), {:reply, Reply.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Play>http://app.ask.dev/audio/foo</Play>"},
       ]
     }
   end

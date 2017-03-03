@@ -1,6 +1,6 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :push, :has_queued_message]
+  defstruct [:pid, :push, :has_queued_message, :delivery]
 
   def new(push \\ true)
 
@@ -66,6 +66,10 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def can_push_question?(channel) do
     channel.push
+  end
+
+  def has_delivery_confirmation?(channel) do
+    channel.delivery
   end
 
   def ask(channel, respondent, token, prompts) do

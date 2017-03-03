@@ -91,6 +91,29 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
   }
 
+  selectCsvType(type) {
+    this.setState({ csvType: type })
+  }
+
+  performCSVDownload() {
+    const { csvType } = this.state
+    switch (csvType) {
+      case 'results':
+        this.downloadCSV()
+        break
+      case 'disposition':
+        this.downloadDispositionHistoryCSV()
+        break
+      case 'incentives':
+        this.downloadIncentivesCSV()
+        break
+      case 'interactions':
+        this.downloadInteractionsCSV()
+        break
+    }
+    $('#downloadCSV').modal('close')
+  }
+
   render() {
     if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
       return <div>Loading...</div>
@@ -162,8 +185,7 @@ class RespondentIndex extends Component {
       colspan += 1
     }
 
-    let incentivesCsvButton = null
-    let interactionsCsvButton = null
+    let incentivesCsvInput = null
     if (project.owner) {
       incentivesCsvInput = (
         <div>
@@ -178,12 +200,22 @@ class RespondentIndex extends Component {
           <label htmlFor='incentives'>Download CSV for incentives</label>
         </div>
       )
-      interactionsCsvButton = (
-        <li>
-          <Tooltip text='Download interactions'>
-            <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadInteractionsCSV()}><i className='material-icons'>description</i></a>
-          </Tooltip>
-        </li>
+    }
+
+    let interactionsCsvInput = null
+    if (project.owner) {
+      interactionsCsvInput = (
+        <div>
+          <input
+            id='interactions'
+            type='radio'
+            name='csvType'
+            className='with-gap'
+            value='1'
+            onChange={e => this.selectCsvType('interactions')}
+          />
+          <label htmlFor='interactions'>Download CSV for interactions</label>
+        </div>
       )
     }
 
@@ -193,20 +225,6 @@ class RespondentIndex extends Component {
           <a className='btn-floating btn-large green' href='#' onClick={(e) => { e.preventDefault(); $('#downloadCSV').modal('open') }}>
             <i className='material-icons'>get_app</i>
           </a>
-          <ul>
-            <li>
-              <Tooltip text='Download results'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>assignment_turned_in</i></a>
-              </Tooltip>
-            </li>
-            <li>
-              <Tooltip text='Download disposition history'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadDispositionHistoryCSV()}><i className='material-icons'>description</i></a>
-              </Tooltip>
-            </li>
-            {incentivesCsvButton}
-            {interactionsCsvButton}
-          </ul>
         </div>
         <ConfirmationModal modalId='downloadCSV' header='Download CSV' confirmationText='Download CSV' onConfirm={() => this.performCSVDownload()}>
           Select one of the following:
@@ -231,6 +249,7 @@ class RespondentIndex extends Component {
           />
           <label htmlFor='disposition'>Download disposition history</label>
           {incentivesCsvInput}
+          {interactionsCsvInput}
         </ConfirmationModal>
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
