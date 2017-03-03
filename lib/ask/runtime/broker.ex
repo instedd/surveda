@@ -8,7 +8,6 @@ defmodule Ask.Runtime.Broker do
   alias Ask.QuotaBucket
   require Logger
 
-  @batch_size 10
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
 
@@ -90,8 +89,8 @@ defmodule Ask.Runtime.Broker do
         reached_quotas || (active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed)) ->
           complete(survey)
 
-        active < @batch_size && pending > 0 ->
-          start_some(survey, @batch_size - active)
+        active < batch_size() && pending > 0 ->
+          start_some(survey, batch_size() - active)
 
         true -> :ok
       end
@@ -387,4 +386,18 @@ defmodule Ask.Runtime.Broker do
     schedule
   end
 
+  defp batch_size do
+    case Application.get_env(:ask, __MODULE__)[:batch_size] do
+      {:system, env_var} ->
+        String.to_integer(System.get_env(env_var))
+      {:system, env_var, default} ->
+        env_value = System.get_env(env_var)
+        if env_value do
+          String.to_integer(env_value)
+        else
+          default
+        end
+      value -> value
+    end
+  end
 end
