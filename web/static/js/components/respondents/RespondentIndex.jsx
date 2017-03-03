@@ -162,7 +162,8 @@ class RespondentIndex extends Component {
       colspan += 1
     }
 
-    let incentivesCsvInput = null
+    let incentivesCsvButton = null
+    let interactionsCsvButton = null
     if (project.owner) {
       incentivesCsvInput = (
         <div>
@@ -176,6 +177,13 @@ class RespondentIndex extends Component {
           />
           <label htmlFor='incentives'>Download CSV for incentives</label>
         </div>
+      )
+      interactionsCsvButton = (
+        <li>
+          <Tooltip text='Download interactions'>
+            <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadInteractionsCSV()}><i className='material-icons'>description</i></a>
+          </Tooltip>
+        </li>
       )
     }
 
@@ -197,11 +205,7 @@ class RespondentIndex extends Component {
               </Tooltip>
             </li>
             {incentivesCsvButton}
-            <li>
-              <Tooltip text='Download interactions'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadInteractionsCSV()}><i className='material-icons'>description</i></a>
-              </Tooltip>
-            </li>
+            {interactionsCsvButton}
           </ul>
         </div>
         <ConfirmationModal modalId='downloadCSV' header='Download CSV' confirmationText='Download CSV' onConfirm={() => this.performCSVDownload()}>
