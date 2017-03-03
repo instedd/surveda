@@ -8,15 +8,15 @@ defmodule Ask.TestChannel do
     %Ask.TestChannel{pid: self(), push: push}
   end
 
-  def new(push, has_queued_message) do
-    %Ask.TestChannel{pid: self(), push: push, has_queued_message: has_queued_message}
-  end
-
   def new(channel) do
     pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
     push = channel.settings["push"] |> String.to_atom
     has_queued_message = channel.settings["has_queued_message"] |> String.to_atom
     %Ask.TestChannel{pid: pid, push: push, has_queued_message: has_queued_message}
+  end
+
+  def new(push, has_queued_message) do
+    %Ask.TestChannel{pid: self(), push: push, has_queued_message: has_queued_message}
   end
 
   def settings(channel) do
@@ -72,7 +72,7 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     send channel.pid, [:ask, channel, respondent, token, prompts]
   end
 
-  def has_queued_message?(channel, channel_state) do
+  def has_queued_message?(channel, _channel_state) do
     channel.has_queued_message
   end
 
