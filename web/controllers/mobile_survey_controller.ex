@@ -28,14 +28,14 @@ defmodule Ask.MobileSurveyController do
         %{
           id: "id",
           type: "multiple-choice",
-          prompt: "What's your favorite color?",
+          prompt: "What's your favourite colour?",
           choices: ["Red", "Green", "Blue"]
         }
       "numeric" ->
         %{
           id: "id",
           type: "numeric",
-          prompt: "What's your favorite number (1-10)?",
+          prompt: "What's your favourite number (1-10)?",
           min: 1,
           max: 10,
         }
