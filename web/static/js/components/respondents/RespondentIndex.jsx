@@ -8,7 +8,7 @@ import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
 import range from 'lodash/range'
 import values from 'lodash/values'
-import { CardTable, Tooltip, UntitledIfEmpty } from '../ui'
+import { CardTable, UntitledIfEmpty, ConfirmationModal } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../reducers/survey'
@@ -33,8 +33,18 @@ type Props = {
   actions: any
 };
 
+type State = {
+  csvType: string
+};
+
 class RespondentIndex extends Component {
   props: Props
+  state: State
+
+  constructor(props) {
+    super(props)
+    this.state = {csvType: ''}
+  }
 
   componentDidMount() {
     const { projectId, surveyId, pageSize } = this.props
@@ -74,6 +84,26 @@ class RespondentIndex extends Component {
   downloadIncentivesCSV() {
     const { projectId, surveyId } = this.props
     window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
+  }
+
+  selectCsvType(type) {
+    this.setState({ csvType: type })
+  }
+
+  performCSVDownload() {
+    const { csvType } = this.state
+    switch (csvType) {
+      case 'results':
+        this.downloadCSV()
+        break
+      case 'disposition':
+        this.downloadDispositionHistoryCSV()
+        break
+      case 'incentives':
+        this.downloadIncentivesCSV()
+        break
+    }
+    $('#downloadCSV').modal('close')
   }
 
   render() {
@@ -147,37 +177,54 @@ class RespondentIndex extends Component {
       colspan += 1
     }
 
-    let incentivesCsvButton = null
+    let incentivesCsvInput = null
     if (project.owner) {
-      incentivesCsvButton = (
-        <li>
-          <Tooltip text='Download CSV for incentives'>
-            <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadIncentivesCSV()}><i className='material-icons'>description</i></a>
-          </Tooltip>
-        </li>
+      incentivesCsvInput = (
+        <div>
+          <input
+            id='incentives'
+            type='radio'
+            name='csvType'
+            className='with-gap'
+            value='1'
+            onChange={e => this.selectCsvType('incentives')}
+          />
+          <label htmlFor='incentives'>Download CSV for incentives</label>
+        </div>
       )
     }
 
     return (
       <div className='white'>
         <div className='fixed-action-btn horizontal right mtop'>
-          <a className='btn-floating btn-large green'>
+          <a className='btn-floating btn-large green' href='#' onClick={(e) => { e.preventDefault(); $('#downloadCSV').modal('open') }}>
             <i className='material-icons'>get_app</i>
           </a>
-          <ul>
-            <li>
-              <Tooltip text='Download results'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>assignment_turned_in</i></a>
-              </Tooltip>
-            </li>
-            <li>
-              <Tooltip text='Download disposition history'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadDispositionHistoryCSV()}><i className='material-icons'>description</i></a>
-              </Tooltip>
-            </li>
-            {incentivesCsvButton}
-          </ul>
         </div>
+        <ConfirmationModal modalId='downloadCSV' header='Download CSV' confirmationText='Download CSV' onConfirm={() => this.performCSVDownload()}>
+          Select one of the following:
+          <br />
+          <input
+            id='results'
+            type='radio'
+            name='csvType'
+            className='with-gap'
+            value='1'
+            onChange={e => this.selectCsvType('results')}
+          />
+          <label htmlFor='results'>Download results</label>
+          <br />
+          <input
+            id='disposition'
+            type='radio'
+            name='csvType'
+            className='with-gap'
+            value='1'
+            onChange={e => this.selectCsvType('disposition')}
+          />
+          <label htmlFor='disposition'>Download disposition history</label>
+          {incentivesCsvInput}
+        </ConfirmationModal>
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
