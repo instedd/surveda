@@ -180,7 +180,7 @@ defmodule Ask.Runtime.Session do
               :rejected
             end
           false ->
-            {:ok, %{session | flow: flow, respondent: respondent}, reply, session.fallback_delay}
+            {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
         end
       _ ->
         step_answer

@@ -189,6 +189,24 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.timeout_at in interval
   end
 
+  test "set timeout_at according to retries if they're present" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    survey |> Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.state == "active"
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, minutes: 1), until: Timex.shift(now, minutes: 3), step: [seconds: 1])
+    assert updated_respondent.timeout_at in interval
+  end
+
   test "retry respondent (SMS mode)" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
