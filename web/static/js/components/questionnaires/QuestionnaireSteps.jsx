@@ -2,9 +2,12 @@
 import React, { Component } from 'react'
 import StepEditor from './StepEditor'
 import StepsList from './StepsList'
+import DraftFirstExample from './Draft1'
+import DraftSecondExample from './Draft2'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
+// import {Editor, EditorState} from 'draft-js'
 
 type Props = {
   steps: Step[],
@@ -73,6 +76,10 @@ class QuestionnaireSteps extends Component {
   render() {
     return (
       <div>
+        <div>
+          <DraftFirstExample />
+          <DraftSecondExample />
+        </div>
         {this.dummyDropTarget()}
         {this.questionnaireSteps()}
       </div>
