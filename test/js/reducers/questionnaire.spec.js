@@ -779,6 +779,16 @@ describe('questionnaire reducer', () => {
         [`quotaCompletedMsg.prompt['en'].ivr.text`]: ['Voice prompt must not be blank']
       })
     })
+
+    it('should consider "end" skip logic as valid', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '  Maybe  ', '  M,  MB  , 3  ', '  May  ', 'end')
+      ])
+
+      expect(!!state.errorsByLang['en']['steps[0].skipLogic']).toEqual(false)
+    })
   })
 
   describe('multilanguage support', () => {
