@@ -290,6 +290,56 @@ defmodule Ask.BrokerTest do
     assert history.disposition == "partial"
   end
 
+  test "mark disposition as ineligible on end" do
+    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_ineligible_skip_logic)
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
+    assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    assert respondent.state == "completed"
+    assert respondent.disposition == "ineligible"
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "ineligible"
+  end
+
+  test "mark disposition as completed when partial on end" do
+    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_partial_skip_logic)
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
+    assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you exercise? Reply 1 for YES, 2 for NO"]]
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    assert respondent.state == "completed"
+    assert respondent.disposition == "completed"
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "completed"
+  end
+
   test "don't reset disposition after having set it" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
 

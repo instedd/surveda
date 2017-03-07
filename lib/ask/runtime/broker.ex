@@ -236,7 +236,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp handle_session_step(respondent, {:end, reply}) do
-    update_respondent(respondent, :end)
+    update_respondent(respondent, :end, Reply.disposition(reply))
     {:end, {:prompts, Reply.prompts(reply)}}
   end
 
@@ -275,24 +275,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :end) do
-    old_disposition = respondent.disposition
-
-    # If the current disposition is ineligible we shouldn't mark the respondent
-    # as completed (#639).
-    # If the respondent has partial disposition, or no disposition at all,
-    # then it's OK to mark it as completed.
-    new_disposition =
-      if old_disposition == "ineligible" do
-        old_disposition
-      else
-        "completed"
-      end
-
-    respondent
-    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
-    |> Repo.update!
-    |> create_disposition_history(old_disposition)
-    |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
+    update_respondent(respondent, :end, nil)
   end
 
   defp update_respondent(respondent, {:stalled, session}) do
@@ -333,6 +316,38 @@ defmodule Ask.Runtime.Broker do
       |> update_quota_bucket(old_disposition, session.count_partial_results)
     end
   end
+
+  defp update_respondent(respondent, :end, reply_disposition) do
+    old_disposition = respondent.disposition
+
+    # If the current disposition is ineligible we shouldn't mark the respondent
+    # as completed (#639).
+    # If the respondent has partial disposition, or no disposition at all,
+    # then it's OK to mark it as completed.
+    #
+    # Here we also consider the case where a flag step is used at the end of a
+    # survey: if the flag step must set the respondent as "ineligible" or
+    # "completed" we must do so, unless the respondent is already marked
+    # as "completed".
+    new_disposition =
+      case {old_disposition, reply_disposition} do
+        # If the respondent is already completed or ineligible, don't change it
+        {"completed", _} -> "completed"
+        {"ineligible", _} -> "ineligible"
+        # If a flag step sets the respondent as ineligible, do do (the respondent
+        # will be an non-set or partial disposition here)
+        {_, "ineligible"} -> "ineligible"
+        # In any other case the survey ends and the respondent is marked as completed
+        _ -> "completed"
+      end
+
+    respondent
+    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
+    |> Repo.update!
+    |> create_disposition_history(old_disposition)
+    |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
+  end
+
 
   defp shouldnt_update_disposition(old_disposition, new_disposition) do
     (old_disposition == "completed"
