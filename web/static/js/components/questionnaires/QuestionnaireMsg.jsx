@@ -11,6 +11,7 @@ import { decamelize } from 'humps'
 import { getPromptSms, getPromptIvr, getPromptIvrText } from '../../step'
 import { msgPromptTextPath, msgIvrAudioIdPath, msgHasErrors } from '../../questionnaireErrors'
 import * as api from '../../api'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   dispatch: Function,
@@ -102,6 +103,8 @@ class QuestionnaireMsg extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps, this.state.editing))
   }
 

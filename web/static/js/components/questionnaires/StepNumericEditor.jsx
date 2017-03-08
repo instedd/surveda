@@ -7,6 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { newRefusal } from '../../step'
 import ChoiceEditor from './ChoiceEditor'
 import SkipLogic from './SkipLogic'
+import propsAreEqual from '../../propsAreEqual'
 
 type State = {
   stepId: string,
@@ -35,8 +36,10 @@ class StepNumericEditor extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState(this.stateFromProps(nextProps))
+  componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
+    this.setState(this.stateFromProps(newProps))
   }
 
   delimitersFromRanges(ranges) {
