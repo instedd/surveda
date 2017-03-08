@@ -8,7 +8,7 @@ import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
 import range from 'lodash/range'
 import values from 'lodash/values'
-import { CardTable, UntitledIfEmpty, ConfirmationModal } from '../ui'
+import { CardTable, UntitledIfEmpty, Modal } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../reducers/survey'
@@ -86,26 +86,6 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
   }
 
-  selectCsvType(type) {
-    this.setState({ csvType: type })
-  }
-
-  performCSVDownload() {
-    const { csvType } = this.state
-    switch (csvType) {
-      case 'results':
-        this.downloadCSV()
-        break
-      case 'disposition':
-        this.downloadDispositionHistoryCSV()
-        break
-      case 'incentives':
-        this.downloadIncentivesCSV()
-        break
-    }
-    $('#downloadCSV').modal('close')
-  }
-
   render() {
     if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
       return <div>Loading...</div>
@@ -177,20 +157,18 @@ class RespondentIndex extends Component {
       colspan += 1
     }
 
-    let incentivesCsvInput = null
+    let incentivesCsvLink = null
     if (project.owner) {
-      incentivesCsvInput = (
-        <div>
-          <input
-            id='incentives'
-            type='radio'
-            name='csvType'
-            className='with-gap'
-            value='1'
-            onChange={e => this.selectCsvType('incentives')}
-          />
-          <label htmlFor='incentives'>Download CSV for incentives</label>
-        </div>
+      incentivesCsvLink = (
+        <ul>
+          <li>
+            <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
+              <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+              <h4>Incentives file</h4>
+              <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
+            </a>
+          </li>
+        </ul>
       )
     }
 
@@ -201,30 +179,31 @@ class RespondentIndex extends Component {
             <i className='material-icons'>get_app</i>
           </a>
         </div>
-        <ConfirmationModal modalId='downloadCSV' header='Download CSV' confirmationText='Download CSV' onConfirm={() => this.performCSVDownload()}>
-          Select one of the following:
-          <br />
-          <input
-            id='results'
-            type='radio'
-            name='csvType'
-            className='with-gap'
-            value='1'
-            onChange={e => this.selectCsvType('results')}
-          />
-          <label htmlFor='results'>Download results</label>
-          <br />
-          <input
-            id='disposition'
-            type='radio'
-            name='csvType'
-            className='with-gap'
-            value='1'
-            onChange={e => this.selectCsvType('disposition')}
-          />
-          <label htmlFor='disposition'>Download disposition history</label>
-          {incentivesCsvInput}
-        </ConfirmationModal>
+        <Modal id='downloadCSV' confirmationText='Download CSV' card>
+          <div className='card-title header'>
+            <h5>Download CSV</h5>
+            <p>Download survey respondents data as CSV</p>
+          </div>
+          <ul>
+            <li>
+              <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
+                <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                <h4>Survey results</h4>
+                <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
+              </a>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
+                <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                <h4>Disposition History</h4>
+                <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
+              </a>
+            </li>
+          </ul>
+          {incentivesCsvLink}
+        </Modal>
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
