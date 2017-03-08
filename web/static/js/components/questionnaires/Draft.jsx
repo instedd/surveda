@@ -1,8 +1,6 @@
-import React from 'react'
+import React, {PropTypes} from 'react'
 // import {Editor, EditorState, RichUtils} from 'draft-js'
 import {
- convertToRaw,
- CompositeDecorator,
  Editor,
  EditorState,
  RichUtils
@@ -17,9 +15,13 @@ class Draft extends React.Component {
     super(props)
 
     this.state = {editorState: EditorState.createEmpty()}
+    console.log(props.onChange)
 
     this.focus = () => this.refs.editor.focus()
-    this.onChange = (editorState) => this.setState({editorState})
+    this.onChange = (editorState) => {
+      this.setState({editorState})
+      props.onChange(stateToHTML(editorState.getCurrentContent()))
+    }
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
     this.onTab = (e) => this._onTab(e)
@@ -117,6 +119,10 @@ class Draft extends React.Component {
       </div>
     )
   }
+}
+
+Draft.propTypes = {
+  onChange: PropTypes.func
 }
 
 export default Draft

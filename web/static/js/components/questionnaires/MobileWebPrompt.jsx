@@ -3,6 +3,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { InputWithLabel } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
+import Draft from './Draft'
 import classNames from 'classnames/bind'
 
 class MobileWebPrompt extends Component {
@@ -34,6 +35,7 @@ class MobileWebPrompt extends Component {
                 className={maybeInvalidClass}
               />
             </InputWithLabel>
+            <Draft onChange={onBlur} />
           </div>
         </div>
       </div>
