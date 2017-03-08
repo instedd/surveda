@@ -8,6 +8,7 @@ import IvrPrompt from './IvrPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText } from '../../step'
 import { promptTextPath } from '../../questionnaireErrors'
 import * as api from '../../api'
+import propsAreEqual from '../../propsAreEqual'
 
 type State = {
   stepPromptSms: string,
@@ -71,6 +72,8 @@ class StepPrompts extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 

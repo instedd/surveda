@@ -5,6 +5,7 @@ import { InputWithLabel, ConfirmationModal, AudioDropzone, Dropdown, DropdownIte
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import classNames from 'classnames/bind'
+import propsAreEqual from '../../propsAreEqual'
 
 type State = {
   audioErrors: string,
@@ -58,6 +59,8 @@ class IvrPrompt extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 

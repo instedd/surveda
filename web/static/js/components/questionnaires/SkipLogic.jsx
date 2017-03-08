@@ -2,6 +2,7 @@
 import findIndex from 'lodash/findIndex'
 import React, { Component } from 'react'
 import { Input } from 'react-materialize'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   value: ?string,
@@ -26,6 +27,8 @@ class SkipLogic extends Component {
   }
 
   componentWillReceiveProps(newProps: Props) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 
