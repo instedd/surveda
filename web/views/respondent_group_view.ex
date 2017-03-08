@@ -16,8 +16,8 @@ defmodule Ask.RespondentGroupView do
   def render("respondent_group.json", %{respondent_group: respondent_group}) do
     sample = respondent_group.sample |> Enum.map(&Respondent.mask_phone_number/1)
 
-    channels = respondent_group.channels
-    |> Enum.map(&(&1.id))
+    channels = respondent_group.respondent_group_channels
+    |> Enum.map(fn group_channel -> %{id: group_channel.channel_id, mode: group_channel.mode} end)
 
     %{
       id: respondent_group.id,

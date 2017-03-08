@@ -4,6 +4,7 @@ defmodule Ask.RespondentGroupChannel do
   schema "respondent_group_channels" do
     belongs_to :respondent_group, Ask.RespondentGroup
     belongs_to :channel, Ask.Channel
+    field :mode, :string
 
     timestamps()
   end
@@ -13,8 +14,8 @@ defmodule Ask.RespondentGroupChannel do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:respondent_group_id, :channel_id])
-    |> validate_required([:respondent_group_id, :channel_id])
+    |> cast(params, [:respondent_group_id, :channel_id, :mode])
+    |> validate_required([:respondent_group_id, :channel_id, :mode])
     |> foreign_key_constraint(:respondent_group)
     |> foreign_key_constraint(:channel)
   end

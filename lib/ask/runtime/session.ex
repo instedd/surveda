@@ -32,7 +32,7 @@ defmodule Ask.Runtime.Session do
     # Is this really necessary?
     Channel.setup(runtime_channel, respondent, token)
 
-    case flow |> Flow.step(TextVisitor.new("sms")) do
+    case flow |> Flow.step(session.current_mode |> SessionMode.visitor) do
       {:end, reply} ->
         if Reply.prompts(reply) != [] do
           runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))

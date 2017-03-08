@@ -33,7 +33,7 @@ class SurveyForm extends Component {
   }
 
   allModesHaveAChannel(modes, channels, allChannels) {
-    const selectedTypes = channels.map(id => allChannels[id].type)
+    const selectedTypes = channels.map(channel => channel.mode)
     modes = uniq(flatMap(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
   }
