@@ -9,6 +9,7 @@ defmodule Ask.Questionnaire do
     field :steps, Ask.Ecto.Type.JSON
     field :quota_completed_msg, Ask.Ecto.Type.JSON
     field :error_msg, Ask.Ecto.Type.JSON
+    field :mobile_web_sms_message, :string
     field :languages, Ask.Ecto.Type.JSON
     field :default_language, :string
     belongs_to :project, Ask.Project
