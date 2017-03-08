@@ -2,8 +2,7 @@
 import React, { Component } from 'react'
 import StepEditor from './StepEditor'
 import StepsList from './StepsList'
-import DraftFirstExample from './Draft1'
-import DraftSecondExample from './Draft2'
+import Draft from './Draft'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
@@ -77,8 +76,7 @@ class QuestionnaireSteps extends Component {
     return (
       <div>
         <div>
-          <DraftFirstExample />
-          <DraftSecondExample />
+          <Draft />
         </div>
         {this.dummyDropTarget()}
         {this.questionnaireSteps()}
