@@ -11,6 +11,7 @@ import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
+import MobileWebSmsMessage from './MobileWebSmsMessage'
 import csvString from 'csv-string'
 import * as language from '../../language'
 import * as routes from '../../routes'
@@ -358,6 +359,9 @@ class QuestionnaireEditor extends Component {
           <div className='row'>
             <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
+          {mobileWeb
+          ? <MobileWebSmsMessage readOnly={readOnly} />
+          : null}
         </div>
         : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
         }

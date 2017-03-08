@@ -19,7 +19,8 @@ defmodule Ask.QuestionnaireView do
       default_language: questionnaire.default_language,
       languages: questionnaire.languages,
       quota_completed_msg: questionnaire.quota_completed_msg,
-      error_msg: questionnaire.error_msg
+      error_msg: questionnaire.error_msg,
+      mobile_web_sms_message: questionnaire.mobile_web_sms_message,
     }
   end
 end

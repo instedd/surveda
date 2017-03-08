@@ -8,6 +8,7 @@ export type Questionnaire = {
   activeLanguage: string,
   quotaCompletedMsg: Prompt,
   errorMsg: Prompt,
+  mobileWebSmsMessage: ?string,
   projectId: number
 };
 
