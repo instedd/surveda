@@ -86,10 +86,10 @@ defmodule Ask.Runtime.Broker do
       reached_quotas = reached_quotas?(survey)
 
       cond do
-        reached_quotas || (active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed)) ->
+        (active == 0 && ((pending + stalled) == 0 || survey.cutoff <= completed || reached_quotas)) ->
           complete(survey)
 
-        active < batch_size() && pending > 0 ->
+        active < batch_size() && pending > 0 && !(survey.cutoff <= completed || reached_quotas) ->
           start_some(survey, batch_size() - active)
 
         true -> :ok
