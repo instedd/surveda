@@ -508,11 +508,85 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_fallback_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
   end
 
-  test "marks the survey as completed when the cutoff is reached" do
+  test "should not keep setting pending to actives when cutoff is reached" do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 12}))
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+    assert_respondents_by_state(survey, 10, 11)
+
+    r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
+    Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
+
+    Broker.handle_info(:poll, nil)
+
+    assert_respondents_by_state(survey, 9, 11)
+    assert survey.state == "running"
+  end
+
+  test "marks survey as complete when the cutoff is reached and actives become stalled" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
+
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+    assert_respondents_by_state(survey, 10, 11)
+
+    r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
+    Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
+
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "stalled"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+
+    assert_respondents_by_state(survey, 0, 11)
+    assert survey.state == "completed"
+  end
+
+  test "marks survey as complete when the cutoff is reached and actives become failed" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
+
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+    assert_respondents_by_state(survey, 10, 11)
+
+    r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
+    Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
+
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+
+    assert_respondents_by_state(survey, 0, 11)
+    assert survey.state == "completed"
+  end
+
+  test "marks the survey as completed when the cutoff is reached and actives become completed" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
+
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 6}))
 
     Broker.handle_info(:poll, nil)
 
@@ -545,7 +619,7 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
-  test "marks the survey as completed when all the quotas are reached" do
+  test "marks the survey as completed when all the quotas are reached and actives become completed" do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 10)
 
@@ -603,6 +677,12 @@ defmodule Ask.BrokerTest do
 
     # Now it should be completed
     qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
+
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
+    end)
+
     Broker.handle_info(:poll, nil)
 
     survey_id = survey.id
@@ -610,6 +690,191 @@ defmodule Ask.BrokerTest do
       where: q.survey_id == ^survey_id
 
     survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "completed"
+  end
+
+  test "should not keep setting pending to actives when all the quotas are completed" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
+    qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
+    qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
+    qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
+
+    Repo.all(from r in Respondent, where: r.state == "active", limit: 5)
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert_respondents_by_state(survey, 5, 11)
+  end
+
+  test "marks the survey as completed when all the quotas are reached and actives become stalled" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
+    qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
+    qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
+    qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
+
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "stalled"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert_respondents_by_state(survey, 0, 11)
+    assert survey.state == "completed"
+  end
+
+  test "marks the survey as completed when all the quotas are reached and actives become failed" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 20)
+
+    quotas = %{
+      "vars" => ["Smokes", "Exercises"],
+      "buckets" => [
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
+          "quota" => 2,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
+          "quota" => 3,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
+          "quota" => 4,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
+    qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert survey.state == "running"
+
+    qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
+    qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
+    qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
+    qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
+
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
+    end)
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Survey |> Repo.get(survey.id)
+    assert_respondents_by_state(survey, 0, 11)
     assert survey.state == "completed"
   end
 
