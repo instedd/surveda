@@ -1,7 +1,6 @@
 defmodule Ask.ChannelControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Channel
   @valid_attrs %{name: "some content", provider: "some content", settings: %{}, type: "some content"}
   @invalid_attrs %{name: ""}
 
