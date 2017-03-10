@@ -160,15 +160,17 @@ class RespondentIndex extends Component {
     let incentivesCsvLink = null
     if (project.owner) {
       incentivesCsvLink = (
-        <ul>
-          <li>
-            <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
+        <li className='collection-item'>
+          <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
+            <div>
               <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
-              <h4>Incentives file</h4>
+            </div>
+            <div>
+              <h5>Incentives file</h5>
               <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
-            </a>
-          </li>
-        </ul>
+            </div>
+          </a>
+        </li>
       )
     }
 
@@ -184,25 +186,31 @@ class RespondentIndex extends Component {
             <h5>Download CSV</h5>
             <p>Download survey respondents data as CSV</p>
           </div>
-          <ul>
-            <li>
-              <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
-                <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
-                <h4>Survey results</h4>
-                <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
+          <ul className='collection'>
+            <li className='collection-item'>
+              <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
+                <div>
+                  <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                </div>
+                <div>
+                  <h5>Survey results</h5>
+                  <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
+                </div>
               </a>
             </li>
-          </ul>
-          <ul>
-            <li>
-              <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
-                <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
-                <h4>Disposition History</h4>
-                <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
+            <li className='collection-item'>
+              <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
+                <div>
+                  <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                </div>
+                <div>
+                  <h5>Disposition History</h5>
+                  <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
+                </div>
               </a>
             </li>
+            {incentivesCsvLink}
           </ul>
-          {incentivesCsvLink}
         </Modal>
         <CardTable title={title} footer={footer} tableScroll>
           <thead>

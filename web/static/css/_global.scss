@@ -829,3 +829,19 @@ audio::-webkit-media-controls-enclosure {
 audio::-webkit-media-controls-panel {
   width: calc(100% + 30px); /* Adjust as needed */
 }
+
+.download-csv > div {
+  display: inline-block;
+  color: gray;
+  max-width: 70%;
+}
+
+.download-csv > div > i {
+  padding-left: 15px;
+  top: -38px;
+  width: 60px;
+  height: 60px;
+  padding-top: 10px;
+  margin-right: 10px;
+  font-size: 23pt;
+}
