@@ -300,9 +300,26 @@ const toggleDay = (state, action) => {
 }
 
 const setScheduleFrom = (state, action) => {
+  let endTime = state.scheduleEndTime
+  if (action.hour >= endTime) {
+    endTime = action.nextHour
+  }
   return {
     ...state,
+    scheduleEndTime: endTime,
     scheduleStartTime: action.hour
+  }
+}
+
+const setScheduleTo = (state, action) => {
+  let startTime = state.scheduleStartTime
+  if (action.hour <= startTime) {
+    startTime = action.previousHour
+  }
+  return {
+    ...state,
+    scheduleStartTime: startTime,
+    scheduleEndTime: action.hour
   }
 }
 
@@ -385,13 +402,6 @@ const buildComparisons = (modeComparison, questionnaireComparison, modes, questi
     }))
   } else {
     return []
-  }
-}
-
-const setScheduleTo = (state, action) => {
-  return {
-    ...state,
-    scheduleEndTime: action.hour
   }
 }
 
