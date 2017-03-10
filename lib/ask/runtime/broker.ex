@@ -10,6 +10,7 @@ defmodule Ask.Runtime.Broker do
 
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
+  @batch_limit 100
 
   def server_ref, do: @server_ref
 
@@ -24,25 +25,31 @@ defmodule Ask.Runtime.Broker do
   end
 
   def init(_args) do
-    :timer.send_interval(@poll_interval, :poll)
+    :timer.send_after(1000, :poll)
     {:ok, nil}
   end
 
   def handle_info(:poll, state, now \\ Timex.now) do
-    Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now)
-    |> Enum.each(&retry_respondent(&1))
+    IO.inspect("POLL!")
 
-    schedule = today_schedule()
+    try do
+      Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: @batch_limit)
+      |> Enum.each(&retry_respondent(&1))
 
-    surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^schedule, ^schedule))
+      schedule = today_schedule()
 
-    surveys |> Enum.filter( fn s ->
-                  s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
-                  && s.schedule_end_time >= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
-               end)
-            |> Enum.each(&poll_survey(&1))
+      surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^schedule, ^schedule))
 
-    {:noreply, state}
+      surveys |> Enum.filter( fn s ->
+                    s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
+                    && s.schedule_end_time >= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
+                 end)
+              |> Enum.each(&poll_survey(&1))
+
+      {:noreply, state}
+    after
+      :timer.send_after(@poll_interval, :poll)
+    end
   end
 
   def handle_call(:poll, _from, state) do
@@ -116,6 +123,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp start_some(survey, count) do
+    count = Enum.min([@batch_limit, count])
+
     (from r in assoc(survey, :respondents),
       where: r.state == "pending",
       limit: ^count)
