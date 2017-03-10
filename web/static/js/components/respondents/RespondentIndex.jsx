@@ -8,7 +8,7 @@ import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
 import range from 'lodash/range'
 import values from 'lodash/values'
-import { CardTable, Tooltip, UntitledIfEmpty } from '../ui'
+import { CardTable, UntitledIfEmpty, Modal } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../reducers/survey'
@@ -33,8 +33,18 @@ type Props = {
   actions: any
 };
 
+type State = {
+  csvType: string
+};
+
 class RespondentIndex extends Component {
   props: Props
+  state: State
+
+  constructor(props) {
+    super(props)
+    this.state = {csvType: ''}
+  }
 
   componentDidMount() {
     const { projectId, surveyId, pageSize } = this.props
@@ -147,37 +157,53 @@ class RespondentIndex extends Component {
       colspan += 1
     }
 
-    let incentivesCsvButton = null
+    let incentivesCsvLink = null
     if (project.owner) {
-      incentivesCsvButton = (
-        <li>
-          <Tooltip text='Download CSV for incentives'>
-            <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadIncentivesCSV()}><i className='material-icons'>description</i></a>
-          </Tooltip>
-        </li>
+      incentivesCsvLink = (
+        <ul>
+          <li>
+            <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
+              <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+              <h4>Incentives file</h4>
+              <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
+            </a>
+          </li>
+        </ul>
       )
     }
 
     return (
       <div className='white'>
         <div className='fixed-action-btn horizontal right mtop'>
-          <a className='btn-floating btn-large green'>
+          <a className='btn-floating btn-large green' href='#' onClick={(e) => { e.preventDefault(); $('#downloadCSV').modal('open') }}>
             <i className='material-icons'>get_app</i>
           </a>
+        </div>
+        <Modal id='downloadCSV' confirmationText='Download CSV' card>
+          <div className='card-title header'>
+            <h5>Download CSV</h5>
+            <p>Download survey respondents data as CSV</p>
+          </div>
           <ul>
             <li>
-              <Tooltip text='Download results'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadCSV()}><i className='material-icons'>assignment_turned_in</i></a>
-              </Tooltip>
+              <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
+                <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                <h4>Survey results</h4>
+                <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
+              </a>
             </li>
-            <li>
-              <Tooltip text='Download disposition history'>
-                <a className='btn-floating waves-effect waves-light green' onClick={() => this.downloadDispositionHistoryCSV()}><i className='material-icons'>description</i></a>
-              </Tooltip>
-            </li>
-            {incentivesCsvButton}
           </ul>
-        </div>
+          <ul>
+            <li>
+              <a className='' href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
+                <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                <h4>Disposition History</h4>
+                <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
+              </a>
+            </li>
+          </ul>
+          {incentivesCsvLink}
+        </Modal>
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>

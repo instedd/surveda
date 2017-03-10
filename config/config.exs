@@ -41,6 +41,9 @@ config :ask, :channel,
     "verboice" => Ask.Runtime.VerboiceChannel
   }
 
+config :ask, Ask.Runtime.Broker,
+  batch_size: {:system, "BROKER_BATCH_SIZE", 10}
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$dateT$timeZ $metadata[$level] $message\n",

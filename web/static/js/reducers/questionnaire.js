@@ -878,7 +878,7 @@ const validatePrompts = (step, stepIndex, context) => {
 }
 
 const validateSkipLogic = (skipLogic, stepIndex, steps, context) => {
-  if (!skipLogic) {
+  if (!skipLogic || skipLogic == 'end') {
     return true
   }
   let currentValueIsValid = false

@@ -119,9 +119,16 @@ export const changeName = (newName: string) => ({
   newName
 })
 
-export const setScheduleFrom = (hour: string) => ({
+export const setScheduleFrom = (hour: string, nextHour: string) => ({
   type: SET_SCHEDULE_FROM,
-  hour
+  hour,
+  nextHour
+})
+
+export const setScheduleTo = (hour: string, previousHour: string) => ({
+  type: SET_SCHEDULE_TO,
+  hour,
+  previousHour
 })
 
 export const selectMode = (mode: string[]) => ({
@@ -139,11 +146,6 @@ export const toggleCountPartialResults = () => ({
 
 export const changeQuestionnaireComparison = () => ({
   type: CHANGE_QUESTIONNAIRE_COMPARISON
-})
-
-export const setScheduleTo = (hour: string) => ({
-  type: SET_SCHEDULE_TO,
-  hour
 })
 
 export const changeQuestionnaire = (questionnaire: number) => ({
