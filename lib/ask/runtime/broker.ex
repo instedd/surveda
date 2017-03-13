@@ -30,8 +30,6 @@ defmodule Ask.Runtime.Broker do
   end
 
   def handle_info(:poll, state, now \\ Timex.now) do
-    IO.inspect("POLL!")
-
     try do
       Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: @batch_limit)
       |> Enum.each(&retry_respondent(&1))
