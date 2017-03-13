@@ -79,7 +79,7 @@ class SurveyWizardScheduleStep extends Component {
         </div>
         <div className='row'>
           <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{at: -1, item: {label: '12:00 AM', value: '23:59:59'}}} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{at: 23, item: {label: '12:00 AM', value: '23:59:59'}}} />
         </div>
         <SurveyWizardRetryAttempts readOnly={readOnly} />
       </div>
