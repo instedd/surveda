@@ -29,8 +29,8 @@ defmodule Ask.Runtime.Broker do
     GenServer.call(@server_ref, {:channel_failed, respondent, token, reason})
   end
 
-  def delivery_confirm(respondent, token, title, disposition) do
-    GenServer.call(@server_ref, {:delivery_confirm, respondent, token, title, disposition})
+  def delivery_confirm(respondent, token, title) do
+    GenServer.call(@server_ref, {:delivery_confirm, respondent, token, title})
   end
 
   # Makes the borker performs a poll on the surveys.
@@ -85,8 +85,8 @@ defmodule Ask.Runtime.Broker do
     {:reply, :ok, state}
   end
 
-  def handle_call({:delivery_confirm, respondent, _token, title, disposition}, _from, state) do
-    respondent.session |> Session.load |> Session.delivery_confirm(title, disposition)
+  def handle_call({:delivery_confirm, respondent, _token, title}, _from, state) do
+    respondent.session |> Session.load |> Session.delivery_confirm(title)
     {:reply, :ok, state}
   end
 

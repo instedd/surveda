@@ -26,6 +26,7 @@ defmodule Ask.Respondent do
     belongs_to :respondent_group, Ask.RespondentGroup
     belongs_to :quota_bucket, Ask.QuotaBucket
     has_many :responses, Ask.Response
+    has_many :survey_log_entries, Ask.SurveyLogEntry
 
     timestamps()
   end

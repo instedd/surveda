@@ -431,7 +431,7 @@ defmodule Ask.RespondentController do
       |> Timex.Ecto.DateTime.cast!
       |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
 
-      [e.respondent, (e.mode |> String.upcase), channel_name, disposition, action_type, e.action_data, timestamp]
+      [e.respondent_hashed_number, (e.mode |> String.upcase), channel_name, disposition, action_type, e.action_data, timestamp]
     end)
 
     header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]

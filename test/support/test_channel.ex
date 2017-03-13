@@ -5,18 +5,22 @@ defmodule Ask.TestChannel do
   def new(push \\ true)
 
   def new(push) when is_atom(push) do
-    %Ask.TestChannel{pid: self(), push: push}
+    new(push, nil, push)
   end
 
   def new(channel) do
     pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
     push = channel.settings["push"] |> String.to_atom
     has_queued_message = channel.settings["has_queued_message"] |> String.to_atom
-    %Ask.TestChannel{pid: pid, push: push, has_queued_message: has_queued_message}
+    %Ask.TestChannel{pid: pid, push: push, has_queued_message: has_queued_message, delivery: push}
   end
 
   def new(push, has_queued_message) do
-    %Ask.TestChannel{pid: self(), push: push, has_queued_message: has_queued_message}
+    new(push, has_queued_message, push)
+  end
+
+  def new(push, has_queued_message, delivery) do
+    %Ask.TestChannel{pid: self(), push: push, has_queued_message: has_queued_message, delivery: delivery}
   end
 
   def settings(channel) do

@@ -53,7 +53,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       "failed" ->
         Broker.channel_failed(respondent, token)
       "delivered" ->
-        Broker.delivery_confirm(respondent, token, args["step_title"], args["respondent_disposition"])
+        Broker.delivery_confirm(respondent, token, args["step_title"])
     end
 
     conn |> send_resp(200, "")
@@ -100,7 +100,6 @@ defmodule Ask.Runtime.NuntiumChannel do
           to: to,
           body: prompt,
           respondent_id: respondent.id,
-          respondent_disposition: Reply.disposition(reply),
           step_title: Reply.step_title_with_index(step, index)
         }
       end)

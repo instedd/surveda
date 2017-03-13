@@ -66,18 +66,18 @@ defmodule Ask.Runtime.Session do
       disposition = Reply.disposition(reply) || respondent.disposition
       Enum.each Reply.steps(reply), fn(step) ->
         step[:prompts] |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
-          SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition, :prompt, Reply.step_title_with_index(step, index))
+          SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition, :prompt, Reply.step_title_with_index(step, index))
         end)
       end
     end
   end
 
   defp log_confirmation(title, disposition, channel, respondent) do
-    SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition, :prompt, title)
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition, :prompt, title)
   end
 
   defp log_contact(status, channel, respondent, disposition \\ nil) do
-    SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition || respondent.disposition, :contact, status)
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :contact, status)
   end
 
   defp log_response(:answer, channel, respondent, disposition) do
@@ -89,7 +89,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp log_response({:reply, response}, channel, respondent, disposition) do
-    SurveyLogger.log(respondent.survey_id, channel.type, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
   end
 
   defp handle_setup_response(setup_response) do
@@ -178,8 +178,8 @@ defmodule Ask.Runtime.Session do
     :ok
   end
 
-  def delivery_confirm(session, title, disposition) do
-    log_confirmation(title, disposition, session.channel, session.respondent)
+  def delivery_confirm(session, title) do
+    log_confirmation(title, session.respondent.disposition, session.channel, session.respondent)
   end
 
   defp switch_to_fallback(session) do

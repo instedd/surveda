@@ -15,16 +15,16 @@ defmodule Ask.Runtime.SurveyLogger do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  def log(survey_id, mode, respondent, channel_id, disposition, action_type, action_data, timestamp \\ Timex.now) do
-    GenServer.cast(@server_ref, {:log, survey_id, mode, respondent, channel_id, disposition, action_type, action_data, timestamp})
+  def log(survey_id, mode, respondent_id, respondent_hash, channel_id, disposition, action_type, action_data, timestamp \\ Timex.now) do
+    GenServer.cast(@server_ref, {:log, survey_id, mode, respondent_id, respondent_hash, channel_id, disposition, action_type, action_data, timestamp})
   end
 
   def init(_args) do
     {:ok, nil}
   end
 
-  def handle_cast({:log, survey_id, mode, respondent, channel_id, disposition, action_type, action_data, timestamp}, state) do
-    Logger.debug "Survey log entry: #{survey_id} #{mode} #{respondent} #{channel_id} #{disposition} #{action_type} #{action_data} #{timestamp}"
+  def handle_cast({:log, survey_id, mode, respondent_id, respondent_hash, channel_id, disposition, action_type, action_data, timestamp}, state) do
+    Logger.debug "Survey log entry: #{survey_id} #{mode} #{respondent_id} #{respondent_hash} #{channel_id} #{disposition} #{action_type} #{action_data} #{timestamp}"
 
     action_type = case action_type do
       type when is_atom(type) -> Atom.to_string(type)
@@ -34,7 +34,8 @@ defmodule Ask.Runtime.SurveyLogger do
     %SurveyLogEntry{
       survey_id: survey_id,
       mode: mode,
-      respondent: respondent,
+      respondent_id: respondent_id,
+      respondent_hashed_number: respondent_hash,
       channel_id: channel_id,
       disposition: disposition,
       action_type: action_type,
