@@ -731,6 +731,14 @@ i.survey-status { // icon for survey status on index
   }
 }
 .accept-invitation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0 !important;
+  h1 {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
   p {
     @extend .grey-text;
     font-weight: 300;
