@@ -217,6 +217,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
+    respondent = Repo.get!(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
@@ -225,6 +226,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
+    respondent = Repo.get!(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time it should stall
@@ -248,6 +250,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
+    respondent = Repo.get!(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # This time it should stall
@@ -408,6 +411,7 @@ defmodule Ask.BrokerTest do
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
@@ -415,6 +419,7 @@ defmodule Ask.BrokerTest do
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time it should fail
@@ -453,6 +458,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
@@ -461,6 +467,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ["Do you smoke? Reply 1 for YES, 2 for NO"]]
 
     # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time fallback to IVR channel
@@ -493,6 +500,7 @@ defmodule Ask.BrokerTest do
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
@@ -500,6 +508,7 @@ defmodule Ask.BrokerTest do
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time fallback to SMS channel
@@ -909,6 +918,7 @@ defmodule Ask.BrokerTest do
 
     assert_respondents_by_state(survey, 1, 0)
 
+    respondent = Repo.get(Respondent, respondent.id)
     Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
 
     Broker.handle_info(:poll, nil)
@@ -1500,6 +1510,27 @@ defmodule Ask.BrokerTest do
     Repo.get(Respondent, respondent.id)
 
     :ok = broker |> GenServer.stop
+  end
+
+  test "reloads respondent if stale" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    survey |> Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    session = respondent.session |> Ask.Runtime.Session.load
+    Broker.retry_respondent(respondent)
+
+    Broker.sync_step_internal(session, Flow.Message.reply("Yes"))
+
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.state == "active"
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, minutes: 1), until: Timex.shift(now, minutes: 3), step: [seconds: 1])
+    assert updated_respondent.timeout_at in interval
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do

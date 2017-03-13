@@ -42,7 +42,7 @@ defmodule Ask.Runtime.Session do
 
     case flow do
       :end ->
-        {:end, reply}
+        {:end, reply, respondent}
       _ ->
         session = %Session{
           channel: channel,
@@ -55,7 +55,7 @@ defmodule Ask.Runtime.Session do
           channel_state: channel_state,
           count_partial_results: count_partial_results
         }
-        {:ok, session, reply, current_timeout(session)}
+        {:ok, session, reply, current_timeout(session), respondent}
     end
   end
 
@@ -78,10 +78,10 @@ defmodule Ask.Runtime.Session do
 
   # Process retries. If there are no more retries, mark session as failed.
   # We ran out of retries, and there is no fallback specified
-  def timeout(session = %Session{retries: [], fallback: nil}) do
+  def timeout(session = %Session{retries: [], fallback: nil, respondent: respondent}) do
     case session.channel |> Ask.Channel.runtime_channel |> Channel.can_push_question? do
-      true -> {:stalled, session |> clear_token}
-      false -> :failed
+      true -> {:stalled, session |> clear_token, respondent}
+      false -> {:failed, respondent}
     end
   end
 
@@ -94,13 +94,13 @@ defmodule Ask.Runtime.Session do
   end
 
   # Let's try again
-  def timeout(session = %Session{retries: [_ | retries], channel_state: channel_state}) do
+  def timeout(session = %Session{retries: [_ | retries], channel_state: channel_state, respondent: respondent}) do
     runtime_channel = Ask.Channel.runtime_channel(session.channel)
 
     # First, check if there's already a queued message in the channel, to
     # avoid queueing another one before even trying to send the first one.
     if Channel.has_queued_message?(runtime_channel, channel_state) do
-      {:ok, session, %Reply{}, current_timeout(session)}
+      {:ok, session, %Reply{}, current_timeout(session), respondent}
     else
       token = Ecto.UUID.generate
 
@@ -123,7 +123,7 @@ defmodule Ask.Runtime.Session do
 
       # The new session will timeout as defined by hd(retries)
       session = %{session | retries: retries, token: token, channel_state: channel_state}
-      {:ok, session, %Reply{}, current_timeout(session)}
+      {:ok, session, %Reply{}, current_timeout(session), respondent}
     end
   end
 
@@ -169,21 +169,21 @@ defmodule Ask.Runtime.Session do
 
     case step_answer do
       {:end, %Reply{prompts: []}} ->
-        :end
+        {:end, respondent}
+      {:end, reply} ->
+        {:end, reply, respondent}
       {:ok, flow, reply} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
             msg = quota_completed_msg(session.flow)
             if msg do
-              {:rejected, %Reply{prompts: [msg]}}
+              {:rejected, %Reply{prompts: [msg]}, respondent}
             else
-              :rejected
+              {:rejected, respondent}
             end
           false ->
-            {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
+            {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
         end
-      _ ->
-        step_answer
     end
   end
 
