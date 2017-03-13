@@ -1,17 +1,16 @@
 defmodule Ask.EctoDbSession do
-  require Logger
   import Ecto.Query
 
   alias Ask.Session
   alias Ask.Repo
 
-  def get_user_data(repo, _user, creds, _id_key) do 
+  def get_user_data(repo, _user, creds, _id_key) do
     Ask.Session
     |> where([s], s.token == ^creds)
     |> Repo.one
     |> case do
       nil -> nil
-      session -> 
+      session ->
         user_id = String.to_integer session.user_id
 
         session.user_type
@@ -21,18 +20,18 @@ defmodule Ask.EctoDbSession do
     end
   end
 
-  def put_credentials(_repo, user, creds, _id_key) do 
+  def put_credentials(_repo, user, creds, _id_key) do
     id_str = "#{Map.get user, "id"}"
     params = %{
-      token: creds, 
-      user_type: Atom.to_string(user.__struct__), 
+      token: creds,
+      user_type: Atom.to_string(user.__struct__),
       user_id: Integer.to_string(user.id)
     }
 
     where(Session, [s], s.user_id == ^id_str)
     |> Repo.delete_all
 
-    Session.changeset(Session.__struct__, params) 
+    Session.changeset(Session.__struct__, params)
     |> Repo.insert
     |> case do
       {:ok, _} -> :ok
@@ -43,11 +42,11 @@ defmodule Ask.EctoDbSession do
   def delete_credentials(_user, creds) do
     Session
     |> where([s], s.token == ^creds)
-    |> Repo.one 
+    |> Repo.one
     |> case do
-      nil -> 
+      nil ->
         nil
-      user -> 
+      user ->
         Repo.delete user
     end
   end

@@ -12,7 +12,7 @@ defmodule Ask.Coherence.PasswordController do
   * update - verify password, password confirmation, and update the database
   """
   use Coherence.Web, :controller
-  require Logger
+  alias Ask.Logger
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
   alias Ask.Coherence.Helper

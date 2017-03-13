@@ -1,8 +1,7 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-  require Logger
 
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Channel}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Channel, Logger}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
@@ -43,9 +42,7 @@ defmodule Ask.RespondentGroupController do
         _ -> render_invalid(conn, file.filename, invalid_entries)
       end
     else
-      if Mix.env != :test do
-        Logger.warn "Error when creating respondent group for survey: #{inspect survey}"
-      end
+      Logger.warn "Error when creating respondent group for survey: #{inspect survey}"
       render_unprocessable_entity(conn)
     end
   end

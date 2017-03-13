@@ -11,7 +11,6 @@ defmodule Ask.Coherence.RegistrationController do
   * delete - delete the user account
   """
   use Coherence.Web, :controller
-  require Logger
   alias Coherence.ControllerHelpers, as: Helpers
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a

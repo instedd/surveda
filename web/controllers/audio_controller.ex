@@ -1,6 +1,6 @@
 defmodule Ask.AudioController do
   use Ask.Web, :api_controller
-  require Logger
+  alias Ask.Logger
 
   alias Ask.Audio
 
@@ -20,9 +20,7 @@ defmodule Ask.AudioController do
         |> put_status(:created)
         |> render("show.json", audio: %{id: audio.uuid})
       {:error, changeset} ->
-        if Mix.env != :test do
-          Logger.warn "Error during audio uploading: #{inspect changeset}"
-        end
+        Logger.warn "Error during audio uploading: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)

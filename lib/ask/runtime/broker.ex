@@ -3,10 +3,9 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger}
   alias Ask.Runtime.{Session, Reply}
   alias Ask.QuotaBucket
-  require Logger
 
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
@@ -89,9 +88,7 @@ defmodule Ask.Runtime.Broker do
       end
     rescue
       e ->
-        if Mix.env != :test do
-          Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
-        end
+        Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
         Sentry.capture_exception(e, [
           stacktrace: System.stacktrace(),
           extra: %{survey_id: survey.id}])

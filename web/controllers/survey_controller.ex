@@ -1,8 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
-  require Logger
 
-  alias Ask.{Project, Survey, Questionnaire}
+  alias Ask.{Project, Survey, Questionnaire, Logger}
   alias Ask.Runtime.Session
 
   def index(conn, %{"project_id" => project_id}) do
@@ -38,9 +37,7 @@ defmodule Ask.SurveyController do
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
         |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]))
       {:error, changeset} ->
-        if Mix.env != :test do
-          Logger.warn "Error when creating a survey: #{inspect changeset}"
-        end
+        Logger.warn "Error when creating a survey: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -78,9 +75,7 @@ defmodule Ask.SurveyController do
         project |> Project.touch!
         render(conn, "show.json", survey: survey)
       {:error, changeset} ->
-        if Mix.env != :test do
-          Logger.warn "Error when updating survey: #{inspect changeset}"
-        end
+        Logger.warn "Error when updating survey: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -133,9 +128,7 @@ defmodule Ask.SurveyController do
     |> Repo.preload(respondent_groups: :channels)
 
     if survey.state != "ready" do
-      if Mix.env != :test do
-        Logger.warn "Error when launching survey #{id}. State is not ready "
-      end
+      Logger.warn "Error when launching survey #{id}. State is not ready "
       conn
         |> put_status(:unprocessable_entity)
         |> render("show.json", survey: survey)
@@ -155,18 +148,14 @@ defmodule Ask.SurveyController do
               project |> Project.touch!
               render(conn, "show.json", survey: survey)
             {:error, changeset} ->
-              if Mix.env != :test do
-                Logger.warn "Error when launching survey: #{inspect changeset}"
-              end
+              Logger.warn "Error when launching survey: #{inspect changeset}"
               conn
               |> put_status(:unprocessable_entity)
               |> render(Ask.ChangesetView, "error.json", changeset: changeset)
           end
 
         {:error, _reason} ->
-          if Mix.env != :test do
-            Logger.warn "Error when preparing channels for launching survey #{id}"
-          end
+          Logger.warn "Error when preparing channels for launching survey #{id}"
           conn
           |> put_status(:unprocessable_entity)
           |> render("show.json", survey: survey)
@@ -207,9 +196,7 @@ defmodule Ask.SurveyController do
             project |> Project.touch!
             render(conn, "show.json", survey: survey)
           {:error, changeset} ->
-            if Mix.env != :test do
-              Logger.warn "Error when stopping survey #{inspect survey}"
-            end
+            Logger.warn "Error when stopping survey #{inspect survey}"
             conn
             |> put_status(:unprocessable_entity)
             |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -217,9 +204,7 @@ defmodule Ask.SurveyController do
       _ ->
         # Cancelling a pending survey or a survey in any other state should
         # result in an error.
-        if Mix.env != :test do
-          Logger.warn "Error when stopping survey #{inspect survey}: Wrong state"
-        end
+        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state"
         conn
           |> put_status(:unprocessable_entity)
           |> render("show.json", survey: survey)
