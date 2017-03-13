@@ -7,9 +7,7 @@ defmodule Ask.InviteController do
   def accept_invitation(conn, %{"code" => code}) do
     invite = Repo.one(from i in Invite, where: i.code == ^code)
     if !invite do
-      if Mix.env != :test do
-        Logger.warn "There is no invite matching code #{inspect code}"
-      end
+      Logger.warn "There is no invite matching code #{inspect code}"
       render(conn, "error.json", error: "invitation code is invalid")
     else
       user = conn |> current_user

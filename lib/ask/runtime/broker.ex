@@ -229,9 +229,7 @@ defmodule Ask.Runtime.Broker do
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
         e ->
-          if Mix.env != :test do
-            Logger.error "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id}): #{inspect e} #{inspect System.stacktrace}"
-          end
+          Logger.error "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id}): #{inspect e} #{inspect System.stacktrace}"
           Sentry.capture_exception(e, [
             stacktrace: System.stacktrace(),
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
