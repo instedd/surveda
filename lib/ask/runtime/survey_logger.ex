@@ -1,10 +1,7 @@
 defmodule Ask.Runtime.SurveyLogger do
   use GenServer
   use Timex
-  import Ecto.Query
-  import Ecto
-  alias Ask.{Repo, Survey, Respondent, SurveyLogEntry}
-  alias Ask.Runtime.Session
+  alias Ask.{Repo, SurveyLogEntry}
   require Logger
 
   @server_ref {:global, __MODULE__}
