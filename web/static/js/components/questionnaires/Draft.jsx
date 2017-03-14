@@ -1,12 +1,13 @@
 import React, {PropTypes} from 'react'
-// import {Editor, EditorState, RichUtils} from 'draft-js'
+
 import {
  Editor,
+ ContentState,
+ convertFromHTML,
  EditorState,
  RichUtils
 } from 'draft-js'
 
-import BlockStyleControls from './BlockStyleControls'
 import InlineStyleControls from './InlineStyleControls'
 import {stateToHTML} from 'draft-js-export-html'
 
@@ -14,13 +15,20 @@ class Draft extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = {editorState: EditorState.createEmpty()}
-    console.log(props.onChange)
+    const blocksFromHTML = convertFromHTML(props.initialValue)
+    const state = ContentState.createFromBlockArray(
+      blocksFromHTML.contentBlocks,
+      blocksFromHTML.entityMap
+    )
+    this.state = {editorState: EditorState.createWithContent(state)}
 
     this.focus = () => this.refs.editor.focus()
     this.onChange = (editorState) => {
       this.setState({editorState})
-      props.onChange(stateToHTML(editorState.getCurrentContent()))
+    }
+
+    this.onBlur = (editorState) => {
+      props.onBlur(stateToHTML(this.state.editorState.getCurrentContent()))
     }
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
@@ -44,14 +52,14 @@ class Draft extends React.Component {
     this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth))
   }
 
-  _toggleBlockType(blockType) {
-    this.onChange(
-      RichUtils.toggleBlockType(
-        this.state.editorState,
-        blockType
-      )
-    )
-  }
+  // _toggleBlockType(blockType) {
+  //   this.onChange(
+  //     RichUtils.toggleBlockType(
+  //       this.state.editorState,
+  //       blockType
+  //     )
+  //   )
+  // }
 
   _toggleInlineStyle(inlineStyle) {
     this.onChange(
@@ -76,7 +84,7 @@ class Draft extends React.Component {
     const styleMap = {
       CODE: {
         backgroundColor: 'rgba(0, 0, 0, 0.05)',
-        fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
+        fontFamily: '"Inconsolata", "Menlo", "Consolas"',
         fontSize: 16,
         padding: 2
       }
@@ -86,7 +94,6 @@ class Draft extends React.Component {
     // either style the placeholder or hide it. Let's just hide it now.
     let className = 'RichEditor-editor'
     let contentState = editorState.getCurrentContent()
-    console.log(stateToHTML(contentState))
     if (!contentState.hasText()) {
       if (contentState.getBlockMap().first().getType() !== 'unstyled') {
         className += ' RichEditor-hidePlaceholder'
@@ -95,10 +102,6 @@ class Draft extends React.Component {
 
     return (
       <div className='RichEditor-root'>
-        <BlockStyleControls
-          editorState={editorState}
-          onToggle={this.toggleBlockType}
-        />
         <InlineStyleControls
           editorState={editorState}
           onToggle={this.toggleInlineStyle}
@@ -110,10 +113,11 @@ class Draft extends React.Component {
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
             onChange={this.onChange}
+            onBlur={this.onBlur}
             onTab={this.onTab}
-            placeholder='Tell a story...'
+            placeholder='Mobile Web Prompt'
             ref='editor'
-            spellCheck
+            spellCheck={false}
           />
         </div>
       </div>
@@ -122,7 +126,8 @@ class Draft extends React.Component {
 }
 
 Draft.propTypes = {
-  onChange: PropTypes.func
+  onBlur: PropTypes.func,
+  initialValue: PropTypes.string
 }
 
 export default Draft

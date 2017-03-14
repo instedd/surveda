@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {PropTypes} from 'react'
 import StyleButton from './StyleButton'
 
 class InlineStyleControls extends React.Component {
@@ -6,8 +6,7 @@ class InlineStyleControls extends React.Component {
     return ([
       {label: 'Bold', style: 'BOLD'},
       {label: 'Italic', style: 'ITALIC'},
-      {label: 'Underline', style: 'UNDERLINE'},
-      {label: 'Monospace', style: 'CODE'}
+      {label: 'Underline', style: 'UNDERLINE'}
     ])
   }
 
@@ -27,6 +26,11 @@ class InlineStyleControls extends React.Component {
       </div>
     )
   }
+}
+
+InlineStyleControls.propTypes = {
+  onToggle: PropTypes.func,
+  editorState: PropTypes.object
 }
 
 export default InlineStyleControls
