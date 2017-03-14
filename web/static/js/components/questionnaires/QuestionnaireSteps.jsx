@@ -5,7 +5,6 @@ import StepsList from './StepsList'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
-// import {Editor, EditorState} from 'draft-js'
 
 type Props = {
   steps: Step[],

@@ -33,7 +33,6 @@ class Draft extends React.Component {
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
     this.onTab = (e) => this._onTab(e)
-    this.toggleBlockType = (type) => this._toggleBlockType(type)
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style)
   }
 
@@ -52,15 +51,6 @@ class Draft extends React.Component {
     this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth))
   }
 
-  // _toggleBlockType(blockType) {
-  //   this.onChange(
-  //     RichUtils.toggleBlockType(
-  //       this.state.editorState,
-  //       blockType
-  //     )
-  //   )
-  // }
-
   _toggleInlineStyle(inlineStyle) {
     this.onChange(
       RichUtils.toggleInlineStyle(
@@ -70,25 +60,8 @@ class Draft extends React.Component {
     )
   }
 
-  getBlockStyle(block) {
-    switch (block.getType()) {
-      case 'blockquote': return 'RichEditor-blockquote'
-      default: return null
-    }
-  }
-
   render() {
     const {editorState} = this.state
-
-    // Custom overrides for "code" style.
-    const styleMap = {
-      CODE: {
-        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-        fontFamily: '"Inconsolata", "Menlo", "Consolas"',
-        fontSize: 16,
-        padding: 2
-      }
-    }
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
@@ -108,8 +81,6 @@ class Draft extends React.Component {
         />
         <div className={className} onClick={this.focus}>
           <Editor
-            blockStyleFn={(block) => this.getBlockStyle(block)}
-            customStyleMap={styleMap}
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
             onChange={this.onChange}
