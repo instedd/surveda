@@ -33,7 +33,7 @@ class ProjectTitle extends Component {
     const { project, readOnly } = this.props
     if (project == null) return null
 
-    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+    return (<EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />)
   }
 }
 
