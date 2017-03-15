@@ -1,9 +1,3 @@
-export const toggleDefault = () => {
-  console.log('toggling default')
-  document.documentElement.style.setProperty('--header-color', 'blue')
-}
-
-export const toggleBetterDataForHealth = () => {
-  console.log('toggling better data for health')
+export const toggleColourScheme = (scheme) => {
   document.documentElement.style.setProperty('--header-color', 'blue')
 }

@@ -5,6 +5,7 @@ import { EditableTitleLabel } from '../ui'
 import merge from 'lodash/merge'
 import * as projectActions from '../../actions/project'
 import { updateProject } from '../../api'
+import { toggleColourScheme } from '../../toggleColourScheme'
 
 class ProjectTitle extends Component {
   static propTypes = {
@@ -29,11 +30,31 @@ class ProjectTitle extends Component {
       .then(response => dispatch(projectActions.updateProject(response.entities.projects[response.result])))
   }
 
+  onClickToggle(colourScheme) {
+    const {project} = this.props
+    console.log(colourScheme)
+    toggleColourScheme(project.colourScheme)
+  }
+
   render() {
     const { project, readOnly } = this.props
     if (project == null) return null
 
-    return (<EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />)
+    return (
+      <div>
+        <p onClick={() => this.onClickToggle()}>Set colour scheme</p>
+        <input
+          id={`default`}
+          type='radio'
+          name='toggleDefault'
+          value='default'
+          checked={project.colourScheme == 'default'}
+          onChange={e => this.onClickToggle('default')}
+          disabled={readOnly}
+        />
+        <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+      </div>
+    )
   }
 }
 
