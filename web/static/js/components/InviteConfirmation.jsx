@@ -44,7 +44,7 @@ class InviteConfirmation extends Component {
 
     return (
       <div className='row accept-invitation'>
-        <div className='col s4 offset-s4 center'>
+        <div className='col s12 center'>
           <h1><i className='material-icons grey-text xxlarge'>folder_shared</i></h1>
           <p> { inviteText } </p>
           <div className='divider' />

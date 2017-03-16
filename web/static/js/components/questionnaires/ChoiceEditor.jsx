@@ -251,9 +251,11 @@ class ChoiceEditor extends Component {
           </td> : null
           }
           {skipLogicInput}
-          <td>
+          { (!isRefusal)
+          ? <td>
             <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
-          </td>
+          </td> : null
+          }
         </tr>)
     } else {
       let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : []

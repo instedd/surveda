@@ -864,6 +864,26 @@ defmodule Ask.SurveyControllerTest do
     assert_receive [:cancel_message, ^test_channel, ^channel_state]
   end
 
+  test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "completed")
+
+    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "completed"
+  end
+
+  test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: "cancelled")
+
+    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == "cancelled"
+  end
+
   def prepare_for_state_update(user) do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)

@@ -452,6 +452,62 @@ defmodule Ask.DummySteps do
         )
       ]
 
+      @flag_steps_ineligible_skip_logic [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "bbb",
+          title: "Let there be rock",
+          disposition: "ineligible"
+        ),
+        explanation_step(
+          id: "ccc",
+          title: "Bye",
+          prompt: prompt(
+            sms: sms_prompt("Good bye")
+          ),
+          skip_logic: "end"
+        ),
+      ]
+
+      @flag_steps_partial_skip_logic [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "bbb",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
+        explanation_step(
+          id: "ccc",
+          title: "Bye",
+          prompt: prompt(
+            sms: sms_prompt("Good bye")
+          ),
+          skip_logic: "end"
+        ),
+      ]
+
       @partial_step [
         flag_step(
           id: "aaa",

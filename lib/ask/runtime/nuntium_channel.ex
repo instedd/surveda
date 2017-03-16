@@ -47,19 +47,24 @@ defmodule Ask.Runtime.NuntiumChannel do
     client.token
   end
 
-  def callback(conn, args = %{"path" => ["status"], "respondent_id" => respondent_id, "session_token" => token, "state" => state}) do
+  def callback(conn, params) do
+    callback(conn, params, Broker)
+  end
+
+  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "session_token" => token, "state" => state} = args, broker) do
     respondent = Repo.get!(Respondent, respondent_id)
     case state do
       "failed" ->
-        Broker.channel_failed(respondent, token)
+        broker.channel_failed(respondent, token)
       "delivered" ->
-        Broker.delivery_confirm(respondent, token, args["step_title"])
+        broker.delivery_confirm(respondent, token, args["step_title"])
+      _ -> :ok
     end
 
     conn |> send_resp(200, "")
   end
 
-  def callback(conn, %{"from" => from, "body" => body}) do
+  def callback(conn, %{"from" => from, "body" => body}, broker) do
     %URI{host: phone_number} = URI.parse(from)
 
     respondent = Repo.one(from r in Respondent,
@@ -71,7 +76,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       nil ->
         nil
       _ ->
-        case Broker.sync_step(respondent, Flow.Message.reply(body)) do
+        case broker.sync_step(respondent, Flow.Message.reply(body)) do
           {:reply, reply} ->
             reply
           {:end, {:reply, reply}} ->
@@ -85,7 +90,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     Phoenix.Controller.json(conn, json_reply)
   end
 
-  def callback(conn, _) do
+  def callback(conn, _, _) do
     conn |> send_resp(404, "not found")
   end
 

@@ -28,6 +28,8 @@ defmodule Ask.Respondent do
     has_many :responses, Ask.Response
     has_many :survey_log_entries, Ask.SurveyLogEntry
 
+    field :lock_version, :integer, default: 1
+
     timestamps()
   end
 
@@ -38,6 +40,7 @@ defmodule Ask.Respondent do
     struct
     |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition])
     |> validate_required([:phone_number, :state])
+    |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
 
   def sanitize_phone_number(text) do

@@ -141,7 +141,11 @@ defmodule Ask.Runtime.VerboiceChannel do
     conn |> send_resp(200, "")
   end
 
-  def callback(conn, params = %{"respondent" => respondent_id}) do
+  def callback(conn, params) do
+    callback(conn, params, Broker)
+  end
+
+  def callback(conn, params = %{"respondent" => respondent_id}, broker) do
     respondent = Respondent |> Repo.get(respondent_id)
 
     response_content = case respondent do
@@ -155,7 +159,7 @@ defmodule Ask.Runtime.VerboiceChannel do
           digits -> Flow.Message.reply(digits)
         end
 
-        case Broker.sync_step(respondent, response) do
+        case broker.sync_step(respondent, response) do
           {:reply, reply} ->
             prompts = Reply.prompts(reply)
             gather(respondent, prompts)
@@ -174,7 +178,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> send_resp(200, reply)
   end
 
-  def callback(conn, _) do
+  def callback(conn, _, _) do
     conn
     |> put_resp_content_type("text/xml")
     |> send_resp(200, response(hangup) |> generate)

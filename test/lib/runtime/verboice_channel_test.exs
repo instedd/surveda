@@ -2,29 +2,17 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.ConnCase
   use Ask.DummySteps
 
-  alias Ask.Respondent
-  alias Ask.Runtime.{Broker, VerboiceChannel, Flow, ReplyHelper}
+  alias Ask.{Respondent, BrokerStub}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper}
 
   require Ask.Runtime.ReplyHelper
-
-  defmodule BrokerStub do
-    use GenServer
-
-    def handle_cast({:expects, matcher}, _) do
-      {:noreply, matcher}
-    end
-
-    def handle_call(call, _from, matcher) do
-      {:reply, matcher.(call), matcher}
-    end
-  end
 
   defp trim_xml(xml) do
     xml |> String.replace("\t", "") |> String.replace("\n", "")
   end
 
   setup %{conn: conn} do
-    GenServer.start_link(BrokerStub, [], name: Broker.server_ref)
+    GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
     respondent = insert(:respondent, phone_number: "123", state: "active")
     {
       :ok,
@@ -50,7 +38,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
     Enum.each(twiml_map, fn
       {flow_message, step, twiml} ->
-        GenServer.cast(Broker.server_ref, {:expects, fn
+        GenServer.cast(BrokerStub.server_ref, {:expects, fn
           {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message} -> step
         end})
 
@@ -59,7 +47,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
           {:reply, digits } -> digits
         end
 
-        conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits})
+        conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits}, BrokerStub)
         response_twiml = response(conn, 200) |> trim_xml
         assert response_twiml =~ twiml
       end)
