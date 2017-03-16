@@ -31,27 +31,45 @@ class ProjectTitle extends Component {
   }
 
   onClickToggle(colourScheme) {
-    const {project} = this.props
-    console.log(colourScheme)
-    toggleColourScheme(project.colourScheme)
+    const { dispatch, project } = this.props
+    if (project.colourScheme == colourScheme) return
+    const newProject = merge({}, project, {colour_scheme: colourScheme})
+    updateProject(newProject)
+      .then(response => dispatch(projectActions.updateProject(response.entities.projects[response.result])))
+    // toggleColourScheme(project.colourScheme)
   }
 
   render() {
     const { project, readOnly } = this.props
     if (project == null) return null
 
+    console.log(project.colourScheme)
+
     return (
       <div>
         <p onClick={() => this.onClickToggle()}>Set colour scheme</p>
         <input
-          id={`default`}
+          id={`defaultScheme`}
           type='radio'
           name='toggleDefault'
           value='default'
           checked={project.colourScheme == 'default'}
           onChange={e => this.onClickToggle('default')}
           disabled={readOnly}
+          className='colourScheme'
         />
+        <label className='colourScheme' htmlFor={`defaultScheme`}>Default scheme</label>
+        <input
+          id={`betterDataForHealthScheme`}
+          type='radio'
+          name='toggleDefault'
+          value='better_data_for_health'
+          checked={project.colourScheme == 'better_data_for_health'}
+          onChange={e => this.onClickToggle('better_data_for_health')}
+          disabled={readOnly}
+          className='colourScheme'
+        />
+        <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Better Data for Health</label>
         <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
       </div>
     )
