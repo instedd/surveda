@@ -1,7 +1,7 @@
 defmodule Ask.ProjectController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, ProjectMembership, Invite}
+  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
 
   def index(conn, _params) do
     memberships = conn
@@ -66,6 +66,7 @@ defmodule Ask.ProjectController do
         |> put_resp_header("location", project_path(conn, :show, project))
         |> render("show.json", project: project, read_only: false, owner: true)
       {:error, changeset} ->
+        Logger.warn "Error when creating a new project: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -116,6 +117,7 @@ defmodule Ask.ProjectController do
         owner = membership.level == "owner"
         render(conn, "show.json", project: project, read_only: false, owner: owner)
       {:error, changeset} ->
+        Logger.warn "Error when updating project #{project.id}: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)

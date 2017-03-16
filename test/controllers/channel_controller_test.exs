@@ -1,7 +1,6 @@
 defmodule Ask.ChannelControllerTest do
   use Ask.ConnCase
 
-  alias Ask.Channel
   @valid_attrs %{name: "some content", provider: "some content", settings: %{}, type: "some content"}
   @invalid_attrs %{name: ""}
 
@@ -58,65 +57,6 @@ defmodule Ask.ChannelControllerTest do
       channel = insert(:channel)
       assert_error_sent :forbidden, fn ->
         get conn, channel_path(conn, :show, channel)
-      end
-    end
-
-  end
-
-  describe "create" do
-
-    test "creates and renders resource when data is valid", %{conn: conn, user: user} do
-      conn = post conn, channel_path(conn, :create), channel: @valid_attrs
-      assert json_response(conn, 201)["data"]["id"]
-      channel = Repo.get_by(Channel, @valid_attrs)
-      assert channel
-      assert channel.user_id == user.id
-    end
-
-    test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, channel_path(conn, :create), channel: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-
-  end
-
-  describe "update" do
-
-    test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
-      channel = insert(:channel, user: user)
-      conn = put conn, channel_path(conn, :update, channel), channel: @valid_attrs
-      assert json_response(conn, 200)["data"]["id"]
-      assert Repo.get_by(Channel, @valid_attrs)
-    end
-
-    test "does not update chosen resource and renders errors when data is invalid", %{conn: conn, user: user} do
-      channel = insert(:channel, user: user)
-      conn = put conn, channel_path(conn, :update, channel), channel: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-
-    test "forbid update to channel from other user", %{conn: conn} do
-      channel = insert(:channel)
-      assert_error_sent :forbidden, fn ->
-        put conn, channel_path(conn, :update, channel), channel: @invalid_attrs
-      end
-    end
-
-  end
-
-  describe "delete" do
-
-    test "deletes chosen resource", %{conn: conn, user: user} do
-      channel = insert(:channel, user: user)
-      conn = delete conn, channel_path(conn, :delete, channel)
-      assert response(conn, 204)
-      refute Repo.get(Channel, channel.id)
-    end
-
-    test "forbid to delete channel from other user", %{conn: conn} do
-      channel = insert(:channel)
-      assert_error_sent :forbidden, fn ->
-        delete conn, channel_path(conn, :delete, channel)
       end
     end
 

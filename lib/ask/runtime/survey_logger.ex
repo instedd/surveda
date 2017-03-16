@@ -1,8 +1,7 @@
 defmodule Ask.Runtime.SurveyLogger do
   use GenServer
   use Timex
-  alias Ask.{Repo, SurveyLogEntry}
-  require Logger
+  alias Ask.{Repo, SurveyLogEntry, Logger}
 
   @server_ref {:global, __MODULE__}
 
