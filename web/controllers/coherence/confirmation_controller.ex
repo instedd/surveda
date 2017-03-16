@@ -6,7 +6,6 @@ defmodule Ask.Coherence.ConfirmationController do
 
   """
   use Coherence.Web, :controller
-  require Logger
   use Timex
   alias Coherence.ControllerHelpers, as: Helpers
   alias Ask.Coherence.Helper

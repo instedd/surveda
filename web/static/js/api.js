@@ -56,6 +56,9 @@ const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
 const commonCallback = (json, schema) => {
   return () => {
     if (!json) { return null }
+    if (json.errors) {
+      console.log(json.errors)
+    }
     if (schema) {
       return normalize(camelizeKeys(json.data), schema)
     } else {

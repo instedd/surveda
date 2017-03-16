@@ -3,7 +3,6 @@ Code.ensure_loaded Phoenix.Swoosh
 defmodule Ask.Email do
   use Phoenix.Swoosh, view: Ask.EmailView
   alias Swoosh.Email
-  require Logger
 
   def invite(level, email, invited_by, invite_url, project) do
     invited_by_name = name_or_email(invited_by)

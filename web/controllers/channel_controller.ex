@@ -12,47 +12,12 @@ defmodule Ask.ChannelController do
     render(conn, "index.json", channels: channels)
   end
 
-  def create(conn, %{"channel" => channel_params}) do
-    changeset = conn
-    |> current_user
-    |> build_assoc(:channels)
-    |> Channel.changeset(channel_params)
-
-    case Repo.insert(changeset) do
-      {:ok, channel} ->
-        conn
-        |> put_status(:created)
-        |> put_resp_header("location", channel_path(conn, :show, channel))
-        |> render("show.json", channel: channel)
-      {:error, changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
-  end
-
   def show(conn, %{"id" => id}) do
     channel = Channel
     |> Repo.get!(id)
     |> authorize_channel(conn)
 
     render(conn, "show.json", channel: channel)
-  end
-
-  def update(conn, %{"id" => id, "channel" => channel_params}) do
-    changeset = Channel
-    |> Repo.get!(id)
-    |> authorize_channel(conn)
-    |> Channel.changeset(channel_params)
-
-    case Repo.update(changeset) do
-      {:ok, channel} ->
-        render(conn, "show.json", channel: channel)
-      {:error, changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
   end
 
   def delete(conn, %{"id" => id}) do
