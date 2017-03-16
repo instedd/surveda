@@ -5,7 +5,7 @@ import { EditableTitleLabel } from '../ui'
 import merge from 'lodash/merge'
 import * as projectActions from '../../actions/project'
 import { updateProject } from '../../api'
-import { toggleColourScheme } from '../../toggleColourScheme'
+import ColourSchemeModal from './ColourSchemeModal'
 
 class ProjectTitle extends Component {
   static propTypes = {
@@ -39,6 +39,10 @@ class ProjectTitle extends Component {
     // toggleColourScheme(project.colourScheme)
   }
 
+  selectColourScheme() {
+    $('#colourSchemeModal').modal('open')
+  }
+
   render() {
     const { project, readOnly } = this.props
     if (project == null) return null
@@ -70,6 +74,10 @@ class ProjectTitle extends Component {
           className='colourScheme'
         />
         <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Better Data for Health</label>
+        <button type='button' onClick={() => this.selectColourScheme()}>
+          Colour scheme
+        </button>
+        <ColourSchemeModal modalId='colourSchemeModal' />
         <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
       </div>
     )
