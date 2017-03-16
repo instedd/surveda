@@ -3,10 +3,13 @@ import { Link } from 'react-router'
 import TitleContainer from './TitleContainer'
 import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
+import { toggleColourScheme } from '../../toggleColourScheme'
 
-const Header = ({ tabs, logout, user, project }) => {
+const Header = ({ tabs, logout, user, project, showProjectLink }) => {
   let projectLink
-  if (project) {
+  let scheme = project ? project.colourScheme : 'default'
+
+  if (showProjectLink) {
     projectLink = (
       <li className='breadcrumb-item'>
         <Link to={routes.project(project.id)} className=''>
@@ -15,9 +18,10 @@ const Header = ({ tabs, logout, user, project }) => {
       </li>
     )
   }
+  toggleColourScheme(scheme)
 
   return (
-    <header>
+    <header className={scheme}>
       <nav id='TopNav'>
         <div className='nav-wrapper'>
           <div className='row'>
@@ -58,7 +62,8 @@ Header.propTypes = {
   tabs: PropTypes.node,
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
-  project: PropTypes.object
+  project: PropTypes.object,
+  showProjectLink: PropTypes.boolean
 }
 
 export default Header

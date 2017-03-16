@@ -30,15 +30,6 @@ class ProjectTitle extends Component {
       .then(response => dispatch(projectActions.updateProject(response.entities.projects[response.result])))
   }
 
-  onClickToggle(colourScheme) {
-    const { dispatch, project } = this.props
-    if (project.colourScheme == colourScheme) return
-    const newProject = merge({}, project, {colour_scheme: colourScheme})
-    updateProject(newProject)
-      .then(response => dispatch(projectActions.updateProject(response.entities.projects[response.result])))
-    // toggleColourScheme(project.colourScheme)
-  }
-
   selectColourScheme() {
     $('#colourSchemeModal').modal('open')
   }
@@ -47,33 +38,8 @@ class ProjectTitle extends Component {
     const { project, readOnly } = this.props
     if (project == null) return null
 
-    console.log(project.colourScheme)
-
     return (
       <div>
-        <p onClick={() => this.onClickToggle()}>Set colour scheme</p>
-        <input
-          id={`defaultScheme`}
-          type='radio'
-          name='toggleDefault'
-          value='default'
-          checked={project.colourScheme == 'default'}
-          onChange={e => this.onClickToggle('default')}
-          disabled={readOnly}
-          className='colourScheme'
-        />
-        <label className='colourScheme' htmlFor={`defaultScheme`}>Default scheme</label>
-        <input
-          id={`betterDataForHealthScheme`}
-          type='radio'
-          name='toggleDefault'
-          value='better_data_for_health'
-          checked={project.colourScheme == 'better_data_for_health'}
-          onChange={e => this.onClickToggle('better_data_for_health')}
-          disabled={readOnly}
-          className='colourScheme'
-        />
-        <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Better Data for Health</label>
         <button type='button' onClick={() => this.selectColourScheme()}>
           Colour scheme
         </button>

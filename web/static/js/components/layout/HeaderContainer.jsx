@@ -19,12 +19,12 @@ class HeaderContainer extends Component {
     let { project } = this.props
     const { surveyId, questionnaireId } = this.props.params
 
-    if (!surveyId && !questionnaireId) {
-      project = null
+    let showProjectLink = true
+    if (!project || (!surveyId && !questionnaireId)) {
+      showProjectLink = false
     }
-
     return (
-      <Header tabs={tabs} logout={logout} user={user} project={project || null} />
+      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} project={project || null} />
     )
   }
 }
