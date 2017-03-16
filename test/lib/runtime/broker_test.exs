@@ -672,7 +672,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "respondent flow via ivr" do
-    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, logger} = SurveyLogger.start_link
     {:ok, broker} = Broker.start_link
