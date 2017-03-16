@@ -1,0 +1,84 @@
+// ------- mobile --------------
+$primarycolor: rgb(102,72,162);
+$navbarBackground: rgb(102,72,162);
+$progressBarBackground: rgb(179,164,209);
+$progressBarFill: rgb(251,154,0);
+
+$white: rgb(255,255,255);
+$black: rgb(0,0,0);
+
+
+/* THIS FILE IS ONLY FOR TESTING PURPOSES. TO CHECK THAT EVERYTHING WRITTEN HERE IS COMPILED AS SPECIFIED ON brunch-config.js */
+
+html {
+  line-height: 1.5;
+  font-family: 'Roboto', 'San Francisco', Helvetica, Arial, sans-serif;
+  font-weight: normal;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 400;
+  line-height: 1;
+}
+
+
+body {
+  margin: 0;
+  padding: 0;
+}
+nav {
+  background-color: $navbarBackground;
+  color: $white;
+  padding: 1rem 2rem;
+  position: relative;
+}
+.progressBar {
+  background: $progressBarBackground;
+  line-height: 0;
+  height: 10px;
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  width: 100%;
+  span {
+    background: $progressBarFill;
+    height: 100%;
+    display: inline-block;
+    position: relative;
+  }
+}
+main {
+  font-size: 1.2rem;
+  padding: 2rem;
+}
+h1 {
+  font-size: 1.3rem;
+}
+.btn {
+  display: inline-block;
+  background: $white;
+  font-size: 2rem;
+  color: $primarycolor;
+  text-transform: uppercase;
+  border: 3px solid $primarycolor;
+  border-radius: 4px;
+  padding: 1.2rem 1rem;
+  margin: 1rem .2rem;
+
+  &.block {
+    width: 100%;
+    display: block;
+    margin: 1rem 0;
+
+    + .btn.block {
+      margin-top: 2.5rem;
+    }
+  }
+}
+
+select {
+  display: block;
+  width: 100%;
+  height: 2rem;
+  border: 2px solid $primarycolor;
+  margin: .8rem 0 1.3rem;
+}

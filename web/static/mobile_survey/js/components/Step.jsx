@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react'
+import Header from './layout/Header'
 import { connect } from 'react-redux'
 import * as actions from '../actions/step'
 import MultipleChoiceStep from './steps/MultipleChoiceStep'
@@ -49,9 +50,14 @@ class Step extends Component {
     }
 
     return (
-      <form onSubmit={this.handleSubmit}>
-        {this.stepComponent(step)}
-      </form>
+      <div>
+        <Header />
+        <main>
+          <form onSubmit={this.handleSubmit}>
+            {this.stepComponent(step)}
+          </form>
+        </main>
+      </div>
     )
   }
 }
