@@ -21,10 +21,6 @@ defmodule Ask.Runtime.Broker do
     GenServer.call(@server_ref, {:sync_step, respondent, reply})
   end
 
-  # def channel_success(respondent, token, status) do
-  #   GenServer.call(@server_ref, {:channel_success, respondent, token, status})
-  # end
-
   def channel_failed(respondent, token, reason \\ "failed") do
     GenServer.call(@server_ref, {:channel_failed, respondent, token, reason})
   end
@@ -69,11 +65,6 @@ defmodule Ask.Runtime.Broker do
     handle_info(:poll, state)
     {:reply, :ok, state}
   end
-
-  # def handle_call({:channel_success, respondent, token, status}, _from, state) do
-  #   respondent.session |> Session.load |> Session.channel_success(status, token)
-  #   {:reply, :ok, state}
-  # end
 
   def handle_call({:channel_failed, respondent, token, reason}, _from, state) do
     session = respondent.session |> Session.load

@@ -161,11 +161,6 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  # def channel_success(session, _token, status) do
-  #   log_contact(status, session.channel, session.respondent)
-  #   :ok
-  # end
-
   def channel_failed(session, token, reason \\ "Failed")
 
   def channel_failed(session = %Session{retries: [], fallback: nil, token: token}, token, reason) do
