@@ -3,8 +3,8 @@ defmodule Ask.FlowTest do
   use Ask.DummySteps
   import Ask.Factory
   import Ask.StepBuilder
-  alias Ask.Runtime.{Flow, Reply}
-  require Ask.Runtime.Reply
+  alias Ask.Runtime.{Flow, Reply, ReplyHelper}
+  require Ask.Runtime.ReplyHelper
 
   @quiz build(:questionnaire, steps: @dummy_steps)
 
@@ -21,17 +21,17 @@ defmodule Ask.FlowTest do
 
   test "first step (sms mode)" do
     step = Flow.start(@quiz, "sms") |> Flow.step()
-    assert {:ok, %Flow{}, Reply.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = step
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = step
   end
 
   test "first step (ivr mode)" do
     step = Flow.start(@quiz, "ivr") |> Flow.step()
-    assert {:ok, %Flow{}, Reply.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"})} = step
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"})} = step
   end
 
   test "retry step" do
     {:ok, flow, _prompts} = Flow.start(@quiz, "sms") |> Flow.step
-    {:ok, %Flow{}, Reply.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry
+    {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry
   end
 
   test "fail if a response is given to a flow that was never executed" do
@@ -43,13 +43,13 @@ defmodule Ask.FlowTest do
   test "next step with store" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
     step = flow |> Flow.step(Flow.Message.reply("Y"))
-    assert {:ok, %Flow{}, Reply.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "next step (ivr mode)" do
     {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
     step = flow |> Flow.step(Flow.Message.reply("8"))
-    assert {:ok, %Flow{}, Reply.simple("Do you exercise", %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}, %{"Smokes" => "Yes"})} = step
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}, %{"Smokes" => "Yes"})} = step
   end
 
   test "retry step (sms mode)" do
@@ -153,13 +153,13 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step()
     step = flow |> Flow.step(Flow.Message.no_reply)
 
-    assert {:ok, %Flow{retries: 1}, Reply.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"})} = step
+    assert {:ok, %Flow{retries: 1}, ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"})} = step
   end
 
   test "next step with store, case insensitive, strip space" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step()
     step = flow |> Flow.step(Flow.Message.reply(" y "))
-    assert {:ok, %Flow{}, Reply.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "last step" do

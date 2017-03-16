@@ -3,9 +3,9 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   use Ask.DummySteps
 
   alias Ask.Respondent
-  alias Ask.Runtime.{Broker, NuntiumChannel, Reply}
+  alias Ask.Runtime.{Broker, NuntiumChannel, ReplyHelper}
 
-  require Ask.Runtime.Reply
+  require Ask.Runtime.ReplyHelper
 
   defmodule BrokerStub do
     use GenServer
@@ -29,7 +29,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:reply, Reply.multiple(["Hello!", "Do you exercise?"])}
+        {:reply, ReplyHelper.multiple(["Hello!", "Do you exercise?"])}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
     assert [%{"to" => "sms://123456", "body" => "Hello!", "step_title" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
@@ -49,7 +49,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:end, {:reply, Reply.quota_completed("Bye!")}}
+        {:end, {:reply, ReplyHelper.quota_completed("Bye!")}}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"})
     assert [%{"body" => "Bye!", "to" => "sms://123456", "step_title" => "Quota completed"}] = json_response(conn, 200)
@@ -65,7 +65,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent_id = respondent.id
     GenServer.cast(Broker.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:reply, Reply.simple("Do you exercise?")}
+        {:reply, ReplyHelper.simple("Do you exercise?")}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"})
     assert [%{"to" => "sms://123457", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
