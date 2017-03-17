@@ -40,13 +40,10 @@ header {
     + a.breadcrumb:before {
       display: none;
     }
-    svg {
-      .st0{fill:#FF5722;}
-      .st1{fill:#FFC107;}
-      .st2{fill:#FFA000;}
-      .st3{fill:#4CAF50;}
-      .st4{fill:#555555;}
-
+    .logo-container {
+      background-image: url('../images/header_icon_default.svg');
+      width: 60px;
+      height: 60px;
     }
   }
 }
