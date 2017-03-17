@@ -42,6 +42,8 @@ header {
     }
     .logo-container {
       background-image: url('../images/header_icon_default.svg');
+      background-repeat: no-repeat;
+      display: block;
       width: 60px;
       height: 60px;
     }
@@ -138,12 +140,11 @@ header {
   padding-bottom: 0.3rem;
 
   .col {
-    height: 200px;
+    height: 66px;
   }
 
   a.page-title {
     font-size: 20px;
-    max-width: 95%;
     padding-top: 4px;
     display: inline-block;
     i {

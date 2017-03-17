@@ -30,7 +30,7 @@ class ProjectTitle extends Component {
       .then(response => dispatch(projectActions.updateProject(response.entities.projects[response.result])))
   }
 
-  selectColourScheme() {
+  selectColourScheme(e) {
     $('#colourSchemeModal').modal('open')
   }
 
@@ -39,12 +39,12 @@ class ProjectTitle extends Component {
     if (project == null) return null
 
     return (
-      <div>
-        <button type='button' onClick={() => this.selectColourScheme()}>
-          Colour scheme
-        </button>
-        <ColourSchemeModal modalId='colourSchemeModal' />
+      <div className='fixed-action-btn horizontal color-palette-wrapper'>
         <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+        <ColourSchemeModal modalId='colourSchemeModal' />
+        <ul>
+          <li><a onClick={(e) => this.selectColourScheme(e)}><i className='material-icons'>palette</i></a></li>
+        </ul>
       </div>
     )
   }

@@ -896,3 +896,14 @@ body.bdfh {
     }
   }
 }
+
+.color-palette-wrapper {
+  display: inline-block;
+  width: 100%;
+}
+
+#colourSchemeModal {
+  .modal-overlay{
+    z-index: 0;
+  }
+}

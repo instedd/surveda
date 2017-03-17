@@ -18,7 +18,7 @@ export class ColourSchemeModal extends Component {
   render() {
     const { modalId, project } = this.props
     return (
-      <Modal card id={modalId} >
+      <Modal card id={modalId}>
         <input
           id={`defaultScheme`}
           type='radio'
