@@ -161,14 +161,14 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def channel_failed(session, token, reason \\ "Failed")
+  def channel_failed(session, reason \\ "Failed")
 
-  def channel_failed(session = %Session{retries: [], fallback: nil, token: token}, token, reason) do
+  def channel_failed(session = %Session{retries: [], fallback: nil}, reason) do
     log_contact(reason, session.channel, session.respondent)
     :failed
   end
 
-  def channel_failed(session, _token, reason) do
+  def channel_failed(session, reason) do
     log_contact(reason, session.channel, session.respondent)
     :ok
   end
@@ -189,7 +189,7 @@ defmodule Ask.Runtime.Session do
     # Log raw response from user including new disposition
     case step_answer do
       {:end, reply} -> log_response(response, session.channel, respondent, Reply.disposition(reply))
-      {:ok, flow, reply} -> log_response(response, session.channel, respondent, Reply.disposition(reply))
+      {:ok, _flow, reply} -> log_response(response, session.channel, respondent, Reply.disposition(reply))
       _ -> :ok
     end
 

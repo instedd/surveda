@@ -54,16 +54,16 @@ defmodule Ask.Runtime.Broker do
     {:reply, :ok, state}
   end
 
-  def channel_failed(respondent, token, reason \\ "failed") do
+  def channel_failed(respondent, reason \\ "failed") do
     session = respondent.session |> Session.load
-    case Session.channel_failed(session, token, reason) do
+    case Session.channel_failed(session, reason) do
       :ok -> :ok
       :failed ->
         update_respondent(respondent, :failed)
     end
   end
 
-  def delivery_confirm(respondent, _token, title) do
+  def delivery_confirm(respondent, title) do
     respondent.session |> Session.load |> Session.delivery_confirm(title)
   end
 

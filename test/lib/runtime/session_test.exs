@@ -99,22 +99,17 @@ defmodule Ask.SessionTest do
 
   test "mark respondent as failed when failure notification arrives on last retry", %{quiz: quiz, respondent: respondent, channel: channel} do
     {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel)
-    assert :failed = Session.channel_failed(session, token)
-  end
-
-  test "ignore failure notification if token doesn't match", %{quiz: quiz, respondent: respondent, channel: channel} do
-    {:ok, session, _, 10, _} = Session.start(quiz, respondent, channel)
-    assert :ok = Session.channel_failed(session, "1234")
+    assert :failed = Session.channel_failed(session)
   end
 
   test "ignore failure notification when channel fails but there are retries", %{quiz: quiz, respondent: respondent, channel: channel} do
-    {:ok, session = %Session{token: token}, _, 5, _} = Session.start(quiz, respondent, channel, [5])
-    assert :ok = Session.channel_failed(session, token)
+    {:ok, session = %Session{}, _, 5, _} = Session.start(quiz, respondent, channel, [5])
+    assert :ok = Session.channel_failed(session)
   end
 
   test "ignore failure notification when channel fails but there is a fallback channel", %{quiz: quiz, respondent: respondent, channel: channel} do
     {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel, [], channel)
-    assert :ok = Session.channel_failed(session, token)
+    assert :ok = Session.channel_failed(session)
   end
 
   # Primary SMS fallbacks to IVR

@@ -936,7 +936,7 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = Broker.start_link
     Broker.poll
 
-    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -944,25 +944,25 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    Broker.delivery_confirm(respondent, token, "Do you smoke?")
+    Broker.delivery_confirm(respondent, "Do you smoke?")
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, token, "Do you exercise")
+    Broker.delivery_confirm(respondent, "Do you exercise")
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, token, "Which is the second perfect number?")
+    Broker.delivery_confirm(respondent, "Which is the second perfect number?")
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, token, "What's the number of this question?")
+    Broker.delivery_confirm(respondent, "What's the number of this question?")
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert :end = reply
