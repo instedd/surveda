@@ -7,7 +7,7 @@
     line-height: 35px;
     height: 100%;
     a {
-      @extend .grey-text;
+      color: var(--header-text-color);
       font-size: .9rem;
       padding: 0 25px;
       &:hover {
@@ -21,7 +21,7 @@
     }
   }
   .indicator {
-    @extend .green;
+    background-color: var(--tabs-indicator-color);
     height: 4px;
   }
 }
@@ -135,4 +135,8 @@ textarea.materialize-textarea {
       margin-right: 0;
     }
   }
+}
+
+nav {
+  background-color: var(--header-background-color);
 }
