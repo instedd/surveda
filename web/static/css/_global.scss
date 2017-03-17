@@ -867,3 +867,32 @@ audio::-webkit-media-controls-panel {
   margin-right: 10px;
   font-size: 23pt;
 }
+
+body.bdfh {
+  header {
+    background-color: #6648A2
+  }
+  nav {
+    background-color: #6648A2
+  }
+  #TopNav {
+    border-bottom-color: rgba(0,0,0,.25);
+    ul {
+      a {
+        color: rgba(255, 255, 255, .33);
+      }
+    }
+  }
+  .tabs {
+    .tab {
+      a {
+        color: rgba(255, 255, 255, .33);
+      }
+    }
+  }
+  .logo {
+    .logo-container {
+      background-image: url('../images/header_icon_bloomberg.svg');
+    }
+  }
+}

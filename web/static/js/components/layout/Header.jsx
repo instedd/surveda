@@ -3,11 +3,10 @@ import { Link } from 'react-router'
 import TitleContainer from './TitleContainer'
 import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
-import { toggleColourScheme } from '../../toggleColourScheme'
 
 const Header = ({ tabs, logout, user, project, showProjectLink }) => {
   let projectLink
-  let scheme = project ? project.colourScheme : 'default'
+  let className = (project && project.colourScheme == 'better_data_for_health') ? 'bdfh' : ''
 
   if (showProjectLink) {
     projectLink = (
@@ -18,10 +17,11 @@ const Header = ({ tabs, logout, user, project, showProjectLink }) => {
       </li>
     )
   }
-  toggleColourScheme(scheme)
+  $('body').removeClass('bdfh')
+  $('body').addClass(className)
 
   return (
-    <header className={scheme}>
+    <header>
       <nav id='TopNav'>
         <div className='nav-wrapper'>
           <div className='row'>

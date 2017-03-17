@@ -3,7 +3,7 @@ export const toggleColourScheme = (scheme) => {
     case 'better_data_for_health':
       document.documentElement.style.setProperty('--header-background-color', '#6648A2')
       document.documentElement.style.setProperty('--tabs-indicator-color', '#FBA400')
-      document.documentElement.style.setProperty('--header-text-color', 'rgba(255, 255, 255, .33')
+      document.documentElement.style.setProperty('--header-text-color', 'rgba(255, 255, 255, .33)')
       break
     case 'default':
       document.documentElement.style.setProperty('--header-background-color', '#424242')
