@@ -29,9 +29,7 @@ main:not(.main-welcome) {
 }
 
 header {
-  @extend .grey, .darken-3;
-
-  background-color: var(--header-color) !important;
+  background-color: var(--header-color);
 
   .logo {
     display: inline-block;
