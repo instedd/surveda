@@ -51,13 +51,13 @@ defmodule Ask.Runtime.NuntiumChannel do
     callback(conn, params, Broker)
   end
 
-  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "session_token" => token, "state" => state} = args, broker) do
+  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args, broker) do
     respondent = Repo.get!(Respondent, respondent_id)
     case state do
       "failed" ->
-        broker.channel_failed(respondent, token)
+        broker.channel_failed(respondent)
       "delivered" ->
-        broker.delivery_confirm(respondent, token, args["step_title"])
+        broker.delivery_confirm(respondent, args["step_title"])
       _ -> :ok
     end
 
