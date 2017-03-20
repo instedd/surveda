@@ -39,12 +39,14 @@ class ProjectTitle extends Component {
     if (project == null) return null
 
     return (
-      <div className='fixed-action-btn horizontal color-palette-wrapper'>
-        <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+      <div className='color-palette-wrapper'>
+        <div className='fixed-action-btn horizontal'>
+          <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+          <ul>
+            <li><a onClick={(e) => this.selectColourScheme(e)}><i className='material-icons'>palette</i></a></li>
+          </ul>
+        </div>
         <ColourSchemeModal modalId='colourSchemeModal' />
-        <ul>
-          <li><a onClick={(e) => this.selectColourScheme(e)}><i className='material-icons'>palette</i></a></li>
-        </ul>
       </div>
     )
   }

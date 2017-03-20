@@ -63,7 +63,7 @@ Header.propTypes = {
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
   project: PropTypes.object,
-  showProjectLink: PropTypes.boolean
+  showProjectLink: PropTypes.bool
 }
 
 export default Header

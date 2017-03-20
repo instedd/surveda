@@ -17,8 +17,7 @@ const Title = ({ children }) => {
         <div className='row'>
           <div className='col s9'>
             <div className='logo'>
-              <Link className='logo-container' to='/'>
-              </Link>
+              <Link className='logo-container' to='/' />
             </div>
             {renderChildren()}
           </div>
