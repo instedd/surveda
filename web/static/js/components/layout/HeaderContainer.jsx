@@ -17,12 +17,23 @@ class HeaderContainer extends Component {
   render() {
     const { tabs, logout, user } = this.props
     let { project } = this.props
-    const { surveyId, questionnaireId } = this.props.params
+    const { projectId, surveyId, questionnaireId } = this.props.params
 
     let showProjectLink = true
     if (!project || (!surveyId && !questionnaireId)) {
       showProjectLink = false
     }
+
+    if (projectId && !project) {
+      // If there's a projectId and there's no project loaded
+      // (it's still being loaded) we don't want to reset the body
+      // class that came from the server.
+    } else {
+      let className = (project && project.colourScheme == 'better_data_for_health') ? 'bdfh' : ''
+      $('body').removeClass('bdfh')
+      $('body').addClass(className)
+    }
+
     return (
       <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} project={project || null} />
     )

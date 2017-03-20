@@ -6,7 +6,6 @@ import * as routes from '../../routes'
 
 const Header = ({ tabs, logout, user, project, showProjectLink }) => {
   let projectLink
-  let className = (project && project.colourScheme == 'better_data_for_health') ? 'bdfh' : ''
 
   if (showProjectLink) {
     projectLink = (
@@ -17,8 +16,6 @@ const Header = ({ tabs, logout, user, project, showProjectLink }) => {
       </li>
     )
   }
-  $('body').removeClass('bdfh')
-  $('body').addClass(className)
 
   return (
     <header>
