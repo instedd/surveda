@@ -5,7 +5,6 @@ import { EditableTitleLabel } from '../ui'
 import merge from 'lodash/merge'
 import * as projectActions from '../../actions/project'
 import { updateProject } from '../../api'
-import ColourSchemeModal from './ColourSchemeModal'
 
 class ProjectTitle extends Component {
   static propTypes = {
@@ -30,25 +29,11 @@ class ProjectTitle extends Component {
       .then(response => dispatch(projectActions.updateProject(response.entities.projects[response.result])))
   }
 
-  selectColourScheme(e) {
-    $('#colourSchemeModal').modal('open')
-  }
-
   render() {
     const { project, readOnly } = this.props
     if (project == null) return null
 
-    return (
-      <div className='color-palette-wrapper'>
-        <div className='fixed-action-btn horizontal'>
-          <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
-          <ul>
-            <li><a onClick={(e) => this.selectColourScheme(e)}><i className='material-icons'>palette</i></a></li>
-          </ul>
-        </div>
-        <ColourSchemeModal modalId='colourSchemeModal' />
-      </div>
-    )
+    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
   }
 }
 

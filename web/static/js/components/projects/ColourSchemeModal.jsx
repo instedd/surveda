@@ -17,6 +17,8 @@ export class ColourSchemeModal extends Component {
 
   render() {
     const { modalId, project } = this.props
+    if (project == null) return null
+
     return (
       <Modal card id={modalId}>
         <input
