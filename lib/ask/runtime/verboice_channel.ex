@@ -11,12 +11,12 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   def new(channel) do
     channel_name = channel.settings["verboice_channel"]
-    client = create_client(channel.user_id)
+    client = create_client(channel.user_id, channel.base_url)
     %VerboiceChannel{client: client, channel_name: channel_name}
   end
 
-  def oauth2_authorize(code, redirect_uri, _callback_url) do
-    verboice_config = Application.get_env(:ask, Verboice)
+  def oauth2_authorize(code, redirect_uri, base_url) do
+    verboice_config = Ask.Config.provider_config(Verboice, base_url)
     guisso_config = verboice_config[:guisso]
 
     client = OAuth2.Client.new([
@@ -33,8 +33,8 @@ defmodule Ask.Runtime.VerboiceChannel do
     client.token
   end
 
-  def oauth2_refresh(access_token) do
-    verboice_config = Application.get_env(:ask, Verboice)
+  def oauth2_refresh(access_token, base_url) do
+    verboice_config = Ask.Config.provider_config(Verboice, base_url)
     guisso_config = verboice_config[:guisso]
 
     client = OAuth2.Client.new([
@@ -90,26 +90,25 @@ defmodule Ask.Runtime.VerboiceChannel do
     element(:Response, [content])
   end
 
-  defp create_client(user_id) do
-    verboice_config = Application.get_env(:ask, Verboice)
-    oauth_token = Ask.OAuthTokenServer.get_token "verboice", user_id
-    Verboice.Client.new(verboice_config[:base_url], oauth_token)
+  defp create_client(user_id, base_url) do
+    oauth_token = Ask.OAuthTokenServer.get_token "verboice", base_url, user_id
+    Verboice.Client.new(base_url, oauth_token)
   end
 
-  def sync_channels(user_id) do
-    client = create_client(user_id)
+  def sync_channels(user_id, base_url) do
+    client = create_client(user_id, base_url)
 
     case client |> Verboice.Client.get_channels do
       {:ok, channel_names} ->
-        sync_channels(user_id, channel_names)
+        sync_channels(user_id, base_url, channel_names)
 
       _ -> :error
     end
   end
 
-  def sync_channels(user_id, channel_names) do
+  def sync_channels(user_id, base_url, channel_names) do
     user = Ask.User |> Repo.get!(user_id)
-    channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
+    channels = user |> assoc(:channels) |> where([c], c.provider == "verboice" and c.base_url == ^base_url) |> Repo.all
 
     channels |> Enum.each(fn channel ->
       exists = channel_names |> Enum.any?(fn name -> channel.settings["verboice_channel"] == name end)
@@ -118,13 +117,12 @@ defmodule Ask.Runtime.VerboiceChannel do
       end
     end)
 
-
     channel_names |> Enum.each(fn name ->
       exists = channels |> Enum.any?(fn channel -> channel.settings["verboice_channel"] == name end)
       if !exists do
         user
         |> Ecto.build_assoc(:channels)
-        |> Channel.changeset(%{name: name, type: "ivr", provider: "verboice", settings: %{"verboice_channel" => name}})
+        |> Channel.changeset(%{name: name, type: "ivr", provider: "verboice", base_url: base_url, settings: %{"verboice_channel" => name}})
         |> Repo.insert
       end
     end)

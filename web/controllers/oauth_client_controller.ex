@@ -10,12 +10,12 @@ defmodule Ask.OAuthClientController do
     render conn, "index.json", authorizations: auths
   end
 
-  def delete(conn, params = %{"id" => provider}) do
+  def delete(conn, params = %{"id" => provider, "base_url" => base_url}) do
     user = get_current_user(conn)
 
     user
     |> assoc(:oauth_tokens)
-    |> Repo.get_by!(provider: provider)
+    |> Repo.get_by!(provider: provider, base_url: base_url)
     |> Repo.delete!
 
     keep_channels = params
@@ -25,7 +25,7 @@ defmodule Ask.OAuthClientController do
     unless keep_channels do
       user
       |> assoc(:channels)
-      |> where([c], c.provider == ^provider)
+      |> where([c], c.provider == ^provider and c.base_url == ^base_url)
       |> Repo.all
       |> Enum.each(&Repo.delete(&1))
     end
@@ -41,26 +41,28 @@ defmodule Ask.OAuthClientController do
     |> Repo.all
     |> Enum.each(fn token ->
       provider = Ask.Channel.provider(token.provider)
-      provider.sync_channels(user.id)
+      provider.sync_channels(user.id, token.base_url)
     end)
 
     send_resp(conn, :no_content, "")
   end
 
-  def callback(conn, %{"code" => code, "state" => provider_name}) do
+  def callback(conn, %{"code" => code, "state" => state}) do
+    [provider_name, base_url] = String.split(state, "|", parts: 2)
+
     user = get_current_user(conn)
-    token = user |> assoc(:oauth_tokens) |> Repo.get_by(provider: provider_name)
+    token = user |> assoc(:oauth_tokens) |> Repo.get_by(provider: provider_name, base_url: base_url)
 
     if token == nil do
       provider = Ask.Channel.provider(provider_name)
-      access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}", callback_url(conn, :callback, provider_name))
+      access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}", base_url)
 
       user
-      |> build_assoc(:oauth_tokens, provider: provider_name)
+      |> build_assoc(:oauth_tokens, provider: provider_name, base_url: base_url)
       |> Ask.OAuthToken.from_access_token(access_token)
       |> Repo.insert!
 
-      provider.sync_channels(user.id)
+      provider.sync_channels(user.id, base_url)
     end
 
     render conn, "callback.html"

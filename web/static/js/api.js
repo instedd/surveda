@@ -221,10 +221,6 @@ export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }
 
-export const createChannel = (channel) => {
-  return apiPostJSON('channels', channelSchema, { channel })
-}
-
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
     questionnaireSchema, { questionnaire })
@@ -254,8 +250,8 @@ export const fetchAuthorizations = () => {
   return apiFetchJSONWithCallback(`authorizations`, null, {}, (json, _) => () => json)
 }
 
-export const deleteAuthorization = (provider, keepChannels = false) => {
-  return apiDelete(`authorizations/${provider}?keep_channels=${keepChannels}`)
+export const deleteAuthorization = (provider, baseUrl, keepChannels = false) => {
+  return apiDelete(`authorizations/${provider}?base_url=${encodeURIComponent(baseUrl)}&keep_channels=${keepChannels}`)
 }
 
 export const synchronizeChannels = () => {

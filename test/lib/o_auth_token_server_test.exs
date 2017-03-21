@@ -11,7 +11,7 @@ defmodule Ask.OAuthTokenServerTest do
     user = insert(:user)
     token = insert(:oauth_token, user: user)
 
-    access_token = OAuthTokenServer.get_token("test", user.id)
+    access_token = OAuthTokenServer.get_token("test", "http://test.com", user.id)
     assert %OAuth2.AccessToken{} = access_token
     assert token.access_token["access_token"] == access_token.access_token
 
@@ -23,13 +23,13 @@ defmodule Ask.OAuthTokenServerTest do
     user = insert(:user)
     token = insert(:oauth_token, user: user)
 
-    access_token1 = OAuthTokenServer.get_token("test", user.id)
+    access_token1 = OAuthTokenServer.get_token("test", "http://test.com", user.id)
 
     token
     |> Ask.OAuthToken.changeset(%{expires_at: Timex.now |> Timex.add(Timex.Duration.from_seconds(5))})
     |> Repo.update!
 
-    access_token2 = OAuthTokenServer.get_token("test", user.id)
+    access_token2 = OAuthTokenServer.get_token("test", "http://test.com", user.id)
     refute access_token2.access_token == access_token1.access_token
 
     token = Ask.OAuthToken |> Repo.get(token.id)

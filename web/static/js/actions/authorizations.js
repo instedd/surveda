@@ -2,6 +2,7 @@ import * as api from '../api'
 import * as guissoApi from '../guisso'
 import * as channelActions from './channels'
 import { config } from '../config'
+import some from 'lodash/some'
 
 export const FETCH_AUTHORIZATIONS = 'FETCH_AUTHORIZATIONS'
 export const RECEIVE_AUTHORIZATIONS = 'RECEIVE_AUTHORIZATIONS'
@@ -31,57 +32,62 @@ export const receiveAuthorizations = (authorizations) => ({
   authorizations
 })
 
-export const deleteAuthorization = (provider) => ({
+export const deleteAuthorization = (provider, baseUrl) => ({
   type: DELETE_AUTHORIZATION,
-  provider
+  provider,
+  baseUrl
 })
 
-export const addAuthorization = (provider) => ({
+export const addAuthorization = (provider, baseUrl) => ({
   type: ADD_AUTHORIZATION,
-  provider
+  provider,
+  baseUrl
 })
 
-export const toggleAuthorization = (provider) => (dispatch, getState) => {
+export const toggleAuthorization = (provider, index) => (dispatch, getState) => {
   const state = getState().authorizations
 
   if (state.fetching || state.items == null) {
     return
   }
 
-  const currentValue = state.items.includes(provider)
+  const baseUrl = config[provider][index].baseUrl
+  const currentValue = hasInAuthorizations(state, provider, index)
 
   if (currentValue) {
     // Turn off
-    dispatch(deleteAuthorization(provider))
-    api.deleteAuthorization(provider)
+    dispatch(deleteAuthorization(provider, baseUrl))
+    api.deleteAuthorization(provider, baseUrl)
       .then(() => { dispatch(channelActions.fetchChannels()) })
       .catch((e) => {
-        dispatch(addAuthorization(provider))
+        dispatch(addAuthorization(provider, baseUrl))
       })
   } else {
     // Turn on
-    dispatch(addAuthorization(provider))
-    const guissoSession = guissoApi.newSession(config[provider].guisso)
-    return guissoSession.authorize('code', provider)
+    dispatch(addAuthorization(provider, baseUrl))
+    const guissoSession = guissoApi.newSession(config[provider][index].guisso)
+    return guissoSession.authorize('code', provider, baseUrl)
       .then(() => guissoSession.close())
       .then(() => { dispatch(channelActions.fetchChannels()) })
       .catch(() => {
-        dispatch(deleteAuthorization(provider))
+        dispatch(deleteAuthorization(provider, baseUrl))
       })
   }
 }
 
-export const removeAuthorization = (provider) => (dispatch, getState) => {
+export const removeAuthorization = (provider, index) => (dispatch, getState) => {
   const state = getState().authorizations
 
   if (state.fetching || state.items == null) {
     return
   }
 
-  dispatch(deleteAuthorization(provider))
-  api.deleteAuthorization(provider, true)
+  const baseUrl = config[provider][index].baseUrl
+
+  dispatch(deleteAuthorization(provider, baseUrl))
+  api.deleteAuthorization(provider, baseUrl, true)
     .catch((e) => {
-      dispatch(addAuthorization(provider))
+      dispatch(addAuthorization(provider, baseUrl))
     })
 }
 
@@ -98,4 +104,9 @@ export const synchronizeChannels = () => (dispatch, getState) => {
   api.synchronizeChannels()
     .then(() => { dispatch(endSynchronization()) })
     .then(() => { dispatch(channelActions.fetchChannels()) })
+}
+
+export const hasInAuthorizations = (authorizations, provider, index) => {
+  const baseUrl = config[provider][index].baseUrl
+  return !!(authorizations.items && some(authorizations.items, item => item.provider == provider && item.baseUrl == baseUrl))
 }

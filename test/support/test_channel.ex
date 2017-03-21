@@ -26,19 +26,19 @@ defmodule Ask.TestChannel do
     %{"pid" => encoded_pid, "push" => encoded_push, "has_queued_message" => encoded_has_queued_message}
   end
 
-  def oauth2_authorize(_code, _redirect_uri, _callback_uri) do
+  def oauth2_authorize(_code, _redirect_uri, _base_url) do
     random_access_token
   end
 
-  def oauth2_refresh(%OAuth2.AccessToken{}) do
+  def oauth2_refresh(%OAuth2.AccessToken{}, _base_url) do
     random_access_token
   end
 
-  def sync_channels(user_id) do
+  def sync_channels(user_id, base_url) do
     user = Ask.User |> Ask.Repo.get(user_id)
     user
     |> Ecto.build_assoc(:channels)
-    |> Ask.Channel.changeset(%{name: "test", provider: "test", type: "ivr", settings: %{}})
+    |> Ask.Channel.changeset(%{name: "test", provider: "test", base_url: base_url, type: "ivr", settings: %{}})
     |> Ask.Repo.insert!
   end
 
