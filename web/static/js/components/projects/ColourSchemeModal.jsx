@@ -21,26 +21,45 @@ export class ColourSchemeModal extends Component {
 
     return (
       <Modal card id={modalId}>
-        <input
-          id={`defaultScheme`}
-          type='radio'
-          name='toggleDefault'
-          value='default'
-          checked={project.colourScheme == 'default'}
-          onChange={e => this.toggleColourScheme('default')}
-          className='colourScheme'
-        />
-        <label className='colourScheme' htmlFor={`defaultScheme`}>Default scheme</label>
-        <input
-          id={`betterDataForHealthScheme`}
-          type='radio'
-          name='toggleDefault'
-          value='better_data_for_health'
-          checked={project.colourScheme == 'better_data_for_health'}
-          onChange={e => this.toggleColourScheme('better_data_for_health')}
-          className='colourScheme'
-        />
-        <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Better Data for Health</label>
+        <div className='modal-content'>
+          <div className='card-title header'>
+            <h5>Select color Scheme</h5>
+            <p>Click to change the color scheme</p>
+          </div>
+          <div className='card-content'>
+            <div className='row'>
+              <div className='col s12'>
+                <input
+                  id={`defaultScheme`}
+                  type='radio'
+                  name='toggleDefault'
+                  value='default'
+                  checked={project.colourScheme == 'default'}
+                  onChange={e => this.toggleColourScheme('default')}
+                  className='with-gap'
+                />
+                <label className='colourScheme' htmlFor={`defaultScheme`}>Default color scheme</label>
+              </div>
+            </div>
+            <div className='row'>
+              <div className='col s12'>
+                <input
+                  id={`betterDataForHealthScheme`}
+                  type='radio'
+                  name='toggleDefault'
+                  value='better_data_for_health'
+                  checked={project.colourScheme == 'better_data_for_health'}
+                  onChange={e => this.toggleColourScheme('better_data_for_health')}
+                  className='with-gap'
+                />
+                <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Better Data for Health</label>
+              </div>
+            </div>
+          </div>
+          <div className='card-action'>
+            <a className='btn-large waves-effect waves-light blue modal-action modal-close '>Done</a>
+          </div>
+        </div>
       </Modal>
     )
   }
