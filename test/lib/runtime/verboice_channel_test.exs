@@ -65,33 +65,33 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "create channels" do
       user = insert(:user)
       user_id = user.id
-      VerboiceChannel.sync_channels(user.id, ["foo", "bar"])
-      channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
+      VerboiceChannel.sync_channels(user.id, "http://test.com", ["foo", "bar"])
+      channels = user |> assoc(:channels) |> where([c], c.provider == "verboice" and c.base_url == "http://test.com") |> Repo.all
       assert [
-        %Ask.Channel{user_id: ^user_id, provider: "verboice", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo"}},
-        %Ask.Channel{user_id: ^user_id, provider: "verboice", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar"}}
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo"}},
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar"}}
       ] = channels
     end
 
     test "delete channels" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "verboice", name: "foo", settings: %{"verboice_channel" => "foo"})
-      VerboiceChannel.sync_channels(user.id, ["bar"])
+      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "foo", settings: %{"verboice_channel" => "foo"})
+      VerboiceChannel.sync_channels(user.id, "http://test.com", ["bar"])
       refute Ask.Channel |> Repo.get(channel.id)
     end
 
     test "don't delete channels of other providers" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "other", name: "foo")
-      VerboiceChannel.sync_channels(user.id, [])
+      channel = insert(:channel, user: user, provider: "other", base_url: "http://test.com", name: "foo")
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [])
       assert Ask.Channel |> Repo.get(channel.id)
     end
 
     test "leave existing channels untouched" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "verboice", name: "FOO", settings: %{"verboice_channel" => "foo"})
+      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "FOO", settings: %{"verboice_channel" => "foo"})
       channel = Ask.Channel |> Repo.get(channel.id)
-      VerboiceChannel.sync_channels(user.id, ["foo"])
+      VerboiceChannel.sync_channels(user.id, "http://test.com", ["foo"])
       channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
       assert [^channel] = channels
     end

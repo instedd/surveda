@@ -3,6 +3,7 @@ defmodule Ask.OAuthToken do
 
   schema "oauth_tokens" do
     field :provider, :string
+    field :base_url, :string
     field :access_token, :map
     field :expires_at, Timex.Ecto.DateTime
     belongs_to :user, Ask.User
@@ -15,7 +16,7 @@ defmodule Ask.OAuthToken do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:user_id, :provider, :access_token, :expires_at])
+    |> cast(params, [:user_id, :provider, :base_url, :access_token, :expires_at])
     |> validate_required([:user_id, :provider, :access_token])
   end
 

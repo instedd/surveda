@@ -88,6 +88,7 @@ defmodule Ask.Factory do
       name: "My Channel",
       type: "sms",
       provider: "test",
+      base_url: "http://test.com",
       settings: %{}
     }
   end
@@ -144,6 +145,7 @@ defmodule Ask.Factory do
   def oauth_token_factory do
     %Ask.OAuthToken{
       provider: "test",
+      base_url: "http://test.com",
       user: build(:user),
       access_token: %{
         "access_token" => :crypto.strong_rand_bytes(27) |> Base.encode64,
