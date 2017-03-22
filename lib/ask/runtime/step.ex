@@ -7,11 +7,11 @@ defmodule Ask.Runtime.Step do
     !((min_value && value < min_value) || (max_value && value > max_value))
   end
 
-  def has_refusal_option(%{"refusal" => %{"enabled" => true} = refusal}, reply, mode, language, default_language) do
+  def is_refusal_option(%{"refusal" => %{"enabled" => true} = refusal}, reply, mode, language, default_language) do
     fetch(:response, refusal, mode, language, default_language)
     |> Enum.any?(fn r -> (r |> clean_string) == reply end)
   end
-  def has_refusal_option(_, _, _, _, _), do: false
+  def is_refusal_option(_, _, _, _, _), do: false
 
   def validate(step, reply, mode, language, default_language) do
     reply = reply |> clean_string
@@ -25,10 +25,13 @@ defmodule Ask.Runtime.Step do
         if (choice), do: choice["value"], else: :invalid_answer
       "numeric" ->
         num = is_numeric(reply)
-        if (num && is_in_numeric_range(step, num)) || has_refusal_option(step, reply, mode, language, default_language) do
-          reply
-        else
-          :invalid_answer
+        cond do
+          is_refusal_option(step, reply, mode, language, default_language) ->
+            {:refusal, reply}
+          num && is_in_numeric_range(step, num) ->
+            reply
+          :else ->
+            :invalid_answer
         end
       "language-selection" ->
         choices = step["language_choices"]
@@ -39,18 +42,18 @@ defmodule Ask.Runtime.Step do
     end
   end
 
-  def skip_logic(step, reply) do
+  def skip_logic(step, reply, mode, language, default_language) do
     case step["type"] do
       "numeric" ->
-        if is_numeric(reply) do
+        if is_refusal_option(step, reply, mode, language, default_language) do
+          step["refusal"]["skip_logic"]
+        else
           value = String.to_integer(reply)
           step["ranges"]
           |> Enum.find_value(nil, fn (range) ->
             if (range["from"] == nil || range["from"] <= value) && (range["to"]
               == nil || range["to"] >= value), do: range["skip_logic"], else: false
           end)
-        else
-          step["refusal"]["skip_logic"]
         end
       "multiple-choice" ->
         step

@@ -1,6 +1,4 @@
-
 // --------- NCD classes ---------------
-
 
 // -----------------------------------------------------------------------------
 // ------- Surveys -------------------------------------------------------------
@@ -106,6 +104,16 @@
   padding: 0px;
   .card-chart {
     margin: 30px 0 20px;
+  }
+  .card-title {
+    position: relative;
+    padding-right: 20px;
+
+    a {
+      position: absolute;
+      top: 3px;
+      right: -5px;
+    }
   }
   .card-content {
     padding: 30px 0;
@@ -731,6 +739,14 @@ i.survey-status { // icon for survey status on index
   }
 }
 .accept-invitation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0 !important;
+  h1 {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
   p {
     @extend .grey-text;
     font-weight: 300;
@@ -844,4 +860,101 @@ audio::-webkit-media-controls-panel {
   padding-top: 10px;
   margin-right: 10px;
   font-size: 23pt;
+}
+
+body.bdfh {
+  header {
+    background-color: #6648A2
+  }
+  nav {
+    background-color: #6648A2
+  }
+  #TopNav {
+    border-bottom-color: rgba(0,0,0,.25);
+    ul {
+      a {
+        color: rgba(255, 255, 255, .33);
+      }
+    }
+  }
+  .tabs {
+    .tab {
+      a {
+        color: rgba(255, 255, 255, .33);
+      }
+    }
+    .indicator {
+      background-color: #FBA400;
+    }
+  }
+  .logo {
+    .logo-container {
+      background-image: url('../images/header_icon_bloomberg.svg');
+    }
+  }
+}
+
+.color-palette-wrapper {
+  display: inline-block;
+  width: 100%;
+}
+
+#colourSchemeModal {
+  .modal-overlay{
+    z-index: 0;
+  }
+  .card-content {
+    max-height: initial;
+    padding: 2rem 2rem;
+
+    .row {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+  }
+}
+
+// ----- Three dots option menu next to Tabs ------
+.options {
+  i.material-icons {
+    @extend .grey-text;
+    height: 46px;
+    line-height: 1.4;
+    &.right {
+      display: none;
+    }
+  }
+  ul {
+    box-shadow: 0 2px 10px 2px rgba(0,0,0,.4);
+    width: auto !important;
+    margin-left: -15px;
+    margin-top: -10px;
+    border-radius: 5px;
+    li {
+      box-sizing: border-box;
+      i.material-icons {
+        @extend .black-text;
+        display: inline-block;
+        line-height: 1.8;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
+      a {
+        @extend .black-text;
+        padding: 14px 22px 14px 16px;
+        white-space: nowrap;
+        display: block;
+      }
+      &.dots {
+        @extend .white;
+        padding-left: 15px;
+        padding-top: 10px;
+        i.material-icons {
+          height: 46px;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
 }

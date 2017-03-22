@@ -32,7 +32,7 @@ defmodule Ask.Runtime.Flow do
 
   defp next_step_by_skip_logic(flow, step, reply_value) do
     step
-    |> Step.skip_logic(reply_value)
+    |> Step.skip_logic(reply_value, flow.mode, flow.language, flow.questionnaire.default_language)
     |> next_step(flow)
   end
 
@@ -111,10 +111,17 @@ defmodule Ask.Runtime.Flow do
       nil ->
         flow = flow |> advance_current_step(step, reply_value)
         {%{flow | retries: 0}, %Reply{}, visitor}
+      {:refusal, reply_value} ->
+        advance_after_reply(flow, step, reply_value, visitor, stores: [])
       reply_value ->
-        flow = flow |> advance_current_step(step, reply_value)
-        {%{flow | retries: 0}, %Reply{stores: %{step["store"] => reply_value}}, visitor}
+        advance_after_reply(flow, step, reply_value, visitor, stores: %{step["store"] => reply_value})
     end
+  end
+    # flow = flow |> advance_current_step(step, reply_value)
+    # {%{flow | retries: 0}, %Reply{stores: %{step["store"] => reply_value}}, visitor}
+  defp advance_after_reply(flow, step, reply_value, visitor, stores: stores) do
+    flow = flow |> advance_current_step(step, reply_value)
+    {%{flow | retries: 0}, %Reply{stores: stores}, visitor}
   end
 
   # :next_step, :end_survey, {:jump, step_id}, :wait_for_reply

@@ -1,7 +1,7 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Questionnaire, Project, JsonSchema, Audio}
+  alias Ask.{Questionnaire, Project, JsonSchema, Audio, Logger}
 
   plug :validate_params when action in [:create, :update]
 
@@ -35,6 +35,7 @@ defmodule Ask.QuestionnaireController do
         |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
         |> render("show.json", questionnaire: questionnaire)
       {:error, changeset} ->
+        Logger.warn "Error when creating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -68,6 +69,7 @@ defmodule Ask.QuestionnaireController do
         questionnaire |> Ask.Translation.rebuild
         render(conn, "show.json", questionnaire: questionnaire)
       {:error, changeset} ->
+        Logger.warn "Error when updating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)

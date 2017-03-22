@@ -36,6 +36,7 @@ defmodule Ask.ProjectControllerTest do
           "running_surveys" => 0,
           "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at),
           "read_only" => false,
+          "colour_scheme" => "default",
           "owner" => true,
         },
         %{
@@ -44,6 +45,7 @@ defmodule Ask.ProjectControllerTest do
           "running_surveys" => 0,
           "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
           "read_only" => true,
+          "colour_scheme" => "default",
           "owner" => false,
         }
       ]
@@ -67,18 +69,21 @@ defmodule Ask.ProjectControllerTest do
                           "running_surveys" => 2,
                           "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at),
                           "read_only" => false,
+                          "colour_scheme" => "default",
                           "owner" => true}
       project_map_2 = %{"id"      => project2.id,
                           "name"    => project2.name,
                           "running_surveys" => 1,
                           "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
                           "read_only" => false,
+                          "colour_scheme" => "default",
                           "owner" => true}
       project_map_3 = %{"id"      => project3.id,
                           "name"    => project3.name,
                           "running_surveys" => 0,
                           "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at),
                           "read_only" => false,
+                          "colour_scheme" => "default",
                           "owner" => true}
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
     end
@@ -94,6 +99,7 @@ defmodule Ask.ProjectControllerTest do
         "name" => project.name,
         "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
         "read_only" => false,
+        "colour_scheme" => "default",
         "owner" => true}
     end
 
@@ -104,6 +110,7 @@ defmodule Ask.ProjectControllerTest do
         "name" => project.name,
         "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
         "read_only" => true,
+        "colour_scheme" => "default",
         "owner" => false}
     end
 
@@ -127,6 +134,7 @@ defmodule Ask.ProjectControllerTest do
         "name" => project.name,
         "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
         "read_only" => true,
+        "colour_scheme" => "default",
         "owner" => false}
     end
 
@@ -155,6 +163,20 @@ defmodule Ask.ProjectControllerTest do
       assert response["data"]["read_only"] == false
       assert response["data"]["owner"] == true
       assert Repo.get_by(Project, @valid_attrs)
+    end
+
+    test "updates colour_scheme when it is valid", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = put conn, project_path(conn, :update, project), project: %{colour_scheme: "better_data_for_health"}
+      response = json_response(conn, 200)
+      assert response["data"]["id"]
+      assert response["data"]["colour_scheme"] == "better_data_for_health"
+    end
+
+    test "rejects update when colour_scheme is invalid", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = put conn, project_path(conn, :update, project), project: %{colour_scheme: "invalid scheme"}
+      assert json_response(conn, 422)["errors"]["colour_scheme"] == ["value has to be either default or better_data_for_health"]
     end
 
     test "rejects update if the project doesn't belong to the current user", %{conn: conn} do

@@ -1,12 +1,13 @@
 defmodule Ask.InviteController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, ProjectMembership, Invite}
+  alias Ask.{Project, ProjectMembership, Invite, Logger}
   import Ecto.Query
 
   def accept_invitation(conn, %{"code" => code}) do
     invite = Repo.one(from i in Invite, where: i.code == ^code)
     if !invite do
+      Logger.warn "There is no invite matching code #{inspect code}"
       render(conn, "error.json", error: "invitation code is invalid")
     else
       user = conn |> current_user
@@ -60,6 +61,7 @@ defmodule Ask.InviteController do
                   |> put_status(:created)
                   |> render("invite.json", %{project_id: project.id, code: code, email: email, level: level})
               {:error, changeset} ->
+                Logger.warn "Error when inviting collaborator #{inspect changeset}"
                 conn
                   |> put_status(:unprocessable_entity)
                   |> render(Ask.ChangesetView, "error.json", changeset: changeset)

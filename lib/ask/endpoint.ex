@@ -20,7 +20,7 @@ defmodule Ask.Endpoint do
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Poison,
-    length: 314_572_800
+    length: 1_073_741_824
 
   plug Plug.MethodOverride
   plug Plug.Head

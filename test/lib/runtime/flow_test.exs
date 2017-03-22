@@ -3,7 +3,7 @@ defmodule Ask.FlowTest do
   use Ask.DummySteps
   import Ask.Factory
   import Ask.StepBuilder
-  alias Ask.Runtime.Flow
+  alias Ask.Runtime.{Flow, Reply}
   alias Ask.Runtime.Flow.TextVisitor
 
   @quiz build(:questionnaire, steps: @dummy_steps)
@@ -244,6 +244,44 @@ defmodule Ask.FlowTest do
     result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("skip"))
 
     assert {:end, _} = result
+  end
+
+  test "refusal is stronger than response" do
+    steps = [
+      numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        refusal: %{
+          "enabled" => true,
+          "responses" => %{
+            "sms" => %{
+              "en" => ["1"],
+            }
+          },
+          "skip_logic" => "end",
+        }
+      ),
+      multiple_choice_step(
+        id: "aaa",
+        title: "Title",
+        prompt: %{
+        },
+        store: "Swims",
+        choices: []
+      ),
+    ]
+
+    {:ok, flow, _} =
+      build(:questionnaire, steps: steps)
+      |> Flow.start("sms")
+      |> Flow.step(@sms_visitor)
+    result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+
+    # No stores (because of refusal)
+    assert {:end, %Reply{stores: []}} = result
   end
 
   describe "numeric steps" do

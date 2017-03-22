@@ -3,6 +3,7 @@ import React, { Component, PropTypes } from 'react'
 export class Tabs extends Component {
   static propTypes = {
     children: PropTypes.node,
+    more: PropTypes.node,
     id: PropTypes.string.isRequired
   }
 
@@ -11,16 +12,17 @@ export class Tabs extends Component {
   }
 
   render() {
-    const { children, id } = this.props
+    const { children, more, id } = this.props
     return (
       <nav id='BottomNav'>
         <div className='nav-wrapper'>
           <div className='row'>
-            <div className='col s12 m11 l8'>
+            <div className='col'>
               <ul id={id} className='tabs' key='foo' ref='node'>
                 {children}
               </ul>
             </div>
+            {more}
           </div>
         </div>
       </nav>

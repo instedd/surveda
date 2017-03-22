@@ -103,4 +103,17 @@ describe('project reducer', () => {
 
     expect(state).toEqual({fetching: false, projectId: 1, data: project2})
   })
+
+  it('should update project with colourScheme', () => {
+    const project = {id: 1, name: 'p1'}
+    const project2 = {id: 1, name: 'p2', colourScheme: 'default'}
+
+    const state = playActions([
+      actions.startFetchingProject(1),
+      actions.receiveProject(project),
+      actions.updateProject(project2)
+    ])
+
+    expect(state).toEqual({fetching: false, projectId: 1, data: project2})
+  })
 })
