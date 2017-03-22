@@ -44,6 +44,9 @@ config :ask, :channel,
 config :ask, Ask.Runtime.Broker,
   batch_size: {:system, "BROKER_BATCH_SIZE", 10}
 
+config :ask, :sox,
+  bin: System.get_env("SOX_BINARY") || "sox"
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$dateT$timeZ $metadata[$level] $message\n",

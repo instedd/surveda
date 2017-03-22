@@ -26,3 +26,5 @@ erl_crash.dump
 /config/local.exs
 
 .vagrant
+
+/test/tmp/
