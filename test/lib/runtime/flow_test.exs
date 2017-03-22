@@ -3,7 +3,7 @@ defmodule Ask.FlowTest do
   use Ask.DummySteps
   import Ask.Factory
   import Ask.StepBuilder
-  alias Ask.Runtime.Flow
+  alias Ask.Runtime.{Flow, Reply}
 
   @quiz build(:questionnaire, steps: @dummy_steps)
 
@@ -277,7 +277,8 @@ defmodule Ask.FlowTest do
       |> Flow.step
     result = flow |> Flow.step(Flow.Message.reply("1"))
 
-    assert {:end, _} = result
+    # No stores (because of refusal)
+    assert {:end, %Reply{stores: []}} = result
   end
 
   describe "numeric steps" do

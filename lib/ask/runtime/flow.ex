@@ -148,10 +148,13 @@ defmodule Ask.Runtime.Flow do
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
                       num = is_numeric(reply)
-                      if (num && is_in_numeric_range(step, num)) || is_refusal_option(step, flow, reply) do
-                        reply
-                      else
-                        nil
+                      cond do
+                        is_refusal_option(step, flow, reply) ->
+                          {:refusal, reply}
+                        num && is_in_numeric_range(step, num)  ->
+                          reply
+                        :else ->
+                          nil
                       end
                     "language-selection" ->
                       choices = step["language_choices"]
@@ -174,10 +177,16 @@ defmodule Ask.Runtime.Flow do
         else
           {%{flow | retries: flow.retries + 1}, %Reply{prompts: fetch(:error_msg, flow, step)}}
         end
+      {:refusal, reply_value} ->
+        advance_after_reply(flow, step, reply_value, stores: [])
       reply_value ->
-        flow = flow |> advance_current_step(step, reply_value)
-        {%{flow | retries: 0}, %Reply{stores: %{step["store"] => reply_value}}}
+        advance_after_reply(flow, step, reply_value, stores: %{step["store"] => reply_value})
     end
+  end
+
+  defp advance_after_reply(flow, step, reply_value, stores: stores) do
+    flow = flow |> advance_current_step(step, reply_value)
+    {%{flow | retries: 0}, %Reply{stores: stores}}
   end
 
   defp eval({flow, state}) do
