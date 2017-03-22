@@ -55,7 +55,11 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   def gather(respondent, prompts) do
     [
-      element(:Gather, %{action: callback_url(respondent)}, [
+      # We need to set finishOnKey="" so that when a user presses '#'
+      # the current question doesn't give a "timeout" from Verboice,
+      # and '#' is sent here so it can be considered a refusal, a valid
+      # option, etc.
+      element(:Gather, %{action: callback_url(respondent), finishOnKey: ""}, [
         say_or_play(prompts)
       ]),
       element(:Redirect, no_reply_callback_url(respondent))
