@@ -34,6 +34,36 @@ defmodule Ask.Runtime.ReplyHelper do
     end
   end
 
+  defmacro error(error_prompt, title, prompt) do
+    quote do
+      %{steps: [
+        %{prompts: [unquote(error_prompt)], title: "Error"},
+        %{
+          prompts: [unquote(prompt)],
+          title: unquote(title)
+        }
+      ]}
+    end
+  end
+
+  defmacro quota_completed_ivr(prompt) do
+    quote do
+      %{steps: [ %{prompts: [unquote(prompt)], title: "Quota completed"} ]}
+    end
+  end
+
+  defmacro error_ivr(error_prompt, title, prompt) do
+    quote do
+      %{steps: [
+        %{prompts: [%{"audio_source" => "tts", "text" => unquote(error_prompt)}], title: "Error"},
+        %{
+          prompts: [%{"audio_source" => "tts", "text" => unquote(prompt)}],
+          title: unquote(title)
+        }
+      ]}
+    end
+  end
+
   defmacro multiple(steps) do
     quote do
       %{steps: (Enum.map unquote(steps), fn(step) ->

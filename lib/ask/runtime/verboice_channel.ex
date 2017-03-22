@@ -130,11 +130,11 @@ defmodule Ask.Runtime.VerboiceChannel do
     end)
   end
 
-  def callback(conn, %{"path" => ["status", respondent_id, token], "CallStatus" => status}) do
+  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status}) do
     respondent = Repo.get!(Respondent, respondent_id)
     case status do
       s when s in ["failed", "busy", "no-answer"] ->
-        Broker.channel_failed(respondent, token, status)
+        Broker.channel_failed(respondent, status)
       _ -> :ok
     end
 

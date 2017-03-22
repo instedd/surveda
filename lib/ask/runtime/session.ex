@@ -28,7 +28,7 @@ defmodule Ask.Runtime.Session do
         case flow |> Flow.step do
           {:end, reply} ->
             if Reply.prompts(reply) != [] do
-              log_prompts(reply, channel, respondent)
+              log_prompts(reply, channel, respondent, true)
               runtime_channel |> Channel.ask(respondent, token, reply)
             end
             {:end, reply}
@@ -61,8 +61,8 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp log_prompts(reply, channel, respondent) do
-    unless channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation? do
+  defp log_prompts(reply, channel, respondent, force \\ false) do
+    if force || !(channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation?) do
       disposition = Reply.disposition(reply) || respondent.disposition
       Enum.each Reply.steps(reply), fn(step) ->
         step[:prompts] |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
@@ -220,7 +220,7 @@ defmodule Ask.Runtime.Session do
       {:end, %Reply{steps: []}} ->
         {:end, respondent}
       {:end, reply} ->
-        log_prompts(reply, session.channel, respondent)
+        log_prompts(reply, session.channel, respondent, true)
         {:end, reply, respondent}
       {:ok, flow, reply} ->
         case falls_in_quota_already_completed?(buckets, responses) do
@@ -228,7 +228,7 @@ defmodule Ask.Runtime.Session do
             msg = quota_completed_msg(session.flow)
             if msg do
               reply = %Reply{steps: [%{prompts: [msg], title: "Quota completed"}]}
-              log_prompts(reply, session.channel, respondent)
+              log_prompts(reply, session.channel, respondent, true)
               {:rejected, reply, respondent}
             else
               {:rejected, respondent}
