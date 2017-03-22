@@ -81,7 +81,7 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, audioIdErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
     const shouldDisplayErrors = value == this.props.originalValue
 
@@ -145,7 +145,7 @@ class IvrPrompt extends Component {
                 <source src={this.state.audioUri} type='audio/mpeg' />
               </audio>
               {readOnly ? null
-                : <AudioDropzone onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+                : <AudioDropzone error={!!audioIdErrors} onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
               }
             </div>
             : ''}
@@ -161,6 +161,7 @@ IvrPrompt.propTypes = {
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
+  audioIdErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   autocomplete: PropTypes.bool.isRequired,

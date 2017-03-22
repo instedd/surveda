@@ -557,6 +557,18 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should validate required audioId for prompt ivr when audio source is upload', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: '  New prompt  ', audioSource: 'upload'})]
+      )
+
+      expect(state.errors).toInclude({
+        "steps[1].prompt['en'].ivr.audioId": ['An audio file must be uploaded']
+      })
+    })
+
     it('should validate there must be at least two responses', () => {
       const state = playActions([
         actions.fetch(1, 1),

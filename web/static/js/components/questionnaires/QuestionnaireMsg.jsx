@@ -9,7 +9,7 @@ import IvrPrompt from './IvrPrompt'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
 import { getPromptSms, getPromptIvr, getPromptIvrText } from '../../step'
-import { msgPromptTextPath, msgHasErrors } from '../../questionnaireErrors'
+import { msgPromptTextPath, msgIvrAudioIdPath, msgHasErrors } from '../../questionnaireErrors'
 import * as api from '../../api'
 
 type Props = {
@@ -282,9 +282,11 @@ class QuestionnaireMsg extends Component {
 
       if (ivr) {
         let ivrInputErrors = errors[msgPromptTextPath(messageKey, 'ivr', questionnaire.activeLanguage)]
+        let ivrAudioIdErrors = errors[msgIvrAudioIdPath(messageKey, questionnaire.activeLanguage)]
         ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`}
           key={quizState.cardId}
           inputErrors={ivrInputErrors}
+          audioIdErrors={ivrAudioIdErrors}
           value={quizState.stepPromptIvrText}
           originalValue={quizState.ivrOriginalValue}
           onChange={e => this.promptIvrChange(e)}
