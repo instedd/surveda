@@ -29,7 +29,7 @@ main:not(.main-welcome) {
 }
 
 header {
-  @extend .grey, .darken-3;
+  background-color: #424242;
 
   .logo {
     display: inline-block;
@@ -40,19 +40,20 @@ header {
     + a.breadcrumb:before {
       display: none;
     }
-    svg {
-      .st0{fill:#FF5722;}
-      .st1{fill:#FFC107;}
-      .st2{fill:#FFA000;}
-      .st3{fill:#4CAF50;}
-      .st4{fill:#555555;}
-
+    .logo-container {
+      background-image: url('../images/header_icon_default.svg');
+      background-repeat: no-repeat;
+      display: block;
+      width: 60px;
+      height: 60px;
     }
   }
 }
 
 #TopNav {
-  border-bottom: 1px solid color("shades", "black");
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #000000;
   min-width: 395px;
 
   ul {
@@ -60,7 +61,7 @@ header {
       margin-left: -15px;
     }
     a {
-      @extend .grey-text;
+      color: #9e9e9e;
       i.right {
         font-size: 1.6rem;
         margin-left: 5px;
@@ -144,7 +145,6 @@ header {
 
   a.page-title {
     font-size: 20px;
-    max-width: 95%;
     padding-top: 4px;
     display: inline-block;
     i {

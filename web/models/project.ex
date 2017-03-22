@@ -4,6 +4,7 @@ defmodule Ask.Project do
   schema "projects" do
     field :name, :string
     field :salt, :string
+    field :colour_scheme, :string
 
     has_many :questionnaires, Ask.Questionnaire
     has_many :surveys, Ask.Survey
@@ -18,12 +19,23 @@ defmodule Ask.Project do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :salt])
+    |> cast(params, [:name, :salt, :colour_scheme])
+    |> validate_colour_scheme
   end
 
   def touch!(project) do
     project
     |> Ask.Project.changeset
     |> Ask.Repo.update!(force: true)
+  end
+
+  defp validate_colour_scheme(changeset) do
+    colour_scheme = get_field(changeset, :colour_scheme)
+    cond do
+      colour_scheme && !Enum.member?(["default", "better_data_for_health"], colour_scheme) ->
+        add_error(changeset, :colour_scheme, "value has to be either default or better_data_for_health")
+      true ->
+        changeset
+    end
   end
 end
