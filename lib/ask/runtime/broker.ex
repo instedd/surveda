@@ -64,7 +64,9 @@ defmodule Ask.Runtime.Broker do
   end
 
   def delivery_confirm(respondent, title) do
-    respondent.session |> Session.load |> Session.delivery_confirm(title)
+    unless respondent.session == nil do
+      respondent.session |> Session.load |> Session.delivery_confirm(title)
+    end
   end
 
   defp poll_survey(survey) do

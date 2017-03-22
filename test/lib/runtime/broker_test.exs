@@ -1097,7 +1097,7 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
-  test "respondent flow with quota completed msg" do
+  test "respondent flow with error msg and quota completed msg via sms" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     quotas = %{
@@ -1123,12 +1123,108 @@ defmodule Ask.BrokerTest do
 
 
     quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
-    quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
+    quiz
+    |> Questionnaire.changeset(%{
+      quota_completed_msg: %{"en" => %{"sms" => "Bye!"}},
+      error_msg: %{"en" => %{"sms" => "Wrong answer"}}
+    })
+    |> Repo.update!
 
+    {:ok, logger} = SurveyLogger.start_link
     {:ok, broker} = Broker.start_link
     Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Foo"))
+    assert {:reply, ReplyHelper.error("Wrong answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Error")
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    assert {:end, {:reply, ReplyHelper.quota_completed("Bye!")}} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.delivery_confirm(respondent, "Quota completed")
+
+    :ok = logger |> GenServer.stop
+
+    assert [do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke, quota_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert do_you_smoke.survey_id == survey.id
+    assert do_you_smoke.action_data == "Do you smoke?"
+    assert do_you_smoke.action_type == "prompt"
+
+    assert foo.survey_id == survey.id
+    assert foo.action_data == "Foo"
+    assert foo.action_type == "response"
+
+    assert wrong_answer.survey_id == survey.id
+    assert wrong_answer.action_data == "Error"
+    assert wrong_answer.action_type == "prompt"
+
+    assert do_you_smoke_again.survey_id == survey.id
+    assert do_you_smoke_again.action_data == "Do you smoke?"
+    assert do_you_smoke_again.action_type == "prompt"
+
+    assert dont_smoke.survey_id == survey.id
+    assert dont_smoke.action_data == "No"
+    assert dont_smoke.action_type == "response"
+
+    assert quota_completed.survey_id == survey.id
+    assert quota_completed.action_data == "Quota completed"
+    assert quota_completed.action_type == "prompt"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "respondent flow with error msg and quota completed msg via ivr" do
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    quotas = %{
+      "vars" => ["Smokes"],
+      "buckets" => [
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"}],
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"}],
+          "quota" => 1,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+
+    quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
+    quiz
+    |> Questionnaire.changeset(%{
+      quota_completed_msg: %{"en" => %{"ivr" => "Bye!"}},
+      error_msg: %{"en" => %{"ivr" => %{"text" => "Wrong answer", "audio_source" => "tts"}}}
+    })
+    |> Repo.update!
+
+    {:ok, logger} = SurveyLogger.start_link
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -1136,7 +1232,48 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    {:end, {:reply, ReplyHelper.quota_completed("Bye!")}} = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert {:reply, ReplyHelper.error_ivr("Wrong answer", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    assert {:end, {:reply, ReplyHelper.quota_completed_ivr("Bye!")}} = reply
+
+    :ok = logger |> GenServer.stop
+
+    assert [answer, do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke, quota_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert answer.survey_id == survey.id
+    assert answer.action_data == "Answer"
+    assert answer.action_type == "contact"
+
+    assert do_you_smoke.survey_id == survey.id
+    assert do_you_smoke.action_data == "Do you smoke?"
+    assert do_you_smoke.action_type == "prompt"
+
+    assert foo.survey_id == survey.id
+    assert foo.action_data == "3"
+    assert foo.action_type == "response"
+
+    assert wrong_answer.survey_id == survey.id
+    assert wrong_answer.action_data == "Error"
+    assert wrong_answer.action_type == "prompt"
+
+    assert do_you_smoke_again.survey_id == survey.id
+    assert do_you_smoke_again.action_data == "Do you smoke?"
+    assert do_you_smoke_again.action_type == "prompt"
+
+    assert dont_smoke.survey_id == survey.id
+    assert dont_smoke.action_data == "9"
+    assert dont_smoke.action_type == "response"
+
+    assert quota_completed.survey_id == survey.id
+    assert quota_completed.action_data == "Quota completed"
+    assert quota_completed.action_type == "prompt"
 
     :ok = broker |> GenServer.stop
   end
