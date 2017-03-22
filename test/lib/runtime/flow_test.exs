@@ -243,6 +243,43 @@ defmodule Ask.FlowTest do
     assert {:end, _} = result
   end
 
+  test "refusal is stronger than response" do
+    steps = [
+      numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        refusal: %{
+          "enabled" => true,
+          "responses" => %{
+            "sms" => %{
+              "en" => ["1"],
+            }
+          },
+          "skip_logic" => "end",
+        }
+      ),
+      multiple_choice_step(
+        id: "aaa",
+        title: "Title",
+        prompt: %{
+        },
+        store: "Swims",
+        choices: []
+      ),
+    ]
+
+    {:ok, flow, _} =
+      build(:questionnaire, steps: steps)
+      |> Flow.start("sms")
+      |> Flow.step
+    result = flow |> Flow.step(Flow.Message.reply("1"))
+
+    assert {:end, _} = result
+  end
+
   describe "numeric steps" do
     test "when value is in a middle range it finds it" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
