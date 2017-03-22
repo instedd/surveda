@@ -39,6 +39,8 @@ defmodule Ask.ProjectView do
   defp render_one(project) do
     %{id: project.id,
       name: project.name,
-      updated_at: project.updated_at}
+      updated_at: project.updated_at,
+      colour_scheme: project.colour_scheme
+    }
   end
 end

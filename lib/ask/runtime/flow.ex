@@ -43,12 +43,12 @@ defmodule Ask.Runtime.Flow do
     !((min_value && value < min_value) || (max_value && value > max_value))
   end
 
-  defp has_refusal_option(%{"refusal" => refusal = %{"enabled" => true}}, flow, reply) do
+  defp is_refusal_option(%{"refusal" => refusal = %{"enabled" => true}}, flow, reply) do
     fetch(:response, flow, refusal)
     |> Enum.any?(fn r -> (r |> clean_string) == reply end)
   end
 
-  defp has_refusal_option(_, _, _) do
+  defp is_refusal_option(_, _, _) do
     false
   end
 
@@ -56,15 +56,15 @@ defmodule Ask.Runtime.Flow do
     skip_logic =
       case step["type"] do
         "numeric" ->
-          if is_numeric(reply_value) do
+          if is_refusal_option(step, flow, reply_value) do
+            step["refusal"]["skip_logic"]
+          else
             value = String.to_integer(reply_value)
             step["ranges"]
             |> Enum.find_value(nil, fn (range) ->
               if (range["from"] == nil || range["from"] <= value) && (range["to"]
                 == nil || range["to"] >= value), do: range["skip_logic"], else: false
             end)
-          else
-            step["refusal"]["skip_logic"]
           end
         "multiple-choice" ->
           step
@@ -148,10 +148,13 @@ defmodule Ask.Runtime.Flow do
                       if (choice), do: choice["value"], else: nil
                     "numeric" ->
                       num = is_numeric(reply)
-                      if (num && is_in_numeric_range(step, num)) || has_refusal_option(step, flow, reply) do
-                        reply
-                      else
-                        nil
+                      cond do
+                        is_refusal_option(step, flow, reply) ->
+                          {:refusal, reply}
+                        num && is_in_numeric_range(step, num)  ->
+                          reply
+                        :else ->
+                          nil
                       end
                     "language-selection" ->
                       choices = step["language_choices"]
@@ -174,10 +177,16 @@ defmodule Ask.Runtime.Flow do
         else
           {%{flow | retries: flow.retries + 1}, %Reply{steps: [%{prompts: fetch(:error_msg, flow, step), title: "Error"}]}}
         end
+      {:refusal, reply_value} ->
+        advance_after_reply(flow, step, reply_value, stores: [])
       reply_value ->
-        flow = flow |> advance_current_step(step, reply_value)
-        {%{flow | retries: 0}, %Reply{stores: %{step["store"] => reply_value}}}
+        advance_after_reply(flow, step, reply_value, stores: %{step["store"] => reply_value})
     end
+  end
+
+  defp advance_after_reply(flow, step, reply_value, stores: stores) do
+    flow = flow |> advance_current_step(step, reply_value)
+    {%{flow | retries: 0}, %Reply{stores: stores}}
   end
 
   defp eval({flow, state}) do
