@@ -23,8 +23,8 @@ export class ColourSchemeModal extends Component {
       <Modal card id={modalId}>
         <div className='modal-content'>
           <div className='card-title header'>
-            <h5>Select color Scheme</h5>
-            <p>Click to change the color scheme</p>
+            <h5>Select color scheme</h5>
+            <p>Choose an option to change the color scheme</p>
           </div>
           <div className='card-content'>
             <div className='row'>
@@ -52,7 +52,7 @@ export class ColourSchemeModal extends Component {
                   onChange={e => this.toggleColourScheme('better_data_for_health')}
                   className='with-gap'
                 />
-                <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Better Data for Health</label>
+                <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Data for health initiative</label>
               </div>
             </div>
           </div>
