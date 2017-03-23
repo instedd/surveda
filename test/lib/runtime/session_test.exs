@@ -416,7 +416,7 @@ defmodule Ask.SessionTest do
     respondent = Respondent |> Repo.get(respondent.id)
 
     {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms")
-    {:rejected, %Reply{prompts: ["Quota completed"]}, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    assert {:rejected, %Reply{prompts: ["Quota completed"]}, _} = Session.sync_step(session, Flow.Message.reply("N"))
   end
 
   test "assigns respondent to its bucket", %{quiz: quiz, respondent: respondent, channel: channel} do

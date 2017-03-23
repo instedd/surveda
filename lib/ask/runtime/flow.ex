@@ -21,9 +21,9 @@ defmodule Ask.Runtime.Flow do
     msg = flow.questionnaire.quota_completed_msg
     if msg do
       visitor = visitor |> Visitor.accept_message(msg, flow.language)
-      %Reply{prompts: Visitor.close(visitor)}
+      {:ok, %Reply{prompts: Visitor.close(visitor)}}
     else
-      nil
+      :ok
     end
   end
 

@@ -54,6 +54,14 @@ defmodule Ask.Runtime.Session do
     {:ok, session, %Reply{}, current_timeout(session), respondent}
   end
 
+  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+    fallback_delay
+  end
+
+  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+    next_retry
+  end
+
   defp run_flow(session) do
     mode_start(%{session | token: Ecto.UUID.generate})
   end
@@ -153,37 +161,41 @@ defmodule Ask.Runtime.Session do
                where: q.survey_id == ^survey.id)
       end
 
-    stores =
-      case step_answer do
-        {:end, %{stores: stores}} -> stores
-        {:ok, _, %{stores: stores}} -> stores
-      end
-
     # Store responses, assign respondent to bucket (if any, if there's a match)
     # Since to determine the assigned bucket we need to get all responses,
     # we return them here and reuse them in `falls_in_quota_already_completed`
     # to avoid executing this query twice.
     {respondent, responses} =
-      store_responses_and_assign_bucket(respondent, stores, buckets, session)
+      store_responses_and_assign_bucket(respondent, step_answer, buckets, session)
 
-    case step_answer do
-      {:end, %Reply{prompts: []}} ->
-        {:end, respondent}
-      {:end, reply} ->
-        {:end, reply, respondent}
-      {:ok, flow, reply} ->
-        case falls_in_quota_already_completed?(buckets, responses) do
-          true ->
-            reply = Flow.quota_completed(session.flow, session.current_mode |> SessionMode.visitor)
-            if reply do
-              {:rejected, reply, respondent}
-            else
-              {:rejected, respondent}
-            end
-          false ->
-            {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
+    session |> handle_step_answer(step_answer, respondent, responses, buckets)
+  end
+
+  defp handle_step_answer(_, {:end, %Reply{prompts: []}}, respondent, _, _) do
+    {:end, respondent}
+  end
+
+  defp handle_step_answer(_, {:end, reply}, respondent, _, _) do
+    {:end, reply, respondent}
+  end
+
+  defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets) do
+    case falls_in_quota_already_completed?(buckets, responses) do
+      true ->
+        case Flow.quota_completed(session.flow, session.current_mode |> SessionMode.visitor) do
+        {:ok, reply} ->
+          {:rejected, reply, respondent}
+        :ok ->
+          {:rejected, respondent}
         end
+      false ->
+        {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
     end
+  end
+
+  def cancel(session) do
+    Ask.Channel.runtime_channel(session.current_mode.channel)
+    |> Channel.cancel_message(session.channel_state)
   end
 
   def dump(session) do
@@ -199,11 +211,6 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  def cancel(session) do
-    Ask.Channel.runtime_channel(session.current_mode.channel)
-    |> Channel.cancel_message(session.channel_state)
-  end
-
   def load(state) do
     %Session{
       current_mode: SessionModeProvider.load(state["current_mode"]),
@@ -217,7 +224,13 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  defp store_responses_and_assign_bucket(respondent, stores, buckets, session) do
+  defp store_responses_and_assign_bucket(respondent, step_answer, buckets, session) do
+    stores =
+      case step_answer do
+        {:end, %{stores: stores}} -> stores
+        {:ok, _, %{stores: stores}} -> stores
+      end
+
     # Add response to responses
     stores |> Enum.each(fn {field_name, value} ->
       existing_responses = respondent
@@ -234,14 +247,6 @@ defmodule Ask.Runtime.Session do
 
     # Try to assign a bucket to the respondent
     assign_bucket(respondent, buckets, session)
-  end
-
-  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
-    fallback_delay
-  end
-
-  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
-    next_retry
   end
 
   defp assign_bucket(respondent, [], _session) do
