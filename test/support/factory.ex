@@ -38,6 +38,19 @@ defmodule Ask.Factory do
     }
   end
 
+  def survey_log_entry_factory do
+    %Ask.SurveyLogEntry{
+      survey: build(:survey),
+      mode: "sms",
+      respondent: sequence(:survey_log_entry_respondent, &"#{&1}"),
+      channel: build(:channel),
+      disposition: "completed",
+      action_type: "prompt",
+      action_data: "explanation",
+      timestamp: Ecto.DateTime.utc,
+    }
+  end
+
   def quota_bucket_factory do
     %Ask.QuotaBucket{
       survey: build(:survey),

@@ -175,7 +175,7 @@ defmodule Ask.Runtime.Flow do
         if flow.retries >=  @max_retries do
           {%{flow | current_step: flow |> end_flow}, %Reply{}}
         else
-          {%{flow | retries: flow.retries + 1}, %Reply{prompts: fetch(:error_msg, flow, step)}}
+          {%{flow | retries: flow.retries + 1}, %Reply{steps: [%{prompts: fetch(:error_msg, flow, step), title: "Error"}]}}
         end
       {:refusal, reply_value} ->
         advance_after_reply(flow, step, reply_value, stores: [])
@@ -197,18 +197,17 @@ defmodule Ask.Runtime.Flow do
       step ->
         case step["type"] do
           "explanation" ->
-            add_explanation_step_prompt(flow, state)
+            add_explanation_step_prompt(flow, state, step)
           "flag" ->
             add_disposition_to_next_step(flow, state, step)
           _ ->
-            {:ok, flow, %{state | prompts: (state.prompts || []) ++ fetch(:prompt, flow, step)}}
+            add_question_step_prompt(flow, state, step)
         end
     end
   end
 
-  defp add_explanation_step_prompt(flow, state) do
-    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
-    state = %{state | prompts: (state.prompts || []) ++ fetch(:prompt, flow, step)}
+  defp add_explanation_step_prompt(flow, state, step) do
+    state = %{state | steps: (state.steps || []) ++ [fetch(:reply, flow, step)]}
     flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
     eval({flow, state})
   end
@@ -217,6 +216,11 @@ defmodule Ask.Runtime.Flow do
     state = %{state | disposition: step["disposition"]}
     flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
     eval({flow, state})
+  end
+
+  defp add_question_step_prompt(flow, state, step) do
+    state = %{state | steps: (state.steps || []) ++ [fetch(:reply, flow, step)]}
+    {:ok, flow, state}
   end
 
   defp clean_string(nil), do: ""
@@ -244,6 +248,10 @@ defmodule Ask.Runtime.Flow do
     |> Map.get(language, %{})
     |> Map.get(flow.mode)
     |> split_by_newlines(flow.mode)
+  end
+
+  defp fetch(:reply, flow, step, language) do
+    %{prompts: fetch(:prompt, flow, step, language), id: step["id"], title: step["title"]}
   end
 
   defp fetch(:response, flow, step, language) do
