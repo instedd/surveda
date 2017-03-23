@@ -17,6 +17,16 @@ defmodule Ask.Runtime.Flow do
     |> eval
   end
 
+  def quota_completed(flow, visitor) do
+    msg = flow.questionnaire.quota_completed_msg
+    if msg do
+      visitor = visitor |> Visitor.accept_message(msg, flow.language)
+      %Reply{prompts: Visitor.close(visitor)}
+    else
+      nil
+    end
+  end
+
   def retry(flow, visitor) do
     {flow, %Reply{}, visitor} |> eval
   end

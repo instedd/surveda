@@ -174,9 +174,9 @@ defmodule Ask.Runtime.Session do
       {:ok, flow, reply} ->
         case falls_in_quota_already_completed?(buckets, responses) do
           true ->
-            msg = quota_completed_msg(session.flow)
-            if msg do
-              {:rejected, %Reply{prompts: [msg]}, respondent}
+            reply = Flow.quota_completed(session.flow, session.current_mode |> SessionMode.visitor)
+            if reply do
+              {:rejected, reply, respondent}
             else
               {:rejected, respondent}
             end
@@ -314,16 +314,6 @@ defmodule Ask.Runtime.Session do
           _ ->
             buckets |> Enum.all?(fn bucket -> bucket.count >= bucket.quota end)
         end
-    end
-  end
-
-  defp quota_completed_msg(flow) do
-    msg = flow.questionnaire.quota_completed_msg
-    if msg do
-      (msg |> Map.get(flow.language) |> Map.get(flow.mode)) ||
-        (msg |> Map.get(flow.questionnaire.defaultLanguage) |> Map.get(flow.mode))
-    else
-      nil
     end
   end
 end
