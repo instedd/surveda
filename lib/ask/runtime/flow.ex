@@ -214,9 +214,25 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp add_disposition_to_next_step(flow, state, step) do
-    state = %{state | disposition: step["disposition"]}
+    old_disposition = state.disposition
+    new_disposition = step["disposition"]
+
+    disposition =
+      if shouldnt_update_disposition(old_disposition, new_disposition) do
+        old_disposition
+      else
+        new_disposition
+      end
+
+    state = %{state | disposition: disposition}
     flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
     eval({flow, state})
+  end
+
+  def shouldnt_update_disposition(old_disposition, new_disposition) do
+    (old_disposition == "completed"
+    || old_disposition == "ineligible"
+    || (new_disposition == "ineligible" && old_disposition == "partial"))
   end
 
   defp clean_string(nil), do: ""

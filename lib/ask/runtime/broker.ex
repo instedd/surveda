@@ -4,7 +4,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger}
-  alias Ask.Runtime.{Session, Reply}
+  alias Ask.Runtime.{Session, Reply, Flow}
   alias Ask.QuotaBucket
 
   @poll_interval :timer.minutes(1)
@@ -326,7 +326,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     old_disposition = respondent.disposition
-    if shouldnt_update_disposition(old_disposition, disposition) do
+    if Flow.shouldnt_update_disposition(old_disposition, disposition) do
       update_respondent(respondent, {:ok, session, timeout}, nil)
     else
       timeout_at = Timex.shift(Timex.now, minutes: timeout)
@@ -367,13 +367,6 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
     |> create_disposition_history(old_disposition)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
-  end
-
-
-  defp shouldnt_update_disposition(old_disposition, new_disposition) do
-    (old_disposition == "completed"
-    || old_disposition == "ineligible"
-    || (new_disposition == "ineligible" && old_disposition == "partial"))
   end
 
   defp create_disposition_history(respondent, old_disposition) do

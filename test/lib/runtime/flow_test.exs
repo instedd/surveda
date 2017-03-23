@@ -477,5 +477,38 @@ defmodule Ask.FlowTest do
       flow_state = flow |> Flow.step
       assert {:end, %{disposition: "partial"}} = flow_state
     end
+
+    test "two consecutive flag steps: ineligible, completed" do
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "bbb",
+          title: "b",
+          disposition: "ineligible"
+        ),
+        flag_step(
+          id: "ccc",
+          title: "c",
+          disposition: "completed"
+        ),
+      ]
+
+      {:ok, flow, _} =
+        build(:questionnaire, steps: steps)
+        |> Flow.start("sms")
+        |> Flow.step
+      {:end, %Reply{disposition: "ineligible"}} = flow |> Flow.step(Flow.Message.reply("1"))
+    end
   end
 end
