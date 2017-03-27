@@ -344,7 +344,7 @@ defmodule Ask.Runtime.Broker do
       respondent
       |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
-      |> create_disposition_history(old_disposition)
+      |> create_disposition_history(old_disposition, session.channel.type)
       |> update_quota_bucket(old_disposition, session.count_partial_results)
     end
   end
@@ -373,10 +373,18 @@ defmodule Ask.Runtime.Broker do
         _ -> "completed"
       end
 
+    mode =
+      if respondent.session do
+        session = respondent.session |> Session.load
+        session.channel.type
+      else
+        nil
+      end
+
     respondent
     |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update!
-    |> create_disposition_history(old_disposition)
+    |> create_disposition_history(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
   end
 
@@ -387,11 +395,12 @@ defmodule Ask.Runtime.Broker do
     || (new_disposition == "ineligible" && old_disposition == "partial"))
   end
 
-  defp create_disposition_history(respondent, old_disposition) do
+  defp create_disposition_history(respondent, old_disposition, mode) do
     if respondent.disposition && respondent.disposition != old_disposition do
       %RespondentDispositionHistory{
         respondent: respondent,
-        disposition: respondent.disposition}
+        disposition: respondent.disposition,
+        mode: mode}
       |> Repo.insert!
     end
     respondent

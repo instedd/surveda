@@ -128,6 +128,7 @@ defmodule Ask.BrokerTest do
     history = histories |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "completed"
+    assert history.mode == nil
   end
 
   test "set the respondent questionnaire and mode" do
@@ -292,6 +293,7 @@ defmodule Ask.BrokerTest do
     history = histories |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "partial"
+    assert history.mode == "sms"
   end
 
   test "mark disposition as ineligible on end" do

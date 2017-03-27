@@ -151,6 +151,7 @@ defmodule Ask.Factory do
     %Ask.RespondentDispositionHistory{
       respondent: build(:respondent),
       disposition: "partial",
+      mode: "sms",
     }
   end
 
