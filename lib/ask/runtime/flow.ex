@@ -173,7 +173,7 @@ defmodule Ask.Runtime.Flow do
     case reply_value do
       nil ->
         if flow.retries >=  @max_retries do
-          {%{flow | current_step: flow |> end_flow}, %Reply{}}
+          :failed
         else
           {%{flow | retries: flow.retries + 1}, %Reply{steps: [%{prompts: fetch(:error_msg, flow, step), title: "Error"}]}}
         end
@@ -187,6 +187,10 @@ defmodule Ask.Runtime.Flow do
   defp advance_after_reply(flow, step, reply_value, stores: stores) do
     flow = flow |> advance_current_step(step, reply_value)
     {%{flow | retries: 0}, %Reply{stores: stores}}
+  end
+
+  defp eval(:failed) do
+    :failed
   end
 
   defp eval({flow, state}) do

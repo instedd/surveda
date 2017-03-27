@@ -98,7 +98,7 @@ defmodule Ask.SessionTest do
   end
 
   test "mark respondent as failed when failure notification arrives on last retry", %{quiz: quiz, respondent: respondent, channel: channel} do
-    {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel)
+    {:ok, session = %Session{}, _, 10, _} = Session.start(quiz, respondent, channel)
     assert :failed = Session.channel_failed(session)
   end
 
@@ -108,7 +108,7 @@ defmodule Ask.SessionTest do
   end
 
   test "ignore failure notification when channel fails but there is a fallback channel", %{quiz: quiz, respondent: respondent, channel: channel} do
-    {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel, [], channel)
+    {:ok, session = %Session{}, _, 10, _} = Session.start(quiz, respondent, channel, [], channel)
     assert :ok = Session.channel_failed(session)
   end
 

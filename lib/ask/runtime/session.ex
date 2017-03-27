@@ -207,6 +207,7 @@ defmodule Ask.Runtime.Session do
       case step_answer do
         {:end, %{stores: stores}} -> stores
         {:ok, _, %{stores: stores}} -> stores
+        :failed -> []
       end
 
     # Store responses, assign respondent to bucket (if any, if there's a match)
@@ -237,6 +238,8 @@ defmodule Ask.Runtime.Session do
             log_prompts(reply, session.channel, respondent)
             {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
         end
+      :failed ->
+        {:failed, respondent}
     end
   end
 

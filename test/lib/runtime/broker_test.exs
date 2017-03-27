@@ -1801,6 +1801,21 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.timeout_at in interval
   end
 
+  test "marks as failed after 3 successive wrong replies" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+
+    (1..3) |> Enum.each(fn _ ->
+      respondent = Repo.get(Respondent, respondent.id)
+      Broker.sync_step(respondent, Flow.Message.reply("Oops"))
+    end)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
