@@ -348,10 +348,10 @@ defmodule Ask.RespondentController do
       |> Ecto.DateTime.to_erl
       |> Timex.Ecto.DateTime.cast!
       |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
-      [history.respondent.hashed_number, history.disposition, date]
+      [history.respondent.hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
-    header = ["Respondent ID", "Disposition", "Timestamp"]
+    header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string

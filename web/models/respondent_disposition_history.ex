@@ -3,6 +3,7 @@ defmodule Ask.RespondentDispositionHistory do
 
   schema "respondent_disposition_history" do
     field :disposition, :string
+    field :mode, :string
     belongs_to :respondent, Ask.Respondent
 
     timestamps()
@@ -13,7 +14,7 @@ defmodule Ask.RespondentDispositionHistory do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:disposition])
+    |> cast(params, [:disposition, :mode])
     |> validate_required([:disposition])
   end
 end
