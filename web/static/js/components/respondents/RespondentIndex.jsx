@@ -188,8 +188,8 @@ class RespondentIndex extends Component {
               <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
             </div>
             <div>
-              <h5>Download CSV for interactions</h5>
-              <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
+              <h5>Interactions</h5>
+              <p>One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp</p>
             </div>
           </a>
         </li>
