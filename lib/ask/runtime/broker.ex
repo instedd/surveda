@@ -331,15 +331,15 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     old_disposition = respondent.disposition
-    if Flow.shouldnt_update_disposition(old_disposition, disposition) do
-      update_respondent(respondent, {:ok, session, timeout}, nil)
-    else
+    if Flow.should_update_disposition(old_disposition, disposition) do
       timeout_at = Timex.shift(Timex.now, minutes: timeout)
       respondent
       |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
       |> create_disposition_history(old_disposition)
       |> update_quota_bucket(old_disposition, session.count_partial_results)
+    else
+      update_respondent(respondent, {:ok, session, timeout}, nil)
     end
   end
 
