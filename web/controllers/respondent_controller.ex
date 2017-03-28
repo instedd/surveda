@@ -351,7 +351,7 @@ defmodule Ask.RespondentController do
       [history.respondent.hashed_number, history.disposition, date]
     end)
 
-    header = ["Respondent hash", "Disposition", "Timestamp"]
+    header = ["Respondent ID", "Disposition", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string

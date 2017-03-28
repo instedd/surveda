@@ -12,7 +12,7 @@ import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal, splitSmsText } from '../step'
-import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, msgPromptTextPath, errorsByLang } from '../questionnaireErrors'
+import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, msgPromptTextPath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 import * as characterCounter from '../characterCounter'
 
@@ -803,6 +803,9 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
       if (isBlank(ivr.text)) {
         addError(context, msgPromptTextPath(msgKey, 'ivr', lang), 'Voice prompt must not be blank')
       }
+      if (ivr.audioSource == 'upload' && !ivr.audioId) {
+        addError(context, msgIvrAudioIdPath(msgKey, lang), 'An audio file must be uploaded')
+      }
     })
   }
 }
@@ -828,6 +831,9 @@ const validateIvrLangPrompt = (step: Step, stepIndex: number, context: Validatio
   let ivr = getStepPromptIvr(step, lang)
   if (isBlank(ivr.text)) {
     addError(context, promptTextPath(stepIndex, 'ivr', lang), 'Voice prompt must not be blank')
+  }
+  if (ivr.audioSource == 'upload' && !ivr.audioId) {
+    addError(context, promptIvrAudioIdPath(stepIndex, lang), 'An audio file must be uploaded')
   }
 }
 

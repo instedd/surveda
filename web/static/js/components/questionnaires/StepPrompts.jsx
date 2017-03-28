@@ -6,8 +6,9 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText } from '../../step'
-import { promptTextPath } from '../../questionnaireErrors'
+import { promptTextPath, promptIvrAudioIdPath } from '../../questionnaireErrors'
 import * as api from '../../api'
+import propsAreEqual from '../../propsAreEqual'
 
 type State = {
   stepPromptSms: string,
@@ -71,6 +72,8 @@ class StepPrompts extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 
@@ -168,11 +171,13 @@ class StepPrompts extends Component {
     let ivrInput = null
     if (ivr) {
       let ivrInputErrors = errors[promptTextPath(stepIndex, 'ivr', activeLanguage)]
+      let ivrAudioIdErrors = errors[promptIvrAudioIdPath(stepIndex, activeLanguage)]
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
         key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
         originalValue={this.state.ivrOriginalValue}
         inputErrors={ivrInputErrors}
+        audioIdErrors={ivrAudioIdErrors}
         readOnly={readOnly}
         onChange={e => this.stepPromptIvrChange(e)}
         onBlur={e => this.stepPromptIvrSubmit(e)}

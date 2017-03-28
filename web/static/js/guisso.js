@@ -26,12 +26,13 @@ class GuissoSession {
     }
   }
 
-  authorize(responseType, provider = null) {
+  authorize(responseType, provider = null, baseUrl = null) {
     return new Promise((resolve, reject) => {
+      const state = (provider && baseUrl ? `${provider}|${baseUrl}` : null)
       const authorizeUrl = this.config.baseUrl + '/oauth2/authorize' +
         '?client_id=' + this.config.clientId +
         '&scope=' + encodeURIComponent('app=' + this.config.appId) +
-        '&state=' + provider +
+        '&state=' + state +
         '&response_type=' + responseType +
         '&redirect_uri=' + encodeURIComponent(window.location.origin + '/oauth_client/callback')
 

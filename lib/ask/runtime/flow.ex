@@ -134,8 +134,21 @@ defmodule Ask.Runtime.Flow do
     {%{flow | retries: 0}, %Reply{stores: stores}, visitor}
   end
 
+  def shouldnt_update_disposition(old_disposition, new_disposition) do
+    (old_disposition == "completed"
+    || old_disposition == "ineligible"
+    || (new_disposition == "ineligible" && old_disposition == "partial"))
+  end
+
   # :next_step, :end_survey, {:jump, step_id}, :wait_for_reply
   defp run_step(state, %{"type" => "flag", "disposition" => disposition}) do
+    disposition =
+      if shouldnt_update_disposition(state.disposition, disposition) do
+        state.disposition
+      else
+        disposition
+      end
+
     {:ok, %{state | disposition: disposition}}
   end
 

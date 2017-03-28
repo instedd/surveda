@@ -127,14 +127,10 @@ class SurveyWizardRespondentsStep extends Component {
 }
 
 const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
-  var isIE = /* @cc_on!@ */false || !!document.documentMode
-
-  // Edge 20+
-  var isEdge = !isIE && !!window.StyleMedia
-
   let commonProps = {className: 'dropfile', activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, onDrop: onDrop, accept: 'text/csv', onDropRejected: onDropRejected}
 
-  if (isEdge || isIE) {
+  var isWindows = navigator.platform && navigator.platform.indexOf('Win') != 1
+  if (isWindows) {
     commonProps = {
       ...commonProps,
       accept: '.csv',

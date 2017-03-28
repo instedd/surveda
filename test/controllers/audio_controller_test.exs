@@ -2,7 +2,7 @@ defmodule Ask.AudioControllerTest do
 
   use Ask.ConnCase
 
-  alias Ask.Audio
+  alias Ask.{Audio, AudioChecker}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -30,7 +30,9 @@ defmodule Ask.AudioControllerTest do
       audio_count = Audio |> Repo.all |> Enum.count
       assert audio_count == 1
 
-      assert Repo.one(Audio).filename == "test1.mp3"
+      audio = Repo.one(Audio)
+      assert audio.filename == "test1.mp3"
+      assert AudioChecker.get_audio_format(audio.data, "mp3") == "mp3"
     end
 
     test "MP3: when data is valid returns its uuid", %{conn: conn} do
@@ -41,7 +43,7 @@ defmodule Ask.AudioControllerTest do
       assert json_response(conn, 201)["data"] == %{"id" => uuid}
     end
 
-    test "WAV: when data is valid saves the audio", %{conn: conn} do
+    test "WAV: when data is valid saves the audio as MP3", %{conn: conn} do
       file = %Plug.Upload{path: "test/fixtures/audio.wav", filename: "test1.wav"}
       audio_count = Audio |> Repo.all |> Enum.count
       assert audio_count == 0
@@ -49,7 +51,9 @@ defmodule Ask.AudioControllerTest do
       audio_count = Audio |> Repo.all |> Enum.count
       assert audio_count == 1
 
-      assert Repo.one(Audio).filename == "test1.wav"
+      audio = Repo.one(Audio)
+      assert audio.filename == "test1.mp3"
+      assert AudioChecker.get_audio_format(audio.data, "mp3") == "mp3"
     end
 
     test "WAV: when data is valid returns its uuid", %{conn: conn} do

@@ -4,17 +4,21 @@ import Dropzone from 'react-dropzone'
 
 type AudioDropzoneProps = {
   onDrop: Function,
-  onDropRejected: Function
+  onDropRejected: Function,
+  error: boolean,
 };
 
 export class AudioDropzone extends Component {
   props: AudioDropzoneProps
 
   render() {
-    const { onDrop, onDropRejected } = this.props
+    const { onDrop, onDropRejected, error } = this.props
+
+    let className = 'dropfile audio'
+    if (error) className = `${className} error`
 
     return (
-      <Dropzone className='dropfile audio' activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
+      <Dropzone className={className} activeClassName='active' rejectClassName='rejectedfile' multiple={false} onDrop={onDrop} onDropRejected={onDropRejected} accept='audio/*' >
         <div className='drop-icon' />
         <div className='drop-text audio' />
       </Dropzone>

@@ -171,6 +171,15 @@ class SurveyShow extends Component {
     )
   }
 
+  // Round a number to two decimals, but only if the number has decimals
+  round(num) {
+    if (num == parseInt(num)) {
+      return num
+    } else {
+      return num.toFixed(2)
+    }
+  }
+
   dispositions(respondentsStats) {
     const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed', 'cancelled']
     return (
@@ -194,7 +203,7 @@ class SurveyShow extends Component {
                   <tr>
                     <td>{capitalize(disposition)}</td>
                     <td className='right-align'>{ stat.count }</td>
-                    <td className='right-align'>{ Math.round(stat.percent) }%</td>
+                    <td className='right-align'>{ this.round(stat.percent) }%</td>
                   </tr>
                 )
               })}

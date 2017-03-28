@@ -5,6 +5,7 @@ import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined } from '../../step'
 import { choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath } from '../../questionnaireErrors'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   onDelete: Function,
@@ -74,6 +75,8 @@ class ChoiceEditor extends Component {
   }
 
   componentWillReceiveProps(newProps: Props) {
+    if (propsAreEqual(this.props, newProps)) return
+
     let newState = this.stateFromProps(newProps)
     this.setState({ ...newState, editing: this.state.editing })
   }

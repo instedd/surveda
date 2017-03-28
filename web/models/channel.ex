@@ -5,6 +5,7 @@ defmodule Ask.Channel do
     field :name, :string
     field :type, :string
     field :provider, :string
+    field :base_url, :string
     field :settings, :map
     belongs_to :user, Ask.User
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
@@ -32,7 +33,7 @@ defmodule Ask.Channel do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :type, :provider, :settings, :user_id])
+    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id])
     |> validate_required([:name, :type, :provider, :settings, :user_id])
     |> assoc_constraint(:user)
   end

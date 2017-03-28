@@ -5,16 +5,16 @@ defmodule Ask.AudioController do
   alias Ask.Audio
 
   def create(conn, %{"file" => file_upload}) do
-    {:ok, file_content} = File.read(file_upload.path)
-    new_audio =
-      %{
-        uuid: Ecto.UUID.generate,
-        filename: file_upload.filename,
-        data: file_content
-      }
-    changeset = Audio.changeset(%Audio{}, new_audio)
+    upload_changeset = Audio.upload_changeset(file_upload)
+    result = if upload_changeset.valid? do
+      new_audio = Audio.params_from_converted_upload(file_upload)
+      changeset = Audio.changeset(%Audio{}, new_audio)
+      Repo.insert(changeset)
+    else
+      {:error, upload_changeset}
+    end
 
-    case Repo.insert(changeset) do
+    case result do
       {:ok, audio} ->
         conn
         |> put_status(:created)

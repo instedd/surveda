@@ -295,7 +295,7 @@ defmodule Ask.RespondentControllerTest do
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
-    assert lines == ["Respondent hash,Disposition,Timestamp",
+    assert lines == ["Respondent ID,Disposition,Timestamp",
      "1asd12451eds,partial,2000-01-01 01:02:03 UTC",
      "1asd12451eds,completed,2000-01-01 02:03:04 UTC",
      "34y5345tjyet,partial,2000-01-01 03:04:05 UTC",
