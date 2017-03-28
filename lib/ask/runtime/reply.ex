@@ -8,4 +8,8 @@ defmodule Ask.Runtime.Reply do
   def disposition(%{disposition: disposition}) do
     disposition
   end
+
+  def stores(%{stores: stores}) do
+    stores
+  end
 end

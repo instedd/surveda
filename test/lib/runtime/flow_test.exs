@@ -18,7 +18,7 @@ defmodule Ask.FlowTest do
   test "first step of empty quiz" do
     quiz = build(:questionnaire)
     step = Flow.start(quiz, "sms") |> Flow.step(@sms_visitor)
-    assert {:end, _} = step
+    assert {:end, _, _} = step
   end
 
   test "first step (sms mode)" do
@@ -103,7 +103,7 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
 
-    assert {:end, _} = step
+    assert {:end, _, _} = step
   end
 
   test "retry step 2 times, then valid answer, then retry 3 times (ivr mode)" do
@@ -144,7 +144,7 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
 
-    assert {:end, _} = step
+    assert {:end, _, _} = step
   end
 
   test "retry question without the error message when no reply is received" do
@@ -172,7 +172,7 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("N"))
     {:ok, flow, _} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("99"))
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("11"))
-    assert {:end, _} = step
+    assert {:end, _, _} = step
   end
 
   def init_quiz_and_send_response response do
@@ -187,7 +187,7 @@ defmodule Ask.FlowTest do
   test "when skip_logic is end it ends the flow" do
     result = init_quiz_and_send_response("Y")
 
-    assert {:end, _} = result
+    assert {:end, _, _} = result
   end
 
   test "when skip_logic is null it continues with next step" do
@@ -243,7 +243,7 @@ defmodule Ask.FlowTest do
       |> Flow.step(@sms_visitor)
     result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("skip"))
 
-    assert {:end, _} = result
+    assert {:end, _, _} = result
   end
 
   test "refusal is stronger than response" do
@@ -281,7 +281,7 @@ defmodule Ask.FlowTest do
     result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
 
     # No stores (because of refusal)
-    assert {:end, %Reply{stores: []}} = result
+    assert {:end, _, %Reply{stores: []}} = result
   end
 
   describe "numeric steps" do
@@ -289,7 +289,7 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} = init_quiz_and_send_response("S")
       result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("50"))
 
-      assert {:end, _} = result
+      assert {:end, _, _} = result
     end
 
     @numeric_steps_no_min_max [
@@ -330,7 +330,7 @@ defmodule Ask.FlowTest do
         |> Flow.start("sms")
         |> Flow.step(@sms_visitor)
       result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("-10"))
-      assert {:end, _} = result
+      assert {:end, _, _} = result
     end
 
     test "when value is in the last range and it has no max value it finds it" do
@@ -339,7 +339,7 @@ defmodule Ask.FlowTest do
         |> Flow.start("sms")
         |> Flow.step(@sms_visitor)
       result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("999"))
-      assert {:end, _} = result
+      assert {:end, _, _} = result
     end
 
     test "when value is less than min" do
@@ -456,7 +456,7 @@ defmodule Ask.FlowTest do
       flow = Flow.start(quiz, "sms")
       flow_state = flow |> Flow.step(@sms_visitor)
 
-      assert {:end, %{prompts: prompts}} = flow_state
+      assert {:end, _, %{prompts: prompts}} = flow_state
 
       assert prompts == ["Is this the last question?"]
     end
@@ -478,7 +478,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @partial_step)
       flow = Flow.start(quiz, "sms")
       flow_state = flow |> Flow.step(@sms_visitor)
-      assert {:end, %{disposition: "partial"}} = flow_state
+      assert {:end, _, %{disposition: "partial"}} = flow_state
     end
   end
 end

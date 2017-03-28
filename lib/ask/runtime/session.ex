@@ -33,7 +33,7 @@ defmodule Ask.Runtime.Session do
     Channel.setup(runtime_channel, respondent, token)
 
     case flow |> Flow.step(session.current_mode |> SessionMode.visitor) do
-      {:end, reply} ->
+      {:end, _, reply} ->
         if Reply.prompts(reply) != [] do
           runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
         end
@@ -171,11 +171,11 @@ defmodule Ask.Runtime.Session do
     session |> handle_step_answer(step_answer, respondent, responses, buckets)
   end
 
-  defp handle_step_answer(_, {:end, %Reply{prompts: []}}, respondent, _, _) do
+  defp handle_step_answer(_, {:end, _, %Reply{prompts: []}}, respondent, _, _) do
     {:end, respondent}
   end
 
-  defp handle_step_answer(_, {:end, reply}, respondent, _, _) do
+  defp handle_step_answer(_, {:end, _, reply}, respondent, _, _) do
     {:end, reply, respondent}
   end
 
@@ -224,15 +224,9 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  defp store_responses_and_assign_bucket(respondent, step_answer, buckets, session) do
-    stores =
-      case step_answer do
-        {:end, %{stores: stores}} -> stores
-        {:ok, _, %{stores: stores}} -> stores
-      end
-
+  defp store_responses_and_assign_bucket(respondent, {_, _, reply}, buckets, session) do
     # Add response to responses
-    stores |> Enum.each(fn {field_name, value} ->
+    Reply.stores(reply) |> Enum.each(fn {field_name, value} ->
       existing_responses = respondent
       |> assoc(:responses)
       |> where([r], r.field_name == ^field_name)

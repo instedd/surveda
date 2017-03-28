@@ -151,7 +151,7 @@ defmodule Ask.Runtime.Flow do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
     case step do
       nil ->
-        {:end, %{state | prompts: Visitor.close(visitor)}}
+        {:end, nil, %{state | prompts: Visitor.close(visitor)}}
       step ->
         case state |> run_step(step) do
           {:ok, state} ->
