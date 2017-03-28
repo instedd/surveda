@@ -1,6 +1,5 @@
 defmodule Ask.QuestionnaireTest do
-  use Ask.ModelCase
-
+  use Ask.{ModelCase, DummySteps}
   alias Ask.Questionnaire
 
   @valid_attrs %{project_id: 1, name: "some content", modes: ["sms", "ivr"], steps: []}
@@ -24,5 +23,11 @@ defmodule Ask.QuestionnaireTest do
   test "changeset with invalid attributes" do
     changeset = Questionnaire.changeset(%Questionnaire{}, @invalid_attrs)
     refute changeset.valid?
+  end
+
+  test "gets variables" do
+    questionnaire = insert(:questionnaire, steps: @dummy_steps)
+    vars = Questionnaire.variables(questionnaire)
+    assert vars == ["Smokes", "Exercises", "Perfect Number", "Question"]
   end
 end

@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Response}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -237,14 +237,10 @@ defmodule Ask.RespondentController do
 
     {offset, ""} = Integer.parse(offset)
 
-    # We first need to get all unique field names in all responses
-    all_fields = Repo.all(from resp in Response,
-      join: r in Respondent,
-      where: resp.respondent_id == r.id and
-             r.survey_id == ^survey_id and
-             resp.field_name != "",
-      select: resp.field_name,
-      distinct: true)
+    # We first need to get all unique field names in all questionnaires
+    all_fields = questionnaires
+    |> Enum.flat_map(&Questionnaire.variables/1)
+    |> Enum.uniq
 
     # Now traverse each respondent and create a row for it
     csv_rows = from(
