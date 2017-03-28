@@ -98,6 +98,14 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp accept_reply(flow, {:reply, reply}, visitor) do
+    if String.downcase(reply) == "stop" do
+      :failed
+    else
+      accept_reply_non_stop(flow, reply, visitor)
+    end
+  end
+
+  defp accept_reply_non_stop(flow, reply, visitor) do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
 
     reply_value = Step.validate(step, reply, flow.mode, flow.language, flow.questionnaire.default_language)

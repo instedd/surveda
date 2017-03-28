@@ -61,6 +61,12 @@ defmodule Ask.FlowTest do
     assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
   end
 
+  test "next step with STOP" do
+    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
+    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("StoP"))
+    assert {:failed, nil, %Reply{}} = step
+  end
+
   test "retry step (sms mode)" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))

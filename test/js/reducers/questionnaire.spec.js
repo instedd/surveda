@@ -670,6 +670,28 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it("should validate a response's SMS must not be STOP if SMS mode is on", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'stop', 'a', '1', null),
+        actions.addLanguage('es'),
+        actions.setActiveLanguage('es'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', 'a', '1', null),
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'stop', 'a', '1', null)
+      ])
+
+      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
+
+      expect(resultErrors).toInclude({
+        [`steps[1].choices[0]['en'].sms`]: ["SMS must not be 'STOP'"],
+        [`steps[1].choices[0]['fr'].sms`]: ["SMS must not be 'STOP'"]
+      })
+    })
+
     it("should validate a response's Mobile Web must not be blank if Mobile Web mode is on", () => {
       const resultState = playActions([
         actions.fetch(1, 1),

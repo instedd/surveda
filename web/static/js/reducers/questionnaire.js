@@ -1016,10 +1016,18 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
 }
 
 const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
-  if (choice.responses.sms &&
-      choice.responses.sms[lang] &&
-      choice.responses.sms[lang].length == 0) {
+  let sms = choice.responses.sms
+  if (!sms) return
+
+  sms = sms[lang]
+  if (!sms) return
+
+  if (sms.length == 0) {
     addError(context, choiceSmsResponsePath(stepIndex, choiceIndex, lang), 'SMS must not be blank')
+  }
+
+  if (sms.some(x => x.toLowerCase() == 'stop')) {
+    addError(context, choiceSmsResponsePath(stepIndex, choiceIndex, lang), "SMS must not be 'STOP'")
   }
 }
 
