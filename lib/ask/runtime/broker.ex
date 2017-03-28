@@ -360,7 +360,7 @@ defmodule Ask.Runtime.Broker do
         # If the respondent is already completed or ineligible, don't change it
         {"completed", _} -> "completed"
         {"ineligible", _} -> "ineligible"
-        # If a flag step sets the respondent as ineligible, do do (the respondent
+        # If a flag step sets the respondent as ineligible, do so (the respondent
         # will be an non-set or partial disposition here)
         {_, "ineligible"} -> "ineligible"
         # In any other case the survey ends and the respondent is marked as completed
