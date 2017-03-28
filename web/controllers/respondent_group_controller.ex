@@ -1,7 +1,6 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Channel, Logger}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, RespondentGroupChannel}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
@@ -11,7 +10,7 @@ defmodule Ask.RespondentGroupController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
     |> assoc(:respondent_groups)
-    |> preload(:channels)
+    |> preload(:respondent_group_channels)
     |> Repo.all
 
     render(conn, "index.json", respondent_groups: respondent_groups)
@@ -58,10 +57,13 @@ defmodule Ask.RespondentGroupController do
     group = survey
     |> assoc(:respondent_groups)
     |> Repo.get!(id)
-    |> Repo.preload(:channels)
     |> RespondentGroup.changeset(respondent_group_params)
-    |> update_channels(respondent_group_params)
     |> Repo.update!
+
+    update_channels(id, respondent_group_params)
+
+    group = group
+    |> Repo.preload(:respondent_group_channels)
 
     survey
     |> Repo.preload([:questionnaires])
@@ -77,18 +79,18 @@ defmodule Ask.RespondentGroupController do
     |> render("show.json", respondent_group: group)
   end
 
-  defp update_channels(changeset, %{"channels" => channels_params}) do
-    channels_changeset = Enum.map(channels_params, fn ch ->
-      Repo.get!(Channel, ch) |> change
-    end)
+  defp update_channels(id, %{"channels" => channels_params}) do
+    from(gch in RespondentGroupChannel, where: gch.respondent_group_id == ^id) |> Repo.delete_all
 
-    changeset
-    |> put_assoc(:channels, channels_changeset)
+    Repo.transaction fn ->
+      Enum.each(channels_params, fn ch ->
+        RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: id, channel_id: ch["id"], mode: ch["mode"]})
+        |> Repo.insert
+      end)
+    end
   end
 
-  defp update_channels(changeset, _) do
-    changeset
-  end
+  defp update_channels(_, _), do: nil
 
   defp csv_rows(csv_string) do
     delimiters = ["\r\n", "\r", "\n"]
@@ -136,7 +138,7 @@ defmodule Ask.RespondentGroupController do
       respondents_count: respondents_count
     }
     |> Repo.insert!
-    |> Repo.preload(:channels)
+    |> Repo.preload(:respondent_group_channels)
 
     entries = rows
       |> Enum.map(fn row ->

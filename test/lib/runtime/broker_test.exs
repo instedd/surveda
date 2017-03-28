@@ -142,7 +142,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "set the respondent questionnaire and mode with comparisons" do
-    test_channel = TestChannel.new(false)
+    test_channel = TestChannel.new
     sms_channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     ivr_channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "ivr")
 
@@ -433,10 +433,10 @@ defmodule Ask.BrokerTest do
   end
 
   test "fallback respondent (SMS => IVR)" do
-    test_channel = TestChannel.new(true)
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
 
-    test_fallback_channel = TestChannel.new(false)
+    test_fallback_channel = TestChannel.new
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "ivr")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -476,10 +476,10 @@ defmodule Ask.BrokerTest do
   end
 
   test "fallback respondent (IVR => SMS)" do
-    test_channel = TestChannel.new(false)
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "ivr")
 
-    test_fallback_channel = TestChannel.new(true)
+    test_fallback_channel = TestChannel.new
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "sms")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
@@ -1328,7 +1328,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "increments quota bucket when a respondent is flagged as partial" do
-    test_channel = TestChannel.new(true)
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @dummy_steps_with_flag)
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true}))
@@ -1401,7 +1401,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "increments quota bucket when a respondent is flagged as partial before being in a bucket" do
-    test_channel = TestChannel.new(true)
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @dummy_steps_with_flag)
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true}))
@@ -1534,7 +1534,7 @@ defmodule Ask.BrokerTest do
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
-    test_channel = TestChannel.new(mode == "sms")
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
     quiz = insert(:questionnaire, steps: steps)
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [[mode]]}))

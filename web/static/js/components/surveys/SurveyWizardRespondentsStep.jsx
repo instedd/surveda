@@ -58,15 +58,17 @@ class SurveyWizardRespondentsStep extends Component {
     )
   }
 
-  channelChange(e, group, type, allChannels) {
+  channelChange(e, group, type, allChannels, allModes) {
     e.preventDefault()
 
     let currentChannels = group.channels || []
-    currentChannels = currentChannels.filter(id => allChannels[id].type != type)
+    currentChannels = currentChannels.filter(channel => channel.mode != type)
     if (e.target.value != '') {
-      currentChannels.push(e.target.value)
+      currentChannels.push({
+        mode: type,
+        id: parseInt(e.target.value)
+      })
     }
-    currentChannels = currentChannels.map(x => parseInt(x))
 
     const { actions, survey } = this.props
     actions.selectChannels(survey.projectId, survey.id, group.id, currentChannels)
@@ -87,7 +89,7 @@ class SurveyWizardRespondentsStep extends Component {
     return (
       <RespondentsList key={group.id} group={group} remove={removeRespondents} modes={allModes}
         channels={channels} readOnly={readOnly}
-        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+        onChannelChange={(e, type, allChannels, mode) => this.channelChange(e, group, type, allChannels, mode)}
         >
         {group.sample.map((respondent, index) =>
           <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
@@ -151,7 +153,7 @@ RespondentsDropzone.propTypes = {
 }
 
 const newChannelComponent = (type, allChannels, currentChannels, onChange, readOnly) => {
-  const currentChannel = currentChannels.find(id => allChannels[id].type == type)
+  const currentChannel = currentChannels.find(channel => channel.mode == type) || {}
 
   let label
   if (type == 'sms') {
@@ -168,7 +170,7 @@ const newChannelComponent = (type, allChannels, currentChannels, onChange, readO
     <div className='row' key={type}>
       <div className='input-field col s12'>
         <Input s={12} type='select' label={label}
-          value={currentChannel || ''}
+          value={currentChannel.id || ''}
           onChange={e => onChange(e, type, allChannels)}
           disabled={readOnly}>
           <option value=''>

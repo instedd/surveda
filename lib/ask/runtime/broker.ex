@@ -165,14 +165,19 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
 
-    handle_session_step(Session.start(questionnaire, respondent, primary_channel, retries, fallback_channel, fallback_retries, fallback_delay, survey.count_partial_results))
+    {primary_mode, fallback_mode} = case mode do
+      [primary] -> {primary, nil}
+      [primary, fallback] -> {primary, fallback}
+    end
+
+    handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
   end
 
-  defp select_questionnaire_and_mode(survey = %Survey{comparisons: []}) do
+  defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
     {hd(survey.questionnaires), hd(survey.mode)}
   end
 
-  defp select_questionnaire_and_mode(survey = %Survey{comparisons: comparisons}) do
+  defp select_questionnaire_and_mode(%Survey{comparisons: comparisons} = survey) do
     # Get a random value between 0 and 100
     rand = :rand.uniform() * 100
 
@@ -326,15 +331,15 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     old_disposition = respondent.disposition
-    if Flow.shouldnt_update_disposition(old_disposition, disposition) do
-      update_respondent(respondent, {:ok, session, timeout}, nil)
-    else
+    if Flow.should_update_disposition(old_disposition, disposition) do
       timeout_at = Timex.shift(Timex.now, minutes: timeout)
       respondent
       |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
       |> create_disposition_history(old_disposition)
       |> update_quota_bucket(old_disposition, session.count_partial_results)
+    else
+      update_respondent(respondent, {:ok, session, timeout}, nil)
     end
   end
 

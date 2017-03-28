@@ -38,9 +38,7 @@ class SurveyForm extends Component {
   }
 
   allModesHaveAChannel(modes, channels, allChannels) {
-    const selectedTypes = channels
-      .filter(id => allChannels[id]) // Avoid potential `null.type` (#712)
-      .map(id => allChannels[id].type)
+    const selectedTypes = channels.map(channel => channel.mode)
     modes = uniq(flatMap(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
   }

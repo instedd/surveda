@@ -3,6 +3,8 @@ defmodule Ask.SurveyControllerTest do
   use Ask.TestHelpers
 
   alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
+  alias Ask.Runtime.{Flow, Session}
+  alias Ask.Runtime.SessionModeProvider
 
   @valid_attrs %{name: "some content"}
   @invalid_attrs %{state: ""}
@@ -768,7 +770,7 @@ defmodule Ask.SurveyControllerTest do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, state: "ready")
 
-    test_channel = TestChannel.new(false)
+    test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     create_group(survey, channel)
 
@@ -812,13 +814,13 @@ defmodule Ask.SurveyControllerTest do
     insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
 
     channel_state = %{"call_id" => 123}
-    session = %Ask.Runtime.Session{
-      channel: channel,
+    session = %Session{
+      current_mode: SessionModeProvider.new("sms", channel, []),
       channel_state: channel_state,
       respondent: r1,
-      flow: %Ask.Runtime.Flow{questionnaire: questionnaire},
+      flow: %Flow{questionnaire: questionnaire},
     }
-    session = Ask.Runtime.Session.dump(session)
+    session = Session.dump(session)
     r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
@@ -846,13 +848,13 @@ defmodule Ask.SurveyControllerTest do
     insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
 
     channel_state = %{"call_id" => 123}
-    session = %Ask.Runtime.Session{
-      channel: channel,
+    session = %Session{
+      current_mode: SessionModeProvider.new("sms", channel, []),
       channel_state: channel_state,
       respondent: r1,
-      flow: %Ask.Runtime.Flow{questionnaire: questionnaire},
+      flow: %Flow{questionnaire: questionnaire},
     }
-    session = Ask.Runtime.Session.dump(session)
+    session = Session.dump(session)
     r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)

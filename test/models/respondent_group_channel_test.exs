@@ -3,7 +3,7 @@ defmodule Ask.RespondentGroupChannelTest do
 
   alias Ask.RespondentGroupChannel
 
-  @valid_attrs %{channel_id: 1, respondent_group_id: 2}
+  @valid_attrs %{channel_id: 1, respondent_group_id: 2, mode: "a"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
