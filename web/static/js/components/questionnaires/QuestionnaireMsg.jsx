@@ -6,9 +6,10 @@ import * as actions from '../../actions/questionnaire'
 import classNames from 'classnames'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
+import MobileWebPrompt from './MobileWebPrompt'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
-import { getPromptSms, getPromptIvr, getPromptIvrText } from '../../step'
+import { getPromptSms, getPromptIvr, getPromptIvrText, getPromptMobileWeb } from '../../step'
 import { msgPromptTextPath, msgIvrAudioIdPath, msgHasErrors } from '../../questionnaireErrors'
 import * as api from '../../api'
 import propsAreEqual from '../../propsAreEqual'
@@ -27,9 +28,11 @@ type Props = {
 type QuizState = {
   smsOriginalValue: string,
   ivrOriginalValue: string,
+  mobileWebOriginalValue: string,
   stepPromptSms: string,
   stepPromptIvr: AudioPrompt,
   stepPromptIvrText: string,
+  stepPromptMobileWeb: string,
   activeLanguage: string,
   cardId: string,
   questionnaireMsg: LanguagePrompt,
@@ -90,6 +93,20 @@ class QuestionnaireMsg extends Component {
     }
   }
 
+  promptMobileWebChange(text) {
+    this.setState({
+      quizState: {
+        ...this.state.quizState,
+        stepPromptMobileWeb: text
+      }
+    })
+  }
+
+  promptMobileWebSubmit(text) {
+    const { dispatch, messageKey } = this.props
+    dispatch(actions.setMobileWebQuestionnaireMsg(messageKey, text))
+  }
+
   changeIvrMode(e, mode) {
     e.preventDefault()
     const { dispatch, messageKey } = this.props
@@ -128,8 +145,10 @@ class QuestionnaireMsg extends Component {
       quizState: {
         smsOriginalValue: getPromptSms(questionnaireMsg, activeLanguage),
         ivrOriginalValue: getPromptIvrText(questionnaireMsg, activeLanguage),
+        mobileWebOriginalValue: getPromptMobileWeb(questionnaireMsg, activeLanguage),
         stepPromptSms: getPromptSms(questionnaireMsg, activeLanguage),
         stepPromptIvr: promptIvr,
+        stepPromptMobileWeb: getPromptMobileWeb(questionnaireMsg, activeLanguage),
         stepPromptIvrText: getPromptIvrText(questionnaireMsg, activeLanguage),
         questionnaireMsg: questionnaireMsg,
         cardId: `${decamelize(messageKey, '-')}-${activeLanguage}-card`,
@@ -260,6 +279,7 @@ class QuestionnaireMsg extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
+    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
 
     let smsInput = null
 
@@ -304,6 +324,20 @@ class QuestionnaireMsg extends Component {
           />
       }
 
+      let mobileWebInput = null
+
+      if (mobileWeb) {
+        let mobileWebInputErrors = errors[msgPromptTextPath(messageKey, 'mobileWeb', questionnaire.activeLanguage)]
+        mobileWebInput = <MobileWebPrompt id={`${decamelize(messageKey, '-')}-mobile-web`}
+          value={quizState.stepPromptMobileWeb}
+          inputErrors={mobileWebInputErrors}
+          originalValue={quizState.mobileWebOriginalValue}
+          onChange={e => this.promptMobileWebChange(e)}
+          readOnly={readOnly}
+          onBlur={e => this.promptMobileWebSubmit(e)}
+          />
+      }
+
       return (
         <Card className='z-depth-0'>
           <ul className='collection collection-card dark' id={quizState.cardId} >
@@ -324,6 +358,10 @@ class QuestionnaireMsg extends Component {
               <div>
                 {smsInput}
                 {ivrInput}
+                { this.props.messageKey == 'quotaCompletedMsg'
+                ? mobileWebInput
+                : null
+                }
               </div>
             </li>
           </ul>

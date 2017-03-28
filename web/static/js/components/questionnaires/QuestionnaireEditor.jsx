@@ -268,6 +268,7 @@ class QuestionnaireEditor extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
+    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
 
     return (
       <div className='row'>
@@ -315,6 +316,18 @@ class QuestionnaireEditor extends Component {
               <div className='switch right'>
                 <label>
                   <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
+                  <span className='lever' />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div className='row'>
+            <div className='col s12'>
+              <i className='material-icons v-middle left'>phonelink</i>
+              <span className='mode-label'>Mobile web</span>
+              <div className='switch right'>
+                <label>
+                  <input type='checkbox' defaultChecked={mobileWeb} onClick={e => this.toggleMode(e, 'mobileWeb')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>

@@ -206,6 +206,17 @@ defmodule Ask.StepsValidatorTest do
       }
     })
     |> valid_lang_prompt
+
+    ~s({"mobile_web": {}}) |> invalid_lang_prompt("Prompt mobile-web must be a string")
+    ~s({
+      "sms": "Do you smoke? Reply YES or NO",
+      "ivr": {
+        "text": "Do you smoke?",
+        "audio_source": "tts"
+      },
+      "mobile_web": "Do you smoke?"
+    })
+    |> valid_lang_prompt
   end
 
   test "ivr prompt" do

@@ -5,7 +5,8 @@ import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
-import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText } from '../../step'
+import MobileWebPrompt from './MobileWebPrompt'
+import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText, getStepPromptMobileWeb } from '../../step'
 import { promptTextPath, promptIvrAudioIdPath } from '../../questionnaireErrors'
 import * as api from '../../api'
 import propsAreEqual from '../../propsAreEqual'
@@ -15,7 +16,9 @@ type State = {
   smsOriginalValue: string,
   ivrOriginalValue: string,
   stepPromptIvrText: string,
-  stepPromptIvr: AudioPrompt
+  stepPromptIvr: AudioPrompt,
+  stepPromptMobileWeb: string,
+  mobileWebOriginalValue: string
 };
 
 type Props = {
@@ -48,8 +51,11 @@ class StepPrompts extends Component {
   }
 
   stepPromptSmsSubmit(text) {
-    const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptSms(step.id, text)
+    this.props.questionnaireActions.changeStepPromptSms(this.props.step.id, text)
+  }
+
+  stepPromptMobileWebSubmit(text) {
+    this.props.questionnaireActions.changeStepPromptMobileWeb(this.props.step.id, text)
   }
 
   stepPromptIvrChange(e) {
@@ -64,6 +70,10 @@ class StepPrompts extends Component {
       text: e.target.value,
       audioSource: this.state.stepPromptIvr.audioSource
     })
+  }
+
+  stepPromptMobileWebChange(text) {
+    this.setState({stepPromptMobileWeb: text})
   }
 
   changeIvrMode(e, mode) {
@@ -86,7 +96,9 @@ class StepPrompts extends Component {
       smsOriginalValue: getStepPromptSms(step, lang),
       ivrOriginalValue: getStepPromptIvrText(step, lang),
       stepPromptIvr: getStepPromptIvr(step, lang),
-      stepPromptIvrText: getStepPromptIvrText(step, lang)
+      stepPromptIvrText: getStepPromptIvrText(step, lang),
+      stepPromptMobileWeb: getStepPromptMobileWeb(step, lang),
+      mobileWebOriginalValue: getStepPromptMobileWeb(step, lang)
     }
   }
 
@@ -150,6 +162,7 @@ class StepPrompts extends Component {
     const activeLanguage = questionnaire.activeLanguage
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
+    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
     const autocomplete = step.type != 'language-selection'
 
     let smsInput = null
@@ -189,6 +202,22 @@ class StepPrompts extends Component {
         />
     }
 
+    let mobileWebInput = null
+    if (mobileWeb) {
+      let mobileWebInputErrors = errors[promptTextPath(stepIndex, 'mobileWeb', activeLanguage)]
+      mobileWebInput = <MobileWebPrompt id='step_editor_mobile_web_prompt'
+        key={`${questionnaire.activeLanguage}-mobile-web-prompt`}
+        value={this.state.stepPromptMobileWeb}
+        originalValue={this.state.mobileWebOriginalValue}
+        inputErrors={mobileWebInputErrors}
+        readOnly={readOnly}
+        onChange={text => this.stepPromptMobileWebChange(text)}
+        onBlur={text => this.stepPromptMobileWebSubmit(text)}
+        autocomplete={autocomplete}
+        stepId={step.id}
+        />
+    }
+
     return (
       <li className={`collection-item ${classes}`} key='prompts'>
         <div className='row'>
@@ -198,6 +227,7 @@ class StepPrompts extends Component {
         </div>
         {smsInput}
         {ivrInput}
+        {mobileWebInput}
       </li>
     )
   }

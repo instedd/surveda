@@ -40,6 +40,10 @@ export function getStepPromptSms(step: Step, language: string): string {
   return ((getStepPrompt(step, language) || {}).sms || '').trim()
 }
 
+export function getStepPromptMobileWeb(step: Step, language: string): string {
+  return ((getStepPrompt(step, language) || {}).mobileWeb || '').trim()
+}
+
 export function getStepPromptIvr(step: Step, language: string): AudioPrompt {
   return (getStepPrompt(step, language) || {}).ivr || {audioSource: 'tts', text: ''}
 }
@@ -50,6 +54,10 @@ export function getStepPromptIvrText(step: Step, language: string): string {
 
 export function getPromptSms(prompt: ?Prompt, language: string): string {
   return (((prompt || {})[language] || {}).sms || '').trim()
+}
+
+export function getPromptMobileWeb(prompt: ?Prompt, language: string): string {
+  return (((prompt || {})[language] || {}).mobileWeb || '').trim()
 }
 
 export function getPromptIvr(prompt: ?Prompt, language: string): AudioPrompt {
@@ -66,6 +74,10 @@ export function getChoiceResponseSmsJoined(choice: Choice, language: string): st
 
 export function getChoiceResponseIvrJoined(choice: Choice): string {
   return (choice.responses.ivr || []).join(', ')
+}
+
+export function getChoiceResponseMobileWebJoined(choice: Choice, language: string): string {
+  return (choice.responses.mobileWeb || {})[language] || ''
 }
 
 export const newStepPrompt = () => {

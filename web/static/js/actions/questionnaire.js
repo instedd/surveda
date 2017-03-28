@@ -15,6 +15,7 @@ export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
 export const AUTOCOMPLETE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_AUTOCOMPLETE_STEP_PROMPT_SMS'
 export const AUTOCOMPLETE_STEP_PROMPT_IVR = 'QUESTIONNAIRE_AUTOCOMPLETE_STEP_PROMPT_IVR'
+export const CHANGE_STEP_PROMPT_MOBILE_WEB = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_MOBILE_WEB'
 export const CHANGE_STEP_PROMPT_IVR = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_IVR'
 export const CHANGE_STEP_AUDIO_ID_IVR = 'QUESTIONNAIRE_CHANGE_STEP_AUDIO_ID_IVR'
 export const CHANGE_STEP_STORE = 'QUESTIONNAIRE_CHANGE_STEP_STORE'
@@ -31,6 +32,7 @@ export const SET_DEFAULT_LANGUAGE = 'QUESTIONNAIRE_SET_DEFAULT_LANGUAGE'
 export const SET_ACTIVE_LANGUAGE = 'QUESTIONNAIRE_SET_ACTIVE_LANGUAGE'
 export const SET_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_SET_QUESTIONNAIRE_MSG'
 export const SET_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_SET_QUESTIONNAIRE_MSG'
+export const SET_MOBILE_WEB_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_MOBILE_WEB_SET_QUESTIONNAIRE_MSG'
 export const AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_SMS_AUTOCOMPLETE_QUESTIONNAIRE_MSG'
 export const AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG = 'QUESTIONNAIRE_IVR_AUTOCOMPLETE_QUESTIONNAIRE_MSG'
 export const CHANGE_NUMERIC_RANGES = 'QUESTIONNAIRE_CHANGE_NUMERIC_RANGES'
@@ -91,9 +93,9 @@ export const addChoice = (stepId) => ({
   stepId
 })
 
-export const changeChoice = (stepId, index, response, smsValues, ivrValues, skipLogic, autoComplete = false) => ({
+export const changeChoice = (stepId, index, response, smsValues, ivrValues, mobileWebValues, skipLogic, autoComplete = false) => ({
   type: CHANGE_CHOICE,
-  choiceChange: { index, response, smsValues, ivrValues, skipLogic, autoComplete },
+  choiceChange: { index, response, smsValues, ivrValues, mobileWebValues, skipLogic, autoComplete },
   stepId
 })
 
@@ -141,6 +143,12 @@ export const autocompleteStepPromptIvr = (stepId, item) => ({
 
 export const changeStepPromptIvr = (stepId, newPrompt) => ({
   type: CHANGE_STEP_PROMPT_IVR,
+  stepId,
+  newPrompt
+})
+
+export const changeStepPromptMobileWeb = (stepId, newPrompt) => ({
+  type: CHANGE_STEP_PROMPT_MOBILE_WEB,
   stepId,
   newPrompt
 })
@@ -231,6 +239,12 @@ export const setSmsQuestionnaireMsg = (msgKey, msg) => ({
 
 export const setIvrQuestionnaireMsg = (msgKey, msg: AudioPrompt) => ({
   type: SET_IVR_QUESTIONNAIRE_MSG,
+  msgKey,
+  msg
+})
+
+export const setMobileWebQuestionnaireMsg = (msgKey, msg) => ({
+  type: SET_MOBILE_WEB_QUESTIONNAIRE_MSG,
   msgKey,
   msg
 })

@@ -10,9 +10,9 @@ import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
+  getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal, splitSmsText } from '../step'
-import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, msgPromptTextPath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
+import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 import * as characterCounter from '../characterCounter'
 
@@ -27,6 +27,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
     case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
     case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
+    case actions.SET_MOBILE_WEB_QUESTIONNAIRE_MSG: return setMobileWebQuestionnaireMsg(state, action)
     case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
     case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
@@ -90,6 +91,7 @@ const stepsReducer = (state: Step[], action, quiz: Questionnaire) => {
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action, quiz)
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action, quiz)
+    case actions.CHANGE_STEP_PROMPT_MOBILE_WEB: return changeStepMobileWebPrompt(state, action, quiz)
     case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action, quiz)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action, quiz)
@@ -143,6 +145,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
   let response = action.choiceChange.response.trim()
   let smsValues = action.choiceChange.smsValues.trim()
   let ivrValues = action.choiceChange.ivrValues.trim()
+  let mobileWebValues = action.choiceChange.mobileWebValues.trim()
 
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
     [smsValues, ivrValues] = autoComplete(state, response, quiz)
@@ -165,6 +168,10 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
             sms: {
               ...choice.responses.sms,
               [quiz.activeLanguage]: splitValues(smsValues)
+            },
+            mobileWeb: {
+              ...choice.responses.mobileWeb,
+              [quiz.activeLanguage]: mobileWebValues
             }
           },
           skipLogic: action.choiceChange.skipLogic
@@ -291,6 +298,15 @@ const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Que
     return setStepPrompt(step, quiz.activeLanguage, prompt => ({
       ...prompt,
       sms: action.newPrompt.trim()
+    }))
+  })
+}
+
+const changeStepMobileWebPrompt = (state, action: ActionChangeStepSmsPrompt, quiz: Questionnaire): Step[] => {
+  return changeStep(state, action.stepId, step => {
+    return setStepPrompt(step, quiz.activeLanguage, prompt => ({
+      ...prompt,
+      mobileWeb: action.newPrompt.trim()
     }))
   })
 }
@@ -633,6 +649,10 @@ const setSmsQuestionnaireMsg = (state, action) => {
   return setQuestionnaireMsg(state, action, 'sms')
 }
 
+const setMobileWebQuestionnaireMsg = (state, action) => {
+  return setQuestionnaireMsg(state, action, 'mobileWeb')
+}
+
 const autocompleteSmsQuestionnaireMsg = (state, action) => {
   let lang = state.defaultLanguage
   let msgKey = action.msgKey
@@ -775,6 +795,7 @@ const validate = (state: DataStore<Questionnaire>) => {
   const context = {
     sms: data.modes.indexOf('sms') != -1,
     ivr: data.modes.indexOf('ivr') != -1,
+    mobileWeb: data.modes.indexOf('mobileWeb') != -1,
     activeLanguage: data.activeLanguage,
     languages: data.languages,
     errors: state.errors
@@ -793,6 +814,14 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
     context.languages.forEach(lang => {
       if (getPromptSms(msg, lang).length == 0) {
         addError(context, msgPromptTextPath(msgKey, 'sms', lang), 'SMS prompt must not be blank')
+      }
+    })
+  }
+
+  if (context.mobileWeb) {
+    context.languages.forEach(lang => {
+      if (getPromptMobileWeb(msg, lang).length == 0) {
+        addError(context, msgPromptTextPath(msgKey, 'mobileWeb', lang), 'Mobile web prompt must not be blank')
       }
     })
   }
@@ -824,6 +853,12 @@ const validateSmsLangPrompt = (step: Step, stepIndex: number, context: Validatio
     if (parts.some(p => characterCounter.limitExceeded(p))) {
       addError(context, promptTextPath(stepIndex, 'sms', lang), 'limit exceeded')
     }
+  }
+}
+
+const validateMobileWebLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
+  if (getStepPromptMobileWeb(step, lang).length == 0) {
+    addError(context, promptTextPath(stepIndex, 'mobileWeb', lang), 'Mobile web prompt must not be blank')
   }
 }
 
@@ -876,6 +911,10 @@ const validateExplanationStep = (step, stepIndex, context, steps) => {
 const validatePrompts = (step, stepIndex, context) => {
   if (context.sms) {
     context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
+  }
+
+  if (context.mobileWeb) {
+    context.languages.forEach(lang => validateMobileWebLangPrompt(step, stepIndex, context, lang))
   }
 
   if (context.ivr) {
@@ -984,6 +1023,12 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
   }
 }
 
+const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
+  if (choice.responses.mobileWeb && !choice.responses.mobileWeb[lang]) {
+    addError(context, choiceMobileWebResponsePath(stepIndex, choiceIndex, lang), 'Mobile web must not be blank')
+  }
+}
+
 const validateChoiceIvrResponse = (choice, context, stepIndex: number, choiceIndex: number) => {
   if (choice.responses.ivr &&
       choice.responses.ivr.length == 0) {
@@ -1003,6 +1048,10 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
 
   if (context.sms) {
     context.languages.forEach(lang => validateChoiceSmsResponse(choice, context, stepIndex, choiceIndex, lang))
+  }
+
+  if (context.mobileWeb) {
+    context.languages.forEach(lang => validateChoiceMobileWebResponse(choice, context, stepIndex, choiceIndex, lang))
   }
 
   if (context.ivr) {

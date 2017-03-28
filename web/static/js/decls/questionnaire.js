@@ -26,6 +26,7 @@ export type AudioPrompt = {
 export type LanguagePrompt = {
   sms?: string,
   ivr?: AudioPrompt,
+  mobileWeb?: string
 };
 
 export type Prompt = { [lang: string]: LanguagePrompt };
@@ -67,6 +68,9 @@ export type Refusal = {
     ivr?: string[],
     sms?: {
       [lang: string]: string[]
+    },
+    mobileWeb?: {
+      [lang: string]: string[]
     }
   },
   skipLogic: ?string
@@ -85,6 +89,9 @@ export type Choice = {
     ivr?: string[],
     sms?: {
       [lang: string]: string[]
+    },
+    mobileWeb?: {
+      [lang: string]: ?string
     }
   }
 };

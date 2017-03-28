@@ -88,6 +88,9 @@ defmodule Ask.Router do
   post "/callbacks/:provider", Ask.CallbackController, :callback
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback
   post "/callbacks/:provider/*path", Ask.CallbackController, :callback
+  get "/mobile_survey", Ask.MobileSurveyController, :index
+  get "/mobile_survey/get_step", Ask.MobileSurveyController, :get_step
+  post "/mobile_survey/send_reply", Ask.MobileSurveyController, :send_reply
 
   scope "/", Ask do
     pipe_through :browser
