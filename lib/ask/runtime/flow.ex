@@ -91,7 +91,7 @@ defmodule Ask.Runtime.Flow do
 
   defp accept_reply(flow, :no_reply, visitor) do
     if flow.retries >=  @max_retries do
-      {%{flow | current_step: flow |> end_flow}, %Reply{}, visitor}
+      :failed
     else
       {%{flow | retries: flow.retries + 1}, %Reply{}, visitor}
     end
@@ -113,7 +113,7 @@ defmodule Ask.Runtime.Flow do
     case reply_value do
       :invalid_answer ->
         if flow.retries >=  @max_retries do
-          {%{flow | current_step: flow |> end_flow}, %Reply{}, visitor}
+          :failed
         else
           visitor = visitor |> Visitor.accept_message(flow.questionnaire.error_msg, flow.language)
           {%{flow | retries: flow.retries + 1}, %Reply{}, visitor}
@@ -155,6 +155,10 @@ defmodule Ask.Runtime.Flow do
 
   defp run_step(state, _step) do
     {:wait_for_reply, state}
+  end
+
+  defp eval(:failed) do
+    {:failed, nil, %Reply{}}
   end
 
   defp eval({flow, state, visitor}) do

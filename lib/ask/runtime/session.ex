@@ -193,6 +193,10 @@ defmodule Ask.Runtime.Session do
     end
   end
 
+  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _) do
+    {:failed, respondent}
+  end
+
   def cancel(session) do
     Ask.Channel.runtime_channel(session.current_mode.channel)
     |> Channel.cancel_message(session.channel_state)
