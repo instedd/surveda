@@ -1,6 +1,7 @@
 defprotocol Ask.Runtime.Channel do
   def prepare(channel, callback_url)
   def setup(channel, respondent, token)
+  def has_delivery_confirmation?(channel)
   def ask(channel, respondent, token, prompts)
   def has_queued_message?(channel, channel_state)
   def cancel_message(channel, channel_state)

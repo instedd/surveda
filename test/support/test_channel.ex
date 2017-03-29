@@ -1,6 +1,6 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :push, :has_queued_message]
+  defstruct [:pid, :has_queued_message, :delivery]
 
   def new() do
     %Ask.TestChannel{pid: self()}
@@ -13,13 +13,19 @@ defmodule Ask.TestChannel do
   def new(channel) do
     pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
     has_queued_message = channel.settings["has_queued_message"] |> String.to_atom
-    %Ask.TestChannel{pid: pid, has_queued_message: has_queued_message}
+    delivery = channel.settings["delivery"] |> String.to_atom
+    %Ask.TestChannel{pid: pid, has_queued_message: has_queued_message, delivery: delivery}
+  end
+
+  def new(has_queued_message, delivery) do
+    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, delivery: delivery}
   end
 
   def settings(channel) do
     encoded_pid = channel.pid |> :erlang.term_to_binary |> Base.encode64
     encoded_has_queued_message = channel.has_queued_message |> Atom.to_string
-    %{"pid" => encoded_pid, "has_queued_message" => encoded_has_queued_message}
+    encoded_delivery = channel.delivery |> Atom.to_string
+    %{"pid" => encoded_pid, "has_queued_message" => encoded_has_queued_message, "delivery" => encoded_delivery}
   end
 
   def oauth2_authorize(_code, _redirect_uri, _base_url) do
@@ -58,6 +64,10 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
   def setup(channel, respondent, token) do
     send channel.pid, [:setup, channel, respondent, token]
     {:ok, 0}
+  end
+
+  def has_delivery_confirmation?(channel) do
+    channel.delivery
   end
 
   def ask(channel, respondent, token, prompts) do

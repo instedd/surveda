@@ -86,6 +86,11 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
   }
 
+  downloadInteractionsCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
+  }
+
   render() {
     if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
       return <div>Loading...</div>
@@ -174,6 +179,23 @@ class RespondentIndex extends Component {
       )
     }
 
+    let interactionsCsvLink = null
+    if (project.owner) {
+      interactionsCsvLink = (
+        <li className='collection-item'>
+          <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
+            <div>
+              <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+            </div>
+            <div>
+              <h5>Interactions</h5>
+              <p>One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp</p>
+            </div>
+          </a>
+        </li>
+      )
+    }
+
     return (
       <div className='white'>
         <div className='fixed-action-btn horizontal right mtop'>
@@ -210,6 +232,7 @@ class RespondentIndex extends Component {
               </a>
             </li>
             {incentivesCsvLink}
+            {interactionsCsvLink}
           </ul>
         </Modal>
         <CardTable title={title} footer={footer} tableScroll>

@@ -54,12 +54,18 @@ defmodule Ask.Runtime.Broker do
     {:reply, :ok, state}
   end
 
-  def channel_failed(respondent, token) do
+  def channel_failed(respondent, reason \\ "failed") do
     session = respondent.session |> Session.load
-    case Session.channel_failed(session, token) do
+    case Session.channel_failed(session, reason) do
       :ok -> :ok
       :failed ->
         update_respondent(respondent, :failed)
+    end
+  end
+
+  def delivery_confirm(respondent, title) do
+    unless respondent.session == nil do
+      respondent.session |> Session.load |> Session.delivery_confirm(title)
     end
   end
 
@@ -258,12 +264,12 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:ok, session, reply, timeout, respondent}) do
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
-    {:prompts, Reply.prompts(reply)}
+    {:reply, reply}
   end
 
   defp handle_session_step({:end, reply, respondent}) do
     update_respondent(respondent, :end, Reply.disposition(reply))
-    {:end, {:prompts, Reply.prompts(reply)}}
+    {:end, {:reply, reply}}
   end
 
   defp handle_session_step({:end, respondent}) do
@@ -273,7 +279,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:rejected, reply, respondent}) do
     update_respondent(respondent, :rejected)
-    {:end, {:prompts, Reply.prompts(reply)}}
+    {:end, {:reply, reply}}
   end
 
   defp handle_session_step({:rejected, respondent}) do
