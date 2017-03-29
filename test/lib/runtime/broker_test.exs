@@ -209,6 +209,25 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.timeout_at in interval
   end
 
+  test "set timeout_at according to retries, taking survey schedule into account" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+
+    survey |> Survey.changeset(%{sms_retry_configuration: "1d", schedule_day_of_week: tomorrow_schedule_day_of_week()}) |> Repo.update!
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.state == "active"
+
+    {erl_date, _} = Timex.now |> Timex.shift(days: 1) |> Timex.to_erl
+    time = Timex.Timezone.resolve("Etc/UTC", {erl_date, {0, 0, 0}})
+    assert updated_respondent.timeout_at == time
+  end
+
   test "retry respondent (SMS mode)" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
@@ -1853,5 +1872,18 @@ defmodule Ask.BrokerTest do
       group_by: :state,
       select: {r.state, count("*")}) |> Enum.into(%{})
     [by_state["active"] || 0, by_state["pending"] || 0]
+  end
+
+  defp tomorrow_schedule_day_of_week() do
+    {erl_date, _} = Timex.now |> Timex.to_erl
+    case :calendar.day_of_the_week(erl_date) do
+      1 -> %Ask.DayOfWeek{tue: true}
+      2 -> %Ask.DayOfWeek{wed: true}
+      3 -> %Ask.DayOfWeek{thu: true}
+      4 -> %Ask.DayOfWeek{fri: true}
+      5 -> %Ask.DayOfWeek{sat: true}
+      6 -> %Ask.DayOfWeek{sun: true}
+      7 -> %Ask.DayOfWeek{mon: true}
+    end
   end
 end

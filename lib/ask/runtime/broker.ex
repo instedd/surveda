@@ -329,7 +329,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, nil) do
-    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    timeout_at = next_timeout(respondent, timeout)
     respondent
     |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
     |> Repo.update!
@@ -338,7 +338,7 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
-      timeout_at = Timex.shift(Timex.now, minutes: timeout)
+      timeout_at = next_timeout(respondent, timeout)
       respondent
       |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
@@ -386,6 +386,15 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
     |> create_disposition_history(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
+  end
+
+  defp next_timeout(respondent, timeout) do
+    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    survey = (respondent |> Repo.preload(:survey)).survey
+    date_time = survey
+    |> Survey.next_available_date_time(timeout_at)
+    |> Ecto.DateTime.to_erl
+    Timex.Timezone.resolve("UTC", date_time)
   end
 
   defp create_disposition_history(respondent, old_disposition, mode) do
