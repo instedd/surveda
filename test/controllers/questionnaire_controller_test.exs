@@ -241,6 +241,17 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Repo.preload(:questionnaire_variables)).questionnaire_variables
       assert length(vars) == 4
     end
+
+    test "updates survey ready state when valid changes", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, valid: true)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"valid" => false, steps: []}
+
+      survey = Ask.Survey |> Repo.get!(survey.id)
+      assert survey.state == "not_ready"
+    end
   end
 
   describe "update translations" do
