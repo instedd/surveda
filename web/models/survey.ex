@@ -94,7 +94,7 @@ defmodule Ask.Survey do
 
   defp questionnaires_ready?(changeset) do
     questionnaires = get_field(changeset, :questionnaires)
-    length(questionnaires) > 0
+    length(questionnaires) > 0 && Enum.all?(questionnaires, &(&1.valid))
   end
 
   defp schedule_ready?(changeset) do

@@ -84,7 +84,8 @@ defmodule Ask.Factory do
           }
         }
       },
-      languages: []
+      languages: [],
+      valid: true,
     }
   end
 

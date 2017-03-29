@@ -11,6 +11,7 @@ defmodule Ask.Questionnaire do
     field :error_msg, Ask.Ecto.Type.JSON
     field :languages, Ask.Ecto.Type.JSON
     field :default_language, :string
+    field :valid, :boolean
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
 
@@ -22,7 +23,7 @@ defmodule Ask.Questionnaire do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :quota_completed_msg, :error_msg])
+    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :quota_completed_msg, :error_msg, :valid])
     |> validate_required([:project_id, :modes, :steps])
     |> foreign_key_constraint(:project_id)
   end

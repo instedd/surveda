@@ -8,7 +8,8 @@ export type Questionnaire = {
   activeLanguage: string,
   quotaCompletedMsg: Prompt,
   errorMsg: Prompt,
-  projectId: number
+  projectId: number,
+  valid: boolean
 };
 
 export type ChoiceErrors = {

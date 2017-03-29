@@ -41,7 +41,10 @@ describe('questionnaire reducer', () => {
         actions.receive(questionnaire)
       ])
       expect(state.fetching).toEqual(false)
-      expect(state.data).toEqual(questionnaire)
+      expect(state.data).toEqual({
+        ...questionnaire,
+        valid: false
+      })
     })
 
     it('should fetch', () => {
@@ -96,7 +99,10 @@ describe('questionnaire reducer', () => {
       expect(state).toEqual({
         ...state,
         fetching: true,
-        data: questionnaire
+        data: {
+          ...questionnaire,
+          valid: false
+        }
       })
     })
 
@@ -1376,7 +1382,8 @@ describe('questionnaire reducer', () => {
             }
           }
         ],
-        id: 1
+        id: 1,
+        valid: true
       }
 
       const questionnaire = deepFreeze(bareQuestionnaire)

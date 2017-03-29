@@ -43,7 +43,21 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
     if (state !== newState) {
       validate(newState)
     }
-    return newState
+    if (newState.data) {
+      const valid = Object.keys(newState.errors).length == 0 &&
+        (Object.keys(newState.errorsByLang).length == 0 ||
+          newState.data.languages.every(lang => !newState.errorsByLang[lang] || Object.keys(newState.errorsByLang[lang]).length == 0)
+        )
+      return {
+        ...newState,
+        data: {
+          ...newState.data,
+          valid
+        }
+      }
+    } else {
+      return newState
+    }
   }
 }
 

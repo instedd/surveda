@@ -49,9 +49,13 @@ class SurveyForm extends Component {
       .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 
+  questionnairesValid(ids, questionnaires) {
+    return every(ids, id => questionnaires[id] && questionnaires[id].valid)
+  }
+
   render() {
     const { survey, projectId, questionnaires, channels, respondentGroups, invalidRespondents, errors, questionnaire, readOnly } = this.props
-    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
+    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
         return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels || {})
