@@ -74,10 +74,6 @@ defmodule Ask.Runtime.Step do
     ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["id"])
   end
 
-  def fetch(:reply_msg, msg, mode, language, title) do
-    ReplyStep.new(fetch(:msg, msg, mode, language), title)
-  end
-
   def fetch(:prompt, step = %{"type" => "language-selection"}, mode, _language) do
     step
     |> Map.get("prompt", %{})
@@ -109,6 +105,10 @@ defmodule Ask.Runtime.Step do
     |> Map.get(language, %{})
     |> Map.get(mode)
     |> split_by_newlines(mode)
+  end
+
+  def fetch(:reply_msg, msg, mode, language, title) do
+    ReplyStep.new(fetch(:msg, msg, mode, language), title)
   end
 
   defp split_by_newlines(text, mode) do
