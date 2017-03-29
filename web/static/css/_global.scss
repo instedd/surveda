@@ -66,6 +66,15 @@
       vertical-align: top;
     }
   }
+
+  .mode-inline-block {
+    display: inline-block;
+    vertical-align: text-top;
+    margin-right: 12px;
+    &:last-child{
+      margin-left: -6px;
+    }
+  }
 }
 
 

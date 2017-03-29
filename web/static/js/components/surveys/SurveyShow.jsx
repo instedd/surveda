@@ -55,7 +55,7 @@ class SurveyShow extends Component {
       .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
   }
 
-  iconForMode(mode) {
+  iconForMode(mode: string) {
     let icon = null
     if (mode == 'sms') {
       icon = 'sms'
@@ -66,7 +66,22 @@ class SurveyShow extends Component {
     return icon
   }
 
-  labelForMode(mode) {
+  letterForIndex(index) {
+    switch (index) {
+      case 0:
+        return 'A'
+      case 1:
+        return 'B'
+      case 2:
+        return 'C'
+      case 3:
+        return 'D'
+      default:
+        throw new Error(`invalid modes`)
+    }
+  }
+
+  labelForMode(mode: string) {
     let label = null
     if (mode == 'sms') {
       label = 'SMS'
@@ -77,13 +92,37 @@ class SurveyShow extends Component {
     return label
   }
 
-  modeFor(type, mode) {
+  modeFor(index: number, mode: string) {
+    let type = (index == 0) ? 'Primary' : 'Fallback'
     return (
       <div className='mode'>
         <label className='grey-text'>{type} Mode</label>
         <div>
           <i className='material-icons'>{this.iconForMode(mode)}</i>
           <span className='mode-label name'>{this.labelForMode(mode)}</span>
+        </div>
+      </div>
+    )
+  }
+
+  modeForComparison(mode: string) {
+    return (<div className='mode-inline-block'>
+      <i className='material-icons'>{this.iconForMode(mode)}</i>
+      <span className='mode-label name'>{this.labelForMode(mode)}</span>
+    </div>
+    )
+  }
+
+  modesForComparisons(modes: string[], index) {
+    let modesForComparisons = modes.map((m, index) => {
+      return this.modeForComparison(m)
+    })
+    const modeDescriptions = (modesForComparisons.length == 2) ? [modesForComparisons[0], (<div className='mode-inline-block'> + </div>), modesForComparisons[1], (<div className='mode-inline-block'>fallback</div>)] : modesForComparisons
+    return (
+      <div className='mode'>
+        <label className='grey-text'>{'Mode ' + this.letterForIndex(index)}</label>
+        <div>
+          {modeDescriptions}
         </div>
       </div>
     )
@@ -97,16 +136,17 @@ class SurveyShow extends Component {
       return <p>Loading...</p>
     }
 
-    let primaryMode = this.modeFor('Primary', survey.mode[0])
-    let fallbackMode = null
-    if (survey.mode.length > 1) {
-      fallbackMode = this.modeFor('Fallback', survey.mode[1])
+    let modes
+    if (survey.mode.length == 1) {
+      modes = <div className='survey-modes'>
+        {survey.mode[0].map((mode, index) => (this.modeFor(index, mode)))}
+      </div>
+    } else {
+      modes = survey.mode.map((modes, index) => (<div className='survey-modes' key={String(index)}>
+        {this.modesForComparisons(modes, index)}
+      </div>)
+      )
     }
-
-    let modes = <div className='survey-modes'>
-      {primaryMode}
-      {fallbackMode}
-    </div>
 
     let table
     if (respondentsQuotasStats.length > 0) {
