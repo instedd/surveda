@@ -173,6 +173,7 @@ const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
 
 RespondentsDropzone.propTypes = {
   survey: PropTypes.object,
+  uploading: PropTypes.bool,
   onDrop: PropTypes.func.isRequired,
   onDropRejected: PropTypes.func.isRequired
 }
