@@ -98,7 +98,9 @@ class ChannelIndex extends Component {
       let name = `${provider[0].toUpperCase()}${provider.slice(1)}`
       if (multiple) name = `${name} (${friendlyName})`
 
-      return <ConfirmationModal key={`${provider}-${index}`} modalId={`${provider}Modal-${index}`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider, index)} style={{maxWidth: '600px'}} showCancel onNo={() => this.turnOffProvider(provider, index)} />
+      return <ConfirmationModal key={`${provider}-${index}`} modalId={`${provider}Modal-${index}`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider, index)} style={{maxWidth: '600px'}} showCancel
+        /* onNo={() => this.turnOffProvider(provider, index)} */
+        />
     }
 
     let syncButton = null
