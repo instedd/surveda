@@ -756,6 +756,21 @@ defmodule Ask.SurveyControllerTest do
 
       assert new_survey.state == "not_ready"
     end
+
+    test "changes state to not_ready when survey mode doesn't match questionnaire mode", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+      questionnaire |> Ask.Questionnaire.changeset(%{"modes" => ["ivr"]}) |> Repo.update!
+
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["ivr"]], questionnaires: [questionnaire])
+      create_group(survey, channel)
+
+      attrs = %{mode: [["sms"]]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
   end
 
   test "prevents launching a survey that is not in the ready state", %{conn: conn, user: user} do

@@ -252,6 +252,17 @@ defmodule Ask.QuestionnaireControllerTest do
       survey = Ask.Survey |> Repo.get!(survey.id)
       assert survey.state == "not_ready"
     end
+
+    test "updates survey ready state when mode changes", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"modes" => ["ivr"], steps: []}
+
+      survey = Ask.Survey |> Repo.get!(survey.id)
+      assert survey.state == "not_ready"
+    end
   end
 
   describe "update translations" do

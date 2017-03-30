@@ -53,6 +53,13 @@ class SurveyForm extends Component {
     return every(ids, id => questionnaires[id] && questionnaires[id].valid)
   }
 
+  questionnairesMatchModes(modes, ids, questionnaires) {
+    return every(modes, mode =>
+      every(mode, m =>
+        ids && every(ids, id =>
+          questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
+  }
+
   render() {
     const { survey, projectId, questionnaires, channels, respondentGroups, invalidRespondents, errors, questionnaire, readOnly } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
@@ -61,7 +68,7 @@ class SurveyForm extends Component {
         return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels || {})
       })
 
-    const modeStepCompleted = survey.mode != null && survey.mode.length > 0
+    const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
@@ -129,7 +136,7 @@ class SurveyForm extends Component {
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardModeStep survey={survey} readOnly={readOnly} />
+            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>

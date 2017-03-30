@@ -148,9 +148,10 @@ export const changeQuestionnaireComparison = () => ({
   type: CHANGE_QUESTIONNAIRE_COMPARISON
 })
 
-export const changeQuestionnaire = (questionnaire: number) => ({
+export const changeQuestionnaire = (questionnaire: number, questionnaires: any) => ({
   type: CHANGE_QUESTIONNAIRE,
-  questionnaire
+  questionnaire,
+  questionnaires
 })
 
 export const updateRespondentsCount = (respondentsCount: string) => ({

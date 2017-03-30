@@ -62,6 +62,7 @@ defmodule Ask.QuestionnaireController do
     |> Repo.get!(id)
 
     old_valid = questionnaire.valid
+    old_modes = questionnaire.modes
 
     changeset = questionnaire
     |> Questionnaire.changeset(params)
@@ -72,8 +73,9 @@ defmodule Ask.QuestionnaireController do
         questionnaire |> Questionnaire.recreate_variables!
         questionnaire |> Ask.Translation.rebuild
 
-        new_valid = Ecto.Changeset.get_field(changeset, :valid)
-        if new_valid != old_valid do
+        new_valid = Ecto.Changeset.get_change(changeset, :valid)
+        new_modes = Ecto.Changeset.get_change(changeset, :modes)
+        if new_valid != old_valid || new_modes != old_modes do
           update_related_surveys(questionnaire)
         end
 

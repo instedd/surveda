@@ -9,6 +9,7 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
+import every from 'lodash/every'
 import some from 'lodash/some'
 
 export const dataReducer = (state: Survey, action: any): Survey => {
@@ -277,16 +278,31 @@ const changeQuestionnaire = (state, action) => {
     newQuestionnaireIds = [questionnaireId]
   }
 
+  // If any questionnaire has a mode that's not present in the current survey mode,
+  // unleselect the mode
+  let mode = state.mode
+  if (mode && mode.length > 0 && action.questionnaires && !questionnairesMatchModes(mode, newQuestionnaireIds, action.questionnaires)) {
+    mode = []
+  }
+
   return {
     ...state,
     questionnaireIds: newQuestionnaireIds,
     questionnaireComparison,
+    mode,
     comparisons: buildComparisons(state.modeComparison, questionnaireComparison, state.mode, newQuestionnaireIds),
     quotas: {
       vars: [],
       buckets: []
     }
   }
+}
+
+const questionnairesMatchModes = (modes, ids, questionnaires) => {
+  return every(modes, mode =>
+    every(mode, m =>
+      ids && every(ids, id =>
+        questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
 }
 
 const toggleDay = (state, action) => {

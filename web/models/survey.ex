@@ -66,7 +66,8 @@ defmodule Ask.Survey do
       fallback_delay_ready?(changeset) &&
       comparisons_ready?(changeset) &&
       questionnaires_ready?(changeset) &&
-      respondent_groups_ready?(changeset)
+      respondent_groups_ready?(changeset) &&
+      mode_and_questionnaires_ready?(changeset)
 
     state = get_field(changeset, :state)
 
@@ -107,6 +108,20 @@ defmodule Ask.Survey do
   defp mode_ready?(changeset) do
     mode = get_field(changeset, :mode)
     mode && length(mode) > 0
+  end
+
+  defp mode_and_questionnaires_ready?(changeset) do
+    mode = get_field(changeset, :mode)
+    questionnaires = get_field(changeset, :questionnaires)
+
+    # Check that all survey modes are present in the associated questionnaires
+    mode |> Enum.all?(fn modes ->
+      modes |> Enum.all?(fn mode ->
+        questionnaires |> Enum.all?(fn q ->
+          q.modes |> Enum.member?(mode)
+        end)
+      end)
+    end)
   end
 
   def comparisons_ready?(changeset) do

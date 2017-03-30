@@ -17,8 +17,10 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   questionnaireChange(e) {
+    const { questionnaires } = this.props
+
     const { dispatch } = this.props
-    dispatch(actions.changeQuestionnaire(e.target.value))
+    dispatch(actions.changeQuestionnaire(e.target.value, questionnaires))
   }
 
   createQuestionnaire(e) {

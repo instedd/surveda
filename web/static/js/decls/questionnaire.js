@@ -9,7 +9,7 @@ export type Questionnaire = {
   quotaCompletedMsg: Prompt,
   errorMsg: Prompt,
   projectId: number,
-  valid: boolean
+  valid: ?boolean
 };
 
 export type ChoiceErrors = {
