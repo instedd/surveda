@@ -25,6 +25,7 @@ class SurveyForm extends Component {
     questionnaires: PropTypes.object,
     questionnaire: PropTypes.object,
     respondentGroups: PropTypes.object,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object,
     channels: PropTypes.object,
     errors: PropTypes.object,
@@ -61,7 +62,7 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, invalidRespondents, errors, questionnaire, readOnly } = this.props
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, invalidRespondents, errors, questionnaire, readOnly } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -140,7 +141,7 @@ class SurveyForm extends Component {
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} readOnly={readOnly} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} readOnly={readOnly} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>

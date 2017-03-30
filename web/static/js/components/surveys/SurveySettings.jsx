@@ -18,6 +18,7 @@ class SurveySettings extends Component {
     questionnaires: PropTypes.object,
     channels: PropTypes.object,
     respondentGroups: PropTypes.object,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object
   }
 
@@ -34,7 +35,7 @@ class SurveySettings extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, dispatch, channels, respondentGroups, invalidRespondents } = this.props
+    const { survey, projectId, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, invalidRespondents } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
@@ -48,7 +49,7 @@ class SurveySettings extends Component {
 
     return (
       <div className='white'>
-        <SurveyForm survey={survey} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly />
       </div>
     )
   }
@@ -60,6 +61,7 @@ const mapStateToProps = (state, ownProps) => ({
   channels: state.channels.items,
   questionnaires: state.questionnaires.items || {},
   respondentGroups: state.respondentGroups.items || {},
+  respondentGroupsUploading: state.respondentGroups.uploading,
   invalidRespondents: state.respondentGroups.invalidRespondents,
   survey: state.survey.data || {}
 })

@@ -13,6 +13,7 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
     respondentGroups: PropTypes.object.isRequired,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
@@ -99,7 +100,7 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    let { survey, channels, respondentGroups, invalidRespondents, readOnly } = this.props
+    let { survey, channels, respondentGroups, respondentGroupsUploading, invalidRespondents, readOnly } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
     if (!survey || !channels) {
       return <div>Loading...</div>
@@ -111,7 +112,7 @@ class SurveyWizardRespondentsStep extends Component {
     let respondentsDropzone = null
     if (!readOnly) {
       respondentsDropzone = (
-        <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+        <RespondentsDropzone survey={survey} uploading={respondentGroupsUploading} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
       )
     }
 
@@ -126,7 +127,7 @@ class SurveyWizardRespondentsStep extends Component {
   }
 }
 
-const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
+const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
   let commonProps = {className: 'dropfile', activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, onDrop: onDrop, accept: 'text/csv', onDropRejected: onDropRejected}
 
   var isWindows = navigator.platform && navigator.platform.indexOf('Win') != 1
@@ -138,10 +139,34 @@ const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
     }
   }
 
+  let className = 'drop-text csv'
+  if (uploading) className += ' uploading'
+
+  let icon = null
+  if (uploading) {
+    icon = (
+      <div className='drop-uploading'>
+        <div className='preloader-wrapper active center'>
+          <div className='spinner-layer spinner-blue-only'>
+            <div className='circle-clipper left'>
+              <div className='circle' />
+            </div><div className='gap-patch'>
+              <div className='circle' />
+            </div><div className='circle-clipper right'>
+              <div className='circle' />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  } else {
+    icon = <div className='drop-icon' />
+  }
+
   return (
     <Dropzone {...commonProps} >
-      <div className='drop-icon' />
-      <div className='drop-text csv' />
+      {icon}
+      <div className={className} />
     </Dropzone>
   )
 }
