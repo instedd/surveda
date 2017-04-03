@@ -130,12 +130,15 @@ const setState = (state, action) => {
 }
 
 const setQuotaVars = (state, action) => {
+  const vars = map(action.vars, (storeVar) => storeVar.var)
+  const cutoff = vars.length == 0 ? state.cutoff : null
   return {
     ...state,
     quotas: {
-      vars: map(action.vars, (storeVar) => storeVar.var),
+      vars,
       buckets: bucketsFor(action.vars, action.options)
-    }
+    },
+    cutoff
   }
 }
 
