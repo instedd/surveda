@@ -413,22 +413,24 @@ defmodule Ask.FlowTest do
     end
   end
 
+  @languageStep %{
+    "id" => "1234-5678",
+    "type" => "language-selection",
+    "title" => "Language selection",
+    "store" => "",
+    "prompt" => %{
+      "sms" => "1 for English, 2 for Spanish",
+      "ivr" => %{
+        "text" => "1 para ingles, 2 para español",
+        "audioSource" => "tts",
+      }
+    },
+    "language_choices" => [nil, "en", "es"],
+  }
+
   test "language selection step" do
     steps = @dummy_steps
-    languageStep = %{
-      "id" => "1234-5678",
-      "type" => "language-selection",
-      "title" => "Language selection",
-      "store" => "",
-      "prompt" => %{
-        "sms" => "1 for English, 2 for Spanish",
-        "ivr" => %{
-          "text" => "1 para ingles, 2 para español",
-          "audioSource" => "tts",
-        }
-      },
-      "language_choices" => [nil, "en", "es"],
-    }
+    languageStep = @languageStep
     steps = [languageStep | steps]
     quiz = build(:questionnaire, steps: steps)
 
@@ -447,6 +449,25 @@ defmodule Ask.FlowTest do
 
     assert flow.language == "es"
     assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"]
+  end
+
+  test "language selection step doesn't crash on non-numeric" do
+    steps = @dummy_steps
+    languageStep = @languageStep
+    steps = [languageStep | steps]
+    quiz = build(:questionnaire, steps: steps)
+
+    flow = Flow.start(quiz, "sms")
+
+    step = flow |> Flow.step(@sms_visitor)
+    assert {:ok, flow, _} = step
+
+    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("text"))
+    assert {:ok, %Flow{}, reply} = step
+    prompts = Reply.prompts(reply)
+    assert prompts == [
+      "You have entered an invalid answer",
+      "1 for English, 2 for Spanish"]
   end
 
   test "first step (sms mode) with multiple messages separated by newline" do

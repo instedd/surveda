@@ -112,7 +112,7 @@ defmodule Ask.Runtime.Flow do
 
     # Select language to use in next questions
     flow =
-      if step["type"] == "language-selection" do
+      if reply_value != :invalid_answer && step["type"] == "language-selection" do
         %Flow{flow | language: reply_value}
       else
         flow
