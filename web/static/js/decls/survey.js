@@ -5,7 +5,7 @@ export type Survey = {
   questionnaireIds: number[],
   channels: number[],
   name: string,
-  cutoff: number,
+  cutoff: ?number,
   countPartialResults: boolean,
   mode: [?string[]],
   modeComparison: boolean,
@@ -37,7 +37,7 @@ export type SurveyPreview = {
   name: string,
   mode: [?string[]],
   state: string,
-  cutoff: number,
+  cutoff: ?number,
 };
 
 export type Comparison = {
