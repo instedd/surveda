@@ -69,8 +69,12 @@ export const toggleAuthorization = (provider, index) => (dispatch, getState) => 
     return guissoSession.authorize('code', provider, baseUrl)
       .then(() => guissoSession.close())
       .then(() => { dispatch(channelActions.fetchChannels()) })
-      .catch(() => {
+      .catch((err) => {
+        guissoSession.close()
         dispatch(deleteAuthorization(provider, baseUrl))
+        if (err) {
+          throw err
+        }
       })
   }
 }

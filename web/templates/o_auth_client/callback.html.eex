@@ -1,7 +1,7 @@
 <html>
 <head>
 <script type="text/javascript">
-  window.opener.postMessage(window.location.hash, "*");
+  window.opener.postMessage({token: window.location.hash, error: "<%= if(@error, do: @error, else: "") %>"}, "*");
 </script>
 </head>
 </html>
