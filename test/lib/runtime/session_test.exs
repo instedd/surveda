@@ -27,6 +27,64 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
   end
 
+  test "start with web mode", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    {:ok, session, _, timeout, _} = Session.start(quiz, respondent, channel, "mobile_web")
+    assert %Session{token: token} = session
+    assert 10 = timeout
+    assert token != nil
+
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", "Please enter to app.ask.dev/mobile_survey?token=1234567890")]
+    # TODO check this url
+  end
+
+  test "reloading the page should not consume retries in mobile_web mode", %{respondent: respondent, test_channel: test_channel, channel: channel} do
+    quiz = insert(:questionnaire, steps: @mobile_web_dummy_steps)
+    retries = [1, 2, 3]
+
+    {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "mobile_web", retries)
+    assert %Session{token: token} = session
+    assert token != nil
+
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", "Please enter to app.ask.dev/mobile_survey?token=1234567890")]
+
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+
+    expected_session = %Session{
+      current_mode: SessionModeProvider.new("mobile_web", channel, retries),
+      fallback_mode: nil,
+      flow: %Flow{questionnaire: quiz, mode: "mobile_web", current_step: 0}
+    }
+
+    assert session.current_mode == expected_session.current_mode
+    assert session.fallback_mode == expected_session.fallback_mode
+    assert session.flow.questionnaire == expected_session.flow.questionnaire
+    assert session.flow.mode == expected_session.flow.mode
+    assert session.flow.current_step == expected_session.flow.current_step
+
+    step_result = Session.sync_step(session, Flow.Message.reply("N"))
+    assert {:ok, session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "No"}), _, _} = step_result
+
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+
+    expected_session = %Session{
+      current_mode: SessionModeProvider.new("mobile_web", channel, retries),
+      fallback_mode: nil,
+      flow: %Flow{questionnaire: quiz, mode: "mobile_web", current_step: 1}
+    }
+
+    assert session.current_mode == expected_session.current_mode
+    assert session.fallback_mode == expected_session.fallback_mode
+    assert session.flow.questionnaire == expected_session.flow.questionnaire
+    assert session.flow.mode == expected_session.flow.mode
+    assert session.flow.current_step == expected_session.flow.current_step
+  end
+
   test "start with fallback delay", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
     {:ok, session, _, timeout, _} = Session.start(quiz, respondent, channel, "sms", [], nil, nil, nil, 123)
     assert %Session{token: token} = session
