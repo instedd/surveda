@@ -51,7 +51,6 @@ class Step extends Component {
 
     return (
       <div>
-        <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
             {this.stepComponent(step)}
