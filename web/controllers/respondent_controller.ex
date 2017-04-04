@@ -381,7 +381,7 @@ defmodule Ask.RespondentController do
       [r.phone_number, experiment_name(r.questionnaire, r.mode)]
     end)
 
-    header = ["Telephone number", "Survey/experiment version"]
+    header = ["Telephone number", "Questionnaire-Mode"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string

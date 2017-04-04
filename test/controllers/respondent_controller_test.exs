@@ -315,7 +315,7 @@ defmodule Ask.RespondentControllerTest do
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
-    assert lines == ["Telephone number,Survey/experiment version",
+    assert lines == ["Telephone number,Questionnaire-Mode",
      "5678,test - SMS with phone call fallback"]
   end
 
