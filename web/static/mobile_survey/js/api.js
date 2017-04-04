@@ -1,7 +1,7 @@
 import 'isomorphic-fetch'
 
-export const fetchStep = () => {
-  return fetch(`/mobile_survey/get_step`, {
+export const fetchStep = (mode) => {
+  return fetch(`/mobile_survey/get_step?mode=${mode}`, {
     credentials: 'same-origin'
   })
 }
