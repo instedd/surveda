@@ -80,7 +80,7 @@ defmodule Ask.Runtime.Session do
             channel.id,
             disposition,
             :prompt,
-            ReplyStep.title_with_index(step, index))
+            ReplyStep.title_with_index(step, index + 1))
         end)
       end
     end
