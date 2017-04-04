@@ -1760,7 +1760,7 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
-  test "stops survey when there's an uncaught exception" do
+  test "doesn't stop survey when there's an uncaught exception" do
     # First, we create a quiz with a single step with an invalid skip_logic value for the "Yes" choice
     step = Ask.StepBuilder
       .multiple_choice_step(
@@ -1788,13 +1788,13 @@ defmodule Ask.BrokerTest do
     # Respondent says 1 (i.e.: Yes), causing an invalid skip_logic to be inspected
     Broker.sync_step(respondent, Flow.Message.reply("1"))
 
-    # Given the Broker failed for mysterious reasons, we want to stop the survey to prevent
-    # further consequences. Right now we don't have that notion, so for the moment we mark it
-    # as 'completed'.
+    # If there's a probelm with one respondent, continue the survey with others
+    # and mark this one as failed
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
+    assert survey.state == "running"
 
-    Repo.get(Respondent, respondent.id)
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
 
     :ok = broker |> GenServer.stop
   end

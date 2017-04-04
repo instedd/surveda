@@ -245,9 +245,12 @@ defmodule Ask.Runtime.Broker do
             stacktrace: System.stacktrace(),
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
-          Survey
-          |> Repo.get(respondent.survey_id)
-          |> complete
+          try do
+            handle_session_step({:failed, respondent})
+          rescue
+            _ ->
+              :end
+          end
       end
     end)
 
@@ -293,6 +296,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:failed, respondent}) do
     update_respondent(respondent, :failed)
+    :end
   end
 
   defp match_condition(responses, bucket) do
