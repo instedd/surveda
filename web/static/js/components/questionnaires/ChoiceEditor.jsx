@@ -5,6 +5,7 @@ import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined, getChoiceResponseMobileWebJoined } from '../../step'
 import { choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, choiceMobileWebResponsePath } from '../../questionnaireErrors'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   onDelete: Function,
@@ -84,6 +85,8 @@ class ChoiceEditor extends Component {
   }
 
   componentWillReceiveProps(newProps: Props) {
+    if (propsAreEqual(this.props, newProps)) return
+
     let newState = this.stateFromProps(newProps)
     this.setState({ ...newState, editing: this.state.editing })
   }
@@ -149,6 +152,13 @@ class ChoiceEditor extends Component {
       this.exitEditMode(autoComplete)
     } else if (event.key == 'Tab') {
       this.setDoNotClose(focus)
+    }
+  }
+
+  smsCheckEmptyString(event: Event) {
+    // This is due to a materialize css bug. Analogous to SmsPrompt
+    if (!event.target.value) {
+      this.smsChange(event, '')
     }
   }
 
@@ -232,6 +242,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
+              onKeyUp={e => this.smsCheckEmptyString(e)}
               onKeyDown={e => this.onKeyDown(e, 'ivr')} />
             <Autocomplete
               getInput={() => this.refs.smsInput}
@@ -267,9 +278,11 @@ class ChoiceEditor extends Component {
           </td> : null
           }
           {skipLogicInput}
-          <td>
+          { (!isRefusal)
+          ? <td>
             <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
-          </td>
+          </td> : null
+          }
         </tr>)
     } else {
       let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : []

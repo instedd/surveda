@@ -38,6 +38,12 @@ label {
       text-align: center;
     }
   }
+  .drop-uploading {
+    position: absolute;
+    width: 20%;
+    top: calc(50% - 70px);
+    margin: 0 46%;
+  }
   .drop-text {
     @include  transition(color ease-in-out .2s);
     color: inherit;
@@ -51,6 +57,12 @@ label {
       position: absolute;
       width: 100%;
       text-align: center;
+    }
+    &.csv.uploading {
+      @extend .blue-text, .lighten-1;
+    }
+    &.csv.uploading:before {
+      content: 'Uploading...';
     }
     &.audio:before {
       content: 'Drop your MP3 or WAV file here, or click to browse';
@@ -90,7 +102,11 @@ label {
       width: 90%;
       margin: 0 5%;
     }
-
+    &.error {
+      .drop-text {
+        color: #ff5722;
+      }
+    }
   }
 }
 

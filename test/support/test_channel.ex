@@ -1,44 +1,46 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :push, :has_queued_message]
+  defstruct [:pid, :has_queued_message, :delivery]
 
-  def new(push \\ true)
-
-  def new(push) when is_atom(push) do
-    %Ask.TestChannel{pid: self(), push: push}
+  def new() do
+    %Ask.TestChannel{pid: self()}
   end
 
-  def new(push, has_queued_message) do
-    %Ask.TestChannel{pid: self(), push: push, has_queued_message: has_queued_message}
+  def new(has_queued_message) when is_boolean(has_queued_message) do
+    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message}
   end
 
   def new(channel) do
     pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
-    push = channel.settings["push"] |> String.to_atom
     has_queued_message = channel.settings["has_queued_message"] |> String.to_atom
-    %Ask.TestChannel{pid: pid, push: push, has_queued_message: has_queued_message}
+    delivery = channel.settings["delivery"] |> String.to_atom
+    %Ask.TestChannel{pid: pid, has_queued_message: has_queued_message, delivery: delivery}
+  end
+
+  def new(has_queued_message, delivery) do
+    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, delivery: delivery}
   end
 
   def settings(channel) do
     encoded_pid = channel.pid |> :erlang.term_to_binary |> Base.encode64
-    encoded_push = channel.push |> Atom.to_string
     encoded_has_queued_message = channel.has_queued_message |> Atom.to_string
-    %{"pid" => encoded_pid, "push" => encoded_push, "has_queued_message" => encoded_has_queued_message}
+    encoded_delivery = channel.delivery |> Atom.to_string
+    %{"pid" => encoded_pid, "has_queued_message" => encoded_has_queued_message, "delivery" => encoded_delivery}
   end
 
-  def oauth2_authorize(_code, _redirect_uri, _callback_uri) do
+  def oauth2_authorize(_code, _redirect_uri, _base_url) do
     random_access_token
   end
 
-  def oauth2_refresh(%OAuth2.AccessToken{}) do
+  def oauth2_refresh(%OAuth2.AccessToken{}, _base_url) do
     random_access_token
   end
 
-  def sync_channels(user_id) do
+  def sync_channels(user_id, base_url) do
     user = Ask.User |> Ask.Repo.get(user_id)
     user
     |> Ecto.build_assoc(:channels)
-    |> Ask.Channel.changeset(%{name: "test", provider: "test", type: "ivr", settings: %{}})
+    |> Ask.Channel.changeset(%{name: "test", provider: "test", base_url: base_url, type: "ivr", settings: %{}})
     |> Ask.Repo.insert!
   end
 
@@ -64,15 +66,15 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     {:ok, 0}
   end
 
-  def can_push_question?(channel) do
-    channel.push
+  def has_delivery_confirmation?(channel) do
+    channel.delivery
   end
 
   def ask(channel, respondent, token, prompts) do
     send channel.pid, [:ask, channel, respondent, token, prompts]
   end
 
-  def has_queued_message?(channel, channel_state) do
+  def has_queued_message?(channel, _) do
     channel.has_queued_message
   end
 

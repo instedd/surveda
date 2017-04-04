@@ -163,9 +163,17 @@ export const promptTextPath = (stepIndex: number, mode: string, lang: string): s
   return `${stepPath(stepIndex)}.${promptTextPathSuffix(mode, lang)}`
 }
 
+export const promptIvrAudioIdPath = (stepIndex: number, lang: string): string => {
+  return `${stepPath(stepIndex)}.prompt['${lang}'].ivr.audioId`
+}
+
 export const msgPath = (msg: string): string => msg
 export const msgPromptTextPath = (msg: string, mode: string, lang: string): string => {
   return `${msgPath(msg)}.${promptTextPathSuffix(mode, lang)}`
+}
+
+export const msgIvrAudioIdPath = (msg: string, lang: string): string => {
+  return `${msgPath(msg)}.prompt['${lang}'].ivr.audioId`
 }
 
 export const choicesPath = (stepIndex: number) => `${stepPath(stepIndex)}.choices`

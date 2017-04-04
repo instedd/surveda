@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Questionnaire}
+  alias Ask.{Project, Survey, Questionnaire, Logger}
   alias Ask.Runtime.Session
 
   def index(conn, %{"project_id" => project_id}) do
@@ -37,6 +37,7 @@ defmodule Ask.SurveyController do
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
         |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]))
       {:error, changeset} ->
+        Logger.warn "Error when creating a survey: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -74,6 +75,7 @@ defmodule Ask.SurveyController do
         project |> Project.touch!
         render(conn, "show.json", survey: survey)
       {:error, changeset} ->
+        Logger.warn "Error when updating survey: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -126,6 +128,7 @@ defmodule Ask.SurveyController do
     |> Repo.preload(respondent_groups: :channels)
 
     if survey.state != "ready" do
+      Logger.warn "Error when launching survey #{id}. State is not ready "
       conn
         |> put_status(:unprocessable_entity)
         |> render("show.json", survey: survey)
@@ -145,12 +148,14 @@ defmodule Ask.SurveyController do
               project |> Project.touch!
               render(conn, "show.json", survey: survey)
             {:error, changeset} ->
+              Logger.warn "Error when launching survey: #{inspect changeset}"
               conn
               |> put_status(:unprocessable_entity)
               |> render(Ask.ChangesetView, "error.json", changeset: changeset)
           end
 
         {:error, _reason} ->
+          Logger.warn "Error when preparing channels for launching survey #{id}"
           conn
           |> put_status(:unprocessable_entity)
           |> render("show.json", survey: survey)
@@ -162,24 +167,48 @@ defmodule Ask.SurveyController do
     survey = Repo.get!(Survey, id)
     |> Repo.preload([:quota_buckets])
 
-    project = conn
-      |> load_project_for_change(survey.project_id)
-
-    cancel_messages(survey)
-
-    from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
-    |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
-
-    changeset = Survey.changeset(survey, %{"state": "cancelled"})
-    case Repo.update(changeset) do
-      {:ok, survey} ->
-        project |> Project.touch!
-        render(conn, "show.json", survey: survey)
-      {:error, changeset} ->
+    case survey.state do
+      "cancelled" ->
+        # Cancelling a cancelled survey is idempotent.
+        # We must not error, because this can happen if a user has the survey
+        # UI open with the cancel button, and meanwhile the survey is cancelled
+        # from another tab.
         conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
+          |> render("show.json", survey: survey)
+      "completed" ->
+        # Cancelling a completed survey should have no effect.
+        # We must not error, because this can happen if a user has the survey
+        # UI open with the cancel button, and meanwhile the survey finished
+        conn
+          |> render("show.json", survey: survey)
+      "running" ->
+        project = conn
+          |> load_project_for_change(survey.project_id)
+
+        cancel_messages(survey)
+
+        from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
+        |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
+
+        changeset = Survey.changeset(survey, %{"state": "cancelled"})
+        case Repo.update(changeset) do
+          {:ok, survey} ->
+            project |> Project.touch!
+            render(conn, "show.json", survey: survey)
+          {:error, changeset} ->
+            Logger.warn "Error when stopping survey #{inspect survey}"
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        end
+      _ ->
+        # Cancelling a pending survey or a survey in any other state should
+        # result in an error.
+        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state"
+        conn
+          |> put_status(:unprocessable_entity)
+          |> render("show.json", survey: survey)
+      end
   end
 
   defp prepare_channels(_, []), do: :ok

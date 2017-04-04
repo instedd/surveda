@@ -12,9 +12,9 @@ import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal, splitSmsText } from '../step'
-import { stepSkipLogicPath, promptTextPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
+import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
   choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath,
-  mobileWebSmsMessagePath, errorsByLang } from '../questionnaireErrors'
+  mobileWebSmsMessagePath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 import * as characterCounter from '../characterCounter'
 
@@ -46,7 +46,21 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
     if (state !== newState) {
       validate(newState)
     }
-    return newState
+    if (newState.data) {
+      const valid = Object.keys(newState.errors).length == 0 &&
+        (Object.keys(newState.errorsByLang).length == 0 ||
+          newState.data.languages.every(lang => !newState.errorsByLang[lang] || Object.keys(newState.errorsByLang[lang]).length == 0)
+        )
+      return {
+        ...newState,
+        data: {
+          ...newState.data,
+          valid
+        }
+      }
+    } else {
+      return newState
+    }
   }
 }
 
@@ -848,6 +862,9 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
       if (isBlank(ivr.text)) {
         addError(context, msgPromptTextPath(msgKey, 'ivr', lang), 'Voice prompt must not be blank')
       }
+      if (ivr.audioSource == 'upload' && !ivr.audioId) {
+        addError(context, msgIvrAudioIdPath(msgKey, lang), 'An audio file must be uploaded')
+      }
     })
   }
 }
@@ -879,6 +896,9 @@ const validateIvrLangPrompt = (step: Step, stepIndex: number, context: Validatio
   let ivr = getStepPromptIvr(step, lang)
   if (isBlank(ivr.text)) {
     addError(context, promptTextPath(stepIndex, 'ivr', lang), 'Voice prompt must not be blank')
+  }
+  if (ivr.audioSource == 'upload' && !ivr.audioId) {
+    addError(context, promptIvrAudioIdPath(stepIndex, lang), 'An audio file must be uploaded')
   }
 }
 
@@ -933,7 +953,7 @@ const validatePrompts = (step, stepIndex, context) => {
 }
 
 const validateSkipLogic = (skipLogic, stepIndex, steps, context) => {
-  if (!skipLogic) {
+  if (!skipLogic || skipLogic == 'end') {
     return true
   }
   let currentValueIsValid = false
@@ -1026,10 +1046,18 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
 }
 
 const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
-  if (choice.responses.sms &&
-      choice.responses.sms[lang] &&
-      choice.responses.sms[lang].length == 0) {
+  let sms = choice.responses.sms
+  if (!sms) return
+
+  sms = sms[lang]
+  if (!sms) return
+
+  if (sms.length == 0) {
     addError(context, choiceSmsResponsePath(stepIndex, choiceIndex, lang), 'SMS must not be blank')
+  }
+
+  if (sms.some(x => x.toLowerCase() == 'stop')) {
+    addError(context, choiceSmsResponsePath(stepIndex, choiceIndex, lang), "SMS must not be 'STOP'")
   }
 }
 

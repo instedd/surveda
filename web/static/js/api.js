@@ -56,6 +56,9 @@ const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
 const commonCallback = (json, schema) => {
   return () => {
     if (!json) { return null }
+    if (json.errors) {
+      console.log(json.errors)
+    }
     if (schema) {
       return normalize(camelizeKeys(json.data), schema)
     } else {
@@ -218,10 +221,6 @@ export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }
 
-export const createChannel = (channel) => {
-  return apiPostJSON('channels', channelSchema, { channel })
-}
-
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
     questionnaireSchema, { questionnaire })
@@ -251,8 +250,8 @@ export const fetchAuthorizations = () => {
   return apiFetchJSONWithCallback(`authorizations`, null, {}, (json, _) => () => json)
 }
 
-export const deleteAuthorization = (provider, keepChannels = false) => {
-  return apiDelete(`authorizations/${provider}?keep_channels=${keepChannels}`)
+export const deleteAuthorization = (provider, baseUrl, keepChannels = false) => {
+  return apiDelete(`authorizations/${provider}?base_url=${encodeURIComponent(baseUrl)}&keep_channels=${keepChannels}`)
 }
 
 export const synchronizeChannels = () => {
@@ -264,13 +263,13 @@ export const autocompleteVars = (projectId, text) => {
   .then(response => response.json())
 }
 
-export const autocompletePrimaryLanguage = (projectId, mode, language, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&language=${language}&text=${encodeURIComponent(text)}`)
+export const autocompletePrimaryLanguage = (projectId, mode, scope, language, text) => {
+  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&scope=${scope}&language=${language}&text=${encodeURIComponent(text)}`)
   .then(response => response.json())
 }
 
-export const autocompleteOtherLanguage = (projectId, mode, primaryLanguage, otherLanguage, sourceText, targetText) => {
-  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
+export const autocompleteOtherLanguage = (projectId, mode, scope, primaryLanguage, otherLanguage, sourceText, targetText) => {
+  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&scope=${scope}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
   .then(response => response.json())
 }
 

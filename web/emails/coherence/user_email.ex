@@ -3,7 +3,7 @@ Code.ensure_loaded Phoenix.Swoosh
 defmodule Ask.Coherence.UserEmail do
   use Phoenix.Swoosh, view: Coherence.EmailView, layout: {Coherence.LayoutView, :email}
   alias Swoosh.Email
-  require Logger
+  alias Ask.Logger
   alias Coherence.Config
 
   defp site_name, do: Config.site_name(inspect Config.module)

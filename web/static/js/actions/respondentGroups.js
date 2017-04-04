@@ -1,14 +1,15 @@
 import * as api from '../api'
 import * as surveyActions from './survey'
 
-export const RECEIVE_RESPONDENT_GROUPS = 'RECEIVE_RESPONDENT_GROUPS'
-export const RECEIVE_RESPONDENT_GROUP = 'RECEIVE_RESPONDENT_GROUP'
-export const REMOVE_RESPONDENT_GROUP = 'REMOVE_RESPONDENT_GROUP'
-export const FETCH_RESPONDENT_GROUPS = 'FETCH_RESPONDENT_GROUPS'
-export const INVALID_RESPONDENT_GROUPS = 'INVALID_RESPONDENT_GROUPS'
-export const INVALID_RESPONDENTS = 'INVALID_RESPONDENTS'
-export const CLEAR_INVALIDS = 'CLEAR_INVALIDS'
-export const SELECT_CHANNELS = 'SURVEY_SELECT_CHANNELS'
+export const RECEIVE_RESPONDENT_GROUPS = 'RESPONDENT_GROUPS_RECEIVE'
+export const RECEIVE_RESPONDENT_GROUP = 'RESPONDENT_GROUP_RECEIVE'
+export const REMOVE_RESPONDENT_GROUP = 'RESPONDENT_GROUP_REMOVE'
+export const FETCH_RESPONDENT_GROUPS = 'RESPONDENT_GROUPS_FETCH'
+export const INVALID_RESPONDENT_GROUPS = 'RESPONDENT_GROUP_INVALID_GROUPS'
+export const INVALID_RESPONDENTS = 'RESPONDENT_GROUP_INVALID_RESPONDENTS'
+export const CLEAR_INVALIDS = 'RESPONDENT_GROUP_CLEAR_INVALIDS'
+export const SELECT_CHANNELS = 'RESPONDENT_GROUP_SELECT_CHANNELS'
+export const UPLOAD_RESPONDENT_GROUP = 'RESPONDENT_GROUP_UPLOAD'
 
 export const fetchRespondentGroups = (projectId, surveyId) => dispatch => {
   dispatch(startFetchingRespondentGroups(surveyId))
@@ -55,6 +56,7 @@ export const clearInvalids = () => ({
 // this info and won't allow launching a non-ready survey)
 
 export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, getState) => {
+  dispatch(uploadingRespondentGroup())
   api.uploadRespondentGroup(projectId, surveyId, files)
   .then(response => {
     const group = response.entities.respondentGroups[response.result]
@@ -66,6 +68,10 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, 
   })
   .then(() => dispatch(surveyActions.save()))
 }
+
+export const uploadingRespondentGroup = () => ({
+  type: UPLOAD_RESPONDENT_GROUP
+})
 
 export const removeRespondentGroup = (projectId, surveyId, groupId) => (dispatch, getState) => {
   api.removeRespondentGroup(projectId, surveyId, groupId)

@@ -11,6 +11,7 @@ import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import StepStoreVariable from './StepStoreVariable'
 import { getStepPromptSms, getStepPromptIvrText } from '../../step'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   step: NumericStep,
@@ -42,6 +43,8 @@ class NumericStepEditor extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 

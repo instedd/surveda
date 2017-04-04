@@ -3,7 +3,7 @@ defmodule Ask.RespondentDispositionHistoryTest do
 
   alias Ask.RespondentDispositionHistory
 
-  @valid_attrs %{disposition: "some content"}
+  @valid_attrs %{disposition: "some content", mode: "sms"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

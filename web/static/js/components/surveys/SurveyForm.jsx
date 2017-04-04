@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { ScrollToTopButton, CollectionItem, ScrollToLink } from '../ui'
+import { withRouter } from 'react-router'
+import { ScrollToTopButton, CollectionItem, ScrollToLink, Tooltip } from '../ui'
 import SurveyWizardQuestionnaireStep from './SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardModeStep from './SurveyWizardModeStep'
@@ -12,14 +13,19 @@ import uniq from 'lodash/uniq'
 import sumBy from 'lodash/sumBy'
 import values from 'lodash/values'
 import every from 'lodash/every'
+import { launchSurvey } from '../../api'
+import * as routes from '../../routes'
 
 class SurveyForm extends Component {
   static propTypes = {
     projectId: PropTypes.any.isRequired,
     survey: PropTypes.object.isRequired,
+    surveyId: PropTypes.any.isRequired,
+    router: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     questionnaire: PropTypes.object,
     respondentGroups: PropTypes.object,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object,
     channels: PropTypes.object,
     errors: PropTypes.object,
@@ -33,20 +39,37 @@ class SurveyForm extends Component {
   }
 
   allModesHaveAChannel(modes, channels, allChannels) {
-    const selectedTypes = channels.map(id => allChannels[id].type)
+    const selectedTypes = channels.map(channel => channel.mode)
     modes = uniq(flatMap(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
   }
 
+  launchSurvey() {
+    const { projectId, surveyId, router } = this.props
+    launchSurvey(projectId, surveyId)
+      .then(() => router.push(routes.survey(projectId, surveyId)))
+  }
+
+  questionnairesValid(ids, questionnaires) {
+    return every(ids, id => questionnaires[id] && questionnaires[id].valid)
+  }
+
+  questionnairesMatchModes(modes, ids, questionnaires) {
+    return every(modes, mode =>
+      every(mode, m =>
+        ids && every(ids, id =>
+          questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
+  }
+
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, invalidRespondents, errors, questionnaire, readOnly } = this.props
-    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, invalidRespondents, errors, questionnaire, readOnly } = this.props
+    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
         return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels || {})
       })
 
-    const modeStepCompleted = survey.mode != null && survey.mode.length > 0
+    const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
@@ -70,6 +93,17 @@ class SurveyForm extends Component {
     const numberOfCompletedSteps = mandatorySteps.filter(item => item == true).length
     const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
+    let launchComponent = null
+    if (survey.state == 'ready' && !readOnly) {
+      launchComponent = (
+        <Tooltip text='Launch survey'>
+          <a className='btn-floating btn-large waves-effect waves-light green right mtop' style={{top: '90px', left: '-5%'}} onClick={() => this.launchSurvey()}>
+            <i className='material-icons'>play_arrow</i>
+          </a>
+        </Tooltip>
+      )
+    }
+
     return (
       <div className='row'>
         <div className='col s12 m4'>
@@ -84,6 +118,7 @@ class SurveyForm extends Component {
                   <div className='determinate' style={{ width: percentage }} />
                 </div>
               </li>
+              {launchComponent}
               <CollectionItem path='#questionnaire' icon='assignment' text='Select a questionnaire' completed={!!questionnaireStepCompleted} />
               <CollectionItem path='#channels' icon='settings_input_antenna' text='Select mode' completed={!!modeStepCompleted} />
               <CollectionItem path='#respondents' icon='group' text='Upload your respondents list' completed={!!respondentsStepCompleted} />
@@ -102,11 +137,11 @@ class SurveyForm extends Component {
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardModeStep survey={survey} readOnly={readOnly} />
+            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} readOnly={readOnly} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} readOnly={readOnly} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>
@@ -132,7 +167,8 @@ class SurveyForm extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
+  surveyId: ownProps.params.surveyId,
   errors: state.survey.errors
 })
 
-export default connect(mapStateToProps)(SurveyForm)
+export default withRouter(connect(mapStateToProps)(SurveyForm))

@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { Autocomplete } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as api from '../../api.js'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   step: StoreStep & BaseStep,
@@ -42,6 +43,8 @@ class StepStoreVariable extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 

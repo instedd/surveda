@@ -38,6 +38,19 @@ defmodule Ask.Factory do
     }
   end
 
+  def survey_log_entry_factory do
+    %Ask.SurveyLogEntry{
+      survey: build(:survey),
+      mode: "sms",
+      respondent: sequence(:survey_log_entry_respondent, &"#{&1}"),
+      channel: build(:channel),
+      disposition: "completed",
+      action_type: "prompt",
+      action_data: "explanation",
+      timestamp: Ecto.DateTime.utc,
+    }
+  end
+
   def quota_bucket_factory do
     %Ask.QuotaBucket{
       survey: build(:survey),
@@ -71,7 +84,8 @@ defmodule Ask.Factory do
           }
         }
       },
-      languages: []
+      languages: [],
+      valid: true,
     }
   end
 
@@ -88,6 +102,7 @@ defmodule Ask.Factory do
       name: "My Channel",
       type: "sms",
       provider: "test",
+      base_url: "http://test.com",
       settings: %{}
     }
   end
@@ -138,12 +153,14 @@ defmodule Ask.Factory do
     %Ask.RespondentDispositionHistory{
       respondent: build(:respondent),
       disposition: "partial",
+      mode: "sms",
     }
   end
 
   def oauth_token_factory do
     %Ask.OAuthToken{
       provider: "test",
+      base_url: "http://test.com",
       user: build(:user),
       access_token: %{
         "access_token" => :crypto.strong_rand_bytes(27) |> Base.encode64,

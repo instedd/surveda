@@ -2,6 +2,7 @@ import * as actions from '../actions/respondentGroups'
 
 const initialState = {
   fetching: false,
+  uploading: false,
   items: null,
   surveyId: null,
   invalidRespondents: null
@@ -10,6 +11,7 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case actions.FETCH_RESPONDENT_GROUPS: return fetchRespondentGroups(state, action)
+    case actions.UPLOAD_RESPONDENT_GROUP: return uploadRespondentGroup(state, action)
     case actions.RECEIVE_RESPONDENT_GROUPS: return receiveRespondentGroups(state, action)
     case actions.RECEIVE_RESPONDENT_GROUP: return receiveRespondentGroup(state, action)
     case actions.REMOVE_RESPONDENT_GROUP: return removeRespondentGroup(state, action)
@@ -31,6 +33,13 @@ const fetchRespondentGroups = (state, action) => {
   }
 }
 
+const uploadRespondentGroup = (state, action) => {
+  return {
+    ...state,
+    uploading: true
+  }
+}
+
 const receiveRespondentGroups = (state, action) => {
   if (state.surveyId != action.surveyId) {
     return state
@@ -40,6 +49,7 @@ const receiveRespondentGroups = (state, action) => {
   return {
     ...state,
     fetching: false,
+    uploading: false,
     items: respondentGroups,
     invalidRespondents: null
   }
@@ -50,6 +60,7 @@ const receiveRespondentGroup = (state, action) => {
   return {
     ...state,
     fetching: false,
+    uploading: false,
     items: {
       ...state.items,
       [group.id]: group

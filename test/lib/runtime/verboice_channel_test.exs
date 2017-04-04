@@ -2,27 +2,17 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.ConnCase
   use Ask.DummySteps
 
-  alias Ask.Respondent
-  alias Ask.Runtime.{Broker, VerboiceChannel, Flow}
+  alias Ask.{Respondent, BrokerStub}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper}
 
-  defmodule BrokerStub do
-    use GenServer
-
-    def handle_cast({:expects, matcher}, _) do
-      {:noreply, matcher}
-    end
-
-    def handle_call(call, _from, matcher) do
-      {:reply, matcher.(call), matcher}
-    end
-  end
+  require Ask.Runtime.ReplyHelper
 
   defp trim_xml(xml) do
     xml |> String.replace("\t", "") |> String.replace("\n", "")
   end
 
   setup %{conn: conn} do
-    GenServer.start_link(BrokerStub, [], name: Broker.server_ref)
+    GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
     respondent = insert(:respondent, phone_number: "123", state: "active")
     {
       :ok,
@@ -31,14 +21,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       tts_step: {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]},
       # Triple of "digits", step spec, and expected TwiML output
       twiml_map: [
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.reply("8"), {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.tts_prompt("Hello!"), Ask.StepBuilder.tts_prompt("Do you exercise?")]}, "<Response><Say>Hello!</Say><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Say>Do you exercise?</Say></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}, "<Say>Do you exercise?</Say>"},
+        {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}, "<Say>Do you exercise?</Say>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.multiple([{"Hello!", Ask.StepBuilder.tts_prompt("Hello!")}, {"Do you exercise", Ask.StepBuilder.tts_prompt("Do you exercise?")}])}, "<Response><Say>Hello!</Say><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\"><Say>Do you exercise?</Say></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Response><Gather action=\"http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\"><Play>http://app.ask.dev/audio/foo</Play></Gather><Redirect>http://app.ask.dev/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer, :end, "<Response><Hangup/></Response>"},
-        {Flow.Message.answer, {:end, {:prompts, [Ask.StepBuilder.tts_prompt("Bye!")]}}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
-        {Flow.Message.answer, {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Play>http://app.ask.dev/audio/foo</Play>"},
-        {Flow.Message.reply("8"), {:prompts, [Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")]}, "<Play>http://app.ask.dev/audio/foo</Play>"},
+        {Flow.Message.answer, {:end, {:reply, ReplyHelper.quota_completed(Ask.StepBuilder.tts_prompt("Bye!"))}}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Play>http://app.ask.dev/audio/foo</Play>"},
+        {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Play>http://app.ask.dev/audio/foo</Play>"},
       ]
     }
   end
@@ -48,7 +38,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
     Enum.each(twiml_map, fn
       {flow_message, step, twiml} ->
-        GenServer.cast(Broker.server_ref, {:expects, fn
+        GenServer.cast(BrokerStub.server_ref, {:expects, fn
           {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message} -> step
         end})
 
@@ -57,7 +47,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
           {:reply, digits } -> digits
         end
 
-        conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits})
+        conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits}, BrokerStub)
         response_twiml = response(conn, 200) |> trim_xml
         assert response_twiml =~ twiml
       end)
@@ -77,33 +67,33 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "create channels" do
       user = insert(:user)
       user_id = user.id
-      VerboiceChannel.sync_channels(user.id, ["foo", "bar"])
-      channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
+      VerboiceChannel.sync_channels(user.id, "http://test.com", ["foo", "bar"])
+      channels = user |> assoc(:channels) |> where([c], c.provider == "verboice" and c.base_url == "http://test.com") |> Repo.all
       assert [
-        %Ask.Channel{user_id: ^user_id, provider: "verboice", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo"}},
-        %Ask.Channel{user_id: ^user_id, provider: "verboice", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar"}}
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo"}},
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar"}}
       ] = channels
     end
 
     test "delete channels" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "verboice", name: "foo", settings: %{"verboice_channel" => "foo"})
-      VerboiceChannel.sync_channels(user.id, ["bar"])
+      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "foo", settings: %{"verboice_channel" => "foo"})
+      VerboiceChannel.sync_channels(user.id, "http://test.com", ["bar"])
       refute Ask.Channel |> Repo.get(channel.id)
     end
 
     test "don't delete channels of other providers" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "other", name: "foo")
-      VerboiceChannel.sync_channels(user.id, [])
+      channel = insert(:channel, user: user, provider: "other", base_url: "http://test.com", name: "foo")
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [])
       assert Ask.Channel |> Repo.get(channel.id)
     end
 
     test "leave existing channels untouched" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "verboice", name: "FOO", settings: %{"verboice_channel" => "foo"})
+      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "FOO", settings: %{"verboice_channel" => "foo"})
       channel = Ask.Channel |> Repo.get(channel.id)
-      VerboiceChannel.sync_channels(user.id, ["foo"])
+      VerboiceChannel.sync_channels(user.id, "http://test.com", ["foo"])
       channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
       assert [^channel] = channels
     end

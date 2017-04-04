@@ -1,4 +1,5 @@
 import * as actions from '../actions/authorizations'
+import findIndex from 'lodash/findIndex'
 
 const initialState = {
   fetching: false,
@@ -30,7 +31,7 @@ const receiveAuthorizations = (state, action) => ({
 })
 
 const deleteAuthorization = (state, action) => {
-  const index = state.items.indexOf(action.provider)
+  const index = findIndex(state.items, item => item.provider == action.provider && item.baseUrl == action.baseUrl)
 
   if (index == -1) {
     return state
@@ -46,7 +47,8 @@ const deleteAuthorization = (state, action) => {
 }
 
 const addAuthorization = (state, action) => {
-  if (state.items.includes(action.provider)) {
+  const index = findIndex(state.items, item => item.provider == action.provider && item.baseUrl == action.baseUrl)
+  if (index != -1) {
     return state
   }
 
@@ -54,7 +56,10 @@ const addAuthorization = (state, action) => {
     ...state,
     items: [
       ...state.items,
-      action.provider
+      {
+        provider: action.provider,
+        baseUrl: action.baseUrl
+      }
     ]
   }
 }

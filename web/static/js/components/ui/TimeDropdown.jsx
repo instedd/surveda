@@ -6,13 +6,14 @@ class TimeDropdown extends PureComponent {
     defaultValue: PropTypes.any,
     onChange: PropTypes.func,
     label: PropTypes.string,
+    extraOption: PropTypes.object,
     readOnly: PropTypes.bool
   }
 
   render() {
-    const { defaultValue, onChange, label, readOnly } = this.props
-    const hours = [
-      {label: '12:00 AM', value: '00:00:00'}, {label: '01:00 AM', value: '01:00:00'},
+    const { defaultValue, onChange, label, readOnly, extraOption } = this.props
+    let hours = [
+      {label: '01:00 AM', value: '01:00:00'},
       {label: '02:00 AM', value: '02:00:00'}, {label: '03:00 AM', value: '03:00:00'},
       {label: '04:00 AM', value: '04:00:00'}, {label: '05:00 AM', value: '05:00:00'},
       {label: '06:00 AM', value: '06:00:00'}, {label: '07:00 AM', value: '07:00:00'},
@@ -26,8 +27,12 @@ class TimeDropdown extends PureComponent {
       {label: '10:00 PM', value: '22:00:00'}, {label: '11:00 PM', value: '23:00:00'}
     ]
 
+    if (extraOption) {
+      hours.splice(extraOption.at, 0, extraOption.item)
+    }
+
     return (
-      <Input s={12} m={3} type='select' label={label} defaultValue={defaultValue} onChange={onChange} disabled={readOnly}>
+      <Input s={12} m={3} type='select' label={label} value={defaultValue} onChange={onChange} disabled={readOnly}>
         {hours.map((hour) => (
           <option value={hour.value} key={hour.value}>{hour.label}</option>
         ))}

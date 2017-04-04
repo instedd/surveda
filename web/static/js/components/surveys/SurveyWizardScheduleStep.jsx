@@ -21,12 +21,14 @@ class SurveyWizardScheduleStep extends Component {
 
   updateFrom(event) {
     const { dispatch } = this.props
-    dispatch(actions.setScheduleFrom(event.target.value))
+    const next = event.target.options[event.target.selectedIndex + 1] ? event.target.options[event.target.selectedIndex + 1].value : '23:59:59'
+    dispatch(actions.setScheduleFrom(event.target.value, next))
   }
 
   updateTo(event) {
     const { dispatch } = this.props
-    dispatch(actions.setScheduleTo(event.target.value))
+    const previous = event.target.selectedIndex != 0 ? event.target.options[event.target.selectedIndex - 1].value : '00:00:00'
+    dispatch(actions.setScheduleTo(event.target.value, previous))
   }
 
   updateTimezone(event) {
@@ -76,8 +78,8 @@ class SurveyWizardScheduleStep extends Component {
           <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} readOnly={readOnly} />
         </div>
         <div className='row'>
-          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} />
+          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />
+          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{at: 23, item: {label: '12:00 AM', value: '23:59:59'}}} />
         </div>
         <SurveyWizardRetryAttempts readOnly={readOnly} />
       </div>

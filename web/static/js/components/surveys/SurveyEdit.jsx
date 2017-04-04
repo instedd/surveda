@@ -7,8 +7,6 @@ import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
 import * as respondentGroupsActions from '../../actions/respondentGroups'
 import SurveyForm from './SurveyForm'
-import { Tooltip } from '../ui'
-import { launchSurvey } from '../../api'
 import * as routes from '../../routes'
 
 class SurveyEdit extends Component {
@@ -22,6 +20,7 @@ class SurveyEdit extends Component {
     channels: PropTypes.object,
     project: PropTypes.object,
     respondentGroups: PropTypes.object,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object
   }
 
@@ -39,20 +38,13 @@ class SurveyEdit extends Component {
 
   componentDidUpdate() {
     const { survey, router } = this.props
-    if (survey && survey.state === 'running') {
+    if (survey && survey.state && survey.state != 'not_ready' && survey.state != 'ready') {
       router.replace(routes.survey(survey.projectId, survey.id))
     }
   }
 
-  launchSurvey() {
-    const { dispatch, projectId, surveyId, router } = this.props
-    launchSurvey(projectId, surveyId)
-      .then(survey => dispatch(actions.receive(survey)))
-      .then(() => router.push(routes.survey(projectId, surveyId)))
-  }
-
   render() {
-    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, invalidRespondents } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, invalidRespondents } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
@@ -66,21 +58,9 @@ class SurveyEdit extends Component {
       questionnaire = questionnaires[questionnaireIds[0]]
     }
 
-    let launchComponent = null
-    if (survey.state == 'ready' && !readOnly) {
-      launchComponent = (
-        <Tooltip text='Launch survey'>
-          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.launchSurvey()}>
-            <i className='material-icons'>play_arrow</i>
-          </a>
-        </Tooltip>
-      )
-    }
-
     return (
       <div className='white'>
-        {launchComponent}
-        <SurveyForm survey={survey} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
       </div>
     )
   }
@@ -93,6 +73,7 @@ const mapStateToProps = (state, ownProps) => ({
   channels: state.channels.items,
   questionnaires: state.questionnaires.items || {},
   respondentGroups: state.respondentGroups.items || {},
+  respondentGroupsUploading: state.respondentGroups.uploading,
   invalidRespondents: state.respondentGroups.invalidRespondents,
   survey: state.survey.data || {}
 })

@@ -1,9 +1,8 @@
 defmodule Ask.RespondentGroupControllerTest do
-
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Project, RespondentGroup, Respondent, Channel}
+  alias Ask.{Project, RespondentGroup, Respondent, Channel, RespondentGroupChannel}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -38,7 +37,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "name" => group.name,
         "sample" => sample,
         "respondents_count" => group.respondents_count,
-        "channels" => [channel.id],
+        "channels" => [%{"id" => channel.id, "mode" => channel.type}],
       }]
     end
   end
@@ -212,14 +211,14 @@ defmodule Ask.RespondentGroupControllerTest do
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
       channel = insert(:channel, name: "test")
 
-      attrs = %{channels: [channel.id]}
+      attrs = %{channels: [%{id: channel.id, mode: channel.type}]}
       conn = put conn, project_survey_respondent_group_path(conn, :update, project.id, survey.id, group.id), respondent_group: attrs
       assert json_response(conn, 200)["data"] == %{
         "id" => group.id,
         "name" => group.name,
         "sample" => group.sample,
         "respondents_count" => group.respondents_count,
-        "channels" => [channel.id],
+        "channels" => [%{"id" => channel.id, "mode" => channel.type}],
       }
 
       group = RespondentGroup
@@ -322,13 +321,7 @@ defmodule Ask.RespondentGroupControllerTest do
   end
 
   defp add_channel_to(group = %RespondentGroup{}, channel = %Channel{}) do
-    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
-
-    changeset = group
-    |> Repo.preload([:channels])
-    |> Ecto.Changeset.change
-    |> put_assoc(:channels, [channels_changeset])
-
-    Repo.update(changeset)
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type})
+    |> Repo.insert
   end
 end

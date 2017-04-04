@@ -124,7 +124,8 @@ const bareQuestionnaire: Questionnaire = {
   languages: ['en'],
   quotaCompletedMsg: {},
   errorMsg: {},
-  mobileWebSmsMessage: ''
+  mobileWebSmsMessage: '',
+  valid: true
 }
 
 // TODO: investigate why Flow ignores the result of `deepFreeze`

@@ -21,20 +21,20 @@ class ChannelIndex extends Component {
     $('#add-channel').modal('open')
   }
 
-  toggleProvider(provider, checked) {
+  toggleProvider(provider, index, checked) {
     if (checked) {
-      $(`#${provider}Modal`).modal('open')
+      $(`#${provider}Modal-${index}`).modal('open')
     } else {
-      this.props.authActions.toggleAuthorization(provider)
+      this.props.authActions.toggleAuthorization(provider, index)
     }
   }
 
-  turnOffProvider(provider) {
-    this.props.authActions.removeAuthorization(provider)
+  turnOffProvider(provider, index) {
+    this.props.authActions.removeAuthorization(provider, index)
   }
 
-  deleteProvider(provider) {
-    this.props.authActions.toggleAuthorization(provider)
+  deleteProvider(provider, index) {
+    this.props.authActions.toggleAuthorization(provider, index)
   }
 
   nextPage(e) {
@@ -83,20 +83,24 @@ class ChannelIndex extends Component {
       </div>
     )
 
-    const providerSwitch = (provider) => {
+    const providerSwitch = (provider, index) => {
       const disabled = authorizations.fetching
-      const checked = !!(authorizations.items && authorizations.items.includes(provider))
+      const checked = authActions.hasInAuthorizations(authorizations, provider, index)
       return <div className='switch'>
         <label>
-          <input type='checkbox' disabled={disabled} checked={checked} onChange={() => this.toggleProvider(provider, checked)} />
+          <input type='checkbox' disabled={disabled} checked={checked} onChange={() => this.toggleProvider(provider, index, checked)} />
           <span className='lever' />
         </label>
       </div>
     }
 
-    const providerModal = (provider) => {
-      const name = `${provider[0].toUpperCase()}${provider.slice(1)}`
-      return <ConfirmationModal modalId={`${provider}Modal`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider)} style={{maxWidth: '600px'}} showCancel onNo={() => this.turnOffProvider(provider)} />
+    const providerModal = (provider, index, friendlyName, multiple) => {
+      let name = `${provider[0].toUpperCase()}${provider.slice(1)}`
+      if (multiple) name = `${name} (${friendlyName})`
+
+      return <ConfirmationModal key={`${provider}-${index}`} modalId={`${provider}Modal-${index}`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider, index)} style={{maxWidth: '600px'}} showCancel
+        /* onNo={() => this.turnOffProvider(provider, index)} */
+        />
     }
 
     let syncButton = null
@@ -114,11 +118,69 @@ class ChannelIndex extends Component {
         <span className='right'>{ syncButton }</span>
       </span>
 
+    const multipleNuntium = config.nuntium.length > 1
+    const multipleVerboice = config.verboice.length > 1
+
+    let providerModals = []
+    for (let index in config.verboice) {
+      providerModals.push(providerModal('verboice', index, config.verboice[index].friendlyName, multipleVerboice))
+    }
+    for (let index in config.nuntium) {
+      providerModals.push(providerModal('nuntium', index, config.nuntium[index].friendlyName, multipleNuntium))
+    }
+
+    const nuntiumProviderUI = (index, multiple) => {
+      let name = 'Nuntium'
+      if (multiple) name = `${name} (${config.nuntium[index].friendlyName})`
+
+      return (
+        <li key={`nuntium-${index}`} className='collection-item icon nuntium'>
+          <h5>{name}</h5>
+          {providerSwitch('nuntium', index)}
+          <span onClick={() => window.open(config.nuntium[index].baseUrl)}>
+            <i className='material-icons arrow-right'>chevron_right</i>
+          </span>
+          <span className='channel-description'>
+            <b>SMS channels</b>
+            <br />
+            Clickatell, DTAC, I-POP, Multimodem iSms and 8 more
+          </span>
+        </li>
+      )
+    }
+
+    const verboiceProviderUI = (index, multiple) => {
+      let name = 'Verboice'
+      if (multiple) name = `${name} (${config.verboice[index].friendlyName})`
+
+      return (
+        <li key={`verboice-${index}`} className={`collection-item icon verboice`}>
+          <h5>{name}</h5>
+          {providerSwitch('verboice', index)}
+          <span className='channel-description'>
+            <b>Voice channels</b>
+            <br />
+            Callcentric, SIP client, SIP server, Skype, Twillio
+          </span>
+          <span onClick={() => window.open(config.verboice[index].baseUrl)}>
+            <i className='material-icons arrow-right'>chevron_right</i>
+          </span>
+        </li>
+      )
+    }
+
+    let providerUIs = []
+    for (let index in config.verboice) {
+      providerUIs.push(verboiceProviderUI(index, multipleVerboice))
+    }
+    for (let index in config.nuntium) {
+      providerUIs.push(nuntiumProviderUI(index, multipleNuntium))
+    }
+
     return (
       <div>
         <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
-        {providerModal('nuntium')}
-        {providerModal('verboice')}
+        {providerModals}
 
         <Modal card id='add-channel'>
           <div className='modal-content'>
@@ -127,30 +189,7 @@ class ChannelIndex extends Component {
               <p>Ask will sync available channels from these providers after user authorization</p>
             </div>
             <ul className='collection'>
-              <li className='collection-item icon verboice'>
-                <h5>Verboice</h5>
-                {providerSwitch('verboice')}
-                <span className='channel-description'>
-                  <b>Voice channels</b>
-                  <br />
-                  Callcentric, SIP client, SIP server, Skype, Twillio
-                </span>
-                <span onClick={() => window.open(config.verboice.baseUrl)}>
-                  <i className='material-icons arrow-right'>chevron_right</i>
-                </span>
-              </li>
-              <li className='collection-item icon nuntium'>
-                <h5>Nuntium</h5>
-                {providerSwitch('nuntium')}
-                <span onClick={() => window.open(config.nuntium.baseUrl)}>
-                  <i className='material-icons arrow-right'>chevron_right</i>
-                </span>
-                <span className='channel-description'>
-                  <b>SMS channels</b>
-                  <br />
-                  Clickatell, DTAC, I-POP, Multimodem iSms and 8 more
-                </span>
-              </li>
+              {providerUIs}
             </ul>
           </div>
         </Modal>

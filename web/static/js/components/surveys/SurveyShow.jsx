@@ -9,7 +9,7 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
-import { Tooltip } from '../ui'
+import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 
@@ -50,10 +50,17 @@ class SurveyShow extends Component {
   }
 
   stopSurvey() {
-    const { dispatch, projectId, surveyId, router } = this.props
-    stopSurvey(projectId, surveyId)
-      .then(survey => dispatch(actions.receive(survey)))
-      .then(() => router.push(routes.survey(projectId, surveyId)))
+    const { projectId, surveyId, survey, router } = this.props
+    const stopConfirmationModal = this.refs.stopConfirmationModal
+    stopConfirmationModal.open({
+      modalText: <span>
+        <p>Are you sure you want to stop the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
+      </span>,
+      onConfirm: () => {
+        stopSurvey(projectId, surveyId)
+          .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
+      }
+    })
   }
 
   iconForMode(mode) {
@@ -132,6 +139,7 @@ class SurveyShow extends Component {
     return (
       <div className='row'>
         {stopComponent}
+        <ConfirmationModal ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}
@@ -172,6 +180,15 @@ class SurveyShow extends Component {
     )
   }
 
+  // Round a number to two decimals, but only if the number has decimals
+  round(num) {
+    if (num == parseInt(num)) {
+      return num
+    } else {
+      return num.toFixed(2)
+    }
+  }
+
   dispositions(respondentsStats) {
     const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed', 'cancelled']
     return (
@@ -195,7 +212,7 @@ class SurveyShow extends Component {
                   <tr>
                     <td>{capitalize(disposition)}</td>
                     <td className='right-align'>{ stat.count }</td>
-                    <td className='right-align'>{ Math.round(stat.percent) }%</td>
+                    <td className='right-align'>{ this.round(stat.percent) }%</td>
                   </tr>
                 )
               })}

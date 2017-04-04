@@ -1,7 +1,7 @@
 defmodule Ask.Questionnaire do
   use Ask.Web, :model
 
-  alias Ask.{QuestionnaireVariable, Repo}
+  alias Ask.{Questionnaire, QuestionnaireVariable, Repo}
 
   schema "questionnaires" do
     field :name, :string
@@ -12,6 +12,7 @@ defmodule Ask.Questionnaire do
     field :mobile_web_sms_message, :string
     field :languages, Ask.Ecto.Type.JSON
     field :default_language, :string
+    field :valid, :boolean
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
 
@@ -23,7 +24,7 @@ defmodule Ask.Questionnaire do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :quota_completed_msg, :error_msg, :mobile_web_sms_message])
+    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :quota_completed_msg, :error_msg, :mobile_web_sms_message, :valid])
     |> validate_required([:project_id, :modes, :steps])
     |> foreign_key_constraint(:project_id)
   end
@@ -77,4 +78,22 @@ defmodule Ask.Questionnaire do
   end
 
   def sms_split_separator, do: "\u{1E}"
+
+  def variables(%Questionnaire{steps: steps}) do
+    variables(steps)
+  end
+
+  def variables(steps) when is_list(steps) do
+    steps
+    |> Enum.map(&variables/1)
+    |> Enum.reject(fn x -> x == nil end)
+  end
+
+  def variables(%{"store" => var}) do
+    var
+  end
+
+  def variables(_) do
+    nil
+  end
 end

@@ -41,7 +41,10 @@ describe('questionnaire reducer', () => {
         actions.receive(questionnaire)
       ])
       expect(state.fetching).toEqual(false)
-      expect(state.data).toEqual(questionnaire)
+      expect(state.data).toEqual({
+        ...questionnaire,
+        valid: false
+      })
     })
 
     it('should fetch', () => {
@@ -96,7 +99,10 @@ describe('questionnaire reducer', () => {
       expect(state).toEqual({
         ...state,
         fetching: true,
-        data: questionnaire
+        data: {
+          ...questionnaire,
+          valid: false
+        }
       })
     })
 
@@ -609,6 +615,18 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should validate required audioId for prompt ivr when audio source is upload', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptIvr('b6588daa-cd81-40b1-8cac-ff2e72a15c15', {text: '  New prompt  ', audioSource: 'upload'})]
+      )
+
+      expect(state.errors).toInclude({
+        "steps[1].prompt['en'].ivr.audioId": ['An audio file must be uploaded']
+      })
+    })
+
     it('should validate there must be at least two responses', () => {
       const state = playActions([
         actions.fetch(1, 1),
@@ -655,6 +673,28 @@ describe('questionnaire reducer', () => {
       expect(resultErrors).toInclude({
         [`steps[1].choices[0]['en'].sms`]: ['SMS must not be blank'],
         [`steps[1].choices[0]['fr'].sms`]: ['SMS must not be blank']
+      })
+    })
+
+    it("should validate a response's SMS must not be STOP if SMS mode is on", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('ivr'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'stop', 'a', '1', null),
+        actions.addLanguage('es'),
+        actions.setActiveLanguage('es'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', 'a', '1', null),
+        actions.addLanguage('fr'),
+        actions.setActiveLanguage('fr'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'stop', 'a', '1', null)
+      ])
+
+      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
+
+      expect(resultErrors).toInclude({
+        [`steps[1].choices[0]['en'].sms`]: ["SMS must not be 'STOP'"],
+        [`steps[1].choices[0]['fr'].sms`]: ["SMS must not be 'STOP'"]
       })
     })
 
@@ -858,6 +898,16 @@ describe('questionnaire reducer', () => {
       expect(state.errorsByLang['en']).toInclude({
         [`quotaCompletedMsg.prompt['en'].ivr.text`]: ['Voice prompt must not be blank']
       })
+    })
+
+    it('should consider "end" skip logic as valid', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '  Maybe  ', '  M,  MB  , 3  ', '  May  ', 'end')
+      ])
+
+      expect(!!state.errorsByLang['en']['steps[0].skipLogic']).toEqual(false)
     })
   })
 
@@ -1333,7 +1383,8 @@ describe('questionnaire reducer', () => {
             }
           }
         ],
-        id: 1
+        id: 1,
+        valid: true
       }
 
       const questionnaire = deepFreeze(bareQuestionnaire)

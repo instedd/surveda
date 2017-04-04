@@ -7,8 +7,18 @@ defmodule Ask.MobileSurveyController do
     |> render("index.html", user: nil)
   end
 
-  def get_step(conn, _params) do
-    step_type = "multiple-choice"
+  def get_step(conn, params) do
+    step_types = ["language-selection", "explanation", "multiple-choice", "numeric"]
+
+    mode =
+      if params["mode"] do
+        String.to_integer(params["mode"])
+      else
+        mode = 2
+      end
+    mode = rem(mode, length(step_types))
+
+    step_type = step_types |> Enum.at(mode)
 
     step = case step_type do
       "language-selection" ->

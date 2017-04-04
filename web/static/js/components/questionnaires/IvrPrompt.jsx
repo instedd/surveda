@@ -5,6 +5,7 @@ import { InputWithLabel, ConfirmationModal, AudioDropzone, Dropdown, DropdownIte
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import classNames from 'classnames/bind'
+import propsAreEqual from '../../propsAreEqual'
 
 type State = {
   audioErrors: string,
@@ -58,6 +59,8 @@ class IvrPrompt extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 
@@ -81,7 +84,7 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, audioIdErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
 
     const shouldDisplayErrors = value == this.props.originalValue
 
@@ -145,7 +148,7 @@ class IvrPrompt extends Component {
                 <source src={this.state.audioUri} type='audio/mpeg' />
               </audio>
               {readOnly ? null
-                : <AudioDropzone onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+                : <AudioDropzone error={!!audioIdErrors} onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
               }
             </div>
             : ''}
@@ -161,6 +164,7 @@ IvrPrompt.propTypes = {
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
+  audioIdErrors: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   autocomplete: PropTypes.bool.isRequired,

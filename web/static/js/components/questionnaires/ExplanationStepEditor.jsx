@@ -9,6 +9,7 @@ import StepCard from './StepCard'
 import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import SkipLogic from './SkipLogic'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   step: ExplanationStep,
@@ -41,6 +42,8 @@ class ExplanationStepEditor extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 

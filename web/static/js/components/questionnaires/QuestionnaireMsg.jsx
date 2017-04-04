@@ -10,8 +10,9 @@ import MobileWebPrompt from './MobileWebPrompt'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
 import { getPromptSms, getPromptIvr, getPromptIvrText, getPromptMobileWeb } from '../../step'
-import { msgPromptTextPath, msgHasErrors } from '../../questionnaireErrors'
+import { msgPromptTextPath, msgIvrAudioIdPath, msgHasErrors } from '../../questionnaireErrors'
 import * as api from '../../api'
+import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
   dispatch: Function,
@@ -119,6 +120,8 @@ class QuestionnaireMsg extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps, this.state.editing))
   }
 
@@ -190,9 +193,10 @@ class QuestionnaireMsg extends Component {
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
+    const scope = messageKey == 'quotaCompletedMsg' ? 'quota_completed' : 'error'
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, defaultLanguage, value)
+      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, scope, defaultLanguage, value)
       .then(response => {
         const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
         this.autocompleteItems = items
@@ -209,7 +213,7 @@ class QuestionnaireMsg extends Component {
       }
       if (promptValue.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, mode, defaultLanguage, activeLanguage, promptValue, value)
+      api.autocompleteOtherLanguage(questionnaire.projectId, mode, scope, defaultLanguage, activeLanguage, promptValue, value)
       .then(response => {
         const items = response.map(r => ({id: r, text: r}))
         this.autocompleteItems = items
@@ -301,9 +305,11 @@ class QuestionnaireMsg extends Component {
 
       if (ivr) {
         let ivrInputErrors = errors[msgPromptTextPath(messageKey, 'ivr', questionnaire.activeLanguage)]
+        let ivrAudioIdErrors = errors[msgIvrAudioIdPath(messageKey, questionnaire.activeLanguage)]
         ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`}
           key={quizState.cardId}
           inputErrors={ivrInputErrors}
+          audioIdErrors={ivrAudioIdErrors}
           value={quizState.stepPromptIvrText}
           originalValue={quizState.ivrOriginalValue}
           onChange={e => this.promptIvrChange(e)}

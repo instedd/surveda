@@ -7,8 +7,9 @@ import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
 import MobileWebPrompt from './MobileWebPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText, getStepPromptMobileWeb } from '../../step'
-import { promptTextPath } from '../../questionnaireErrors'
+import { promptTextPath, promptIvrAudioIdPath } from '../../questionnaireErrors'
 import * as api from '../../api'
+import propsAreEqual from '../../propsAreEqual'
 
 type State = {
   stepPromptSms: string,
@@ -81,6 +82,8 @@ class StepPrompts extends Component {
   }
 
   componentWillReceiveProps(newProps) {
+    if (propsAreEqual(this.props, newProps)) return
+
     this.setState(this.stateFromProps(newProps))
   }
 
@@ -106,7 +109,7 @@ class StepPrompts extends Component {
     const activeLanguage = questionnaire.activeLanguage
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, defaultLanguage, value)
+      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, 'prompt', defaultLanguage, value)
       .then(response => {
         const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
         this.autocompleteItems = items
@@ -121,7 +124,7 @@ class StepPrompts extends Component {
       }
       if (promptValue.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, mode, defaultLanguage, activeLanguage, promptValue, value)
+      api.autocompleteOtherLanguage(questionnaire.projectId, mode, 'prompt', defaultLanguage, activeLanguage, promptValue, value)
       .then(response => {
         const items = response.map(r => ({id: r, text: r}))
         this.autocompleteItems = items
@@ -181,11 +184,13 @@ class StepPrompts extends Component {
     let ivrInput = null
     if (ivr) {
       let ivrInputErrors = errors[promptTextPath(stepIndex, 'ivr', activeLanguage)]
+      let ivrAudioIdErrors = errors[promptIvrAudioIdPath(stepIndex, activeLanguage)]
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
         key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
         originalValue={this.state.ivrOriginalValue}
         inputErrors={ivrInputErrors}
+        audioIdErrors={ivrAudioIdErrors}
         readOnly={readOnly}
         onChange={e => this.stepPromptIvrChange(e)}
         onBlur={e => this.stepPromptIvrSubmit(e)}

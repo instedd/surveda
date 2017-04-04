@@ -13,6 +13,7 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     survey: PropTypes.object,
     respondentGroups: PropTypes.object.isRequired,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
@@ -58,15 +59,17 @@ class SurveyWizardRespondentsStep extends Component {
     )
   }
 
-  channelChange(e, group, type, allChannels) {
+  channelChange(e, group, type, allChannels, allModes) {
     e.preventDefault()
 
     let currentChannels = group.channels || []
-    currentChannels = currentChannels.filter(id => allChannels[id].type != type)
+    currentChannels = currentChannels.filter(channel => channel.mode != type)
     if (e.target.value != '') {
-      currentChannels.push(e.target.value)
+      currentChannels.push({
+        mode: type,
+        id: parseInt(e.target.value)
+      })
     }
-    currentChannels = currentChannels.map(x => parseInt(x))
 
     const { actions, survey } = this.props
     actions.selectChannels(survey.projectId, survey.id, group.id, currentChannels)
@@ -87,7 +90,7 @@ class SurveyWizardRespondentsStep extends Component {
     return (
       <RespondentsList key={group.id} group={group} remove={removeRespondents} modes={allModes}
         channels={channels} readOnly={readOnly}
-        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+        onChannelChange={(e, type, allChannels, mode) => this.channelChange(e, group, type, allChannels, mode)}
         >
         {group.sample.map((respondent, index) =>
           <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
@@ -97,7 +100,7 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    let { survey, channels, respondentGroups, invalidRespondents, readOnly } = this.props
+    let { survey, channels, respondentGroups, respondentGroupsUploading, invalidRespondents, readOnly } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
     if (!survey || !channels) {
       return <div>Loading...</div>
@@ -109,7 +112,7 @@ class SurveyWizardRespondentsStep extends Component {
     let respondentsDropzone = null
     if (!readOnly) {
       respondentsDropzone = (
-        <RespondentsDropzone survey={survey} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+        <RespondentsDropzone survey={survey} uploading={respondentGroupsUploading} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
       )
     }
 
@@ -124,15 +127,11 @@ class SurveyWizardRespondentsStep extends Component {
   }
 }
 
-const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
-  var isIE = /* @cc_on!@ */false || !!document.documentMode
-
-  // Edge 20+
-  var isEdge = !isIE && !!window.StyleMedia
-
+const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
   let commonProps = {className: 'dropfile', activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, onDrop: onDrop, accept: 'text/csv', onDropRejected: onDropRejected}
 
-  if (isEdge || isIE) {
+  var isWindows = navigator.platform && navigator.platform.indexOf('Win') != 1
+  if (isWindows) {
     commonProps = {
       ...commonProps,
       accept: '.csv',
@@ -140,22 +139,47 @@ const RespondentsDropzone = ({ survey, onDrop, onDropRejected }) => {
     }
   }
 
+  let className = 'drop-text csv'
+  if (uploading) className += ' uploading'
+
+  let icon = null
+  if (uploading) {
+    icon = (
+      <div className='drop-uploading'>
+        <div className='preloader-wrapper active center'>
+          <div className='spinner-layer spinner-blue-only'>
+            <div className='circle-clipper left'>
+              <div className='circle' />
+            </div><div className='gap-patch'>
+              <div className='circle' />
+            </div><div className='circle-clipper right'>
+              <div className='circle' />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  } else {
+    icon = <div className='drop-icon' />
+  }
+
   return (
     <Dropzone {...commonProps} >
-      <div className='drop-icon' />
-      <div className='drop-text csv' />
+      {icon}
+      <div className={className} />
     </Dropzone>
   )
 }
 
 RespondentsDropzone.propTypes = {
   survey: PropTypes.object,
+  uploading: PropTypes.bool,
   onDrop: PropTypes.func.isRequired,
   onDropRejected: PropTypes.func.isRequired
 }
 
 const newChannelComponent = (type, allChannels, currentChannels, onChange, readOnly) => {
-  const currentChannel = currentChannels.find(id => allChannels[id].type == type)
+  const currentChannel = currentChannels.find(channel => channel.mode == type) || {}
 
   let label
   if (type == 'sms') {
@@ -172,7 +196,7 @@ const newChannelComponent = (type, allChannels, currentChannels, onChange, readO
     <div className='row' key={type}>
       <div className='input-field col s12'>
         <Input s={12} type='select' label={label}
-          value={currentChannel || ''}
+          value={currentChannel.id || ''}
           onChange={e => onChange(e, type, allChannels)}
           disabled={readOnly}>
           <option value=''>

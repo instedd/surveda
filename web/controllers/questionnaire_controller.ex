@@ -1,7 +1,7 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Questionnaire, Project, JsonSchema, Audio}
+  alias Ask.{Questionnaire, Project, JsonSchema, Audio, Logger}
 
   plug :validate_params when action in [:create, :update]
 
@@ -35,6 +35,7 @@ defmodule Ask.QuestionnaireController do
         |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
         |> render("show.json", questionnaire: questionnaire)
       {:error, changeset} ->
+        Logger.warn "Error when creating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -56,9 +57,14 @@ defmodule Ask.QuestionnaireController do
 
     params = conn.assigns[:questionnaire]
 
-    changeset = project
+    questionnaire = project
     |> assoc(:questionnaires)
     |> Repo.get!(id)
+
+    old_valid = questionnaire.valid
+    old_modes = questionnaire.modes
+
+    changeset = questionnaire
     |> Questionnaire.changeset(params)
 
     case Repo.update(changeset) do
@@ -66,12 +72,39 @@ defmodule Ask.QuestionnaireController do
         project |> Project.touch!
         questionnaire |> Questionnaire.recreate_variables!
         questionnaire |> Ask.Translation.rebuild
+
+        new_valid = Ecto.Changeset.get_change(changeset, :valid)
+        new_modes = Ecto.Changeset.get_change(changeset, :modes)
+        if new_valid != old_valid || new_modes != old_modes do
+          update_related_surveys(questionnaire)
+        end
+
         render(conn, "show.json", questionnaire: questionnaire)
       {:error, changeset} ->
+        Logger.warn "Error when updating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
+  end
+
+  defp update_related_surveys(questionnaire) do
+    (from s in Ask.Survey,
+      join: sq in Ask.SurveyQuestionnaire,
+      join: q in Ask.Questionnaire,
+      where: q.id == ^questionnaire.id,
+      where: sq.questionnaire_id == q.id,
+      where: sq.survey_id == s.id)
+    |> Repo.all
+    |> Enum.each(fn survey ->
+      survey
+      |> Repo.preload([:questionnaires])
+      |> Repo.preload([:quota_buckets])
+      |> Repo.preload(respondent_groups: :channels)
+      |> change
+      |> Ask.Survey.update_state
+      |> Repo.update!
+    end)
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do

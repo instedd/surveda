@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Response}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, SurveyLogEntry}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -237,14 +237,10 @@ defmodule Ask.RespondentController do
 
     {offset, ""} = Integer.parse(offset)
 
-    # We first need to get all unique field names in all responses
-    all_fields = Repo.all(from resp in Response,
-      join: r in Respondent,
-      where: resp.respondent_id == r.id and
-             r.survey_id == ^survey_id and
-             resp.field_name != "",
-      select: resp.field_name,
-      distinct: true)
+    # We first need to get all unique field names in all questionnaires
+    all_fields = questionnaires
+    |> Enum.flat_map(&Questionnaire.variables/1)
+    |> Enum.uniq
 
     # Now traverse each respondent and create a row for it
     csv_rows = from(
@@ -348,10 +344,10 @@ defmodule Ask.RespondentController do
       |> Ecto.DateTime.to_erl
       |> Timex.Ecto.DateTime.cast!
       |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
-      [history.respondent.hashed_number, history.disposition, date]
+      [history.respondent.hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
-    header = ["Respondent hash", "Disposition", "Timestamp"]
+    header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string
@@ -378,7 +374,7 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     csv_rows = (from r in Respondent,
-      where: r.survey_id == ^survey.id and r.disposition == "completed")
+      where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id))
     |> preload(:questionnaire)
     |> Repo.stream
     |> Stream.map(fn r ->
@@ -395,6 +391,55 @@ defmodule Ask.RespondentController do
     |> to_string
 
     filename = Timex.now |> Timex.format!("respondents_incentives_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+
+    conn
+      |> put_resp_content_type("text/csv")
+      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+      |> send_resp(200, csv)
+  end
+
+  def interactions_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = conn
+    |> load_project_for_owner(project_id)
+
+    # Check that the survey is in the project
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    csv_rows = (from e in SurveyLogEntry,
+      where: e.survey_id == ^survey.id)
+    |> preload(:channel)
+    |> Repo.stream
+    |> Stream.map(fn e ->
+      channel_name =
+        if e.channel do
+          e.channel.name
+        else
+          ""
+        end
+
+      disposition = disposition_label(e.disposition)
+      action_type = action_type_label(e.action_type)
+
+      timestamp = e.timestamp
+      |> Ecto.DateTime.to_erl
+      |> Timex.Ecto.DateTime.cast!
+      |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
+
+      [e.respondent_hashed_number, (e.mode |> String.upcase), channel_name, disposition, action_type, e.action_data, timestamp]
+    end)
+
+    header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
+    rows = Stream.concat([[header], csv_rows])
+
+    # Convert to CSV string
+    csv = rows
+    |> CSV.encode
+    |> Enum.to_list
+    |> to_string
+
+    filename = Timex.now |> Timex.format!("respondents_interactions_%Y-%m-%d-%H-%M-%S.csv", :strftime)
 
     conn
       |> put_resp_content_type("text/csv")
@@ -423,6 +468,21 @@ defmodule Ask.RespondentController do
       ["ivr", "sms"] -> "Phone call with SMS fallback"
       ["sms", "ivr"] -> "SMS with phone call fallback"
       _ -> "Unknown mode"
+    end
+  end
+
+  defp action_type_label(action) do
+    case action do
+      nil -> nil
+      "contact" -> "Contact attempt"
+      _ -> String.capitalize(action)
+    end
+  end
+
+  defp disposition_label(disposition) do
+    case disposition do
+      nil -> nil
+      _ -> String.capitalize(disposition)
     end
   end
 end

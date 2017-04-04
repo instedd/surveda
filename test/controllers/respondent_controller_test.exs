@@ -2,6 +2,7 @@ defmodule Ask.RespondentControllerTest do
 
   use Ask.ConnCase
   use Ask.TestHelpers
+  use Ask.DummySteps
 
   alias Ask.{Respondent, QuotaBucket, Survey}
 
@@ -214,37 +215,37 @@ defmodule Ask.RespondentControllerTest do
 
   test "download csv", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
-    insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
-    insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
-    insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
     conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
-    assert line1 == "Respondent ID,Smoke,Drink,Disposition,Date"
+    assert line1 == "Respondent ID,Smokes,Exercises,Perfect Number,Question,Disposition,Date"
 
-    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_disp, _] = line2 |> String.split(",", parts: 5)
+    [line_2_hashed_number, line_2_smoke, line_2_exercises, _, _, line_2_disp, _] = line2 |> String.split(",", parts: 7)
     assert line_2_hashed_number == respondent_1.hashed_number
     assert line_2_smoke == "Yes"
-    assert line_2_drink == "No"
+    assert line_2_exercises == "No"
     assert line_2_disp == "Partial"
 
-    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_disp,  _] = line3 |> String.split(",", parts: 5)
+    [line_3_hashed_number, line_3_smoke, line_3_exercises, _, _, line_3_disp,  _] = line3 |> String.split(",", parts: 7)
     assert line_3_hashed_number == respondent_2.hashed_number
     assert line_3_smoke == "No"
-    assert line_3_drink == ""
+    assert line_3_exercises == ""
     assert line_3_disp == ""
   end
 
   test "download csv with comparisons", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    questionnaire2 = insert(:questionnaire, name: "test 2", project: project)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    questionnaire2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire, questionnaire2], state: "ready", schedule_day_of_week: completed_schedule,
       comparisons: [
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "ratio" => 50},
@@ -252,28 +253,28 @@ defmodule Ask.RespondentControllerTest do
       ]
     )
     respondent_1 = insert(:respondent, survey: survey, questionnaire_id: questionnaire.id, mode: ["sms"], disposition: "partial")
-    insert(:response, respondent: respondent_1, field_name: "Smoke", value: "Yes")
-    insert(:response, respondent: respondent_1, field_name: "Drink", value: "No")
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "No")
     respondent_2 = insert(:respondent, survey: survey, questionnaire_id: questionnaire2.id, mode: ["sms", "ivr"], disposition: "completed")
-    insert(:response, respondent: respondent_2, field_name: "Smoke", value: "No")
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
     conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
-    assert line1 == "Respondent ID,Smoke,Drink,Variant,Disposition,Date"
+    assert line1 == "Respondent ID,Smokes,Exercises,Perfect Number,Question,Variant,Disposition,Date"
 
-    [line_2_hashed_number, line_2_smoke, line_2_drink, line_2_variant, line_2_disp, _] = line2 |> String.split(",", parts: 6)
+    [line_2_hashed_number, line_2_smoke, _, line_2_number, _, line_2_variant, line_2_disp, _] = line2 |> String.split(",", parts: 8)
     assert line_2_hashed_number == respondent_1.hashed_number |> to_string
     assert line_2_smoke == "Yes"
-    assert line_2_drink == "No"
+    assert line_2_number == "No"
     assert line_2_variant == "test - SMS"
     assert line_2_disp == "Partial"
 
-    [line_3_hashed_number, line_3_smoke, line_3_drink, line_3_variant, line_3_disp, _] = line3 |> String.split(",", parts: 6)
+    [line_3_hashed_number, line_3_smoke, _, line_3_number, _, line_3_variant, line_3_disp, _] = line3 |> String.split(",", parts: 8)
     assert line_3_hashed_number == respondent_2.hashed_number |> to_string
     assert line_3_smoke == "No"
-    assert line_3_drink == ""
+    assert line_3_number == ""
     assert line_3_variant == "test 2 - SMS with phone call fallback"
     assert line_3_disp == "Completed"
   end
@@ -285,21 +286,21 @@ defmodule Ask.RespondentControllerTest do
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
-    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
 
-    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
-    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
 
     conn = get conn, project_survey_respondents_disposition_history_csv_path(conn, :disposition_history_csv, survey.project.id, survey.id)
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
-    assert lines == ["Respondent hash,Disposition,Timestamp",
-     "1asd12451eds,partial,2000-01-01 01:02:03 UTC",
-     "1asd12451eds,completed,2000-01-01 02:03:04 UTC",
-     "34y5345tjyet,partial,2000-01-01 03:04:05 UTC",
-     "34y5345tjyet,completed,2000-01-01 04:05:06 UTC"]
+    assert lines == ["Respondent ID,Disposition,Mode,Timestamp",
+     "1asd12451eds,partial,SMS,2000-01-01 01:02:03 UTC",
+     "1asd12451eds,completed,SMS,2000-01-01 02:03:04 UTC",
+     "34y5345tjyet,partial,Phone call,2000-01-01 03:04:05 UTC",
+     "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06 UTC"]
   end
 
   test "download incentives_csv", %{conn: conn, user: user} do
@@ -308,6 +309,7 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
     insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
     insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+    insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
     conn = get conn, project_survey_respondents_incentives_csv_path(conn, :incentives_csv, survey.project.id, survey.id)
     csv = response(conn, 200)
@@ -315,6 +317,26 @@ defmodule Ask.RespondentControllerTest do
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert lines == ["Telephone number,Survey/experiment version",
      "5678,test - SMS with phone call fallback"]
+  end
+
+  test "download interactions_csv", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
+    channel = insert(:channel, name: "test_channel")
+    insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "1234", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+
+    conn = get conn, project_survey_respondents_interactions_csv_path(conn, :interactions_csv, survey.project.id, survey.id)
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
+     "1234,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+     "5678,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
+   ]
   end
 
   test "quotas_stats", %{conn: conn, user: user} do

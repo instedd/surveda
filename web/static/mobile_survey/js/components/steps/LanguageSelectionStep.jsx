@@ -11,16 +11,12 @@ class LanguageSelectionStep extends Component {
     return (
       <div>
         <Prompt text={step.prompt} />
-        <br />
-        <div>
-          <select ref='select'>
-            {step.choices.map(choice => {
-              return <option key={choice} value={choice}>{choice}</option>
-            })}
-          </select>
-        </div>
-        <br />
-        <input type='submit' value='Next' />
+        <select ref='select'>
+          {step.choices.map(choice => {
+            return <option key={choice} value={choice}>{choice}</option>
+          })}
+        </select>
+        <input className='btn block' type='submit' value='Next' />
       </div>
     )
   }

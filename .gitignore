@@ -24,3 +24,7 @@ erl_crash.dump
 /config/prod.secret.exs
 
 /config/local.exs
+
+.vagrant
+
+/test/tmp/

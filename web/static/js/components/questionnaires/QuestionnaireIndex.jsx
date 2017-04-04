@@ -128,7 +128,7 @@ class QuestionnaireIndex extends Component {
           <tbody>
             { range(0, pageSize).map(index => {
               const questionnaire = questionnaires[index]
-              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
+              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan={readOnly ? 2 : 3} /></tr>
 
               return (
                 <tr key={questionnaire.id}>

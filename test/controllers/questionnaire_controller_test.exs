@@ -71,23 +71,24 @@ defmodule Ask.QuestionnaireControllerTest do
         "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at),
         "mobile_web_sms_message" => nil,
         "quota_completed_msg" => %{
-        "en" => %{
-          "sms" => "Quota completed",
-          "ivr" => %{
-            "audio_source" => "tts",
-            "text" => "Quota completed (ivr)"
+          "en" => %{
+            "sms" => "Quota completed",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "Quota completed (ivr)"
+            }
           }
-        }
-      },
+        },
         "error_msg" => %{
-        "en" => %{
-          "sms" => "You have entered an invalid answer",
-          "ivr" => %{
-            "audio_source" => "tts",
-            "text" => "You have entered an invalid answer (ivr)"
+          "en" => %{
+            "sms" => "You have entered an invalid answer",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "You have entered an invalid answer (ivr)"
+            }
           }
-        }
-      },
+        },
+        "valid" => true
       }
     end
 
@@ -241,6 +242,28 @@ defmodule Ask.QuestionnaireControllerTest do
       |> Repo.preload(:questionnaire_variables)).questionnaire_variables
       assert length(vars) == 4
     end
+
+    test "updates survey ready state when valid changes", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, valid: true)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"valid" => false, steps: []}
+
+      survey = Ask.Survey |> Repo.get!(survey.id)
+      assert survey.state == "not_ready"
+    end
+
+    test "updates survey ready state when mode changes", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"modes" => ["ivr"], steps: []}
+
+      survey = Ask.Survey |> Repo.get!(survey.id)
+      assert survey.state == "not_ready"
+    end
   end
 
   describe "update translations" do
@@ -358,15 +381,15 @@ defmodule Ask.QuestionnaireControllerTest do
 
       translations = Translation
       |> Repo.all
-      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.map(&{&1.mode, &1.scope, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
       |> Enum.sort
 
       expected = [
-        {"sms", "en", "EN 1", "es", "ES 1"},
-        {"ivr", "en", "EN 2", "fr", "FR 2"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
-        {"sms", "en", "EN 5", "es", "ES 5"},
-        {"ivr", "en", "EN 6", "fr", "FR 6"},
+        {"sms", "prompt", "en", "EN 1", "es", "ES 1"},
+        {"ivr", "prompt", "en", "EN 2", "fr", "FR 2"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "quota_completed", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "quota_completed", "en", "EN 6", "fr", "FR 6"},
       ] |> Enum.sort
 
       assert translations == expected
@@ -408,17 +431,17 @@ defmodule Ask.QuestionnaireControllerTest do
 
       translations = Translation
       |> Repo.all
-      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.map(&{&1.mode, &1.scope, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
       |> Enum.sort
 
       expected = [
-        {"sms", "en", "EN 1", nil, nil},
-        {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 10"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
-        {"sms", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
-        {"sms", "en", "EN 5", "es", "ES 5"},
-        {"ivr", "en", "EN 6", "fr", "FR 6"},
+        {"sms", "prompt", "en", "EN 1", nil, nil},
+        {"ivr", "prompt", "en", "EN 2", "fr", "FR 2 (NEW)"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 10"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "response", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
+        {"sms", "quota_completed", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "quota_completed", "en", "EN 6", "fr", "FR 6"},
       ] |> Enum.sort
 
       assert translations == expected
@@ -460,17 +483,17 @@ defmodule Ask.QuestionnaireControllerTest do
 
       translations = Translation
       |> Repo.all
-      |> Enum.map(&{&1.mode, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
+      |> Enum.map(&{&1.mode, &1.scope, &1.source_lang, &1.source_text, &1.target_lang, &1.target_text})
       |> Enum.sort
 
       expected = [
-        {"sms", "en", "EN 1", nil, nil},
-        {"ivr", "en", "EN 2", "fr", "FR 2 (NEW)"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 9"},
-        {"sms", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
-        {"sms", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
-        {"sms", "en", "EN 5", "es", "ES 5"},
-        {"ivr", "en", "EN 6", "fr", "FR 6"},
+        {"sms", "prompt", "en", "EN 1", nil, nil},
+        {"ivr", "prompt", "en", "EN 2", "fr", "FR 2 (NEW)"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 9"},
+        {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
+        {"sms", "response", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
+        {"sms", "quota_completed", "en", "EN 5", "es", "ES 5"},
+        {"ivr", "quota_completed", "en", "EN 6", "fr", "FR 6"},
       ] |> Enum.sort
 
       assert translations == expected

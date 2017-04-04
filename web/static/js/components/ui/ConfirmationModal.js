@@ -12,6 +12,7 @@ type Props = {
   onConfirm?: Function,
   onNo?: Function,
   modalId?: string,
+  children?: any,
   style?: Object
 };
 
@@ -45,7 +46,7 @@ export class ConfirmationModal extends Component {
   }
 
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, showCancel = false } = this.state
+    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false } = this.state
 
     let cancelLink = null
     if (showCancel) {
@@ -74,6 +75,8 @@ export class ConfirmationModal extends Component {
     var content
     if (typeof modalText === 'string') {
       content = <p>{modalText}</p>
+    } else if (children) {
+      content = children
     } else {
       content = modalText
     }
