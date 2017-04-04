@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react'
-import Header from './layout/Header'
 import { connect } from 'react-redux'
 import * as actions from '../actions/step'
 import MultipleChoiceStep from './steps/MultipleChoiceStep'
