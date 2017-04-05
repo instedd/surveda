@@ -111,6 +111,19 @@ class FlagStepEditor extends Component {
                 </p>
                 <p>
                   <input
+                    id={`${step.id}_disposition_refusal`}
+                    type='radio'
+                    name='questionnaire_disposition'
+                    className='with-gap'
+                    value='refusal'
+                    checked={this.state.disposition == 'refusal'}
+                    onChange={e => this.dispositionChange('refusal')}
+                    disabled={readOnly}
+                  />
+                  <label htmlFor={`${step.id}_disposition_refusal`}>Refusal</label>
+                </p>
+                <p>
+                  <input
                     id={`${step.id}_disposition_completed`}
                     type='radio'
                     name='questionnaire_disposition'

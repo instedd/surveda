@@ -83,6 +83,7 @@ defmodule Ask.RespondentControllerTest do
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "refusal" => %{"count" => 0, "percent" => 0.0},
       "pending" => %{"count" => 0, "percent" => 0.0},
       "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
@@ -117,6 +118,7 @@ defmodule Ask.RespondentControllerTest do
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "refusal" => %{"count" => 0, "percent" => 0.0},
       "pending" => %{"count" => 0, "percent" => 0.0},
       "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
@@ -146,6 +148,7 @@ defmodule Ask.RespondentControllerTest do
     assert data["respondents_by_state"] == %{
       "partial" => %{"count" => 1, "percent" => 100*1/total},
       "ineligible" => %{"count" => 3, "percent" => 100*3/total},
+      "refusal" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 1, "percent" => 100*1/total},
       "pending" => %{"count" => 10, "percent" => 100*10/total},
       "active" => %{"count" => 0, "percent" => 0.0},
@@ -203,6 +206,7 @@ defmodule Ask.RespondentControllerTest do
         "failed" => %{"count" => 0, "percent" => 0.0},
         "stalled" => %{"count" => 0, "percent" => 0.0},
         "ineligible" => %{"count" => 0, "percent" => 0.0},
+        "refusal" => %{"count" => 0, "percent" => 0.0},
         "partial" => %{"count" => 0, "percent" => 0.0},
         "cancelled" => %{"count" => 0, "percent" => 0.0}
       },

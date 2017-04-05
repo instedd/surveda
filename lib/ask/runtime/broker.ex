@@ -367,12 +367,14 @@ defmodule Ask.Runtime.Broker do
     # as "completed".
     new_disposition =
       case {old_disposition, reply_disposition} do
-        # If the respondent is already completed or ineligible, don't change it
+        # If the respondent is already completed, ineligible or refusal, don't change it
         {"completed", _} -> "completed"
         {"ineligible", _} -> "ineligible"
-        # If a flag step sets the respondent as ineligible, do so (the respondent
+        {"refusal", _} -> "refusal"
+        # If a flag step sets the respondent as ineligible or refusal, do so (the respondent
         # will be an non-set or partial disposition here)
         {_, "ineligible"} -> "ineligible"
+        {_, "refusal"} -> "refusal"
         # In any other case the survey ends and the respondent is marked as completed
         _ -> "completed"
       end
