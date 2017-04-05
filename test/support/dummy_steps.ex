@@ -480,7 +480,7 @@ defmodule Ask.DummySteps do
         ),
       ]
 
-      @flag_steps_refusal_skip_logic [
+      @flag_steps_refused_skip_logic [
         multiple_choice_step(
           id: "aaa",
           title: "Do you exercise?",
@@ -496,7 +496,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "bbb",
           title: "Let there be rock",
-          disposition: "refusal"
+          disposition: "refused"
         ),
         explanation_step(
           id: "ccc",

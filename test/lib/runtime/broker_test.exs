@@ -66,15 +66,15 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "ineligible"
   end
 
-  test "don't set the respondent as completed (disposition) if disposition is refusal" do
+  test "don't set the respondent as completed (disposition) if disposition is refused" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-    respondent |> Respondent.changeset(%{disposition: "refusal"}) |> Repo.update!
+    respondent |> Respondent.changeset(%{disposition: "refused"}) |> Repo.update!
 
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "refusal"
+    assert respondent.disposition == "refused"
   end
 
   test "don't set the respondent as partial (disposition) if disposition is ineligible" do
@@ -88,15 +88,15 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "ineligible"
   end
 
-  test "don't set the respondent as partial (disposition) if disposition is refusal" do
+  test "don't set the respondent as partial (disposition) if disposition is refused" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@partial_step)
 
-    respondent |> Respondent.changeset(%{disposition: "refusal"}) |> Repo.update!
+    respondent |> Respondent.changeset(%{disposition: "refused"}) |> Repo.update!
 
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "refusal"
+    assert respondent.disposition == "refused"
   end
 
   test "don't set the respondent as ineligible (disposition) if disposition is partial" do
@@ -362,8 +362,8 @@ defmodule Ask.BrokerTest do
     assert history.disposition == "ineligible"
   end
 
-  test "mark disposition as refusal on end" do
-    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refusal_skip_logic)
+  test "mark disposition as refused on end" do
+    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
 
     {:ok, _} = Broker.start_link
 
@@ -377,14 +377,14 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == "completed"
-    assert respondent.disposition == "refusal"
+    assert respondent.disposition == "refused"
 
     histories = RespondentDispositionHistory |> Repo.all
     assert length(histories) == 1
 
     history = histories |> hd
     assert history.respondent_id == respondent.id
-    assert history.disposition == "refusal"
+    assert history.disposition == "refused"
   end
 
   test "mark disposition as completed when partial on end" do

@@ -144,9 +144,9 @@ defmodule Ask.Runtime.Flow do
   def should_update_disposition(old_disposition, new_disposition)
   def should_update_disposition("completed", _), do: false
   def should_update_disposition("ineligible", _), do: false
-  def should_update_disposition("refusal", _), do: false
+  def should_update_disposition("refused", _), do: false
   def should_update_disposition("partial", "ineligible"), do: false
-  def should_update_disposition("partial", "refusal"), do: false
+  def should_update_disposition("partial", "refused"), do: false
   def should_update_disposition(_, _), do: true
 
   # :next_step, :end_survey, {:jump, step_id}, :wait_for_reply

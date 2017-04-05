@@ -576,7 +576,7 @@ defmodule Ask.FlowTest do
       assert Reply.disposition(reply) == "ineligible"
     end
 
-    test "two consecutive flag steps: refusal, completed" do
+    test "two consecutive flag steps: refused, completed" do
       steps = [
         multiple_choice_step(
           id: "aaa",
@@ -593,7 +593,7 @@ defmodule Ask.FlowTest do
         flag_step(
           id: "bbb",
           title: "b",
-          disposition: "refusal"
+          disposition: "refused"
         ),
         flag_step(
           id: "ccc",
@@ -607,7 +607,7 @@ defmodule Ask.FlowTest do
         |> Flow.start("sms")
         |> Flow.step(@sms_visitor)
       assert {:end, _, reply} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
-      assert Reply.disposition(reply) == "refusal"
+      assert Reply.disposition(reply) == "refused"
     end
   end
 end

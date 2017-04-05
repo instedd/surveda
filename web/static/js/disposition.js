@@ -4,6 +4,6 @@ export const show = (disposition: Disposition) => {
     case 'completed': return 'Completed'
     case 'partial': return 'Partial'
     case 'ineligible': return 'Ineligible'
-    case 'refusal': return 'Refusal'
+    case 'refused': return 'Refused'
   }
 }
