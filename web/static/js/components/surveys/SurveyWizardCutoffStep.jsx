@@ -101,9 +101,7 @@ class SurveyWizardCutoffStep extends Component {
       quotasModal = (
         <div className='row'>
           <div className='col s12'>
-            <div>
-              <QuotasModal showLink={hasQuotas} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
-            </div>
+            <QuotasModal showLink={hasQuotas} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
           </div>
         </div>
       )
@@ -113,7 +111,7 @@ class SurveyWizardCutoffStep extends Component {
       <div>
         <div className='row quotas'>
           <div className='col s12'>
-            <input type='radio' className='filled-in' id='set-quotas' checked={hasQuotas} onChange={() => this.turnOnQuotas()} disabled={readOnly} />
+            <input type='radio' className='filled-in with-gap' id='set-quotas' checked={hasQuotas} onChange={() => this.turnOnQuotas()} disabled={readOnly} />
             <label htmlFor='set-quotas'>Quotas for completes</label>
             <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
           </div>
@@ -132,7 +130,7 @@ class SurveyWizardCutoffStep extends Component {
         onChange={this.toggleCountPartialResults}
       />
     )
-    const partialsLabel = <label htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+    const partialsLabel = <label className='bottom-margin' htmlFor='toggle_count_partial_results'>Count partials as completed</label>
 
     let partialsForCutoff = null
     let partialsForQuotas = null
@@ -147,7 +145,7 @@ class SurveyWizardCutoffStep extends Component {
       )
     } else {
       partialsForCutoff = (
-        <div className='col s4 l4'>
+        <div className='col s12'>
           {partialsInput}
           {partialsLabel}
         </div>
@@ -158,11 +156,9 @@ class SurveyWizardCutoffStep extends Component {
       <div>
         {this.header()}
         <div className='row'>
-          <div className='col s8 l8'>
-            <div className='input-field inline'>
-              <input type='radio' id='survey_cutoff' checked={!hasQuotas} onChange={() => this.turnOffQuotas()} disabled={readOnly} />
-              <label htmlFor='survey_cutoff'>Number of completes</label>
-            </div>
+          <div className='col s12'>
+            <input type='radio' className='with-gap' id='survey_cutoff' checked={!hasQuotas} onChange={() => this.turnOffQuotas()} disabled={readOnly} />
+            <label htmlFor='survey_cutoff'>Number of completes</label>
             <div className='input-field inline'>
               <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
                 <input
@@ -204,7 +200,7 @@ class SurveyWizardCutoffStep extends Component {
       <div>
         {this.header()}
         <div className='row'>
-          <div className='col s8 l8'>
+          <div className='col s12'>
             Number of completes
             <div className='input-field inline'>
               <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
@@ -216,16 +212,18 @@ class SurveyWizardCutoffStep extends Component {
               </InputWithLabel>
             </div>
           </div>
-          <div className='col s4 l4'>
-            <input
-              id='toggle_count_partial_results'
-              type='checkbox'
-              checked={survey.countPartialResults}
-              disabled={readOnly}
-              className='filled-in'
-              onChange={this.toggleCountPartialResults}
-            />
-            <label htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+          <div className='col s12'>
+            <div className='input-field'>
+              <input
+                id='toggle_count_partial_results'
+                type='checkbox'
+                checked={survey.countPartialResults}
+                disabled={readOnly}
+                className='filled-in'
+                onChange={this.toggleCountPartialResults}
+              />
+              <label htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+            </div>
           </div>
         </div>
       </div>

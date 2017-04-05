@@ -2,6 +2,9 @@
 
 label {
   color: $primary-color;
+  &.bottom-margin {
+    margin-bottom: 1rem;
+  }
 }
 
 .small-text-bellow {
@@ -152,7 +155,7 @@ label {
   @extend .grey-text, .lighten-2;
 }
 
-.input-field.inline {
+.input-field.inline.min-width {
   min-width: 250px;
 }
 
