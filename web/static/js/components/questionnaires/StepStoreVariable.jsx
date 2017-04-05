@@ -75,7 +75,7 @@ class StepStoreVariable extends Component {
       <div className='row'>
         <div className='col s12'>
           Variable name:
-          <div className='input-field inline'>
+          <div className='input-field inline min-width'>
             <input
               type='text'
               disabled={this.props.readOnly}
