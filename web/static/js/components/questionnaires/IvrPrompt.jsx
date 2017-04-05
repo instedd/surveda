@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { InputWithLabel, ConfirmationModal, AudioDropzone, Dropdown, DropdownItem, Autocomplete } from '../ui'
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
+import * as uiActions from '../../actions/ui'
 import classNames from 'classnames/bind'
 import propsAreEqual from '../../propsAreEqual'
 
@@ -66,10 +67,12 @@ class IvrPrompt extends Component {
 
   genericHandlerFileUpload = (files) => {
     const { stepId } = this.props
+    this.props.uiActions.uploadAudio(stepId)
     createAudio(files)
       .then(response => {
         this.setState({audioUri: `/api/v1/audios/${response.result}`}, () => {
           this.props.questionnaireActions.changeStepAudioIdIvr(stepId, response.result)
+          this.props.uiActions.finishAudioUpload()
           $('audio')[0].load()
         })
       })
@@ -84,11 +87,34 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, audioIdErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
+    const { id, value, inputErrors, audioIdErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId } = this.props
 
     const shouldDisplayErrors = value == this.props.originalValue
 
     const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
+
+    let audioComponent = <AudioDropzone error={!!audioIdErrors} onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+    if (uploadingAudio && uploadingAudio == stepId) {
+      let className = 'drop-text csv uploading'
+
+      audioComponent =
+        <div>
+          <div className='drop-uploading'>
+            <div className='preloader-wrapper active center'>
+              <div className='spinner-layer spinner-blue-only'>
+                <div className='circle-clipper left'>
+                  <div className='circle' />
+                </div><div className='gap-patch'>
+                  <div className='circle' />
+                </div><div className='circle-clipper right'>
+                  <div className='circle' />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className={className} />
+        </div>
+    }
 
     let autocompleteComponent = null
     if (autocomplete) {
@@ -148,7 +174,7 @@ class IvrPrompt extends Component {
                 <source src={this.state.audioUri} type='audio/mpeg' />
               </audio>
               {readOnly ? null
-                : <AudioDropzone error={!!audioIdErrors} onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
+                : audioComponent
               }
             </div>
             : ''}
@@ -174,11 +200,18 @@ IvrPrompt.propTypes = {
   ivrPrompt: PropTypes.object.isRequired,
   readOnly: PropTypes.bool,
   questionnaireActions: PropTypes.any,
-  stepId: PropTypes.string
+  uiActions: PropTypes.any,
+  stepId: PropTypes.string,
+  uploadingAudio: PropTypes.any
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+const mapStateToProps = (state) => ({
+  uploadingAudio: state.ui.data.questionnaireEditor.uploadingAudio
 })
 
-export default connect(null, mapDispatchToProps)(IvrPrompt)
+const mapDispatchToProps = (dispatch) => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
+  uiActions: bindActionCreators(uiActions, dispatch)
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(IvrPrompt)
