@@ -26,7 +26,7 @@ type Props = {
 type State = {
   stepTitle: string,
   stepType: string,
-  disposition: 'completed' | 'partial' | 'ineligible',
+  disposition: 'completed' | 'partial' | 'ineligible' | 'refusal',
   skipLogic: ?string
 };
 
