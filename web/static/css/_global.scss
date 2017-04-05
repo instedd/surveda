@@ -104,6 +104,10 @@
   padding: 0px;
   .card-chart {
     margin: 30px 0 20px;
+    svg {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
   }
   .card-title {
     position: relative;
