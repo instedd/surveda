@@ -653,25 +653,6 @@ i.survey-status { // icon for survey status on index
   }
 }
 
-.audio-section {
-  position: relative;
-  padding-left: 10px;
-  .audio-dropdown {
-    display: inline-block;
-    width: 25%;
-    min-width: 145px;
-  }
-  .upload-audio {
-    padding-top: 20px;
-  }
-  audio {
-    position: absolute;
-    right: 5px;
-    top: 0px;
-    width: 74%;
-  }
-}
-
 
 .collection.dark { // this class 'dark' is for quotas and error cards
   border: none;

@@ -113,6 +113,29 @@ label {
   }
 }
 
+.audio-section {
+  position: relative;
+  padding-left: 10px;
+  .audio-dropdown {
+    display: inline-block;
+    width: 25%;
+    min-width: 145px;
+  }
+  .upload-audio {
+    padding-top: 20px;
+  }
+  audio {
+    position: absolute;
+    right: 5px;
+    top: 0px;
+    width: 74%;
+  }
+  .drop-uploading {
+    text-align: center;
+  }
+}
+
+
 .invalidValue {
   color: red;
   text-decoration: line-through;
