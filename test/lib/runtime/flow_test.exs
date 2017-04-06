@@ -38,10 +38,11 @@ defmodule Ask.FlowTest do
     {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry(@sms_visitor)
   end
 
-  test "fail if a response is given to a flow that was never executed" do
-    assert_raise RuntimeError, ~r/Flow was not expecting any reply/, fn ->
-      Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
-    end
+  test "replies when never started" do
+    # this can happen on a fallback channel
+    step = Flow.start(@quiz, "sms")
+    |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "next step with store" do

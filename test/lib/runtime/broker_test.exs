@@ -1882,6 +1882,32 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "failed"
   end
 
+  test "reply via another channel (sms when ivr is the current one)" do
+    sms_test_channel = TestChannel.new(false, true)
+    sms_channel = insert(:channel, settings: sms_test_channel |> TestChannel.settings, type: "sms")
+
+    ivr_test_channel = TestChannel.new(false, false)
+    ivr_channel = insert(:channel, settings: ivr_test_channel |> TestChannel.settings, type: "ivr")
+
+    quiz = insert(:questionnaire, steps: @dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    group
+    |> Ecto.Changeset.change
+    |> Ecto.Changeset.put_assoc(:channels, [Ecto.Changeset.change(sms_channel), Ecto.Changeset.change(ivr_channel)])
+    |> Repo.update
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(false, mode == "sms")
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)

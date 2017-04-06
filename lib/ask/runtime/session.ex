@@ -177,8 +177,8 @@ defmodule Ask.Runtime.Session do
     :ok
   end
 
-  def delivery_confirm(session, title) do
-    log_confirmation(title, session.respondent.disposition, session.current_mode.channel, session.respondent)
+  def delivery_confirm(session, title, current_mode) do
+    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.respondent)
   end
 
   defp switch_to_fallback(session) do
@@ -195,13 +195,17 @@ defmodule Ask.Runtime.Session do
   end
 
   def sync_step(session, response) do
-    step_answer = Flow.step(session.flow, session.current_mode |> SessionMode.visitor, response)
+    sync_step(session, response, session.current_mode)
+  end
+
+  def sync_step(session, response, current_mode) do
+    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode))
     respondent = session.respondent
 
     # Log raw response from user including new disposition
     case step_answer do
-      {:end, _, reply} -> log_response(response, session.current_mode.channel, respondent, Reply.disposition(reply))
-      {:ok, _flow, reply} -> log_response(response, session.current_mode.channel, respondent, Reply.disposition(reply))
+      {:end, _, reply} -> log_response(response, current_mode.channel, respondent, Reply.disposition(reply))
+      {:ok, _flow, reply} -> log_response(response, current_mode.channel, respondent, Reply.disposition(reply))
       _ -> :ok
     end
 
@@ -222,10 +226,10 @@ defmodule Ask.Runtime.Session do
     {respondent, responses} =
       store_responses_and_assign_bucket(respondent, step_answer, buckets, session)
 
-    session |> handle_step_answer(step_answer, respondent, responses, buckets)
+    session |> handle_step_answer(step_answer, respondent, responses, buckets, current_mode)
   end
 
-  defp handle_step_answer(_, {:end, _, reply}, respondent, _, _) do
+  defp handle_step_answer(_, {:end, _, reply}, respondent, _, _, _) do
     case Reply.steps(reply) do
       [] ->
         {:end, respondent}
@@ -234,23 +238,23 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets) do
+  defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets, current_mode) do
     case falls_in_quota_already_completed?(buckets, responses) do
       true ->
-        case Flow.quota_completed(session.flow, session.current_mode |> SessionMode.visitor) do
+        case Flow.quota_completed(session.flow, current_mode |> SessionMode.visitor) do
         {:ok, reply} ->
-          log_prompts(reply, session.current_mode.channel, respondent, true)
+          log_prompts(reply, current_mode.channel, respondent, true)
           {:rejected, reply, respondent}
         :ok ->
           {:rejected, respondent}
         end
       false ->
-        log_prompts(reply, session.current_mode.channel, respondent)
+        log_prompts(reply, current_mode.channel, respondent)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
     end
   end
 
-  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _) do
+  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _, _) do
     {:failed, respondent}
   end
 

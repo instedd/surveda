@@ -64,8 +64,14 @@ defmodule Ask.Runtime.Broker do
   end
 
   def delivery_confirm(respondent, title) do
+    delivery_confirm(respondent, title, nil)
+  end
+
+  def delivery_confirm(respondent, title, mode) do
     unless respondent.session == nil do
-      respondent.session |> Session.load |> Session.delivery_confirm(title)
+      session = respondent.session |> Session.load
+      session_mode = session_mode(respondent, session, mode)
+      Session.delivery_confirm(session, title, session_mode)
     end
   end
 
@@ -224,18 +230,45 @@ defmodule Ask.Runtime.Broker do
 
   def sync_step(respondent, reply) do
     session = respondent.session |> Session.load
-    sync_step_internal(session, reply)
+    sync_step_internal(session, reply, session.current_mode)
+  end
+
+  def sync_step(respondent, reply, mode) do
+    session = respondent.session |> Session.load
+    session_mode = session_mode(respondent, session, mode)
+    sync_step_internal(session, reply, session_mode)
+  end
+
+  defp session_mode(_respondent, session, :nil) do
+    session.current_mode
+  end
+
+  defp session_mode(respondent, session, mode) do
+    if mode == Ask.Runtime.SessionMode.mode(session.current_mode) do
+      session.current_mode
+    else
+      # We need to find which channel has this mode
+      group = (respondent |> Repo.preload(:respondent_group)).respondent_group
+      channel = (group |> Repo.preload(:channels)).channels
+      |> Enum.find(fn c -> c.type == mode end)
+
+      Ask.Runtime.SessionModeProvider.new(mode, channel, [])
+    end
   end
 
   # We expose this method so we can test that if a stale respondent is
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
   def sync_step_internal(session, reply) do
+    sync_step_internal(session, reply, session.current_mode)
+  end
+
+  defp sync_step_internal(session, reply, session_mode) do
     respondent = session.respondent
 
     transaction_result = Repo.transaction(fn ->
       try do
-        handle_session_step(Session.sync_step(session, reply))
+        handle_session_step(Session.sync_step(session, reply, session_mode))
       rescue
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
