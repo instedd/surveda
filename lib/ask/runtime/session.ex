@@ -130,12 +130,12 @@ defmodule Ask.Runtime.Session do
   end
 
   # If there is a fallback specified, switch session to use it
-  def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session |> clear_token)
+  def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session)
 
   #if we have a last timeout, use it to fallback
   # TODO: this should use fallback_delay
   def timeout(%{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
-    switch_to_fallback(session |> clear_token)
+    switch_to_fallback(session)
   end
 
   # Let's try again
@@ -182,6 +182,18 @@ defmodule Ask.Runtime.Session do
   end
 
   defp switch_to_fallback(session) do
+    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
+
+    # Ff there's stil a queued message in the channel, don't fallback yet
+    if Channel.has_queued_message?(runtime_channel, session.channel_state) do
+      {:ok, session, %Reply{}, current_timeout(session), session.respondent}
+    else
+      do_switch_to_fallback(session)
+    end
+  end
+
+  defp do_switch_to_fallback(session) do
+    session = session |> clear_token
     run_flow(%Session{
       session |
       current_mode: session.fallback_mode,

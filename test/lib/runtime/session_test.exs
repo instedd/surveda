@@ -195,6 +195,21 @@ defmodule Ask.SessionTest do
     assert result.flow.current_step == expected_session.flow.current_step
   end
 
+  test "doesn't switch to fallback if there are queued messages", %{quiz: quiz, respondent: respondent} do
+    test_channel = TestChannel.new(true, false)
+    channel = build(:channel, settings: test_channel |> TestChannel.settings)
+
+    fallback_runtime_channel = TestChannel.new
+    fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
+    fallback_retries = [5]
+
+    {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel, "sms", [], fallback_channel, "ivr", fallback_retries)
+    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    assert {:ok, ^session, %Reply{}, 10, _} = Session.timeout(session)
+  end
+
   test "uses retry configuration", %{quiz: quiz, respondent: respondent, channel: channel} do
     assert {:ok, _, _, 60, _} = Session.start(quiz, respondent, channel, "sms", [60])
   end
