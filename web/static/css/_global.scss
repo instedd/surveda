@@ -110,8 +110,12 @@
     }
   }
   .card-title {
-    position: relative;
+    position: absolute;
     padding-right: 20px;
+    width: 85%;
+    height: 40px;
+    top: 0;
+    display: block;
 
     a {
       position: absolute;
@@ -127,11 +131,9 @@
     }
     .card-status {
       border-top: 1px solid color("grey","lighten-3");
-      padding-top: 20px;
+      padding-top: 50px;
+      position: relative;
       padding-bottom: 20px;
-      p {
-        margin-top: 10px;
-      }
     }
   }
 
