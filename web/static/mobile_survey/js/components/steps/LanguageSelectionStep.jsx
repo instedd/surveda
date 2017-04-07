@@ -11,7 +11,9 @@ class LanguageSelectionStep extends Component {
     const { step } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
+        {step.prompts.map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
         <select ref='select'>
           {step.choices.map(choice => {
             return <option key={choice} value={choice}>{choice}</option>

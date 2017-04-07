@@ -34,7 +34,9 @@ class NumericStep extends Component {
     const { step } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
+        {step.prompts.map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
         <br />
         <div>
           <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} />

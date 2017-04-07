@@ -21,7 +21,7 @@ defmodule Ask.MobileSurveyController do
     respondent = Repo.get!(Respondent, respondent_id)
 
     step = case Broker.sync_step(respondent, value) do
-      {:ok, reply} ->
+      {:reply, reply} ->
         reply |> Reply.steps() |> hd
       _ -> %{
           type: "explanation",

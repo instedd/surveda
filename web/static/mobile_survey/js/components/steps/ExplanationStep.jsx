@@ -11,7 +11,9 @@ class ExplanationStep extends Component {
     const { step } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
+        {step.prompts.map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
         <br />
         <input type='submit' value='Next' />
       </div>
