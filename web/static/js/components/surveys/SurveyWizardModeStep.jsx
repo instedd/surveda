@@ -17,12 +17,14 @@ class SurveyWizardModeStep extends Component {
     readOnly: PropTypes.bool.isRequired
   }
 
-  modeChange(e, value) {
+  modeChange(e, modes) {
     const { dispatch, survey, respondentGroups } = this.props
-    dispatch(actions.selectMode(value))
-    each(Object.keys(respondentGroups), groupId =>
-      dispatch(respondentActions.selectChannels(survey.projectId, survey.id, groupId, []))
-    )
+    dispatch(actions.selectMode(modes))
+    each(Object.keys(respondentGroups), groupId => {
+      let currentChannels = respondentGroups[groupId].channels || []
+      currentChannels = currentChannels.filter(channel => some(modes, mode => channel.mode == mode))
+      dispatch(respondentActions.selectChannels(survey.projectId, survey.id, groupId, currentChannels))
+    })
   }
 
   modeComparisonChange(e) {
