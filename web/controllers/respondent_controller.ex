@@ -140,6 +140,7 @@ defmodule Ask.RespondentController do
     failed = by_state["failed"] || 0
     partial = by_state["partial"] || 0
     ineligible = by_state["ineligible"] || 0
+    refused = by_state["refused"] || 0
     cancelled = by_state["cancelled"] || 0
 
     total_quota = buckets
@@ -157,6 +158,7 @@ defmodule Ask.RespondentController do
         failed: respondent_by_state(failed, total_respondents),
         partial: respondent_by_state(partial, total_respondents),
         ineligible: respondent_by_state(ineligible, total_respondents),
+        refused: respondent_by_state(refused, total_respondents),
         cancelled: respondent_by_state(cancelled, total_respondents)
       },
       respondents_by_date: cumulative_count,
@@ -381,7 +383,7 @@ defmodule Ask.RespondentController do
       [r.phone_number, experiment_name(r.questionnaire, r.mode)]
     end)
 
-    header = ["Telephone number", "Survey/experiment version"]
+    header = ["Telephone number", "Questionnaire-Mode"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string

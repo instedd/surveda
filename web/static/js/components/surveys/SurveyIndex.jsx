@@ -148,8 +148,8 @@ class SurveyCard extends PureComponent {
     }
 
     return (
-      <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
-        <div className='col s12 m6 l4'>
+      <div className='col s12 m6 l4'>
+        <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
           <Card>
             <div className='card-content'>
               <div className='grey-text'>
@@ -167,8 +167,8 @@ class SurveyCard extends PureComponent {
               </div>
             </div>
           </Card>
-        </div>
-      </Link>
+        </Link>
+      </div>
     )
   }
 }

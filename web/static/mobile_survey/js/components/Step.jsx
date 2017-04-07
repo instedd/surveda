@@ -1,7 +1,6 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import Header from './layout/Header'
 import * as actions from '../actions/step'
 import MultipleChoiceStep from './steps/MultipleChoiceStep'
 import NumericStep from './steps/NumericStep'
@@ -60,7 +59,6 @@ class Step extends Component {
 
     return (
       <div>
-        <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
             {this.stepComponent(step)}

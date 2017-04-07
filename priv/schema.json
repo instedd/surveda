@@ -106,7 +106,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["flag"]},
         "title": {"type": "string"},
-        "disposition": { "enum": ["partial", "completed", "ineligible"] },
+        "disposition": { "enum": ["partial", "completed", "ineligible", "refused"] },
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,

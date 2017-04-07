@@ -39,7 +39,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     Enum.each(twiml_map, fn
       {flow_message, step, twiml} ->
         GenServer.cast(BrokerStub.server_ref, {:expects, fn
-          {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message} -> step
+          {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message, "ivr"} -> step
         end})
 
         digits = case flow_message do

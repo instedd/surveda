@@ -5,12 +5,18 @@ import classNames from 'classnames/bind'
 
 export class Modal extends Component {
   componentDidMount() {
-    const { initOptions = {} } = this.props
+    let { initOptions } = this.props
+    if (!initOptions) initOptions = {}
+    console.log(initOptions)
     $(this.refs.modal).modal(initOptions)
   }
 
   open() {
     $(this.refs.modal).modal('open')
+  }
+
+  close() {
+    $(this.refs.modal).modal('close')
   }
 
   render() {

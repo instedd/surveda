@@ -35,9 +35,13 @@ defmodule Ask.Runtime.Step do
             :invalid_answer
         end
       "language-selection" ->
-        choices = step["language_choices"]
-        {num, ""} = Integer.parse(reply)
-        (choices |> Enum.at(num)) || (choices |> Enum.at(1))
+        if is_numeric(reply) do
+          choices = step["language_choices"]
+          {num, ""} = Integer.parse(reply)
+          (choices |> Enum.at(num)) || (choices |> Enum.at(1))
+        else
+          :invalid_answer
+        end
       "disposition" -> nil
       "explanation" -> nil
     end

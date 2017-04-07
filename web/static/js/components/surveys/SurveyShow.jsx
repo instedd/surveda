@@ -9,7 +9,7 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
-import { Tooltip } from '../ui'
+import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 
@@ -50,9 +50,17 @@ class SurveyShow extends Component {
   }
 
   stopSurvey() {
-    const { projectId, surveyId, router } = this.props
-    stopSurvey(projectId, surveyId)
-      .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
+    const { projectId, surveyId, survey, router } = this.props
+    const stopConfirmationModal = this.refs.stopConfirmationModal
+    stopConfirmationModal.open({
+      modalText: <span>
+        <p>Are you sure you want to stop the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
+      </span>,
+      onConfirm: () => {
+        stopSurvey(projectId, surveyId)
+          .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
+      }
+    })
   }
 
   iconForMode(mode) {
@@ -121,7 +129,7 @@ class SurveyShow extends Component {
     if (!readOnly && survey.state == 'running') {
       stopComponent = (
         <Tooltip text='Stop survey'>
-          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.stopSurvey()}>
+          <a className='btn-floating btn-large waves-effect waves-light red right mtop' onClick={() => this.stopSurvey()}>
             <i className='material-icons'>stop</i>
           </a>
         </Tooltip>
@@ -131,6 +139,7 @@ class SurveyShow extends Component {
     return (
       <div className='row'>
         {stopComponent}
+        <ConfirmationModal ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}
