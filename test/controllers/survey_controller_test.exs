@@ -70,6 +70,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
@@ -106,6 +107,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{

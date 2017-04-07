@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper}
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel}
   require Ask.Runtime.ReplyHelper
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
@@ -465,8 +465,8 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "ivr"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
 
-    channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
-    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update!
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: fallback_channel.id, mode: fallback_channel.type}) |> Repo.insert
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
@@ -508,8 +508,8 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
 
-    channels_changeset = [Ecto.Changeset.change(channel), Ecto.Changeset.change(fallback_channel)]
-    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, channels_changeset) |> Repo.update!
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: fallback_channel.id, mode: fallback_channel.type}) |> Repo.insert
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
@@ -1118,14 +1118,14 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
-  test "respondent flow via mobile_web" do
-    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobile_web_dummy_steps, "mobile_web")
+  test "respondent flow via mobileweb" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
     {:ok, broker} = Broker.start_link
     Broker.poll
 
-    # TODO this url
-    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", "Please enter to app.ask.dev/mobile_survey?token=1234567890")]
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter to http://app.ask.dev/mobile_survey/#{respondent.id}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -1666,8 +1666,7 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
-    channel_changeset = Ecto.Changeset.change(channel)
-    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
@@ -1739,8 +1738,7 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
-    channel_changeset = Ecto.Changeset.change(channel)
-    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
@@ -1882,13 +1880,18 @@ defmodule Ask.BrokerTest do
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(false, mode == "sms")
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: mode)
+
+    channel_type = case mode do
+      "mobileweb" -> "sms"
+      _ -> mode
+    end
+
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: channel_type)
     quiz = insert(:questionnaire, steps: steps)
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [[mode]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
-    channel_changeset = Ecto.Changeset.change(channel)
-    group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [channel_changeset]) |> Repo.update
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Repo.insert
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number

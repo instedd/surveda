@@ -82,6 +82,7 @@ defmodule Ask.RespondentGroupController do
   defp update_channels(id, %{"channels" => channels_params}) do
     from(gch in RespondentGroupChannel, where: gch.respondent_group_id == ^id) |> Repo.delete_all
 
+    # TODO this mode shouldn't be the channel mode but the survey mode
     Repo.transaction fn ->
       Enum.each(channels_params, fn ch ->
         RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: id, channel_id: ch["id"], mode: ch["mode"]})

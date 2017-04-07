@@ -189,8 +189,9 @@ const newChannelComponent = (type, allChannels, currentChannels, onChange, readO
   }
   label += ' channel'
 
+  const mode = type == 'mobileweb' ? 'sms' : type
   let channels = values(allChannels)
-  channels = channels.filter(c => c.type == type)
+  channels = channels.filter(c => c.type == mode)
 
   return (
     <div className='row' key={type}>

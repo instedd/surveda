@@ -1,6 +1,8 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
-import Header from './layout/Header'
 import { connect } from 'react-redux'
+import { withRouter } from 'react-router'
+import Header from './layout/Header'
 import * as actions from '../actions/step'
 import MultipleChoiceStep from './steps/MultipleChoiceStep'
 import NumericStep from './steps/NumericStep'
@@ -8,6 +10,13 @@ import ExplanationStep from './steps/ExplanationStep'
 import LanguageSelectionStep from './steps/LanguageSelectionStep'
 
 class Step extends Component {
+  handleSubmit: PropTypes.func.isRequired
+  props: {
+    dispatch: PropTypes.func.isRequired,
+    respondentId: any,
+    step: PropTypes.object.isRequired
+  }
+
   constructor(props) {
     super(props)
 
@@ -15,8 +24,8 @@ class Step extends Component {
   }
 
   componentDidMount() {
-    const { dispatch } = this.props
-    actions.fetchStep(dispatch)
+    const { dispatch, respondentId } = this.props
+    actions.fetchStep(dispatch, respondentId)
   }
 
   stepComponent(step) {
@@ -62,14 +71,9 @@ class Step extends Component {
   }
 }
 
-Step.propTypes = {
-  dispatch: PropTypes.any,
-  step: PropTypes.object
-}
-
-const mapStateToProps = (state) => ({
-  step: state.step.current
+const mapStateToProps = (state, ownProps) => ({
+  step: state.step.current,
+  respondentId: ownProps.params.respondentId
 })
 
-export default connect(mapStateToProps)(Step)
-
+export default withRouter(connect(mapStateToProps)(Step))

@@ -1,6 +1,6 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
-import * as actions from '../../actions/step'
 
 class ExplanationStep extends Component {
   getValue() {
@@ -24,4 +24,3 @@ ExplanationStep.propTypes = {
 }
 
 export default ExplanationStep
-

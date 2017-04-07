@@ -19,6 +19,7 @@ defmodule Ask.Survey do
     field :started_at, Timex.Ecto.DateTime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
+    field :mobileweb_retry_configuration, :string
     field :fallback_delay, :string
     field :quota_vars, Ask.Ecto.Type.JSON, default: []
     field :quotas, Ask.Ecto.Type.JSON, virtual: true
@@ -39,7 +40,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results])
+    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
@@ -147,14 +148,16 @@ defmodule Ask.Survey do
   defp respondent_group_ready?(respondent_group, mode) do
     channels = respondent_group.channels
     Enum.all?(mode, fn(modes) ->
-      Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type end) end)
+      # TODO This should be a temporary hack
+      Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type || (m == "mobileweb" && c.type == "sms") end) end)
     end)
   end
 
   defp retry_attempts_ready?(changeset) do
     sms_retry_configuration = get_field(changeset, :sms_retry_configuration)
     ivr_retry_configuration = get_field(changeset, :ivr_retry_configuration)
-    valid_retry_configurations?(sms_retry_configuration) && valid_retry_configurations?(ivr_retry_configuration)
+    mobileweb_retry_configuration = get_field(changeset, :mobileweb_retry_configuration)
+    valid_retry_configurations?(sms_retry_configuration) && valid_retry_configurations?(ivr_retry_configuration) && valid_retry_configurations?(mobileweb_retry_configuration)
   end
 
   defp fallback_delay_ready?(changeset) do
@@ -174,6 +177,7 @@ defmodule Ask.Survey do
     retries = case mode do
       "sms" -> survey.sms_retry_configuration
       "ivr" -> survey.ivr_retry_configuration
+      "mobileweb" -> survey.mobileweb_retry_configuration
       _ -> nil
     end
 

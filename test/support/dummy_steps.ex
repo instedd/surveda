@@ -58,10 +58,10 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def prompt(mobile_web: text) do
+  def prompt(mobileweb: text) do
     %{
       "en" => %{
-        "mobile_web" => text
+        "mobileweb" => text
       }
     }
   end
@@ -122,9 +122,9 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def responses(mobile_web: responses) do
+  def responses(mobileweb: responses) do
     %{
-      "mobile_web" => %{
+      "mobileweb" => %{
         "en" => responses
       }
     }
@@ -688,36 +688,36 @@ defmodule Ask.DummySteps do
         )
       ]
 
-      @mobile_web_dummy_steps [
+      @mobileweb_dummy_steps [
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you smoke?",
           prompt: prompt(
-            mobile_web: "Do you smoke? Reply 1 for YES, 2 for NO"
+            mobileweb: "Do you smoke? Reply 1 for YES, 2 for NO"
           ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", responses: responses(mobile_web: ["Yes", "Y", "1"])),
-            choice(value: "No", responses: responses(mobile_web: ["No", "N", "2"]))
+            choice(value: "Yes", responses: responses(mobileweb: ["Yes", "Y", "1"])),
+            choice(value: "No", responses: responses(mobileweb: ["No", "N", "2"]))
           ]
         ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you exercise",
           prompt: prompt(
-            mobile_web: "Do you exercise? Reply 1 for YES, 2 for NO"
+            mobileweb: "Do you exercise? Reply 1 for YES, 2 for NO"
           ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(mobile_web: ["Yes", "Y", "1"])),
-            choice(value: "No", responses: responses(mobile_web: ["No", "N", "2"]))
+            choice(value: "Yes", responses: responses(mobileweb: ["Yes", "Y", "1"])),
+            choice(value: "No", responses: responses(mobileweb: ["No", "N", "2"]))
           ]
         ),
         numeric_step(
           id: Ecto.UUID.generate,
           title: "Which is the second perfect number?",
           prompt: prompt(
-            mobile_web: "Which is the second perfect number??"
+            mobileweb: "Which is the second perfect number??"
             ),
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
@@ -727,7 +727,7 @@ defmodule Ask.DummySteps do
           id: Ecto.UUID.generate,
           title: "What's the number of this question?",
           prompt: prompt(
-            mobile_web: "What's the number of this question??"
+            mobileweb: "What's the number of this question??"
             ),
           store: "Question",
           skip_logic: default_numeric_skip_logic(),

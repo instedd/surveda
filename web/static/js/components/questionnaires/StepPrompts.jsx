@@ -18,7 +18,7 @@ type State = {
   stepPromptIvrText: string,
   stepPromptIvr: AudioPrompt,
   stepPromptMobileWeb: string,
-  mobileWebOriginalValue: string
+  mobilewebOriginalValue: string
 };
 
 type Props = {
@@ -98,7 +98,7 @@ class StepPrompts extends Component {
       stepPromptIvr: getStepPromptIvr(step, lang),
       stepPromptIvrText: getStepPromptIvrText(step, lang),
       stepPromptMobileWeb: getStepPromptMobileWeb(step, lang),
-      mobileWebOriginalValue: getStepPromptMobileWeb(step, lang)
+      mobilewebOriginalValue: getStepPromptMobileWeb(step, lang)
     }
   }
 
@@ -162,7 +162,7 @@ class StepPrompts extends Component {
     const activeLanguage = questionnaire.activeLanguage
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
+    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
     const autocomplete = step.type != 'language-selection'
 
     let smsInput = null
@@ -202,14 +202,14 @@ class StepPrompts extends Component {
         />
     }
 
-    let mobileWebInput = null
-    if (mobileWeb) {
-      let mobileWebInputErrors = errors[promptTextPath(stepIndex, 'mobileWeb', activeLanguage)]
-      mobileWebInput = <MobileWebPrompt id='step_editor_mobile_web_prompt'
+    let mobilewebInput = null
+    if (mobileweb) {
+      let mobilewebInputErrors = errors[promptTextPath(stepIndex, 'mobileweb', activeLanguage)]
+      mobilewebInput = <MobileWebPrompt id='step_editor_mobileweb_prompt'
         key={`${questionnaire.activeLanguage}-mobile-web-prompt`}
         value={this.state.stepPromptMobileWeb}
-        originalValue={this.state.mobileWebOriginalValue}
-        inputErrors={mobileWebInputErrors}
+        originalValue={this.state.mobilewebOriginalValue}
+        inputErrors={mobilewebInputErrors}
         readOnly={readOnly}
         onChange={text => this.stepPromptMobileWebChange(text)}
         onBlur={text => this.stepPromptMobileWebSubmit(text)}
@@ -227,7 +227,7 @@ class StepPrompts extends Component {
         </div>
         {smsInput}
         {ivrInput}
-        {mobileWebInput}
+        {mobilewebInput}
       </li>
     )
   }

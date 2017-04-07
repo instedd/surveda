@@ -129,7 +129,7 @@ defmodule Ask.Runtime.Broker do
     (from r in assoc(survey, :respondents),
       where: r.state == "pending",
       limit: ^count)
-    |> preload(respondent_group: :channels)
+    |> preload(respondent_group: [respondent_group_channels: :channel])
     |> Repo.all
     |> Enum.each(&start(survey, &1))
   end

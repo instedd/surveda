@@ -8,11 +8,9 @@ defmodule Ask.Runtime.SessionModeProvider do
   alias Ask.Runtime.{SessionMode, SMSMode, IVRMode, MobileWebMode}
   alias Ask.{Repo, Channel}
 
-  defstruct [:mode, :channel, :retries]
-
   defp mode_provider("sms"), do: SMSMode
   defp mode_provider("ivr"), do: IVRMode
-  defp mode_provider("mobile_web"), do: MobileWebMode
+  defp mode_provider("mobileweb"), do: MobileWebMode
 
   def new(nil, _channel, _retries), do: nil
   def new(mode, channel, retries) when not is_nil(channel) and is_list(retries) do
@@ -138,18 +136,18 @@ defmodule Ask.Runtime.MobileWebMode do
   defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.MobileWebMode do
     def dump(%MobileWebMode{channel: channel, retries: retries}) do
       %{
-        mode: "mobile_web",
+        mode: "mobileweb",
         channel_id: channel.id,
         retries: retries
       }
     end
 
     def visitor(_) do
-      TextVisitor.new("mobile_web")
+      TextVisitor.new("mobileweb")
     end
 
     def mode(_) do
-      "mobile_web"
+      "mobileweb"
     end
   end
 end

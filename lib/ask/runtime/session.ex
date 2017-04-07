@@ -64,7 +64,7 @@ defmodule Ask.Runtime.Session do
     reply = %Reply{
       steps: [
         ReplyStep.new(
-          ["Please enter to app.ask.dev/mobile_survey?token=1234567890"],
+          ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}"],
           "Contact")
       ]
     }
