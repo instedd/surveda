@@ -3,10 +3,10 @@ defmodule Ask.MobileSurveyController do
   alias Ask.Respondent
   use Ask.Web, :controller
 
-  def index(conn, %{"respondent_id" => _}) do
+  def index(conn, %{"respondent_id" => respondent_id}) do
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", user: nil)
+    |> render("index.html", respondent_id: respondent_id)
   end
 
   def get_step(conn, %{"respondent_id" => respondent_id}) do

@@ -69,6 +69,7 @@ defmodule Ask.Runtime.Session do
       ]
     }
 
+    log_prompts(reply, session.current_mode.channel, session.respondent)
     runtime_channel |> Channel.ask(respondent, token, reply)
     {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
   end
@@ -144,6 +145,7 @@ defmodule Ask.Runtime.Session do
     case session.current_mode do
       %SMSMode{} -> {:stalled, session |> clear_token, respondent}
       %IVRMode{} -> {:failed, respondent}
+      %MobileWebMode{} -> {:stalled, session |> clear_token, respondent}
     end
   end
 
@@ -177,6 +179,18 @@ defmodule Ask.Runtime.Session do
           %IVRMode{} ->
             setup_response = runtime_channel |> Channel.setup(session.respondent, token)
             handle_setup_response(setup_response)
+
+          %MobileWebMode{} ->
+            reply = %Reply{
+              steps: [
+                ReplyStep.new(
+                  ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}"],
+                  "Contact")
+              ]
+            }
+            log_prompts(reply, session.current_mode.channel, session.respondent)
+            runtime_channel |> Channel.ask(session.respondent, token, reply)
+            channel_state
         end
 
       # The new session will timeout as defined by hd(retries)

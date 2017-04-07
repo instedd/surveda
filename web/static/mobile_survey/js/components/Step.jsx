@@ -1,7 +1,6 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
 import Header from './layout/Header'
 import * as actions from '../actions/step'
 import MultipleChoiceStep from './steps/MultipleChoiceStep'
@@ -25,6 +24,7 @@ class Step extends Component {
 
   componentDidMount() {
     const { dispatch, respondentId } = this.props
+
     actions.fetchStep(dispatch, respondentId)
   }
 
@@ -71,9 +71,9 @@ class Step extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = (state) => ({
   step: state.step.current,
-  respondentId: ownProps.params.respondentId
+  respondentId: window.respondentId
 })
 
-export default withRouter(connect(mapStateToProps)(Step))
+export default connect(mapStateToProps)(Step)
