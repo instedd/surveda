@@ -36,7 +36,6 @@ defmodule Ask.SessionTest do
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter to http://app.ask.dev/mobile_survey/#{respondent.id}"
-    # TODO check this url
   end
 
   test "reloading the page should not consume retries in mobileweb mode", %{respondent: respondent, test_channel: test_channel, channel: channel} do

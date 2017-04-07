@@ -146,10 +146,9 @@ defmodule Ask.Survey do
   end
 
   defp respondent_group_ready?(respondent_group, mode) do
-    channels = respondent_group.channels
+    channels = respondent_group.respondent_group_channels
     Enum.all?(mode, fn(modes) ->
-      # TODO This should be a temporary hack
-      Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.type || (m == "mobileweb" && c.type == "sms") end) end)
+      Enum.all?(modes, fn(m) -> Enum.any?(channels, fn(c) -> m == c.mode end) end)
     end)
   end
 

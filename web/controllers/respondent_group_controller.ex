@@ -68,7 +68,7 @@ defmodule Ask.RespondentGroupController do
     survey
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> change
     |> Survey.update_state
     |> Repo.update!
