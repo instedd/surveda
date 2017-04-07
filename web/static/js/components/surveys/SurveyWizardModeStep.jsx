@@ -3,20 +3,26 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
 import every from 'lodash/every'
 import some from 'lodash/some'
+import each from 'lodash/each'
 import isEqual from 'lodash/isEqual'
 import { modeLabel } from '../../reducers/survey'
+import * as respondentActions from '../../actions/respondentGroups'
 
 class SurveyWizardModeStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
+    respondentGroups: PropTypes.object,
     questionnaires: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired
   }
 
   modeChange(e, value) {
-    const { dispatch } = this.props
+    const { dispatch, survey, respondentGroups } = this.props
     dispatch(actions.selectMode(value))
+    each(Object.keys(respondentGroups), groupId =>
+      dispatch(respondentActions.selectChannels(survey.projectId, survey.id, groupId, []))
+    )
   }
 
   modeComparisonChange(e) {

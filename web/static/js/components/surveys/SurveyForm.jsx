@@ -137,7 +137,7 @@ class SurveyForm extends Component {
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
+            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} respondentGroups={respondentGroups} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>

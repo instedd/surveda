@@ -63,10 +63,10 @@ class SurveyWizardRespondentsStep extends Component {
     e.preventDefault()
 
     let currentChannels = group.channels || []
-    currentChannels = currentChannels.filter(channel => channel.mode != type)
+    currentChannels = currentChannels.filter(channel => channel.mode != mode)
     if (e.target.value != '') {
       currentChannels.push({
-        mode: type,
+        mode: mode,
         id: parseInt(e.target.value)
       })
     }
@@ -178,8 +178,8 @@ RespondentsDropzone.propTypes = {
   onDropRejected: PropTypes.func.isRequired
 }
 
-const newChannelComponent = (type, allChannels, currentChannels, onChange, readOnly) => {
-  const currentChannel = currentChannels.find(channel => channel.mode == type) || {}
+const newChannelComponent = (mode, allChannels, currentChannels, onChange, readOnly) => {
+  const currentChannel = currentChannels.find(channel => channel.mode == mode) || {}
 
   let label
   if (type == 'sms') {
@@ -189,16 +189,16 @@ const newChannelComponent = (type, allChannels, currentChannels, onChange, readO
   }
   label += ' channel'
 
-  const mode = type == 'mobileweb' ? 'sms' : type
+  const type = mode == 'mobileweb' ? 'sms' : mode
   let channels = values(allChannels)
-  channels = channels.filter(c => c.type == mode)
+  channels = channels.filter(c => c.type == type)
 
   return (
-    <div className='row' key={type}>
+    <div className='row' key={mode}>
       <div className='input-field col s12'>
         <Input s={12} type='select' label={label}
           value={currentChannel.id || ''}
-          onChange={e => onChange(e, type, allChannels)}
+          onChange={e => onChange(e, mode, allChannels)}
           disabled={readOnly}>
           <option value=''>
             Select a channel...
