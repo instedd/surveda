@@ -59,7 +59,7 @@ class SurveyWizardRespondentsStep extends Component {
     )
   }
 
-  channelChange(e, group, type, allChannels, allModes) {
+  channelChange(e, group, mode, allChannels) {
     e.preventDefault()
 
     let currentChannels = group.channels || []
@@ -90,7 +90,7 @@ class SurveyWizardRespondentsStep extends Component {
     return (
       <RespondentsList key={group.id} group={group} remove={removeRespondents} modes={allModes}
         channels={channels} readOnly={readOnly}
-        onChannelChange={(e, type, allChannels, mode) => this.channelChange(e, group, type, allChannels, mode)}
+        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
         >
         {group.sample.map((respondent, index) =>
           <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />

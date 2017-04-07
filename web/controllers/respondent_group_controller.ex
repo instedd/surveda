@@ -10,7 +10,7 @@ defmodule Ask.RespondentGroupController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
     |> assoc(:respondent_groups)
-    |> preload(:respondent_group_channels)
+    |> preload(respondent_group_channels: :channel)
     |> Repo.all
 
     render(conn, "index.json", respondent_groups: respondent_groups)
@@ -82,7 +82,6 @@ defmodule Ask.RespondentGroupController do
   defp update_channels(id, %{"channels" => channels_params}) do
     from(gch in RespondentGroupChannel, where: gch.respondent_group_id == ^id) |> Repo.delete_all
 
-    # TODO this mode shouldn't be the channel mode but the survey mode
     Repo.transaction fn ->
       Enum.each(channels_params, fn ch ->
         RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: id, channel_id: ch["id"], mode: ch["mode"]})
@@ -155,7 +154,7 @@ defmodule Ask.RespondentGroupController do
     survey
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> change
     |> Survey.update_state
     |> Repo.update!
@@ -202,7 +201,7 @@ defmodule Ask.RespondentGroupController do
     survey
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> change
     |> Survey.update_state
     |> Repo.update!
