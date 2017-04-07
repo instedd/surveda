@@ -25,7 +25,7 @@ defmodule Ask.MobileSurveyController do
         reply |> Reply.steps() |> hd
       _ -> %{
           type: "explanation",
-          prompt: "The survey has ended",
+          prompts: ["The survey has ended"],
         }
     end
 

@@ -11,8 +11,12 @@ export const fetchStep = (dispatch: (action: any) => any, respondentId: any) => 
   })
 }
 
-export const sendReply = (id: any, value: any) => {
-  api.sendReply(id, value)
+export const sendReply = (dispatch: (action: any) => any, id: any, value: any) => {
+  api.sendReply(id, value).then((response: any) => {
+    response.json().then(json => {
+      dispatch(receiveStep(json.step))
+    })
+  })
 }
 
 const receiveStep = step => ({

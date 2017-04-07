@@ -11,7 +11,7 @@ class ExplanationStep extends Component {
     const { step } = this.props
     return (
       <div>
-        {step.prompts.map(prompt =>
+        {(step.prompts || []).map(prompt =>
           <Prompt key={prompt} text={prompt} />
         )}
         <br />
