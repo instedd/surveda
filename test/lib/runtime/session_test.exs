@@ -66,7 +66,7 @@ defmodule Ask.SessionTest do
     assert session.flow.mode == expected_session.flow.mode
     assert session.flow.current_step == expected_session.flow.current_step
 
-    step_result = Session.sync_step(session, Flow.Message.reply("N"))
+    step_result = Session.sync_step(session, Flow.Message.reply("No"))
     assert {:ok, session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "No"}), _, _} = step_result
 
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())

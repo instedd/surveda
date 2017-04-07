@@ -14,7 +14,7 @@ defmodule Ask.MobileSurveyController do
   end
 
   def send_reply(conn, %{"respondent_id" => respondent_id, "value" => value}) do
-    sync_step(conn, respondent_id, value)
+    sync_step(conn, respondent_id, {:reply, value})
   end
 
   defp sync_step(conn, respondent_id, value) do
@@ -23,9 +23,13 @@ defmodule Ask.MobileSurveyController do
     step = case Broker.sync_step(respondent, value) do
       {:reply, reply} ->
         reply |> Reply.steps() |> hd
-      _ -> %{
+      {:end, {:reply, reply}} ->
+        reply |> Reply.steps() |> hd
+      :end ->
+        %{
           type: "explanation",
           prompts: ["The survey has ended"],
+          title: "The survey has ended",
         }
     end
 

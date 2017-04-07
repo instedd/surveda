@@ -725,8 +725,8 @@ defmodule Ask.DummySteps do
           ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", responses: responses(mobileweb: ["Yes", "Y", "1"])),
-            choice(value: "No", responses: responses(mobileweb: ["No", "N", "2"]))
+            choice(value: "Yes", responses: responses(mobileweb: ["Yes"])),
+            choice(value: "No", responses: responses(mobileweb: ["No"]))
           ]
         ),
         multiple_choice_step(
@@ -737,8 +737,8 @@ defmodule Ask.DummySteps do
           ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(mobileweb: ["Yes", "Y", "1"])),
-            choice(value: "No", responses: responses(mobileweb: ["No", "N", "2"]))
+            choice(value: "Yes", responses: responses(mobileweb: ["Yes"])),
+            choice(value: "No", responses: responses(mobileweb: ["No"]))
           ]
         ),
         numeric_step(
