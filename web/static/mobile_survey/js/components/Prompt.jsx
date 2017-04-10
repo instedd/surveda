@@ -4,7 +4,7 @@ import React, { Component, PropTypes } from 'react'
 class Prompt extends Component {
   render() {
     const { text } = this.props
-    return <div>{text}</div>
+    return <div className='prompt'><h1>{text}</h1></div>
   }
 }
 

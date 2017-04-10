@@ -17,7 +17,7 @@ class MultipleChoiceStep extends Component {
         {step.choices.map(choice => {
           return (
             <div key={choice}>
-              <button value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
+              <button className='btn block' value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
             </div>
           )
         })}

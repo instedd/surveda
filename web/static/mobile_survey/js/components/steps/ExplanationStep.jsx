@@ -14,8 +14,7 @@ class ExplanationStep extends Component {
         {(step.prompts || []).map(prompt =>
           <Prompt key={prompt} text={prompt} />
         )}
-        <br />
-        <input type='submit' value='>' />
+        <button className='btn block'>Siguiente</button>
       </div>
     )
   }

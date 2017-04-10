@@ -48,21 +48,31 @@ nav {
 }
 main {
   font-size: 1.2rem;
-  padding: 2rem;
+  padding: 2rem 1.6rem;
+}
+.prompt {
+  min-height: 150px;
+  margin-bottom: 2rem;
 }
 h1 {
   font-size: 1.3rem;
+  line-height: 1.4;
 }
 .btn {
   display: inline-block;
   background: $white;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: $primarycolor;
   text-transform: uppercase;
   border: 3px solid $primarycolor;
   border-radius: 4px;
-  padding: 1.2rem 1rem;
+  padding: .8rem .4rem;
   margin: 1rem .2rem;
+
+  svg {
+    fill: $primarycolor;
+    transform: scale(1.5);
+  }
 
   &.block {
     width: 100%;
@@ -73,12 +83,46 @@ h1 {
       margin-top: 2.5rem;
     }
   }
+  &.square {
+    width: 5rem;
+    height: 5rem;
+  }
+  &:focus {
+    outline: none;
+  }
 }
-
+input[type=number],
+input[type=email],
+input[type=text] {
+  border: none;
+  border-bottom: 1px solid #cdcdcd;
+  min-width: 90px;
+  height: 4rem;
+  &:focus {
+    outline: none;
+  }
+}
+input[type=number] {
+  font-size: 2rem;
+}
 select {
   display: block;
   width: 100%;
   height: 2rem;
   border: 2px solid $primarycolor;
   margin: .8rem 0 1.3rem;
+}
+.input-button-inline {
+  input {
+    width: 60%;
+  }
+  .btn {
+    float: right;
+  }
+  &:after {
+    content: '';
+    display: table;
+    clear: both;
+    zoom: 1;
+  }
 }
