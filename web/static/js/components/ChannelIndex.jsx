@@ -186,7 +186,7 @@ class ChannelIndex extends Component {
           <div className='modal-content'>
             <div className='card-title header'>
               <h5>Create a channel</h5>
-              <p>Ask will sync available channels from these providers after user authorization</p>
+              <p>Surveda will sync available channels from these providers after user authorization</p>
             </div>
             <ul className='collection'>
               {providerUIs}
