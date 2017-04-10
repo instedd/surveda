@@ -15,7 +15,7 @@ class ExplanationStep extends Component {
           <Prompt key={prompt} text={prompt} />
         )}
         <br />
-        <input type='submit' value='Next' />
+        <input type='submit' value='>' />
       </div>
     )
   }

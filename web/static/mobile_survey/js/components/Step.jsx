@@ -30,13 +30,13 @@ class Step extends Component {
   stepComponent(step) {
     switch (step.type) {
       case 'multiple-choice':
-        return <MultipleChoiceStep ref='step' step={step} />
+        return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
       case 'numeric':
         return <NumericStep ref='step' step={step} />
       case 'explanation':
         return <ExplanationStep ref='step' step={step} />
       case 'language-selection':
-        return <LanguageSelectionStep ref='step' step={step} />
+        return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
       default:
         throw new Error(`Unknown step type: ${step.type}`)
     }
@@ -49,6 +49,11 @@ class Step extends Component {
     const value = this.refs.step.getValue()
 
     actions.sendReply(dispatch, respondentId, value)
+  }
+
+  handleValue(value) {
+    const { step } = this.props
+    actions.sendReply(step.id, value)
   }
 
   render() {

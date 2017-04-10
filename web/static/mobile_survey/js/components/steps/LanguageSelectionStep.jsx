@@ -8,25 +8,27 @@ class LanguageSelectionStep extends Component {
   }
 
   render() {
-    const { step } = this.props
+    const { step, onClick } = this.props
     return (
       <div>
         {(step.prompts || []).map(prompt =>
           <Prompt key={prompt} text={prompt} />
         )}
-        <select ref='select'>
-          {step.choices.map(choice => {
-            return <option key={choice} value={choice}>{choice}</option>
-          })}
-        </select>
-        <input className='btn block' type='submit' value='Next' />
+        {step.choices.map(choice => {
+          return (
+            <div key={choice} >
+              <button value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
+            </div>
+          )
+        })}
       </div>
     )
   }
 }
 
 LanguageSelectionStep.propTypes = {
-  step: PropTypes.object
+  step: PropTypes.object,
+  onClick: PropTypes.func
 }
 
 export default LanguageSelectionStep
