@@ -159,7 +159,7 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
   let response = action.choiceChange.response.trim()
   let smsValues = action.choiceChange.smsValues.trim()
   let ivrValues = action.choiceChange.ivrValues.trim()
-  let mobileWebValues = action.choiceChange.mobileWebValues.trim()
+  let mobilewebValues = action.choiceChange.mobilewebValues.trim()
 
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
     [smsValues, ivrValues] = autoComplete(state, response, quiz)
@@ -183,9 +183,9 @@ const changeChoice = (state, action, quiz: Questionnaire) => {
               ...choice.responses.sms,
               [quiz.activeLanguage]: splitValues(smsValues)
             },
-            mobileWeb: {
-              ...choice.responses.mobileWeb,
-              [quiz.activeLanguage]: mobileWebValues
+            mobileweb: {
+              ...choice.responses.mobileweb,
+              [quiz.activeLanguage]: mobilewebValues
             }
           },
           skipLogic: action.choiceChange.skipLogic
@@ -320,7 +320,7 @@ const changeStepMobileWebPrompt = (state, action: ActionChangeStepSmsPrompt, qui
   return changeStep(state, action.stepId, step => {
     return setStepPrompt(step, quiz.activeLanguage, prompt => ({
       ...prompt,
-      mobileWeb: action.newPrompt.trim()
+      mobileweb: action.newPrompt.trim()
     }))
   })
 }
@@ -664,7 +664,7 @@ const setSmsQuestionnaireMsg = (state, action) => {
 }
 
 const setMobileWebQuestionnaireMsg = (state, action) => {
-  return setQuestionnaireMsg(state, action, 'mobileWeb')
+  return setQuestionnaireMsg(state, action, 'mobileweb')
 }
 
 const autocompleteSmsQuestionnaireMsg = (state, action) => {
@@ -809,7 +809,7 @@ const validate = (state: DataStore<Questionnaire>) => {
   const context = {
     sms: data.modes.indexOf('sms') != -1,
     ivr: data.modes.indexOf('ivr') != -1,
-    mobileWeb: data.modes.indexOf('mobileWeb') != -1,
+    mobileweb: data.modes.indexOf('mobileweb') != -1,
     activeLanguage: data.activeLanguage,
     languages: data.languages,
     errors: state.errors
@@ -832,10 +832,10 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
     })
   }
 
-  if (context.mobileWeb) {
+  if (context.mobileweb) {
     context.languages.forEach(lang => {
       if (getPromptMobileWeb(msg, lang).length == 0) {
-        addError(context, msgPromptTextPath(msgKey, 'mobileWeb', lang), 'Mobile web prompt must not be blank')
+        addError(context, msgPromptTextPath(msgKey, 'mobileweb', lang), 'Mobile web prompt must not be blank')
       }
     })
   }
@@ -872,7 +872,7 @@ const validateSmsLangPrompt = (step: Step, stepIndex: number, context: Validatio
 
 const validateMobileWebLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string) => {
   if (getStepPromptMobileWeb(step, lang).length == 0) {
-    addError(context, promptTextPath(stepIndex, 'mobileWeb', lang), 'Mobile web prompt must not be blank')
+    addError(context, promptTextPath(stepIndex, 'mobileweb', lang), 'Mobile web prompt must not be blank')
   }
 }
 
@@ -927,7 +927,7 @@ const validatePrompts = (step, stepIndex, context) => {
     context.languages.forEach(lang => validateSmsLangPrompt(step, stepIndex, context, lang))
   }
 
-  if (context.mobileWeb) {
+  if (context.mobileweb) {
     context.languages.forEach(lang => validateMobileWebLangPrompt(step, stepIndex, context, lang))
   }
 
@@ -1046,7 +1046,7 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
 }
 
 const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
-  if (choice.responses.mobileWeb && !choice.responses.mobileWeb[lang]) {
+  if (choice.responses.mobileweb && !choice.responses.mobileweb[lang]) {
     addError(context, choiceMobileWebResponsePath(stepIndex, choiceIndex, lang), 'Mobile web must not be blank')
   }
 }
@@ -1072,7 +1072,7 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
     context.languages.forEach(lang => validateChoiceSmsResponse(choice, context, stepIndex, choiceIndex, lang))
   }
 
-  if (context.mobileWeb) {
+  if (context.mobileweb) {
     context.languages.forEach(lang => validateChoiceMobileWebResponse(choice, context, stepIndex, choiceIndex, lang))
   }
 

@@ -99,7 +99,7 @@ defmodule Ask.RespondentController do
     {date, value}
   end
 
-  def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     survey = conn
     |> load_project(project_id)
     |> assoc(:surveys)
@@ -466,9 +466,14 @@ defmodule Ask.RespondentController do
   defp mode_label(mode) do
     case mode do
       ["sms"] -> "SMS"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
       ["ivr"] -> "Phone call"
       ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["ivr", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["mobileweb"] -> "Mobile Web"
+      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
+      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
       _ -> "Unknown mode"
     end
   end

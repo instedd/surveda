@@ -162,7 +162,7 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "mobile_web": {
+        "mobileweb": {
           "type" : "object"
         }
       }
@@ -178,7 +178,7 @@
       "properties": {
         "sms": {"type": "string" },
         "ivr": {"$ref": "#/definitions/ivr_prompt"},
-        "mobile_web": {"type": "string"}
+        "mobileweb": {"type": "string"}
       },
       "additionalProperties": false
     },

@@ -41,7 +41,7 @@ export function getStepPromptSms(step: Step, language: string): string {
 }
 
 export function getStepPromptMobileWeb(step: Step, language: string): string {
-  return ((getStepPrompt(step, language) || {}).mobileWeb || '').trim()
+  return ((getStepPrompt(step, language) || {}).mobileweb || '').trim()
 }
 
 export function getStepPromptIvr(step: Step, language: string): AudioPrompt {
@@ -57,7 +57,7 @@ export function getPromptSms(prompt: ?Prompt, language: string): string {
 }
 
 export function getPromptMobileWeb(prompt: ?Prompt, language: string): string {
-  return (((prompt || {})[language] || {}).mobileWeb || '').trim()
+  return (((prompt || {})[language] || {}).mobileweb || '').trim()
 }
 
 export function getPromptIvr(prompt: ?Prompt, language: string): AudioPrompt {
@@ -77,7 +77,7 @@ export function getChoiceResponseIvrJoined(choice: Choice): string {
 }
 
 export function getChoiceResponseMobileWebJoined(choice: Choice, language: string): string {
-  return (choice.responses.mobileWeb || {})[language] || ''
+  return (choice.responses.mobileweb || {})[language] || ''
 }
 
 export const newStepPrompt = () => {

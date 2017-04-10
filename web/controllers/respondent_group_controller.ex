@@ -10,7 +10,7 @@ defmodule Ask.RespondentGroupController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
     |> assoc(:respondent_groups)
-    |> preload(:respondent_group_channels)
+    |> preload(respondent_group_channels: :channel)
     |> Repo.all
 
     render(conn, "index.json", respondent_groups: respondent_groups)
@@ -68,7 +68,7 @@ defmodule Ask.RespondentGroupController do
     survey
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> change
     |> Survey.update_state
     |> Repo.update!
@@ -154,7 +154,7 @@ defmodule Ask.RespondentGroupController do
     survey
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> change
     |> Survey.update_state
     |> Repo.update!
@@ -201,7 +201,7 @@ defmodule Ask.RespondentGroupController do
     survey
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> change
     |> Survey.update_state
     |> Repo.update!

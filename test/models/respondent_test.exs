@@ -36,4 +36,10 @@ defmodule Ask.RespondentTest do
 
     assert hash1 != hash2
   end
+
+  test "respondent mobile token should be always the same for the same respondent id" do
+    assert Respondent.token(1) == Respondent.token(1)
+
+    assert Respondent.token(1) != Respondent.token(2)
+  end
 end

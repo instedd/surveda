@@ -1,13 +1,14 @@
+// @flow
 import 'isomorphic-fetch'
 
-export const fetchStep = (mode) => {
-  return fetch(`/mobile_survey/get_step?mode=${mode}`, {
+export const fetchStep = (id: any) => {
+  return fetch(`/mobile_survey/get_step/${encodeURIComponent(id)}`, {
     credentials: 'same-origin'
   })
 }
 
-export const sendReply = (id, value) => {
-  return fetch(`/mobile_survey/send_reply?id=${encodeURIComponent(id)}&value=${encodeURIComponent(value)}`, {
+export const sendReply = (id: any, value: any) => {
+  return fetch(`/mobile_survey/send_reply/${encodeURIComponent(id)}?value=${encodeURIComponent(value)}`, {
     method: 'POST',
     credentials: 'same-origin'
   })

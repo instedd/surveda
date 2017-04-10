@@ -13,6 +13,7 @@ export type Survey = {
   questionnaireComparison: boolean,
   ivrRetryConfiguration: string,
   smsRetryConfiguration: string,
+  mobilewebRetryConfiguration: string,
   fallbackDelay: string,
   scheduleDayOfWeek: DayOfWeek,
   scheduleStartTime: string,

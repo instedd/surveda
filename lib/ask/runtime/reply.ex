@@ -23,19 +23,17 @@ defmodule Ask.Runtime.Reply do
 end
 
 defmodule Ask.Runtime.ReplyStep do
-  defstruct prompts: [], id: nil, title: nil
+  defstruct prompts: [], id: nil, title: nil, type: nil, choices: [], min: nil, max: nil
   alias __MODULE__
 
-  def new(prompts, title) do
-    new(prompts, title, nil)
-  end
+  def new(prompts, title, type \\ "explanation", id \\ nil, choices \\ [], min \\ nil, max \\ nil)
 
-  def new([nil], _, _) do
+  def new([nil], _, _, _, _, _, _) do
     nil
   end
 
-  def new(prompts, title, id) do
-    %ReplyStep{prompts: prompts, id: id, title: title}
+  def new(prompts, title, type, id, choices, min, max) do
+    %ReplyStep{prompts: prompts, id: id, title: title, type: type, choices: choices, min: min, max: max}
   end
 
   def title_with_index(step, index) do

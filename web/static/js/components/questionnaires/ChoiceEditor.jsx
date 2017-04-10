@@ -18,20 +18,20 @@ type Props = {
   stepsAfter: Step[],
   lang: string,
   sms: boolean,
-  mobileWeb: boolean,
+  mobileweb: boolean,
   ivr: boolean,
   errors: Errors,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
 };
 
-type Focus = null | 'response' | 'sms' | 'ivr' | 'mobileWeb';
+type Focus = null | 'response' | 'sms' | 'ivr' | 'mobileweb';
 
 type State = {
   response: string,
   sms: string,
   ivr: string,
-  mobileWeb: string,
+  mobileweb: string,
   editing: boolean,
   focus: Focus,
   doNotClose: boolean,
@@ -66,11 +66,11 @@ class ChoiceEditor extends Component {
     })
   }
 
-  mobileWebChange(event: ?Event, mobileWeb: string) {
+  mobilewebChange(event: ?Event, mobileweb: string) {
     if (event) event.preventDefault()
     this.setState({
       ...this.state,
-      mobileWeb
+      mobileweb
     })
   }
 
@@ -98,7 +98,7 @@ class ChoiceEditor extends Component {
       response: choice.value,
       sms: getChoiceResponseSmsJoined(choice, lang),
       ivr: getChoiceResponseIvrJoined(choice),
-      mobileWeb: getChoiceResponseMobileWebJoined(choice, lang),
+      mobileweb: getChoiceResponseMobileWebJoined(choice, lang),
       skipLogic: choice.skipLogic
     }
   }
@@ -123,14 +123,14 @@ class ChoiceEditor extends Component {
     if (this.state.doNotClose) {
       this.state.doNotClose = false
       if (autoComplete) {
-        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileWeb, this.state.skipLogic, true)
+        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileweb, this.state.skipLogic, true)
       }
     } else {
       this.setState({
         ...this.state,
         editing: false
       }, () => {
-        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileWeb, this.state.skipLogic, autoComplete)
+        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileweb, this.state.skipLogic, autoComplete)
       })
     }
   }
@@ -168,7 +168,7 @@ class ChoiceEditor extends Component {
       ...this.state,
       skipLogic: skipOption
     }, () => {
-      onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileWeb, this.state.skipLogic)
+      onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileweb, this.state.skipLogic)
     })
   }
 
@@ -202,7 +202,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileWeb, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     const isRefusal = choiceIndex == 'refusal'
 
@@ -265,14 +265,14 @@ class ChoiceEditor extends Component {
           </td> : null
           }
           {
-            mobileWeb
-          ? <td onMouseDown={e => this.setDoNotClose('mobileWeb')}>
+            mobileweb
+          ? <td onMouseDown={e => this.setDoNotClose('mobileweb')}>
             <input
               type='text'
               placeholder='Valid entries'
-              value={this.state.mobileWeb}
-              autoFocus={this.state.focus == 'mobileWeb'}
-              onChange={e => this.mobileWebChange(e, e.target.value)}
+              value={this.state.mobileweb}
+              autoFocus={this.state.focus == 'mobileweb'}
+              onChange={e => this.mobilewebChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
               onKeyDown={e => this.onKeyDown(e, 'ivr')} />
           </td> : null
@@ -288,7 +288,7 @@ class ChoiceEditor extends Component {
       let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : []
       let smsErrors = errors[choiceSmsResponsePath(stepIndex, choiceIndex, lang)]
       let ivrErrors = errors[choiceIvrResponsePath(stepIndex, choiceIndex)]
-      let mobileWebErrors = errors[choiceMobileWebResponsePath(stepIndex, choiceIndex, lang)]
+      let mobilewebErrors = errors[choiceMobileWebResponsePath(stepIndex, choiceIndex, lang)]
 
       return (
         <tr>
@@ -298,7 +298,7 @@ class ChoiceEditor extends Component {
           }
           {this.cell(this.state.sms, 'No SMS', smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
           {this.cell(this.state.ivr, 'No IVR', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
-          {this.cell(this.state.mobileWeb, 'No MOBILE WEB', mobileWebErrors, mobileWeb, e => this.enterEditMode(e, 'mobileWeb'))}
+          {this.cell(this.state.mobileweb, 'No MOBILE WEB', mobilewebErrors, mobileweb, e => this.enterEditMode(e, 'mobileweb'))}
           {skipLogicInput}
           { readOnly || isRefusal ? <td />
             : <td>

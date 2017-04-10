@@ -2,7 +2,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel}
   alias Ask.Runtime.{Flow, Session}
   alias Ask.Runtime.SessionModeProvider
 
@@ -70,6 +70,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
@@ -106,6 +107,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
@@ -547,11 +549,8 @@ defmodule Ask.SurveyControllerTest do
 
       channel2 = insert(:channel, user: user, type: "ivr")
 
-      group
-      |> Repo.preload([:channels])
-      |> Ecto.Changeset.change
-      |> put_assoc(:channels, [channel, channel2])
-      |> Repo.update
+      add_channel_to(group, channel)
+      add_channel_to(group, channel2)
 
       attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -936,14 +935,8 @@ defmodule Ask.SurveyControllerTest do
   end
 
   defp add_channel_to(group = %RespondentGroup{}, channel = %Channel{}) do
-    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
-
-    changeset = group
-    |> Repo.preload([:channels])
-    |> Ecto.Changeset.change
-    |> put_assoc(:channels, [channels_changeset])
-
-    Repo.update(changeset)
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type})
+    |> Repo.insert
   end
 
   defp create_group(survey, channel \\ nil) do

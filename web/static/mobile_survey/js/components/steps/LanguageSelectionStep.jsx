@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
@@ -10,7 +11,9 @@ class LanguageSelectionStep extends Component {
     const { step, onClick } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
+        {(step.prompts || []).map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
         {step.choices.map(choice => {
           return (
             <div key={choice} >

@@ -1,15 +1,24 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
+type State = {
+  value: string,
+  valid: boolean
+};
+
 class NumericStep extends Component {
-  constructor(props) {
+  state: State
+  handleChange: PropTypes.func.isRequired
+
+  constructor(props: any) {
     super(props)
     this.state = {value: '', valid: false}
 
     this.handleChange = this.handleChange.bind(this)
   }
 
-  handleChange(event) {
+  handleChange(event: any) {
     const { step } = this.props
     const { value } = event.target
     const intValue = parseInt(value)
@@ -25,7 +34,9 @@ class NumericStep extends Component {
     const { step } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
+        {(step.prompts || []).map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
         <br />
         <div>
           <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} />

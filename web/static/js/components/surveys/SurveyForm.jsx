@@ -38,7 +38,7 @@ class SurveyForm extends Component {
     sidebar.pushpin({ top: sidebar.offset().top, offset: 60 })
   }
 
-  allModesHaveAChannel(modes, channels, allChannels) {
+  allModesHaveAChannel(modes, channels) {
     const selectedTypes = channels.map(channel => channel.mode)
     modes = uniq(flatMap(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
@@ -66,7 +66,7 @@ class SurveyForm extends Component {
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
-        return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels || {})
+        return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels)
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
@@ -137,7 +137,7 @@ class SurveyForm extends Component {
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
+            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} respondentGroups={respondentGroups} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>

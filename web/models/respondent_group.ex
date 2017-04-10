@@ -37,7 +37,6 @@ defmodule Ask.RespondentGroup do
   end
 
   defp channel(respondent_group, mode) do
-    respondent_group.channels |> Enum.find(fn c -> c.type == mode end)
+    (respondent_group.respondent_group_channels |> Enum.find(fn c -> c.mode == mode end)).channel
   end
-
 end

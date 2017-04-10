@@ -58,6 +58,14 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def prompt(mobileweb: text) do
+    %{
+      "en" => %{
+        "mobileweb" => text
+      }
+    }
+  end
+
   def prompt(ivr: ivr) do
     %{
       "en" => %{
@@ -111,6 +119,14 @@ defmodule Ask.StepBuilder do
       "value" => value,
       "responses" => responses,
       "skip_logic" => skip_logic
+    }
+  end
+
+  def responses(mobileweb: responses) do
+    %{
+      "mobileweb" => %{
+        "en" => responses
+      }
     }
   end
 
@@ -697,6 +713,53 @@ defmodule Ask.DummySteps do
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
+        )
+      ]
+
+      @mobileweb_dummy_steps [
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            mobileweb: "Do you smoke? Reply 1 for YES, 2 for NO"
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", responses: responses(mobileweb: ["Yes"])),
+            choice(value: "No", responses: responses(mobileweb: ["No"]))
+          ]
+        ),
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you exercise",
+          prompt: prompt(
+            mobileweb: "Do you exercise? Reply 1 for YES, 2 for NO"
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(mobileweb: ["Yes"])),
+            choice(value: "No", responses: responses(mobileweb: ["No"]))
+          ]
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(
+            mobileweb: "Which is the second perfect number??"
+            ),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          refusal: nil
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "What's the number of this question?",
+          prompt: prompt(
+            mobileweb: "What's the number of this question??"
+            ),
+          store: "Question",
+          skip_logic: default_numeric_skip_logic(),
+          refusal: nil
         )
       ]
     end

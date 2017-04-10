@@ -3,20 +3,28 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
 import every from 'lodash/every'
 import some from 'lodash/some'
+import each from 'lodash/each'
 import isEqual from 'lodash/isEqual'
 import { modeLabel } from '../../reducers/survey'
+import * as respondentActions from '../../actions/respondentGroups'
 
 class SurveyWizardModeStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
+    respondentGroups: PropTypes.object,
     questionnaires: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired
   }
 
-  modeChange(e, value) {
-    const { dispatch } = this.props
-    dispatch(actions.selectMode(value))
+  modeChange(e, modes) {
+    const { dispatch, survey, respondentGroups } = this.props
+    dispatch(actions.selectMode(modes))
+    each(Object.keys(respondentGroups), groupId => {
+      let currentChannels = respondentGroups[groupId].channels || []
+      currentChannels = currentChannels.filter(channel => some(modes, mode => channel.mode == mode))
+      dispatch(respondentActions.selectChannels(survey.projectId, survey.id, groupId, currentChannels))
+    })
   }
 
   modeComparisonChange(e) {
@@ -93,8 +101,13 @@ class SurveyWizardModeStep extends Component {
             </p>
             {this.input('questionnaire_mode_ivr', inputType, modeComparison, mode, ['ivr'], 'ivr')}
             {this.input('questionnaire_mode_ivr_sms', inputType, modeComparison, mode, ['ivr', 'sms'], 'ivr_sms')}
+            {this.input('questionnaire_mode_ivr_web', inputType, modeComparison, mode, ['ivr', 'mobileweb'], 'ivr_mobileweb')}
             {this.input('questionnaire_mode_sms', inputType, modeComparison, mode, ['sms'], 'sms')}
             {this.input('questionnaire_mode_sms_ivr', inputType, modeComparison, mode, ['sms', 'ivr'], 'sms_ivr')}
+            {this.input('questionnaire_mode_sms_mobileweb', inputType, modeComparison, mode, ['sms', 'mobileweb'], 'sms_mobileweb')}
+            {this.input('questionnaire_mode_mobileweb', inputType, modeComparison, mode, ['mobileweb'], 'mobileweb')}
+            {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
+            {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
           </div>
         </div>
       </div>

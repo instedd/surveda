@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/step'
@@ -7,6 +8,13 @@ import ExplanationStep from './steps/ExplanationStep'
 import LanguageSelectionStep from './steps/LanguageSelectionStep'
 
 class Step extends Component {
+  handleSubmit: PropTypes.func.isRequired
+  props: {
+    dispatch: PropTypes.func.isRequired,
+    respondentId: any,
+    step: PropTypes.object.isRequired
+  }
+
   constructor(props) {
     super(props)
 
@@ -14,8 +22,9 @@ class Step extends Component {
   }
 
   componentDidMount() {
-    const { dispatch } = this.props
-    actions.fetchStep(dispatch)
+    const { dispatch, respondentId } = this.props
+
+    actions.fetchStep(dispatch, respondentId)
   }
 
   stepComponent(step) {
@@ -36,10 +45,10 @@ class Step extends Component {
   handleSubmit(event) {
     event.preventDefault()
 
-    const { step } = this.props
+    const { dispatch, respondentId } = this.props
     const value = this.refs.step.getValue()
 
-    actions.sendReply(step.id, value)
+    actions.sendReply(dispatch, respondentId, value)
   }
 
   handleValue(value) {
@@ -65,14 +74,9 @@ class Step extends Component {
   }
 }
 
-Step.propTypes = {
-  dispatch: PropTypes.any,
-  step: PropTypes.object
-}
-
 const mapStateToProps = (state) => ({
-  step: state.step.current
+  step: state.step.current,
+  respondentId: window.respondentId
 })
 
 export default connect(mapStateToProps)(Step)
-

@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.{Repo, QuotaBucket, Respondent}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode}
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results]
 
   @default_fallback_delay 10
@@ -53,6 +53,25 @@ defmodule Ask.Runtime.Session do
 
     session = %{session| channel_state: channel_state}
     {:ok, session, %Reply{}, current_timeout(session), respondent}
+  end
+
+  defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %MobileWebMode{channel: channel}} = session) do
+    runtime_channel = Ask.Channel.runtime_channel(channel)
+
+    # Is this really necessary?
+    Channel.setup(runtime_channel, respondent, token)
+
+    reply = %Reply{
+      steps: [
+        ReplyStep.new(
+          ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"],
+          "Contact")
+      ]
+    }
+
+    log_prompts(reply, session.current_mode.channel, session.respondent)
+    runtime_channel |> Channel.ask(respondent, token, reply)
+    {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
   end
 
   defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
@@ -126,6 +145,7 @@ defmodule Ask.Runtime.Session do
     case session.current_mode do
       %SMSMode{} -> {:stalled, session |> clear_token, respondent}
       %IVRMode{} -> {:failed, respondent}
+      %MobileWebMode{} -> {:stalled, session |> clear_token, respondent}
     end
   end
 
@@ -159,6 +179,18 @@ defmodule Ask.Runtime.Session do
           %IVRMode{} ->
             setup_response = runtime_channel |> Channel.setup(session.respondent, token)
             handle_setup_response(setup_response)
+
+          %MobileWebMode{} ->
+            reply = %Reply{
+              steps: [
+                ReplyStep.new(
+                  ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}"],
+                  "Contact")
+              ]
+            }
+            log_prompts(reply, session.current_mode.channel, session.respondent)
+            runtime_channel |> Channel.ask(session.respondent, token, reply)
+            channel_state
         end
 
       # The new session will timeout as defined by hd(retries)
