@@ -3,10 +3,14 @@ defmodule Ask.MobileSurveyController do
   alias Ask.Respondent
   use Ask.Web, :controller
 
-  def index(conn, %{"respondent_id" => respondent_id}) do
-    conn
-    |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", respondent_id: respondent_id)
+  def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
+    if Respondent.token(respondent_id) == token do
+      conn
+      |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+      |> render("index.html", respondent_id: respondent_id)
+    else
+      raise Ask.UnauthorizedError, conn: conn
+    end
   end
 
   def get_step(conn, %{"respondent_id" => respondent_id}) do

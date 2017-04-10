@@ -19,7 +19,7 @@ defmodule Ask.MobileSurveyControllerTest do
     {:ok, conn: conn}
   end
 
-  test "respondent flow via mobileweb", %{conn: conn}do
+  test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
@@ -36,7 +36,7 @@ defmodule Ask.MobileSurveyControllerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter to http://app.ask.dev/mobile_survey/#{respondent.id}"
+    assert message == "Please enter to http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -91,5 +91,36 @@ defmodule Ask.MobileSurveyControllerTest do
     assert respondent.completed_at in interval
 
     :ok = broker |> GenServer.stop
+  end
+
+  test "using an invalid token", %{conn: conn} do
+    test_channel = TestChannel.new(false, true)
+
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+    phone_number = respondent.sanitized_phone_number
+
+    {:ok, broker} = Broker.start_link
+    {:ok, config} = Ask.Config.start_link
+    Broker.poll
+
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter to http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
+    assert response(conn, 200)
+
+    assert_error_sent :forbidden, fn ->
+      get conn, mobile_survey_path(conn, :index, respondent.id, %{token: "some invalid token"})
+    end
+
+    :ok = broker |> GenServer.stop
+    :ok = config |> GenServer.stop
   end
 end
