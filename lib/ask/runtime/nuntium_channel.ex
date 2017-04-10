@@ -56,7 +56,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       "failed" ->
         broker.channel_failed(respondent)
       "delivered" ->
-        broker.delivery_confirm(respondent, args["step_title"])
+        broker.delivery_confirm(respondent, args["step_title"], "sms")
       _ -> :ok
     end
 
@@ -75,7 +75,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       nil ->
         nil
       _ ->
-        case broker.sync_step(respondent, Flow.Message.reply(body)) do
+        case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
           {:reply, reply} ->
             reply
           {:end, {:reply, reply}} ->

@@ -161,7 +161,7 @@ defmodule Ask.Runtime.VerboiceChannel do
           digits -> Flow.Message.reply(digits)
         end
 
-        case broker.sync_step(respondent, response) do
+        case broker.sync_step(respondent, response, "ivr") do
           {:reply, reply} ->
             prompts = Reply.prompts(reply)
             gather(respondent, prompts)

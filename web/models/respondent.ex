@@ -15,7 +15,7 @@ defmodule Ask.Respondent do
     #            communication might continue if the respondent replies at any time
     # * rejected: communication ended because the respondent fell in a full quota bucket
     field :state, :string, default: "pending" # pending, active, completed, failed, stalled, rejected
-    field :disposition, :string # NULL, completed, partial, ineligible
+    field :disposition, :string # NULL, completed, partial, ineligible, refused
 
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime

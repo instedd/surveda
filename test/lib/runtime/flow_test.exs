@@ -38,10 +38,11 @@ defmodule Ask.FlowTest do
     {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry(@sms_visitor)
   end
 
-  test "fail if a response is given to a flow that was never executed" do
-    assert_raise RuntimeError, ~r/Flow was not expecting any reply/, fn ->
-      Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
-    end
+  test "replies when never started" do
+    # this can happen on a fallback channel
+    step = Flow.start(@quiz, "sms")
+    |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
+    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "next step with store" do
@@ -574,6 +575,40 @@ defmodule Ask.FlowTest do
         |> Flow.step(@sms_visitor)
       assert {:end, _, reply} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
       assert Reply.disposition(reply) == "ineligible"
+    end
+
+    test "two consecutive flag steps: refused, completed" do
+      steps = [
+        multiple_choice_step(
+          id: "aaa",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "bbb",
+          title: "b",
+          disposition: "refused"
+        ),
+        flag_step(
+          id: "ccc",
+          title: "c",
+          disposition: "completed"
+        ),
+      ]
+
+      {:ok, flow, _} =
+        build(:questionnaire, steps: steps)
+        |> Flow.start("sms")
+        |> Flow.step(@sms_visitor)
+      assert {:end, _, reply} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      assert Reply.disposition(reply) == "refused"
     end
   end
 end
