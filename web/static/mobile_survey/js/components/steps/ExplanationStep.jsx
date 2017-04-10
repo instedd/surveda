@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
-import * as actions from '../../actions/step'
 
 class ExplanationStep extends Component {
   getValue() {
@@ -13,7 +12,7 @@ class ExplanationStep extends Component {
       <div>
         <Prompt text={step.prompt} />
         <br />
-        <input type='submit' value='Next' />
+        <input type='submit' value='>' />
       </div>
     )
   }

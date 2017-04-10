@@ -31,7 +31,7 @@ class NumericStep extends Component {
           <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} />
         </div>
         <br />
-        <input type='submit' value='Next' disabled={!this.state.valid} />
+        <input type='submit' value='>' disabled={!this.state.valid} />
       </div>
     )
   }
