@@ -6,6 +6,5 @@ defmodule Ask.Repo.Migrations.AddRetryConfigurationToSurveys do
       add :sms_retry_configuration, :text
       add :ivr_retry_configuration, :text
     end
-
   end
 end

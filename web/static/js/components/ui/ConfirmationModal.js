@@ -13,7 +13,8 @@ type Props = {
   onNo?: Function,
   modalId?: string,
   children?: any,
-  style?: Object
+  style?: Object,
+  initOptions?: any,
 };
 
 export class ConfirmationModal extends Component {
@@ -45,8 +46,13 @@ export class ConfirmationModal extends Component {
     modal.open()
   }
 
+  close() {
+    const modal: Modal = this.refs.modal
+    modal.close()
+  }
+
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false } = this.state
+    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false, initOptions } = this.state
 
     let cancelLink = null
     if (showCancel) {
@@ -81,17 +87,24 @@ export class ConfirmationModal extends Component {
       content = modalText
     }
 
-    return (
-      <Modal id={modalId} ref='modal' style={style} showLink={showLink} linkText={linkText}>
-        <div className='modal-content'>
-          <h4>{header}</h4>
-          {content}
-        </div>
+    let footer = null
+    if (cancelLink || noLink || onConfirm || confirmationText) {
+      footer = (
         <div className='modal-footer'>
           {cancelLink}
           {noLink}
           <a href='#!' className='modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
         </div>
+      )
+    }
+
+    return (
+      <Modal id={modalId} ref='modal' style={style} showLink={showLink} linkText={linkText} initOptions={initOptions}>
+        <div className='modal-content'>
+          <h4>{header}</h4>
+          {content}
+        </div>
+        {footer}
       </Modal>
     )
   }

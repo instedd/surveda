@@ -1,15 +1,24 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
+type State = {
+  value: string,
+  valid: boolean
+};
+
 class NumericStep extends Component {
-  constructor(props) {
+  state: State
+  handleChange: PropTypes.func.isRequired
+
+  constructor(props: any) {
     super(props)
     this.state = {value: '', valid: false}
 
     this.handleChange = this.handleChange.bind(this)
   }
 
-  handleChange(event) {
+  handleChange(event: any) {
     const { step } = this.props
     const { value } = event.target
     const intValue = parseInt(value)
@@ -25,13 +34,17 @@ class NumericStep extends Component {
     const { step } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
-        <br />
-        <div>
+        {(step.prompts || []).map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
+        <div className='input-button-inline'>
           <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} />
+          <button className='btn square' disabled={!this.state.valid}>
+            <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
+              <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' />
+            </svg>
+          </button>
         </div>
-        <br />
-        <input type='submit' value='Next' disabled={!this.state.valid} />
       </div>
     )
   }

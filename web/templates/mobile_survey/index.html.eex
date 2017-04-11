@@ -1,7 +1,8 @@
 <body>
   <div id="root" role="main"></div>
-  <script src="<%= static_path(@conn, "/js/mobileSurvey.js") %>"></script>
   <script>
     window.mixEnv = "<%= Mix.env %>"
+    window.respondentId = <%= @respondent_id %>
   </script>
+  <script src="<%= static_path(@conn, "/js/mobileSurvey.js") %>"></script>
 </body>

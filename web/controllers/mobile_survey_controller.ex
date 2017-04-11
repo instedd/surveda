@@ -1,52 +1,42 @@
 defmodule Ask.MobileSurveyController do
+  alias Ask.Runtime.{Broker, Reply}
+  alias Ask.Respondent
   use Ask.Web, :controller
 
-  def index(conn, _params) do
-    conn
-    |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", user: nil)
+  def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
+    if Respondent.token(respondent_id) == token do
+      conn
+      |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+      |> render("index.html", respondent_id: respondent_id)
+    else
+      raise Ask.UnauthorizedError, conn: conn
+    end
   end
 
-  def get_step(conn, _params) do
-    step_type = "multiple-choice"
+  def get_step(conn, %{"respondent_id" => respondent_id}) do
+    sync_step(conn, respondent_id, :answer)
+  end
 
-    step = case step_type do
-      "language-selection" ->
+  def send_reply(conn, %{"respondent_id" => respondent_id, "value" => value}) do
+    sync_step(conn, respondent_id, {:reply, value})
+  end
+
+  defp sync_step(conn, respondent_id, value) do
+    respondent = Repo.get!(Respondent, respondent_id)
+
+    step = case Broker.sync_step(respondent, value) do
+      {:reply, reply} ->
+        reply |> Reply.steps() |> hd
+      {:end, {:reply, reply}} ->
+        reply |> Reply.steps() |> hd
+      :end ->
         %{
-          id: "id",
-          type: "language-selection",
-          prompt: "Select a language",
-          choices: ["English", "Spanish"]
-        }
-      "explanation" ->
-        %{
-          id: "id",
           type: "explanation",
-          prompt: "This is an explanation step",
-        }
-      "multiple-choice" ->
-        %{
-          id: "id",
-          type: "multiple-choice",
-          prompt: "What's your favourite colour?",
-          choices: ["Red", "Green", "Blue"]
-        }
-      "numeric" ->
-        %{
-          id: "id",
-          type: "numeric",
-          prompt: "What's your favourite number (1-10)?",
-          min: 1,
-          max: 10,
+          prompts: ["The survey has ended"],
+          title: "The survey has ended",
         }
     end
 
     render(conn, "show_step.json", step: step)
-  end
-
-  def send_reply(conn, %{"id" => _id, "value" => _value}) do
-    conn
-    |> put_status(:ok)
-    |> text("OK")
   end
 end

@@ -120,7 +120,7 @@ class StepNumericEditor extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
+    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
     const refusal = step.refusal || newRefusal()
     const acceptsRefusals = !!refusal.enabled
@@ -233,7 +233,7 @@ class StepNumericEditor extends Component {
                 stepsBefore={stepsBefore}
                 sms={sms}
                 ivr={ivr}
-                mobileWeb={mobileWeb}
+                mobileweb={mobileweb}
                 errors={errors}
                 smsAutocompleteGetData={(value, callback) => null}
                 smsAutocompleteOnSelect={item => null}

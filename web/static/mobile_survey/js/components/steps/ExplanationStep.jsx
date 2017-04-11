@@ -1,6 +1,6 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
-import * as actions from '../../actions/step'
 
 class ExplanationStep extends Component {
   getValue() {
@@ -11,9 +11,10 @@ class ExplanationStep extends Component {
     const { step } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
-        <br />
-        <input type='submit' value='Next' />
+        {(step.prompts || []).map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
+        <button className='btn block'>Siguiente</button>
       </div>
     )
   }
@@ -24,4 +25,3 @@ ExplanationStep.propTypes = {
 }
 
 export default ExplanationStep
-

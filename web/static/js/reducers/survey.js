@@ -32,6 +32,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.SET_QUOTA_VARS: return setQuotaVars(state, action)
     case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
+    case actions.CHANGE_MOBILEWEB_RETRY_CONFIGURATION: return changeMobileWebRetryConfiguration(state, action)
     case actions.CHANGE_FALLBACK_DELAY: return changeFallbackDelay(state, action)
     case actions.SAVED: return saved(state, action)
     default: return state
@@ -52,6 +53,7 @@ const validate = (state) => {
   state.errors = {}
   validateRetry(state, 'sms', 'smsRetryConfiguration')
   validateRetry(state, 'ivr', 'ivrRetryConfiguration')
+  validateRetry(state, 'mobileweb', 'mobilewebRetryConfiguration')
   validateFallbackDelay(state)
 }
 
@@ -243,15 +245,31 @@ export const modeLabel = (mode: string[]) => {
   if (isEqual(mode, ['sms'])) {
     return 'SMS'
   }
+  if (isEqual(mode, ['sms', 'ivr'])) {
+    return 'SMS with phone call fallback'
+  }
+  if (isEqual(mode, ['sms', 'mobileweb'])) {
+    return 'SMS with Mobile Web fallback'
+  }
   if (isEqual(mode, ['ivr'])) {
     return 'Phone call'
   }
   if (isEqual(mode, ['ivr', 'sms'])) {
     return 'Phone call with SMS fallback'
   }
-  if (isEqual(mode, ['sms', 'ivr'])) {
-    return 'SMS with phone call fallback'
+  if (isEqual(mode, ['ivr', 'mobileweb'])) {
+    return 'SMS with Mobile Web fallback'
   }
+  if (isEqual(mode, ['mobileweb'])) {
+    return 'Mobile Web'
+  }
+  if (isEqual(mode, ['mobileweb', 'sms'])) {
+    return 'Mobile Web with SMS fallback'
+  }
+  if (isEqual(mode, ['mobileweb', 'ivr'])) {
+    return 'Mobile Web with phone call fallback'
+  }
+
   return 'Unknown mode'
 }
 
@@ -452,6 +470,12 @@ const changeIvrRetryConfiguration = (state, action) => {
   }
 }
 
+const changeMobileWebRetryConfiguration = (state, action) => {
+  return {
+    ...state,
+    mobilewebRetryConfiguration: action.mobilewebRetryConfiguration
+  }
+}
 const changeFallbackDelay = (state, action) => {
   return {
     ...state,

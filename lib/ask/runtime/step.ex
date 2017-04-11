@@ -75,7 +75,18 @@ defmodule Ask.Runtime.Step do
   end
 
   def fetch(:reply_step, step, mode, language) do
-    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["id"])
+    choices = case step["type"] do
+      "multiple-choice" ->
+        step["choices"]
+        |> Enum.map(fn choice ->
+          fetch(:response, choice, mode, language)
+        end)
+      "language-selection" ->
+        step["language_choices"]
+      _ -> []
+    end
+
+    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["type"], step["id"], choices, step["min_value"], step["max_value"])
   end
 
   def fetch(:prompt, step = %{"type" => "language-selection"}, mode, _language) do

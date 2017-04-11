@@ -151,6 +151,7 @@ const bareSurvey: Survey = {
   respondentsCount: 2,
   comparisons: [],
   ivrRetryConfiguration: '',
+  mobilewebRetryConfiguration: '',
   smsRetryConfiguration: '',
   fallbackDelay: '',
   modeComparison: false,

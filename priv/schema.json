@@ -106,7 +106,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["flag"]},
         "title": {"type": "string"},
-        "disposition": { "enum": ["partial", "completed", "ineligible"] },
+        "disposition": { "enum": ["partial", "completed", "ineligible", "refused"] },
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
@@ -162,7 +162,7 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "mobile_web": {
+        "mobileweb": {
           "type" : "object"
         }
       }
@@ -178,7 +178,7 @@
       "properties": {
         "sms": {"type": "string" },
         "ivr": {"$ref": "#/definitions/ivr_prompt"},
-        "mobile_web": {"type": "string"}
+        "mobileweb": {"type": "string"}
       },
       "additionalProperties": false
     },

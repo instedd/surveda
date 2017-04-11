@@ -64,8 +64,14 @@ defmodule Ask.Runtime.Broker do
   end
 
   def delivery_confirm(respondent, title) do
+    delivery_confirm(respondent, title, nil)
+  end
+
+  def delivery_confirm(respondent, title, mode) do
     unless respondent.session == nil do
-      respondent.session |> Session.load |> Session.delivery_confirm(title)
+      session = respondent.session |> Session.load
+      session_mode = session_mode(respondent, session, mode)
+      Session.delivery_confirm(session, title, session_mode)
     end
   end
 
@@ -129,7 +135,7 @@ defmodule Ask.Runtime.Broker do
     (from r in assoc(survey, :respondents),
       where: r.state == "pending",
       limit: ^count)
-    |> preload(respondent_group: :channels)
+    |> preload(respondent_group: [respondent_group_channels: :channel])
     |> Repo.all
     |> Enum.each(&start(survey, &1))
   end
@@ -224,18 +230,45 @@ defmodule Ask.Runtime.Broker do
 
   def sync_step(respondent, reply) do
     session = respondent.session |> Session.load
-    sync_step_internal(session, reply)
+    sync_step_internal(session, reply, session.current_mode)
+  end
+
+  def sync_step(respondent, reply, mode) do
+    session = respondent.session |> Session.load
+    session_mode = session_mode(respondent, session, mode)
+    sync_step_internal(session, reply, session_mode)
+  end
+
+  defp session_mode(_respondent, session, :nil) do
+    session.current_mode
+  end
+
+  defp session_mode(respondent, session, mode) do
+    if mode == Ask.Runtime.SessionMode.mode(session.current_mode) do
+      session.current_mode
+    else
+      # We need to find which channel has this mode
+      group = (respondent |> Repo.preload(:respondent_group)).respondent_group
+      channel = (group |> Repo.preload(:channels)).channels
+      |> Enum.find(fn c -> c.type == mode end)
+
+      Ask.Runtime.SessionModeProvider.new(mode, channel, [])
+    end
   end
 
   # We expose this method so we can test that if a stale respondent is
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
   def sync_step_internal(session, reply) do
+    sync_step_internal(session, reply, session.current_mode)
+  end
+
+  defp sync_step_internal(session, reply, session_mode) do
     respondent = session.respondent
 
     transaction_result = Repo.transaction(fn ->
       try do
-        handle_session_step(Session.sync_step(session, reply))
+        handle_session_step(Session.sync_step(session, reply, session_mode))
       rescue
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
@@ -245,9 +278,12 @@ defmodule Ask.Runtime.Broker do
             stacktrace: System.stacktrace(),
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
-          Survey
-          |> Repo.get(respondent.survey_id)
-          |> complete
+          try do
+            handle_session_step({:failed, respondent})
+          rescue
+            _ ->
+              :end
+          end
       end
     end)
 
@@ -293,6 +329,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:failed, respondent}) do
     update_respondent(respondent, :failed)
+    :end
   end
 
   defp match_condition(responses, bucket) do
@@ -363,12 +400,14 @@ defmodule Ask.Runtime.Broker do
     # as "completed".
     new_disposition =
       case {old_disposition, reply_disposition} do
-        # If the respondent is already completed or ineligible, don't change it
+        # If the respondent is already completed, ineligible or refused, don't change it
         {"completed", _} -> "completed"
         {"ineligible", _} -> "ineligible"
-        # If a flag step sets the respondent as ineligible, do so (the respondent
+        {"refused", _} -> "refused"
+        # If a flag step sets the respondent as ineligible or refused, do so (the respondent
         # will be an non-set or partial disposition here)
         {_, "ineligible"} -> "ineligible"
+        {_, "refused"} -> "refused"
         # In any other case the survey ends and the respondent is marked as completed
         _ -> "completed"
       end

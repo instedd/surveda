@@ -13,6 +13,7 @@ class SurveyWizardRetryAttempts extends Component {
       this.setState({
         smsRetryConfiguration: survey.data.smsRetryConfiguration,
         ivrRetryConfiguration: survey.data.ivrRetryConfiguration,
+        mobilewebRetryConfiguration: survey.data.mobilewebRetryConfiguration,
         fallbackDelay: survey.data.fallbackDelay
       })
     }
@@ -26,6 +27,9 @@ class SurveyWizardRetryAttempts extends Component {
         break
       case 'ivr':
         this.setState({ivrRetryConfiguration: value})
+        break
+      case 'mobileweb':
+        this.setState({mobilewebRetryConfiguration: value})
         break
       case 'fallbackDelay':
         this.setState({fallbackDelay: value})
@@ -58,6 +62,10 @@ class SurveyWizardRetryAttempts extends Component {
           cssClass = 'ivr-attempts'
           icon = <i className='material-icons v-middle '>phone</i>
           break
+        case 'mobileweb':
+          cssClass = 'mobileweb-attempts'
+          icon = <i className='material-icons v-middle '>phone_android</i>
+          break
         default:
           throw new Error(`unknown mode: ${mode}`)
       }
@@ -82,6 +90,9 @@ class SurveyWizardRetryAttempts extends Component {
       case 'ivr':
         dispatch(actions.changeIvrRetryConfiguration(this.state.ivrRetryConfiguration))
         break
+      case 'mobileweb':
+        dispatch(actions.changeMobileWebRetryConfiguration(this.state.mobilewebRetryConfiguration))
+        break
       case 'fallbackDelay':
         dispatch(actions.changeFallbackDelay(this.state.fallbackDelay))
         break
@@ -96,6 +107,8 @@ class SurveyWizardRetryAttempts extends Component {
         return this.state.smsRetryConfiguration
       case 'ivr':
         return this.state.ivrRetryConfiguration
+      case 'mobileweb':
+        return this.state.mobilewebRetryConfiguration
       case 'fallbackDelay':
         return this.state.fallbackDelay
       default:
@@ -109,6 +122,8 @@ class SurveyWizardRetryAttempts extends Component {
         return !!errors.smsRetryConfiguration
       case 'ivr':
         return !!errors.ivrRetryConfiguration
+      case 'mobileweb':
+        return !!errors.mobilewebRetryConfiguration
       case 'fallbackDelay':
         return !!errors.fallbackDelay
       default:
@@ -122,11 +137,29 @@ class SurveyWizardRetryAttempts extends Component {
         return errors.smsRetryConfiguration
       case 'ivr':
         return errors.ivrRetryConfiguration
+      case 'mobileweb':
+        return errors.mobilewebRetryConfiguration
       case 'fallbackDelay':
         return errors.fallbackDelay
       default:
         throw new Error(`unknown mode: ${mode}`)
     }
+  }
+
+  label(mode) {
+    if (mode == 'sms') {
+      return 'SMS re-contact attempts'
+    }
+
+    if (mode == 'ivr') {
+      return 'Phone re-contact attempts'
+    }
+
+    if (mode == 'mobileweb') {
+      return 'Mobile Web re-contact attempts'
+    }
+
+    throw new Error(`unknown mode: ${mode}`)
   }
 
   render() {
@@ -176,7 +209,7 @@ class SurveyWizardRetryAttempts extends Component {
           return (
             <div className='row' key={mode}>
               <div className='input-field col s12'>
-                <InputWithLabel id={`recontact-attempts${mode}`} value={defaultValue || ''} label={`${mode == 'sms' ? 'SMS' : 'Phone'} re-contact attempts`} >
+                <InputWithLabel id={`recontact-attempts${mode}`} value={defaultValue || ''} label={this.label(mode)} >
                   <input
                     type='text'
                     onChange={e => this.editingRetryConfiguration(mode, e)}

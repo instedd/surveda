@@ -1,6 +1,6 @@
 Hello <%= @name %>!
 
-Your new Ask account is almost ready, follow the link below to confirm and activate it.
+Your new Surveda account is almost ready, follow the link below to confirm and activate it.
 
 <%= @url %>
 

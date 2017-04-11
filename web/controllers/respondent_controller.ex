@@ -99,7 +99,7 @@ defmodule Ask.RespondentController do
     {date, value}
   end
 
-  def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     survey = conn
     |> load_project(project_id)
     |> assoc(:surveys)
@@ -140,6 +140,7 @@ defmodule Ask.RespondentController do
     failed = by_state["failed"] || 0
     partial = by_state["partial"] || 0
     ineligible = by_state["ineligible"] || 0
+    refused = by_state["refused"] || 0
     cancelled = by_state["cancelled"] || 0
 
     total_quota = buckets
@@ -157,6 +158,7 @@ defmodule Ask.RespondentController do
         failed: respondent_by_state(failed, total_respondents),
         partial: respondent_by_state(partial, total_respondents),
         ineligible: respondent_by_state(ineligible, total_respondents),
+        refused: respondent_by_state(refused, total_respondents),
         cancelled: respondent_by_state(cancelled, total_respondents)
       },
       respondents_by_date: cumulative_count,
@@ -381,7 +383,7 @@ defmodule Ask.RespondentController do
       [r.phone_number, experiment_name(r.questionnaire, r.mode)]
     end)
 
-    header = ["Telephone number", "Survey/experiment version"]
+    header = ["Telephone number", "Questionnaire-Mode"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string
@@ -464,9 +466,14 @@ defmodule Ask.RespondentController do
   defp mode_label(mode) do
     case mode do
       ["sms"] -> "SMS"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
       ["ivr"] -> "Phone call"
       ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["ivr", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["mobileweb"] -> "Mobile Web"
+      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
+      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
       _ -> "Unknown mode"
     end
   end

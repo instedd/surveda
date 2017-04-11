@@ -43,7 +43,7 @@ config :ask, Ask.Mailer,
   adapter: Swoosh.Adapters.Local
 
 config :coherence,
-  email_from_name: "Ask Dev",
+  email_from_name: "Surveda Dev",
   email_from_email: "myname@domain.com"
 
 config :coherence, Ask.Coherence.Mailer,

@@ -87,7 +87,8 @@ const receiveInvalids = (state, action) => ({
 const clearInvalids = (state, action) => {
   return {
     ...state,
-    invalidRespondents: null
+    invalidRespondents: null,
+    uploading: false
   }
 }
 
