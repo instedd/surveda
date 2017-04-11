@@ -7,6 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
 import classNames from 'classnames/bind'
 import propsAreEqual from '../../propsAreEqual'
+import { Preloader } from 'react-materialize'
 
 type State = {
   audioErrors: string,
@@ -101,15 +102,7 @@ class IvrPrompt extends Component {
         <div>
           <div className='drop-uploading'>
             <div className='preloader-wrapper active center'>
-              <div className='spinner-layer spinner-blue-only'>
-                <div className='circle-clipper left'>
-                  <div className='circle' />
-                </div><div className='gap-patch'>
-                  <div className='circle' />
-                </div><div className='circle-clipper right'>
-                  <div className='circle' />
-                </div>
-              </div>
+              <Preloader />
             </div>
           </div>
           <div className={className} />
