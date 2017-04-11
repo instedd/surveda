@@ -124,6 +124,7 @@ const bareQuestionnaire: Questionnaire = {
   languages: ['en'],
   quotaCompletedMsg: {},
   errorMsg: {},
+  mobileWebSmsMessage: '',
   valid: true
 }
 

@@ -69,6 +69,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "default_language" => "en",
         "languages" => [],
         "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at),
+        "mobile_web_sms_message" => nil,
         "quota_completed_msg" => %{
           "en" => %{
             "sms" => "Quota completed",

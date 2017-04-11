@@ -42,6 +42,7 @@ export const CHANGE_EXPLANATION_STEP_SKIP_LOGIC = 'QUESTIONNAIRE_CHANGE_EXPLANAT
 export const CHANGE_DISPOSITION = 'QUESTIONNAIRE_CHANGE_DISPOSITION'
 export const TOGGLE_ACCEPT_REFUSALS = 'QUESTIONNAIRE_TOGGLE_ACCEPT_REFUSALS'
 export const CHANGE_REFUSAL = 'QUESTIONNAIRE_CHANGE_REFUSAL'
+export const SET_MOBILE_WEB_SMS_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SMS_MESSAGE'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -336,4 +337,9 @@ export const changeRefusal = (stepId, smsValues, ivrValues, skipLogic) => ({
   smsValues,
   ivrValues,
   skipLogic
+})
+
+export const setMobileWebSmsMessage = (text) => ({
+  type: SET_MOBILE_WEB_SMS_MESSAGE,
+  text
 })

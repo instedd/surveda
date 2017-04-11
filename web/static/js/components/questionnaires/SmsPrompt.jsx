@@ -80,7 +80,7 @@ class SmsPrompt extends Component {
   }
 
   renderSmsInput(total, index, value, autocompleteComponent) {
-    const { id, inputErrors, readOnly } = this.props
+    const { id, inputErrors, readOnly, fixedEndLength } = this.props
 
     const shouldDisplayReducerErrors = (value == this.props.originalValue)
     const reducerErrors = filter(inputErrors, (err) => err !== 'limit exceeded')
@@ -95,6 +95,8 @@ class SmsPrompt extends Component {
     })
 
     const label = total == 1 ? 'SMS message' : `SMS message (part ${index + 1})`
+    const last = index + 1 == total
+    const fixedLength = last ? fixedEndLength : null
 
     const inputComponent = (
       <div>
@@ -118,7 +120,7 @@ class SmsPrompt extends Component {
             className={maybeInvalidClass}
           />
         </InputWithLabel>
-        <CharacterCounter text={value} />
+        <CharacterCounter text={value} fixedLength={fixedLength} />
       </div>
     )
     if (total <= 1 || index == 0) {
@@ -187,6 +189,7 @@ SmsPrompt.propTypes = {
   onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   readOnly: PropTypes.bool,
+  fixedEndLength: PropTypes.number,
   autocomplete: PropTypes.bool.isRequired,
   autocompleteGetData: PropTypes.func,
   autocompleteOnSelect: PropTypes.func}

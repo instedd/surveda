@@ -12,7 +12,9 @@ import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
   newIvrPrompt, newRefusal, splitSmsText } from '../step'
-import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath, choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
+import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
+  choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath,
+  mobileWebSmsMessagePath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 import * as characterCounter from '../characterCounter'
 
@@ -31,6 +33,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
     case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
+    case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     default: return steps(state, action)
   }
 }
@@ -743,6 +746,13 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
   }
 }
 
+const setMobileWebSmsMessage = (state, action) => {
+  return {
+    ...state,
+    mobileWebSmsMessage: action.text
+  }
+}
+
 const addOptionToLanguageSelectionStep = (state, language) => {
   return changeStep(state.steps, state.steps[0].id, (step) => ({
     ...step,
@@ -817,6 +827,12 @@ const validate = (state: DataStore<Questionnaire>) => {
 
   validateMsg('errorMsg', data.errorMsg, context)
   validateMsg('quotaCompletedMsg', data.quotaCompletedMsg, context)
+
+  if (context.mobileWeb) {
+    if (isBlank(data.mobileWebSmsMessage)) {
+      addError(context, mobileWebSmsMessagePath(), 'Mobile web SMS message must not be blank')
+    }
+  }
 
   validateSteps(data.steps, context)
 
@@ -1088,7 +1104,7 @@ const addError = (context, path: string, error) => {
   context.errors[path].push(error)
 }
 
-const isBlank = (value: string) => {
+const isBlank = (value: ?string) => {
   return !value || value.trim().length == 0
 }
 

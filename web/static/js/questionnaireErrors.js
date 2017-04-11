@@ -129,6 +129,14 @@ export const msgHasErrors = (quiz: DataStore<Questionnaire>, msgKey: string) => 
   return some(keys(quiz.errorsByLang[quiz.data.activeLanguage]), k => startsWith(k, msgPath(msgKey)))
 }
 
+export const mobileWebSmsMessagePath = () => 'mobileWebSmsMessage'
+
+export const mobileWebSmsMessageHasErrors = (quiz: DataStore<Questionnaire>) => {
+  if (!quiz.data) return false
+
+  return quiz.errors[mobileWebSmsMessagePath()]
+}
+
 export const filterByPathPrefix = (errors: Errors, prefix: string) => {
   return reduce(errors, (stepErrors, currentError, currentErrorPath) => {
     if (startsWith(currentErrorPath, prefix)) {

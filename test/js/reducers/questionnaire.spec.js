@@ -1269,6 +1269,7 @@ describe('questionnaire reducer', () => {
         activeLanguage: 'en',
         quotaCompletedMsg: {},
         errorMsg: {},
+        mobileWebSmsMessage: '',
         steps: [
           {
             type: 'multiple-choice',
@@ -1469,6 +1470,18 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(state.data.quotaCompletedMsg['en']['mobileweb']).toEqual(mobilewebText)
+    })
+
+    it('should set mobile web sms message', () => {
+      const mobileWebSmsMessage = 'Click here'
+
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setMobileWebSmsMessage(mobileWebSmsMessage)
+      ])
+
+      expect(state.data.mobileWebSmsMessage).toEqual(mobileWebSmsMessage)
     })
 
     it('should not modify other mode quota message', () => {
