@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import Dropzone from 'react-dropzone'
-import { Input } from 'react-materialize'
+import { Input, Preloader } from 'react-materialize'
 import { ConfirmationModal, Card } from '../ui'
 import * as actions from '../../actions/respondentGroups'
 import values from 'lodash/values'
@@ -147,15 +147,7 @@ const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
     icon = (
       <div className='drop-uploading'>
         <div className='preloader-wrapper active center'>
-          <div className='spinner-layer spinner-blue-only'>
-            <div className='circle-clipper left'>
-              <div className='circle' />
-            </div><div className='gap-patch'>
-              <div className='circle' />
-            </div><div className='circle-clipper right'>
-              <div className='circle' />
-            </div>
-          </div>
+          <Preloader />
         </div>
       </div>
     )
