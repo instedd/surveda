@@ -130,7 +130,8 @@ class SurveyWizardRespondentsStep extends Component {
 const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
   let commonProps = {className: 'dropfile', activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, onDrop: onDrop, accept: 'text/csv', onDropRejected: onDropRejected}
 
-  var isWindows = navigator.platform && navigator.platform.indexOf('Win') != 1
+  var isWindows = navigator.platform && navigator.platform.indexOf('Win') != -1
+
   if (isWindows) {
     commonProps = {
       ...commonProps,
