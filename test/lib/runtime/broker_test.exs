@@ -312,6 +312,46 @@ defmodule Ask.BrokerTest do
     assert hd(respondent.responses).value == "Yes"
   end
 
+  test "mark stalled respondent as failed after 8 hours" do
+    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
+    assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    # Set for immediate timeout
+    respondent = Repo.get!(Respondent, respondent.id)
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # This time it should stall
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    now = Timex.now
+
+    # After seven hours it's still stalled
+    seven_hours_ago = now |> Timex.shift(hours: -7) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: seven_hours_ago])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "stalled"
+
+    # After eight hours it should be marked as failed
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+  end
+
   test "mark disposition as partial" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
 

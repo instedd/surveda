@@ -30,6 +30,8 @@ defmodule Ask.Runtime.Broker do
 
   def handle_info(:poll, state, now \\ Timex.now) do
     try do
+      mark_stalled_for_eight_hours_respondents_as_failed()
+
       Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: @batch_limit)
       |> Enum.each(&retry_respondent(&1))
 
@@ -52,6 +54,18 @@ defmodule Ask.Runtime.Broker do
   def handle_call(:poll, _from, state) do
     handle_info(:poll, state)
     {:reply, :ok, state}
+  end
+
+  defp mark_stalled_for_eight_hours_respondents_as_failed do
+    eight_hours_ago = Timex.now |> Timex.shift(hours: -8)
+
+    (from r in Respondent,
+      where: r.state == "stalled",
+      where: r.updated_at <= ^eight_hours_ago)
+    |> Repo.all
+    |> Enum.each(fn respondent ->
+      update_respondent(respondent, :failed)
+    end)
   end
 
   def channel_failed(respondent, reason \\ "failed") do
