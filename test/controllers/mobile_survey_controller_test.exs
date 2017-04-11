@@ -123,4 +123,30 @@ defmodule Ask.MobileSurveyControllerTest do
     :ok = broker |> GenServer.stop
     :ok = config |> GenServer.stop
   end
+
+  test "respondent flow via mobileweb when respondent state is not active nor stalled nor pending", %{conn: conn} do
+    test_channel = TestChannel.new(false, true)
+
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    {:ok, _} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    respondent |> Respondent.changeset(%{"state" => "finised"}) |> Repo.update!
+
+    conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    assert %{
+      "prompts" => ["The survey has ended"],
+      "title" => "The survey has ended",
+      "type" => "explanation"
+    } = json_response(conn, 200)["step"]
+  end
 end

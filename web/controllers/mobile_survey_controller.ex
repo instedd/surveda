@@ -24,19 +24,28 @@ defmodule Ask.MobileSurveyController do
   defp sync_step(conn, respondent_id, value) do
     respondent = Repo.get!(Respondent, respondent_id)
 
-    step = case Broker.sync_step(respondent, value) do
-      {:reply, reply} ->
-        reply |> Reply.steps() |> hd
-      {:end, {:reply, reply}} ->
-        reply |> Reply.steps() |> hd
-      :end ->
-        %{
-          type: "explanation",
-          prompts: ["The survey has ended"],
-          title: "The survey has ended",
-        }
-    end
+    step =
+      if respondent.state in ["pending", "active", "stalled"] do
+        case Broker.sync_step(respondent, value) do
+          {:reply, reply} ->
+            reply |> Reply.steps() |> hd
+          {:end, {:reply, reply}} ->
+            reply |> Reply.steps() |> hd
+          :end ->
+            end_step()
+        end
+      else
+        end_step()
+      end
 
     render(conn, "show_step.json", step: step)
+  end
+
+  defp end_step do
+    %{
+      type: "explanation",
+      prompts: ["The survey has ended"],
+      title: "The survey has ended",
+    }
   end
 end
