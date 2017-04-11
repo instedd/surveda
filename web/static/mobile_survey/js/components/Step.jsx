@@ -52,8 +52,8 @@ class Step extends Component {
   }
 
   handleValue(value) {
-    const { step } = this.props
-    actions.sendReply(step.id, value)
+    const { dispatch, respondentId } = this.props
+    actions.sendReply(dispatch, respondentId, value)
   }
 
   render() {
