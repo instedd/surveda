@@ -382,7 +382,7 @@ class QuestionnaireEditor extends Component {
           <div className='row'>
             <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
-          {mobileWeb
+          {mobileweb
           ? <MobileWebSmsMessage readOnly={readOnly} />
           : null}
         </div>
