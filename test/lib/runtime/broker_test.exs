@@ -1172,7 +1172,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter to http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -1208,6 +1208,19 @@ defmodule Ask.BrokerTest do
     assert respondent.completed_at in interval
 
     :ok = broker |> GenServer.stop
+  end
+
+  test "respondent flow via mobileweb with splitted message" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
+
+    quiz = hd(survey.questionnaires)
+    quiz |> Questionnaire.changeset(%{"mobile_web_sms_message" => "One#{Questionnaire.sms_split_separator}Two"}) |> Repo.update!
+
+    {:ok, _} = Broker.start_link
+    Broker.poll
+
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, %Ask.Runtime.Reply{steps: [step]}]
+    assert step == Ask.Runtime.ReplyStep.new(["One", "Two http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"], "Contact")
   end
 
   test "respondent flow with error msg and quota completed msg via sms" do

@@ -128,10 +128,14 @@ defmodule Ask.Runtime.Step do
 
   defp split_by_newlines(text, mode) do
     if mode == "sms" && text do
-      text |> String.split(Questionnaire.sms_split_separator)
+      split_by_newlines(text)
     else
       [text]
     end
+  end
+
+  def split_by_newlines(text) do
+    text |> String.split(Questionnaire.sms_split_separator)
   end
 
   defp clean_string(nil), do: ""

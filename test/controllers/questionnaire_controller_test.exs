@@ -88,6 +88,7 @@ defmodule Ask.QuestionnaireControllerTest do
             }
           }
         },
+        "mobile_web_sms_message" => "Please enter",
         "valid" => true
       }
     end

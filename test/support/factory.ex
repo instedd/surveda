@@ -84,6 +84,7 @@ defmodule Ask.Factory do
           }
         }
       },
+      mobile_web_sms_message: "Please enter",
       languages: [],
       valid: true,
     }

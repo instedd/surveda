@@ -61,10 +61,24 @@ defmodule Ask.Runtime.Session do
     # Is this really necessary?
     Channel.setup(runtime_channel, respondent, token)
 
+    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
+    prompts = Ask.Runtime.Step.split_by_newlines(msg)
+    url = "#{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    prompts = prompts
+    |> Enum.with_index(1)
+    |> Enum.map(fn {prompt, index} ->
+         if index == length(prompts) do
+           "#{prompt} #{url}"
+         else
+           prompt
+         end
+       end)
+
     reply = %Reply{
       steps: [
         ReplyStep.new(
-          ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"],
+          prompts,
           "Contact")
       ]
     }
