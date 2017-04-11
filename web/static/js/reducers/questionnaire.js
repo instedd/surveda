@@ -828,9 +828,9 @@ const validate = (state: DataStore<Questionnaire>) => {
   validateMsg('errorMsg', data.errorMsg, context)
   validateMsg('quotaCompletedMsg', data.quotaCompletedMsg, context)
 
+  if (context.mobileweb) {
     if (isBlank(data.mobileWebSmsMessage)) {
       addError(context, mobileWebSmsMessagePath(), 'Mobile web SMS message must not be blank')
-  if (context.mobileweb) {
     }
   }
 
