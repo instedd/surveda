@@ -25,6 +25,7 @@ export const SET_TIMEZONE = 'SURVEY_SET_TIMEZONE'
 export const SET_QUOTA_VARS = 'SURVEY_SET_QUOTA_VARS'
 export const CHANGE_SMS_RETRY_CONFIGURATION = 'SURVEY_CHANGE_SMS_RETRY_CONFIGURATION'
 export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURATION'
+export const CHANGE_MOBILEWEB_RETRY_CONFIGURATION = 'SURVEY_CHANGE_MOBILEWEB_RETRY_CONFIGURATION'
 export const CHANGE_FALLBACK_DELAY = 'SURVEY_CHANGE_FALLBACK_DELAY'
 export const TOGGLE_COUNT_PARTIAL_RESULTS = 'SURVEY_TOGGLE_COUNT_PARTIAL_RESULTS'
 
@@ -148,9 +149,10 @@ export const changeQuestionnaireComparison = () => ({
   type: CHANGE_QUESTIONNAIRE_COMPARISON
 })
 
-export const changeQuestionnaire = (questionnaire: number) => ({
+export const changeQuestionnaire = (questionnaire: number, questionnaires: any) => ({
   type: CHANGE_QUESTIONNAIRE,
-  questionnaire
+  questionnaire,
+  questionnaires
 })
 
 export const updateRespondentsCount = (respondentsCount: string) => ({
@@ -171,6 +173,11 @@ export const changeSmsRetryConfiguration = (smsRetryConfiguration: string) => ({
 export const changeIvrRetryConfiguration = (ivrRetryConfiguration: string) => ({
   type: CHANGE_IVR_RETRY_CONFIGURATION,
   ivrRetryConfiguration
+})
+
+export const changeMobileWebRetryConfiguration = (mobilewebRetryConfiguration: string) => ({
+  type: CHANGE_MOBILEWEB_RETRY_CONFIGURATION,
+  mobilewebRetryConfiguration
 })
 
 export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {

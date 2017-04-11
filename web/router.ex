@@ -59,6 +59,7 @@ defmodule Ask.Router do
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv
           get "/respondents/disposition_history_csv", RespondentController, :disposition_history_csv, as: :respondents_disposition_history_csv
           get "/respondents/incentives_csv", RespondentController, :incentives_csv, as: :respondents_incentives_csv
+          get "/respondents/interactions_csv", RespondentController, :interactions_csv, as: :respondents_interactions_csv
         end
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
@@ -88,9 +89,9 @@ defmodule Ask.Router do
   post "/callbacks/:provider", Ask.CallbackController, :callback
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback
   post "/callbacks/:provider/*path", Ask.CallbackController, :callback
-  get "/mobile_survey", Ask.MobileSurveyController, :index
-  get "/mobile_survey/get_step", Ask.MobileSurveyController, :get_step
-  post "/mobile_survey/send_reply", Ask.MobileSurveyController, :send_reply
+  get "/mobile_survey/:respondent_id", Ask.MobileSurveyController, :index
+  get "/mobile_survey/get_step/:respondent_id", Ask.MobileSurveyController, :get_step
+  post "/mobile_survey/send_reply/:respondent_id", Ask.MobileSurveyController, :send_reply
 
   scope "/", Ask do
     pipe_through :browser

@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
@@ -7,23 +8,27 @@ class LanguageSelectionStep extends Component {
   }
 
   render() {
-    const { step } = this.props
+    const { step, onClick } = this.props
     return (
       <div>
-        <Prompt text={step.prompt} />
-        <select ref='select'>
-          {step.choices.map(choice => {
-            return <option key={choice} value={choice}>{choice}</option>
-          })}
-        </select>
-        <input className='btn block' type='submit' value='Next' />
+        {(step.prompts || []).map(prompt =>
+          <Prompt key={prompt} text={prompt} />
+        )}
+        {step.choices.map(choice => {
+          return (
+            <div key={choice} >
+              <button className='btn block' value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
+            </div>
+          )
+        })}
       </div>
     )
   }
 }
 
 LanguageSelectionStep.propTypes = {
-  step: PropTypes.object
+  step: PropTypes.object,
+  onClick: PropTypes.func
 }
 
 export default LanguageSelectionStep

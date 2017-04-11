@@ -4,8 +4,8 @@ defmodule Ask.BrokerStub do
   @server_ref {:global, __MODULE__}
   def server_ref, do: @server_ref
 
-  def sync_step(respondent, reply) do
-    GenServer.call(@server_ref, {:sync_step, respondent, reply})
+  def sync_step(respondent, reply, mode) do
+    GenServer.call(@server_ref, {:sync_step, respondent, reply, mode})
   end
 
   def handle_cast({:expects, matcher}, _) do

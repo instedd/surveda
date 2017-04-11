@@ -5,13 +5,12 @@ defprotocol Ask.Runtime.SessionMode do
 end
 
 defmodule Ask.Runtime.SessionModeProvider do
-  alias Ask.Runtime.{SessionMode, SMSMode, IVRMode}
+  alias Ask.Runtime.{SessionMode, SMSMode, IVRMode, MobileWebMode}
   alias Ask.{Repo, Channel}
-
-  defstruct [:mode, :channel, :retries]
 
   defp mode_provider("sms"), do: SMSMode
   defp mode_provider("ivr"), do: IVRMode
+  defp mode_provider("mobileweb"), do: MobileWebMode
 
   def new(nil, _channel, _retries), do: nil
   def new(mode, channel, retries) when not is_nil(channel) and is_list(retries) do
@@ -40,7 +39,7 @@ defmodule Ask.Runtime.SessionModeProvider do
 end
 
 defmodule Ask.Runtime.SMSMode do
-  alias Ask.Runtime.SMSMode
+  alias __MODULE__
   alias Ask.Runtime.Flow.TextVisitor
   alias Ask.{Repo, Channel}
 
@@ -78,7 +77,7 @@ end
 
 
 defmodule Ask.Runtime.IVRMode do
-  alias Ask.Runtime.IVRMode
+  alias __MODULE__
   alias Ask.Runtime.Flow.TextVisitor
   alias Ask.{Repo, Channel}
 
@@ -111,6 +110,44 @@ defmodule Ask.Runtime.IVRMode do
 
     def mode(_) do
       "ivr"
+    end
+  end
+end
+
+defmodule Ask.Runtime.MobileWebMode do
+  alias Ask.Runtime.Flow.TextVisitor
+  alias Ask.{Repo, Channel}
+  alias __MODULE__
+
+  defstruct [:channel, :retries]
+
+  def new(channel, retries) do
+    %MobileWebMode{channel: channel, retries: retries}
+  end
+
+  def load(nil), do: nil
+  def load(mode_dump) do
+    %MobileWebMode{
+      channel: Channel |> Repo.get(mode_dump["channel_id"]),
+      retries: mode_dump["retries"]
+    }
+  end
+
+  defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.MobileWebMode do
+    def dump(%MobileWebMode{channel: channel, retries: retries}) do
+      %{
+        mode: "mobileweb",
+        channel_id: channel.id,
+        retries: retries
+      }
+    end
+
+    def visitor(_) do
+      TextVisitor.new("mobileweb")
+    end
+
+    def mode(_) do
+      "mobileweb"
     end
   end
 end

@@ -3,7 +3,9 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   use Ask.DummySteps
 
   alias Ask.{Respondent, BrokerStub}
-  alias Ask.Runtime.NuntiumChannel
+  alias Ask.Runtime.{NuntiumChannel, ReplyHelper}
+
+  require Ask.Runtime.ReplyHelper
 
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
@@ -14,17 +16,17 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   test "callback with :prompts", %{conn: conn, respondent: respondent} do
     respondent_id = respondent.id
     GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:prompts, ["Hello!", "Do you exercise?"]}
+      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
+        {:reply, ReplyHelper.multiple(["Hello!", "Do you exercise?"])}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
-    assert json_response(conn, 200) == [%{"to" => "sms://123456", "body" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?"}]
+    assert [%{"to" => "sms://123456", "body" => "Hello!", "step_title" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
   end
 
   test "callback with :end", %{conn: conn, respondent: respondent} do
     respondent_id = respondent.id
     GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
+      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
         :end
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
@@ -34,11 +36,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   test "callback with :end, :prompt", %{conn: conn, respondent: respondent} do
     respondent_id = respondent.id
     GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:end, {:prompts, ["Bye!"]}}
+      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
+        {:end, {:reply, ReplyHelper.quota_completed("Bye!")}}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
-    assert json_response(conn, 200) == [%{"body" => "Bye!", "to" => "sms://123456"}]
+    assert [%{"body" => "Bye!", "to" => "sms://123456", "step_title" => "Quota completed"}] = json_response(conn, 200)
   end
 
   test "callback respondent not found", %{conn: conn} do
@@ -50,10 +52,10 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     respondent = insert(:respondent, phone_number: "123 457", sanitized_phone_number: "123457", state: "stalled")
     respondent_id = respondent.id
     GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}} ->
-        {:prompts, ["Do you exercise?"]}
+      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
+        {:reply, ReplyHelper.simple("Do you exercise?")}
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"}, BrokerStub)
-    assert json_response(conn, 200) == [%{"to" => "sms://123457", "body" => "Do you exercise?"}]
+    assert [%{"to" => "sms://123457", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
   end
 end

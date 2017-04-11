@@ -17,8 +17,10 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   questionnaireChange(e) {
+    const { questionnaires } = this.props
+
     const { dispatch } = this.props
-    dispatch(actions.changeQuestionnaire(e.target.value))
+    dispatch(actions.changeQuestionnaire(e.target.value, questionnaires))
   }
 
   createQuestionnaire(e) {
@@ -94,24 +96,28 @@ class SurveyWizardQuestionnaireStep extends Component {
               <label htmlFor='questionnaires_comparison'>Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)</label>
             </p>
           </div>
-          <div className='col s12'>
-            { Object.keys(questionnaires).map((questionnaireId) => (
-              <div key={questionnaireId}>
-                <p>
-                  <input
-                    id={questionnaireId}
-                    type={inputType}
-                    name='questionnaire'
-                    className={questionnaireComparison ? 'filled-in' : 'with-gap'}
-                    value={questionnaireId}
-                    checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
-                    onChange={e => this.questionnaireChange(e)}
-                    disabled={readOnly}
-                  />
-                  <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} entityName='questionnaire' /></label>
-                </p>
-              </div>
-            ))}
+          <div className='col s12 survey-questionnaires'>
+            { Object.keys(questionnaires).map((questionnaireId) => {
+              const questionnaire = questionnaires[questionnaireId]
+              const className = questionnaire.valid ? null : 'tooltip-error'
+              return (
+                <div key={questionnaireId}>
+                  <p>
+                    <input
+                      id={questionnaireId}
+                      type={inputType}
+                      name='questionnaire'
+                      className={questionnaireComparison ? 'filled-in' : 'with-gap'}
+                      value={questionnaireId}
+                      checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
+                      onChange={e => this.questionnaireChange(e)}
+                      disabled={readOnly}
+                    />
+                    <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} entityName='questionnaire' className={className} /></label>
+                  </p>
+                </div>
+              )
+            })}
           </div>
           {newQuestionnaireComponent}
         </div>

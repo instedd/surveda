@@ -12,7 +12,7 @@ defmodule Ask.Email do
 
     %Email{}
     |> to({"", email})
-    |> from({"InSTEDD Ask", "noreply@instedd.org"})
+    |> from({"InSTEDD Surveda", "noreply@instedd.org"})
     |> subject(subject)
     |> render_body(:invite, %{
         url: invite_url,
@@ -22,8 +22,8 @@ defmodule Ask.Email do
       })
   end
 
-  defp project_name(""), do: "an Ask project"
-  defp project_name(nil), do: "an Ask project"
+  defp project_name(""), do: "a Surveda project"
+  defp project_name(nil), do: "a Surveda project"
   defp project_name(name), do: "#{name}"
 
   defp explanation("editor"), do: "You'll be able to manage surveys, questionnaires, content and collaborators."

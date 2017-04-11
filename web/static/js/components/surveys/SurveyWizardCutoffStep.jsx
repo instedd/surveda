@@ -60,12 +60,17 @@ class SurveyWizardCutoffStep extends Component {
     }), ', ')
   }
 
-  toggleQuotas() {
-    const { dispatch, questionnaire, survey } = this.props
-    if (survey.quotas.vars.length > 0) {
-      dispatch(actions.setQuotaVars([], questionnaire))
-    } else {
+  turnOnQuotas() {
+    const { survey } = this.props
+    if (survey.quotas.vars.length == 0) {
       $('#setupQuotas').modal('open')
+    }
+  }
+
+  turnOffQuotas() {
+    const { dispatch, questionnaire, survey } = this.props
+    if (survey.quotas.vars.length != 0) {
+      dispatch(actions.setQuotaVars([], questionnaire))
     }
   }
 
@@ -74,71 +79,97 @@ class SurveyWizardCutoffStep extends Component {
     dispatch(actions.toggleCountPartialResults())
   }
 
-  render() {
+  header() {
+    return (
+      <div className='row'>
+        <div className='col s12'>
+          <h4>Configure cutoff rules</h4>
+          <p className='flow-text'>
+            Cutoff rules define when the survey will stop. You can use one or more of these options. If you don't select any, the survey will be sent to all respondents.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  renderWithQuotas() {
     const { questionnaire, survey, readOnly } = this.props
+    const hasQuotas = questionnaire && survey.quotas.vars.length > 0
 
-    let quotasForCompletes = null
-    if (questionnaire && Object.keys(stepStoreValues(questionnaire)).length) {
-      let quotasModal = null
-      if (!readOnly) {
-        quotasModal = (
-          <div className='row'>
-            <div className='col s12'>
-              <div>
-                <QuotasModal showLink={questionnaire && survey.quotas.vars.length > 0} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
-              </div>
-            </div>
+    let quotasModal = null
+    if (!readOnly) {
+      quotasModal = (
+        <div className='row'>
+          <div className='col s12'>
+            <QuotasModal showLink={hasQuotas} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
           </div>
-        )
-      }
+        </div>
+      )
+    }
 
-      quotasForCompletes = (
-        <div>
-          <div className='row quotas'>
-            <div className='col s12'>
-              <input type='checkbox' className='filled-in' id='set-quotas' checked={survey.quotas.vars.length > 0} onChange={() => this.toggleQuotas()} disabled={readOnly} />
-              <label htmlFor='set-quotas'>Quotas for completes</label>
-              <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
-            </div>
+    let quotasForCompletes = (
+      <div>
+        <div className='row quotas'>
+          <div className='col s12'>
+            <input type='radio' className='filled-in with-gap' id='set-quotas' checked={hasQuotas} onChange={() => this.turnOnQuotas()} disabled={readOnly} />
+            <label htmlFor='set-quotas'>Quotas for completes</label>
+            <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
           </div>
-          {quotasModal}
+        </div>
+        {quotasModal}
+      </div>
+    )
+
+    const partialsInput = (
+      <input
+        id='toggle_count_partial_results'
+        type='checkbox'
+        checked={survey.countPartialResults}
+        disabled={readOnly}
+        className='filled-in'
+        onChange={this.toggleCountPartialResults}
+      />
+    )
+    const partialsLabel = <label className='bottom-margin' htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+
+    let partialsForCutoff = null
+    let partialsForQuotas = null
+    if (hasQuotas) {
+      partialsForQuotas = (
+        <div className='row'>
+          <div className='col s12'>
+            {partialsInput}
+            {partialsLabel}
+          </div>
+        </div>
+      )
+    } else {
+      partialsForCutoff = (
+        <div className='col s12'>
+          {partialsInput}
+          {partialsLabel}
         </div>
       )
     }
 
     return (
       <div>
+        {this.header()}
         <div className='row'>
           <div className='col s12'>
-            <h4>Configure cutoff rules</h4>
-            <p className='flow-text'>
-              Cutoff rules define when the survey will stop. You can use one or more of these options. If you don't select any, the survey will be sent to all respondents.
-            </p>
+            <input type='radio' className='with-gap' id='survey_cutoff' checked={!hasQuotas} onChange={() => this.turnOffQuotas()} disabled={readOnly} />
+            <label htmlFor='survey_cutoff'>Number of completes</label>
+            <div className='input-field inline'>
+              <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
+                <input
+                  type='text'
+                  onChange={e => this.cutoffChange(e)}
+                  disabled={readOnly || hasQuotas}
+                />
+              </InputWithLabel>
+            </div>
           </div>
-        </div>
-        <div className='row'>
-          <div className='input-field col s8 l4'>
-            <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='Completed results' >
-              <input
-                type='text'
-                onChange={e => this.cutoffChange(e)}
-                disabled={readOnly}
-              />
-            </InputWithLabel>
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col s12'>
-            <input
-              id='toggle_count_partial_results'
-              type='checkbox'
-              checked={survey.countPartialResults}
-              disabled={readOnly}
-              className='filled-in'
-              onChange={this.toggleCountPartialResults}
-            />
-            <label htmlFor='toggle_count_partial_results'>Count partial results towards cutoff</label>
-          </div>
+          {partialsForCutoff}
         </div>
         {quotasForCompletes}
         { survey.quotas.buckets
@@ -157,8 +188,56 @@ class SurveyWizardCutoffStep extends Component {
           )
           : ''
         }
+        {partialsForQuotas}
       </div>
     )
+  }
+
+  renderWithoutQuotas() {
+    const { survey, readOnly } = this.props
+
+    return (
+      <div>
+        {this.header()}
+        <div className='row'>
+          <div className='col s12'>
+            Number of completes
+            <div className='input-field inline'>
+              <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
+                <input
+                  type='text'
+                  onChange={e => this.cutoffChange(e)}
+                  disabled={readOnly}
+                />
+              </InputWithLabel>
+            </div>
+          </div>
+          <div className='col s12'>
+            <div className='input-field'>
+              <input
+                id='toggle_count_partial_results'
+                type='checkbox'
+                checked={survey.countPartialResults}
+                disabled={readOnly}
+                className='filled-in'
+                onChange={this.toggleCountPartialResults}
+              />
+              <label htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  render() {
+    const { questionnaire } = this.props
+    const hasQuotas = questionnaire && Object.keys(stepStoreValues(questionnaire)).length
+    if (hasQuotas) {
+      return this.renderWithQuotas()
+    } else {
+      return this.renderWithoutQuotas()
+    }
   }
 }
 

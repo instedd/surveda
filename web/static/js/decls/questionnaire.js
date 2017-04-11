@@ -8,7 +8,9 @@ export type Questionnaire = {
   activeLanguage: string,
   quotaCompletedMsg: Prompt,
   errorMsg: Prompt,
-  projectId: number
+  mobileWebSmsMessage: ?string,
+  projectId: number,
+  valid: ?boolean
 };
 
 export type ChoiceErrors = {
@@ -26,7 +28,7 @@ export type AudioPrompt = {
 export type LanguagePrompt = {
   sms?: string,
   ivr?: AudioPrompt,
-  mobileWeb?: string
+  mobileweb?: string
 };
 
 export type Prompt = { [lang: string]: LanguagePrompt };
@@ -69,7 +71,7 @@ export type Refusal = {
     sms?: {
       [lang: string]: string[]
     },
-    mobileWeb?: {
+    mobileweb?: {
       [lang: string]: string[]
     }
   },
@@ -90,7 +92,7 @@ export type Choice = {
     sms?: {
       [lang: string]: string[]
     },
-    mobileWeb?: {
+    mobileweb?: {
       [lang: string]: ?string
     }
   }

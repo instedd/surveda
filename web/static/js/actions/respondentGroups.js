@@ -9,6 +9,7 @@ export const INVALID_RESPONDENT_GROUPS = 'RESPONDENT_GROUP_INVALID_GROUPS'
 export const INVALID_RESPONDENTS = 'RESPONDENT_GROUP_INVALID_RESPONDENTS'
 export const CLEAR_INVALIDS = 'RESPONDENT_GROUP_CLEAR_INVALIDS'
 export const SELECT_CHANNELS = 'RESPONDENT_GROUP_SELECT_CHANNELS'
+export const UPLOAD_RESPONDENT_GROUP = 'RESPONDENT_GROUP_UPLOAD'
 
 export const fetchRespondentGroups = (projectId, surveyId) => dispatch => {
   dispatch(startFetchingRespondentGroups(surveyId))
@@ -55,6 +56,7 @@ export const clearInvalids = () => ({
 // this info and won't allow launching a non-ready survey)
 
 export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, getState) => {
+  dispatch(uploadingRespondentGroup())
   api.uploadRespondentGroup(projectId, surveyId, files)
   .then(response => {
     const group = response.entities.respondentGroups[response.result]
@@ -66,6 +68,10 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, 
   })
   .then(() => dispatch(surveyActions.save()))
 }
+
+export const uploadingRespondentGroup = () => ({
+  type: UPLOAD_RESPONDENT_GROUP
+})
 
 export const removeRespondentGroup = (projectId, surveyId, groupId) => (dispatch, getState) => {
   api.removeRespondentGroup(projectId, surveyId, groupId)

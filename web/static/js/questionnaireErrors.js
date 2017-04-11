@@ -129,6 +129,14 @@ export const msgHasErrors = (quiz: DataStore<Questionnaire>, msgKey: string) => 
   return some(keys(quiz.errorsByLang[quiz.data.activeLanguage]), k => startsWith(k, msgPath(msgKey)))
 }
 
+export const mobileWebSmsMessagePath = () => 'mobileWebSmsMessage'
+
+export const mobileWebSmsMessageHasErrors = (quiz: DataStore<Questionnaire>) => {
+  if (!quiz.data) return false
+
+  return quiz.errors[mobileWebSmsMessagePath()]
+}
+
 export const filterByPathPrefix = (errors: Errors, prefix: string) => {
   return reduce(errors, (stepErrors, currentError, currentErrorPath) => {
     if (startsWith(currentErrorPath, prefix)) {
@@ -172,7 +180,7 @@ export const choicesPath = (stepIndex: number) => `${stepPath(stepIndex)}.choice
 export const choicePath = (stepIndex: number, choiceIndex: number) => `${choicesPath(stepIndex)}[${choiceIndex}]`
 export const choiceValuePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.value`
 export const choiceSmsResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].sms`
-export const choiceMobileWebResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].mobileWeb`
+export const choiceMobileWebResponsePath = (stepIndex: number, choiceIndex: number, lang: string) => `${choicePath(stepIndex, choiceIndex)}['${lang}'].mobileweb`
 export const choiceIvrResponsePath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.ivr`
 export const choiceSkipLogicPath = (stepIndex: number, choiceIndex: number) => `${choicePath(stepIndex, choiceIndex)}.skipLogic`
 

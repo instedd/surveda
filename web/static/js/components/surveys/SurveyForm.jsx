@@ -25,6 +25,7 @@ class SurveyForm extends Component {
     questionnaires: PropTypes.object,
     questionnaire: PropTypes.object,
     respondentGroups: PropTypes.object,
+    respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object,
     channels: PropTypes.object,
     errors: PropTypes.object,
@@ -37,7 +38,7 @@ class SurveyForm extends Component {
     sidebar.pushpin({ top: sidebar.offset().top, offset: 60 })
   }
 
-  allModesHaveAChannel(modes, channels, allChannels) {
+  allModesHaveAChannel(modes, channels) {
     const selectedTypes = channels.map(channel => channel.mode)
     modes = uniq(flatMap(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
@@ -49,15 +50,26 @@ class SurveyForm extends Component {
       .then(() => router.push(routes.survey(projectId, surveyId)))
   }
 
+  questionnairesValid(ids, questionnaires) {
+    return every(ids, id => questionnaires[id] && questionnaires[id].valid)
+  }
+
+  questionnairesMatchModes(modes, ids, questionnaires) {
+    return every(modes, mode =>
+      every(mode, m =>
+        ids && every(ids, id =>
+          questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
+  }
+
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, invalidRespondents, errors, questionnaire, readOnly } = this.props
-    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, invalidRespondents, errors, questionnaire, readOnly } = this.props
+    const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
-        return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels, channels || {})
+        return group.channels.length > 0 && this.allModesHaveAChannel(survey.mode, group.channels)
       })
 
-    const modeStepCompleted = survey.mode != null && survey.mode.length > 0
+    const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
@@ -125,11 +137,11 @@ class SurveyForm extends Component {
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardModeStep survey={survey} readOnly={readOnly} />
+            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} respondentGroups={respondentGroups} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} invalidRespondents={invalidRespondents} readOnly={readOnly} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} readOnly={readOnly} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>

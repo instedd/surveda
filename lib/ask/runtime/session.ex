@@ -1,10 +1,9 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.Runtime.{Flow, Channel, Session, Reply}
   alias Ask.{Repo, QuotaBucket, Respondent}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{SessionMode, SessionModeProvider, SMSMode, IVRMode}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode}
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results]
 
   @default_fallback_delay 10
@@ -35,11 +34,13 @@ defmodule Ask.Runtime.Session do
     case flow |> Flow.step(session.current_mode |> SessionMode.visitor) do
       {:end, _, reply} ->
         if Reply.prompts(reply) != [] do
-          runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
+          log_prompts(reply, channel, respondent, true)
+          runtime_channel |> Channel.ask(respondent, token, reply)
         end
         {:end, reply, respondent}
       {:ok, flow, reply} ->
-        runtime_channel |> Channel.ask(respondent, token, Reply.prompts(reply))
+        log_prompts(reply, channel, respondent)
+        runtime_channel |> Channel.ask(respondent, token, reply)
         {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
     end
   end
@@ -54,6 +55,39 @@ defmodule Ask.Runtime.Session do
     {:ok, session, %Reply{}, current_timeout(session), respondent}
   end
 
+  defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %MobileWebMode{channel: channel}} = session) do
+    runtime_channel = Ask.Channel.runtime_channel(channel)
+
+    # Is this really necessary?
+    Channel.setup(runtime_channel, respondent, token)
+
+    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
+    prompts = Ask.Runtime.Step.split_by_newlines(msg)
+    url = "#{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    prompts = prompts
+    |> Enum.with_index(1)
+    |> Enum.map(fn {prompt, index} ->
+         if index == length(prompts) do
+           "#{prompt} #{url}"
+         else
+           prompt
+         end
+       end)
+
+    reply = %Reply{
+      steps: [
+        ReplyStep.new(
+          prompts,
+          "Contact")
+      ]
+    }
+
+    log_prompts(reply, session.current_mode.channel, session.respondent)
+    runtime_channel |> Channel.ask(respondent, token, reply)
+    {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
+  end
+
   defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
     fallback_delay
   end
@@ -64,6 +98,45 @@ defmodule Ask.Runtime.Session do
 
   defp run_flow(session) do
     mode_start(%{session | token: Ecto.UUID.generate})
+  end
+
+  defp log_prompts(reply, channel, respondent, force \\ false) do
+    if force || !(channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation?) do
+      disposition = Reply.disposition(reply) || respondent.disposition
+      Enum.each Reply.steps(reply), fn(step) ->
+        step.prompts |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
+          SurveyLogger.log(
+            respondent.survey_id,
+            channel.type,
+            respondent.id,
+            respondent.hashed_number,
+            channel.id,
+            disposition,
+            :prompt,
+            ReplyStep.title_with_index(step, index + 1))
+        end)
+      end
+    end
+  end
+
+  defp log_confirmation(title, disposition, channel, respondent) do
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition, :prompt, title)
+  end
+
+  defp log_contact(status, channel, respondent, disposition \\ nil) do
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :contact, status)
+  end
+
+  defp log_response(:answer, channel, respondent, disposition) do
+    log_contact("Answer", channel, respondent, disposition)
+  end
+
+  defp log_response(:no_reply, channel, respondent, disposition) do
+    log_contact("Timeout", channel, respondent, disposition)
+  end
+
+  defp log_response({:reply, response}, channel, respondent, disposition) do
+    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
   end
 
   defp handle_setup_response(setup_response) do
@@ -86,16 +159,17 @@ defmodule Ask.Runtime.Session do
     case session.current_mode do
       %SMSMode{} -> {:stalled, session |> clear_token, respondent}
       %IVRMode{} -> {:failed, respondent}
+      %MobileWebMode{} -> {:stalled, session |> clear_token, respondent}
     end
   end
 
   # If there is a fallback specified, switch session to use it
-  def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session |> clear_token)
+  def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session)
 
   #if we have a last timeout, use it to fallback
   # TODO: this should use fallback_delay
   def timeout(%{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
-    switch_to_fallback(session |> clear_token)
+    switch_to_fallback(session)
   end
 
   # Let's try again
@@ -111,13 +185,26 @@ defmodule Ask.Runtime.Session do
       channel_state =
         case session.current_mode do
           %SMSMode{} ->
-            {:ok, _flow, %Reply{prompts: prompts}} = Flow.retry(session.flow, TextVisitor.new("sms"))
-            runtime_channel |> Channel.ask(session.respondent, token, prompts)
+            {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
+            log_prompts(reply, session.current_mode.channel, session.respondent)
+            runtime_channel |> Channel.ask(session.respondent, token, reply)
             channel_state
 
           %IVRMode{} ->
             setup_response = runtime_channel |> Channel.setup(session.respondent, token)
             handle_setup_response(setup_response)
+
+          %MobileWebMode{} ->
+            reply = %Reply{
+              steps: [
+                ReplyStep.new(
+                  ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}"],
+                  "Contact")
+              ]
+            }
+            log_prompts(reply, session.current_mode.channel, session.respondent)
+            runtime_channel |> Channel.ask(session.respondent, token, reply)
+            channel_state
         end
 
       # The new session will timeout as defined by hd(retries)
@@ -126,15 +213,33 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil, token: token}, token) do
+  def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil} = session, reason) do
+    log_contact(reason, session.current_mode.channel, session.respondent)
     :failed
   end
 
-  def channel_failed(_session, _token) do
+  def channel_failed(session, reason) do
+    log_contact(reason, session.current_mode.channel, session.respondent)
     :ok
   end
 
+  def delivery_confirm(session, title, current_mode) do
+    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.respondent)
+  end
+
   defp switch_to_fallback(session) do
+    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
+
+    # Ff there's stil a queued message in the channel, don't fallback yet
+    if Channel.has_queued_message?(runtime_channel, session.channel_state) do
+      {:ok, session, %Reply{}, current_timeout(session), session.respondent}
+    else
+      do_switch_to_fallback(session)
+    end
+  end
+
+  defp do_switch_to_fallback(session) do
+    session = session |> clear_token
     run_flow(%Session{
       session |
       current_mode: session.fallback_mode,
@@ -147,10 +252,21 @@ defmodule Ask.Runtime.Session do
     })
   end
 
-  def sync_step(session, reply) do
-    step_answer = Flow.step(session.flow, session.current_mode |> SessionMode.visitor, reply)
+  def sync_step(session, response) do
+    sync_step(session, response, session.current_mode)
+  end
 
+  def sync_step(session, response, current_mode) do
+    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode))
     respondent = session.respondent
+
+    # Log raw response from user including new disposition
+    case step_answer do
+      {:end, _, reply} -> log_response(response, current_mode.channel, respondent, Reply.disposition(reply))
+      {:ok, _flow, reply} -> log_response(response, current_mode.channel, respondent, Reply.disposition(reply))
+      _ -> :ok
+    end
+
     survey = (respondent |> Repo.preload(:survey)).survey
 
     # Get all quota buckets, if any
@@ -168,32 +284,35 @@ defmodule Ask.Runtime.Session do
     {respondent, responses} =
       store_responses_and_assign_bucket(respondent, step_answer, buckets, session)
 
-    session |> handle_step_answer(step_answer, respondent, responses, buckets)
+    session |> handle_step_answer(step_answer, respondent, responses, buckets, current_mode)
   end
 
-  defp handle_step_answer(_, {:end, _, %Reply{prompts: []}}, respondent, _, _) do
-    {:end, respondent}
+  defp handle_step_answer(_, {:end, _, reply}, respondent, _, _, _) do
+    case Reply.steps(reply) do
+      [] ->
+        {:end, respondent}
+      _ ->
+        {:end, reply, respondent}
+    end
   end
 
-  defp handle_step_answer(_, {:end, _, reply}, respondent, _, _) do
-    {:end, reply, respondent}
-  end
-
-  defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets) do
+  defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets, current_mode) do
     case falls_in_quota_already_completed?(buckets, responses) do
       true ->
-        case Flow.quota_completed(session.flow, session.current_mode |> SessionMode.visitor) do
+        case Flow.quota_completed(session.flow, current_mode |> SessionMode.visitor) do
         {:ok, reply} ->
+          log_prompts(reply, current_mode.channel, respondent, true)
           {:rejected, reply, respondent}
         :ok ->
           {:rejected, respondent}
         end
       false ->
+        log_prompts(reply, current_mode.channel, respondent)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
     end
   end
 
-  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _) do
+  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _, _) do
     {:failed, respondent}
   end
 

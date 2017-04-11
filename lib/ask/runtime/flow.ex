@@ -12,23 +12,28 @@ defmodule Ask.Runtime.Flow do
   end
 
   def step(flow, visitor, reply \\ :answer) do
+    step(flow, visitor, reply, flow.mode)
+  end
+
+  def step(flow, visitor, reply, mode) do
     flow
-    |> accept_reply(reply, visitor)
-    |> eval
+    |> accept_reply(reply, visitor, mode)
+    |> eval(mode)
   end
 
   def quota_completed(flow, visitor) do
     msg = flow.questionnaire.quota_completed_msg
     if msg do
-      visitor = visitor |> Visitor.accept_message(msg, flow.language)
-      {:ok, %Reply{prompts: Visitor.close(visitor)}}
+      visitor = visitor |> Visitor.accept_message(msg, flow.language, "Quota completed")
+      {:ok, %Reply{steps: Visitor.close(visitor)}}
     else
       :ok
     end
   end
 
   def retry(flow, visitor) do
-    {flow, %Reply{}, visitor} |> eval
+    {flow, %Reply{}, visitor}
+    |> eval(flow.mode)
   end
 
   def dump(flow) do
@@ -40,9 +45,9 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"], retries: state["retries"]}
   end
 
-  defp next_step_by_skip_logic(flow, step, reply_value) do
+  defp next_step_by_skip_logic(flow, step, reply_value, mode) do
     step
-    |> Step.skip_logic(reply_value, flow.mode, flow.language, flow.questionnaire.default_language)
+    |> Step.skip_logic(reply_value, mode, flow.language)
     |> next_step(flow)
   end
 
@@ -60,13 +65,13 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
-  defp advance_current_step(flow, step, reply_value) do
+  defp advance_current_step(flow, step, reply_value, mode) do
     next_step =
       cond do
         !reply_value && !(step["type"] == "explanation") ->
           flow.current_step + 1
         :else ->
-          next_step_by_skip_logic(flow, step, reply_value)
+          next_step_by_skip_logic(flow, step, reply_value, mode)
       end
 
     %{flow | current_step: next_step}
@@ -76,20 +81,20 @@ defmodule Ask.Runtime.Flow do
     length(flow.questionnaire.steps)
   end
 
-  defp accept_reply(%Flow{current_step: nil} = flow, :answer, visitor) do
+  defp accept_reply(%Flow{current_step: nil} = flow, :answer, visitor, _mode) do
     flow = %{flow | current_step: 0}
     {flow, %Reply{}, visitor}
   end
 
-  defp accept_reply(%Flow{current_step: nil}, _, _) do
-    raise "Flow was not expecting any reply"
+  defp accept_reply(flow = %Flow{current_step: nil}, reply, visitor, mode) do
+    accept_reply(%Flow{flow | current_step: 0}, reply, visitor, mode)
   end
 
-  defp accept_reply(flow, :answer, visitor) do
+  defp accept_reply(flow, :answer, visitor, _mode) do
     {flow, %Reply{}, visitor}
   end
 
-  defp accept_reply(flow, :no_reply, visitor) do
+  defp accept_reply(flow, :no_reply, visitor, _mode) do
     if flow.retries >=  @max_retries do
       :failed
     else
@@ -97,22 +102,22 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
-  defp accept_reply(flow, {:reply, reply}, visitor) do
+  defp accept_reply(flow, {:reply, reply}, visitor, mode) do
     if String.downcase(reply) == "stop" do
       :failed
     else
-      accept_reply_non_stop(flow, reply, visitor)
+      accept_reply_non_stop(flow, reply, visitor, mode)
     end
   end
 
-  defp accept_reply_non_stop(flow, reply, visitor) do
+  defp accept_reply_non_stop(flow, reply, visitor, mode) do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
 
-    reply_value = Step.validate(step, reply, flow.mode, flow.language, flow.questionnaire.default_language)
+    reply_value = Step.validate(step, reply, mode, flow.language)
 
     # Select language to use in next questions
     flow =
-      if step["type"] == "language-selection" do
+      if reply_value != :invalid_answer && step["type"] == "language-selection" do
         %Flow{flow | language: reply_value}
       else
         flow
@@ -123,29 +128,30 @@ defmodule Ask.Runtime.Flow do
         if flow.retries >=  @max_retries do
           :failed
         else
-          visitor = visitor |> Visitor.accept_message(flow.questionnaire.error_msg, flow.language)
+          visitor = visitor |> Visitor.accept_message(flow.questionnaire.error_msg, flow.language, "Error")
           {%{flow | retries: flow.retries + 1}, %Reply{}, visitor}
         end
       nil ->
-        flow = flow |> advance_current_step(step, reply_value)
+        flow = flow |> advance_current_step(step, reply_value, mode)
         {%{flow | retries: 0}, %Reply{}, visitor}
       {:refusal, reply_value} ->
-        advance_after_reply(flow, step, reply_value, visitor, stores: [])
+        advance_after_reply(flow, step, reply_value, visitor, mode, stores: [])
       reply_value ->
-        advance_after_reply(flow, step, reply_value, visitor, stores: %{step["store"] => reply_value})
+        advance_after_reply(flow, step, reply_value, visitor, mode, stores: %{step["store"] => reply_value})
     end
   end
-    # flow = flow |> advance_current_step(step, reply_value)
-    # {%{flow | retries: 0}, %Reply{stores: %{step["store"] => reply_value}}, visitor}
-  defp advance_after_reply(flow, step, reply_value, visitor, stores: stores) do
-    flow = flow |> advance_current_step(step, reply_value)
+
+  defp advance_after_reply(flow, step, reply_value, visitor, mode, stores: stores) do
+    flow = flow |> advance_current_step(step, reply_value, mode)
     {%{flow | retries: 0}, %Reply{stores: stores}, visitor}
   end
 
   def should_update_disposition(old_disposition, new_disposition)
   def should_update_disposition("completed", _), do: false
   def should_update_disposition("ineligible", _), do: false
+  def should_update_disposition("refused", _), do: false
   def should_update_disposition("partial", "ineligible"), do: false
+  def should_update_disposition("partial", "refused"), do: false
   def should_update_disposition(_, _), do: true
 
   # :next_step, :end_survey, {:jump, step_id}, :wait_for_reply
@@ -165,29 +171,29 @@ defmodule Ask.Runtime.Flow do
     {:wait_for_reply, state}
   end
 
-  defp eval(:failed) do
+  defp eval(:failed, _mode) do
     {:failed, nil, %Reply{}}
   end
 
-  defp eval({flow, state, visitor}) do
+  defp eval({flow, state, visitor}, mode) do
     step = flow.questionnaire.steps |> Enum.at(flow.current_step)
     case step do
       nil ->
-        {:end, nil, %{state | prompts: Visitor.close(visitor)}}
+        {:end, nil, %{state | steps: Visitor.close(visitor)}}
       step ->
         case state |> run_step(step) do
           {:ok, state} ->
             case visitor |> Visitor.accept_step(step, flow.language) do
               {:continue, visitor} ->
-                flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil)}
-                eval({flow, state, visitor})
+                flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil, mode)}
+                eval({flow, state, visitor}, mode)
               {:stop, visitor} ->
-                {:ok, flow, %{state | prompts: Visitor.close(visitor)}}
+                {:ok, flow, %{state | steps: Visitor.close(visitor)}}
             end
 
           {:wait_for_reply, state} ->
             {_, visitor} = visitor |> Visitor.accept_step(step, flow.language)
-            {:ok, flow, %{state | prompts: Visitor.close(visitor)}}
+            {:ok, flow, %{state | steps: Visitor.close(visitor)}}
         end
     end
   end
@@ -210,14 +216,14 @@ end
 defprotocol Ask.Runtime.Flow.Visitor do
   # -> {:continue, visitor} | {:stop, visitor}
   def accept_step(visitor, step, lang)
-  def accept_message(visitor, message, lang)
+  def accept_message(visitor, message, lang, title)
   def close(visitor)
 end
 
 defmodule Ask.Runtime.Flow.TextVisitor do
   alias Ask.Runtime.Flow.TextVisitor
   alias Ask.Runtime.Step
-  defstruct prompts: [], mode: nil
+  defstruct reply_steps: [], mode: nil
 
   def new(mode) do
     %TextVisitor{mode: mode}
@@ -225,25 +231,25 @@ defmodule Ask.Runtime.Flow.TextVisitor do
 
   defimpl Ask.Runtime.Flow.Visitor, for: Ask.Runtime.Flow.TextVisitor do
     def accept_step(visitor, step, lang) do
-      prompt = Step.fetch(:prompt, step, visitor.mode, lang, lang)
-      {:continue, add_prompt(visitor, prompt)}
+      reply_step = Step.fetch(:reply_step, step, visitor.mode, lang)
+      {:continue, add_reply_step(visitor, reply_step)}
     end
 
-    def accept_message(visitor, message, lang) do
-      prompt = Step.fetch(:error_msg, message, visitor.mode, lang, lang)
-      add_prompt(visitor, prompt)
+    def accept_message(visitor, message, lang, title) do
+      reply_step = Step.fetch(:reply_msg, message, visitor.mode, lang, title)
+      add_reply_step(visitor, reply_step)
     end
 
-    defp add_prompt(visitor, [nil]) do
+    defp add_reply_step(visitor, nil) do
       visitor
     end
 
-    defp add_prompt(visitor, prompt) do
-      %{visitor | prompts: visitor.prompts ++ prompt}
+    defp add_reply_step(visitor, reply_step) do
+      %{visitor | reply_steps: visitor.reply_steps ++ [reply_step]}
     end
 
-    def close(%TextVisitor{prompts: prompts}) do
-      prompts
+    def close(%TextVisitor{reply_steps: reply_steps}) do
+      reply_steps
     end
   end
 end

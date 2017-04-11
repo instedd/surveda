@@ -11,7 +11,9 @@ import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
+import MobileWebSmsMessage from './MobileWebSmsMessage'
 import csvString from 'csv-string'
+import { ConfirmationModal } from '../ui'
 import * as language from '../../language'
 import * as routes from '../../routes'
 import * as api from '../../api'
@@ -199,6 +201,7 @@ class QuestionnaireEditor extends Component {
     if (files.length != 1) return
 
     const { projectId, questionnaireId } = this.props
+    const importModal = this.refs.importModal
 
     api.importQuestionnaireZip(projectId, questionnaireId, files)
     .then(response => {
@@ -209,12 +212,32 @@ class QuestionnaireEditor extends Component {
         currentStep: null
       }, () => {
         this.props.questionnaireActions.receive(questionnaire)
+        importModal.close()
       })
     })
 
     // Make sure to clear the input's value so a same file
     // can be uploaded multiple times
     e.target.value = null
+
+    importModal.open({
+      modalText: <div>
+        <p>Your questionnaire is being imported, please wait...</p>
+        <div className='center-align'>
+          <div className='preloader-wrapper active center'>
+            <div className='spinner-layer spinner-blue-only'>
+              <div className='circle-clipper left'>
+                <div className='circle' />
+              </div><div className='gap-patch'>
+                <div className='circle' />
+              </div><div className='circle-clipper right'>
+                <div className='circle' />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    })
   }
 
   removeLanguage(lang) {
@@ -268,7 +291,7 @@ class QuestionnaireEditor extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
+    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
     return (
       <div className='row'>
@@ -285,6 +308,7 @@ class QuestionnaireEditor extends Component {
           </div>
           <div className='row'>
             <div className='col s12'>
+              <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
               <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
               <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
                 <i className='material-icons'>file_upload</i>
@@ -327,7 +351,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Mobile web</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={mobileWeb} onClick={e => this.toggleMode(e, 'mobileWeb')} disabled={readOnly} />
+                  <input type='checkbox' defaultChecked={mobileweb} onClick={e => this.toggleMode(e, 'mobileweb')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -358,6 +382,9 @@ class QuestionnaireEditor extends Component {
           <div className='row'>
             <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
           </div>
+          {mobileweb
+          ? <MobileWebSmsMessage readOnly={readOnly} />
+          : null}
         </div>
         : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
         }

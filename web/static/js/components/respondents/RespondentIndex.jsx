@@ -86,6 +86,11 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
   }
 
+  downloadInteractionsCSV() {
+    const { projectId, surveyId } = this.props
+    window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
+  }
+
   render() {
     if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
       return <div>Loading...</div>
@@ -161,13 +166,30 @@ class RespondentIndex extends Component {
     if (project.owner) {
       incentivesCsvLink = (
         <li className='collection-item'>
-          <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
+          <a href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
             <div>
-              <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+              <i className='material-icons'>get_app</i>
             </div>
             <div>
-              <h5>Incentives file</h5>
+              <p className='black-text'><b>Incentives file</b></p>
               <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
+            </div>
+          </a>
+        </li>
+      )
+    }
+
+    let interactionsCsvLink = null
+    if (project.owner) {
+      interactionsCsvLink = (
+        <li className='collection-item'>
+          <a href='#' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
+            <div>
+              <i className='material-icons'>get_app</i>
+            </div>
+            <div>
+              <p className='black-text'><b>Interactions</b></p>
+              <p>One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp</p>
             </div>
           </a>
         </li>
@@ -188,30 +210,31 @@ class RespondentIndex extends Component {
             <h5>Download CSV</h5>
             <p>Download survey respondents data as CSV</p>
           </div>
-          <ul className='collection'>
+          <ul className='collection download-csv'>
             <li className='collection-item'>
-              <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
+              <a href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
                 <div>
-                  <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                  <i className='material-icons'>get_app</i>
                 </div>
                 <div>
-                  <h5>Survey results</h5>
+                  <p className='black-text'><b>Survey results</b></p>
                   <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
                 </div>
               </a>
             </li>
             <li className='collection-item'>
-              <a className='download-csv' href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
+              <a href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
                 <div>
-                  <i className='btn-floating waves-effect waves-light grey material-icons'>get_app</i>
+                  <i className='material-icons'>get_app</i>
                 </div>
                 <div>
-                  <h5>Disposition History</h5>
+                  <p className='black-text'><b>Disposition History</b></p>
                   <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
                 </div>
               </a>
             </li>
             {incentivesCsvLink}
+            {interactionsCsvLink}
           </ul>
         </Modal>
         <CardTable title={title} footer={footer} tableScroll>

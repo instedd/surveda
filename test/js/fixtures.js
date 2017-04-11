@@ -123,7 +123,9 @@ const bareQuestionnaire: Questionnaire = {
   activeLanguage: 'en',
   languages: ['en'],
   quotaCompletedMsg: {},
-  errorMsg: {}
+  errorMsg: {},
+  mobileWebSmsMessage: '',
+  valid: true
 }
 
 // TODO: investigate why Flow ignores the result of `deepFreeze`
@@ -150,6 +152,7 @@ const bareSurvey: Survey = {
   respondentsCount: 2,
   comparisons: [],
   ivrRetryConfiguration: '',
+  mobilewebRetryConfiguration: '',
   smsRetryConfiguration: '',
   fallbackDelay: '',
   modeComparison: false,

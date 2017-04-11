@@ -658,6 +658,15 @@ describe('survey reducer', () => {
     expect(state3.data.questionnaireIds).toEqual([1, 3])
   })
 
+  it('changes questionnaire, resets mode', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.changeQuestionnaire(2, {'2': {'modes': ['ivr']}})
+    ])
+    expect(state.data.mode).toEqual([])
+  })
+
   it('changes questionnaireComparison with many questionnaires', () => {
     const state = playActions([
       actions.fetch(1, 1),

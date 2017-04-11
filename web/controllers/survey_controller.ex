@@ -65,7 +65,7 @@ defmodule Ask.SurveyController do
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
     |> with_respondents_count
-    |> Repo.preload(respondent_groups: :channels)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> Survey.changeset(survey_params)
     |> update_questionnaires(survey_params)
     |> Survey.update_state

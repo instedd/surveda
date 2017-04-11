@@ -83,6 +83,7 @@ defmodule Ask.RespondentControllerTest do
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "refused" => %{"count" => 0, "percent" => 0.0},
       "pending" => %{"count" => 0, "percent" => 0.0},
       "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
@@ -117,6 +118,7 @@ defmodule Ask.RespondentControllerTest do
       "failed" => %{"count" => 0, "percent" => 0.0},
       "stalled" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "refused" => %{"count" => 0, "percent" => 0.0},
       "pending" => %{"count" => 0, "percent" => 0.0},
       "cancelled" => %{"count" => 0, "percent" => 0.0}
     }
@@ -146,6 +148,7 @@ defmodule Ask.RespondentControllerTest do
     assert data["respondents_by_state"] == %{
       "partial" => %{"count" => 1, "percent" => 100*1/total},
       "ineligible" => %{"count" => 3, "percent" => 100*3/total},
+      "refused" => %{"count" => 0, "percent" => 0.0},
       "completed" => %{"count" => 1, "percent" => 100*1/total},
       "pending" => %{"count" => 10, "percent" => 100*10/total},
       "active" => %{"count" => 0, "percent" => 0.0},
@@ -203,6 +206,7 @@ defmodule Ask.RespondentControllerTest do
         "failed" => %{"count" => 0, "percent" => 0.0},
         "stalled" => %{"count" => 0, "percent" => 0.0},
         "ineligible" => %{"count" => 0, "percent" => 0.0},
+        "refused" => %{"count" => 0, "percent" => 0.0},
         "partial" => %{"count" => 0, "percent" => 0.0},
         "cancelled" => %{"count" => 0, "percent" => 0.0}
       },
@@ -315,8 +319,28 @@ defmodule Ask.RespondentControllerTest do
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
-    assert lines == ["Telephone number,Survey/experiment version",
+    assert lines == ["Telephone number,Questionnaire-Mode",
      "5678,test - SMS with phone call fallback"]
+  end
+
+  test "download interactions_csv", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
+    channel = insert(:channel, name: "test_channel")
+    insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "1234", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+
+    conn = get conn, project_survey_respondents_interactions_csv_path(conn, :interactions_csv, survey.project.id, survey.id)
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
+     "1234,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+     "5678,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
+   ]
   end
 
   test "quotas_stats", %{conn: conn, user: user} do

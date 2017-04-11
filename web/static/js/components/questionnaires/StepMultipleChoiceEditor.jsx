@@ -38,8 +38,8 @@ class StepMultipleChoiceEditor extends Component {
 
   changeChoice(index) {
     const { step, actions } = this.props
-    return (response, smsValues, ivrValues, mobileWebValues, skipLogic, autoComplete = false) => {
-      actions.changeChoice(step.id, index, response, smsValues, ivrValues, mobileWebValues, skipLogic, autoComplete)
+    return (response, smsValues, ivrValues, mobilewebValues, skipLogic, autoComplete = false) => {
+      actions.changeChoice(step.id, index, response, smsValues, ivrValues, mobilewebValues, skipLogic, autoComplete)
     }
   }
 
@@ -93,7 +93,7 @@ class StepMultipleChoiceEditor extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
+    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
     let myErrors = errors[choicesPath(stepIndex)]
     if (myErrors) {
@@ -118,7 +118,7 @@ class StepMultipleChoiceEditor extends Component {
                   ? <th style={{width: '15%'}}>Phone call</th>
                   : null
                   }
-                  { mobileWeb
+                  { mobileweb
                   ? <th style={{width: '15%'}}>Mobile web</th>
                   : null
                   }
@@ -142,7 +142,7 @@ class StepMultipleChoiceEditor extends Component {
                     stepsBefore={stepsBefore}
                     sms={sms}
                     ivr={ivr}
-                    mobileWeb={mobileWeb}
+                    mobileweb={mobileweb}
                     errors={errors}
                     smsAutocompleteGetData={(value, callback) => this.smsAutocompleteGetData(value, callback, choice, index)}
                     smsAutocompleteOnSelect={item => this.smsAutocompleteOnSelect(item, choice, index)}

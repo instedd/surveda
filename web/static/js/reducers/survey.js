@@ -9,6 +9,7 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
+import every from 'lodash/every'
 import some from 'lodash/some'
 
 export const dataReducer = (state: Survey, action: any): Survey => {
@@ -31,6 +32,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.SET_QUOTA_VARS: return setQuotaVars(state, action)
     case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
+    case actions.CHANGE_MOBILEWEB_RETRY_CONFIGURATION: return changeMobileWebRetryConfiguration(state, action)
     case actions.CHANGE_FALLBACK_DELAY: return changeFallbackDelay(state, action)
     case actions.SAVED: return saved(state, action)
     default: return state
@@ -51,6 +53,7 @@ const validate = (state) => {
   state.errors = {}
   validateRetry(state, 'sms', 'smsRetryConfiguration')
   validateRetry(state, 'ivr', 'ivrRetryConfiguration')
+  validateRetry(state, 'mobileweb', 'mobilewebRetryConfiguration')
   validateFallbackDelay(state)
 }
 
@@ -127,12 +130,15 @@ const setState = (state, action) => {
 }
 
 const setQuotaVars = (state, action) => {
+  const vars = map(action.vars, (storeVar) => storeVar.var)
+  const cutoff = vars.length == 0 ? state.cutoff : null
   return {
     ...state,
     quotas: {
-      vars: map(action.vars, (storeVar) => storeVar.var),
+      vars,
       buckets: bucketsFor(action.vars, action.options)
-    }
+    },
+    cutoff
   }
 }
 
@@ -239,15 +245,31 @@ export const modeLabel = (mode: string[]) => {
   if (isEqual(mode, ['sms'])) {
     return 'SMS'
   }
+  if (isEqual(mode, ['sms', 'ivr'])) {
+    return 'SMS with phone call fallback'
+  }
+  if (isEqual(mode, ['sms', 'mobileweb'])) {
+    return 'SMS with Mobile Web fallback'
+  }
   if (isEqual(mode, ['ivr'])) {
     return 'Phone call'
   }
   if (isEqual(mode, ['ivr', 'sms'])) {
     return 'Phone call with SMS fallback'
   }
-  if (isEqual(mode, ['sms', 'ivr'])) {
-    return 'SMS with phone call fallback'
+  if (isEqual(mode, ['ivr', 'mobileweb'])) {
+    return 'SMS with Mobile Web fallback'
   }
+  if (isEqual(mode, ['mobileweb'])) {
+    return 'Mobile Web'
+  }
+  if (isEqual(mode, ['mobileweb', 'sms'])) {
+    return 'Mobile Web with SMS fallback'
+  }
+  if (isEqual(mode, ['mobileweb', 'ivr'])) {
+    return 'Mobile Web with phone call fallback'
+  }
+
   return 'Unknown mode'
 }
 
@@ -277,16 +299,31 @@ const changeQuestionnaire = (state, action) => {
     newQuestionnaireIds = [questionnaireId]
   }
 
+  // If any questionnaire has a mode that's not present in the current survey mode,
+  // unleselect the mode
+  let mode = state.mode
+  if (mode && mode.length > 0 && action.questionnaires && !questionnairesMatchModes(mode, newQuestionnaireIds, action.questionnaires)) {
+    mode = []
+  }
+
   return {
     ...state,
     questionnaireIds: newQuestionnaireIds,
     questionnaireComparison,
+    mode,
     comparisons: buildComparisons(state.modeComparison, questionnaireComparison, state.mode, newQuestionnaireIds),
     quotas: {
       vars: [],
       buckets: []
     }
   }
+}
+
+const questionnairesMatchModes = (modes, ids, questionnaires) => {
+  return every(modes, mode =>
+    every(mode, m =>
+      ids && every(ids, id =>
+        questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
 }
 
 const toggleDay = (state, action) => {
@@ -433,6 +470,12 @@ const changeIvrRetryConfiguration = (state, action) => {
   }
 }
 
+const changeMobileWebRetryConfiguration = (state, action) => {
+  return {
+    ...state,
+    mobilewebRetryConfiguration: action.mobilewebRetryConfiguration
+  }
+}
 const changeFallbackDelay = (state, action) => {
   return {
     ...state,

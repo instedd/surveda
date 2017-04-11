@@ -98,7 +98,9 @@ class ChannelIndex extends Component {
       let name = `${provider[0].toUpperCase()}${provider.slice(1)}`
       if (multiple) name = `${name} (${friendlyName})`
 
-      return <ConfirmationModal key={`${provider}-${index}`} modalId={`${provider}Modal-${index}`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider, index)} style={{maxWidth: '600px'}} showCancel onNo={() => this.turnOffProvider(provider, index)} />
+      return <ConfirmationModal key={`${provider}-${index}`} modalId={`${provider}Modal-${index}`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider, index)} style={{maxWidth: '600px'}} showCancel
+        /* onNo={() => this.turnOffProvider(provider, index)} */
+        />
     }
 
     let syncButton = null
@@ -184,7 +186,7 @@ class ChannelIndex extends Component {
           <div className='modal-content'>
             <div className='card-title header'>
               <h5>Create a channel</h5>
-              <p>Ask will sync available channels from these providers after user authorization</p>
+              <p>Surveda will sync available channels from these providers after user authorization</p>
             </div>
             <ul className='collection'>
               {providerUIs}

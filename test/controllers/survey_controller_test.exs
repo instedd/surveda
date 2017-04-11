@@ -2,7 +2,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel}
   alias Ask.Runtime.{Flow, Session}
   alias Ask.Runtime.SessionModeProvider
 
@@ -70,6 +70,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
@@ -106,6 +107,7 @@ defmodule Ask.SurveyControllerTest do
         "started_at" => "",
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
         "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
@@ -547,11 +549,8 @@ defmodule Ask.SurveyControllerTest do
 
       channel2 = insert(:channel, user: user, type: "ivr")
 
-      group
-      |> Repo.preload([:channels])
-      |> Ecto.Changeset.change
-      |> put_assoc(:channels, [channel, channel2])
-      |> Repo.update
+      add_channel_to(group, channel)
+      add_channel_to(group, channel2)
 
       attrs = %{mode: [["sms", "ivr"]]}
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
@@ -741,6 +740,36 @@ defmodule Ask.SurveyControllerTest do
 
       assert new_survey.state == "ready"
     end
+
+    test "changes state to not_ready when questionnaire is invalid", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["sms"]], questionnaires: [])
+      create_group(survey, channel)
+
+      questionnaire |> Ask.Questionnaire.changeset(%{"valid" => false}) |> Repo.update!
+      attrs = %{questionnaire_ids: [questionnaire.id]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
+
+    test "changes state to not_ready when survey mode doesn't match questionnaire mode", %{conn: conn, user: user} do
+      [project, questionnaire, channel] = prepare_for_state_update(user)
+      questionnaire |> Ask.Questionnaire.changeset(%{"modes" => ["ivr"]}) |> Repo.update!
+
+      survey = insert(:survey, project: project, cutoff: 4, schedule_day_of_week: completed_schedule, mode: [["ivr"]], questionnaires: [questionnaire])
+      create_group(survey, channel)
+
+      attrs = %{mode: [["sms"]]}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: attrs
+      assert json_response(conn, 200)["data"]["id"]
+      new_survey = Repo.get(Survey, survey.id)
+
+      assert new_survey.state == "not_ready"
+    end
   end
 
   test "prevents launching a survey that is not in the ready state", %{conn: conn, user: user} do
@@ -906,14 +935,8 @@ defmodule Ask.SurveyControllerTest do
   end
 
   defp add_channel_to(group = %RespondentGroup{}, channel = %Channel{}) do
-    channels_changeset = Repo.get!(Ask.Channel, channel.id) |> change
-
-    changeset = group
-    |> Repo.preload([:channels])
-    |> Ecto.Changeset.change
-    |> put_assoc(:channels, [channels_changeset])
-
-    Repo.update(changeset)
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type})
+    |> Repo.insert
   end
 
   defp create_group(survey, channel \\ nil) do

@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, SurveyLogEntry}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -99,7 +99,7 @@ defmodule Ask.RespondentController do
     {date, value}
   end
 
-  def stats(conn,  %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     survey = conn
     |> load_project(project_id)
     |> assoc(:surveys)
@@ -140,6 +140,7 @@ defmodule Ask.RespondentController do
     failed = by_state["failed"] || 0
     partial = by_state["partial"] || 0
     ineligible = by_state["ineligible"] || 0
+    refused = by_state["refused"] || 0
     cancelled = by_state["cancelled"] || 0
 
     total_quota = buckets
@@ -157,6 +158,7 @@ defmodule Ask.RespondentController do
         failed: respondent_by_state(failed, total_respondents),
         partial: respondent_by_state(partial, total_respondents),
         ineligible: respondent_by_state(ineligible, total_respondents),
+        refused: respondent_by_state(refused, total_respondents),
         cancelled: respondent_by_state(cancelled, total_respondents)
       },
       respondents_by_date: cumulative_count,
@@ -381,7 +383,7 @@ defmodule Ask.RespondentController do
       [r.phone_number, experiment_name(r.questionnaire, r.mode)]
     end)
 
-    header = ["Telephone number", "Survey/experiment version"]
+    header = ["Telephone number", "Questionnaire-Mode"]
     rows = Stream.concat([[header], csv_rows])
 
     # Convert to CSV string
@@ -391,6 +393,55 @@ defmodule Ask.RespondentController do
     |> to_string
 
     filename = Timex.now |> Timex.format!("respondents_incentives_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+
+    conn
+      |> put_resp_content_type("text/csv")
+      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+      |> send_resp(200, csv)
+  end
+
+  def interactions_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = conn
+    |> load_project_for_owner(project_id)
+
+    # Check that the survey is in the project
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    csv_rows = (from e in SurveyLogEntry,
+      where: e.survey_id == ^survey.id)
+    |> preload(:channel)
+    |> Repo.stream
+    |> Stream.map(fn e ->
+      channel_name =
+        if e.channel do
+          e.channel.name
+        else
+          ""
+        end
+
+      disposition = disposition_label(e.disposition)
+      action_type = action_type_label(e.action_type)
+
+      timestamp = e.timestamp
+      |> Ecto.DateTime.to_erl
+      |> Timex.Ecto.DateTime.cast!
+      |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
+
+      [e.respondent_hashed_number, (e.mode |> String.upcase), channel_name, disposition, action_type, e.action_data, timestamp]
+    end)
+
+    header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
+    rows = Stream.concat([[header], csv_rows])
+
+    # Convert to CSV string
+    csv = rows
+    |> CSV.encode
+    |> Enum.to_list
+    |> to_string
+
+    filename = Timex.now |> Timex.format!("respondents_interactions_%Y-%m-%d-%H-%M-%S.csv", :strftime)
 
     conn
       |> put_resp_content_type("text/csv")
@@ -415,10 +466,30 @@ defmodule Ask.RespondentController do
   defp mode_label(mode) do
     case mode do
       ["sms"] -> "SMS"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
       ["ivr"] -> "Phone call"
       ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["ivr", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["mobileweb"] -> "Mobile Web"
+      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
+      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
       _ -> "Unknown mode"
+    end
+  end
+
+  defp action_type_label(action) do
+    case action do
+      nil -> nil
+      "contact" -> "Contact attempt"
+      _ -> String.capitalize(action)
+    end
+  end
+
+  defp disposition_label(disposition) do
+    case disposition do
+      nil -> nil
+      _ -> String.capitalize(disposition)
     end
   end
 end

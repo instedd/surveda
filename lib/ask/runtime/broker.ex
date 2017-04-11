@@ -30,6 +30,8 @@ defmodule Ask.Runtime.Broker do
 
   def handle_info(:poll, state, now \\ Timex.now) do
     try do
+      mark_stalled_for_eight_hours_respondents_as_failed()
+
       Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: @batch_limit)
       |> Enum.each(&retry_respondent(&1))
 
@@ -54,12 +56,36 @@ defmodule Ask.Runtime.Broker do
     {:reply, :ok, state}
   end
 
-  def channel_failed(respondent, token) do
+  defp mark_stalled_for_eight_hours_respondents_as_failed do
+    eight_hours_ago = Timex.now |> Timex.shift(hours: -8)
+
+    (from r in Respondent,
+      where: r.state == "stalled",
+      where: r.updated_at <= ^eight_hours_ago)
+    |> Repo.all
+    |> Enum.each(fn respondent ->
+      update_respondent(respondent, :failed)
+    end)
+  end
+
+  def channel_failed(respondent, reason \\ "failed") do
     session = respondent.session |> Session.load
-    case Session.channel_failed(session, token) do
+    case Session.channel_failed(session, reason) do
       :ok -> :ok
       :failed ->
         update_respondent(respondent, :failed)
+    end
+  end
+
+  def delivery_confirm(respondent, title) do
+    delivery_confirm(respondent, title, nil)
+  end
+
+  def delivery_confirm(respondent, title, mode) do
+    unless respondent.session == nil do
+      session = respondent.session |> Session.load
+      session_mode = session_mode(respondent, session, mode)
+      Session.delivery_confirm(session, title, session_mode)
     end
   end
 
@@ -123,7 +149,7 @@ defmodule Ask.Runtime.Broker do
     (from r in assoc(survey, :respondents),
       where: r.state == "pending",
       limit: ^count)
-    |> preload(respondent_group: :channels)
+    |> preload(respondent_group: [respondent_group_channels: :channel])
     |> Repo.all
     |> Enum.each(&start(survey, &1))
   end
@@ -218,18 +244,45 @@ defmodule Ask.Runtime.Broker do
 
   def sync_step(respondent, reply) do
     session = respondent.session |> Session.load
-    sync_step_internal(session, reply)
+    sync_step_internal(session, reply, session.current_mode)
+  end
+
+  def sync_step(respondent, reply, mode) do
+    session = respondent.session |> Session.load
+    session_mode = session_mode(respondent, session, mode)
+    sync_step_internal(session, reply, session_mode)
+  end
+
+  defp session_mode(_respondent, session, :nil) do
+    session.current_mode
+  end
+
+  defp session_mode(respondent, session, mode) do
+    if mode == Ask.Runtime.SessionMode.mode(session.current_mode) do
+      session.current_mode
+    else
+      # We need to find which channel has this mode
+      group = (respondent |> Repo.preload(:respondent_group)).respondent_group
+      channel = (group |> Repo.preload(:channels)).channels
+      |> Enum.find(fn c -> c.type == mode end)
+
+      Ask.Runtime.SessionModeProvider.new(mode, channel, [])
+    end
   end
 
   # We expose this method so we can test that if a stale respondent is
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
   def sync_step_internal(session, reply) do
+    sync_step_internal(session, reply, session.current_mode)
+  end
+
+  defp sync_step_internal(session, reply, session_mode) do
     respondent = session.respondent
 
     transaction_result = Repo.transaction(fn ->
       try do
-        handle_session_step(Session.sync_step(session, reply))
+        handle_session_step(Session.sync_step(session, reply, session_mode))
       rescue
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
@@ -239,9 +292,12 @@ defmodule Ask.Runtime.Broker do
             stacktrace: System.stacktrace(),
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
-          Survey
-          |> Repo.get(respondent.survey_id)
-          |> complete
+          try do
+            handle_session_step({:failed, respondent})
+          rescue
+            _ ->
+              :end
+          end
       end
     end)
 
@@ -258,12 +314,12 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:ok, session, reply, timeout, respondent}) do
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
-    {:prompts, Reply.prompts(reply)}
+    {:reply, reply}
   end
 
   defp handle_session_step({:end, reply, respondent}) do
     update_respondent(respondent, :end, Reply.disposition(reply))
-    {:end, {:prompts, Reply.prompts(reply)}}
+    {:end, {:reply, reply}}
   end
 
   defp handle_session_step({:end, respondent}) do
@@ -273,7 +329,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:rejected, reply, respondent}) do
     update_respondent(respondent, :rejected)
-    {:end, {:prompts, Reply.prompts(reply)}}
+    {:end, {:reply, reply}}
   end
 
   defp handle_session_step({:rejected, respondent}) do
@@ -287,6 +343,7 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:failed, respondent}) do
     update_respondent(respondent, :failed)
+    :end
   end
 
   defp match_condition(responses, bucket) do
@@ -323,7 +380,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, nil) do
-    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    timeout_at = next_timeout(respondent, timeout)
     respondent
     |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
     |> Repo.update!
@@ -332,7 +389,7 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
-      timeout_at = Timex.shift(Timex.now, minutes: timeout)
+      timeout_at = next_timeout(respondent, timeout)
       respondent
       |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
@@ -357,12 +414,14 @@ defmodule Ask.Runtime.Broker do
     # as "completed".
     new_disposition =
       case {old_disposition, reply_disposition} do
-        # If the respondent is already completed or ineligible, don't change it
+        # If the respondent is already completed, ineligible or refused, don't change it
         {"completed", _} -> "completed"
         {"ineligible", _} -> "ineligible"
-        # If a flag step sets the respondent as ineligible, do so (the respondent
+        {"refused", _} -> "refused"
+        # If a flag step sets the respondent as ineligible or refused, do so (the respondent
         # will be an non-set or partial disposition here)
         {_, "ineligible"} -> "ineligible"
+        {_, "refused"} -> "refused"
         # In any other case the survey ends and the respondent is marked as completed
         _ -> "completed"
       end
@@ -380,6 +439,15 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
     |> create_disposition_history(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
+  end
+
+  defp next_timeout(respondent, timeout) do
+    timeout_at = Timex.shift(Timex.now, minutes: timeout)
+    survey = (respondent |> Repo.preload(:survey)).survey
+    date_time = survey
+    |> Survey.next_available_date_time(timeout_at)
+    |> Ecto.DateTime.to_erl
+    Timex.Timezone.resolve("UTC", date_time)
   end
 
   defp create_disposition_history(respondent, old_disposition, mode) do

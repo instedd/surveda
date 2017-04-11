@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Web, :model
-  alias Ask.Runtime.{Broker, NuntiumChannel, Flow}
+  alias Ask.Runtime.{Broker, NuntiumChannel, Flow, Reply, ReplyStep}
   alias Ask.{Repo, Respondent, Channel}
   import Ecto.Query
   import Plug.Conn
@@ -50,11 +50,13 @@ defmodule Ask.Runtime.NuntiumChannel do
     callback(conn, params, Broker)
   end
 
-  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "session_token" => token, "state" => state}, broker) do
+  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args, broker) do
     respondent = Repo.get!(Respondent, respondent_id)
     case state do
       "failed" ->
-        broker.channel_failed(respondent, token)
+        broker.channel_failed(respondent)
+      "delivered" ->
+        broker.delivery_confirm(respondent, args["step_title"], "sms")
       _ -> :ok
     end
 
@@ -69,26 +71,41 @@ defmodule Ask.Runtime.NuntiumChannel do
       order_by: [desc: r.updated_at],
       limit: 1)
 
-    prompts = case respondent do
+    reply = case respondent do
       nil ->
-        []
+        nil
       _ ->
-        case broker.sync_step(respondent, Flow.Message.reply(body)) do
-          {:prompts, prompts} ->
-            prompts
-          {:end, {:prompts, prompts}} ->
-            prompts
+        case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
+          {:reply, reply} ->
+            reply
+          {:end, {:reply, reply}} ->
+            reply
           :end ->
-            []
+            nil
         end
     end
 
-    reply = prompts |> Enum.map(fn prompt -> %{"to": from, "body": prompt} end)
-    Phoenix.Controller.json(conn, reply)
+    json_reply = reply_to_messages(reply, from, respondent)
+    Phoenix.Controller.json(conn, json_reply)
   end
 
   def callback(conn, _, _) do
     conn |> send_resp(404, "not found")
+  end
+
+  def reply_to_messages(nil, _to, _respondent) do; []; end
+  def reply_to_messages(_reply, _to, nil) do; []; end
+  def reply_to_messages(reply, to, respondent) do
+    Enum.flat_map Reply.steps(reply), fn step ->
+      step.prompts |> Enum.with_index |> Enum.map(fn {prompt, index} ->
+        %{
+          to: to,
+          body: prompt,
+          respondent_id: respondent.id,
+          step_title: ReplyStep.title_with_index(step, index)
+        }
+      end)
+    end
   end
 
   def sync_channels(user_id, base_url) do
@@ -198,20 +215,18 @@ defmodule Ask.Runtime.NuntiumChannel do
 
     def setup(_channel, _respondent, _token), do: :ok
 
-    def ask(channel, respondent, token, prompts) do
-      messages = prompts |> Enum.map(fn prompt ->
-        %{
-          to: "sms://#{respondent.sanitized_phone_number}",
-          body: prompt,
-          suggested_channel: channel.settings["nuntium_channel"],
-          respondent_id: respondent.id,
-          session_token: token
-        }
-      end)
+    def ask(channel, respondent, token, reply) do
+      to = "sms://#{respondent.sanitized_phone_number}"
+      messages = Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent) |>
+        Enum.map(fn(msg) ->
+          Map.merge(msg, %{suggested_channel: channel.settings["nuntium_channel"], session_token: token})
+        end)
+
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
     end
 
+    def has_delivery_confirmation?(_), do: true
     def has_queued_message?(_, _), do: false
     def cancel_message(_, _), do: :ok
   end

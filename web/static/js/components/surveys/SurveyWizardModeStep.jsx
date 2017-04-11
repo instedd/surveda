@@ -1,20 +1,30 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
+import every from 'lodash/every'
 import some from 'lodash/some'
+import each from 'lodash/each'
 import isEqual from 'lodash/isEqual'
 import { modeLabel } from '../../reducers/survey'
+import * as respondentActions from '../../actions/respondentGroups'
 
 class SurveyWizardModeStep extends Component {
   static propTypes = {
     survey: PropTypes.object.isRequired,
+    respondentGroups: PropTypes.object,
+    questionnaires: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired
   }
 
-  modeChange(e, value) {
-    const { dispatch } = this.props
-    dispatch(actions.selectMode(value))
+  modeChange(e, modes) {
+    const { dispatch, survey, respondentGroups } = this.props
+    dispatch(actions.selectMode(modes))
+    each(Object.keys(respondentGroups), groupId => {
+      let currentChannels = respondentGroups[groupId].channels || []
+      currentChannels = currentChannels.filter(channel => some(modes, mode => channel.mode == mode))
+      dispatch(respondentActions.selectChannels(survey.projectId, survey.id, groupId, currentChannels))
+    })
   }
 
   modeComparisonChange(e) {
@@ -24,6 +34,34 @@ class SurveyWizardModeStep extends Component {
 
   modeIncludes(modes, target) {
     return some(modes, ary => isEqual(ary, target))
+  }
+
+  questionnairesMatchMode(mode, ids, questionnaires) {
+    return every(mode, m =>
+      ids && every(ids, id =>
+        questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1))
+  }
+
+  input(id, inputType, modeComparison, mode, modes, value) {
+    const { survey, questionnaires, readOnly } = this.props
+    const questionnaireIds = survey.questionnaireIds
+    const match = this.questionnairesMatchMode(modes, questionnaireIds, questionnaires)
+
+    return (
+      <p>
+        <input
+          id={id}
+          type={inputType}
+          name='questionnaire_mode'
+          className={modeComparison ? 'filled-in' : 'with-gap'}
+          value={value}
+          checked={this.modeIncludes(mode, modes)}
+          onChange={e => this.modeChange(e, modes)}
+          disabled={readOnly || !match}
+          />
+        <label htmlFor={id}>{modeLabel(modes)}</label>
+      </p>
+    )
   }
 
   render() {
@@ -61,58 +99,15 @@ class SurveyWizardModeStep extends Component {
                 />
               <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
             </p>
-            <p>
-              <input
-                id='questionnaire_mode_ivr'
-                type={inputType}
-                name='questionnaire_mode'
-                className={modeComparison ? 'filled-in' : 'with-gap'}
-                value='ivr'
-                checked={this.modeIncludes(mode, ['ivr'])}
-                onChange={e => this.modeChange(e, ['ivr'])}
-                disabled={readOnly}
-                />
-              <label htmlFor='questionnaire_mode_ivr'>{modeLabel(['ivr'])}</label>
-            </p>
-            <p>
-              <input
-                id='questionnaire_mode_ivr_sms'
-                type={inputType}
-                name='questionnaire_mode'
-                className={modeComparison ? 'filled-in' : 'with-gap'}
-                value='ivr_sms'
-                checked={this.modeIncludes(mode, ['ivr', 'sms'])}
-                onChange={e => this.modeChange(e, ['ivr', 'sms'])}
-                disabled={readOnly}
-                />
-              <label htmlFor='questionnaire_mode_ivr_sms'>{modeLabel(['ivr', 'sms'])}</label>
-            </p>
-            <p>
-              <input
-                id='questionnaire_mode_sms'
-                type={inputType}
-                name='questionnaire_mode'
-                className={modeComparison ? 'filled-in' : 'with-gap'}
-                value='sms'
-                checked={this.modeIncludes(mode, ['sms'])}
-                onChange={e => this.modeChange(e, ['sms'])}
-                disabled={readOnly}
-                />
-              <label htmlFor='questionnaire_mode_sms'>{modeLabel(['sms'])}</label>
-            </p>
-            <p>
-              <input
-                id='questionnaire_mode_sms_ivr'
-                type={inputType}
-                name='questionnaire_mode'
-                className={modeComparison ? 'filled-in' : 'with-gap'}
-                value='sms_ivr'
-                checked={this.modeIncludes(mode, ['sms', 'ivr'])}
-                onChange={e => this.modeChange(e, ['sms', 'ivr'])}
-                disabled={readOnly}
-                />
-              <label htmlFor='questionnaire_mode_sms_ivr'>{modeLabel(['sms', 'ivr'])}</label>
-            </p>
+            {this.input('questionnaire_mode_ivr', inputType, modeComparison, mode, ['ivr'], 'ivr')}
+            {this.input('questionnaire_mode_ivr_sms', inputType, modeComparison, mode, ['ivr', 'sms'], 'ivr_sms')}
+            {this.input('questionnaire_mode_ivr_web', inputType, modeComparison, mode, ['ivr', 'mobileweb'], 'ivr_mobileweb')}
+            {this.input('questionnaire_mode_sms', inputType, modeComparison, mode, ['sms'], 'sms')}
+            {this.input('questionnaire_mode_sms_ivr', inputType, modeComparison, mode, ['sms', 'ivr'], 'sms_ivr')}
+            {this.input('questionnaire_mode_sms_mobileweb', inputType, modeComparison, mode, ['sms', 'mobileweb'], 'sms_mobileweb')}
+            {this.input('questionnaire_mode_mobileweb', inputType, modeComparison, mode, ['mobileweb'], 'mobileweb')}
+            {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
+            {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
           </div>
         </div>
       </div>

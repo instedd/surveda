@@ -9,7 +9,7 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
-import { Tooltip } from '../ui'
+import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 
@@ -50,12 +50,20 @@ class SurveyShow extends Component {
   }
 
   stopSurvey() {
-    const { projectId, surveyId, router } = this.props
-    stopSurvey(projectId, surveyId)
-      .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
+    const { projectId, surveyId, survey, router } = this.props
+    const stopConfirmationModal = this.refs.stopConfirmationModal
+    stopConfirmationModal.open({
+      modalText: <span>
+        <p>Are you sure you want to stop the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
+      </span>,
+      onConfirm: () => {
+        stopSurvey(projectId, surveyId)
+          .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
+      }
+    })
   }
 
-  iconForMode(mode) {
+  iconForMode(mode: string) {
     let icon = null
     if (mode == 'sms') {
       icon = 'sms'
@@ -66,7 +74,22 @@ class SurveyShow extends Component {
     return icon
   }
 
-  labelForMode(mode) {
+  letterForIndex(index) {
+    switch (index) {
+      case 0:
+        return 'A'
+      case 1:
+        return 'B'
+      case 2:
+        return 'C'
+      case 3:
+        return 'D'
+      default:
+        throw new Error(`invalid modes`)
+    }
+  }
+
+  labelForMode(mode: string) {
     let label = null
     if (mode == 'sms') {
       label = 'SMS'
@@ -77,13 +100,37 @@ class SurveyShow extends Component {
     return label
   }
 
-  modeFor(type, mode) {
+  modeFor(index: number, mode: string) {
+    let type = (index == 0) ? 'Primary' : 'Fallback'
     return (
       <div className='mode'>
         <label className='grey-text'>{type} Mode</label>
         <div>
           <i className='material-icons'>{this.iconForMode(mode)}</i>
           <span className='mode-label name'>{this.labelForMode(mode)}</span>
+        </div>
+      </div>
+    )
+  }
+
+  modeForComparison(mode: string) {
+    return (<div className='mode-inline-block'>
+      <i className='material-icons'>{this.iconForMode(mode)}</i>
+      <span className='mode-label name'>{this.labelForMode(mode)}</span>
+    </div>
+    )
+  }
+
+  modesForComparisons(modes: string[], index) {
+    let modesForComparisons = modes.map((m, index) => {
+      return this.modeForComparison(m)
+    })
+    const modeDescriptions = (modesForComparisons.length == 2) ? [modesForComparisons[0], (<div className='mode-inline-block'> + </div>), modesForComparisons[1], (<div className='mode-inline-block'>fallback</div>)] : modesForComparisons
+    return (
+      <div className='mode'>
+        <label className='grey-text'>{'Mode ' + this.letterForIndex(index)}</label>
+        <div>
+          {modeDescriptions}
         </div>
       </div>
     )
@@ -97,16 +144,17 @@ class SurveyShow extends Component {
       return <p>Loading...</p>
     }
 
-    let primaryMode = this.modeFor('Primary', survey.mode[0])
-    let fallbackMode = null
-    if (survey.mode.length > 1) {
-      fallbackMode = this.modeFor('Fallback', survey.mode[1])
+    let modes
+    if (survey.mode.length == 1) {
+      modes = <div className='survey-modes'>
+        {survey.mode[0].map((mode, index) => (this.modeFor(index, mode)))}
+      </div>
+    } else {
+      modes = survey.mode.map((modes, index) => (<div className='survey-modes' key={String(index)}>
+        {this.modesForComparisons(modes, index)}
+      </div>)
+      )
     }
-
-    let modes = <div className='survey-modes'>
-      {primaryMode}
-      {fallbackMode}
-    </div>
 
     let table
     if (respondentsQuotasStats.length > 0) {
@@ -121,7 +169,7 @@ class SurveyShow extends Component {
     if (!readOnly && survey.state == 'running') {
       stopComponent = (
         <Tooltip text='Stop survey'>
-          <a className='btn-floating btn-large waves-effect waves-light green right mtop' onClick={() => this.stopSurvey()}>
+          <a className='btn-floating btn-large waves-effect waves-light red right mtop' onClick={() => this.stopSurvey()}>
             <i className='material-icons'>stop</i>
           </a>
         </Tooltip>
@@ -131,6 +179,7 @@ class SurveyShow extends Component {
     return (
       <div className='row'>
         {stopComponent}
+        <ConfirmationModal ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}

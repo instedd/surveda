@@ -28,7 +28,7 @@ type Props = {
 type QuizState = {
   smsOriginalValue: string,
   ivrOriginalValue: string,
-  mobileWebOriginalValue: string,
+  mobilewebOriginalValue: string,
   stepPromptSms: string,
   stepPromptIvr: AudioPrompt,
   stepPromptIvrText: string,
@@ -145,7 +145,7 @@ class QuestionnaireMsg extends Component {
       quizState: {
         smsOriginalValue: getPromptSms(questionnaireMsg, activeLanguage),
         ivrOriginalValue: getPromptIvrText(questionnaireMsg, activeLanguage),
-        mobileWebOriginalValue: getPromptMobileWeb(questionnaireMsg, activeLanguage),
+        mobilewebOriginalValue: getPromptMobileWeb(questionnaireMsg, activeLanguage),
         stepPromptSms: getPromptSms(questionnaireMsg, activeLanguage),
         stepPromptIvr: promptIvr,
         stepPromptMobileWeb: getPromptMobileWeb(questionnaireMsg, activeLanguage),
@@ -279,7 +279,7 @@ class QuestionnaireMsg extends Component {
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileWeb = questionnaire.modes.indexOf('mobileWeb') != -1
+    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
     let smsInput = null
 
@@ -324,14 +324,14 @@ class QuestionnaireMsg extends Component {
           />
       }
 
-      let mobileWebInput = null
+      let mobilewebInput = null
 
-      if (mobileWeb) {
-        let mobileWebInputErrors = errors[msgPromptTextPath(messageKey, 'mobileWeb', questionnaire.activeLanguage)]
-        mobileWebInput = <MobileWebPrompt id={`${decamelize(messageKey, '-')}-mobile-web`}
+      if (mobileweb) {
+        let mobilewebInputErrors = errors[msgPromptTextPath(messageKey, 'mobileweb', questionnaire.activeLanguage)]
+        mobilewebInput = <MobileWebPrompt id={`${decamelize(messageKey, '-')}-mobile-web`}
           value={quizState.stepPromptMobileWeb}
-          inputErrors={mobileWebInputErrors}
-          originalValue={quizState.mobileWebOriginalValue}
+          inputErrors={mobilewebInputErrors}
+          originalValue={quizState.mobilewebOriginalValue}
           onChange={e => this.promptMobileWebChange(e)}
           readOnly={readOnly}
           onBlur={e => this.promptMobileWebSubmit(e)}
@@ -358,10 +358,7 @@ class QuestionnaireMsg extends Component {
               <div>
                 {smsInput}
                 {ivrInput}
-                { this.props.messageKey == 'quotaCompletedMsg'
-                ? mobileWebInput
-                : null
-                }
+                {mobilewebInput}
               </div>
             </li>
           </ul>

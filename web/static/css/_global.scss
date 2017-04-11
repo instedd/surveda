@@ -66,6 +66,15 @@
       vertical-align: top;
     }
   }
+
+  .mode-inline-block {
+    display: inline-block;
+    vertical-align: text-top;
+    margin-right: 12px;
+    &:last-child{
+      margin-left: -6px;
+    }
+  }
 }
 
 
@@ -104,10 +113,18 @@
   padding: 0px;
   .card-chart {
     margin: 30px 0 20px;
+    svg {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
   }
   .card-title {
-    position: relative;
+    position: absolute;
     padding-right: 20px;
+    width: 85%;
+    height: 40px;
+    top: 0;
+    display: block;
 
     a {
       position: absolute;
@@ -123,11 +140,9 @@
     }
     .card-status {
       border-top: 1px solid color("grey","lighten-3");
-      padding-top: 20px;
+      padding-top: 50px;
+      position: relative;
       padding-bottom: 20px;
-      p {
-        margin-top: 10px;
-      }
     }
   }
 
@@ -283,6 +298,24 @@ i.survey-status { // icon for survey status on index
     margin-right: -20px;
   }
 }
+
+.survey-questionnaires {
+  .tooltip-error {
+    position: relative;
+    &:after {
+      content: '';
+      @extend .back-error;
+      display: block;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      position: absolute;
+      top: 3px;
+      right: -20px;
+    }
+  }
+}
+
 .wizard-content {
   > div {
     min-height: 110vh;
@@ -844,22 +877,6 @@ audio::-webkit-media-controls-enclosure {
 
 audio::-webkit-media-controls-panel {
   width: calc(100% + 30px); /* Adjust as needed */
-}
-
-.download-csv > div {
-  display: inline-block;
-  color: gray;
-  max-width: 70%;
-}
-
-.download-csv > div > i {
-  padding-left: 15px;
-  top: -38px;
-  width: 60px;
-  height: 60px;
-  padding-top: 10px;
-  margin-right: 10px;
-  font-size: 23pt;
 }
 
 body.bdfh {
