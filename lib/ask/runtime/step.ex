@@ -109,9 +109,9 @@ defmodule Ask.Runtime.Step do
     |> Map.get("responses", %{})
     |> Map.get(mode, %{}) do
       response when is_map(response) ->
-        response |> Map.get(language)
+        response |> Map.get(language) |> to_list
       response ->
-        response
+        response |> to_list
     end
   end
 
@@ -124,6 +124,14 @@ defmodule Ask.Runtime.Step do
 
   def fetch(:reply_msg, msg, mode, language, title) do
     ReplyStep.new(fetch(:msg, msg, mode, language), title)
+  end
+
+  defp to_list(value) do
+    if is_list(value) do
+      value
+    else
+      [value]
+    end
   end
 
   defp split_by_newlines(text, mode) do
