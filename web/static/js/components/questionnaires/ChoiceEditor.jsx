@@ -184,14 +184,17 @@ class ChoiceEditor extends Component {
     }
   }
 
-  cell(value: string, emptyValue: string, errors: string[], shouldDisplay: boolean, onClick: Function) {
+  cell(value: string, errors: string[], shouldDisplay: boolean, onClick: Function) {
     const tooltip = (errors || [value]).join(', ')
+    const emptyValue = !value || value.trim().length == 0
+    const className = emptyValue ? 'tooltip-error' : 'basic-error'
+
     const elem = shouldDisplay
       ? <div>
         <UntitledIfEmpty
           text={value}
-          emptyText={emptyValue}
-          className={classNames({'basic-error tooltip-error': errors})} />
+          emptyText={'\u00a0'}
+          className={classNames({[className]: errors})} />
       </div>
     : null
 
@@ -293,12 +296,12 @@ class ChoiceEditor extends Component {
       return (
         <tr>
           {!isRefusal
-          ? this.cell(this.state.response, 'No response', responseErrors, true, e => this.enterEditMode(e, 'response'))
+          ? this.cell(this.state.response, responseErrors, true, e => this.enterEditMode(e, 'response'))
           : null
           }
-          {this.cell(this.state.sms, 'No SMS', smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
-          {this.cell(this.state.ivr, 'No IVR', ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
-          {this.cell(this.state.mobileweb, 'No MOBILE WEB', mobilewebErrors, mobileweb, e => this.enterEditMode(e, 'mobileweb'))}
+          {this.cell(this.state.sms, smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
+          {this.cell(this.state.ivr, ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
+          {this.cell(this.state.mobileweb, mobilewebErrors, mobileweb, e => this.enterEditMode(e, 'mobileweb'))}
           {skipLogicInput}
           { readOnly || isRefusal ? <td />
             : <td>
