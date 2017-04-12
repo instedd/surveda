@@ -316,6 +316,11 @@ defmodule Ask.Runtime.Session do
     {:failed, respondent}
   end
 
+  defp handle_step_answer(_, {:stopped, flow, reply}, respondent, _, _, current_mode) do
+    log_prompts(reply, current_mode.channel, respondent, true)
+    {:stopped, reply, respondent}
+  end
+
   def cancel(session) do
     Ask.Channel.runtime_channel(session.current_mode.channel)
     |> Channel.cancel_message(session.channel_state)

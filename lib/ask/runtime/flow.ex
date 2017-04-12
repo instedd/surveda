@@ -104,7 +104,7 @@ defmodule Ask.Runtime.Flow do
 
   defp accept_reply(flow, {:reply, reply}, visitor, mode) do
     if String.downcase(reply) == "stop" do
-      :failed
+      :stopped
     else
       accept_reply_non_stop(flow, reply, visitor, mode)
     end
@@ -169,6 +169,10 @@ defmodule Ask.Runtime.Flow do
 
   defp run_step(state, _step) do
     {:wait_for_reply, state}
+  end
+
+  defp eval(:stopped, _mode) do
+    {:stopped, nil, %Reply{disposition: "refused"}}
   end
 
   defp eval(:failed, _mode) do

@@ -341,6 +341,11 @@ defmodule Ask.Runtime.Broker do
     update_respondent(respondent, {:stalled, session})
   end
 
+  defp handle_session_step({:stopped, reply, respondent}) do
+    update_respondent(respondent, :stopped, Reply.disposition(reply))
+    :end
+  end
+
   defp handle_session_step({:failed, respondent}) do
     update_respondent(respondent, :failed)
     :end
@@ -379,6 +384,11 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
   end
 
+  defp update_respondent(respondent, :stopped, disposition) do
+    session = respondent.session |> Session.load
+    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed")
+  end
+
   defp update_respondent(respondent, {:ok, session, timeout}, nil) do
     timeout_at = next_timeout(respondent, timeout)
     respondent
@@ -387,17 +397,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
-    old_disposition = respondent.disposition
-    if Flow.should_update_disposition(old_disposition, disposition) do
-      timeout_at = next_timeout(respondent, timeout)
-      respondent
-      |> Respondent.changeset(%{disposition: disposition, state: "active", session: Session.dump(session), timeout_at: timeout_at})
-      |> Repo.update!
-      |> create_disposition_history(old_disposition, session.current_mode |> SessionMode.mode)
-      |> update_quota_bucket(old_disposition, session.count_partial_results)
-    else
-      update_respondent(respondent, {:ok, session, timeout}, nil)
-    end
+    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at = next_timeout(respondent, timeout), disposition, "active")
   end
 
   defp update_respondent(respondent, :end, reply_disposition) do
@@ -439,6 +439,19 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
     |> create_disposition_history(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
+  end
+
+  defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state) do
+    old_disposition = respondent.disposition
+    if Flow.should_update_disposition(old_disposition, disposition) do
+      respondent
+      |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at})
+      |> Repo.update!
+      |> create_disposition_history(old_disposition, session.current_mode |> SessionMode.mode)
+      |> update_quota_bucket(old_disposition, session.count_partial_results)
+    else
+      update_respondent(respondent, {:ok, session, timeout}, nil)
+    end
   end
 
   defp next_timeout(respondent, timeout) do

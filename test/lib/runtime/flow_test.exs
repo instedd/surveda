@@ -60,7 +60,14 @@ defmodule Ask.FlowTest do
   test "next step with STOP" do
     {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("StoP"))
-    assert {:failed, nil, %Reply{}} = step
+
+    assert {:stopped, nil, reply} = step
+
+    prompts = Reply.prompts(reply)
+    disposition = Reply.disposition(reply)
+
+    assert prompts == []
+    assert disposition == "refused"
   end
 
   test "retry step (sms mode)" do
