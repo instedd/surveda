@@ -57,8 +57,25 @@ export const clearInvalids = () => ({
 
 export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, getState) => {
   dispatch(uploadingRespondentGroup())
-  api.uploadRespondentGroup(projectId, surveyId, files)
-  .then(response => {
+  handleRespondentGroupUpload(dispatch,
+    api.uploadRespondentGroup(projectId, surveyId, files)
+  )
+}
+
+export const addMoreRespondentsToGroup = (projectId, surveyId, groupId, file) => (dispatch, getState) => {
+  handleRespondentGroupUpload(dispatch,
+    api.addMoreRespondentsToGroup(projectId, surveyId, groupId, file)
+  )
+}
+
+export const replaceRespondents = (projectId, surveyId, groupId, file) => (dispatch, getState) => {
+  handleRespondentGroupUpload(dispatch,
+    api.replaceRespondents(projectId, surveyId, groupId, file)
+  )
+}
+
+const handleRespondentGroupUpload = (dispatch, promise) => {
+  promise.then(response => {
     const group = response.entities.respondentGroups[response.result]
     dispatch(receiveRespondentGroup(group))
   }, (e) => {

@@ -9,6 +9,7 @@ type Props = {
   header?: string,
   modalText?: any,
   confirmationText?: string,
+  noText?: string,
   onConfirm?: Function,
   onNo?: Function,
   modalId?: string,
@@ -53,6 +54,8 @@ export class ConfirmationModal extends Component {
 
   render() {
     const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false, initOptions } = this.state
+    let { noText } = this.state
+    if (!noText) noText = 'No'
 
     let cancelLink = null
     if (showCancel) {
@@ -68,7 +71,7 @@ export class ConfirmationModal extends Component {
         e.preventDefault()
         onNo()
       }
-      noLink = <a href='#!' onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>No</a>
+      noLink = <a href='#!' onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{noText}</a>
     }
 
     const onConfirmClick = (e) => {

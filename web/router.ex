@@ -53,7 +53,10 @@ defmodule Ask.Router do
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop
           resources "/respondents", RespondentController, only: [:index]
-          resources "/respondent_groups", RespondentGroupController, only: [:index, :create, :update, :delete]
+          resources "/respondent_groups", RespondentGroupController, only: [:index, :create, :update, :delete] do
+            post "/add", RespondentGroupController, :add, as: :add
+            post "/replace", RespondentGroupController, :replace, as: :replace
+          end
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/respondents/quotas_stats", RespondentController, :quotas_stats, as: :respondents_quotas_stats
           get "/respondents/csv", RespondentController, :csv, as: :respondents_csv

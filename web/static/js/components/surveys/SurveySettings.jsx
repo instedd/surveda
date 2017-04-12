@@ -17,6 +17,7 @@ class SurveySettings extends Component {
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     channels: PropTypes.object,
+    project: PropTypes.object,
     respondentGroups: PropTypes.object,
     respondentGroupsUploading: PropTypes.bool,
     invalidRespondents: PropTypes.object
@@ -35,11 +36,13 @@ class SurveySettings extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, invalidRespondents } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, invalidRespondents } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
     }
+
+    const readOnly = !project || project.readOnly
 
     let questionnaireIds = survey.questionnaireIds || []
     let questionnaire = null
@@ -49,7 +52,7 @@ class SurveySettings extends Component {
 
     return (
       <div className='white'>
-        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
       </div>
     )
   }
@@ -57,6 +60,7 @@ class SurveySettings extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
+  project: state.project.data,
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items,
   questionnaires: state.questionnaires.items || {},

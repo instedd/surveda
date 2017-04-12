@@ -104,6 +104,15 @@ class SurveyForm extends Component {
       )
     }
 
+    // We make most steps to be "read only" (that is, non-editable) if the server said that survey
+    // is "read only" (this is for a reader user) or if the survey has already started (in which
+    // case there's no point in choosing a different questionnaire and so on).
+    //
+    // However, for the respondents step we distinguish between "read only" and "survey started",
+    // because a non-reader user can still add more respondents to an existing survey, though
+    // she can, for example, change their channel.
+    const surveyStarted = survey.state == 'running' || survey.state == 'completed' || survey.state == 'cancelled'
+
     return (
       <div className='row'>
         <div className='col s12 m4'>
@@ -133,30 +142,30 @@ class SurveyForm extends Component {
         </div>
         <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
-            <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} readOnly={readOnly} />
+            <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} readOnly={readOnly || surveyStarted} />
             <ScrollToLink target='#channels'>NEXT: Select Mode and channels</ScrollToLink>
           </div>
           <div id='channels' className='row scrollspy'>
-            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly} respondentGroups={respondentGroups} />
+            <SurveyWizardModeStep survey={survey} questionnaires={questionnaires} readOnly={readOnly || surveyStarted} respondentGroups={respondentGroups} />
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} readOnly={readOnly} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} readOnly={readOnly} surveyStarted={surveyStarted} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>
-            <SurveyWizardScheduleStep survey={survey} readOnly={readOnly} />
+            <SurveyWizardScheduleStep survey={survey} readOnly={readOnly || surveyStarted} />
             <ScrollToLink target='#cutoff'>NEXT: Setup cutoff rules</ScrollToLink>
           </div>
           <div id='cutoff' className='row scrollspy'>
-            <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} readOnly={readOnly} />
+            <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} readOnly={readOnly || surveyStarted} />
             {survey.comparisons.length > 0
             ? <ScrollToLink target='#comparisons'>NEXT: Comparisons</ScrollToLink>
             : ''}
           </div>
           {survey.comparisons.length > 0
             ? <div id='comparisons' className='row scrollspy'>
-              <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly} />
+              <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly || surveyStarted} />
             </div>
           : ''}
           <ScrollToTopButton />

@@ -316,6 +316,86 @@ defmodule Ask.RespondentGroupControllerTest do
     end
   end
 
+  describe "add" do
+    test "uploads CSV with more resopndents", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      group = insert(:respondent_group, survey: survey, respondents_count: 2, sample: ["9988776655", "(549) 11 4234 2343"])
+
+      # This doesn't exist in the uploaded csv
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "9988776655", sanitized_phone_number: "9988776655")
+
+      # This exists, so we expect no duplicates for this
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "(549) 11 4234 2343", sanitized_phone_number: "5491142342343")
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_add_path(conn, :add, project.id, survey.id, group.id), file: file
+      group = RespondentGroup |> Repo.get(group.id)
+
+      sample = ["######6655", "(###) ## #### 2343", "(###) ## #### 3125", "(###) ## #### 2323", "(###) ## #### 2421"]
+      |> Enum.map(&Respondent.mask_phone_number/1)
+
+      assert json_response(conn, 200)["data"] == %{
+        "id" => group.id,
+        "name" => group.name,
+        "sample" => sample,
+        "respondents_count" => 15,
+        "channels" => [],
+      }
+
+      respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+
+      assert length(respondents) == 15
+
+      assert group
+      assert group.respondents_count == 15
+      assert group.sample == respondents |> Enum.take(5) |> Enum.map(&(&1.phone_number))
+
+      assert Enum.at(respondents, 2).survey_id == survey.id
+      assert Enum.at(respondents, 2).phone_number == "(549) 11 2421 3125"
+      assert Enum.at(respondents, 2).sanitized_phone_number == "5491124213125"
+      assert Enum.at(respondents, 2).respondent_group_id == group.id
+    end
+  end
+
+  describe "replace" do
+    test "uploads CSV that replaces respondents", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      group = insert(:respondent_group, survey: survey, respondents_count: 1, sample: ["9988776655"])
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "9988776655", sanitized_phone_number: "9988776655")
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_replace_path(conn, :replace, project.id, survey.id, group.id), file: file
+      group = RespondentGroup |> Repo.get(group.id)
+
+      sample = ["(###) ## #### 2343", "(###) ## #### 3125", "(###) ## #### 2323", "(###) ## #### 2421", "(###) ## #### 6723"]
+
+      assert json_response(conn, 200)["data"] == %{
+        "id" => group.id,
+        "name" => group.name,
+        "sample" => sample,
+        "respondents_count" => 14,
+        "channels" => [],
+      }
+
+      respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+
+      assert length(respondents) == 14
+
+      assert group
+      assert group.respondents_count == 14
+      assert group.sample == respondents |> Enum.take(5) |> Enum.map(&(&1.phone_number))
+
+      assert Enum.at(respondents, 0).survey_id == survey.id
+      assert Enum.at(respondents, 0).phone_number == "(549) 11 4234 2343"
+      assert Enum.at(respondents, 0).sanitized_phone_number == "5491142342343"
+      assert Enum.at(respondents, 0).respondent_group_id == group.id
+    end
+  end
+
   defp completed_schedule do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end

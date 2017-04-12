@@ -111,6 +111,19 @@ const apiDelete = (url) => {
   return apiFetch(url, {method: 'DELETE'})
 }
 
+const apiPostFile = (url, schema, file) => {
+  return apiFetchJSON(url, schema, {
+    method: 'POST',
+    body: newFormData(file)
+  })
+}
+
+const newFormData = (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return formData
+}
+
 export const fetchProjects = () => {
   return apiFetchJSON(`projects`, arrayOf(projectSchema))
 }
@@ -163,22 +176,22 @@ const getTimezone = () => {
 }
 
 export const createAudio = (files) => {
-  let formData = new FormData()
-  formData.append('file', files[0])
-  let request = {method: 'POST', body: formData}
-
-  return apiFetchJSON('audios', audioSchema, request)
+  return apiPostFile('audios', audioSchema, files[0])
 }
 
 export const uploadRespondentGroup = (projectId, surveyId, files) => {
-  const formData = new FormData()
-  formData.append('file', files[0])
+  return apiPostFile(`projects/${projectId}/surveys/${surveyId}/respondent_groups`,
+    respondentGroupSchema, files[0])
+}
 
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`,
-    respondentGroupSchema, {
-      method: 'POST',
-      body: formData
-    })
+export const addMoreRespondentsToGroup = (projectId, surveyId, groupId, file) => {
+  return apiPostFile(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}/add`,
+    respondentGroupSchema, file)
+}
+
+export const replaceRespondents = (projectId, surveyId, groupId, file) => {
+  return apiPostFile(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}/replace`,
+    respondentGroupSchema, file)
 }
 
 export const updateRespondentGroup = (projectId, surveyId, groupId, data) => {
@@ -306,12 +319,6 @@ export const confirm = (code) => {
 }
 
 export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
-  const formData = new FormData()
-  formData.append('file', files[0])
-
-  return apiFetchJSON(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
-    questionnaireSchema, {
-      method: 'POST',
-      body: formData
-    })
+  return apiPostFile(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
+    questionnaireSchema, files[0])
 }
