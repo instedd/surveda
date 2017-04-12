@@ -132,11 +132,27 @@ defmodule Ask.Runtime.VerboiceChannel do
     end)
   end
 
-  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status}) do
+  defp channel_failed(respondent, status, %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
+    Broker.channel_failed(respondent, "#{status}: #{reason} (#{code})")
+  end
+
+  defp channel_failed(respondent, status, %{"CallStatusReason" => reason}) do
+    Broker.channel_failed(respondent, "#{status}: #{reason}")
+  end
+
+  defp channel_failed(respondent, status, %{"CallStatusCode" => code}) do
+    Broker.channel_failed(respondent, "#{status} (#{code})")
+  end
+
+  defp channel_failed(respondent, status, _) do
+    Broker.channel_failed(respondent, status)
+  end
+
+  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status} = params) do
     respondent = Repo.get!(Respondent, respondent_id)
     case status do
       s when s in ["failed", "busy", "no-answer"] ->
-        Broker.channel_failed(respondent, status)
+        channel_failed(respondent, status, params)
       _ -> :ok
     end
 

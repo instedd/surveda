@@ -1,11 +1,17 @@
 defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.ConnCase
   use Ask.DummySteps
+  use Timex
 
-  alias Ask.{Respondent, BrokerStub}
-  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper}
+  alias Ask.{Respondent, BrokerStub, Survey}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker}
 
   require Ask.Runtime.ReplyHelper
+
+  @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
+  @always_schedule %{schedule_day_of_week: @everyday_schedule,
+                   schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
+                   schedule_end_time: elem(Ecto.Time.cast("23:59:59"), 1)}
 
   defp trim_xml(xml) do
     xml |> String.replace("\t", "") |> String.replace("\n", "")
@@ -108,6 +114,217 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "returns error on response error" do
       new_state = VerboiceChannel.process_call_response(:error)
       assert new_state == {:error, :error}
+    end
+  end
+
+  describe "status callback" do
+    test "with code and reason", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
+      Broker.poll
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert call_failed.survey_id == survey.id
+      assert call_failed.action_data == "failed: some random reason (42)"
+      assert call_failed.action_type == "contact"
+
+      :ok = broker |> GenServer.stop
+    end
+
+    test "with only code", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
+      Broker.poll
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallStatusCode" => "42"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert call_failed.survey_id == survey.id
+      assert call_failed.action_data == "failed (42)"
+      assert call_failed.action_type == "contact"
+
+      :ok = broker |> GenServer.stop
+    end
+
+    test "with only reason", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
+      Broker.poll
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallStatusReason" => "some random reason"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert call_failed.survey_id == survey.id
+      assert call_failed.action_data == "failed: some random reason"
+      assert call_failed.action_type == "contact"
+
+      :ok = broker |> GenServer.stop
+    end
+
+    test "only failed", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
+      Broker.poll
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert call_failed.survey_id == survey.id
+      assert call_failed.action_data == "failed"
+      assert call_failed.action_type == "contact"
+
+      :ok = broker |> GenServer.stop
+    end
+
+    test "no-answer with reason and code", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
+      Broker.poll
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "no-answer", "CallStatusReason" => "another reason", "CallStatusCode" => "foo"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert call_failed.survey_id == survey.id
+      assert call_failed.action_data == "no-answer: another reason (foo)"
+      assert call_failed.action_type == "contact"
+
+      :ok = broker |> GenServer.stop
+    end
+
+    test "busy with reason and code", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
+      Broker.poll
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "busy", "CallStatusReason" => "yet another reason", "CallStatusCode" => "bar"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert call_failed.survey_id == survey.id
+      assert call_failed.action_data == "busy: yet another reason (bar)"
+      assert call_failed.action_type == "contact"
+
+      :ok = broker |> GenServer.stop
     end
   end
 end
