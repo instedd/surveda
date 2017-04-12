@@ -129,8 +129,26 @@ label {
   }
   .drop-uploading {
     text-align: center;
+    border: 2px dashed #4285f4;
+    padding-top: 10px;
+    height: 80px;
+    .preloader-wrapper {
+      width: 30px;
+      height: 30px;
+    }
+    &:before {
+      content: 'Uploading...';
+      font-size: .8rem;
+      color: #4285f4;
+      position: absolute;
+      margin-top: 2.5rem;
+      margin-left: -.5rem;
+    }
   }
 }
+
+
+
 
 
 .invalidValue {
