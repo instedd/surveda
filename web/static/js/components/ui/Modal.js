@@ -7,7 +7,6 @@ export class Modal extends Component {
   componentDidMount() {
     let { initOptions } = this.props
     if (!initOptions) initOptions = {}
-    console.log(initOptions)
     $(this.refs.modal).modal(initOptions)
   }
 
