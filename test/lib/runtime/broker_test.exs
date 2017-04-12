@@ -427,6 +427,31 @@ defmodule Ask.BrokerTest do
     assert history.disposition == "refused"
   end
 
+  test "mark disposition as refused and respondent as failed when the respondent sends 'STOP'" do
+    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
+
+    {:ok, _} = Broker.start_link
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
+    assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("StoP"))
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "refused"
+
+    histories = RespondentDispositionHistory |> Repo.all
+    assert length(histories) == 1
+
+    history = histories |> hd
+    assert history.respondent_id == respondent.id
+    assert history.disposition == "refused"
+  end
+
   test "mark disposition as completed when partial on end" do
     [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_partial_skip_logic)
 
