@@ -317,7 +317,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp handle_step_answer(_, {:stopped, flow, reply}, respondent, _, _, current_mode) do
-    log_prompts(reply, current_mode.channel, respondent, true)
+    log_response({:reply, "STOP"}, current_mode.channel, respondent, reply.disposition)
     {:stopped, reply, respondent}
   end
 
