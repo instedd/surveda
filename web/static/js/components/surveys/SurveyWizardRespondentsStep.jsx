@@ -177,7 +177,9 @@ const newChannelComponent = (mode, allChannels, currentChannels, onChange, readO
   const type = mode == 'mobileweb' ? 'sms' : mode
 
   let label
-  if (type == 'sms') {
+  if (mode == 'mobileweb') {
+    label = 'SMS for mobile web'
+  } else if (mode == 'sms') {
     label = 'SMS'
   } else {
     label = 'Phone'
