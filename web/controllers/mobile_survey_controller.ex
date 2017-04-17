@@ -23,29 +23,36 @@ defmodule Ask.MobileSurveyController do
 
   defp sync_step(conn, respondent_id, value) do
     respondent = Repo.get!(Respondent, respondent_id)
+    survey = Repo.preload(respondent, :survey).survey
 
     step =
-      if respondent.state in ["pending", "active", "stalled"] do
-        case Broker.sync_step(respondent, value) do
-          {:reply, reply} ->
-            reply |> Reply.steps() |> hd
-          {:end, {:reply, reply}} ->
-            reply |> Reply.steps() |> hd
-          :end ->
-            end_step()
-        end
-      else
-        end_step()
+      cond do
+        survey.state in ["completed", "cancelled"] ->
+          questionnaires = Repo.preload(survey, :questionnaires).questionnaires
+          questionnaire = Enum.random(questionnaires)
+          msg = questionnaire.mobile_web_survey_is_over_message || "The survey is over"
+          end_step(msg)
+        respondent.state in ["pending", "active", "stalled"] ->
+          case Broker.sync_step(respondent, value) do
+            {:reply, reply} ->
+              reply |> Reply.steps() |> hd
+            {:end, {:reply, reply}} ->
+              reply |> Reply.steps() |> hd
+            :end ->
+              end_step()
+          end
+        true ->
+          end_step()
       end
 
     render(conn, "show_step.json", step: step)
   end
 
-  defp end_step do
+  defp end_step(msg \\ "The survey has ended") do
     %{
       type: "explanation",
-      prompts: ["The survey has ended"],
-      title: "The survey has ended",
+      prompts: [msg],
+      title: msg,
     }
   end
 end

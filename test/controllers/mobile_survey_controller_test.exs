@@ -149,4 +149,29 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "explanation"
     } = json_response(conn, 200)["step"]
   end
+
+  test "respondent flow via mobileweb when survey is over", %{conn: conn} do
+    test_channel = TestChannel.new(false, true)
+
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, mobile_web_survey_is_over_message: "Bye")
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    {:ok, _} = Broker.start_link
+    Broker.poll
+
+    survey |> Survey.changeset(%{"state" => "completed"}) |> Repo.update!
+
+    conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    assert %{
+      "prompts" => ["Bye"],
+      "title" => "Bye",
+      "type" => "explanation"
+    } = json_response(conn, 200)["step"]
+  end
 end

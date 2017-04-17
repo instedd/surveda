@@ -1,12 +1,11 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Card } from '../ui'
+import { Card, InputWithLabel } from '../ui'
 import classNames from 'classnames'
 import * as actions from '../../actions/questionnaire'
-import SmsPrompt from './SmsPrompt'
-import { mobileWebSmsMessagePath, mobileWebSmsMessageHasErrors } from '../../questionnaireErrors'
+import { mobileWebSurveyIsOverMessagePath, mobileWebSurveyIsOverMessageHasErrors } from '../../questionnaireErrors'
 
-class MobileWebSmsMessage extends Component {
+class MobileWebSurveyIsOverMessage extends Component {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -29,19 +28,23 @@ class MobileWebSmsMessage extends Component {
 
     return {
       editing,
-      text: questionnaire.mobileWebSmsMessage || ''
+      text: questionnaire.mobileWebSurveyIsOverMessage || ''
     }
   }
 
-  onChange(text) {
+  onChange(e) {
+    e.preventDefault()
+
     this.setState({
-      text
+      text: e.target.value
     })
   }
 
-  onBlur(text) {
+  onBlur(e) {
+    e.preventDefault()
+
     const { dispatch } = this.props
-    dispatch(actions.setMobileWebSmsMessage(this.state.text))
+    dispatch(actions.setMobileWebSurveyIsOverMessage(this.state.text))
   }
 
   collapsed() {
@@ -60,7 +63,7 @@ class MobileWebSmsMessage extends Component {
               <div className='card-content closed-step'>
                 <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
                   <i className={iconClass}>phonelink</i>
-                  <span className={classNames({'text-error': hasErrors})}>Mobile Web SMS message</span>
+                  <span className={classNames({'text-error': hasErrors})}>Mobile Web "Survey is over" message</span>
                   <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
                 </a>
               </div>
@@ -75,7 +78,8 @@ class MobileWebSmsMessage extends Component {
     const { readOnly, errors } = this.props
 
     const value = this.state.text
-    let inputErrors = errors[mobileWebSmsMessagePath()]
+    let inputErrors = errors[mobileWebSurveyIsOverMessagePath()]
+    const maybeInvalidClass = classNames({'validate invalid': inputErrors})
 
     return (
       <div className='row'>
@@ -86,7 +90,7 @@ class MobileWebSmsMessage extends Component {
                 <div className='col s12'>
                   <i className='material-icons left'>phonelink</i>
                   <a className='page-title truncate'>
-                    <span>Mobile Web SMS message</span>
+                    <span>Mobile Web "Survey is over" message</span>
                   </a>
                   <a className='collapse right' href='#!' onClick={(e) => this.handleClick(e)}>
                     <i className='material-icons'>expand_less</i>
@@ -97,15 +101,16 @@ class MobileWebSmsMessage extends Component {
             <li className='collection-item'>
               <div className='row'>
                 <div className='col input-field s12'>
-                  <SmsPrompt id='mobileWebSmsMessageInput'
-                    inputErrors={inputErrors}
-                    value={value}
-                    originalValue={value}
-                    readOnly={readOnly}
-                    onChange={text => this.onChange(text)}
-                    onBlur={text => this.onBlur(text)}
-                    fixedEndLength={20}
+                  <InputWithLabel id='mobileWebSurveyIsOverMessageInput' value={value} label='Message' errors={inputErrors} >
+                    <input
+                      type='text'
+                      disabled={readOnly}
+                      onChange={e => this.onChange(e)}
+                      onBlur={e => this.onBlur(e)}
+                      className={maybeInvalidClass}
+                      ref={ref => { this.input = ref; $(ref).addClass(maybeInvalidClass) }}
                     />
+                  </InputWithLabel>
                 </div>
               </div>
             </li>
@@ -129,7 +134,7 @@ class MobileWebSmsMessage extends Component {
   }
 }
 
-MobileWebSmsMessage.propTypes = {
+MobileWebSurveyIsOverMessage.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
   errors: PropTypes.object,
@@ -142,8 +147,8 @@ const mapStateToProps = (state, ownProps: Props) => {
   return {
     questionnaire: quiz.data,
     errors: quiz.errors,
-    hasErrors: quiz.data ? mobileWebSmsMessageHasErrors(quiz) : false
+    hasErrors: quiz.data ? mobileWebSurveyIsOverMessageHasErrors(quiz) : false
   }
 }
 
-export default connect(mapStateToProps)(MobileWebSmsMessage)
+export default connect(mapStateToProps)(MobileWebSurveyIsOverMessage)
