@@ -61,31 +61,40 @@ defmodule Ask.Runtime.Session do
     # Is this really necessary?
     Channel.setup(runtime_channel, respondent, token)
 
-    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
-    prompts = Ask.Runtime.Step.split_by_newlines(msg)
-    url = "#{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
-
-    prompts = prompts
-    |> Enum.with_index(1)
-    |> Enum.map(fn {prompt, index} ->
-         if index == length(prompts) do
-           "#{prompt} #{url}"
-         else
-           prompt
-         end
-       end)
-
-    reply = %Reply{
-      steps: [
-        ReplyStep.new(
-          prompts,
-          "Contact")
-      ]
-    }
+    reply = mobile_contact_reply(session)
 
     log_prompts(reply, session.current_mode.channel, session.respondent)
     runtime_channel |> Channel.ask(respondent, token, reply)
     {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
+  end
+
+  defp mobile_contact_reply(session) do
+    %Reply{
+      steps: [
+        ReplyStep.new(
+          mobile_contact_message(session),
+          "Contact")
+      ]
+    }
+  end
+
+  defp mobile_contact_message(%Session{flow: flow, respondent: respondent}) do
+    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
+    prompts = Ask.Runtime.Step.split_by_newlines(msg)
+
+    prompts
+    |> Enum.with_index(1)
+    |> Enum.map(fn {prompt, index} ->
+      if index == length(prompts) do
+       "#{prompt} #{url(respondent.id)}"
+      else
+       prompt
+      end
+    end)
+  end
+
+  defp url(respondent_id) do
+    "#{Ask.Endpoint.url}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}"
   end
 
   defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
@@ -195,13 +204,7 @@ defmodule Ask.Runtime.Session do
             handle_setup_response(setup_response)
 
           %MobileWebMode{} ->
-            reply = %Reply{
-              steps: [
-                ReplyStep.new(
-                  ["Please enter to #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}"],
-                  "Contact")
-              ]
-            }
+            reply = mobile_contact_reply(session)
             log_prompts(reply, session.current_mode.channel, session.respondent)
             runtime_channel |> Channel.ask(session.respondent, token, reply)
             channel_state
