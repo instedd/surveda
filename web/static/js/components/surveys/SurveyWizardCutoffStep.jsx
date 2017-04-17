@@ -26,9 +26,10 @@ class SurveyWizardCutoffStep extends Component {
   cutoffChange(e) {
     e.preventDefault()
     const { dispatch } = this.props
-    var onlyNumbers = e.target.value.replace(/[^0-9.]/g, '')
-
-    if (onlyNumbers == e.target.value && onlyNumbers < Math.pow(2, 31) - 1) {
+    var onlyNumbers = e.target.value.replace(/[^0-9]/g, '')
+    if (parseInt(onlyNumbers) == 0) {
+      dispatch(actions.changeCutoff(null))
+    } else if (onlyNumbers == e.target.value && onlyNumbers < Math.pow(2, 31) - 1) {
       dispatch(actions.changeCutoff(onlyNumbers))
     }
   }
@@ -36,7 +37,7 @@ class SurveyWizardCutoffStep extends Component {
   quotaChange(e) {
     e.preventDefault()
     const { dispatch, survey } = this.props
-    var onlyNumbers = e.target.value.replace(/[^0-9.]/g, '')
+    var onlyNumbers = e.target.value.replace(/[^0-9]/g, '')
 
     if (onlyNumbers == e.target.value && onlyNumbers < Math.pow(2, 31) - 1) {
       const condition = find(survey.quotas.buckets, (bucket) =>
