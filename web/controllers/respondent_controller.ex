@@ -470,7 +470,7 @@ defmodule Ask.RespondentController do
       ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
       ["ivr"] -> "Phone call"
       ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["ivr", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
       ["mobileweb"] -> "Mobile Web"
       ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
       ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
