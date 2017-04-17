@@ -5,7 +5,7 @@ defmodule Ask.Endpoint do
 
   plug Ask.Static
   if Mix.env == :prod do
-    plug Plug.SSL, rewrite_on: [:x_forwarded_proto]
+    plug Ask.Plugs.SSL, rewrite_on: [:x_forwarded_proto]
   end
 
   # Code reloading can be explicitly enabled under the
