@@ -45,9 +45,14 @@ class GuissoSession {
       const listener = function(event) {
         if (event.source == popup) {
           window.removeEventListener('message', listener)
-          const token = queryString.parse(event.data)
           window.clearInterval(watchdog)
-          resolve(token)
+          if (event.data.error && event.data.error.length > 0) {
+            console.log(event.data)
+            reject(event.data.error)
+          } else {
+            const token = queryString.parse(event.data)
+            resolve(token)
+          }
         }
       }
       window.addEventListener('message', listener, false)

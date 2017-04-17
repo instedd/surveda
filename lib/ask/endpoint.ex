@@ -5,6 +5,14 @@ defmodule Ask.Endpoint do
 
   plug Ask.Static
 
+  IO.puts "Checking to enable SSL"
+  if System.get_env("SSL") && System.get_env("SSL") != "0" do
+    IO.puts "Starting with SSL"
+    plug Plug.SSL, rewrite_on: [:x_forwarded_proto]
+  else
+    IO.puts "Starting without SSL"
+  end
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

@@ -53,19 +53,25 @@ defmodule Ask.OAuthClientController do
     user = get_current_user(conn)
     token = user |> assoc(:oauth_tokens) |> Repo.get_by(provider: provider_name, base_url: base_url)
 
-    if token == nil do
+    error = if token == nil do
       provider = Ask.Channel.provider(provider_name)
-      access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}", base_url)
+      url = %URI{scheme: conn.scheme |> Atom.to_string, host: conn.host, path: conn.request_path} |> URI.to_string
+      access_token = provider.oauth2_authorize(code, url, base_url)
 
-      user
-      |> build_assoc(:oauth_tokens, provider: provider_name, base_url: base_url)
-      |> Ask.OAuthToken.from_access_token(access_token)
-      |> Repo.insert!
+      if access_token.other_params && access_token.other_params["error"] do
+        access_token.other_params["error_description"] || "Error connecting to provider: #{access_token.other_params["error"]}"
+      else
+        user
+        |> build_assoc(:oauth_tokens, provider: provider_name, base_url: base_url)
+        |> Ask.OAuthToken.from_access_token(access_token)
+        |> Repo.insert!
 
-      provider.sync_channels(user.id, base_url)
+        provider.sync_channels(user.id, base_url)
+        nil
+      end
     end
 
-    render conn, "callback.html"
+    render conn, "callback.html", error: error
   end
 
   def callback(conn, _params) do
