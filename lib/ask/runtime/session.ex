@@ -319,7 +319,7 @@ defmodule Ask.Runtime.Session do
     {:failed, respondent}
   end
 
-  defp handle_step_answer(_, {:stopped, flow, reply}, respondent, _, _, current_mode) do
+  defp handle_step_answer(_, {:stopped, _flow, reply}, respondent, _, _, current_mode) do
     log_response({:reply, "STOP"}, current_mode.channel, respondent, reply.disposition)
     {:stopped, reply, respondent}
   end

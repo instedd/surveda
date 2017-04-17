@@ -146,8 +146,6 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
     end)
   end
 
-  defp index_of(enum, field), do: Enum.find_index(enum, fn c -> c == field end)
-
   defp upgrade(state) do
     state
     |> load_old

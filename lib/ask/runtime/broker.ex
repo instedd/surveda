@@ -397,7 +397,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition) do
-    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at = next_timeout(respondent, timeout), disposition, "active")
+    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, next_timeout(respondent, timeout), disposition, "active")
   end
 
   defp update_respondent(respondent, :end, reply_disposition) do
