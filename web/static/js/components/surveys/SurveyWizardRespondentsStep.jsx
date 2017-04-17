@@ -174,6 +174,8 @@ RespondentsDropzone.propTypes = {
 const newChannelComponent = (mode, allChannels, currentChannels, onChange, readOnly) => {
   const currentChannel = currentChannels.find(channel => channel.mode == mode) || {}
 
+  const type = mode == 'mobileweb' ? 'sms' : mode
+
   let label
   if (type == 'sms') {
     label = 'SMS'
@@ -182,7 +184,6 @@ const newChannelComponent = (mode, allChannels, currentChannels, onChange, readO
   }
   label += ' channel'
 
-  const type = mode == 'mobileweb' ? 'sms' : mode
   let channels = values(allChannels)
   channels = channels.filter(c => c.type == type)
 
