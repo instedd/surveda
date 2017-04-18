@@ -29,7 +29,7 @@ defmodule Ask.RespondentGroupController do
         file.path
         |> File.read!
         |> csv_rows
-        |> Enum.uniq
+        |> Enum.uniq_by(&keep_digits/1)
 
       invalid_entries = rows
       |> Enum.with_index
@@ -211,5 +211,9 @@ defmodule Ask.RespondentGroupController do
     conn
       |> put_status(:ok)
       |> render("empty.json", %{})
+  end
+
+  defp keep_digits(string) do
+    Regex.replace(~r/\D/, string, "", [:global])
   end
 end
