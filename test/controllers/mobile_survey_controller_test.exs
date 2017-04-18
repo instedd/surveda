@@ -47,6 +47,38 @@ defmodule Ask.MobileSurveyControllerTest do
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
     assert %{
+      "choices" => [],
+      "prompts" => ["Welcome to the survey!"],
+      "title" => "Let there be rock",
+      "type" => "explanation"
+    } = json_response(conn, 200)["step"]
+
+    conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    assert %{
+      "choices" => [],
+      "prompts" => ["Welcome to the survey!"],
+      "title" => "Let there be rock",
+      "type" => "explanation"
+    } = json_response(conn, 200)["step"]
+
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: ""})
+    assert %{
+      "choices" => [["Yes"], ["No"]],
+      "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
+      "title" => "Do you smoke?",
+      "type" => "multiple-choice"
+    } = json_response(conn, 200)["step"]
+
+    conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    assert %{
+      "choices" => [["Yes"], ["No"]],
+      "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
+      "title" => "Do you smoke?",
+      "type" => "multiple-choice"
+    } = json_response(conn, 200)["step"]
+
+    conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    assert %{
       "choices" => [["Yes"], ["No"]],
       "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
       "title" => "Do you smoke?",

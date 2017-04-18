@@ -717,6 +717,14 @@ defmodule Ask.DummySteps do
       ]
 
       @mobileweb_dummy_steps [
+        explanation_step(
+          id: "aaa",
+          title: "Let there be rock",
+          prompt: prompt(
+            mobileweb: sms_prompt("Welcome to the survey!")
+          ),
+          skip_logic: nil
+        ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you smoke?",
