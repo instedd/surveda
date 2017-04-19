@@ -85,6 +85,10 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "multiple-choice"
     } = json_response(conn, 200)["step"]
 
+    # Check before flag step
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == nil
+
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
     assert %{
       "choices" => [["Yes"], ["No"]],
@@ -92,6 +96,10 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Do you exercise",
       "type" => "multiple-choice"
     } = json_response(conn, 200)["step"]
+
+    # Check after flag step
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "partial"
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
     assert %{

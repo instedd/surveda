@@ -270,8 +270,11 @@ defmodule Ask.Runtime.Flow.WebVisitor do
   defimpl Ask.Runtime.Flow.Visitor, for: Ask.Runtime.Flow.WebVisitor do
     def accept_step(visitor, step, lang) do
       reply_step = Step.fetch(:reply_step, step, visitor.mode, lang)
-      {:stop, add_reply_step(visitor, reply_step)}
+      {step_action(step), add_reply_step(visitor, reply_step)}
     end
+
+    defp step_action(%{"type" => "flag"}), do: :continue
+    defp step_action(_), do: :stop
 
     def accept_message(visitor, message, lang, title) do
       reply_step = Step.fetch(:reply_msg, message, visitor.mode, lang, title)
