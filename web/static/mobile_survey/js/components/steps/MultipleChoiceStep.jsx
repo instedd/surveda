@@ -7,6 +7,8 @@ class MultipleChoiceStep extends Component {
     return this.refs.select.value
   }
 
+  clearValue() {}
+
   classNameForChoice(choice: String) {
     const length = choice.length
     let cssClass

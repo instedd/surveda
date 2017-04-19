@@ -7,6 +7,8 @@ class ExplanationStep extends Component {
     return ''
   }
 
+  clearValue() {}
+
   render() {
     const { step } = this.props
     return (

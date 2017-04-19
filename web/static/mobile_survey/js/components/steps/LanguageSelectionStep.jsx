@@ -7,6 +7,8 @@ class LanguageSelectionStep extends Component {
     return this.refs.select.value
   }
 
+  clearValue() {}
+
   render() {
     const { step, onClick } = this.props
     return (

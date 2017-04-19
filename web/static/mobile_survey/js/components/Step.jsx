@@ -44,16 +44,13 @@ class Step extends Component {
 
   handleSubmit(event) {
     event.preventDefault()
-
-    const { dispatch, respondentId } = this.props
-    const value = this.refs.step.getValue()
-
-    actions.sendReply(dispatch, respondentId, value)
+    this.handleValue(this.refs.step.getValue())
   }
 
   handleValue(value) {
     const { dispatch, respondentId } = this.props
     actions.sendReply(dispatch, respondentId, value)
+      .then(() => this.refs.step.clearValue())
   }
 
   render() {
