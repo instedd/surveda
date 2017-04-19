@@ -43,7 +43,7 @@ defmodule Ask.MobileSurveyController do
 
   defp end_step do
     %{
-      type: "explanation",
+      type: "end",
       prompts: ["The survey has ended"],
       title: "The survey has ended",
     }

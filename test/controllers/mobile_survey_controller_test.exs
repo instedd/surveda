@@ -111,7 +111,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["The survey has ended"],
       "title" => "The survey has ended",
-      "type" => "explanation"
+      "type" => "end"
     } = json_response(conn, 200)["step"]
 
     now = Timex.now
@@ -178,7 +178,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["The survey has ended"],
       "title" => "The survey has ended",
-      "type" => "explanation"
+      "type" => "end"
     } = json_response(conn, 200)["step"]
   end
 end
