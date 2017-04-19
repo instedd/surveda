@@ -32,14 +32,6 @@ class MultipleChoiceStep extends Component {
     return cssClass
   }
 
-  pixelsToAdjust(selectedChoice) {
-    const screenHeight = screen.height
-    const bounds = selectedChoice.getBoundingClientRect()
-    const mean = (bounds.bottom + bounds.top) / 2
-    const difference = screenHeight - mean
-    return difference
-  }
-
   meanFromChoice(selectedChoice) {
     const bounds = selectedChoice.getBoundingClientRect()
     return (bounds.bottom + bounds.top) / 2
