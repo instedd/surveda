@@ -25,12 +25,12 @@ defmodule Ask.Runtime.Step do
         end)
         if (choice), do: choice["value"], else: :invalid_answer
       "numeric" ->
-        num = is_numeric(reply)
+        num = is_numeric_permissive(reply)
         cond do
           is_refusal_option(step, reply, mode, language) ->
             {:refusal, reply}
           num && is_in_numeric_range(step, num) ->
-            reply
+            to_string(num)
           :else ->
             :invalid_answer
         end
@@ -53,7 +53,7 @@ defmodule Ask.Runtime.Step do
         if is_refusal_option(step, reply, mode, language) do
           step["refusal"]["skip_logic"]
         else
-          value = String.to_integer(reply)
+          value = is_numeric_permissive(reply)
           step["ranges"]
           |> Enum.find_value(nil, fn (range) ->
             if (range["from"] == nil || range["from"] <= value) && (range["to"]
@@ -156,6 +156,18 @@ defmodule Ask.Runtime.Step do
     case Float.parse(str) do
       {num, ""} -> num
       {_num, _r} -> false               # _r : remainder_of_bianry
+      :error     -> false
+    end
+  end
+
+  defp is_numeric_permissive(str) do
+    case Float.parse(String.trim(str)) do
+      {num, _} ->
+        if round(num) == num do
+          round(num)
+        else
+          num
+        end
       :error     -> false
     end
   end

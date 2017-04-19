@@ -323,8 +323,13 @@ defmodule Ask.FlowTest do
     test "when value is in a middle range it finds it" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
       result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("50"))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
 
-      assert {:end, _, _} = result
+    test "when value is in a middle range it finds it, permissive" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" 50 units "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
     @numeric_steps_no_min_max [
