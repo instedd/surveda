@@ -433,7 +433,7 @@ defmodule Ask.FlowTest do
         "audioSource" => "tts",
       }
     },
-    "language_choices" => [nil, "en", "es"],
+    "language_choices" => ["en", "es"],
   }
 
   test "language selection step" do

@@ -1050,15 +1050,15 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('fr')
       ])
       const preLanguageSelection = preState.data.steps[0]
-      expect(preLanguageSelection.languageChoices[2]).toEqual('de')
+      expect(preLanguageSelection.languageChoices[1]).toEqual('de')
 
       const resultState = playActionsFromState(preState, reducer)([
         actions.removeLanguage('de')
       ])
 
       const languageSelection = resultState.data.steps[0]
-      expect(languageSelection.languageChoices[2]).toEqual('es')
-      expect(languageSelection.languageChoices[3]).toEqual('fr')
+      expect(languageSelection.languageChoices[1]).toEqual('es')
+      expect(languageSelection.languageChoices[2]).toEqual('fr')
     })
 
     it('should reorder correctly the languages inside the choices of the language selection step', () => {
@@ -1073,10 +1073,10 @@ describe('questionnaire reducer', () => {
       ])
 
       const languageSelection = state.data.steps[0]
-      expect(languageSelection.languageChoices[1]).toEqual('es')
-      expect(languageSelection.languageChoices[2]).toEqual('de')
-      expect(languageSelection.languageChoices[3]).toEqual('fr')
-      expect(languageSelection.languageChoices[4]).toEqual('en')
+      expect(languageSelection.languageChoices[0]).toEqual('es')
+      expect(languageSelection.languageChoices[1]).toEqual('de')
+      expect(languageSelection.languageChoices[2]).toEqual('fr')
+      expect(languageSelection.languageChoices[3]).toEqual('en')
     })
 
     it('should reorder correctly the languages inside the choices of the language selection step 2', () => {
@@ -1091,10 +1091,11 @@ describe('questionnaire reducer', () => {
       ])
 
       const languageSelection = state.data.steps[0]
-      expect(languageSelection.languageChoices[1]).toEqual('fr')
-      expect(languageSelection.languageChoices[2]).toEqual('en')
-      expect(languageSelection.languageChoices[3]).toEqual('es')
-      expect(languageSelection.languageChoices[4]).toEqual('de')
+      console.log(languageSelection.languageChoices)
+      expect(languageSelection.languageChoices[0]).toEqual('fr')
+      expect(languageSelection.languageChoices[1]).toEqual('en')
+      expect(languageSelection.languageChoices[2]).toEqual('es')
+      expect(languageSelection.languageChoices[3]).toEqual('de')
     })
 
     it('should add language', () => {

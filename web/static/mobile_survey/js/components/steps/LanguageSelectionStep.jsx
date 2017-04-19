@@ -17,12 +17,9 @@ class LanguageSelectionStep extends Component {
           <Prompt key={prompt} text={prompt} />
         )}
         {step.choices.map((choice, index) => {
-          // HACK: skip the first choice because it's always dummy
-          if (index == 0) return null
-
           return (
             <div key={choice} >
-              <button className='btn block' value={choice} onClick={e => { e.preventDefault(); onClick(index) }}>{choice}</button>
+              <button className='btn block' value={choice} onClick={e => { e.preventDefault(); onClick(index + 1) }}>{choice}</button>
             </div>
           )
         })}
