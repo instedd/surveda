@@ -32,13 +32,13 @@ class MultipleChoiceStep extends Component {
     return cssClass
   }
 
-  meanFromChoice(selectedChoice) {
+  meanFromChoice(selectedChoice: HTMLElement) {
     const bounds = selectedChoice.getBoundingClientRect()
     return (bounds.bottom + bounds.top) / 2
   }
 
-  adjustPixels(prompt, difference) {
-    const promptMarginBottom = (prompt.currentStyle || window.getComputedStyle(prompt)).marginBottom
+  adjustPixels(prompt: HTMLElement, difference: number) {
+    const promptMarginBottom = (window.getComputedStyle(prompt)).marginBottom
     const pixels = parseFloat(promptMarginBottom) + difference
     prompt.style.marginBottom = pixels.toString() + 'px'
   }
