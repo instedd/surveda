@@ -13,6 +13,12 @@ export default (state: any = initialState, action: any) => {
 }
 
 const receiveStep = (state, action) => {
+  // When re-fetching a step because of a window.focus() event,
+  // don't change it if the step ends up being the same
+  if (state.current && state.current.id == action.step.id) {
+    return state
+  }
+
   return {
     ...state,
     current: action.step

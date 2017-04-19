@@ -22,8 +22,17 @@ class Step extends Component {
   }
 
   componentDidMount() {
-    const { dispatch, respondentId } = this.props
+    this.fetchStep()
 
+    // This is so that when the user switches between tabs,
+    // in case there are multiple tabs open they refresh
+    // to the current step and so there's no way to submit
+    // an answer for a previous question
+    window.onfocus = () => this.fetchStep()
+  }
+
+  fetchStep() {
+    const { dispatch, respondentId } = this.props
     actions.fetchStep(dispatch, respondentId)
   }
 
