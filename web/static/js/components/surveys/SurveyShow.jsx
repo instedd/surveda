@@ -65,12 +65,19 @@ class SurveyShow extends Component {
 
   iconForMode(mode: string) {
     let icon = null
-    if (mode == 'sms') {
-      icon = 'sms'
-    } else {
-      icon = 'phone'
+    switch (mode) {
+      case 'sms':
+        icon = 'sms'
+        break
+      case 'ivr':
+        icon = 'phone'
+        break
+      case 'mobileweb':
+        icon = 'phonelink'
+        break
+      default:
+        throw new Error(`Unhandled mode in iconForMode: ${mode}`)
     }
-
     return icon
   }
 
@@ -91,12 +98,19 @@ class SurveyShow extends Component {
 
   labelForMode(mode: string) {
     let label = null
-    if (mode == 'sms') {
-      label = 'SMS'
-    } else {
-      label = 'IVR'
+    switch (mode) {
+      case 'sms':
+        label = 'SMS'
+        break
+      case 'ivr':
+        label = 'IVR'
+        break
+      case 'mobileweb':
+        label = 'Mobile Web'
+        break
+      default:
+        throw new Error(`Unhandled mode in labelForMode: ${mode}`)
     }
-
     return label
   }
 
