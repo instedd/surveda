@@ -258,7 +258,11 @@ describe('questionnaire reducer', () => {
       expect(resultStep.type).toEqual('numeric')
       expect(resultStep.title).toEqual('Do you smoke?')
       expect(resultStep.store).toEqual('Smokes')
-      expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?', ivr: { audioSource: 'tts', text: 'Do you smoke?' } })
+      expect(resultStep.prompt['en']).toEqual({
+        sms: 'Do you smoke?',
+        ivr: { audioSource: 'tts', text: 'Do you smoke?' },
+        mobileweb: 'Do you really smoke?'
+      })
     })
 
     it('should update step title', () => {
@@ -545,7 +549,8 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
+        actions.toggleMode('mobileweb'),
+        actions.changeStepPromptMobileWeb('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
       ])
 
       expect(resultState.errors).toInclude({
@@ -1525,8 +1530,11 @@ describe('questionnaire reducer', () => {
       const expected = [
         ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
+        ['Do you really smoke?', '', ''],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
+        ['Of course', '', 'Por supuesto'],
         ['No, N, 2', '', 'No, N, 2'],
+        ['Not at all', '', 'Para nada'],
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', ''],
         ['Done!', '', '']
@@ -1551,8 +1559,11 @@ describe('questionnaire reducer', () => {
       const expected = [
         ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
+        ['Do you really smoke?', '', ''],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
+        ['Of course', '', 'Por supuesto'],
         ['No, N, 2', '', 'No, N, 2'],
+        ['Not at all', '', 'Para nada'],
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', '']
       ]
