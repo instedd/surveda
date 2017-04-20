@@ -94,7 +94,19 @@ defmodule Ask.Runtime.Session do
   end
 
   defp url(respondent_id) do
-    "#{Ask.Endpoint.url}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}"
+    shorten("#{Ask.Endpoint.url}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
+  end
+
+  defp shorten(url) do
+    case Ask.UrlShortener.shorten(url) do
+      {:ok, shortened_url} ->
+        shortened_url
+      {:error, reason} ->
+        Ask.Logger.error "Couldn't shorten url. Reason: #{reason}"
+        url
+      :unavailable ->
+        url
+    end
   end
 
   defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
