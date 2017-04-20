@@ -6,6 +6,7 @@ import MultipleChoiceStep from './steps/MultipleChoiceStep'
 import NumericStep from './steps/NumericStep'
 import ExplanationStep from './steps/ExplanationStep'
 import LanguageSelectionStep from './steps/LanguageSelectionStep'
+import Header from './Header'
 
 class Step extends Component {
   handleSubmit: PropTypes.func.isRequired
@@ -73,6 +74,7 @@ class Step extends Component {
 
     return (
       <div>
+        <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
             {this.stepComponent(step)}

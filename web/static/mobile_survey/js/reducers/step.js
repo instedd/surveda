@@ -2,7 +2,8 @@
 import * as actions from '../actions/step'
 
 const initialState = {
-  current: null
+  current: null,
+  progress: 0.0
 }
 
 export default (state: any = initialState, action: any) => {
@@ -21,6 +22,7 @@ const receiveStep = (state, action) => {
 
   return {
     ...state,
-    current: action.step
+    current: action.step,
+    progress: action.progress
   }
 }

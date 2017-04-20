@@ -111,7 +111,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp accept_reply_non_stop(flow, reply, visitor, mode) do
-    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
+    step = current_step(flow)
 
     reply_value = Step.validate(step, reply, mode, flow.language)
 
@@ -180,7 +180,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp eval({flow, state, visitor}, mode) do
-    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
+    step = current_step(flow)
     case step do
       nil ->
         {:end, nil, %{state | steps: Visitor.close(visitor)}}
@@ -192,14 +192,41 @@ defmodule Ask.Runtime.Flow do
                 flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil, mode)}
                 eval({flow, state, visitor}, mode)
               {:stop, visitor} ->
-                {:ok, flow, %{state | steps: Visitor.close(visitor)}}
+                reply(state, visitor, flow)
             end
 
           {:wait_for_reply, state} ->
             {_, visitor} = visitor |> Visitor.accept_step(step, flow.language)
-            {:ok, flow, %{state | steps: Visitor.close(visitor)}}
+            reply(state, visitor, flow)
         end
     end
+  end
+
+  defp reply(state, visitor, flow) do
+    reply = %{state | steps: Visitor.close(visitor)}
+    reply = add_progress(reply, flow)
+    {:ok, flow, reply}
+  end
+
+  defp add_progress(reply, flow) do
+    {current_step, total_steps} = compute_progress(flow)
+    %{reply | current_step: current_step, total_steps: total_steps}
+  end
+
+  defp compute_progress(flow) do
+    current_step_id = current_step(flow)["id"]
+
+    steps = flow.questionnaire.steps
+    |> Enum.reject(fn step -> step["type"] == "flag" end)
+
+    current_step_index = steps
+    |> Enum.find_index(fn step -> step["id"] == current_step_id end)
+
+    {current_step_index || 0, length(steps)}
+  end
+
+  defp current_step(flow) do
+    flow.questionnaire.steps |> Enum.at(flow.current_step)
   end
 end
 
