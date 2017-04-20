@@ -46,73 +46,92 @@ defmodule Ask.MobileSurveyControllerTest do
     # mobile_survey_send_reply_path
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    json = json_response(conn, 200)
+
     assert %{
       "choices" => [],
       "prompts" => ["Welcome to the survey!"],
       "title" => "Let there be rock",
       "type" => "explanation"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 0.0
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    json = json_response(conn, 200)
     assert %{
       "choices" => [],
       "prompts" => ["Welcome to the survey!"],
       "title" => "Let there be rock",
       "type" => "explanation"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 0.0
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: ""})
+    json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
       "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 20.0
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
       "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 20.0
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
       "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 20.0
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
+    json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
       "prompts" => ["Do you exercise? Reply 1 for YES, 2 for NO"],
       "title" => "Do you exercise",
       "type" => "multiple-choice"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 40.0
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
+    json = json_response(conn, 200)
     assert %{
       "prompts" => ["Which is the second perfect number??"],
       "title" => "Which is the second perfect number?",
       "type" => "numeric"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 60.0
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "99"})
+    json = json_response(conn, 200)
     assert %{
       "prompts" => ["What's the number of this question??"],
       "title" => "What's the number of this question?",
       "type" => "numeric"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 80.0
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "11"})
+    json = json_response(conn, 200)
     assert %{
       "prompts" => ["The survey has ended"],
       "title" => "The survey has ended",
       "type" => "explanation"
-    } = json_response(conn, 200)["step"]
+    } = json["step"]
+    assert json["progress"] == 100.0
 
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
