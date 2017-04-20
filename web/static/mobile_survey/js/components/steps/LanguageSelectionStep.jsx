@@ -1,6 +1,7 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
+import languageNames from 'language-names'
 
 class LanguageSelectionStep extends Component {
   getValue() {
@@ -19,7 +20,7 @@ class LanguageSelectionStep extends Component {
         {step.choices.map((choice, index) => {
           return (
             <div key={choice} >
-              <button className='btn block' value={choice} onClick={e => { e.preventDefault(); onClick(index + 1) }}>{choice}</button>
+              <button className='btn block' value={choice} onClick={e => { e.preventDefault(); onClick(index + 1) }}>{languageNames[choice]}</button>
             </div>
           )
         })}
