@@ -96,6 +96,10 @@ defmodule Ask.MobileSurveyControllerTest do
     } = json["step"]
     assert json["progress"] == 20.0
 
+    # Check before flag step
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == nil
+
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
     json = json_response(conn, 200)
     assert %{
@@ -105,6 +109,10 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "multiple-choice"
     } = json["step"]
     assert json["progress"] == 40.0
+
+    # Check after flag step
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "partial"
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
     json = json_response(conn, 200)
@@ -129,7 +137,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["The survey has ended"],
       "title" => "The survey has ended",
-      "type" => "explanation"
+      "type" => "end"
     } = json["step"]
     assert json["progress"] == 100.0
 
@@ -197,7 +205,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["The survey has ended"],
       "title" => "The survey has ended",
-      "type" => "explanation"
+      "type" => "end"
     } = json_response(conn, 200)["step"]
   end
 end

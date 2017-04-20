@@ -23,12 +23,10 @@ class StepLanguageSelection extends Component {
     const { languageChoices } = step
 
     let selectOptions = languageChoices.map((choice, index) =>
-      index > 0 ? <option key={index} id={index} value={index} >
-        {index}
+      <option key={index} id={index} value={index + 1}>
+        {index + 1}
       </option>
-      : null
     )
-    selectOptions = selectOptions.filter(function(n) { return n != null })
 
     return (
       <div>
@@ -45,8 +43,7 @@ class StepLanguageSelection extends Component {
               </thead>
               <tbody>
                 { languageChoices.map((choice, index) =>
-                  choice
-                  ? <tr key={`${choice}${index}`}>
+                  <tr key={`${choice}${index}`}>
                     <td>
                       {this.translateLangCode(choice)}
                     </td>
@@ -54,13 +51,12 @@ class StepLanguageSelection extends Component {
                       <Input s={8} type='select'
                         disabled={readOnly}
                         onChange={e => this.changeLanguageOrder(choice, e)}
-                        defaultValue={index}
+                        defaultValue={index + 1}
                         >
                         {selectOptions}
                       </Input>
                     </td>
                   </tr>
-                  : <tr key='null' />
                   )}
               </tbody>
             </table>

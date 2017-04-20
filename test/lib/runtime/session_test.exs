@@ -83,7 +83,7 @@ defmodule Ask.SessionTest do
     expected_session = %Session{
       current_mode: SessionModeProvider.new("mobileweb", channel, retries),
       fallback_mode: nil,
-      flow: %Flow{questionnaire: quiz, mode: "mobileweb", current_step: 2}
+      flow: %Flow{questionnaire: quiz, mode: "mobileweb", current_step: 3}
     }
 
     assert session.current_mode == expected_session.current_mode

@@ -186,15 +186,13 @@ class ChoiceEditor extends Component {
 
   cell(value: string, errors: string[], shouldDisplay: boolean, onClick: Function) {
     const tooltip = (errors || [value]).join(', ')
-    const emptyValue = !value || value.trim().length == 0
-    const className = emptyValue ? 'tooltip-error' : 'basic-error'
 
     const elem = shouldDisplay
       ? <div>
         <UntitledIfEmpty
           text={value}
-          emptyText={'\u00a0'}
-          className={classNames({[className]: errors})} />
+          emptyText={'Missing'}
+          className={classNames({'basic-error tooltip-error': errors})} />
       </div>
     : null
 

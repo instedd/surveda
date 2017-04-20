@@ -38,7 +38,7 @@ defmodule Ask.Runtime.Step do
         if is_numeric(reply) do
           choices = step["language_choices"]
           {num, ""} = Integer.parse(reply)
-          (choices |> Enum.at(num)) || (choices |> Enum.at(1))
+          (choices |> Enum.at(num - 1)) || (choices |> Enum.at(0))
         else
           :invalid_answer
         end

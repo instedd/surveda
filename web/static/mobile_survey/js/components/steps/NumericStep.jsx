@@ -30,6 +30,10 @@ class NumericStep extends Component {
     return this.state.value
   }
 
+  clearValue() {
+    this.setState({value: '', valid: false})
+  }
+
   render() {
     const { step } = this.props
     return (

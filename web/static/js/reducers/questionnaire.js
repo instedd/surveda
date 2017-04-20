@@ -520,7 +520,7 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     title: 'Language selection',
     store: 'language',
     prompt: newStepPrompt(),
-    languageChoices: [null, first, second]
+    languageChoices: [first, second]
   }
 }
 
@@ -618,7 +618,7 @@ const reorderLanguages = (state, action) => {
     var index = choices.indexOf(action.language)
     if (index > -1) {
       choices.splice(index, 1)
-      choices.splice(action.index, 0, action.language)
+      choices.splice(action.index - 1, 0, action.language)
     }
 
     return {
@@ -1062,7 +1062,7 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
 }
 
 const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
-  if (choice.responses.mobileweb && !choice.responses.mobileweb[lang]) {
+  if (!choice.responses.mobileweb || isBlank(choice.responses.mobileweb[lang])) {
     addError(context, choiceMobileWebResponsePath(stepIndex, choiceIndex, lang), 'Mobile web must not be blank')
   }
 }

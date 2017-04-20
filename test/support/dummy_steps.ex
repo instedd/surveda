@@ -737,6 +737,11 @@ defmodule Ask.DummySteps do
             choice(value: "No", responses: responses(mobileweb: "No"))
           ]
         ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "partial"
+        ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
           title: "Do you exercise",

@@ -13,8 +13,9 @@ use Mix.Config
 # which you typically run after static files are built.
 config :ask, Ask.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: System.get_env("HOST") || "example.com", port: 80],
-  cache_static_manifest: "priv/static/manifest.json"
+  url: [host: {:system, "HOST"}, scheme: "https", port: 443],
+  cache_static_manifest: "priv/static/manifest.json",
+  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
 
 # Do not print debug messages in production
 config :logger, level: :info
