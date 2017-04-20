@@ -57,21 +57,6 @@ main {
 h1 {
   font-size: 1.3rem;
   line-height: 1.4;
-  &.prompt-length-less-100{
-    font-size: 1.3rem;
-  }
-  &.prompt-length-less-200{
-    font-size: 1.1rem;
-  }
-  &.prompt-length-less-300{
-    font-size: 0.9rem;
-  }
-  &.prompt-length-less-400{
-    font-size: 0.7rem;
-  }
-  &.prompt-length-large{
-    font-size: 0.5rem;
-  }
 }
 .btn {
   display: inline-block;
@@ -149,21 +134,21 @@ select {
 }
 
 .choice-length-less-14{
-  font-size: 1.4rem;
+  font-size: 1.45rem;
 }
 
 .choice-length-less-20{
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 .choice-length-less-40{
-  font-size: 1.0rem;
+  font-size: 1.15rem;
 }
 
 .choice-length-less-60{
-  font-size: 0.8rem;
+  font-size: 1.0rem;
 }
 
 .choice-length-large{
-  font-size: 0.6rem;
+  font-size: 0.8rem;
 }
