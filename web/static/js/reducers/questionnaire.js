@@ -1484,30 +1484,39 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
 
   if (responses.sms && responses.sms[defaultLanguage]) {
     const defLangSms = getChoiceResponseSmsJoined(choice, defaultLanguage)
-    newChoice.responses.sms = processTranslations(defLangSms, newChoice.responses.sms || {}, lookup)
+    newChoice.responses.sms = processTranslationsArray(defLangSms, newChoice.responses.sms || {}, lookup)
   }
 
   if (responses.mobileweb && responses.mobileweb[defaultLanguage]) {
     const defLangMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLanguage)
-    newChoice.responses.mobileweb = processTranslations(defLangMobileWeb, newChoice.responses.mobileweb || {}, lookup, false)
+    newChoice.responses.mobileweb = processTranslationsString(defLangMobileWeb, newChoice.responses.mobileweb || {}, lookup)
   }
 
   return newChoice
 }
 
-const processTranslations = (value, obj, lookup, split = true) => {
+const processTranslationsArray = (value, obj, lookup, split = true) => {
   let translations
 
   if (value && (translations = lookup[value])) {
     for (let lang in translations) {
-      let result = translations[lang]
-      if (split) {
-        result = result.split(',').map(s => s.trim())
-      }
-
       obj = {
         ...obj,
-        [lang]: result
+        [lang]: translations[lang].split(',').map(s => s.trim())
+      }
+    }
+  }
+  return obj
+}
+
+const processTranslationsString = (value, obj, lookup) => {
+  let translations
+
+  if (value && (translations = lookup[value])) {
+    for (let lang in translations) {
+      obj = {
+        ...obj,
+        [lang]: translations[lang]
       }
     }
   }
