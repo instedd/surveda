@@ -5,12 +5,40 @@ defmodule Ask.MobileSurveyController do
 
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     if Respondent.token(respondent_id) == token do
-      conn
-      |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-      |> render("index.html", respondent_id: respondent_id)
+      do_index(conn, respondent_id)
     else
       raise Ask.UnauthorizedError, conn: conn
     end
+  end
+
+  defp do_index(conn, respondent_id) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
+    respondent_cookie = respondent.mobile_web_cookie_code
+    if respondent_cookie do
+      request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
+      if request_cookie == respondent_cookie do
+        render_index(conn, respondent_id)
+      else
+        raise Ask.UnauthorizedError, conn: conn
+      end
+    else
+      cookie_value = Ecto.UUID.generate
+
+      respondent
+      |> Respondent.changeset(%{mobile_web_cookie_code: cookie_value})
+      |> Repo.update!
+
+      conn
+      |> put_resp_cookie(cookie_name, cookie_value)
+      |> render_index(respondent_id)
+    end
+  end
+
+  defp render_index(conn, respondent_id) do
+    conn
+    |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+    |> render("index.html", respondent_id: respondent_id)
   end
 
   def get_step(conn, %{"respondent_id" => respondent_id}) do

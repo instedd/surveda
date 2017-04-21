@@ -34,6 +34,7 @@ defmodule Ask.Respondent do
     field :timeout_at, Timex.Ecto.DateTime
     field :session, Ask.Ecto.Type.JSON
     field :mode, Ask.Ecto.Type.JSON
+    field :mobile_web_cookie_code, :string
     belongs_to :questionnaire, Ask.Questionnaire
     belongs_to :survey, Ask.Survey
     belongs_to :respondent_group, Ask.RespondentGroup
@@ -51,7 +52,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition])
+    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code])
     |> validate_required([:phone_number, :state])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
@@ -78,5 +79,9 @@ defmodule Ask.Respondent do
 
   def token(respondent_id)do
     String.slice(:crypto.hash(:md5, Application.get_env(:ask, Ask.Endpoint)[:secret_key_base] <> "#{respondent_id}") |> Base.encode16(case: :lower), -12, 12)
+  end
+
+  def mobile_web_cookie_name(respondent_id) do
+    "mobile_web_code_#{respondent_id}"
   end
 end
