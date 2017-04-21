@@ -1096,7 +1096,6 @@ describe('questionnaire reducer', () => {
       ])
 
       const languageSelection = state.data.steps[0]
-      console.log(languageSelection.languageChoices)
       expect(languageSelection.languageChoices[0]).toEqual('fr')
       expect(languageSelection.languageChoices[1]).toEqual('en')
       expect(languageSelection.languageChoices[2]).toEqual('es')
