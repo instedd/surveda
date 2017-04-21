@@ -582,7 +582,7 @@ i.survey-status { // icon for survey status on index
 }
 
 
-.sms-attempts, .ivr-attempts {
+.sms-attempts, .ivr-attempts, .mobileweb-attempts {
   li {
     display: inline-block;
     vertical-align: text-top;
@@ -653,6 +653,13 @@ i.survey-status { // icon for survey status on index
   }
 }
 
+.mobileweb-attempts {
+  li {
+    &:after {
+      content: 'phone_android';
+    }
+  }
+}
 
 .collection.dark { // this class 'dark' is for quotas and error cards
   border: none;

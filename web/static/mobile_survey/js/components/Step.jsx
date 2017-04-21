@@ -6,6 +6,8 @@ import MultipleChoiceStep from './steps/MultipleChoiceStep'
 import NumericStep from './steps/NumericStep'
 import ExplanationStep from './steps/ExplanationStep'
 import LanguageSelectionStep from './steps/LanguageSelectionStep'
+import Header from './Header'
+import EndStep from './steps/EndStep'
 
 class Step extends Component {
   handleSubmit: PropTypes.func.isRequired
@@ -22,8 +24,17 @@ class Step extends Component {
   }
 
   componentDidMount() {
-    const { dispatch, respondentId } = this.props
+    this.fetchStep()
 
+    // This is so that when the user switches between tabs,
+    // in case there are multiple tabs open they refresh
+    // to the current step and so there's no way to submit
+    // an answer for a previous question
+    window.onfocus = () => this.fetchStep()
+  }
+
+  fetchStep() {
+    const { dispatch, respondentId } = this.props
     actions.fetchStep(dispatch, respondentId)
   }
 
@@ -37,6 +48,8 @@ class Step extends Component {
         return <ExplanationStep ref='step' step={step} />
       case 'language-selection':
         return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
+      case 'end':
+        return <EndStep ref='step' step={step} />
       default:
         throw new Error(`Unknown step type: ${step.type}`)
     }
@@ -44,16 +57,13 @@ class Step extends Component {
 
   handleSubmit(event) {
     event.preventDefault()
-
-    const { dispatch, respondentId } = this.props
-    const value = this.refs.step.getValue()
-
-    actions.sendReply(dispatch, respondentId, value)
+    this.handleValue(this.refs.step.getValue())
   }
 
   handleValue(value) {
     const { dispatch, respondentId } = this.props
     actions.sendReply(dispatch, respondentId, value)
+      .then(() => this.refs.step.clearValue())
   }
 
   render() {
@@ -64,6 +74,7 @@ class Step extends Component {
 
     return (
       <div>
+        <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
             {this.stepComponent(step)}

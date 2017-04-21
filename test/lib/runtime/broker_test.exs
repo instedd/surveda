@@ -1246,6 +1246,16 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
 
     reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!")} = reply
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!")} = reply
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply(""))
     assert {:reply, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)

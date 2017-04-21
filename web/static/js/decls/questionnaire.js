@@ -40,7 +40,7 @@ export type MultipleChoiceStep = BaseStep & StoreStep & MultilingualStep & {
 
 export type LanguageSelectionStep = BaseStep & StoreStep & {
   type: 'language-selection',
-  languageChoices: (?string)[],
+  languageChoices: string[],
   prompt: LanguagePrompt
 };
 

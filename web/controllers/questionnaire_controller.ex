@@ -163,6 +163,7 @@ defmodule Ask.QuestionnaireController do
       steps: questionnaire.steps,
       quota_completed_msg: questionnaire.quota_completed_msg,
       error_msg: questionnaire.error_msg,
+      mobile_web_sms_message: questionnaire.mobile_web_sms_message,
       languages: questionnaire.languages,
       default_language: questionnaire.default_language,
       audio_files: audio_files,
@@ -213,6 +214,7 @@ defmodule Ask.QuestionnaireController do
       steps: Map.get(manifest, "steps"),
       quota_completed_msg: Map.get(manifest, "quota_completed_msg"),
       error_msg: Map.get(manifest, "error_msg"),
+      mobile_web_sms_message: Map.get(manifest, "mobile_web_sms_message"),
       languages: Map.get(manifest, "languages"),
       default_language: Map.get(manifest, "default_language"),
     })

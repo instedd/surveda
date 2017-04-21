@@ -34,12 +34,12 @@ defmodule Ask.Runtime.Session do
     case flow |> Flow.step(session.current_mode |> SessionMode.visitor) do
       {:end, _, reply} ->
         if Reply.prompts(reply) != [] do
-          log_prompts(reply, channel, respondent, true)
+          log_prompts(reply, channel, flow.mode, respondent, true)
           runtime_channel |> Channel.ask(respondent, token, reply)
         end
         {:end, reply, respondent}
       {:ok, flow, reply} ->
-        log_prompts(reply, channel, respondent)
+        log_prompts(reply, channel, flow.mode, respondent)
         runtime_channel |> Channel.ask(respondent, token, reply)
         {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
     end
@@ -63,7 +63,7 @@ defmodule Ask.Runtime.Session do
 
     reply = mobile_contact_reply(session)
 
-    log_prompts(reply, session.current_mode.channel, session.respondent)
+    log_prompts(reply, session.current_mode.channel, flow.mode, session.respondent)
     runtime_channel |> Channel.ask(respondent, token, reply)
     {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
   end
@@ -94,7 +94,19 @@ defmodule Ask.Runtime.Session do
   end
 
   defp url(respondent_id) do
-    "#{Ask.Endpoint.url}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}"
+    shorten("#{Ask.Endpoint.url}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
+  end
+
+  defp shorten(url) do
+    case Ask.UrlShortener.shorten(url) do
+      {:ok, shortened_url} ->
+        shortened_url
+      {:error, reason} ->
+        Ask.Logger.error "Couldn't shorten url. Reason: #{reason}"
+        url
+      :unavailable ->
+        url
+    end
   end
 
   defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
@@ -109,14 +121,14 @@ defmodule Ask.Runtime.Session do
     mode_start(%{session | token: Ecto.UUID.generate})
   end
 
-  defp log_prompts(reply, channel, respondent, force \\ false) do
+  defp log_prompts(reply, channel, mode, respondent, force \\ false) do
     if force || !(channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation?) do
       disposition = Reply.disposition(reply) || respondent.disposition
       Enum.each Reply.steps(reply), fn(step) ->
         step.prompts |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
           SurveyLogger.log(
             respondent.survey_id,
-            channel.type,
+            mode,
             respondent.id,
             respondent.hashed_number,
             channel.id,
@@ -128,24 +140,24 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp log_confirmation(title, disposition, channel, respondent) do
-    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition, :prompt, title)
+  defp log_confirmation(title, disposition, channel, mode, respondent) do
+    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, disposition, :prompt, title)
   end
 
-  defp log_contact(status, channel, respondent, disposition \\ nil) do
-    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :contact, status)
+  defp log_contact(status, channel, mode, respondent, disposition \\ nil) do
+    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :contact, status)
   end
 
-  defp log_response(:answer, channel, respondent, disposition) do
-    log_contact("Answer", channel, respondent, disposition)
+  defp log_response(:answer, channel, mode, respondent, disposition) do
+    log_contact("Answer", channel, mode, respondent, disposition)
   end
 
-  defp log_response(:no_reply, channel, respondent, disposition) do
-    log_contact("Timeout", channel, respondent, disposition)
+  defp log_response(:no_reply, channel, mode, respondent, disposition) do
+    log_contact("Timeout", channel, mode, respondent, disposition)
   end
 
-  defp log_response({:reply, response}, channel, respondent, disposition) do
-    SurveyLogger.log(respondent.survey_id, channel.type, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
+  defp log_response({:reply, response}, channel, mode, respondent, disposition) do
+    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
   end
 
   defp handle_setup_response(setup_response) do
@@ -195,7 +207,7 @@ defmodule Ask.Runtime.Session do
         case session.current_mode do
           %SMSMode{} ->
             {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
-            log_prompts(reply, session.current_mode.channel, session.respondent)
+            log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
             runtime_channel |> Channel.ask(session.respondent, token, reply)
             channel_state
 
@@ -205,7 +217,7 @@ defmodule Ask.Runtime.Session do
 
           %MobileWebMode{} ->
             reply = mobile_contact_reply(session)
-            log_prompts(reply, session.current_mode.channel, session.respondent)
+            log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
             runtime_channel |> Channel.ask(session.respondent, token, reply)
             channel_state
         end
@@ -217,17 +229,17 @@ defmodule Ask.Runtime.Session do
   end
 
   def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil} = session, reason) do
-    log_contact(reason, session.current_mode.channel, session.respondent)
+    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
     :failed
   end
 
   def channel_failed(session, reason) do
-    log_contact(reason, session.current_mode.channel, session.respondent)
+    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
     :ok
   end
 
   def delivery_confirm(session, title, current_mode) do
-    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.respondent)
+    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
   end
 
   defp switch_to_fallback(session) do
@@ -265,8 +277,8 @@ defmodule Ask.Runtime.Session do
 
     # Log raw response from user including new disposition
     case step_answer do
-      {:end, _, reply} -> log_response(response, current_mode.channel, respondent, Reply.disposition(reply))
-      {:ok, _flow, reply} -> log_response(response, current_mode.channel, respondent, Reply.disposition(reply))
+      {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
+      {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
       _ -> :ok
     end
 
@@ -304,13 +316,13 @@ defmodule Ask.Runtime.Session do
       true ->
         case Flow.quota_completed(session.flow, current_mode |> SessionMode.visitor) do
         {:ok, reply} ->
-          log_prompts(reply, current_mode.channel, respondent, true)
+          log_prompts(reply, current_mode.channel, flow.mode, respondent, true)
           {:rejected, reply, respondent}
         :ok ->
           {:rejected, respondent}
         end
       false ->
-        log_prompts(reply, current_mode.channel, respondent)
+        log_prompts(reply, current_mode.channel, flow.mode, respondent)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
     end
   end
@@ -319,8 +331,8 @@ defmodule Ask.Runtime.Session do
     {:failed, respondent}
   end
 
-  defp handle_step_answer(_, {:stopped, _flow, reply}, respondent, _, _, current_mode) do
-    log_response({:reply, "STOP"}, current_mode.channel, respondent, reply.disposition)
+  defp handle_step_answer(session, {:stopped, _, reply}, respondent, _, _, current_mode) do
+    log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, respondent, reply.disposition)
     {:stopped, reply, respondent}
   end
 

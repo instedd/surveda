@@ -258,7 +258,7 @@ export const modeLabel = (mode: string[]) => {
     return 'Phone call with SMS fallback'
   }
   if (isEqual(mode, ['ivr', 'mobileweb'])) {
-    return 'SMS with Mobile Web fallback'
+    return 'Phone call with Mobile Web fallback'
   }
   if (isEqual(mode, ['mobileweb'])) {
     return 'Mobile Web'

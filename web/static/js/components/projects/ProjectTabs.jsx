@@ -14,7 +14,7 @@ class ProjectTabs extends Component {
 
     let more = (
       <div className='col'>
-        <Dropdown className='options' dataBelowOrigin='false' label={<i className='material-icons'>more_vert</i>}>
+        <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
           <DropdownItem className='dots'>
             <i className='material-icons'>more_vert</i>
           </DropdownItem>

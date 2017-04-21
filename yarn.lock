@@ -3062,6 +3062,10 @@ kind-of@^3.0.2:
   dependencies:
     is-buffer "^1.0.2"
 
+language-names@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/language-names/-/language-names-0.1.0.tgz#82fd6305b73aa0be92d9dd6128e3921a3f5ca5cb"
+
 lazy-cache@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/lazy-cache/-/lazy-cache-1.0.4.tgz#a1d78fc3a50474cb80845d3b3b6e1da49a446e8e"

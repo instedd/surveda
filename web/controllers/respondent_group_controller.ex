@@ -273,7 +273,7 @@ defmodule Ask.RespondentGroupController do
         file.path
         |> File.read!
         |> csv_rows
-        |> Enum.uniq
+        |> Enum.uniq_by(&keep_digits/1)
 
       invalid_entries = rows
       |> Enum.with_index
@@ -327,5 +327,9 @@ defmodule Ask.RespondentGroupController do
     Enum.reject(phone_numbers, fn num ->
       Respondent.sanitize_phone_number(num) in existing_numbers
     end)
+  end
+  
+  defp keep_digits(string) do
+    Regex.replace(~r/\D/, string, "", [:global])
   end
 end

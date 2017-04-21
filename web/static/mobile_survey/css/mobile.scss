@@ -126,3 +126,29 @@ select {
     zoom: 1;
   }
 }
+
+// FONT-SIZE related with buttons of multiple choice steps
+
+.choice-length-less-7{
+  font-size: 1.6rem;
+}
+
+.choice-length-less-14{
+  font-size: 1.45rem;
+}
+
+.choice-length-less-20{
+  font-size: 1.3rem;
+}
+
+.choice-length-less-40{
+  font-size: 1.15rem;
+}
+
+.choice-length-less-60{
+  font-size: 1.0rem;
+}
+
+.choice-length-large{
+  font-size: 0.8rem;
+}

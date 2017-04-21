@@ -11,7 +11,7 @@ import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
-  newIvrPrompt, newRefusal, splitSmsText } from '../step'
+  getChoiceResponseMobileWebJoined, newIvrPrompt, newRefusal, splitSmsText } from '../step'
 import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
   choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath,
   mobileWebSmsMessagePath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
@@ -520,7 +520,7 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
     title: 'Language selection',
     store: 'language',
     prompt: newStepPrompt(),
-    languageChoices: [null, first, second]
+    languageChoices: [first, second]
   }
 }
 
@@ -618,7 +618,7 @@ const reorderLanguages = (state, action) => {
     var index = choices.indexOf(action.language)
     if (index > -1) {
       choices.splice(index, 1)
-      choices.splice(action.index, 0, action.language)
+      choices.splice(action.index - 1, 0, action.language)
     }
 
     return {
@@ -1062,7 +1062,7 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
 }
 
 const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string) => {
-  if (choice.responses.mobileweb && !choice.responses.mobileweb[lang]) {
+  if (!choice.responses.mobileweb || isBlank(choice.responses.mobileweb[lang])) {
     addError(context, choiceMobileWebResponsePath(stepIndex, choiceIndex, lang), 'Mobile web must not be blank')
   }
 }
@@ -1147,6 +1147,10 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
       let defaultIvr = getStepPromptIvrText(step, defaultLang)
       addToCsvForTranslation(defaultIvr, context, lang => getStepPromptIvrText(step, lang))
 
+      // Mobile Web Prompt
+      let defaultMobileWeb = getStepPromptMobileWeb(step, defaultLang)
+      addToCsvForTranslation(defaultMobileWeb, context, lang => getStepPromptMobileWeb(step, lang))
+
       // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
       if (step.type === 'multiple-choice') {
         step.choices.forEach(choice => {
@@ -1154,6 +1158,12 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
           const defaultResponseSms = getChoiceResponseSmsJoined(choice, defaultLang)
           addToCsvForTranslation(defaultResponseSms, context, lang =>
             getChoiceResponseSmsJoined(choice, lang)
+          )
+
+          // Response mobile web
+          const defaultResponseMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLang)
+          addToCsvForTranslation(defaultResponseMobileWeb, context, lang =>
+            getChoiceResponseMobileWebJoined(choice, lang)
           )
         })
       }
@@ -1179,6 +1189,9 @@ const addMessageToCsvForTranslation = (m, defaultLang, context) => {
 
   let defaultIvrCompletedMsg = getPromptIvrText(m, defaultLang)
   addToCsvForTranslation(defaultIvrCompletedMsg, context, lang => getPromptIvrText(m, lang))
+
+  let defaultMobileWebCompletedMsg = getPromptMobileWeb(m, defaultLang)
+  addToCsvForTranslation(defaultMobileWebCompletedMsg, context, lang => getPromptMobileWeb(m, lang))
 }
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
@@ -1433,6 +1446,11 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
     }
   }
 
+  let mobileweb = defaultLanguagePrompt.mobileweb
+  if (mobileweb && (translations = lookup[mobileweb])) {
+    addTranslations(newPrompt, translations, 'mobileweb')
+  }
+
   return newPrompt
 }
 
@@ -1458,27 +1476,47 @@ const translateChoices = (choices, defaultLanguage, lookup) => {
 
 const translateChoice = (choice, defaultLanguage, lookup) => {
   let { responses } = choice
-  if (!responses.sms || !responses.sms[defaultLanguage]) return choice
 
   let newChoice = {
     ...choice,
     responses: {...choice.responses}
   }
 
-  const defLangResp = getChoiceResponseSmsJoined(choice, defaultLanguage)
+  if (responses.sms && responses.sms[defaultLanguage]) {
+    const defLangSms = getChoiceResponseSmsJoined(choice, defaultLanguage)
+    newChoice.responses.sms = processTranslationsArray(defLangSms, newChoice.responses.sms || {}, lookup)
+  }
 
-  newChoice.responses.sms = processTranslations(defLangResp, newChoice.responses.sms || {}, lookup)
+  if (responses.mobileweb && responses.mobileweb[defaultLanguage]) {
+    const defLangMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLanguage)
+    newChoice.responses.mobileweb = processTranslationsString(defLangMobileWeb, newChoice.responses.mobileweb || {}, lookup)
+  }
 
   return newChoice
 }
 
-const processTranslations = (value, obj, lookup, funcOrProperty) => {
+const processTranslationsArray = (value, obj, lookup, split = true) => {
   let translations
+
   if (value && (translations = lookup[value])) {
     for (let lang in translations) {
       obj = {
         ...obj,
         [lang]: translations[lang].split(',').map(s => s.trim())
+      }
+    }
+  }
+  return obj
+}
+
+const processTranslationsString = (value, obj, lookup) => {
+  let translations
+
+  if (value && (translations = lookup[value])) {
+    for (let lang in translations) {
+      obj = {
+        ...obj,
+        [lang]: translations[lang]
       }
     }
   }

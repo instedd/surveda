@@ -33,6 +33,7 @@ class SurveyForm extends Component {
   }
 
   componentDidMount() {
+    window.scrollTo(0, 0)
     $('.scrollspy').scrollSpy()
     const sidebar = $(this.refs.sidebar)
     sidebar.pushpin({ top: sidebar.offset().top, offset: 60 })

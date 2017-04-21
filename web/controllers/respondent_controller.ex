@@ -429,7 +429,7 @@ defmodule Ask.RespondentController do
       |> Timex.Ecto.DateTime.cast!
       |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
 
-      [e.respondent_hashed_number, (e.mode |> String.upcase), channel_name, disposition, action_type, e.action_data, timestamp]
+      [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
     end)
 
     header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
@@ -470,11 +470,18 @@ defmodule Ask.RespondentController do
       ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
       ["ivr"] -> "Phone call"
       ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["ivr", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
       ["mobileweb"] -> "Mobile Web"
       ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
       ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
       _ -> "Unknown mode"
+    end
+  end
+
+  defp interactions_mode_label(mode) do
+    case mode do
+      "mobileweb" -> "Mobile Web"
+      _ -> String.upcase(mode)
     end
   end
 
