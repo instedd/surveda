@@ -4,7 +4,7 @@ import { Card } from '../ui'
 import classNames from 'classnames'
 import * as actions from '../../actions/questionnaire'
 import SmsPrompt from './SmsPrompt'
-import { mobileWebSmsMessagePath, mobileWebSmsMessageHasErrors } from '../../questionnaireErrors'
+import { hasErrorsInPrefix } from '../../questionnaireErrors'
 
 class MobileWebSmsMessage extends Component {
   constructor(props) {
@@ -72,10 +72,10 @@ class MobileWebSmsMessage extends Component {
   }
 
   expanded() {
-    const { readOnly, errors } = this.props
+    const { readOnly, errorsByPath } = this.props
 
     const value = this.state.text
-    let inputErrors = errors[mobileWebSmsMessagePath()]
+    let inputErrors = errorsByPath['mobileWebSmsMessage']
 
     return (
       <div className='row'>
@@ -132,7 +132,7 @@ class MobileWebSmsMessage extends Component {
 MobileWebSmsMessage.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
-  errors: PropTypes.object,
+  errorsByPath: PropTypes.object,
   hasErrors: PropTypes.bool,
   readOnly: PropTypes.bool
 }
@@ -141,8 +141,8 @@ const mapStateToProps = (state, ownProps: Props) => {
   const quiz = state.questionnaire
   return {
     questionnaire: quiz.data,
-    errors: quiz.errors,
-    hasErrors: quiz.data ? mobileWebSmsMessageHasErrors(quiz) : false
+    errorsByPath: quiz.errorsByPath,
+    hasErrors: hasErrorsInPrefix(quiz.errors, 'mobileWebSmsMessage')
   }
 }
 

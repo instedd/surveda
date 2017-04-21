@@ -190,7 +190,7 @@ SmsPrompt.propTypes = {
   onBlur: PropTypes.func.isRequired,
   readOnly: PropTypes.bool,
   fixedEndLength: PropTypes.number,
-  autocomplete: PropTypes.bool.isRequired,
+  autocomplete: PropTypes.bool,
   autocompleteGetData: PropTypes.func,
   autocompleteOnSelect: PropTypes.func}
 

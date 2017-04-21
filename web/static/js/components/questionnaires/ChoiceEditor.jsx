@@ -4,7 +4,6 @@ import { UntitledIfEmpty, Tooltip, Autocomplete } from '../ui'
 import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined, getChoiceResponseMobileWebJoined } from '../../step'
-import { choiceValuePath, choiceSmsResponsePath, choiceIvrResponsePath, choiceMobileWebResponsePath } from '../../questionnaireErrors'
 import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
@@ -20,7 +19,8 @@ type Props = {
   sms: boolean,
   mobileweb: boolean,
   ivr: boolean,
-  errors: Errors,
+  errorPath: string,
+  errorsByPath: ErrorsByPath,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
 };
@@ -36,7 +36,6 @@ type State = {
   focus: Focus,
   doNotClose: boolean,
   skipLogic: ?string,
-  errors: ?Errors,
 };
 
 class ChoiceEditor extends Component {
@@ -203,7 +202,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errors, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     const isRefusal = choiceIndex == 'refusal'
 
@@ -286,10 +285,12 @@ class ChoiceEditor extends Component {
           }
         </tr>)
     } else {
-      let responseErrors = !isRefusal ? errors[choiceValuePath(stepIndex, choiceIndex)] : []
-      let smsErrors = errors[choiceSmsResponsePath(stepIndex, choiceIndex, lang)]
-      let ivrErrors = errors[choiceIvrResponsePath(stepIndex, choiceIndex)]
-      let mobilewebErrors = errors[choiceMobileWebResponsePath(stepIndex, choiceIndex, lang)]
+      const path = `${errorPath}[${choiceIndex}]`
+
+      let responseErrors = !isRefusal ? errorsByPath[`${path}.value`] : []
+      let smsErrors = errorsByPath[`${path}['${lang}'].sms`]
+      let ivrErrors = errorsByPath[`${path}.ivr`]
+      let mobilewebErrors = errorsByPath[`${path}['${lang}'].mobileweb`]
 
       return (
         <tr>

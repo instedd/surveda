@@ -19,7 +19,8 @@ type Props = {
   onCollapse: Function,
   readOnly: boolean,
   questionnaire: Questionnaire,
-  errors: Errors
+  errorPath: string,
+  errorsByPath: ErrorsByPath
 };
 
 type State = {
@@ -56,7 +57,7 @@ class LanguageSelectionStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, errors, readOnly } = this.props
+    const { step, stepIndex, onCollapse, errorPath, errorsByPath, readOnly } = this.props
 
     return (
       <DraggableStep step={step} readOnly={readOnly}>
@@ -65,7 +66,8 @@ class LanguageSelectionStepEditor extends Component {
             step={step}
             readOnly={readOnly}
             stepIndex={stepIndex}
-            errors={errors} />
+            errorPath={errorPath}
+            errorsByPath={errorsByPath} />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>

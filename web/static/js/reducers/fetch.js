@@ -7,7 +7,8 @@ const initialState = {
   dirty: false,
   filter: null,
   data: null,
-  errors: {},
+  errors: [],
+  errorsByPath: {},
   errorsByLang: {},
   saving: false
 }

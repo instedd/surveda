@@ -7,7 +7,6 @@ import ChoiceEditor from './ChoiceEditor'
 import { Card } from '../ui'
 import { getChoiceResponseSmsJoined } from '../../step'
 import * as api from '../../api'
-import { choicesPath } from '../../questionnaireErrors'
 
 type Props = {
   actions: any,
@@ -17,7 +16,8 @@ type Props = {
   stepIndex: number,
   stepsBefore: Step[],
   stepsAfter: Step[],
-  errors: Errors
+  errorPath: string,
+  errorsByPath: ErrorsByPath
 };
 
 class StepMultipleChoiceEditor extends Component {
@@ -88,14 +88,16 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errors } = this.props
+    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath } = this.props
     const { choices } = step
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
-    let myErrors = errors[choicesPath(stepIndex)]
+    const choicesErrorPath = `${errorPath}.choices`
+
+    let myErrors = errorsByPath[choicesErrorPath]
     if (myErrors) {
       myErrors.join(', ')
     }
@@ -143,7 +145,8 @@ class StepMultipleChoiceEditor extends Component {
                     sms={sms}
                     ivr={ivr}
                     mobileweb={mobileweb}
-                    errors={errors}
+                    errorPath={choicesErrorPath}
+                    errorsByPath={errorsByPath}
                     smsAutocompleteGetData={(value, callback) => this.smsAutocompleteGetData(value, callback, choice, index)}
                     smsAutocompleteOnSelect={item => this.smsAutocompleteOnSelect(item, choice, index)}
                     />

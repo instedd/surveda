@@ -257,7 +257,7 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire, project, readOnly, userSettings } = this.props
+    const { questionnaire, project, readOnly, userSettings, errorsByPath } = this.props
 
     let csvButtons = null
 
@@ -363,6 +363,8 @@ class QuestionnaireEditor extends Component {
         ? <div className='col s12 m8 offset-m1'>
           <QuestionnaireSteps
             steps={questionnaire.steps}
+            errorPath='steps'
+            errorsByPath={errorsByPath}
             current={this.state.currentStep}
             currentStepIsNew={this.state.currentStepIsNew}
             onSelectStep={stepId => this.selectStep(stepId)}
@@ -408,6 +410,7 @@ QuestionnaireEditor.propTypes = {
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object,
+  errorsByPath: PropTypes.object,
   location: PropTypes.object
 }
 
@@ -417,7 +420,8 @@ const mapStateToProps = (state, ownProps) => ({
   userSettings: state.userSettings,
   readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
+  errorsByPath: state.questionnaire.errorsByPath || {}
 })
 
 const mapDispatchToProps = (dispatch) => ({

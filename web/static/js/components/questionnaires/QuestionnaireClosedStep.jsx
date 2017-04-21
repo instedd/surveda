@@ -4,10 +4,12 @@ import classNames from 'classnames'
 import { UntitledIfEmpty, Card } from '../ui'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
-import { hasErrors } from '../../questionnaireErrors'
+import { hasErrorsInPrefix } from '../../questionnaireErrors'
 
 type Props = {
   step: Step,
+  stepIndex: number,
+  errorPath: string,
   onClick: Function,
   hasErrors: boolean,
   readOnly: boolean
@@ -64,7 +66,7 @@ class QuestionnaireClosedStep extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  hasErrors: hasErrors(state.questionnaire, ownProps.step)
+  hasErrors: hasErrorsInPrefix(state.questionnaire.errors, ownProps.errorPath)
 })
 
 export default connect(mapStateToProps)(QuestionnaireClosedStep)

@@ -7,7 +7,6 @@ import SmsPrompt from './SmsPrompt'
 import IvrPrompt from './IvrPrompt'
 import MobileWebPrompt from './MobileWebPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText, getStepPromptMobileWeb } from '../../step'
-import { promptTextPath, promptIvrAudioIdPath } from '../../questionnaireErrors'
 import * as api from '../../api'
 import propsAreEqual from '../../propsAreEqual'
 
@@ -27,7 +26,8 @@ type Props = {
   questionnaireActions: any,
   questionnaire: Questionnaire,
   readOnly: boolean,
-  errors: Errors,
+  errorPath: string,
+  errorsByPath: ErrorsByPath,
   classes: string,
   title?: string
 };
@@ -157,17 +157,18 @@ class StepPrompts extends Component {
   }
 
   render() {
-    const { step, stepIndex, questionnaire, readOnly, errors, classes, title } = this.props
+    const { step, questionnaire, readOnly, errorPath, errorsByPath, classes, title } = this.props
 
     const activeLanguage = questionnaire.activeLanguage
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
     const autocomplete = step.type != 'language-selection'
+    const path = `${errorPath}.prompt['${activeLanguage}']`
 
     let smsInput = null
     if (sms) {
-      let smsInputErrors = errors[promptTextPath(stepIndex, 'sms', activeLanguage)]
+      let smsInputErrors = errorsByPath[`${path}.sms`]
       smsInput = <SmsPrompt id='step_editor_sms_prompt'
         originalValue={this.state.smsOriginalValue}
         value={this.state.stepPromptSms}
@@ -183,8 +184,8 @@ class StepPrompts extends Component {
 
     let ivrInput = null
     if (ivr) {
-      let ivrInputErrors = errors[promptTextPath(stepIndex, 'ivr', activeLanguage)]
-      let ivrAudioIdErrors = errors[promptIvrAudioIdPath(stepIndex, activeLanguage)]
+      let ivrInputErrors = errorsByPath[`${path}.ivr.text`]
+      let ivrAudioIdErrors = errorsByPath[`${path}.ivr.audioId`]
       ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
         key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
@@ -204,7 +205,7 @@ class StepPrompts extends Component {
 
     let mobilewebInput = null
     if (mobileweb) {
-      let mobilewebInputErrors = errors[promptTextPath(stepIndex, 'mobileweb', activeLanguage)]
+      let mobilewebInputErrors = errorsByPath[`${path}.mobileweb`]
       mobilewebInput = <MobileWebPrompt id='step_editor_mobileweb_prompt'
         key={`${questionnaire.activeLanguage}-mobile-web-prompt`}
         value={this.state.stepPromptMobileWeb}

@@ -17,7 +17,8 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: Errors,
+  errorPath: string,
+  errorsByPath: ErrorsByPath,
   readOnly: boolean,
   stepsAfter: Step[],
   stepsBefore: Step[]

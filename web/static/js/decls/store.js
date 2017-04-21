@@ -14,15 +14,22 @@ export type DataStore<T> = {
   saving?: ?boolean,
   dirty?: ?boolean,
   data: ?T,
-  errors: Errors,
-  errorsByLang: { [lang: string]: Errors }
+  errors: ValidationError[],
+  errorsByPath: ErrorsByPath,
+  errorsByLang: ErrorsByLang
 };
+
+export type ErrorsByPath = {[path: string]: string[]};
+export type ErrorsByLang = {[lang: string]: boolean};
 
 export type StoreReducer<T> = (state: ?DataStore<T>, action: any) => DataStore<T>;
 export type Reducer<T> = (state: T, action: any) => T;
 
-export type Errors = {
-  [path: string]: string[]
+export type ValidationError = {
+  path: string,
+  mode: ?string,
+  lang: ?string,
+  message: string
 }
 
 export type Filter = {

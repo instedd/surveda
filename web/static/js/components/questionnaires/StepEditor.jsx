@@ -8,16 +8,16 @@ import NumericStepEditor from './NumericStepEditor'
 import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
 import ExplanationStepEditor from './ExplanationStepEditor'
 import FlagStepEditor from './FlagStepEditor'
-import { errorsByLang } from '../../questionnaireErrors'
 
 type Props = {
   step: Step,
   stepIndex: number,
+  errorPath: string,
+  errorsByPath: ErrorsByPath,
   questionnaireActions: any,
   readOnly: boolean,
   onDelete: Function,
   onCollapse: Function,
-  errors: Errors,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -47,7 +47,6 @@ class StepEditor extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  errors: ownProps.isNew ? {} : errorsByLang(state.questionnaire)[state.questionnaire.data.activeLanguage]
 })
 
 const mapDispatchToProps = (dispatch) => ({

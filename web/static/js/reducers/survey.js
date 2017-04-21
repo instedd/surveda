@@ -50,7 +50,7 @@ const validateReducer = (reducer: StoreReducer<Survey>): StoreReducer<Survey> =>
 export default validateReducer(fetchReducer(actions, dataReducer))
 
 const validate = (state) => {
-  state.errors = {}
+  state.errorsByPath = {}
   validateRetry(state, 'sms', 'smsRetryConfiguration')
   validateRetry(state, 'ivr', 'ivrRetryConfiguration')
   validateRetry(state, 'mobileweb', 'mobilewebRetryConfiguration')
@@ -75,7 +75,7 @@ const validateRetry = (state: DataStore<Survey>, mode, key) => {
   values = values.filter((v) => v)
   const invalid = values.some((v) => !timeSpecRegex.test(v))
   if (invalid) {
-    state.errors[key] = ['Re-contact configuration is invalid']
+    state.errorsByPath[key] = ['Re-contact configuration is invalid']
   }
 }
 
@@ -95,7 +95,7 @@ const validateFallbackDelay = (state: DataStore<Survey>) => {
 
   const invalid = !timeSpecRegex.test(fallbackDelay)
   if (invalid) {
-    state.errors.fallbackDelay = ['Fallback delay is invalid']
+    state.errorsByPath.fallbackDelay = ['Fallback delay is invalid']
   }
 }
 

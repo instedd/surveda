@@ -241,7 +241,7 @@ describe('survey reducer', () => {
       actions.receive(survey),
       actions.changeSmsRetryConfiguration('12j')
     ])
-    expect(state.errors.smsRetryConfiguration).toEqual('Re-contact configuration is invalid')
+    expect(state.errorsByPath.smsRetryConfiguration).toEqual('Re-contact configuration is invalid')
   })
 
   it('should not add ivr retry attempts errors if configuration is invalid', () => {
@@ -251,7 +251,7 @@ describe('survey reducer', () => {
       actions.selectMode(['ivr']),
       actions.changeIvrRetryConfiguration('12j')
     ])
-    expect(state.errors.ivrRetryConfiguration).toEqual('Re-contact configuration is invalid')
+    expect(state.errorsByPath.ivrRetryConfiguration).toEqual('Re-contact configuration is invalid')
   })
 
   it('should validate fallback delay', () => {
@@ -261,7 +261,7 @@ describe('survey reducer', () => {
       actions.selectMode(['sms', 'ivr']),
       actions.changeFallbackDelay('12j')
     ])
-    expect(state.errors.fallbackDelay).toEqual('Fallback delay is invalid')
+    expect(state.errorsByPath.fallbackDelay).toEqual('Fallback delay is invalid')
   })
 
   it('should not validate fallback delay if only one mode is selected', () => {

@@ -181,7 +181,7 @@ class SurveyWizardRetryAttempts extends Component {
       let fallbackDelayComponent = null
       if (hasFallbackMode) {
         const defaultValue = this.defaultValue('fallbackDelay')
-        const invalid = this.invalid('fallbackDelay', survey.errors)
+        const invalid = this.invalid('fallbackDelay', survey.errorsByPath)
         fallbackDelayComponent = (
           <div className='row'>
             <div className='input-field col s12'>
@@ -205,7 +205,7 @@ class SurveyWizardRetryAttempts extends Component {
       const modeRetryConfiguration = (
         modes.map((mode) => {
           const defaultValue = this.defaultValue(mode)
-          const invalid = this.invalid(mode, survey.errors)
+          const invalid = this.invalid(mode, survey.errorsByPath)
           return (
             <div className='row' key={mode}>
               <div className='input-field col s12'>

@@ -169,7 +169,7 @@ class SurveyForm extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   surveyId: ownProps.params.surveyId,
-  errors: state.survey.errors
+  errors: state.survey.errorsByPath
 })
 
 export default withRouter(connect(mapStateToProps)(SurveyForm))

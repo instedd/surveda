@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { Card, InputWithLabel } from '../ui'
 import classNames from 'classnames'
 import * as actions from '../../actions/questionnaire'
-import { mobileWebSurveyIsOverMessagePath, mobileWebSurveyIsOverMessageHasErrors } from '../../questionnaireErrors'
+import { hasErrorsInPrefix } from '../../questionnaireErrors'
 
 class MobileWebSurveyIsOverMessage extends Component {
   constructor(props) {
@@ -75,10 +75,10 @@ class MobileWebSurveyIsOverMessage extends Component {
   }
 
   expanded() {
-    const { readOnly, errors } = this.props
+    const { readOnly, errorsByPath } = this.props
 
     const value = this.state.text
-    let inputErrors = errors[mobileWebSurveyIsOverMessagePath()]
+    let inputErrors = errorsByPath['mobileWebSurveyIsOverMessage']
     const maybeInvalidClass = classNames({'validate invalid': inputErrors})
 
     return (
@@ -137,7 +137,7 @@ class MobileWebSurveyIsOverMessage extends Component {
 MobileWebSurveyIsOverMessage.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
-  errors: PropTypes.object,
+  errorsByPath: PropTypes.object,
   hasErrors: PropTypes.bool,
   readOnly: PropTypes.bool
 }
@@ -146,8 +146,8 @@ const mapStateToProps = (state, ownProps: Props) => {
   const quiz = state.questionnaire
   return {
     questionnaire: quiz.data,
-    errors: quiz.errors,
-    hasErrors: quiz.data ? mobileWebSurveyIsOverMessageHasErrors(quiz) : false
+    errorsByPath: quiz.errorsByPath,
+    hasErrors: hasErrorsInPrefix(quiz.errors, 'mobileWebSurveyIsOverMessage')
   }
 }
 

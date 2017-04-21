@@ -18,7 +18,8 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   questionnaire: Questionnaire,
-  errors: Errors,
+  errorPath: string,
+  errorsByPath: ErrorsByPath,
   readOnly: boolean,
   stepsAfter: Step[],
   stepsBefore: Step[]
@@ -69,7 +70,7 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errors, readOnly } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, readOnly } = this.props
 
     return (
       <DraggableStep step={step} readOnly={readOnly}>
@@ -78,7 +79,8 @@ class ExplanationStepEditor extends Component {
             step={step}
             readOnly={readOnly}
             stepIndex={stepIndex}
-            errors={errors}
+            errorPath={errorPath}
+            errorsByPath={errorsByPath}
             classes='no-separator'
             title='Message'
           />

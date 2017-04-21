@@ -115,7 +115,7 @@ class StepNumericEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errors, readOnly } = this.props
+    const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errorPath, errorsByPath, readOnly } = this.props
     const { ranges } = step
 
     const sms = questionnaire.modes.indexOf('sms') != -1
@@ -234,7 +234,8 @@ class StepNumericEditor extends Component {
                 sms={sms}
                 ivr={ivr}
                 mobileweb={mobileweb}
-                errors={errors}
+                errorPath={`${errorPath}.refusal`}
+                errorsByPath={errorsByPath}
                 smsAutocompleteGetData={(value, callback) => null}
                 smsAutocompleteOnSelect={item => null}
               />
@@ -277,7 +278,8 @@ StepNumericEditor.propTypes = {
   stepIndex: PropTypes.number,
   stepsAfter: PropTypes.array.isRequired,
   stepsBefore: PropTypes.array.isRequired,
-  errors: PropTypes.object
+  errorPath: PropTypes.string,
+  errorsByPath: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({})

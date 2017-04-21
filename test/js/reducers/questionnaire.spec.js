@@ -7,7 +7,6 @@ import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
 import { questionnaire } from '../fixtures'
-import { filterByPathPrefix } from '../../../web/static/js/questionnaireErrors'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -537,11 +536,29 @@ describe('questionnaire reducer', () => {
         actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
       ])
 
-      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1]')
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: "steps[1].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: 'SMS prompt must not be blank'
+      })
 
-      expect(resultErrors).toInclude({
-        [`steps[1].prompt['en'].sms`]: ['SMS prompt must not be blank'],
-        [`steps[1].prompt['fr'].sms`]: ['SMS prompt must not be blank']
+      expect(errors).toInclude({
+        path: "steps[1].prompt['fr'].sms",
+        lang: 'fr',
+        mode: 'sms',
+        message: 'SMS prompt must not be blank'
+      })
+
+      expect(resultState.errorsByPath).toInclude({
+        "steps[1].prompt['en'].sms": ['SMS prompt must not be blank'],
+        "steps[1].prompt['fr'].sms": ['SMS prompt must not be blank']
+      })
+
+      expect(resultState.errorsByLang).toInclude({
+        'en': true,
+        'fr': true
       })
     })
 
@@ -554,7 +571,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].prompt['en'].mobileweb`]: ['Mobile web prompt must not be blank']
+        path: "steps[0].prompt['en'].mobileweb",
+        lang: 'en',
+        mode: 'mobileweb',
+        message: 'Mobile web prompt must not be blank'
       })
     })
 
@@ -568,7 +588,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].prompt['en'].sms`]: 'limit exceeded'
+        path: "steps[0].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: 'limit exceeded'
       })
     })
 
@@ -581,7 +604,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].prompt['en'].sms`]: 'limit exceeded'
+        path: "steps[0].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: 'limit exceeded'
       })
     })
 
@@ -612,11 +638,18 @@ describe('questionnaire reducer', () => {
         actions.changeStepPromptIvr('17141bea-a81c-4227-bdda-f5f69188b0e7', {text: '', audioSource: 'tts'})
       ])
 
-      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1]')
-
-      expect(resultErrors).toInclude({
-        [`steps[1].prompt['en'].ivr.text`]: ['Voice prompt must not be blank'],
-        [`steps[1].prompt['fr'].ivr.text`]: ['Voice prompt must not be blank']
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: "steps[1].prompt['en'].ivr.text",
+        lang: 'en',
+        mode: 'ivr',
+        message: 'Voice prompt must not be blank'
+      })
+      expect(errors).toInclude({
+        path: "steps[1].prompt['fr'].ivr.text",
+        lang: 'fr',
+        mode: 'ivr',
+        message: 'Voice prompt must not be blank'
       })
     })
 
@@ -628,7 +661,10 @@ describe('questionnaire reducer', () => {
       )
 
       expect(state.errors).toInclude({
-        "steps[1].prompt['en'].ivr.audioId": ['An audio file must be uploaded']
+        path: "steps[1].prompt['en'].ivr.audioId",
+        lang: 'en',
+        mode: 'ivr',
+        message: 'An audio file must be uploaded'
       })
     })
 
@@ -642,7 +678,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(state.errors).toInclude({
-        'steps[0].choices': ['You should define at least two response options']
+        path: 'steps[0].choices',
+        lang: null,
+        mode: null,
+        message: 'You should define at least two response options'
       })
     })
 
@@ -655,7 +694,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(state.errors).toInclude({
-        'steps[0].choices[0].value': ['Response must not be blank']
+        path: 'steps[0].choices[0].value',
+        lang: null,
+        mode: null,
+        message: 'Response must not be blank'
       })
     })
 
@@ -673,11 +715,19 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', '', 'a', '1', null)
       ])
 
-      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: "steps[1].choices[0]['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: 'SMS must not be blank'
+      })
 
-      expect(resultErrors).toInclude({
-        [`steps[1].choices[0]['en'].sms`]: ['SMS must not be blank'],
-        [`steps[1].choices[0]['fr'].sms`]: ['SMS must not be blank']
+      expect(errors).toInclude({
+        path: "steps[1].choices[0]['fr'].sms",
+        lang: 'fr',
+        mode: 'sms',
+        message: 'SMS must not be blank'
       })
     })
 
@@ -695,11 +745,18 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'stop', 'a', '1', null)
       ])
 
-      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
-
-      expect(resultErrors).toInclude({
-        [`steps[1].choices[0]['en'].sms`]: ["SMS must not be 'STOP'"],
-        [`steps[1].choices[0]['fr'].sms`]: ["SMS must not be 'STOP'"]
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: "steps[1].choices[0]['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: "SMS must not be 'STOP'"
+      })
+      expect(errors).toInclude({
+        path: "steps[1].choices[0]['fr'].sms",
+        lang: 'fr',
+        mode: 'sms',
+        message: "SMS must not be 'STOP'"
       })
     })
 
@@ -712,7 +769,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].choices[0]['en'].mobileweb`]: ['Mobile web must not be blank']
+        path: "steps[0].choices[0]['en'].mobileweb",
+        lang: 'en',
+        mode: 'mobileweb',
+        message: 'Mobile web must not be blank'
       })
     })
 
@@ -730,10 +790,11 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b', '', '', null)
       ])
 
-      const resultErrors = filterByPathPrefix(resultState.errors, 'steps[1].choices[0]')
-
-      expect(resultErrors).toEqual({
-        [`steps[1].choices[0].ivr`]: ['"Phone call" must not be blank']
+      expect(resultState.errors).toInclude({
+        path: 'steps[1].choices[0].ivr',
+        lang: null,
+        mode: 'ivr',
+        message: '"Phone call" must not be blank'
       })
     })
 
@@ -767,9 +828,19 @@ describe('questionnaire reducer', () => {
         },
         skipLogic: 'some-other-id'
       })
-      expect(resultState.errors).toInclude({
-        'steps[0].choices[1].ivr': [ '"Phone call" must only consist of single digits, "#" or "*"' ],
-        'steps[1].choices[2].ivr': [ '"Phone call" must only consist of single digits, "#" or "*"' ]
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: 'steps[0].choices[1].ivr',
+        lang: null,
+        mode: 'ivr',
+        message: '"Phone call" must only consist of single digits, "#" or "*"'
+      })
+      expect(errors).toInclude({
+        path: 'steps[1].choices[2].ivr',
+        lang: null,
+        mode: 'ivr',
+        message: '"Phone call" must only consist of single digits, "#" or "*"'
       })
     })
 
@@ -783,7 +854,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        'steps[0].choices[1].value': ['Value already used in a previous response']
+        path: 'steps[0].choices[1].value',
+        lang: null,
+        mode: null,
+        message: 'Value already used in a previous response'
       })
     })
 
@@ -797,7 +871,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        [`steps[0].choices[1]['en'].sms`]: ['Value "c" already used in a previous response']
+        path: "steps[0].choices[1]['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: 'Value "c" already used in a previous response'
       })
     })
 
@@ -826,7 +903,10 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toInclude({
-        'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+        path: 'steps[0].choices[1].ivr',
+        lang: null,
+        mode: 'ivr',
+        message: 'Value "2" already used in a previous response'
       })
     })
 
@@ -852,8 +932,11 @@ describe('questionnaire reducer', () => {
         actions.setSmsQuestionnaireMsg('errorMsg', '')
       ])
 
-      expect(state.errorsByLang['en']).toInclude({
-        [`errorMsg.prompt['en'].sms`]: ['SMS prompt must not be blank']
+      expect(state.errors).toInclude({
+        path: "errorMsg.prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: 'SMS prompt must not be blank'
       })
     })
 
@@ -864,8 +947,11 @@ describe('questionnaire reducer', () => {
         actions.setIvrQuestionnaireMsg('errorMsg', {text: '', audioSource: 'tts'})
       ])
 
-      expect(state.errorsByLang['en']).toInclude({
-        [`errorMsg.prompt['en'].ivr.text`]: ['Voice prompt must not be blank']
+      expect(state.errors).toInclude({
+        path: `errorMsg.prompt['en'].ivr.text`,
+        lang: 'en',
+        mode: 'ivr',
+        message: 'Voice prompt must not be blank'
       })
     })
 
@@ -876,8 +962,11 @@ describe('questionnaire reducer', () => {
         actions.setSmsQuestionnaireMsg('quotaCompletedMsg', '')
       ])
 
-      expect(state.errorsByLang['en']).toInclude({
-        [`quotaCompletedMsg.prompt['en'].sms`]: ['SMS prompt must not be blank']
+      expect(state.errors).toInclude({
+        path: `quotaCompletedMsg.prompt['en'].sms`,
+        lang: 'en',
+        mode: 'sms',
+        message: 'SMS prompt must not be blank'
       })
     })
 
@@ -888,8 +977,11 @@ describe('questionnaire reducer', () => {
         actions.toggleMode('mobileweb')
       ])
 
-      expect(state.errorsByLang['en']).toInclude({
-        [`quotaCompletedMsg.prompt['en'].mobileweb`]: ['Mobile web prompt must not be blank']
+      expect(state.errors).toInclude({
+        path: "quotaCompletedMsg.prompt['en'].mobileweb",
+        lang: 'en',
+        mode: 'mobileweb',
+        message: 'Mobile web prompt must not be blank'
       })
     })
 
@@ -900,8 +992,11 @@ describe('questionnaire reducer', () => {
         actions.setSmsQuestionnaireMsg('quotaCompletedMsg', '')
       ])
 
-      expect(state.errorsByLang['en']).toInclude({
-        [`quotaCompletedMsg.prompt['en'].ivr.text`]: ['Voice prompt must not be blank']
+      expect(state.errors).toInclude({
+        path: "quotaCompletedMsg.prompt['en'].ivr.text",
+        lang: 'en',
+        mode: 'ivr',
+        message: 'Voice prompt must not be blank'
       })
     })
 
@@ -912,7 +1007,9 @@ describe('questionnaire reducer', () => {
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '  Maybe  ', '  M,  MB  , 3  ', '  May  ', 'end')
       ])
 
-      expect(!!state.errorsByLang['en']['steps[0].skipLogic']).toEqual(false)
+      for (const error of state.errors) {
+        expect(error.path).toExclude('skipLogic')
+      }
     })
   })
 

@@ -10,9 +10,9 @@ import MobileWebPrompt from './MobileWebPrompt'
 import { createAudio } from '../../api.js'
 import { decamelize } from 'humps'
 import { getPromptSms, getPromptIvr, getPromptIvrText, getPromptMobileWeb } from '../../step'
-import { msgPromptTextPath, msgIvrAudioIdPath, msgHasErrors } from '../../questionnaireErrors'
 import * as api from '../../api'
 import propsAreEqual from '../../propsAreEqual'
+import { hasErrorsInPrefix } from '../../questionnaireErrors'
 
 type Props = {
   dispatch: Function,
@@ -21,7 +21,7 @@ type Props = {
   title: string,
   icon: string,
   readOnly: boolean,
-  errors: Errors,
+  errorsByPath: ErrorsByPath,
   hasErrors: boolean
 };
 
@@ -275,7 +275,7 @@ class QuestionnaireMsg extends Component {
   }
 
   expanded(questionnaire: Questionnaire) {
-    const { errors, messageKey, title, icon, readOnly } = this.props
+    const { errorsByPath, messageKey, title, icon, readOnly } = this.props
 
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
@@ -287,7 +287,7 @@ class QuestionnaireMsg extends Component {
       const quizState = this.state.quizState
 
       if (sms) {
-        let smsInputErrors = errors[msgPromptTextPath(messageKey, 'sms', questionnaire.activeLanguage)]
+        let smsInputErrors = errorsByPath[`${messageKey}.prompt['${questionnaire.activeLanguage}'].sms`]
         smsInput = <SmsPrompt id={`${decamelize(messageKey)}_sms`}
           inputErrors={smsInputErrors}
           value={quizState.stepPromptSms}
@@ -304,8 +304,8 @@ class QuestionnaireMsg extends Component {
       let ivrInput = null
 
       if (ivr) {
-        let ivrInputErrors = errors[msgPromptTextPath(messageKey, 'ivr', questionnaire.activeLanguage)]
-        let ivrAudioIdErrors = errors[msgIvrAudioIdPath(messageKey, questionnaire.activeLanguage)]
+        let ivrInputErrors = errorsByPath[`${messageKey}.prompt['${questionnaire.activeLanguage}'].ivr.text`]
+        let ivrAudioIdErrors = errorsByPath[`${messageKey}.prompt['${questionnaire.activeLanguage}'].ivr.audioId`]
         ivrInput = <IvrPrompt id={`${decamelize(messageKey, '-')}-voice`}
           key={quizState.cardId}
           inputErrors={ivrInputErrors}
@@ -327,7 +327,7 @@ class QuestionnaireMsg extends Component {
       let mobilewebInput = null
 
       if (mobileweb) {
-        let mobilewebInputErrors = errors[msgPromptTextPath(messageKey, 'mobileweb', questionnaire.activeLanguage)]
+        let mobilewebInputErrors = errorsByPath[`${messageKey}.prompt['${questionnaire.activeLanguage}'].mobileweb`]
         mobilewebInput = <MobileWebPrompt id={`${decamelize(messageKey, '-')}-mobile-web`}
           value={quizState.stepPromptMobileWeb}
           inputErrors={mobilewebInputErrors}
@@ -387,8 +387,8 @@ const mapStateToProps = (state, ownProps: Props) => {
   const quiz = (state.questionnaire: DataStore<Questionnaire>)
   return {
     questionnaire: quiz.data,
-    errors: quiz.data ? quiz.errorsByLang[quiz.data.activeLanguage] : {},
-    hasErrors: quiz.data ? msgHasErrors(quiz, ownProps.messageKey) : false
+    errorsByPath: quiz.errorsByPath,
+    hasErrors: hasErrorsInPrefix(quiz.errors, ownProps.messageKey)
   }
 }
 
