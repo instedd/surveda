@@ -12,6 +12,7 @@ import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
 import MobileWebSmsMessage from './MobileWebSmsMessage'
+import MobileWebSurveyIsOverMessage from './MobileWebSurveyIsOverMessage'
 import csvString from 'csv-string'
 import { ConfirmationModal } from '../ui'
 import * as language from '../../language'
@@ -384,6 +385,9 @@ class QuestionnaireEditor extends Component {
           </div>
           {mobileweb
           ? <MobileWebSmsMessage readOnly={readOnly} />
+          : null}
+          {mobileweb
+          ? <MobileWebSurveyIsOverMessage readOnly={readOnly} />
           : null}
         </div>
         : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />

@@ -14,7 +14,7 @@ import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getChoiceResponseMobileWebJoined, newIvrPrompt, newRefusal, splitSmsText } from '../step'
 import { stepSkipLogicPath, promptTextPath, promptIvrAudioIdPath, choicesPath, choiceValuePath, choiceSmsResponsePath,
   choiceMobileWebResponsePath, choiceIvrResponsePath, msgPromptTextPath,
-  mobileWebSmsMessagePath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
+  mobileWebSmsMessagePath, mobileWebSurveyIsOverMessagePath, msgIvrAudioIdPath, errorsByLang } from '../questionnaireErrors'
 import * as language from '../language'
 import * as characterCounter from '../characterCounter'
 
@@ -34,6 +34,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
+    case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
     default: return steps(state, action)
   }
 }
@@ -753,6 +754,13 @@ const setMobileWebSmsMessage = (state, action) => {
   }
 }
 
+const setMobileWebSurveyIsOverMessage = (state, action) => {
+  return {
+    ...state,
+    mobileWebSurveyIsOverMessage: action.text
+  }
+}
+
 const addOptionToLanguageSelectionStep = (state, language) => {
   return changeStep(state.steps, state.steps[0].id, (step) => ({
     ...step,
@@ -831,6 +839,9 @@ const validate = (state: DataStore<Questionnaire>) => {
   if (context.mobileweb) {
     if (isBlank(data.mobileWebSmsMessage)) {
       addError(context, mobileWebSmsMessagePath(), 'Mobile web SMS message must not be blank')
+    }
+    if (isBlank(data.mobileWebSurveyIsOverMessage)) {
+      addError(context, mobileWebSurveyIsOverMessagePath(), 'Mobile web "Survey is over" message must not be blank')
     }
   }
 

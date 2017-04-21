@@ -134,7 +134,15 @@ export const mobileWebSmsMessagePath = () => 'mobileWebSmsMessage'
 export const mobileWebSmsMessageHasErrors = (quiz: DataStore<Questionnaire>) => {
   if (!quiz.data) return false
 
-  return quiz.errors[mobileWebSmsMessagePath()]
+  return !!quiz.errors[mobileWebSmsMessagePath()]
+}
+
+export const mobileWebSurveyIsOverMessagePath = () => 'mobileWebSurveyIsOverMessage'
+
+export const mobileWebSurveyIsOverMessageHasErrors = (quiz: DataStore<Questionnaire>) => {
+  if (!quiz.data) return false
+
+  return !!quiz.errors[mobileWebSurveyIsOverMessagePath()]
 }
 
 export const filterByPathPrefix = (errors: Errors, prefix: string) => {

@@ -1276,6 +1276,7 @@ describe('questionnaire reducer', () => {
         quotaCompletedMsg: {},
         errorMsg: {},
         mobileWebSmsMessage: '',
+        mobileWebSurveyIsOverMessage: '',
         steps: [
           {
             type: 'multiple-choice',
@@ -1488,6 +1489,18 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(state.data.mobileWebSmsMessage).toEqual(mobileWebSmsMessage)
+    })
+
+    it('should set mobile web survey is over message', () => {
+      const mobileWebSurveyIsOverMessage = 'Done'
+
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setMobileWebSurveyIsOverMessage(mobileWebSurveyIsOverMessage)
+      ])
+
+      expect(state.data.mobileWebSurveyIsOverMessage).toEqual(mobileWebSurveyIsOverMessage)
     })
 
     it('should not modify other mode quota message', () => {

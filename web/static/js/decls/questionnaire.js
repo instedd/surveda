@@ -9,6 +9,7 @@ export type Questionnaire = {
   quotaCompletedMsg: Prompt,
   errorMsg: Prompt,
   mobileWebSmsMessage: ?string,
+  mobileWebSurveyIsOverMessage: ?string,
   projectId: number,
   valid: ?boolean
 };
