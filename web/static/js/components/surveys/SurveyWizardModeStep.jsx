@@ -4,9 +4,12 @@ import * as actions from '../../actions/survey'
 import every from 'lodash/every'
 import some from 'lodash/some'
 import each from 'lodash/each'
+import flatten from 'lodash/flatten'
 import isEqual from 'lodash/isEqual'
 import { modeLabel } from '../../reducers/survey'
 import * as respondentActions from '../../actions/respondentGroups'
+import { Dropdown, DropdownItem } from '../ui'
+import { availableOptions } from '../../surveyModes'
 
 class SurveyWizardModeStep extends Component {
   static propTypes = {
@@ -40,6 +43,21 @@ class SurveyWizardModeStep extends Component {
     return every(mode, m =>
       ids && every(ids, id =>
         questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1))
+  }
+
+  availableOptions() {
+    const { survey } = this.props
+
+    const allModes = ['sms', 'ivr', 'mobileweb']
+    const availableOptions = flatten(allModes.map((primary) => {
+      return allModes.map((fallback) => {
+        return (primary == fallback) ? [primary] : [primary, fallback]
+      })
+    }))
+    const actualModes = survey.mode
+    return (availableOptions.filter((mode) => {
+      return !this.modeIncludes(actualModes, mode)
+    }))
   }
 
   input(id, inputType, modeComparison, mode, modes, value) {
@@ -108,6 +126,13 @@ class SurveyWizardModeStep extends Component {
             {this.input('questionnaire_mode_mobileweb', inputType, modeComparison, mode, ['mobileweb'], 'mobileweb')}
             {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
             {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
+            <Dropdown label={<span>Primary mode</span>}>
+              <DropdownItem>
+                <a onClick={() => availableOptions(survey.mode)}>
+                  Option one
+                </a>
+              </DropdownItem>
+            </Dropdown>
           </div>
         </div>
       </div>
