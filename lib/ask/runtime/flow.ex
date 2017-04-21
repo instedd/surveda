@@ -111,7 +111,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp accept_reply_non_stop(flow, reply, visitor, mode) do
-    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
+    step = current_step(flow)
 
     reply_value = Step.validate(step, reply, mode, flow.language)
 
@@ -180,7 +180,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp eval({flow, state, visitor}, mode) do
-    step = flow.questionnaire.steps |> Enum.at(flow.current_step)
+    step = current_step(flow)
     case step do
       nil ->
         {:end, nil, %{state | steps: Visitor.close(visitor)}}
@@ -192,14 +192,41 @@ defmodule Ask.Runtime.Flow do
                 flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil, mode)}
                 eval({flow, state, visitor}, mode)
               {:stop, visitor} ->
-                {:ok, flow, %{state | steps: Visitor.close(visitor)}}
+                reply(state, visitor, flow)
             end
 
           {:wait_for_reply, state} ->
             {_, visitor} = visitor |> Visitor.accept_step(step, flow.language)
-            {:ok, flow, %{state | steps: Visitor.close(visitor)}}
+            reply(state, visitor, flow)
         end
     end
+  end
+
+  defp reply(state, visitor, flow) do
+    reply = %{state | steps: Visitor.close(visitor)}
+    reply = add_progress(reply, flow)
+    {:ok, flow, reply}
+  end
+
+  defp add_progress(reply, flow) do
+    {current_step, total_steps} = compute_progress(flow)
+    %{reply | current_step: current_step, total_steps: total_steps}
+  end
+
+  defp compute_progress(flow) do
+    current_step_id = current_step(flow)["id"]
+
+    steps = flow.questionnaire.steps
+    |> Enum.reject(fn step -> step["type"] == "flag" end)
+
+    current_step_index = steps
+    |> Enum.find_index(fn step -> step["id"] == current_step_id end)
+
+    {current_step_index || 0, length(steps)}
+  end
+
+  defp current_step(flow) do
+    flow.questionnaire.steps |> Enum.at(flow.current_step)
   end
 end
 
@@ -225,7 +252,7 @@ defprotocol Ask.Runtime.Flow.Visitor do
 end
 
 defmodule Ask.Runtime.Flow.TextVisitor do
-  alias Ask.Runtime.Flow.TextVisitor
+  alias __MODULE__
   alias Ask.Runtime.Step
   defstruct reply_steps: [], mode: nil
 
@@ -258,3 +285,39 @@ defmodule Ask.Runtime.Flow.TextVisitor do
   end
 end
 
+defmodule Ask.Runtime.Flow.WebVisitor do
+  alias __MODULE__
+  alias Ask.Runtime.Step
+  defstruct reply_steps: [], mode: nil
+
+  def new(mode) do
+    %WebVisitor{mode: mode}
+  end
+
+  defimpl Ask.Runtime.Flow.Visitor, for: Ask.Runtime.Flow.WebVisitor do
+    def accept_step(visitor, step, lang) do
+      reply_step = Step.fetch(:reply_step, step, visitor.mode, lang)
+      {step_action(step), add_reply_step(visitor, reply_step)}
+    end
+
+    defp step_action(%{"type" => "flag"}), do: :continue
+    defp step_action(_), do: :stop
+
+    def accept_message(visitor, message, lang, title) do
+      reply_step = Step.fetch(:reply_msg, message, visitor.mode, lang, title)
+      add_reply_step(visitor, reply_step)
+    end
+
+    defp add_reply_step(visitor, nil) do
+      visitor
+    end
+
+    defp add_reply_step(visitor, reply_step) do
+      %{visitor | reply_steps: visitor.reply_steps ++ [reply_step]}
+    end
+
+    def close(%WebVisitor{reply_steps: reply_steps}) do
+      reply_steps
+    end
+  end
+end

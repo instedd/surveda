@@ -25,7 +25,11 @@ const bareQuestionnaire: Questionnaire = {
             },
             ivr: [
               '1'
-            ]
+            ],
+            mobileweb: {
+              'en': 'Of course',
+              'es': 'Por supuesto'
+            }
           },
           skipLogic: null
         },
@@ -46,7 +50,11 @@ const bareQuestionnaire: Questionnaire = {
             },
             ivr: [
               '2'
-            ]
+            ],
+            mobileweb: {
+              'en': 'Not at all',
+              'es': 'Para nada'
+            }
           },
           skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
         }
@@ -57,7 +65,8 @@ const bareQuestionnaire: Questionnaire = {
           ivr: {
             text: 'Do you smoke?',
             audioSource: 'tts'
-          }
+          },
+          mobileweb: 'Do you really smoke?'
         },
         'es': {
           sms: 'Fumas?'

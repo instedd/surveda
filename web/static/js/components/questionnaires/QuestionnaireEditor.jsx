@@ -328,7 +328,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>SMS</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={sms} onClick={e => this.toggleMode(e, 'sms')} disabled={readOnly} />
+                  <input type='checkbox' checked={sms} onChange={e => this.toggleMode(e, 'sms')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -340,7 +340,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Phone call</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={ivr} onClick={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
+                  <input type='checkbox' checked={ivr} onChange={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>
@@ -352,7 +352,7 @@ class QuestionnaireEditor extends Component {
               <span className='mode-label'>Mobile web</span>
               <div className='switch right'>
                 <label>
-                  <input type='checkbox' defaultChecked={mobileweb} onClick={e => this.toggleMode(e, 'mobileweb')} disabled={readOnly} />
+                  <input type='checkbox' checked={mobileweb} onChange={e => this.toggleMode(e, 'mobileweb')} disabled={readOnly} />
                   <span className='lever' />
                 </label>
               </div>

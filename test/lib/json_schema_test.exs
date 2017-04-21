@@ -142,7 +142,7 @@ defmodule Ask.StepsValidatorTest do
       "type": "language-selection",
       "prompt": {},
       "store": "",
-      "language_choices": [null, "en", "fr", "es"]
+      "language_choices": ["en", "fr", "es"]
     })
     |> valid_step
 

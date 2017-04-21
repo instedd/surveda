@@ -115,7 +115,7 @@ defmodule Ask.Runtime.IVRMode do
 end
 
 defmodule Ask.Runtime.MobileWebMode do
-  alias Ask.Runtime.Flow.TextVisitor
+  alias Ask.Runtime.Flow.WebVisitor
   alias Ask.{Repo, Channel}
   alias __MODULE__
 
@@ -143,7 +143,7 @@ defmodule Ask.Runtime.MobileWebMode do
     end
 
     def visitor(_) do
-      TextVisitor.new("mobileweb")
+      WebVisitor.new("mobileweb")
     end
 
     def mode(_) do

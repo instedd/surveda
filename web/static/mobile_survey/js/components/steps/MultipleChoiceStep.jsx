@@ -7,14 +7,16 @@ class MultipleChoiceStep extends Component {
     return this.refs.select.value
   }
 
+  clearValue() {}
+
   classNameForChoice(choice: String) {
     const length = choice.length
     let cssClass
     switch (true) {
-      case (length < 4):
+      case (length < 7):
         cssClass = 'choice-length-less-7'
         break
-      case (length < 12):
+      case (length < 14):
         cssClass = 'choice-length-less-14'
         break
       case (length < 20):

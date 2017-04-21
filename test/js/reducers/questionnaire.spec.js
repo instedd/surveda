@@ -258,7 +258,11 @@ describe('questionnaire reducer', () => {
       expect(resultStep.type).toEqual('numeric')
       expect(resultStep.title).toEqual('Do you smoke?')
       expect(resultStep.store).toEqual('Smokes')
-      expect(resultStep.prompt['en']).toEqual({ sms: 'Do you smoke?', ivr: { audioSource: 'tts', text: 'Do you smoke?' } })
+      expect(resultStep.prompt['en']).toEqual({
+        sms: 'Do you smoke?',
+        ivr: { audioSource: 'tts', text: 'Do you smoke?' },
+        mobileweb: 'Do you really smoke?'
+      })
     })
 
     it('should update step title', () => {
@@ -545,7 +549,8 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
+        actions.toggleMode('mobileweb'),
+        actions.changeStepPromptMobileWeb('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
       ])
 
       expect(resultState.errors).toInclude({
@@ -1050,15 +1055,15 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('fr')
       ])
       const preLanguageSelection = preState.data.steps[0]
-      expect(preLanguageSelection.languageChoices[2]).toEqual('de')
+      expect(preLanguageSelection.languageChoices[1]).toEqual('de')
 
       const resultState = playActionsFromState(preState, reducer)([
         actions.removeLanguage('de')
       ])
 
       const languageSelection = resultState.data.steps[0]
-      expect(languageSelection.languageChoices[2]).toEqual('es')
-      expect(languageSelection.languageChoices[3]).toEqual('fr')
+      expect(languageSelection.languageChoices[1]).toEqual('es')
+      expect(languageSelection.languageChoices[2]).toEqual('fr')
     })
 
     it('should reorder correctly the languages inside the choices of the language selection step', () => {
@@ -1073,10 +1078,10 @@ describe('questionnaire reducer', () => {
       ])
 
       const languageSelection = state.data.steps[0]
-      expect(languageSelection.languageChoices[1]).toEqual('es')
-      expect(languageSelection.languageChoices[2]).toEqual('de')
-      expect(languageSelection.languageChoices[3]).toEqual('fr')
-      expect(languageSelection.languageChoices[4]).toEqual('en')
+      expect(languageSelection.languageChoices[0]).toEqual('es')
+      expect(languageSelection.languageChoices[1]).toEqual('de')
+      expect(languageSelection.languageChoices[2]).toEqual('fr')
+      expect(languageSelection.languageChoices[3]).toEqual('en')
     })
 
     it('should reorder correctly the languages inside the choices of the language selection step 2', () => {
@@ -1091,10 +1096,11 @@ describe('questionnaire reducer', () => {
       ])
 
       const languageSelection = state.data.steps[0]
-      expect(languageSelection.languageChoices[1]).toEqual('fr')
-      expect(languageSelection.languageChoices[2]).toEqual('en')
-      expect(languageSelection.languageChoices[3]).toEqual('es')
-      expect(languageSelection.languageChoices[4]).toEqual('de')
+      console.log(languageSelection.languageChoices)
+      expect(languageSelection.languageChoices[0]).toEqual('fr')
+      expect(languageSelection.languageChoices[1]).toEqual('en')
+      expect(languageSelection.languageChoices[2]).toEqual('es')
+      expect(languageSelection.languageChoices[3]).toEqual('de')
     })
 
     it('should add language', () => {
@@ -1537,8 +1543,11 @@ describe('questionnaire reducer', () => {
       const expected = [
         ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
+        ['Do you really smoke?', '', ''],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
+        ['Of course', '', 'Por supuesto'],
         ['No, N, 2', '', 'No, N, 2'],
+        ['Not at all', '', 'Para nada'],
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', ''],
         ['Done!', '', '']
@@ -1563,8 +1572,11 @@ describe('questionnaire reducer', () => {
       const expected = [
         ['English', 'French', 'Spanish'],
         ['Do you smoke?', '', 'Fumas?'],
+        ['Do you really smoke?', '', ''],
         ['Yes, Y, 1', '', 'Sí, S, 1'],
+        ['Of course', '', 'Por supuesto'],
         ['No, N, 2', '', 'No, N, 2'],
+        ['Not at all', '', 'Para nada'],
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', '']
       ]

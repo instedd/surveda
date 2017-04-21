@@ -55,8 +55,7 @@ defmodule Ask.OAuthClientController do
 
     error = if token == nil do
       provider = Ask.Channel.provider(provider_name)
-      url = %URI{scheme: conn.scheme |> Atom.to_string, host: conn.host, port: conn.port, path: conn.request_path} |> URI.to_string
-      access_token = provider.oauth2_authorize(code, url, base_url)
+      access_token = provider.oauth2_authorize(code, "#{url(conn)}#{conn.request_path}", base_url)
 
       if access_token.other_params && access_token.other_params["error"] do
         access_token.other_params["error_description"] || "Error connecting to provider: #{access_token.other_params["error"]}"

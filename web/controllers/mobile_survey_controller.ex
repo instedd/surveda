@@ -25,34 +25,50 @@ defmodule Ask.MobileSurveyController do
     respondent = Repo.get!(Respondent, respondent_id)
     survey = Repo.preload(respondent, :survey).survey
 
-    step =
+    {step, progress} =
       cond do
         survey.state in ["completed", "cancelled"] ->
           questionnaires = Repo.preload(survey, :questionnaires).questionnaires
           questionnaire = Enum.random(questionnaires)
           msg = questionnaire.mobile_web_survey_is_over_message || "The survey is over"
-          end_step(msg)
+          {end_step(msg), end_progress()}
         respondent.state in ["pending", "active", "stalled"] ->
           case Broker.sync_step(respondent, value) do
             {:reply, reply} ->
-              reply |> Reply.steps() |> hd
+              {first_step(reply), progress(reply)}
             {:end, {:reply, reply}} ->
-              reply |> Reply.steps() |> hd
+              {first_step(reply), progress(reply)}
             :end ->
-              end_step()
+              {end_step(), end_progress()}
           end
         true ->
-          end_step()
+          {end_step(), end_progress()}
       end
 
-    render(conn, "show_step.json", step: step)
+    render(conn, "show_step.json", step: step, progress: progress)
+  end
+
+  defp first_step(reply) do
+    reply |> Reply.steps() |> hd
+  end
+
+  defp progress(reply) do
+    if reply.current_step && reply.total_steps && reply.total_steps > 0 do
+      100 * (reply.current_step / reply.total_steps)
+    else
+      0.0
+    end
   end
 
   defp end_step(msg \\ "The survey has ended") do
     %{
-      type: "explanation",
+      type: "end",
       prompts: [msg],
       title: msg,
     }
+  end
+
+  defp end_progress do
+    100.0
   end
 end

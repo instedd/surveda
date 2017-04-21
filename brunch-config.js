@@ -4,7 +4,7 @@ exports.config = {
     javascripts: {
       joinTo: {
         'js/app.js': /^(web\/static\/js)|(web\/static\/vendor)|(node_modules)|(deps)/,
-        'js/mobileSurvey.js': /^(web\/static\/mobile_survey\/js)|(node_modules\/process.*)|(node_modules\/react\/)|(node_modules\/react-dom)|(node_modules\/object-assign)|(node_modules\/fbjs)|(node_modules\/isomorphic-fetch)|(node_modules\/invariant)|(node_modules\/hoist-non-react-statics)|(node_modules\/symbol-observable)|(node_modules\/lodash)|(node_modules\/redux\/)|(node_modules\/react-redux\/)|(node_modules\/whatwg-fetch)/
+        'js/mobileSurvey.js': /^(web\/static\/mobile_survey\/js)|(node_modules\/process.*)|(node_modules\/react\/)|(node_modules\/react-dom)|(node_modules\/object-assign)|(node_modules\/fbjs)|(node_modules\/isomorphic-fetch)|(node_modules\/invariant)|(node_modules\/hoist-non-react-statics)|(node_modules\/symbol-observable)|(node_modules\/lodash)|(node_modules\/redux\/)|(node_modules\/react-redux\/)|(node_modules\/whatwg-fetch)|(node_modules\/language-names\/)/
       }
 
       // To use a separate vendor.js bundle, specify two files path

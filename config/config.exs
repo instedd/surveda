@@ -47,6 +47,9 @@ config :ask, Ask.Runtime.Broker,
 config :ask, :sox,
   bin: System.get_env("SOX_BINARY") || "sox"
 
+config :ask, Ask.UrlShortener,
+  google_api_key: {:system, "GOOGLE_URL_SHORTENER_API_KEY"}
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$dateT$timeZ $metadata[$level] $message\n",

@@ -50,6 +50,13 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
 
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _, _} = Session.sync_step(session, Flow.Message.answer())
+
+    step_result = Session.sync_step(session, Flow.Message.reply(""))
+    assert {:ok, session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = step_result
+
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
@@ -57,7 +64,7 @@ defmodule Ask.SessionTest do
     expected_session = %Session{
       current_mode: SessionModeProvider.new("mobileweb", channel, retries),
       fallback_mode: nil,
-      flow: %Flow{questionnaire: quiz, mode: "mobileweb", current_step: 0}
+      flow: %Flow{questionnaire: quiz, mode: "mobileweb", current_step: 1}
     }
 
     assert session.current_mode == expected_session.current_mode
@@ -76,7 +83,7 @@ defmodule Ask.SessionTest do
     expected_session = %Session{
       current_mode: SessionModeProvider.new("mobileweb", channel, retries),
       fallback_mode: nil,
-      flow: %Flow{questionnaire: quiz, mode: "mobileweb", current_step: 1}
+      flow: %Flow{questionnaire: quiz, mode: "mobileweb", current_step: 3}
     }
 
     assert session.current_mode == expected_session.current_mode
