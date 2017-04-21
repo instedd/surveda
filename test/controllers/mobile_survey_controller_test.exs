@@ -230,7 +230,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["Bye"],
       "title" => "Bye",
-      "type" => "explanation"
+      "type" => "end"
     } = json_response(conn, 200)["step"]
   end
 end
