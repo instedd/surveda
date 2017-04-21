@@ -164,7 +164,11 @@ class StepPrompts extends Component {
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
     const autocomplete = step.type != 'language-selection'
-    const path = `${errorPath}.prompt['${activeLanguage}']`
+    let path = `${errorPath}.prompt`
+
+    if (step.type != 'language-selection') {
+      path = `${path}['${activeLanguage}']`
+    }
 
     let smsInput = null
     if (sms) {

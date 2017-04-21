@@ -1011,6 +1011,36 @@ describe('questionnaire reducer', () => {
         expect(error.path).toExclude('skipLogic')
       }
     })
+
+    it('should validate language selection step prompt', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('es'),
+        // actions.toggleMode('ivr'),
+        actions.toggleMode('mobileweb')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: 'steps[0].prompt.sms',
+        lang: null,
+        mode: 'sms',
+        message: 'SMS prompt must not be blank'
+      })
+      expect(errors).toInclude({
+        path: 'steps[0].prompt.ivr.text',
+        lang: null,
+        mode: 'ivr',
+        message: 'Voice prompt must not be blank'
+      })
+      expect(errors).toInclude({
+        path: 'steps[0].prompt.mobileweb',
+        lang: null,
+        mode: 'mobileweb',
+        message: 'Mobile web prompt must not be blank'
+      })
+    })
   })
 
   describe('multilanguage support', () => {

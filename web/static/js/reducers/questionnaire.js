@@ -928,6 +928,8 @@ const validateIvrLangPrompt = (step: Step, stepIndex: number, context: Validatio
 
 const validateStep = (step: Step, stepIndex: number, context: ValidationContext, steps, path: string) => {
   switch (step.type) {
+    case 'language-selection':
+      return validateLanguageSelectionStep(step, stepIndex, context, steps, path)
     case 'flag':
       return validateFlagStep(step, stepIndex, context, steps, path)
     case 'multiple-choice':
@@ -937,6 +939,34 @@ const validateStep = (step: Step, stepIndex: number, context: ValidationContext,
     case 'explanation':
       return validateExplanationStep(step, stepIndex, context, steps, path)
     default:
+  }
+}
+
+const validateLanguageSelectionStep = (step, stepIndex, context, steps, path) => {
+  path = `${path}.prompt`
+
+  const prompt = step.prompt || {}
+
+  if (context.sms) {
+    if (isBlank(prompt.sms)) {
+      addError(context, `${path}.sms`, 'SMS prompt must not be blank', null, 'sms')
+    }
+  }
+
+  if (context.ivr) {
+    let ivr = prompt.ivr || {}
+    if (isBlank(ivr.text)) {
+      addError(context, `${path}.ivr.text`, 'Voice prompt must not be blank', null, 'ivr')
+    }
+    if (ivr.audioSource == 'upload' && !ivr.audioId) {
+      addError(context, `${path}.ivr.audioId`, 'An audio file must be uploaded', null, 'ivr')
+    }
+  }
+
+  if (context.mobileweb) {
+    if (isBlank(prompt.mobileweb)) {
+      addError(context, `${path}.mobileweb`, 'Mobile web prompt must not be blank', null, 'mobileweb')
+    }
   }
 }
 
