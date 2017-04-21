@@ -34,6 +34,45 @@ class MultipleChoiceStep extends Component {
     return cssClass
   }
 
+  meanFromChoice(selectedChoice: HTMLElement) {
+    const bounds = selectedChoice.getBoundingClientRect()
+    return (bounds.bottom + bounds.top) / 2
+  }
+
+  adjustPixels(prompt: HTMLElement, difference: number) {
+    const promptMarginBottom = (window.getComputedStyle(prompt)).marginBottom
+    const pixels = parseFloat(promptMarginBottom) + difference
+    prompt.style.marginBottom = pixels.toString() + 'px'
+  }
+
+  componentDidMount() {
+    const screenHeight = screen.height
+    const choices = document.getElementsByClassName('choice')
+    let selectedChoice
+
+    for (var i = 0; i < choices.length; i++) {
+      const bounds = (choices[i]).getBoundingClientRect()
+      const prompt = (document.getElementsByClassName('prompt')[0])
+      // When bottom of screen matches one of the buttons, prompt margin is
+      // adjusted in order to match the middle of that button
+      if (bounds.top <= screenHeight && bounds.bottom >= screenHeight) {
+        selectedChoice = choices[i]
+        const mean = this.meanFromChoice(selectedChoice)
+        const difference = screenHeight - mean
+        this.adjustPixels(prompt, difference)
+      } else {
+        // When bottom of screen matches none of the buttons, the previous button
+        // that exceeds the screen height is selected to adjust the prompt margin
+        if (bounds.top > screenHeight && i > 0 && (choices[i - 1].getBoundingClientRect()).top < screenHeight) {
+          selectedChoice = choices[i - 1]
+          const mean = this.meanFromChoice(selectedChoice)
+          const difference = screenHeight - mean
+          this.adjustPixels(prompt, difference)
+        }
+      }
+    }
+  }
+
   render() {
     const { step, onClick } = this.props
     return (
@@ -43,7 +82,7 @@ class MultipleChoiceStep extends Component {
         )}
         {step.choices.map(choice => {
           return (
-            <div key={choice}>
+            <div key={choice} className='choice'>
               <button className={'btn block ' + this.classNameForChoice(choice[0])} value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
             </div>
           )
