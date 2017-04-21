@@ -183,7 +183,7 @@ class SurveyWizardRespondentsStep extends Component {
     const allModes = uniq(flatMap(mode))
 
     let respondentsDropzone = null
-    if (!readOnly) {
+    if (!readOnly && !surveyStarted) {
       respondentsDropzone = (
         <RespondentsDropzone survey={survey} uploading={respondentGroupsUploading} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
       )
