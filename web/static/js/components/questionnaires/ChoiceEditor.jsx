@@ -202,7 +202,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepIndex, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     const isRefusal = choiceIndex == 'refusal'
 
