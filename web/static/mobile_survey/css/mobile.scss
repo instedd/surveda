@@ -95,7 +95,7 @@ input[type=number],
 input[type=email],
 input[type=text] {
   border: none;
-  border-bottom: 1px solid #cdcdcd;
+  border-bottom: 2px solid rgb(170,170,170);
   min-width: 90px;
   height: 4rem;
   &:focus {
