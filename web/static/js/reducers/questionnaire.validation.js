@@ -333,6 +333,8 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
 }
 
 const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) => {
+  msg = msg || newStepPrompt()
+
   const path = `${msgKey}.prompt`
 
   context.languages.forEach(lang => {
