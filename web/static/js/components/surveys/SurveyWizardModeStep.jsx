@@ -2,12 +2,14 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
 import every from 'lodash/every'
+import map from 'lodash/map'
+import uniq from 'lodash/uniq'
 import some from 'lodash/some'
 import each from 'lodash/each'
-import flatten from 'lodash/flatten'
 import isEqual from 'lodash/isEqual'
 import { modeLabel } from '../../reducers/survey'
 import * as respondentActions from '../../actions/respondentGroups'
+import * as uiActions from '../../actions/ui'
 import { Dropdown, DropdownItem } from '../ui'
 import { availableOptions } from '../../surveyModes'
 
@@ -45,21 +47,6 @@ class SurveyWizardModeStep extends Component {
         questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1))
   }
 
-  availableOptions() {
-    const { survey } = this.props
-
-    const allModes = ['sms', 'ivr', 'mobileweb']
-    const availableOptions = flatten(allModes.map((primary) => {
-      return allModes.map((fallback) => {
-        return (primary == fallback) ? [primary] : [primary, fallback]
-      })
-    }))
-    const actualModes = survey.mode
-    return (availableOptions.filter((mode) => {
-      return !this.modeIncludes(actualModes, mode)
-    }))
-  }
-
   input(id, inputType, modeComparison, mode, modes, value) {
     const { survey, questionnaires, readOnly } = this.props
     const questionnaireIds = survey.questionnaireIds
@@ -83,7 +70,7 @@ class SurveyWizardModeStep extends Component {
   }
 
   render() {
-    const { survey, readOnly } = this.props
+    const { survey, readOnly, dispatch } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
@@ -93,6 +80,14 @@ class SurveyWizardModeStep extends Component {
     const modeComparison = mode.length > 1 || (!!survey.modeComparison)
 
     let inputType = modeComparison ? 'checkbox' : 'radio'
+    const availableModes = availableOptions(survey.mode)
+    // const primaryOptions = availableModes.map((option) => option[0])
+    const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
+    const primarySelected = 'mobileweb'
+    const fallbackOptions = availableModes.filter((mode) => { return mode[0] == primarySelected }).map((mode) => mode.length == 2 ? mode[1] : 'no fallback')
+    const selectMode = (x) => {
+      dispatch(uiActions.comparisonPrimarySelected(x))
+    }
 
     return (
       <div>
@@ -126,13 +121,28 @@ class SurveyWizardModeStep extends Component {
             {this.input('questionnaire_mode_mobileweb', inputType, modeComparison, mode, ['mobileweb'], 'mobileweb')}
             {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
             {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
-            <Dropdown label={<span>Primary mode</span>}>
-              <DropdownItem>
-                <a onClick={() => availableOptions(survey.mode)}>
-                  Option one
-                </a>
-              </DropdownItem>
-            </Dropdown>
+            <div>
+              <Dropdown label={<span>Primary mode</span>}>
+                {primaryOptions.map((mode) => {
+                  return (
+                    <DropdownItem>
+                      <a onClick={() => selectMode(mode)}>{mode}</a>
+                    </DropdownItem>
+                  )
+                })}
+              </Dropdown>
+            </div>
+            <div>
+              <Dropdown label={<span>Fallback mode</span>}>
+                {fallbackOptions.map((mode) => {
+                  return (
+                    <DropdownItem>
+                      <a onClick={() => selectMode(mode)}>{mode}</a>
+                    </DropdownItem>
+                  )
+                })}
+              </Dropdown>
+            </div>
           </div>
         </div>
       </div>

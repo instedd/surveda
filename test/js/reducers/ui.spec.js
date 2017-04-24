@@ -13,6 +13,10 @@ describe('ui reducer', () => {
       data: {
         questionnaireEditor: {
           uploadingAudio: null
+        },
+        surveyWizard: {
+          primaryModeSelected: null,
+          fallbackModeSelected: null
         }
       },
       errors: {}
@@ -32,5 +36,23 @@ describe('ui reducer', () => {
       actions.finishAudioUpload()
     ])
     assert(!result.data.questionnaireEditor.uploadingAudio)
+  })
+
+  describe('survey modes', () => {
+    it('should select primary mode', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([actions.comparisonPrimarySelected('mobileweb')])
+      expect(result.data.surveyWizard.primaryModeSelected).toEqual('mobileweb')
+    })
+
+    it('should select fallback mode', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions(
+        [actions.comparisonPrimarySelected('mobileweb')],
+        [actions.comparisonFallbackSelected('sms')]
+      )
+      expect(result.data.surveyWizard.primaryModeSelected).toEqual('mobileweb')
+      expect(result.data.surveyWizard.fallbackModeSelected).toEqual('sms')
+    })
   })
 })
