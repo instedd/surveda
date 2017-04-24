@@ -1,7 +1,6 @@
 // @flow
 import * as characterCounter from '../characterCounter'
-import { getPromptSms, getPromptMobileWeb, getPromptIvr,
-  getStepPrompt, splitSmsText, newStepPrompt, newIvrPrompt } from '../step'
+import { getStepPrompt, splitSmsText, newStepPrompt, newIvrPrompt } from '../step'
 
 type ValidationContext = {
   sms: boolean,
