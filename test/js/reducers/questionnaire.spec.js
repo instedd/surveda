@@ -624,6 +624,24 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should include an error if mobile web sms message prompt exceeds the character limit', () => {
+      const prompt = 'a'.repeat(141)
+
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileweb'),
+        actions.setMobileWebSmsMessage(prompt)
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'mobileWebSmsMessage',
+        lang: null,
+        mode: 'mobileweb',
+        message: 'limit exceeded'
+      })
+    })
+
     it('should validate voice message must not be blank if "Phone call" mode is on', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
@@ -922,6 +940,23 @@ describe('questionnaire reducer', () => {
 
       expect(resultState.errors).toNotInclude({
         'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+      })
+    })
+
+    it("should validate a response's mobile web value must not overlap other mobile web values", () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileweb'),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1', 'b', null),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '2', 'b', null)
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: "steps[0].choices[1]['en'].mobileweb",
+        lang: 'en',
+        mode: 'mobileweb',
+        message: 'Value "b" already used in a previous response'
       })
     })
 
