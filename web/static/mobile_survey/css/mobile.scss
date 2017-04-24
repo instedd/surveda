@@ -104,6 +104,9 @@ input[type=text] {
 }
 input[type=number] {
   font-size: 2rem;
+  &.error {
+    border-bottom: 1px solid #ff5722;
+  }
 }
 select {
   display: block;
@@ -151,4 +154,9 @@ select {
 
 .choice-length-large{
   font-size: 0.8rem;
+}
+
+.error-message {
+  color: #ff5722;
+  font-size: 1rem;
 }

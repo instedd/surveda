@@ -53,27 +53,27 @@ defmodule Ask.MobileSurveyController do
     respondent = Repo.get!(Respondent, respondent_id)
     survey = Repo.preload(respondent, :survey).survey
 
-    {step, progress} =
+    {step, progress, error_msg} =
       cond do
         survey.state in ["completed", "cancelled"] ->
           questionnaires = Repo.preload(survey, :questionnaires).questionnaires
           questionnaire = Enum.random(questionnaires)
           msg = questionnaire.mobile_web_survey_is_over_message || "The survey is over"
-          {end_step(msg), end_progress()}
+          {end_step(msg), end_progress(), nil}
         respondent.state in ["pending", "active", "stalled"] ->
           case Broker.sync_step(respondent, value) do
             {:reply, reply} ->
-              {first_step(reply), progress(reply)}
+              {first_step(reply), progress(reply), reply.error_msg}
             {:end, {:reply, reply}} ->
-              {first_step(reply), progress(reply)}
+              {first_step(reply), progress(reply), reply.error_msg}
             :end ->
-              {end_step(), end_progress()}
+              {end_step(), end_progress(), nil}
           end
         true ->
-          {end_step(), end_progress()}
+          {end_step(), end_progress(), nil}
       end
 
-    render(conn, "show_step.json", step: step, progress: progress)
+    render(conn, "show_step.json", step: step, progress: progress, error_message: error_msg)
   end
 
   defp first_step(reply) do

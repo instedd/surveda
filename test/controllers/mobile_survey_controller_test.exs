@@ -23,7 +23,7 @@ defmodule Ask.MobileSurveyControllerTest do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, error_msg: %{"en" => %{"mobileweb" => "Invalid value"}})
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -122,6 +122,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "numeric"
     } = json["step"]
     assert json["progress"] == 60.0
+    assert json["error_message"] == "Invalid value"
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "99"})
     json = json_response(conn, 200)

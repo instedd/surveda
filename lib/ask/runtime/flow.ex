@@ -204,13 +204,26 @@ defmodule Ask.Runtime.Flow do
 
   defp reply(state, visitor, flow) do
     reply = %{state | steps: Visitor.close(visitor)}
-    reply = add_progress(reply, flow)
+    |> add_progress(flow)
+    |> add_error_msg(flow)
+
     {:ok, flow, reply}
   end
 
   defp add_progress(reply, flow) do
     {current_step, total_steps} = compute_progress(flow)
     %{reply | current_step: current_step, total_steps: total_steps}
+  end
+
+  defp add_error_msg(reply, flow) do
+    language = flow.language
+    mode = flow.mode
+    case flow.questionnaire.error_msg do
+      %{^language => %{^mode => error_msg}} ->
+        %{reply | error_msg: error_msg}
+      _ ->
+        reply
+    end
   end
 
   defp compute_progress(flow) do

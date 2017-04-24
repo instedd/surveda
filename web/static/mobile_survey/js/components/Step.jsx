@@ -14,7 +14,8 @@ class Step extends Component {
   props: {
     dispatch: PropTypes.func.isRequired,
     respondentId: any,
-    step: PropTypes.object.isRequired
+    step: PropTypes.object.isRequired,
+    errorMessage: ?string
   }
 
   constructor(props) {
@@ -38,12 +39,14 @@ class Step extends Component {
     actions.fetchStep(dispatch, respondentId)
   }
 
-  stepComponent(step) {
+  stepComponent() {
+    const { step, errorMessage } = this.props
+
     switch (step.type) {
       case 'multiple-choice':
         return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
       case 'numeric':
-        return <NumericStep ref='step' step={step} />
+        return <NumericStep ref='step' step={step} errorMessage={errorMessage} />
       case 'explanation':
         return <ExplanationStep ref='step' step={step} />
       case 'language-selection':
@@ -57,6 +60,7 @@ class Step extends Component {
 
   handleSubmit(event) {
     event.preventDefault()
+
     this.handleValue(this.refs.step.getValue())
   }
 
@@ -77,7 +81,7 @@ class Step extends Component {
         <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
-            {this.stepComponent(step)}
+            {this.stepComponent()}
           </form>
         </main>
       </div>
@@ -87,6 +91,7 @@ class Step extends Component {
 
 const mapStateToProps = (state) => ({
   step: state.step.current,
+  errorMessage: state.step.errorMessage,
   respondentId: window.respondentId
 })
 

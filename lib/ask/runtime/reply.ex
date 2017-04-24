@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.Reply do
-  defstruct stores: [], steps: [], disposition: nil, current_step: nil, total_steps: nil
+  defstruct stores: [], steps: [], disposition: nil, current_step: nil, total_steps: nil, error_msg: nil
 
   def prompts(%{steps: steps}) do
     Enum.flat_map(steps, fn(step) -> step.prompts end)
