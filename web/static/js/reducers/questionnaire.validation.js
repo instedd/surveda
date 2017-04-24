@@ -333,7 +333,7 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
 }
 
 const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) => {
-  msg = msg || newStepPrompt()
+  msg = msg || {}
 
   const path = `${msgKey}.prompt`
 
