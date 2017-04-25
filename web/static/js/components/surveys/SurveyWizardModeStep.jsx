@@ -19,7 +19,8 @@ class SurveyWizardModeStep extends Component {
     respondentGroups: PropTypes.object,
     questionnaires: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
-    readOnly: PropTypes.bool.isRequired
+    readOnly: PropTypes.bool.isRequired,
+    comparisonModes: PropTypes.object
   }
 
   modeChange(e, modes) {
@@ -69,8 +70,24 @@ class SurveyWizardModeStep extends Component {
     )
   }
 
+  addModeComparison = (primary, fallback) => {
+    if (primary && fallback) {
+      this.modeChange(null, [primary, fallback])
+    }
+  }
+
+  selectPrimaryMode = (mode) => {
+    const { dispatch } = this.props
+    dispatch(uiActions.comparisonPrimarySelected(mode))
+  }
+
+  selectFallbackMode = (mode) => {
+    const { dispatch } = this.props
+    dispatch(uiActions.comparisonFallbackSelected(mode))
+  }
+
   render() {
-    const { survey, readOnly, dispatch } = this.props
+    const { survey, readOnly, comparisonModes } = this.props
 
     if (!survey) {
       return <div>Loading...</div>
@@ -80,14 +97,12 @@ class SurveyWizardModeStep extends Component {
     const modeComparison = mode.length > 1 || (!!survey.modeComparison)
 
     let inputType = modeComparison ? 'checkbox' : 'radio'
+
     const availableModes = availableOptions(survey.mode)
-    // const primaryOptions = availableModes.map((option) => option[0])
     const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
-    const primarySelected = 'mobileweb'
+    const primarySelected = comparisonModes.primaryModeSelected
+    const fallbackSelected = comparisonModes.fallbackModeSelected
     const fallbackOptions = availableModes.filter((mode) => { return mode[0] == primarySelected }).map((mode) => mode.length == 2 ? mode[1] : 'no fallback')
-    const selectMode = (x) => {
-      dispatch(uiActions.comparisonPrimarySelected(x))
-    }
 
     return (
       <div>
@@ -122,26 +137,32 @@ class SurveyWizardModeStep extends Component {
             {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
             {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
             <div>
-              <Dropdown label={<span>Primary mode</span>}>
+              <Dropdown label={<span>{ primarySelected || 'Primary mode'}</span>}>
                 {primaryOptions.map((mode) => {
                   return (
                     <DropdownItem>
-                      <a onClick={() => selectMode(mode)}>{mode}</a>
+                      <a onClick={() => this.selectPrimaryMode(mode)}>{mode}</a>
                     </DropdownItem>
                   )
                 })}
               </Dropdown>
             </div>
-            <div>
-              <Dropdown label={<span>Fallback mode</span>}>
-                {fallbackOptions.map((mode) => {
-                  return (
-                    <DropdownItem>
-                      <a onClick={() => selectMode(mode)}>{mode}</a>
-                    </DropdownItem>
-                  )
-                })}
-              </Dropdown>
+            {
+              primarySelected
+              ? <div>
+                <Dropdown label={<span>{ fallbackSelected || 'Fallback mode' }</span>}>
+                  {fallbackOptions.map((mode) => {
+                    return (
+                      <DropdownItem>
+                        <a onClick={() => this.selectFallbackMode(mode)}>{mode}</a>
+                      </DropdownItem>
+                    )
+                  })}
+                </Dropdown>
+              </div> : null
+            }
+            <div onClick={() => this.addModeComparison(primarySelected, fallbackSelected)}>
+              Add mode
             </div>
           </div>
         </div>
@@ -150,4 +171,8 @@ class SurveyWizardModeStep extends Component {
   }
 }
 
-export default connect()(SurveyWizardModeStep)
+const mapStateToProps = (state) => ({
+  comparisonModes: state.ui.data.surveyWizard
+})
+
+export default connect(mapStateToProps)(SurveyWizardModeStep)
