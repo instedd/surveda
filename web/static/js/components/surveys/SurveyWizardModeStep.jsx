@@ -71,9 +71,17 @@ class SurveyWizardModeStep extends Component {
   }
 
   addModeComparison = (primary, fallback) => {
-    if (primary && fallback) {
-      this.modeChange(null, [primary, fallback])
+    const { dispatch } = this.props
+    if (!primary) {
+      return
+    } else {
+      if (primary && !fallback) {
+        this.modeChange(null, [primary])
+      } else {
+        this.modeChange(null, [primary, fallback])
+      }
     }
+    dispatch(uiActions.addModeComparison())
   }
 
   selectPrimaryMode = (mode) => {
@@ -102,7 +110,7 @@ class SurveyWizardModeStep extends Component {
     const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
     const primarySelected = comparisonModes.primaryModeSelected
     const fallbackSelected = comparisonModes.fallbackModeSelected
-    const fallbackOptions = availableModes.filter((mode) => { return mode[0] == primarySelected }).map((mode) => mode.length == 2 ? mode[1] : 'no fallback')
+    const fallbackOptions = availableModes.filter((mode) => { return mode[0] == primarySelected }).map((mode) => mode.length == 2 ? mode[1] : null)
 
     return (
       <div>
@@ -154,7 +162,7 @@ class SurveyWizardModeStep extends Component {
                   {fallbackOptions.map((mode) => {
                     return (
                       <DropdownItem>
-                        <a onClick={() => this.selectFallbackMode(mode)}>{mode}</a>
+                        <a onClick={() => this.selectFallbackMode(mode)}>{mode || 'no fallback'}</a>
                       </DropdownItem>
                     )
                   })}

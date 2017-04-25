@@ -54,5 +54,28 @@ describe('ui reducer', () => {
       expect(result.data.surveyWizard.primaryModeSelected).toEqual('mobileweb')
       expect(result.data.surveyWizard.fallbackModeSelected).toEqual('sms')
     })
+
+    it('should reset primary and fallback modes', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([
+        actions.comparisonPrimarySelected('mobileweb'),
+        actions.comparisonFallbackSelected('sms'),
+        actions.addModeComparison()
+      ])
+      assert(!result.data.surveyWizard.primaryModeSelected)
+      assert(!result.data.surveyWizard.fallbackModeSelected)
+    })
+
+    it('should keep questionnaireEditor state', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([
+        actions.uploadAudio('17141bea-a81c-4227-bdda-f5f69188b0e7'),
+        actions.comparisonPrimarySelected('mobileweb'),
+        actions.comparisonFallbackSelected('sms'),
+        actions.addModeComparison()
+      ])
+      console.log(result)
+      expect(result.data.questionnaireEditor.uploadingAudio).toEqual('17141bea-a81c-4227-bdda-f5f69188b0e7')
+    })
   })
 })

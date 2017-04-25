@@ -2,6 +2,7 @@ export const UPLOAD_AUDIO = 'UPLOAD_AUDIO'
 export const FINISH_AUDIO_UPLOAD = 'FINISH_AUDIO_UPLOAD'
 export const SURVEY_COMPARISON_SELECT_PRIMARY = 'SURVEY_COMPARISON_SELECT_PRIMARY'
 export const SURVEY_COMPARISON_SELECT_FALLBACK = 'SURVEY_COMPARISON_SELECT_FALLBACK'
+export const SURVEY_ADD_COMPARISON_MODE = 'SURVEY_ADD_COMPARISON_MODE'
 
 export const uploadAudio = (stepId) => ({
   type: UPLOAD_AUDIO,
@@ -21,4 +22,8 @@ export const comparisonPrimarySelected = (mode: string) => ({
 export const comparisonFallbackSelected = (mode: string) => ({
   type: SURVEY_COMPARISON_SELECT_FALLBACK,
   mode
+})
+
+export const addModeComparison = () => ({
+  type: SURVEY_ADD_COMPARISON_MODE
 })
