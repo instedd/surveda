@@ -66,7 +66,7 @@ defmodule Ask.MobileSurveyControllerTest do
     } = json["step"]
     assert json["progress"] == 0.0
 
-    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: ""})
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "", step_id: "s1"})
     json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
@@ -100,7 +100,7 @@ defmodule Ask.MobileSurveyControllerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == nil
 
-    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes", step_id: "s2"})
     json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
@@ -114,7 +114,7 @@ defmodule Ask.MobileSurveyControllerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "partial"
 
-    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes"})
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes", step_id: "s4"})
     json = json_response(conn, 200)
     assert %{
       "prompts" => ["Which is the second perfect number??"],
@@ -124,7 +124,18 @@ defmodule Ask.MobileSurveyControllerTest do
     assert json["progress"] == 60.0
     assert json["error_message"] == "Invalid value"
 
-    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "99"})
+    # Reply a previous step (should reply with the current step)
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "Yes", step_id: "s2"})
+    json = json_response(conn, 200)
+    assert %{
+      "prompts" => ["Which is the second perfect number??"],
+      "title" => "Which is the second perfect number?",
+      "type" => "numeric"
+    } = json["step"]
+    assert json["progress"] == 60.0
+    assert json["error_message"] == "Invalid value"
+
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "99", step_id: "s5"})
     json = json_response(conn, 200)
     assert %{
       "prompts" => ["What's the number of this question??"],
@@ -133,7 +144,7 @@ defmodule Ask.MobileSurveyControllerTest do
     } = json["step"]
     assert json["progress"] == 80.0
 
-    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "11"})
+    conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "11", step_id: "s6"})
     json = json_response(conn, 200)
     assert %{
       "prompts" => ["The survey has ended"],

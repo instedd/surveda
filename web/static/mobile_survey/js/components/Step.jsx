@@ -65,8 +65,8 @@ class Step extends Component {
   }
 
   handleValue(value) {
-    const { dispatch, respondentId } = this.props
-    actions.sendReply(dispatch, respondentId, value)
+    const { dispatch, step, respondentId } = this.props
+    actions.sendReply(dispatch, respondentId, step.id, value)
       .then(() => this.refs.step.clearValue())
   }
 

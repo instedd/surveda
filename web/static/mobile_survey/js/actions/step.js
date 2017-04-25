@@ -11,8 +11,8 @@ export const fetchStep = (dispatch: (action: any) => any, respondentId: any) => 
   })
 }
 
-export const sendReply = (dispatch: (action: any) => any, id: any, value: any) => {
-  return api.sendReply(id, value).then((response: any) => {
+export const sendReply = (dispatch: (action: any) => any, respondentId: any, stepId: any, value: any) => {
+  return api.sendReply(respondentId, stepId, value).then((response: any) => {
     response.json().then(json => {
       dispatch(receiveStep(json.step, json.progress, json.error_message))
     })

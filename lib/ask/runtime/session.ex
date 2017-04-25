@@ -160,6 +160,10 @@ defmodule Ask.Runtime.Session do
     SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
   end
 
+  defp log_response({:reply_with_step_id, response, _step_id}, channel, mode, respondent, disposition) do
+    log_response({:reply, response}, channel, mode, respondent, disposition)
+  end
+
   defp handle_setup_response(setup_response) do
     case setup_response do
       {:ok, new_state} ->

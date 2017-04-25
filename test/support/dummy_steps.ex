@@ -718,7 +718,7 @@ defmodule Ask.DummySteps do
 
       @mobileweb_dummy_steps [
         explanation_step(
-          id: "aaa",
+          id: "s1",
           title: "Let there be rock",
           prompt: prompt(
             mobileweb: sms_prompt("Welcome to the survey!")
@@ -726,7 +726,7 @@ defmodule Ask.DummySteps do
           skip_logic: nil
         ),
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: "s2",
           title: "Do you smoke?",
           prompt: prompt(
             mobileweb: "Do you smoke? Reply 1 for YES, 2 for NO"
@@ -738,12 +738,12 @@ defmodule Ask.DummySteps do
           ]
         ),
         flag_step(
-          id: "aaa",
+          id: "s3",
           title: "Let there be rock",
           disposition: "partial"
         ),
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: "s4",
           title: "Do you exercise",
           prompt: prompt(
             mobileweb: "Do you exercise? Reply 1 for YES, 2 for NO"
@@ -755,7 +755,7 @@ defmodule Ask.DummySteps do
           ]
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: "s5",
           title: "Which is the second perfect number?",
           prompt: prompt(
             mobileweb: "Which is the second perfect number??"
@@ -765,7 +765,7 @@ defmodule Ask.DummySteps do
           refusal: nil
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: "s6",
           title: "What's the number of this question?",
           prompt: prompt(
             mobileweb: "What's the number of this question??"

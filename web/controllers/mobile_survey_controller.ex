@@ -45,8 +45,8 @@ defmodule Ask.MobileSurveyController do
     sync_step(conn, respondent_id, :answer)
   end
 
-  def send_reply(conn, %{"respondent_id" => respondent_id, "value" => value}) do
-    sync_step(conn, respondent_id, {:reply, value})
+  def send_reply(conn, %{"respondent_id" => respondent_id, "value" => value, "step_id" => step_id}) do
+    sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
   end
 
   defp sync_step(conn, respondent_id, value) do

@@ -110,6 +110,16 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
+  defp accept_reply(flow, {:reply_with_step_id, reply, step_id}, visitor, mode) do
+    step = current_step(flow)
+    case step do
+      %{"id" => ^step_id} ->
+        accept_reply(flow, {:reply, reply}, visitor, mode)
+      _ ->
+        accept_reply(flow, :answer, visitor, mode)
+    end
+  end
+
   defp accept_reply_non_stop(flow, reply, visitor, mode) do
     step = current_step(flow)
 

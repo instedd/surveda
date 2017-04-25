@@ -7,8 +7,8 @@ export const fetchStep = (id: any) => {
   })
 }
 
-export const sendReply = (id: any, value: any) => {
-  return fetch(`/mobile_survey/send_reply/${encodeURIComponent(id)}?value=${encodeURIComponent(value)}`, {
+export const sendReply = (respondentId: any, stepId: any, value: any) => {
+  return fetch(`/mobile_survey/send_reply/${encodeURIComponent(respondentId)}?value=${encodeURIComponent(value)}&step_id=${encodeURIComponent(stepId)}`, {
     method: 'POST',
     credentials: 'same-origin'
   })
