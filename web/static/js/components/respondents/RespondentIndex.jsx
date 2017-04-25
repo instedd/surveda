@@ -11,7 +11,7 @@ import values from 'lodash/values'
 import { CardTable, UntitledIfEmpty, Modal } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
-import { modeLabel } from '../../reducers/survey'
+import { modeLabel } from '../../questionnaire.mode'
 
 type Props = {
   projectId: number,
