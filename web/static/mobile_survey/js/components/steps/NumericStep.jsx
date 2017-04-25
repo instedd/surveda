@@ -35,27 +35,44 @@ class NumericStep extends Component {
   }
 
   render() {
-    const { step } = this.props
+    const { step, onRefusal } = this.props
+
+    let refusalComponent = null
+    console.log(step)
+    console.log(step.refusal)
+
+    if (step.refusal) {
+      refusalComponent = (
+        <div>
+          <a href='#' onClick={e => { e.preventDefault(); onRefusal(step.refusal) }}>{step.refusal}</a>
+        </div>
+      )
+    }
+
     return (
       <div>
-        {(step.prompts || []).map(prompt =>
-          <Prompt key={prompt} text={prompt} />
-        )}
-        <div className='input-button-inline'>
-          <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} />
-          <button className='btn square' disabled={!this.state.valid}>
-            <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
-              <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' />
-            </svg>
-          </button>
+        <div>
+          {(step.prompts || []).map(prompt =>
+            <Prompt key={prompt} text={prompt} />
+          )}
+          <div className='input-button-inline'>
+            <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} />
+            <button className='btn square' disabled={!this.state.valid}>
+              <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
+                <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' />
+              </svg>
+            </button>
+          </div>
         </div>
+        {refusalComponent}
       </div>
     )
   }
 }
 
 NumericStep.propTypes = {
-  step: PropTypes.object
+  step: PropTypes.object,
+  onRefusal: PropTypes.func
 }
 
 export default NumericStep

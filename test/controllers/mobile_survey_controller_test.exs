@@ -105,7 +105,8 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["Which is the second perfect number??"],
       "title" => "Which is the second perfect number?",
-      "type" => "numeric"
+      "type" => "numeric",
+      "refusal" => "skip me"
     } = json_response(conn, 200)["step"]
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "99"})

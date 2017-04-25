@@ -762,7 +762,15 @@ defmodule Ask.DummySteps do
             ),
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
-          refusal: nil
+          refusal: %{
+            "enabled" => true,
+            "responses" => %{
+              "mobileweb" => %{
+                "en" => "skip me",
+              }
+            },
+            "skip_logic" => "end",
+          }
         ),
         numeric_step(
           id: Ecto.UUID.generate,
