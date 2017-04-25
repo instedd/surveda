@@ -244,7 +244,7 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsStats) {
-    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed', 'cancelled']
+    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'refused', 'stalled', 'failed', 'cancelled']
     return (
       <div className='card'>
         <div className='card-table-title'>
