@@ -775,6 +775,23 @@ defmodule Ask.DummySteps do
           refusal: nil
         )
       ]
+
+      @mobileweb_refusal_dummy_steps [
+        explanation_step(
+          id: "s1",
+          title: "Let there be rock",
+          prompt: prompt(
+            mobileweb: sms_prompt("Welcome to the survey!")
+          ),
+          skip_logic: nil
+        ),
+        flag_step(
+          id: "s3",
+          title: "Let there be rock",
+          disposition: "refused",
+          skip_logic: "end"
+        ),
+      ]
     end
   end
 end

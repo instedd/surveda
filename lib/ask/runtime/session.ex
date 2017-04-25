@@ -307,12 +307,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp handle_step_answer(_, {:end, _, reply}, respondent, _, _, _) do
-    case Reply.steps(reply) do
-      [] ->
-        {:end, respondent}
-      _ ->
-        {:end, reply, respondent}
-    end
+    {:end, reply, respondent}
   end
 
   defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets, current_mode) do

@@ -319,12 +319,13 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:end, reply, respondent}) do
     update_respondent(respondent, :end, Reply.disposition(reply))
-    {:end, {:reply, reply}}
-  end
 
-  defp handle_session_step({:end, respondent}) do
-    update_respondent(respondent, :end)
-    :end
+    case Reply.steps(reply) do
+      [] ->
+        :end
+      _ ->
+        {:end, {:reply, reply}}
+    end
   end
 
   defp handle_session_step({:rejected, reply, respondent}) do

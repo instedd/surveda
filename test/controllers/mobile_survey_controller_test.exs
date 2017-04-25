@@ -290,4 +290,49 @@ defmodule Ask.MobileSurveyControllerTest do
     conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: token})
     assert response(conn, 200)
   end
+
+  test "respondent flow via mobileweb with refusal + end", %{conn: conn} do
+    test_channel = TestChannel.new(false, true)
+
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    quiz = insert(:questionnaire, steps: @mobileweb_refusal_dummy_steps, error_msg: %{"en" => %{"mobileweb" => "Invalid value"}})
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+    phone_number = respondent.sanitized_phone_number
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    # mobile_survey_send_reply_path
+
+    conn = get conn, mobile_survey_path(conn, :get_step, respondent.id)
+    json = json_response(conn, 200)
+
+    assert %{
+      "choices" => [],
+      "prompts" => ["Welcome to the survey!"],
+      "title" => "Let there be rock",
+      "type" => "explanation"
+    } = json["step"]
+    assert json["progress"] == 0.0
+
+    post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "", step_id: "s1"})
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "refused"
+
+    :ok = broker |> GenServer.stop
+  end
 end
