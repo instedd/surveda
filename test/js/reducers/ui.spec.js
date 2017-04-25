@@ -47,10 +47,10 @@ describe('ui reducer', () => {
 
     it('should select fallback mode', () => {
       const playActions = playActionsFromState(initialState, reducer)
-      const result = playActions(
-        [actions.comparisonPrimarySelected('mobileweb')],
-        [actions.comparisonFallbackSelected('sms')]
-      )
+      const result = playActions([
+        actions.comparisonPrimarySelected('mobileweb'),
+        actions.comparisonFallbackSelected('sms')
+      ])
       expect(result.data.surveyWizard.primaryModeSelected).toEqual('mobileweb')
       expect(result.data.surveyWizard.fallbackModeSelected).toEqual('sms')
     })

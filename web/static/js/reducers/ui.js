@@ -69,6 +69,13 @@ const selectPrimaryComparison = (state, action) => {
 }
 
 const selectFallbackComparison = (state, action) => {
-  console.log('selecting primary comparison')
-  return state
+  return {
+    ...state,
+    data: {
+      surveyWizard: {
+        ...state.data.surveyWizard,
+        fallbackModeSelected: action.mode
+      }
+    }
+  }
 }
