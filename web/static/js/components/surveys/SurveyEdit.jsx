@@ -21,6 +21,7 @@ class SurveyEdit extends Component {
     project: PropTypes.object,
     respondentGroups: PropTypes.object,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object
   }
 
@@ -44,7 +45,7 @@ class SurveyEdit extends Component {
   }
 
   render() {
-    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, invalidRespondents } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
@@ -60,7 +61,7 @@ class SurveyEdit extends Component {
 
     return (
       <div className='white'>
-        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} respondentGroupsUploadingExisting={respondentGroupsUploadingExisting} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
       </div>
     )
   }
@@ -74,6 +75,7 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaires: state.questionnaires.items || {},
   respondentGroups: state.respondentGroups.items || {},
   respondentGroupsUploading: state.respondentGroups.uploading,
+  respondentGroupsUploadingExisting: state.respondentGroups.uploadingExisting,
   invalidRespondents: state.respondentGroups.invalidRespondents,
   survey: state.survey.data || {}
 })

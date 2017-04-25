@@ -151,9 +151,12 @@ label {
   }
 }
 
-
-
-
+.preloader-wrapper {
+  &.tiny {
+    width: 16px;
+    height: 16px;
+  }
+}
 
 .invalidValue {
   color: red;
