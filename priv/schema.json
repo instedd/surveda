@@ -7,12 +7,23 @@
       "type": "object",
       "properties": {
         "steps": { "$ref": "#/definitions/steps" },
+        "settings": { "$ref": "#/definitions/settings" },
         "quota_completed_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
         "error_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
         "mobile_web_sms_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] },
         "mobile_web_survey_is_over_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] }
       },
       "required": ["steps"]
+    },
+
+    "settings": {
+      "type": "object",
+      "properties": {
+        "quota_completed_message": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
+        "error_message": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
+        "mobile_web_sms_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] },
+        "mobile_web_survey_is_over_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] }
+      }
     },
 
     "steps": {

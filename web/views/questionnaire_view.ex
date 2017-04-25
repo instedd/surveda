@@ -22,6 +22,7 @@ defmodule Ask.QuestionnaireView do
       error_msg: questionnaire.error_msg,
       mobile_web_sms_message: questionnaire.mobile_web_sms_message,
       mobile_web_survey_is_over_message: questionnaire.mobile_web_survey_is_over_message,
+      settings: questionnaire.settings,
       valid: questionnaire.valid,
     }
   end

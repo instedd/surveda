@@ -90,7 +90,8 @@ defmodule Ask.QuestionnaireControllerTest do
         },
         "mobile_web_sms_message" => "Please enter",
         "mobile_web_survey_is_over_message" => nil,
-        "valid" => true
+        "valid" => true,
+        "settings" => nil
       }
     end
 
