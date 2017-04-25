@@ -6,6 +6,7 @@ $progressBarFill: rgb(251,154,0);
 
 $white: rgb(255,255,255);
 $black: rgb(0,0,0);
+$grey: #cecece;
 
 
 /* THIS FILE IS ONLY FOR TESTING PURPOSES. TO CHECK THAT EVERYTHING WRITTEN HERE IS COMPILED AS SPECIFIED ON brunch-config.js */
@@ -72,6 +73,14 @@ h1 {
   svg {
     fill: $primarycolor;
     transform: scale(1.5);
+  }
+
+  &:disabled {
+    color: $grey;
+    border-color: $grey;
+    svg {
+      fill: $grey;
+    }
   }
 
   &.block {
