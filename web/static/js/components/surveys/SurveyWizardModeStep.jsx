@@ -54,6 +54,18 @@ class SurveyWizardModeStep extends Component {
     return availableModes.filter((mode) => this.questionnairesMatchMode(mode, questionnaireIds, questionnaires))
   }
 
+  checkIfPrimarySelected = () => {
+    const { survey } = this.props
+    const primaryOptions = this.primaryOptionsFor(this.availableModes(survey.mode))
+    return primaryOptions.length == 1 ? primaryOptions[0] : null
+  }
+
+  checkIfFallbackSelected = (primarySelected) => {
+    const { survey } = this.props
+    const options = this.availableModes(survey.mode).filter((mode) => (mode[0] == primarySelected))
+    return options.length == 1 && options[0].length == 2 ? options[0][1] : null
+  }
+
   addModeComparison = (primary, fallback) => {
     const { dispatch } = this.props
     if (!primary) {
@@ -65,6 +77,7 @@ class SurveyWizardModeStep extends Component {
         this.modeChange(null, [primary, fallback])
       }
     }
+
     dispatch(uiActions.addModeComparison())
   }
 
@@ -92,6 +105,54 @@ class SurveyWizardModeStep extends Component {
     (modes.length == 0) || (modes[0].length == 1) ? null : modes[0][1]
   )
 
+  modeSelectorForPrimary = (comparison, current, label, options, handler, readOnly) => {
+    if (comparison && options.length == 1) {
+      return (<div>
+        {options[0]}
+      </div>)
+    } else {
+      return (<div>
+        <Dropdown label={<span>{ current || label}</span>}>
+          {options.map((mode) => {
+            return (
+              <DropdownItem>
+                <a onClick={() => handler(mode)}>{mode}</a>
+              </DropdownItem>
+            )
+          })}
+        </Dropdown>
+      </div>)
+    }
+  }
+
+  modeSelectorForFallback = (comparison, primary, fallback, label, options, handler, readOnly) => {
+    if (comparison && options.length == 1) {
+      return (<div>
+        {options[0] || 'no fallback'}
+      </div>)
+    } else {
+      return (<div>
+        <Dropdown label={<span>{ fallback || label}</span>}>
+          {options.map((mode) => {
+            return (
+              <DropdownItem>
+                <a onClick={() => handler(primary, mode)}>{mode || 'no fallback'}</a>
+              </DropdownItem>
+            )
+          })}
+        </Dropdown>
+      </div>)
+    }
+  }
+
+  availableModes = (modes) => {
+    return this.filterQuestionnaireMatchingModes(availableOptions(modes))
+  }
+
+  primaryOptionsFor = (modes) => {
+    return uniq(map(modes, (mode) => mode[0]))
+  }
+
   render() {
     const { survey, readOnly, comparisonModes } = this.props
 
@@ -101,8 +162,8 @@ class SurveyWizardModeStep extends Component {
 
     const mode = survey.mode || []
     const modeComparison = mode.length > 1 || (!!survey.modeComparison)
-    const availableModes = this.filterQuestionnaireMatchingModes(availableOptions(survey.mode))
-    const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
+    const availableModes = this.availableModes(survey.mode)
+    const primaryOptions = this.primaryOptionsFor(availableModes)
 
     let primarySelected
     let fallbackSelected
@@ -110,11 +171,11 @@ class SurveyWizardModeStep extends Component {
     let fallbackSelectedHandler
     let modeDescriptions
     let addModeButton
-    let showDropdowns = true
+    let showSelectors = true
 
     if (modeComparison) {
-      primarySelected = comparisonModes.primaryModeSelected
-      fallbackSelected = comparisonModes.fallbackModeSelected
+      primarySelected = comparisonModes.primaryModeSelected || this.checkIfPrimarySelected()
+      fallbackSelected = comparisonModes.fallbackModeSelected || this.checkIfFallbackSelected(primarySelected)
       primarySelectedHandler = this.selectPrimaryModeForComparison
       fallbackSelectedHandler = this.selectFallbackModeForComparison
 
@@ -130,7 +191,7 @@ class SurveyWizardModeStep extends Component {
           Add mode
       </div> : null
 
-      showDropdowns = primaryOptions.length > 0
+      showSelectors = primaryOptions.length > 0
     } else {
       primarySelected = this.primarySingleMode(survey.mode)
       fallbackSelected = this.fallbackSingleMode(survey.mode)
@@ -169,31 +230,12 @@ class SurveyWizardModeStep extends Component {
               modeDescriptions
             }
             {
-              showDropdowns
+              showSelectors
               ? <div>
-                <div>
-                  <Dropdown label={<span>{ primarySelected || 'Primary mode'}</span>}>
-                    {primaryOptions.map((mode) => {
-                      return (
-                        <DropdownItem>
-                          <a onClick={() => primarySelectedHandler(mode)}>{mode}</a>
-                        </DropdownItem>
-                      )
-                    })}
-                  </Dropdown>
-                </div>
-                <div>
-                  <Dropdown readOnly={!!primarySelected} label={<span>{ fallbackSelected || 'Fallback mode' }</span>}>
-                    {fallbackOptions.map((mode) => {
-                      return (
-                        <DropdownItem>
-                          <a onClick={() => fallbackSelectedHandler(primarySelected, mode)}>{mode || 'no fallback'}</a>
-                        </DropdownItem>
-                      )
-                    })}
-                  </Dropdown>
-                </div>
-              </div> : null
+                {this.modeSelectorForPrimary(modeComparison, primarySelected, 'Primary mode', primaryOptions, primarySelectedHandler, false)}
+                {this.modeSelectorForFallback(modeComparison, primarySelected, fallbackSelected, 'Fallback mode', fallbackOptions, fallbackSelectedHandler, false)}
+              </div>
+              : null
             }
             {
               addModeButton
