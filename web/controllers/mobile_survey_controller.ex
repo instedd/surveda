@@ -4,21 +4,19 @@ defmodule Ask.MobileSurveyController do
   use Ask.Web, :controller
 
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
-    if Respondent.token(respondent_id) == token do
-      do_index(conn, respondent_id)
-    else
-      raise Ask.UnauthorizedError, conn: conn
-    end
+    authorize(conn, respondent_id, token, fn ->
+      do_index(conn, respondent_id, token)
+    end)
   end
 
-  defp do_index(conn, respondent_id) do
+  defp do_index(conn, respondent_id, token) do
     respondent = Repo.get!(Respondent, respondent_id)
     cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
     respondent_cookie = respondent.mobile_web_cookie_code
     if respondent_cookie do
       request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
       if request_cookie == respondent_cookie do
-        render_index(conn, respondent_id)
+        render_index(conn, respondent_id, token)
       else
         raise Ask.UnauthorizedError, conn: conn
       end
@@ -31,22 +29,26 @@ defmodule Ask.MobileSurveyController do
 
       conn
       |> put_resp_cookie(cookie_name, cookie_value)
-      |> render_index(respondent_id)
+      |> render_index(respondent_id, token)
     end
   end
 
-  defp render_index(conn, respondent_id) do
+  defp render_index(conn, respondent_id, token) do
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", respondent_id: respondent_id)
+    |> render("index.html", respondent_id: respondent_id, token: token)
   end
 
-  def get_step(conn, %{"respondent_id" => respondent_id}) do
-    sync_step(conn, respondent_id, :answer)
+  def get_step(conn, %{"respondent_id" => respondent_id, "token" => token}) do
+    authorize(conn, respondent_id, token, fn ->
+      sync_step(conn, respondent_id, :answer)
+    end)
   end
 
-  def send_reply(conn, %{"respondent_id" => respondent_id, "value" => value, "step_id" => step_id}) do
-    sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
+  def send_reply(conn, %{"respondent_id" => respondent_id, "token" => token, "value" => value, "step_id" => step_id}) do
+    authorize(conn, respondent_id, token, fn ->
+      sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
+    end)
   end
 
   defp sync_step(conn, respondent_id, value) do
@@ -98,5 +100,13 @@ defmodule Ask.MobileSurveyController do
 
   defp end_progress do
     100.0
+  end
+
+  defp authorize(conn, respondent_id, token, success_fn) do
+    if Respondent.token(respondent_id) == token do
+      success_fn.()
+    else
+      raise Ask.UnauthorizedError, conn: conn
+    end
   end
 end

@@ -14,6 +14,7 @@ class Step extends Component {
   props: {
     dispatch: PropTypes.func.isRequired,
     respondentId: any,
+    token: string,
     step: PropTypes.object.isRequired,
     errorMessage: ?string
   }
@@ -35,8 +36,8 @@ class Step extends Component {
   }
 
   fetchStep() {
-    const { dispatch, respondentId } = this.props
-    actions.fetchStep(dispatch, respondentId)
+    const { dispatch, respondentId, token } = this.props
+    actions.fetchStep(dispatch, respondentId, token)
   }
 
   stepComponent() {
@@ -65,8 +66,8 @@ class Step extends Component {
   }
 
   handleValue(value) {
-    const { dispatch, step, respondentId } = this.props
-    actions.sendReply(dispatch, respondentId, step.id, value)
+    const { dispatch, step, respondentId, token } = this.props
+    actions.sendReply(dispatch, respondentId, token, step.id, value)
       .then(() => this.refs.step.clearValue())
   }
 
@@ -92,7 +93,8 @@ class Step extends Component {
 const mapStateToProps = (state) => ({
   step: state.step.current,
   errorMessage: state.step.errorMessage,
-  respondentId: window.respondentId
+  respondentId: window.respondentId,
+  token: window.token
 })
 
 export default connect(mapStateToProps)(Step)
