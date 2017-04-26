@@ -138,6 +138,24 @@ select {
     zoom: 1;
   }
 }
+.refusal {
+  position: absolute;
+  text-align: center;
+  bottom: 30px;
+  left: 0;
+  width: 100%;
+  a {
+    font-weight: 300;
+    color: #999999;
+    text-decoration: none;
+    i {
+      fill: #999999;
+      margin-right: 8px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+}
 
 // FONT-SIZE related with buttons of multiple choice steps
 

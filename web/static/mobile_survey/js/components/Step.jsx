@@ -47,7 +47,7 @@ class Step extends Component {
       case 'multiple-choice':
         return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
       case 'numeric':
-        return <NumericStep ref='step' step={step} errorMessage={errorMessage} />
+        return <NumericStep ref='step' step={step} errorMessage={errorMessage} onRefusal={value => this.handleValue(value)} />
       case 'explanation':
         return <ExplanationStep ref='step' step={step} />
       case 'language-selection':

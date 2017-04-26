@@ -130,7 +130,8 @@ defmodule Ask.MobileSurveyControllerTest do
     assert %{
       "prompts" => ["Which is the second perfect number??"],
       "title" => "Which is the second perfect number?",
-      "type" => "numeric"
+      "type" => "numeric",
+      "refusal" => "skip me"
     } = json["step"]
     assert json["progress"] == 60.0
     assert json["error_message"] == "Invalid value"
