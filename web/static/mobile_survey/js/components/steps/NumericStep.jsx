@@ -38,8 +38,6 @@ class NumericStep extends Component {
     const { step, onRefusal } = this.props
 
     let refusalComponent = null
-    console.log(step)
-    console.log(step.refusal)
 
     if (step.refusal) {
       refusalComponent = (
