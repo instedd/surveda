@@ -1289,7 +1289,7 @@ defmodule Ask.BrokerTest do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
     quiz = hd(survey.questionnaires)
-    quiz |> Questionnaire.changeset(%{"mobile_web_sms_message" => "One#{Questionnaire.sms_split_separator}Two"}) |> Repo.update!
+    quiz |> Questionnaire.changeset(%{settings: %{"mobile_web_sms_message" => "One#{Questionnaire.sms_split_separator}Two"}}) |> Repo.update!
 
     {:ok, _} = Broker.start_link
     Broker.poll
@@ -1326,8 +1326,10 @@ defmodule Ask.BrokerTest do
     quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
     quiz
     |> Questionnaire.changeset(%{
-      quota_completed_msg: %{"en" => %{"sms" => "Bye!"}},
-      error_msg: %{"en" => %{"sms" => "Wrong answer"}}
+      settings: %{
+        "quota_completed_message" => %{"en" => %{"sms" => "Bye!"}},
+        "error_message" => %{"en" => %{"sms" => "Wrong answer"}}
+      }
     })
     |> Repo.update!
 
@@ -1418,8 +1420,10 @@ defmodule Ask.BrokerTest do
     quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
     quiz
     |> Questionnaire.changeset(%{
-      quota_completed_msg: %{"en" => %{"ivr" => "Bye!"}},
-      error_msg: %{"en" => %{"ivr" => %{"text" => "Wrong answer", "audio_source" => "tts"}}}
+      settings: %{
+        "quota_completed_message" => %{"en" => %{"ivr" => "Bye!"}},
+        "error_message" => %{"en" => %{"ivr" => %{"text" => "Wrong answer", "audio_source" => "tts"}}}
+      }
     })
     |> Repo.update!
 

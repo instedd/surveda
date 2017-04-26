@@ -18,10 +18,6 @@ defmodule Ask.QuestionnaireView do
       steps: questionnaire.steps,
       default_language: questionnaire.default_language,
       languages: questionnaire.languages,
-      quota_completed_msg: questionnaire.quota_completed_msg,
-      error_msg: questionnaire.error_msg,
-      mobile_web_sms_message: questionnaire.mobile_web_sms_message,
-      mobile_web_survey_is_over_message: questionnaire.mobile_web_survey_is_over_message,
       settings: questionnaire.settings,
       valid: questionnaire.valid,
     }

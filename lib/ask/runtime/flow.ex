@@ -22,7 +22,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   def quota_completed(flow, visitor) do
-    msg = flow.questionnaire.quota_completed_msg
+    msg = flow.questionnaire.settings["quota_completed_message"]
     if msg do
       visitor = visitor |> Visitor.accept_message(msg, flow.language, "Quota completed")
       {:ok, %Reply{steps: Visitor.close(visitor)}}
@@ -138,7 +138,7 @@ defmodule Ask.Runtime.Flow do
         if flow.retries >=  @max_retries do
           :failed
         else
-          visitor = visitor |> Visitor.accept_message(flow.questionnaire.error_msg, flow.language, "Error")
+          visitor = visitor |> Visitor.accept_message(flow.questionnaire.settings["error_message"], flow.language, "Error")
           {%{flow | retries: flow.retries + 1}, %Reply{}, visitor}
         end
       nil ->
@@ -215,7 +215,7 @@ defmodule Ask.Runtime.Flow do
   defp reply(state, visitor, flow) do
     reply = %{state | steps: Visitor.close(visitor)}
     |> add_progress(flow)
-    |> add_error_msg(flow)
+    |> add_error_message(flow)
 
     {:ok, flow, reply}
   end
@@ -225,12 +225,12 @@ defmodule Ask.Runtime.Flow do
     %{reply | current_step: current_step, total_steps: total_steps}
   end
 
-  defp add_error_msg(reply, flow) do
+  defp add_error_message(reply, flow) do
     language = flow.language
     mode = flow.mode
-    case flow.questionnaire.error_msg do
-      %{^language => %{^mode => error_msg}} ->
-        %{reply | error_msg: error_msg}
+    case flow.questionnaire.settings["error_message"] do
+      %{^language => %{^mode => error_message}} ->
+        %{reply | error_message: error_message}
       _ ->
         reply
     end

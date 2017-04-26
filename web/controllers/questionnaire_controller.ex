@@ -132,8 +132,8 @@ defmodule Ask.QuestionnaireController do
     |> Repo.get!(id)
 
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
-    audio_ids = collect_prompt_audio_ids(questionnaire.quota_completed_msg, audio_ids)
-    audio_ids = collect_prompt_audio_ids(questionnaire.error_msg, audio_ids)
+    audio_ids = collect_prompt_audio_ids(questionnaire.settings.quota_completed, audio_ids)
+    audio_ids = collect_prompt_audio_ids(questionnaire.settings.error, audio_ids)
 
     audios =
       if length(audio_ids) == 0 do
@@ -161,9 +161,10 @@ defmodule Ask.QuestionnaireController do
       name: questionnaire.name,
       modes: questionnaire.modes,
       steps: questionnaire.steps,
-      quota_completed_msg: questionnaire.quota_completed_msg,
-      error_msg: questionnaire.error_msg,
-      mobile_web_sms_message: questionnaire.mobile_web_sms_message,
+      quota_completed_message: questionnaire.settings["quota_completed_message"],
+      error_message: questionnaire.settings["error_message"],
+      mobile_web_sms_message: questionnaire.settings["mobile_web_sms_message"],
+      mobile_web_survey_is_over_message: questionnaire.settings["mobile_web_survey_is_over_message"],
       languages: questionnaire.languages,
       default_language: questionnaire.default_language,
       audio_files: audio_files,
@@ -212,9 +213,12 @@ defmodule Ask.QuestionnaireController do
       name: Map.get(manifest, "name"),
       modes: Map.get(manifest, "modes"),
       steps: Map.get(manifest, "steps"),
-      quota_completed_msg: Map.get(manifest, "quota_completed_msg"),
-      error_msg: Map.get(manifest, "error_msg"),
-      mobile_web_sms_message: Map.get(manifest, "mobile_web_sms_message"),
+      settings: %{
+        quota_completed_message: Map.get(manifest, "quota_completed_message"),
+        error_message: Map.get(manifest, "error_message"),
+        mobile_web_sms_message: Map.get(manifest, "mobile_web_sms_message"),
+        mobile_web_survey_is_over_message: Map.get(manifest, "mobile_web_survey_is_over_message")
+      },
       languages: Map.get(manifest, "languages"),
       default_language: Map.get(manifest, "default_language"),
     })

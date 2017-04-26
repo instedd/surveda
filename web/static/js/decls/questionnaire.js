@@ -6,12 +6,16 @@ export type Questionnaire = {
   languages: string[],
   defaultLanguage: string,
   activeLanguage: string,
-  quotaCompletedMsg: Prompt,
-  errorMsg: Prompt,
-  mobileWebSmsMessage: ?string,
-  mobileWebSurveyIsOverMessage: ?string,
+  settings: Settings,
   projectId: number,
   valid: ?boolean
+};
+
+export type Settings = {
+  quotaCompletedMessage: Prompt,
+  errorMessage: Prompt,
+  mobileWebSmsMessage: ?string,
+  mobileWebSurveyIsOverMessage: ?string,
 };
 
 export type ChoiceErrors = {

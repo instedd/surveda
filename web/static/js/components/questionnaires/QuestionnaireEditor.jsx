@@ -380,10 +380,10 @@ class QuestionnaireEditor extends Component {
           </div>
           }
           <div className='row'>
-            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' readOnly={readOnly} icon='pie_chart' />
+            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMessage' readOnly={readOnly} icon='pie_chart' />
           </div>
           <div className='row'>
-            <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
+            <QuestionnaireMsg title='Error' messageKey='errorMessage' readOnly={readOnly} icon='warning' />
           </div>
           {mobileweb
           ? <MobileWebSmsMessage readOnly={readOnly} />

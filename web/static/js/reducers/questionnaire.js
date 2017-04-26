@@ -629,9 +629,11 @@ const reorderLanguages = (state, action) => {
 const setQuestionnaireMsg = (state, action, mode) => {
   let questionnaireMsg
   let activeLanguageMsg
-  questionnaireMsg = Object.assign({}, state[action.msgKey])
-  if (state[action.msgKey] && state[action.msgKey][state.activeLanguage]) {
-    activeLanguageMsg = questionnaireMsg[state.activeLanguage]
+
+  questionnaireMsg = Object.assign({}, state.settings[action.msgKey])
+
+  if (state.settings[action.msgKey] && state.settings[action.msgKey][state.activeLanguage]) {
+    activeLanguageMsg = Object.assign({}, questionnaireMsg[state.activeLanguage])
   } else {
     activeLanguageMsg = {}
     questionnaireMsg[state.activeLanguage] = activeLanguageMsg
@@ -646,8 +648,12 @@ const setQuestionnaireMsg = (state, action, mode) => {
   }
 
   activeLanguageMsg[mode] = msg
-  let newState = {...state}
-  newState[action.msgKey] = questionnaireMsg
+
+  let newState = {
+    ...state,
+    settings: {...state.settings}
+  }
+  newState.settings[action.msgKey] = questionnaireMsg
   return newState
 }
 
@@ -742,14 +748,20 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
 const setMobileWebSmsMessage = (state, action) => {
   return {
     ...state,
-    mobileWebSmsMessage: action.text
+    settings: {
+      ...state.settings,
+      mobileWebSmsMessage: action.text
+    }
   }
 }
 
 const setMobileWebSurveyIsOverMessage = (state, action) => {
   return {
     ...state,
-    mobileWebSurveyIsOverMessage: action.text
+    settings: {
+      ...state.settings,
+      mobileWebSurveyIsOverMessage: action.text
+    }
   }
 }
 
@@ -865,14 +877,12 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     }
   })
 
-  const q = questionnaire.quotaCompletedMsg
-  if (q) {
-    addMessageToCsvForTranslation(q, defaultLang, context)
+  if (questionnaire.settings.quotaCompletedMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.quotaCompletedMessage, defaultLang, context)
   }
 
-  const e = questionnaire.errorMsg
-  if (e) {
-    addMessageToCsvForTranslation(e, defaultLang, context)
+  if (questionnaire.settings.errorMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.errorMessage, defaultLang, context)
   }
 
   return rows
@@ -1079,13 +1089,16 @@ const uploadCsvForTranslation = (state, action) => {
 
   const lookup = buildCsvLookup(csv, defaultLanguage)
 
-  let newState = {...state}
-  newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
-  if (state.quotaCompletedMsg) {
-    newState.quotaCompletedMsg = translatePrompt(state.quotaCompletedMsg, defaultLanguage, lookup)
+  let newState = {
+    ...state,
+    settings: {...state.settings},
+    steps: state.steps.map(step => translateStep(step, defaultLanguage, lookup))
   }
-  if (state.errorMsg) {
-    newState.errorMsg = translatePrompt(state.errorMsg, defaultLanguage, lookup)
+  if (state.settings.quotaCompletedMessage) {
+    newState.settings.quotaCompletedMessage = translatePrompt(state.settings.quotaCompletedMessage, defaultLanguage, lookup)
+  }
+  if (state.settings.errorMessage) {
+    newState.settings.errorMessage = translatePrompt(state.settings.errorMessage, defaultLanguage, lookup)
   }
   return newState
 }

@@ -270,7 +270,7 @@ export const save = () => (dispatch, getState) => {
 }
 
 export const createQuestionnaire = (projectId) => (dispatch) =>
-  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: [newMultipleChoiceStep()]})
+  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: [newMultipleChoiceStep()], settings: {}})
   .then(response => {
     const questionnaire = response.entities.questionnaires[response.result]
     dispatch(fetch(projectId, questionnaire.id))
