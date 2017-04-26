@@ -48,27 +48,27 @@ class SurveyWizardModeStep extends Component {
         questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1))
   }
 
-  input(id, inputType, modeComparison, mode, modes, value) {
-    const { survey, questionnaires, readOnly } = this.props
-    const questionnaireIds = survey.questionnaireIds
-    const match = this.questionnairesMatchMode(modes, questionnaireIds, questionnaires)
-
-    return (
-      <p>
-        <input
-          id={id}
-          type={inputType}
-          name='questionnaire_mode'
-          className={modeComparison ? 'filled-in' : 'with-gap'}
-          value={value}
-          checked={this.modeIncludes(mode, modes)}
-          onChange={e => this.modeChange(e, modes)}
-          disabled={readOnly || !match}
-          />
-        <label htmlFor={id}>{modeLabel(modes)}</label>
-      </p>
-    )
-  }
+  // input(id, inputType, modeComparison, mode, modes, value) {
+  //   const { survey, questionnaires, readOnly } = this.props
+  //   const questionnaireIds = survey.questionnaireIds
+  //   const match = this.questionnairesMatchMode(modes, questionnaireIds, questionnaires)
+  //
+  //   return (
+  //     <p>
+  //       <input
+  //         id={id}
+  //         type={inputType}
+  //         name='questionnaire_mode'
+  //         className={modeComparison ? 'filled-in' : 'with-gap'}
+  //         value={value}
+  //         checked={this.modeIncludes(mode, modes)}
+  //         onChange={e => this.modeChange(e, modes)}
+  //         disabled={readOnly || !match}
+  //         />
+  //       <label htmlFor={id}>{modeLabel(modes)}</label>
+  //     </p>
+  //   )
+  // }
 
   addModeComparison = (primary, fallback) => {
     const { dispatch } = this.props
@@ -84,15 +84,29 @@ class SurveyWizardModeStep extends Component {
     dispatch(uiActions.addModeComparison())
   }
 
-  selectPrimaryMode = (mode) => {
+  selectPrimaryModeForComparison = (mode) => {
     const { dispatch } = this.props
     dispatch(uiActions.comparisonPrimarySelected(mode))
   }
 
-  selectFallbackMode = (mode) => {
+  selectFallbackModeForComparison = (primary, fallback) => {
     const { dispatch } = this.props
-    dispatch(uiActions.comparisonFallbackSelected(mode))
+    dispatch(uiActions.comparisonFallbackSelected(fallback))
   }
+
+  selectSingleMode = (primary, fallback) => {
+    const { dispatch } = this.props
+    const mode = fallback ? [primary, fallback] : [primary]
+    dispatch(actions.selectMode(mode))
+  }
+
+  primarySingleMode = (modes) => (
+    modes.length == 0 ? null : modes[0][0]
+  )
+
+  fallbackSingleMode = (modes) => (
+    (modes.length == 0) || (modes[0].length == 1) ? null : modes[0][1]
+  )
 
   render() {
     const { survey, readOnly, comparisonModes } = this.props
@@ -104,12 +118,27 @@ class SurveyWizardModeStep extends Component {
     const mode = survey.mode || []
     const modeComparison = mode.length > 1 || (!!survey.modeComparison)
 
-    let inputType = modeComparison ? 'checkbox' : 'radio'
+    // let inputType = modeComparison ? 'checkbox' : 'radio'
+
+    let primarySelected
+    let fallbackSelected
+    let primarySelectedHandler
+    let fallbackSelectedHandler
+
+    if (modeComparison) {
+      primarySelected = comparisonModes.primaryModeSelected
+      fallbackSelected = comparisonModes.fallbackModeSelected
+      primarySelectedHandler = this.selectPrimaryModeForComparison
+      fallbackSelectedHandler = this.selectFallbackModeForComparison
+    } else {
+      primarySelected = this.primarySingleMode(survey.mode)
+      fallbackSelected = this.fallbackSingleMode(survey.mode)
+      primarySelectedHandler = this.selectSingleMode
+      fallbackSelectedHandler = this.selectSingleMode
+    }
 
     const availableModes = availableOptions(survey.mode)
     const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
-    const primarySelected = comparisonModes.primaryModeSelected
-    const fallbackSelected = comparisonModes.fallbackModeSelected
     const fallbackOptions = availableModes.filter((mode) => { return mode[0] == primarySelected }).map((mode) => mode.length == 2 ? mode[1] : null)
 
     return (
@@ -135,21 +164,31 @@ class SurveyWizardModeStep extends Component {
                 />
               <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
             </p>
-            {this.input('questionnaire_mode_ivr', inputType, modeComparison, mode, ['ivr'], 'ivr')}
-            {this.input('questionnaire_mode_ivr_sms', inputType, modeComparison, mode, ['ivr', 'sms'], 'ivr_sms')}
-            {this.input('questionnaire_mode_ivr_web', inputType, modeComparison, mode, ['ivr', 'mobileweb'], 'ivr_mobileweb')}
-            {this.input('questionnaire_mode_sms', inputType, modeComparison, mode, ['sms'], 'sms')}
-            {this.input('questionnaire_mode_sms_ivr', inputType, modeComparison, mode, ['sms', 'ivr'], 'sms_ivr')}
-            {this.input('questionnaire_mode_sms_mobileweb', inputType, modeComparison, mode, ['sms', 'mobileweb'], 'sms_mobileweb')}
-            {this.input('questionnaire_mode_mobileweb', inputType, modeComparison, mode, ['mobileweb'], 'mobileweb')}
-            {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
-            {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
+            {
+              modeComparison
+              ? mode.map((mode) => (
+                <div>{modeLabel(mode)}</div>
+              )) : null
+            }
+            {
+              /*
+              {this.input('questionnaire_mode_ivr', inputType, modeComparison, mode, ['ivr'], 'ivr')}
+              {this.input('questionnaire_mode_ivr_sms', inputType, modeComparison, mode, ['ivr', 'sms'], 'ivr_sms')}
+              {this.input('questionnaire_mode_ivr_web', inputType, modeComparison, mode, ['ivr', 'mobileweb'], 'ivr_mobileweb')}
+              {this.input('questionnaire_mode_sms', inputType, modeComparison, mode, ['sms'], 'sms')}
+              {this.input('questionnaire_mode_sms_ivr', inputType, modeComparison, mode, ['sms', 'ivr'], 'sms_ivr')}
+              {this.input('questionnaire_mode_sms_mobileweb', inputType, modeComparison, mode, ['sms', 'mobileweb'], 'sms_mobileweb')}
+              {this.input('questionnaire_mode_mobileweb', inputType, modeComparison, mode, ['mobileweb'], 'mobileweb')}
+              {this.input('questionnaire_mode_mobileweb_sms', inputType, modeComparison, mode, ['mobileweb', 'sms'], 'mobileweb_sms')}
+              {this.input('questionnaire_mode_mobileweb_ivr', inputType, modeComparison, mode, ['mobileweb', 'ivr'], 'mobileweb_ivr')}
+              */
+            }
             <div>
               <Dropdown label={<span>{ primarySelected || 'Primary mode'}</span>}>
                 {primaryOptions.map((mode) => {
                   return (
                     <DropdownItem>
-                      <a onClick={() => this.selectPrimaryMode(mode)}>{mode}</a>
+                      <a onClick={() => primarySelectedHandler(mode)}>{mode}</a>
                     </DropdownItem>
                   )
                 })}
@@ -162,16 +201,19 @@ class SurveyWizardModeStep extends Component {
                   {fallbackOptions.map((mode) => {
                     return (
                       <DropdownItem>
-                        <a onClick={() => this.selectFallbackMode(mode)}>{mode || 'no fallback'}</a>
+                        <a onClick={() => fallbackSelectedHandler(primarySelected, mode)}>{mode || 'no fallback'}</a>
                       </DropdownItem>
                     )
                   })}
                 </Dropdown>
               </div> : null
             }
-            <div onClick={() => this.addModeComparison(primarySelected, fallbackSelected)}>
-              Add mode
-            </div>
+            {
+              modeComparison
+              ? <div onClick={() => this.addModeComparison(primarySelected, fallbackSelected)}>
+                Add mode
+              </div> : null
+            }
           </div>
         </div>
       </div>

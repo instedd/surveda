@@ -74,7 +74,6 @@ describe('ui reducer', () => {
         actions.comparisonFallbackSelected('sms'),
         actions.addModeComparison()
       ])
-      console.log(result)
       expect(result.data.questionnaireEditor.uploadingAudio).toEqual('17141bea-a81c-4227-bdda-f5f69188b0e7')
     })
   })
