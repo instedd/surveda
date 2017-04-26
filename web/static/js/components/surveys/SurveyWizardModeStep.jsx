@@ -101,26 +101,45 @@ class SurveyWizardModeStep extends Component {
 
     const mode = survey.mode || []
     const modeComparison = mode.length > 1 || (!!survey.modeComparison)
+    const availableModes = this.filterQuestionnaireMatchingModes(availableOptions(survey.mode))
+    const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
 
     let primarySelected
     let fallbackSelected
     let primarySelectedHandler
     let fallbackSelectedHandler
+    let modeDescriptions
+    let addModeButton
+    let showDropdowns = true
 
     if (modeComparison) {
       primarySelected = comparisonModes.primaryModeSelected
       fallbackSelected = comparisonModes.fallbackModeSelected
       primarySelectedHandler = this.selectPrimaryModeForComparison
       fallbackSelectedHandler = this.selectFallbackModeForComparison
+
+      modeDescriptions = mode.map((mode) => (
+        <div>
+          {modeLabel(mode)}
+          <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a>
+        </div>
+      ))
+
+      addModeButton = (primaryOptions.length > 0)
+      ? <div onClick={() => this.addModeComparison(primarySelected, fallbackSelected)}>
+          Add mode
+      </div> : null
+
+      showDropdowns = primaryOptions.length > 0
     } else {
       primarySelected = this.primarySingleMode(survey.mode)
       fallbackSelected = this.fallbackSingleMode(survey.mode)
       primarySelectedHandler = this.selectSingleMode
       fallbackSelectedHandler = this.selectSingleMode
+      modeDescriptions = null
+      addModeButton = null
     }
 
-    const availableModes = this.filterQuestionnaireMatchingModes(availableOptions(survey.mode))
-    const primaryOptions = uniq(map(availableModes, (mode) => mode[0]))
     const fallbackOptions = availableModes.filter((mode) => { return mode[0] == primarySelected }).map((mode) => mode.length == 2 ? mode[1] : null)
 
     return (
@@ -147,44 +166,37 @@ class SurveyWizardModeStep extends Component {
               <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
             </p>
             {
-              modeComparison
-              ? mode.map((mode) => (
-                <div>
-                  {modeLabel(mode)}
-                  <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a>
-                </div>
-              )) : null
+              modeDescriptions
             }
-            <div>
-              <Dropdown label={<span>{ primarySelected || 'Primary mode'}</span>}>
-                {primaryOptions.map((mode) => {
-                  return (
-                    <DropdownItem>
-                      <a onClick={() => primarySelectedHandler(mode)}>{mode}</a>
-                    </DropdownItem>
-                  )
-                })}
-              </Dropdown>
-            </div>
             {
-              primarySelected
+              showDropdowns
               ? <div>
-                <Dropdown label={<span>{ fallbackSelected || 'Fallback mode' }</span>}>
-                  {fallbackOptions.map((mode) => {
-                    return (
-                      <DropdownItem>
-                        <a onClick={() => fallbackSelectedHandler(primarySelected, mode)}>{mode || 'no fallback'}</a>
-                      </DropdownItem>
-                    )
-                  })}
-                </Dropdown>
+                <div>
+                  <Dropdown label={<span>{ primarySelected || 'Primary mode'}</span>}>
+                    {primaryOptions.map((mode) => {
+                      return (
+                        <DropdownItem>
+                          <a onClick={() => primarySelectedHandler(mode)}>{mode}</a>
+                        </DropdownItem>
+                      )
+                    })}
+                  </Dropdown>
+                </div>
+                <div>
+                  <Dropdown readOnly={!!primarySelected} label={<span>{ fallbackSelected || 'Fallback mode' }</span>}>
+                    {fallbackOptions.map((mode) => {
+                      return (
+                        <DropdownItem>
+                          <a onClick={() => fallbackSelectedHandler(primarySelected, mode)}>{mode || 'no fallback'}</a>
+                        </DropdownItem>
+                      )
+                    })}
+                  </Dropdown>
+                </div>
               </div> : null
             }
             {
-              modeComparison
-              ? <div onClick={() => this.addModeComparison(primarySelected, fallbackSelected)}>
-                Add mode
-              </div> : null
+              addModeButton
             }
           </div>
         </div>
