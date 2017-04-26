@@ -28,6 +28,7 @@ class SurveyForm extends Component {
     respondentGroupsUploading: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
+    invalidGroup: PropTypes.bool,
     channels: PropTypes.object,
     errors: PropTypes.object,
     readOnly: PropTypes.bool.isRequired
