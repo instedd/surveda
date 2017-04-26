@@ -199,7 +199,7 @@ class RespondentIndex extends Component {
     return (
       <div className='white'>
         <div dangerouslySetInnerHTML={{
-          __html: '<style> body { overflow: visible !important; color: black}</style>' }} />
+          __html: '<style> body { overflow-y: auto !important; color: black}</style>' }} />
         <div className='fixed-action-btn horizontal right mtop'>
           <a className='btn-floating btn-large green' href='#' onClick={(e) => { e.preventDefault(); $('#downloadCSV').modal('open') }}>
             <i className='material-icons'>get_app</i>
