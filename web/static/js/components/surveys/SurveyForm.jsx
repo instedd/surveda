@@ -64,7 +64,7 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, errors, questionnaire, readOnly } = this.props
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup, errors, questionnaire, readOnly } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -152,7 +152,7 @@ class SurveyForm extends Component {
             <ScrollToLink target='#respondents'>NEXT: Upload your respondents list</ScrollToLink>
           </div>
           <div id='respondents' className='row scrollspy'>
-            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} respondentGroupsUploadingExisting={respondentGroupsUploadingExisting} invalidRespondents={invalidRespondents} readOnly={readOnly} surveyStarted={surveyStarted} />
+            <SurveyWizardRespondentsStep projectId={projectId} survey={survey} channels={channels} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} respondentGroupsUploadingExisting={respondentGroupsUploadingExisting} invalidRespondents={invalidRespondents} invalidGroup={invalidGroup} readOnly={readOnly} surveyStarted={surveyStarted} />
             <ScrollToLink target='#schedule'>NEXT: Setup a Schedule</ScrollToLink>
           </div>
           <div id='schedule' className='row scrollspy'>

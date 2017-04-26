@@ -5,8 +5,9 @@ export const RECEIVE_RESPONDENT_GROUPS = 'RESPONDENT_GROUPS_RECEIVE'
 export const RECEIVE_RESPONDENT_GROUP = 'RESPONDENT_GROUP_RECEIVE'
 export const REMOVE_RESPONDENT_GROUP = 'RESPONDENT_GROUP_REMOVE'
 export const FETCH_RESPONDENT_GROUPS = 'RESPONDENT_GROUPS_FETCH'
-export const INVALID_RESPONDENT_GROUPS = 'RESPONDENT_GROUP_INVALID_GROUPS'
 export const INVALID_RESPONDENTS = 'RESPONDENT_GROUP_INVALID_RESPONDENTS'
+export const INVALID_RESPONDENTS_FOR_GROUP = 'RESPONDENT_GROUP_INVALID_RESPONDENTS_FOR_GROUP'
+export const CLEAR_INVALID_RESPONDENTS_FOR_GROUP = 'RESPONDENT_GROUP_CLEAR_INVALID_RESPONDENTS_FOR_GROUP'
 export const CLEAR_INVALIDS = 'RESPONDENT_GROUP_CLEAR_INVALIDS'
 export const SELECT_CHANNELS = 'RESPONDENT_GROUP_SELECT_CHANNELS'
 export const UPLOAD_RESPONDENT_GROUP = 'RESPONDENT_GROUP_UPLOAD'
@@ -42,8 +43,18 @@ export const receiveInvalids = (invalidRespondents) => ({
   invalidRespondents: invalidRespondents
 })
 
+export const receiveInvalidsForGroup = (groupId, invalidRespondents) => ({
+  type: INVALID_RESPONDENTS_FOR_GROUP,
+  groupId,
+  invalidRespondents
+})
+
 export const clearInvalids = () => ({
   type: CLEAR_INVALIDS
+})
+
+export const clearInvalidsRespondentsForGroup = () => ({
+  type: CLEAR_INVALID_RESPONDENTS_FOR_GROUP
 })
 
 // TODO (ary): after performing these actions we invoke surveyActions.save()
@@ -88,7 +99,11 @@ const handleRespondentGroupUpload = (dispatch, promise, groupId = null) => {
   }, (e) => {
     if (groupId) dispatch(doneUploadingExistingRespondentGroup(groupId))
     e.json().then((value) => {
-      dispatch(receiveInvalids(value))
+      if (groupId) {
+        dispatch(receiveInvalidsForGroup(groupId, value))
+      } else {
+        dispatch(receiveInvalids(value))
+      }
     })
   })
   .then(() => dispatch(surveyActions.save()))
