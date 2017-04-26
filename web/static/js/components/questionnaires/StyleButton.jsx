@@ -27,7 +27,7 @@ StyleButton.propTypes = {
   onToggle: PropTypes.func,
   active: PropTypes.bool,
   label: PropTypes.string,
-  style: PropTypes.object
+  style: PropTypes.string
 }
 
 export default StyleButton
