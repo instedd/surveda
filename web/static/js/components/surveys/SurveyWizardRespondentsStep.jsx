@@ -144,7 +144,7 @@ class SurveyWizardRespondentsStep extends Component {
 
       if (!surveyFinished(survey)) {
         if (uploading) {
-          addMoreRespondents = <Preloader size='tiny' />
+          addMoreRespondents = <Preloader size='small' className='tiny' />
         } else {
           addMoreRespondents = [
             <input key='x' id={addMoreInputId} type='file' accept='.csv' style={{display: 'none'}} onChange={e => addMore(e)} />,
