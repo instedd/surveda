@@ -167,7 +167,10 @@ class SurveyWizardModeStep extends Component {
             {
               modeComparison
               ? mode.map((mode) => (
-                <div>{modeLabel(mode)}</div>
+                <div>
+                  {modeLabel(mode)}
+                  <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a>
+                </div>
               )) : null
             }
             {
