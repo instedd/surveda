@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { Component, PropTypes } from 'react'
 
-class StyleButton extends React.Component {
+class StyleButton extends Component {
   constructor(props) {
     super(props)
     this.onToggle = (e) => {
@@ -21,6 +21,13 @@ class StyleButton extends React.Component {
       </span>
     )
   }
+}
+
+StyleButton.propTypes = {
+  onToggle: PropTypes.func,
+  active: PropTypes.bool,
+  label: PropTypes.string,
+  style: PropTypes.object
 }
 
 export default StyleButton
