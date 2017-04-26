@@ -28,9 +28,11 @@ type State = {
 
 class QuestionnaireEditor extends Component {
   state: State
+  preventSecondImportZipDialog: boolean
 
   constructor(props) {
     super(props)
+    this.preventSecondImportZipDialog = false
     const initialState = props.location.state
     const isNew = initialState && initialState.isNew
     if (isNew) {
@@ -191,6 +193,22 @@ class QuestionnaireEditor extends Component {
 
   openImportZipDialog(e) {
     e.preventDefault()
+
+    // This is a workaround for issue https://github.com/instedd/ask/issues/908
+    //
+    // On Chrome, when a file input has an accept=".zip" attributes one can
+    // click multiple times on it and it will open several dialogs (one
+    // after another). This doesn't happen with other values for the accept
+    // attribute.
+    //
+    // What we do is we prevent the user from triggering another click
+    // until 2 seconds have passed. 2 seconds is big enough for the user
+    // to click the link, wait for the dialog to open, maybe cancel it,
+    // and then want to click the link again. This way accidental multiple
+    // clicks are prevented.
+    if (this.preventSecondImportZipDialog) return
+    this.preventSecondImportZipDialog = true
+    setTimeout(() => { this.preventSecondImportZipDialog = false }, 2000)
 
     $('#questionnaire_import_zip').trigger('click')
   }
