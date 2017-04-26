@@ -28,7 +28,7 @@ class Draft extends React.Component {
     }
 
     this.onBlur = (editorState) => {
-      props.onBlur(stateToHTML(this.state.editorState.getCurrentContent()))
+      props.onBlur(stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}}))
     }
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
