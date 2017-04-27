@@ -1068,6 +1068,10 @@ const changeRefusal = (state, action, quiz) => {
           sms: {
             ...step.refusal.responses.sms,
             [quiz.activeLanguage]: splitValues(action.smsValues)
+          },
+          mobileweb: {
+            ...step.refusal.responses.mobileweb,
+            [quiz.activeLanguage]: action.mobilewebValues
           }
         },
         skipLogic: action.skipLogic

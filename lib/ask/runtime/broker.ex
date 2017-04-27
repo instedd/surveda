@@ -35,15 +35,9 @@ defmodule Ask.Runtime.Broker do
       Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: @batch_limit)
       |> Enum.each(&retry_respondent(&1))
 
-      schedule = today_schedule()
-
-      surveys = Repo.all(from s in Survey, where: s.state == "running" and fragment("(? & ?) = ?", s.schedule_day_of_week, ^schedule, ^schedule))
-
-      surveys |> Enum.filter( fn s ->
-                    s.schedule_start_time <= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
-                    && s.schedule_end_time >= Ecto.Time.cast!(Timex.Timezone.convert(now, s.timezone))
-                 end)
-              |> Enum.each(&poll_survey(&1))
+      all_running_surveys
+      |> Enum.filter(&survey_matches_schedule?(&1, now))
+      |> Enum.each(&poll_survey/1)
 
       {:noreply, state}
     after
@@ -54,6 +48,20 @@ defmodule Ask.Runtime.Broker do
   def handle_call(:poll, _from, state) do
     handle_info(:poll, state)
     {:reply, :ok, state}
+  end
+
+  defp all_running_surveys do
+    Repo.all(from s in Survey, where: s.state == "running")
+  end
+
+  defp survey_matches_schedule?(survey, now) do
+    now_timex = Timex.Timezone.convert(now, survey.timezone)
+    now_ecto = Ecto.Time.cast!(now_timex)
+    now_schedule = time_to_schedule(now_timex)
+
+    Ask.DayOfWeek.intersect?(now_schedule, survey.schedule_day_of_week) &&
+      survey.schedule_start_time <= now_ecto &&
+      survey.schedule_end_time >= now_ecto
   end
 
   defp mark_stalled_for_eight_hours_respondents_as_failed do
@@ -319,12 +327,13 @@ defmodule Ask.Runtime.Broker do
 
   defp handle_session_step({:end, reply, respondent}) do
     update_respondent(respondent, :end, Reply.disposition(reply))
-    {:end, {:reply, reply}}
-  end
 
-  defp handle_session_step({:end, respondent}) do
-    update_respondent(respondent, :end)
-    :end
+    case Reply.steps(reply) do
+      [] ->
+        :end
+      _ ->
+        {:end, {:reply, reply}}
+    end
   end
 
   defp handle_session_step({:rejected, reply, respondent}) do
@@ -496,18 +505,17 @@ defmodule Ask.Runtime.Broker do
     || (new_disposition == "completed" && old_disposition != "partial" && old_disposition != "completed")
   end
 
-  defp today_schedule do
-    week_day = Timex.weekday(Timex.today)
-    schedule = %Ask.DayOfWeek{
+  defp time_to_schedule(now) do
+    week_day = Timex.weekday(now)
+    %Ask.DayOfWeek{
       mon: week_day == 1,
       tue: week_day == 2,
       wed: week_day == 3,
       thu: week_day == 4,
       fri: week_day == 5,
       sat: week_day == 6,
-      sun: week_day == 7}
-    {:ok, schedule} = Ask.DayOfWeek.dump(schedule)
-    schedule
+      sun: week_day == 7,
+    }
   end
 
   defp batch_size do

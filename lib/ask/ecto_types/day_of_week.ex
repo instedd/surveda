@@ -14,6 +14,8 @@ defmodule Ask.DayOfWeek do
   import Bitwise
   @behaviour Ecto.Type
 
+  alias __MODULE__
+
   defstruct [:sun, :mon, :tue, :wed, :thu, :fri, :sat]
 
   @sun 64
@@ -26,23 +28,23 @@ defmodule Ask.DayOfWeek do
 
   def type, do: :integer
 
-  def cast(%Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
-    {:ok, %Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
+  def cast(%DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
+    {:ok, %DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
   end
   def cast(map = %{}) do
-    {:ok, %Ask.DayOfWeek{sun: map["sun"], mon: map["mon"], tue: map["tue"], wed: map["wed"], thu: map["thu"], fri: map["fri"], sat: map["sat"]}}
+    {:ok, %DayOfWeek{sun: map["sun"], mon: map["mon"], tue: map["tue"], wed: map["wed"], thu: map["thu"], fri: map["fri"], sat: map["sat"]}}
   end
   def cast(%{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
-    {:ok, %Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
+    {:ok, %DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
   end
   def cast(int) when is_integer(int) and int < 128, do: load(int)
-  def cast(nil), do: {:ok, %Ask.DayOfWeek{}}
+  def cast(nil), do: {:ok, %DayOfWeek{}}
   def cast(_), do: :error
 
   def load(int) when is_integer(int) and int < 128 do
     {
       :ok,
-      %Ask.DayOfWeek{
+      %DayOfWeek{
         sun: (int &&& @sun) == @sun,
         mon: (int &&& @mon) == @mon,
         tue: (int &&& @tue) == @tue,
@@ -53,10 +55,10 @@ defmodule Ask.DayOfWeek do
       }
     }
   end
-  def load(nil), do: {:ok, %Ask.DayOfWeek{}}
+  def load(nil), do: {:ok, %DayOfWeek{}}
   def load(_), do: :error
 
-  def dump(%Ask.DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
+  def dump(%DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
     {
       :ok,
         (sun && @sun || 0) |||
@@ -70,11 +72,17 @@ defmodule Ask.DayOfWeek do
   end
   def dump(_), do: :error
 
+  def intersect?(day_of_week = %DayOfWeek{}, other_day_of_week = %DayOfWeek{}) do
+    {:ok, v1} = dump(day_of_week)
+    {:ok, v2} = dump(other_day_of_week)
+    (v1 &&& v2) != 0
+  end
+
   def every_day do
-    %Ask.DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true}
+    %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true}
   end
 
   def never do
-    %Ask.DayOfWeek{sun: false, mon: false, tue: false, wed: false, thu: false, fri: false, sat: false}
+    %DayOfWeek{sun: false, mon: false, tue: false, wed: false, thu: false, fri: false, sat: false}
   end
 end

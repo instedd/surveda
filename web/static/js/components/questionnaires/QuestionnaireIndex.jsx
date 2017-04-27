@@ -10,6 +10,7 @@ import * as userSettingsActions from '../../actions/userSettings'
 import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
+import { modeLabel, modeOrder } from '../../questionnaire.mode'
 
 class QuestionnaireIndex extends Component {
   componentDidMount() {
@@ -137,7 +138,7 @@ class QuestionnaireIndex extends Component {
                     <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
                   </td>
                   <td onClick={() => this.goTo(questionnaire.id)}>
-                    { (questionnaire.modes || []).join(', ').toUpperCase() }
+                    { (questionnaire.modes || []).sort((x, y) => modeOrder(x) - modeOrder(y)).map(x => modeLabel(x)).join(', ') }
                   </td>
                   {readOnly ? null
                     : <td className='duplicate'>

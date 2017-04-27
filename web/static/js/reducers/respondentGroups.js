@@ -6,7 +6,8 @@ const initialState = {
   uploadingExisting: {},
   items: null,
   surveyId: null,
-  invalidRespondents: null
+  invalidRespondents: null,
+  invalidRespondentsForGroup: false
 }
 
 export default (state = initialState, action) => {
@@ -20,6 +21,8 @@ export default (state = initialState, action) => {
     case actions.REMOVE_RESPONDENT_GROUP: return removeRespondentGroup(state, action)
     case actions.INVALID_RESPONDENTS: return receiveInvalids(state, action)
     case actions.CLEAR_INVALIDS: return clearInvalids(state, action)
+    case actions.INVALID_RESPONDENTS_FOR_GROUP: return receiveInvalidsForGroup(state, action)
+    case actions.CLEAR_INVALID_RESPONDENTS_FOR_GROUP: return clearInvalidsForGroup(state, action)
     case actions.SELECT_CHANNELS: return selectChannels(state, action)
     default: return state
   }
@@ -114,6 +117,16 @@ const clearInvalids = (state, action) => {
     uploading: false
   }
 }
+
+const receiveInvalidsForGroup = (state, action) => ({
+  ...state,
+  invalidRespondentsForGroup: true
+})
+
+const clearInvalidsForGroup = (state, action) => ({
+  ...state,
+  invalidRespondentsForGroup: false
+})
 
 const selectChannels = (state, action) => {
   return {

@@ -1,5 +1,32 @@
 # InSTEDD Surveda Changelog
 
+## Hazel 0.8.2
+
+### Bugfixes
+
+* Fix issues with refusal option in questionnaire editor [#918](https://github.com/instedd/ask/issues/918)
+
+## Hazel 0.8.1
+
+### Bugfixes
+
+* Validation of file types is back when uploading respondents [#846](https://github.com/instedd/ask/issues/846)
+* Ignore duplicate respondents that differs only in whitespace [#852](https://github.com/instedd/ask/issues/852)
+* Could not continue after an explanation step in mobile web [#871](https://github.com/instedd/ask/issues/871)
+* Non localized button in mobile web [#873](https://github.com/instedd/ask/issues/873)
+* Various issues in language selection step for mobile web [#877](https://github.com/instedd/ask/issues/877), [#880](https://github.com/instedd/ask/issues/880), [#892](https://github.com/instedd/ask/issues/892)
+* Value entered in numeric step persists in the next numeric question [#888](https://github.com/instedd/ask/issues/888)
+* Interactions CSV shows "SMS" when the mobile web mode is used [#875](https://github.com/instedd/ask/issues/875)
+* Show the right mode when mobile web is used [#879](https://github.com/instedd/ask/issues/879)
+* Fix styling issues with retries UI for mobile web [#886](https://github.com/instedd/ask/issues/886)
+* Remove "next" button when the "survey is over" message is displayed [#893](https://github.com/instedd/ask/issues/893)
+* Display validation errors for mobile web in the questionnaire editor [#876](https://github.com/instedd/ask/issues/876), [#896](https://github.com/instedd/ask/issues/896)
+* Issues with flag steps in mobile web [#900](https://github.com/instedd/ask/issues/900)
+* Fix font size for mobile web [#885](https://github.com/instedd/ask/issues/885)
+* Fix import/export of questionnaires with mobile web mode enabled [#909](https://github.com/instedd/ask/issues/909)
+* Allow long messages to be stored for mobile web [#897](https://github.com/instedd/ask/issues/897)
+* Include prompts for mobile web fields in the translation CSV [#910](https://github.com/instedd/ask/issues/910)
+
 ## Hazel 0.8
 
 Deployment considerations:

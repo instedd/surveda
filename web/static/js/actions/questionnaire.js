@@ -332,11 +332,12 @@ export const toggleAcceptsRefusals = (stepId) => ({
   stepId
 })
 
-export const changeRefusal = (stepId, smsValues, ivrValues, skipLogic) => ({
+export const changeRefusal = (stepId, smsValues, ivrValues, mobilewebValues, skipLogic) => ({
   type: CHANGE_REFUSAL,
   stepId,
   smsValues,
   ivrValues,
+  mobilewebValues,
   skipLogic
 })
 

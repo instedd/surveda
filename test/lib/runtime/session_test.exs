@@ -297,7 +297,7 @@ defmodule Ask.SessionTest do
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("99"))
-    {:end, _} = Session.sync_step(session, Flow.Message.reply("11"))
+    {:end, _, _} = Session.sync_step(session, Flow.Message.reply("11"))
 
     responses = respondent
     |> Ecto.assoc(:responses)
@@ -317,7 +317,7 @@ defmodule Ask.SessionTest do
     {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms")
 
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
-    {:end, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    {:end, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
 
     responses = respondent
     |> Ecto.assoc(:responses)

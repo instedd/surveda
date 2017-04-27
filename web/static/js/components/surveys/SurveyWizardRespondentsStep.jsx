@@ -16,6 +16,7 @@ class SurveyWizardRespondentsStep extends Component {
     respondentGroupsUploading: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
+    invalidGroup: PropTypes.bool,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
     readOnly: PropTypes.bool.isRequired,
@@ -50,6 +51,9 @@ class SurveyWizardRespondentsStep extends Component {
 
   invalidRespondentsContent(data) {
     if (!data) return null
+
+    let { surveyStarted } = this.props
+    if (surveyStarted) return
 
     const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
     const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
@@ -144,7 +148,7 @@ class SurveyWizardRespondentsStep extends Component {
 
       if (!surveyFinished(survey)) {
         if (uploading) {
-          addMoreRespondents = <Preloader size='tiny' />
+          addMoreRespondents = <Preloader size='small' className='tiny' />
         } else {
           addMoreRespondents = [
             <input key='x' id={addMoreInputId} type='file' accept='.csv' style={{display: 'none'}} onChange={e => addMore(e)} />,
@@ -175,6 +179,14 @@ class SurveyWizardRespondentsStep extends Component {
         )}
       </RespondentsList>
     )
+  }
+
+  componentDidUpdate() {
+    let { actions, invalidGroup } = this.props
+    if (invalidGroup) {
+      window.Materialize.toast("Couldn't upload CSV: it contains rows that are not phone numbers", 5000)
+      actions.clearInvalidsRespondentsForGroup()
+    }
   }
 
   render() {

@@ -22,7 +22,8 @@ class SurveyEdit extends Component {
     respondentGroups: PropTypes.object,
     respondentGroupsUploading: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
-    invalidRespondents: PropTypes.object
+    invalidRespondents: PropTypes.object,
+    invalidGroup: PropTypes.bool
   }
 
   componentWillMount() {
@@ -45,7 +46,7 @@ class SurveyEdit extends Component {
   }
 
   render() {
-    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
       return <div>Loading...</div>
@@ -61,7 +62,7 @@ class SurveyEdit extends Component {
 
     return (
       <div className='white'>
-        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} respondentGroupsUploadingExisting={respondentGroupsUploadingExisting} invalidRespondents={invalidRespondents} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
+        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} respondentGroupsUploadingExisting={respondentGroupsUploadingExisting} invalidRespondents={invalidRespondents} invalidGroup={invalidGroup} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
       </div>
     )
   }
@@ -77,6 +78,7 @@ const mapStateToProps = (state, ownProps) => ({
   respondentGroupsUploading: state.respondentGroups.uploading,
   respondentGroupsUploadingExisting: state.respondentGroups.uploadingExisting,
   invalidRespondents: state.respondentGroups.invalidRespondents,
+  invalidGroup: state.respondentGroups.invalidRespondentsForGroup,
   survey: state.survey.data || {}
 })
 

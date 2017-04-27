@@ -102,7 +102,7 @@ defmodule Ask.Runtime.NuntiumChannel do
           to: to,
           body: prompt,
           respondent_id: respondent.id,
-          step_title: ReplyStep.title_with_index(step, index)
+          step_title: ReplyStep.title_with_index(step, index + 1)
         }
       end)
     end

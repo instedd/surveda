@@ -1576,6 +1576,48 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
+  test "does poll surveys considering day of week according to timezone" do
+    # Survey runs on Wednesday on every hour, Mexico time (GMT-5)
+    attrs = %{
+      schedule_day_of_week: %Ask.DayOfWeek{wed: true},
+      schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
+      schedule_end_time: elem(Ecto.Time.cast("23:59:00"), 1),
+      state: "running",
+      timezone: "America/Mexico_City",
+    }
+    survey = insert(:survey, attrs)
+
+    # Now is Thursday 1AM UTC, so in Mexico it's still Wednesday
+    mock_now = Timex.parse!("2017-04-27T01:00:00Z", "{ISO:Extended}")
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    # The survey should have run and be completed (questionnaire is empty)
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "completed"
+  end
+
+  test "doesn't poll surveys considering day of week according to timezone" do
+    # Survey runs on Wednesday on every hour, Mexico time (GMT-5)
+    attrs = %{
+      schedule_day_of_week: %Ask.DayOfWeek{wed: true},
+      schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
+      schedule_end_time: elem(Ecto.Time.cast("23:59:00"), 1),
+      state: "running",
+      timezone: "America/Mexico_City",
+    }
+    survey = insert(:survey, attrs)
+
+    # Now is Thursday 6AM UTC, so in Mexico it's now Thursday
+    mock_now = Timex.parse!("2017-04-27T06:00:00Z", "{ISO:Extended}")
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    # Survey shouldn't have started yet
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
   test "increments quota bucket when a respondent completes the survey" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()

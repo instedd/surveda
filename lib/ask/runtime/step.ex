@@ -86,7 +86,9 @@ defmodule Ask.Runtime.Step do
       _ -> []
     end
 
-    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["type"], step["id"], choices, step["min_value"], step["max_value"])
+    refusal = fetch(:refusal, step, mode, language)
+
+    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["type"], step["id"], choices, step["min_value"], step["max_value"], refusal)
   end
 
   def fetch(:prompt, step = %{"type" => "language-selection"}, mode, _language) do
@@ -121,6 +123,25 @@ defmodule Ask.Runtime.Step do
     |> Map.get(mode)
     |> split_by_newlines(mode)
   end
+
+  def fetch(:refusal, step, "ivr", _language) do
+    case step do
+      %{"type" => "numeric", "refusal" => %{"enabled" => true, "responses" => %{"ivr" => value}}} ->
+        value
+      _ ->
+        nil
+    end
+  end
+
+  def fetch(:refusal, step, mode, language) do
+    case step do
+      %{"type" => "numeric", "refusal" => %{"enabled" => true, "responses" => %{^mode => %{^language => value}}}} ->
+        value
+      _ ->
+        nil
+    end
+  end
+
 
   def fetch(:reply_msg, msg, mode, language, title) do
     ReplyStep.new(fetch(:msg, msg, mode, language), title)

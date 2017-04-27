@@ -5,7 +5,7 @@ import every from 'lodash/every'
 import some from 'lodash/some'
 import each from 'lodash/each'
 import isEqual from 'lodash/isEqual'
-import { modeLabel } from '../../reducers/survey'
+import { modeLabel } from '../../questionnaire.mode'
 import * as respondentActions from '../../actions/respondentGroups'
 
 class SurveyWizardModeStep extends Component {
