@@ -86,7 +86,7 @@ class Draft extends React.Component {
             onChange={this.onChange}
             onBlur={this.onBlur}
             onTab={this.onTab}
-            placeholder='Mobile Web Prompt'
+            placeholder={this.props.placeholder}
             ref='editor'
             spellCheck={false}
           />
@@ -98,7 +98,8 @@ class Draft extends React.Component {
 
 Draft.propTypes = {
   onBlur: PropTypes.func,
-  initialValue: PropTypes.string
+  initialValue: PropTypes.string,
+  placeholder: PropTypes.string
 }
 
 export default Draft
