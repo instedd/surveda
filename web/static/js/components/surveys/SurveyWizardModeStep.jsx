@@ -98,11 +98,11 @@ class SurveyWizardModeStep extends Component {
   }
 
   primarySingleMode = (modes) => (
-    modes.length == 0 ? null : modes[0][0]
+    !modes || modes.length == 0 ? null : modes[0][0]
   )
 
   fallbackSingleMode = (modes) => (
-    (modes.length == 0) || (modes[0].length == 1) ? null : modes[0][1]
+    !modes || (modes.length == 0) || (modes[0].length == 1) ? null : modes[0][1]
   )
 
   modeSelectorForPrimary = (comparison, current, label, options, handler, readOnly) => {
@@ -112,7 +112,7 @@ class SurveyWizardModeStep extends Component {
       </div>)
     } else {
       return (<div>
-        <Dropdown label={<span>{ current || label}</span>}>
+        <Dropdown label={<span>{ current || label}</span>} readOnly={readOnly}>
           {options.map((mode) => {
             return (
               <DropdownItem>
@@ -132,7 +132,7 @@ class SurveyWizardModeStep extends Component {
       </div>)
     } else {
       return (<div>
-        <Dropdown label={<span>{ fallback || label}</span>}>
+        <Dropdown label={<span>{ fallback || label}</span>} readOnly={readOnly}>
           {options.map((mode) => {
             return (
               <DropdownItem>
@@ -182,7 +182,9 @@ class SurveyWizardModeStep extends Component {
       modeDescriptions = mode.map((mode) => (
         <div>
           {modeLabel(mode)}
-          <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a>
+          {
+            !readOnly ? <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a> : null
+          }
         </div>
       ))
 
@@ -191,7 +193,7 @@ class SurveyWizardModeStep extends Component {
           Add mode
       </div> : null
 
-      showSelectors = primaryOptions.length > 0
+      showSelectors = primaryOptions.length > 0 && !readOnly
     } else {
       primarySelected = this.primarySingleMode(survey.mode)
       fallbackSelected = this.fallbackSingleMode(survey.mode)
@@ -232,13 +234,13 @@ class SurveyWizardModeStep extends Component {
             {
               showSelectors
               ? <div>
-                {this.modeSelectorForPrimary(modeComparison, primarySelected, 'Primary mode', primaryOptions, primarySelectedHandler, false)}
-                {this.modeSelectorForFallback(modeComparison, primarySelected, fallbackSelected, 'Fallback mode', fallbackOptions, fallbackSelectedHandler, false)}
+                {this.modeSelectorForPrimary(modeComparison, primarySelected, 'Primary mode', primaryOptions, primarySelectedHandler, readOnly)}
+                {this.modeSelectorForFallback(modeComparison, primarySelected, fallbackSelected, 'Fallback mode', fallbackOptions, fallbackSelectedHandler, readOnly)}
               </div>
               : null
             }
             {
-              addModeButton
+              !readOnly ? addModeButton : null
             }
           </div>
         </div>
