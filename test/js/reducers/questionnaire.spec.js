@@ -1674,8 +1674,13 @@ describe('questionnaire reducer', () => {
         }
       }
 
-      let q = Object.assign({}, questionnaire)
-      q.quotaCompletedMessage = quotaMessage
+      let q = {
+        ...questionnaire,
+        settings: {
+          ...questionnaire.settings,
+          quotaCompletedMessage: quotaMessage
+        }
+      }
 
       const newIvrText = {text: 'Thank you very much', audioSource: 'tts'}
 
@@ -1685,8 +1690,8 @@ describe('questionnaire reducer', () => {
         actions.setIvrQuestionnaireMsg('quotaCompletedMessage', newIvrText)
       ])
 
-      expect(state.data.quotaCompletedMessage['en']['sms']).toEqual('thanks for answering sms')
-      expect(state.data.quotaCompletedMessage['en']['ivr']).toEqual(newIvrText)
+      expect(state.data.settings.quotaCompletedMessage['en']['sms']).toEqual('thanks for answering sms')
+      expect(state.data.settings.quotaCompletedMessage['en']['ivr']).toEqual(newIvrText)
     })
   })
 

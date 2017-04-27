@@ -136,7 +136,7 @@ class QuestionnaireMsg extends Component {
     }
 
     const activeLanguage = questionnaire.activeLanguage
-    const questionnaireMsg = questionnaire[messageKey] || {}
+    const questionnaireMsg = questionnaire.settings[messageKey] || {}
 
     const promptIvr = getPromptIvr(questionnaireMsg, activeLanguage)
 

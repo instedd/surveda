@@ -633,7 +633,7 @@ const setQuestionnaireMsg = (state, action, mode) => {
   questionnaireMsg = Object.assign({}, state.settings[action.msgKey])
 
   if (state.settings[action.msgKey] && state.settings[action.msgKey][state.activeLanguage]) {
-    activeLanguageMsg = Object.assign({}, questionnaireMsg[state.activeLanguage])
+    activeLanguageMsg = questionnaireMsg[state.activeLanguage]
   } else {
     activeLanguageMsg = {}
     questionnaireMsg[state.activeLanguage] = activeLanguageMsg
