@@ -132,8 +132,8 @@ defmodule Ask.QuestionnaireController do
     |> Repo.get!(id)
 
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
-    audio_ids = collect_prompt_audio_ids(questionnaire.settings.quota_completed, audio_ids)
-    audio_ids = collect_prompt_audio_ids(questionnaire.settings.error, audio_ids)
+    audio_ids = collect_prompt_audio_ids(questionnaire.settings["quota_completed_message"], audio_ids)
+    audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
 
     audios =
       if length(audio_ids) == 0 do
