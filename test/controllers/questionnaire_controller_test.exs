@@ -119,7 +119,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates and renders resource with a full questionnaire", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: %{
+      quiz = %{
         name: "some content",
         modes: ["sms", "ivr"],
         steps: @dummy_steps,
@@ -146,8 +146,9 @@ defmodule Ask.QuestionnaireControllerTest do
           "mobile_web_survey_is_over_message" => "Survey is over",
         }
       }
+      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: quiz
       assert json_response(conn, 201)["data"]["id"]
-      assert Repo.get_by(Questionnaire, @valid_attrs)
+      assert Repo.get_by(Questionnaire, quiz)
     end
 
     test "creates with default languages and default_language", %{conn: conn, user: user} do
