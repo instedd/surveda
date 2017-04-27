@@ -207,7 +207,7 @@ class ChoiceEditor extends Component {
     const isRefusal = choiceIndex == 'refusal'
 
     let skipLogicInput =
-      <td>
+      <td className='skipLogic'>
         <SkipLogic
           onChange={skipOption => this.skipLogicChange(skipOption)}
           readOnly={readOnly}
@@ -279,7 +279,7 @@ class ChoiceEditor extends Component {
           }
           {skipLogicInput}
           { (!isRefusal)
-          ? <td>
+          ? <td className='tdDelete'>
             <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
           </td> : null
           }
@@ -303,7 +303,7 @@ class ChoiceEditor extends Component {
           {this.cell(this.state.mobileweb, mobilewebErrors, mobileweb, e => this.enterEditMode(e, 'mobileweb'))}
           {skipLogicInput}
           { readOnly || isRefusal ? <td />
-            : <td>
+            : <td className='tdDelete'>
               <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
             </td>
           }

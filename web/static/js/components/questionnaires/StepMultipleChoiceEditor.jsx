@@ -106,7 +106,7 @@ class StepMultipleChoiceEditor extends Component {
       <div>
         <h5>Responses</h5>
         <p><b>List the texts you want to store for each possible choice and define valid values by commas.</b></p>
-        <Card>
+        <Card className='scrollX'>
           <div className='card-table'>
             <table className='responses-table'>
               <thead>
@@ -125,7 +125,7 @@ class StepMultipleChoiceEditor extends Component {
                   : null
                   }
                   <th style={{width: '25%'}}>Skip logic</th>
-                  <th style={{width: '5%'}} />
+                  <th />
                 </tr>
               </thead>
               <tbody>
