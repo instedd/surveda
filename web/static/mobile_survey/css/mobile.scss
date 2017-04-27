@@ -49,7 +49,7 @@ nav {
 }
 main {
   font-size: 1.2rem;
-  padding: 2rem 1.6rem;
+  padding: 2rem 2.6rem;
 }
 .prompt {
   min-height: 150px;
@@ -187,3 +187,20 @@ select {
   color: #ff5722;
   font-size: 1rem;
 }
+
+.more-content-arrow {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  animation: jump 1s infinite;
+  background-image: url("../images/ic_arrow_downward.svg");
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+@keyframes jump {
+    0% { transform: translateY(-100%) }
+    50% { transform: translateY(0) }
+    100% { transform: translateY(-100%) }
+  } 

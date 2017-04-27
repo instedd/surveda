@@ -11,6 +11,7 @@ import EndStep from './steps/EndStep'
 
 class Step extends Component {
   handleSubmit: PropTypes.func.isRequired
+  hideMoreContentHint: PropTypes.func.isRequired
   props: {
     dispatch: PropTypes.func.isRequired,
     respondentId: any,
@@ -23,10 +24,12 @@ class Step extends Component {
     super(props)
 
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.hideMoreContentHint = this.hideMoreContentHint.bind(this)
   }
 
   componentDidMount() {
     this.fetchStep()
+    window.addEventListener('scroll', this.hideMoreContentHint)
 
     // This is so that when the user switches between tabs,
     // in case there are multiple tabs open they refresh
@@ -35,9 +38,38 @@ class Step extends Component {
     window.onfocus = () => this.fetchStep()
   }
 
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.hideMoreContentHint)
+  }
+
   fetchStep() {
     const { dispatch, respondentId, token } = this.props
     actions.fetchStep(dispatch, respondentId, token)
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.step !== this.props.step) {
+      if (this.isContentTallerThanViewport()) {
+        this.showMoreContentHint()
+      } else {
+        this.hideMoreContentHint()
+      }
+    }
+  }
+
+  hideMoreContentHint() {
+    this.refs.moreContentHint.style.display = 'none'
+  }
+
+  showMoreContentHint() {
+    this.refs.moreContentHint.style.display = 'block'
+  }
+
+  isContentTallerThanViewport() {
+    const viewportHeight = document.documentElement.clientHeight
+    const contentHeight = this.refs.stepContent.offsetHeight
+    
+    return contentHeight > viewportHeight
   }
 
   stepComponent() {
@@ -78,13 +110,14 @@ class Step extends Component {
     }
 
     return (
-      <div>
+      <div ref='stepContent'>
         <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
             {this.stepComponent()}
           </form>
         </main>
+        <div ref='moreContentHint' className='more-content-arrow'></div>
       </div>
     )
   }
