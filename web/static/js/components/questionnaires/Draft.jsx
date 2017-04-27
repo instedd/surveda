@@ -75,10 +75,11 @@ class Draft extends React.Component {
 
     return (
       <div className='RichEditor-root'>
+        {/*
         <InlineStyleControls
           editorState={editorState}
           onToggle={this.toggleInlineStyle}
-        />
+        /> */}
         <div className={className} onClick={this.focus}>
           <Editor
             editorState={editorState}
@@ -86,7 +87,6 @@ class Draft extends React.Component {
             onChange={this.onChange}
             onBlur={this.onBlur}
             onTab={this.onTab}
-            placeholder={this.props.placeholder}
             ref='editor'
             spellCheck={false}
           />
