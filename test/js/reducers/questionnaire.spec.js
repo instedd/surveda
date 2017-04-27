@@ -1869,4 +1869,14 @@ describe('questionnaire reducer', () => {
       expect(isEqual(step.ranges, expected)).toEqual(true)
     })
   })
+  describe('color setting', () => {
+    it('should set primary color', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setPrimaryColor('#aaa000')
+      ])
+      console.log(result)
+    })
+  })
 })

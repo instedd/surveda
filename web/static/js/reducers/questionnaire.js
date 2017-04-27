@@ -31,6 +31,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
+    case actions.SET_PRIMARY_COLOR: return setPrimaryColor(state, action)
     default: return steps(state, action)
   }
 }
@@ -1257,4 +1258,9 @@ const buildCsvLookup = (csv, defaultLanguage) => {
   }
 
   return lookup
+}
+
+const setPrimaryColor = (state, action) => {
+  console.log('setting primary color')
+  return state
 }

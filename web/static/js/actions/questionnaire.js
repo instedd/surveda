@@ -44,6 +44,7 @@ export const TOGGLE_ACCEPT_REFUSALS = 'QUESTIONNAIRE_TOGGLE_ACCEPT_REFUSALS'
 export const CHANGE_REFUSAL = 'QUESTIONNAIRE_CHANGE_REFUSAL'
 export const SET_MOBILE_WEB_SMS_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SMS_MESSAGE'
 export const SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE'
+export const SET_PRIMARY_COLOR = 'QUESTIONNAIRE_SET_PRIMARY_COLOR'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -349,4 +350,9 @@ export const setMobileWebSmsMessage = (text) => ({
 export const setMobileWebSurveyIsOverMessage = (text) => ({
   type: SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE,
   text
+})
+
+export const setPrimaryColor = (color) => ({
+  type: SET_PRIMARY_COLOR,
+  color
 })
