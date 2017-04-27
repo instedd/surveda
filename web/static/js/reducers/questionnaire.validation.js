@@ -26,8 +26,8 @@ export const validate = (state: DataStore<Questionnaire>) => {
 
   validateSteps(data.steps, context, 'steps')
 
-  validateMsg('errorMsg', data.errorMsg, context)
-  validateMsg('quotaCompletedMsg', data.quotaCompletedMsg, context)
+  validateMessage('errorMessage', data.settings.errorMessage, context)
+  validateMessage('quotaCompletedMessage', data.settings.quotaCompletedMessage, context)
 
   validateMobileWebSmsMessage(data, context)
   validateMobileWebSurveyIsOverMessage(data, context)
@@ -332,7 +332,7 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
   validateChoiceSkipLogic(choice, stepIndex, choiceIndex, steps, context, path)
 }
 
-const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) => {
+const validateMessage = (msgKey: string, msg: Prompt, context: ValidationContext) => {
   msg = msg || {}
 
   const path = `${msgKey}.prompt`
@@ -345,12 +345,12 @@ const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) =>
 const validateMobileWebSmsMessage = (data, context) => {
   if (!context.mobileweb) return
 
-  if (isBlank(data.mobileWebSmsMessage)) {
+  if (isBlank(data.settings.mobileWebSmsMessage)) {
     addError(context, 'mobileWebSmsMessage', 'Mobile web SMS message must not be blank', null, 'mobileweb')
     return
   }
 
-  const parts = splitSmsText(data.mobileWebSmsMessage || '')
+  const parts = splitSmsText(data.settings.mobileWebSmsMessage || '')
   const exceeds = parts.some((p, i) => {
     // The last part gets appended the link, which we assume will have
     // at most 20 ASCII chars
@@ -367,7 +367,7 @@ const validateMobileWebSmsMessage = (data, context) => {
 const validateMobileWebSurveyIsOverMessage = (data, context) => {
   if (!context.mobileweb) return
 
-  if (isBlank(data.mobileWebSurveyIsOverMessage)) {
+  if (isBlank(data.settings.mobileWebSurveyIsOverMessage)) {
     addError(context, 'mobileWebSurveyIsOverMessage', 'Mobile web "Survey is over" message must not be blank', null, 'mobileweb')
   }
 }

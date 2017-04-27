@@ -66,25 +66,28 @@ defmodule Ask.Factory do
       modes: ["sms", "ivr"],
       steps: [],
       default_language: "en",
-      quota_completed_msg: %{
-        "en" => %{
-          "sms" => "Quota completed",
-          "ivr" => %{
-            "audio_source" => "tts",
-            "text" => "Quota completed (ivr)"
+      settings: %{
+        "quota_completed_message" => %{
+          "en" => %{
+            "sms" => "Quota completed",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "Quota completed (ivr)"
+            }
           }
-        }
-      },
-      error_msg: %{
-        "en" => %{
-          "sms" => "You have entered an invalid answer",
-          "ivr" => %{
-            "audio_source" => "tts",
-            "text" => "You have entered an invalid answer (ivr)"
+        },
+        "error_message" => %{
+          "en" => %{
+            "sms" => "You have entered an invalid answer",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "You have entered an invalid answer (ivr)"
+            }
           }
-        }
+        },
+        "mobile_web_sms_message" => "Please enter",
+        "mobile_web_survey_is_over_message" => "Survey is over",
       },
-      mobile_web_sms_message: "Please enter",
       languages: [],
       valid: true,
     }

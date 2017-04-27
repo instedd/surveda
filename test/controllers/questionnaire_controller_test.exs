@@ -5,8 +5,8 @@ defmodule Ask.QuestionnaireControllerTest do
   import Ask.StepBuilder
 
   alias Ask.{Project, Questionnaire, Translation, JsonSchema}
-  @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: []}
-  @invalid_attrs %{steps: []}
+  @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: [], settings: %{}}
+  @invalid_attrs %{steps: [], settings: %{}}
 
   setup %{conn: conn} do
     GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
@@ -69,28 +69,29 @@ defmodule Ask.QuestionnaireControllerTest do
         "default_language" => "en",
         "languages" => [],
         "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at),
-        "mobile_web_sms_message" => nil,
-        "quota_completed_msg" => %{
-          "en" => %{
-            "sms" => "Quota completed",
-            "ivr" => %{
-              "audio_source" => "tts",
-              "text" => "Quota completed (ivr)"
+        "valid" => true,
+        "settings" => %{
+          "quota_completed_message" => %{
+            "en" => %{
+              "sms" => "Quota completed",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "Quota completed (ivr)"
+              }
             }
-          }
-        },
-        "error_msg" => %{
-          "en" => %{
-            "sms" => "You have entered an invalid answer",
-            "ivr" => %{
-              "audio_source" => "tts",
-              "text" => "You have entered an invalid answer (ivr)"
+          },
+          "error_message" => %{
+            "en" => %{
+              "sms" => "You have entered an invalid answer",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "You have entered an invalid answer (ivr)"
+              }
             }
-          }
-        },
-        "mobile_web_sms_message" => "Please enter",
-        "mobile_web_survey_is_over_message" => nil,
-        "valid" => true
+          },
+          "mobile_web_sms_message" => "Please enter",
+          "mobile_web_survey_is_over_message" => "Survey is over",
+        }
       }
     end
 
@@ -114,6 +115,40 @@ defmodule Ask.QuestionnaireControllerTest do
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
       assert json_response(conn, 201)["data"]["id"]
       assert Repo.get_by(Questionnaire, @valid_attrs)
+    end
+
+    test "creates and renders resource with a full questionnaire", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      quiz = %{
+        name: "some content",
+        modes: ["sms", "ivr"],
+        steps: @dummy_steps,
+        settings: %{
+          "quota_completed_message" => %{
+            "en" => %{
+              "sms" => "Quota completed",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "Quota completed (ivr)"
+              }
+            }
+          },
+          "error_message" => %{
+            "en" => %{
+              "sms" => "You have entered an invalid answer",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "You have entered an invalid answer (ivr)"
+              }
+            }
+          },
+          "mobile_web_sms_message" => "Please enter",
+          "mobile_web_survey_is_over_message" => "Survey is over",
+        }
+      }
+      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: quiz
+      assert json_response(conn, 201)["data"]["id"]
+      assert Repo.get_by(Questionnaire, quiz)
     end
 
     test "creates with default languages and default_language", %{conn: conn, user: user} do
@@ -156,7 +191,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates and recreates variables", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = %{name: "some content", modes: ["sms", "ivr"], steps: @dummy_steps}
+      questionnaire = %{name: "some content", modes: ["sms", "ivr"], steps: @dummy_steps, settings: %{}}
 
       original_conn = conn
 
@@ -181,7 +216,7 @@ defmodule Ask.QuestionnaireControllerTest do
       ]
       questionnaire = Questionnaire |> Repo.get!(id)
 
-      conn = put original_conn, project_questionnaire_path(original_conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      conn = put original_conn, project_questionnaire_path(original_conn, :update, project, questionnaire), questionnaire: %{steps: steps, settings: %{}}
       id = json_response(conn, 200)["data"]["id"]
       assert id
 
@@ -236,7 +271,7 @@ defmodule Ask.QuestionnaireControllerTest do
         name: "Gonna be erased",
       } |> Repo.insert!
 
-      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: @dummy_steps}
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: @dummy_steps, settings: %{}}
       assert json_response(conn, 200)["data"]["id"]
 
       vars = (Questionnaire
@@ -250,7 +285,7 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project, valid: true)
       survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
 
-      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"valid" => false, steps: []}
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"valid" => false, steps: [], settings: %{}}
 
       survey = Ask.Survey |> Repo.get!(survey.id)
       assert survey.state == "not_ready"
@@ -261,7 +296,7 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
 
-      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"modes" => ["ivr"], steps: []}
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{"modes" => ["ivr"], steps: [], settings: %{}}
 
       survey = Ask.Survey |> Repo.get!(survey.id)
       assert survey.state == "not_ready"
@@ -271,17 +306,17 @@ defmodule Ask.QuestionnaireControllerTest do
   describe "update translations" do
     test "creates no translations", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
+      questionnaire = insert(:questionnaire, project: project)
 
       steps = []
-      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps, settings: %{}}
 
       assert (Translation |> Repo.all |> length) == 0
     end
 
     test "creates translations for one sms prompt", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
+      questionnaire = insert(:questionnaire, project: project)
 
       steps = [
         multiple_choice_step(
@@ -295,7 +330,7 @@ defmodule Ask.QuestionnaireControllerTest do
           choices: []
         )
       ]
-      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps, settings: %{}}
       assert json_response(conn, 200)["data"]["id"]
 
       translations = Translation |> Repo.all
@@ -313,7 +348,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates translations when no translation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
+      questionnaire = insert(:questionnaire, project: project)
 
       steps = [
         multiple_choice_step(
@@ -326,7 +361,7 @@ defmodule Ask.QuestionnaireControllerTest do
           choices: []
         )
       ]
-      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps}
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: %{steps: steps, settings: %{}}
       assert json_response(conn, 200)["data"]["id"]
 
       translations = Translation |> Repo.all
@@ -344,7 +379,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "creates and recreates translations for other pieces", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project, quota_completed_msg: nil, error_msg: nil)
+      questionnaire = insert(:questionnaire, project: project)
 
       # Multiple additions
 
@@ -369,7 +404,7 @@ defmodule Ask.QuestionnaireControllerTest do
           ]
         )
       ]
-      quota_completed_msg = %{
+      quota_completed_message = %{
         "en" => %{"sms" => "EN 5", "ivr" => %{"text" => "EN 6", "audio_source": "tts"}},
         "es" => %{"sms" => "ES 5"},
         "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 6", "audio_source": "tts"}},
@@ -378,7 +413,7 @@ defmodule Ask.QuestionnaireControllerTest do
       original_conn = conn
 
       conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire),
-      questionnaire: %{steps: steps, quota_completed_msg: quota_completed_msg}
+      questionnaire: %{steps: steps, settings: %{"quota_completed_message" => quota_completed_message}}
       assert json_response(conn, 200)["data"]["id"]
 
       translations = Translation
@@ -428,7 +463,7 @@ defmodule Ask.QuestionnaireControllerTest do
       ]
 
       conn = put original_conn, project_questionnaire_path(conn, :update, project, questionnaire),
-      questionnaire: %{steps: steps, quota_completed_msg: quota_completed_msg}
+      questionnaire: %{steps: steps, settings: %{"quota_completed_message" => quota_completed_message}}
       assert json_response(conn, 200)["data"]["id"]
 
       translations = Translation
@@ -480,7 +515,7 @@ defmodule Ask.QuestionnaireControllerTest do
       ]
 
       conn = put original_conn, project_questionnaire_path(conn, :update, project, questionnaire),
-      questionnaire: %{steps: steps, quota_completed_msg: quota_completed_msg}
+      questionnaire: %{steps: steps, settings: %{"quota_completed_message" => quota_completed_message}}
       assert json_response(conn, 200)["data"]["id"]
 
       translations = Translation

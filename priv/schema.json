@@ -7,12 +7,19 @@
       "type": "object",
       "properties": {
         "steps": { "$ref": "#/definitions/steps" },
-        "quota_completed_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
-        "error_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
-        "mobile_web_sms_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] },
-        "mobile_web_survey_is_over_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] }
+        "settings": { "$ref": "#/definitions/settings" }
       },
-      "required": ["steps"]
+      "required": ["steps", "settings"]
+    },
+
+    "settings": {
+      "type": "object",
+      "properties": {
+        "quota_completed_message": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
+        "error_message": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
+        "mobile_web_sms_message": { "type": ["string", "null"] },
+        "mobile_web_survey_is_over_message": { "type": ["string", "null"] }
+      }
     },
 
     "steps": {

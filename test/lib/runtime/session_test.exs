@@ -331,7 +331,7 @@ defmodule Ask.SessionTest do
   end
 
   test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel, test_channel: test_channel} do
-    quiz = quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
+    quiz = quiz |> Questionnaire.changeset(%{settings: %{"quota_completed_message" => %{"en" => %{"sms" => "Bye!"}}}}) |> Repo.update!
 
     survey = respondent.survey
 

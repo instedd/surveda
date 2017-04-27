@@ -79,7 +79,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mobile_contact_message(%Session{flow: flow, respondent: respondent}) do
-    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
+    msg = flow.questionnaire.settings["mobile_web_sms_message"] || "Please enter"
     prompts = Ask.Runtime.Step.split_by_newlines(msg)
 
     prompts

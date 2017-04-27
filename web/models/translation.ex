@@ -32,15 +32,15 @@ defmodule Ask.Translation do
     # {mode, scope, source_lang, source_text, target_lang, target_text}
     new_translations = questionnaire.steps
     |> Enum.flat_map(&collect_step_translations(lang, &1))
-    |> collect_prompt_entry_translations("quota_completed", lang, questionnaire.quota_completed_msg)
-    |> collect_prompt_entry_translations("error", lang, questionnaire.error_msg)
+    |> collect_prompt_entry_translations("quota_completed", lang, questionnaire.settings["quota_completed_message"])
+    |> collect_prompt_entry_translations("error", lang, questionnaire.settings["error_message"])
 
     # Also collect all source texts, so later we can know which ones
     # don't have a translation yet (so we can still use them for autocomplete)
     source_texts = questionnaire.steps
     |> Enum.flat_map(&collect_step_source_texts(lang, &1))
-    |> collect_prompt_entry_source_texts("quota_completed", lang, questionnaire.quota_completed_msg)
-    |> collect_prompt_entry_source_texts("error", lang, questionnaire.error_msg)
+    |> collect_prompt_entry_source_texts("quota_completed", lang, questionnaire.settings["quota_completed_message"])
+    |> collect_prompt_entry_source_texts("error", lang, questionnaire.settings["error_message"])
 
     # Only keep source texts that are not already in `new_translations`
     source_texts = source_texts
