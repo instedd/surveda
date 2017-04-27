@@ -117,6 +117,39 @@ defmodule Ask.QuestionnaireControllerTest do
       assert Repo.get_by(Questionnaire, @valid_attrs)
     end
 
+    test "creates and renders resource with a full questionnaire", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: %{
+        name: "some content",
+        modes: ["sms", "ivr"],
+        steps: @dummy_steps,
+        settings: %{
+          "quota_completed_message" => %{
+            "en" => %{
+              "sms" => "Quota completed",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "Quota completed (ivr)"
+              }
+            }
+          },
+          "error_message" => %{
+            "en" => %{
+              "sms" => "You have entered an invalid answer",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "You have entered an invalid answer (ivr)"
+              }
+            }
+          },
+          "mobile_web_sms_message" => "Please enter",
+          "mobile_web_survey_is_over_message" => "Survey is over",
+        }
+      }
+      assert json_response(conn, 201)["data"]["id"]
+      assert Repo.get_by(Questionnaire, @valid_attrs)
+    end
+
     test "creates with default languages and default_language", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
