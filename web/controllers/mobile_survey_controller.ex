@@ -5,32 +5,8 @@ defmodule Ask.MobileSurveyController do
 
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     authorize(conn, respondent_id, token, fn ->
-      do_index(conn, respondent_id, token)
+      render_index(conn, respondent_id, token)
     end)
-  end
-
-  defp do_index(conn, respondent_id, token) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
-    respondent_cookie = respondent.mobile_web_cookie_code
-    if respondent_cookie do
-      request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
-      if request_cookie == respondent_cookie do
-        render_index(conn, respondent_id, token)
-      else
-        raise Ask.UnauthorizedError, conn: conn
-      end
-    else
-      cookie_value = Ecto.UUID.generate
-
-      respondent
-      |> Respondent.changeset(%{mobile_web_cookie_code: cookie_value})
-      |> Repo.update!
-
-      conn
-      |> put_resp_cookie(cookie_name, cookie_value)
-      |> render_index(respondent_id, token)
-    end
   end
 
   defp render_index(conn, respondent_id, token) do
@@ -41,13 +17,17 @@ defmodule Ask.MobileSurveyController do
 
   def get_step(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     authorize(conn, respondent_id, token, fn ->
-      sync_step(conn, respondent_id, :answer)
+      check_cookie(conn, respondent_id, fn conn ->
+        sync_step(conn, respondent_id, :answer)
+      end)
     end)
   end
 
   def send_reply(conn, %{"respondent_id" => respondent_id, "token" => token, "value" => value, "step_id" => step_id}) do
     authorize(conn, respondent_id, token, fn ->
-      sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
+      check_cookie(conn, respondent_id, fn conn ->
+        sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
+      end)
     end)
   end
 
@@ -123,12 +103,36 @@ defmodule Ask.MobileSurveyController do
     (questionnaire.settings["survey_already_taken_message"] || %{})[language] || "You already took this survey"
   end
 
-
   defp authorize(conn, respondent_id, token, success_fn) do
     if Respondent.token(respondent_id) == token do
       success_fn.()
     else
       raise Ask.UnauthorizedError, conn: conn
+    end
+  end
+
+  defp check_cookie(conn, respondent_id, success_fn) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
+    respondent_cookie = respondent.mobile_web_cookie_code
+    if respondent_cookie do
+      request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
+      if request_cookie == respondent_cookie do
+        success_fn.(conn)
+      else
+        raise Ask.UnauthorizedError, conn: conn
+      end
+    else
+      cookie_value = Ecto.UUID.generate
+
+      respondent
+      |> Respondent.changeset(%{mobile_web_cookie_code: cookie_value})
+      |> Repo.update!
+
+      conn = conn
+      |> put_resp_cookie(cookie_name, cookie_value)
+
+      success_fn.(conn)
     end
   end
 end
