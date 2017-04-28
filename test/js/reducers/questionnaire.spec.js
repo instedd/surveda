@@ -1076,6 +1076,32 @@ describe('questionnaire reducer', () => {
         message: 'Mobile web prompt must not be blank'
       })
     })
+
+    it('should validate title', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileweb')
+      ])
+
+      expect(state.errors).toInclude({
+        path: `title['en']`,
+        lang: 'en',
+        mode: 'mobileweb',
+        message: 'Title must not be blank'
+      })
+
+      const newState = playActionsFromState(state, reducer)([
+        actions.setDisplayedTitle('Q')
+      ])
+
+      expect(newState.errors).toExclude({
+        path: `title['en']`,
+        lang: 'en',
+        mode: 'mobileweb',
+        message: 'Title must not be blank'
+      })
+    })
   })
 
   describe('multilanguage support', () => {

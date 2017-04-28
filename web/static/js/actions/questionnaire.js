@@ -44,6 +44,7 @@ export const TOGGLE_ACCEPT_REFUSALS = 'QUESTIONNAIRE_TOGGLE_ACCEPT_REFUSALS'
 export const CHANGE_REFUSAL = 'QUESTIONNAIRE_CHANGE_REFUSAL'
 export const SET_MOBILE_WEB_SMS_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SMS_MESSAGE'
 export const SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE'
+export const SET_DISPLAYED_TITLE = 'QUESTIONNAIRE_SET_DISPLAYED_TITLE'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -248,6 +249,11 @@ export const setIvrQuestionnaireMsg = (msgKey, msg: AudioPrompt) => ({
 export const setMobileWebQuestionnaireMsg = (msgKey, msg) => ({
   type: SET_MOBILE_WEB_QUESTIONNAIRE_MSG,
   msgKey,
+  msg
+})
+
+export const setDisplayedTitle = (msg) => ({
+  type: SET_DISPLAYED_TITLE,
   msg
 })
 

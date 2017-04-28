@@ -4,7 +4,8 @@ import * as actions from '../actions/step'
 const initialState = {
   current: null,
   progress: 0.0,
-  errorMessage: null
+  errorMessage: null,
+  title: ''
 }
 
 export default (state: any = initialState, action: any) => {
@@ -25,6 +26,7 @@ const receiveStep = (state, action) => {
     ...state,
     current: action.step,
     progress: action.progress,
-    errorMessage: action.errorMessage
+    errorMessage: action.errorMessage,
+    title: action.title
   }
 }

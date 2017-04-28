@@ -75,7 +75,15 @@ defmodule Ask.MobileSurveyController do
           {end_step(), end_progress(), nil}
       end
 
-    render(conn, "show_step.json", step: step, progress: progress, error_message: error_message)
+    title = fetch_title(respondent_id)
+
+    json(conn, %{
+      step: step,
+      progress: progress,
+      error_message:
+      error_message,
+      title: title,
+    })
   end
 
   defp first_step(reply) do
@@ -101,6 +109,14 @@ defmodule Ask.MobileSurveyController do
   defp end_progress do
     100.0
   end
+
+  defp fetch_title(respondent_id) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    questionnaire = Repo.preload(respondent, :questionnaire).questionnaire
+    language = respondent.language || questionnaire.default_language
+    (questionnaire.settings["title"] || %{})[language] || ""
+  end
+
 
   defp authorize(conn, respondent_id, token, success_fn) do
     if Respondent.token(respondent_id) == token do

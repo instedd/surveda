@@ -401,7 +401,7 @@ defmodule Ask.Runtime.Broker do
   defp update_respondent(respondent, {:ok, session, timeout}, nil) do
     timeout_at = next_timeout(respondent, timeout)
     respondent
-    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at})
+    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language})
     |> Repo.update!
   end
 

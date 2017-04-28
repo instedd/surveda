@@ -13,6 +13,7 @@ import LanguagesList from './LanguagesList'
 import QuestionnaireMsg from './QuestionnaireMsg'
 import MobileWebSmsMessage from './MobileWebSmsMessage'
 import MobileWebSurveyIsOverMessage from './MobileWebSurveyIsOverMessage'
+import QuestionnaireDisplayedTitle from './QuestionnaireDisplayedTitle'
 import csvString from 'csv-string'
 import { ConfirmationModal } from '../ui'
 import * as language from '../../language'
@@ -403,6 +404,9 @@ class QuestionnaireEditor extends Component {
           <div className='row'>
             <QuestionnaireMsg title='Error' messageKey='errorMessage' readOnly={readOnly} icon='warning' />
           </div>
+          {mobileweb
+          ? <QuestionnaireDisplayedTitle readOnly={readOnly} />
+          : null}
           {mobileweb
           ? <MobileWebSmsMessage readOnly={readOnly} />
           : null}

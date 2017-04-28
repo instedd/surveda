@@ -31,6 +31,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
+    case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
     default: return steps(state, action)
   }
 }
@@ -761,6 +762,21 @@ const setMobileWebSurveyIsOverMessage = (state, action) => {
     settings: {
       ...state.settings,
       mobileWebSurveyIsOverMessage: action.text
+    }
+  }
+}
+
+const setDisplayedTitle = (state, action) => {
+  const lang = state.activeLanguage
+  const title = state.settings.title || {}
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      title: {
+        ...title,
+        [lang]: action.msg
+      }
     }
   }
 }

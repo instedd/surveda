@@ -29,6 +29,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateMessage('errorMessage', data.settings.errorMessage, context)
   validateMessage('quotaCompletedMessage', data.settings.quotaCompletedMessage, context)
 
+  validateTitle(data, context)
   validateMobileWebSmsMessage(data, context)
   validateMobileWebSurveyIsOverMessage(data, context)
 
@@ -339,6 +340,17 @@ const validateMessage = (msgKey: string, msg: Prompt, context: ValidationContext
 
   context.languages.forEach(lang => {
     validatePrompt(msg[lang], context, lang, `${path}['${lang}']`)
+  })
+}
+
+const validateTitle = (data, context) => {
+  if (!context.mobileweb) return
+
+  context.languages.forEach(lang => {
+    const text = (data.settings.title || {})[lang]
+    if (isBlank(text)) {
+      addError(context, `title['${lang}']`, 'Title must not be blank', lang, 'mobileweb')
+    }
   })
 }
 
