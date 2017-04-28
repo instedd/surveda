@@ -1940,5 +1940,27 @@ describe('questionnaire reducer', () => {
 
       expect(isEqual(step.ranges, expected)).toEqual(true)
     })
+
+    it('changes numeric limits with zeros', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, 0, 1, '')
+      ])
+
+      const step = resultState.data.steps[resultState.data.steps.length - 1]
+      const expected = [
+        { from: 0, to: 1, skipLogic: null }
+      ]
+
+      expect(isEqual(step.ranges, expected)).toEqual(true)
+    })
   })
 })

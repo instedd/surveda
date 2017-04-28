@@ -965,8 +965,8 @@ const changeNumericRanges = (state, action) => {
   return changeStep(state, action.stepId, step => {
     // validate
     let rangesDelimiters = action.rangesDelimiters
-    let minValue: ?number = action.minValue ? parseInt(action.minValue) : null
-    let maxValue: ?number = action.maxValue ? parseInt(action.maxValue) : null
+    let minValue: ?number = safeParseInt(action.minValue)
+    let maxValue: ?number = safeParseInt(action.maxValue)
     let values: Array<number> = []
 
     if (minValue != null) {
@@ -1057,6 +1057,20 @@ const changeNumericRanges = (state, action) => {
       ranges: ranges
     }
   })
+}
+
+const safeParseInt = (obj) => {
+  if (typeof (obj) == 'string') {
+    if (obj.trim().length == 0) {
+      return null
+    } else {
+      return parseInt(obj)
+    }
+  } else if (obj != null) {
+    return parseInt(obj)
+  } else {
+    return null
+  }
 }
 
 const changeRangeSkipLogic = (state, action) => {
