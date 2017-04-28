@@ -58,6 +58,10 @@ input[type="checkbox"]:checked + label:before {
   border-color: black;
 }
 
+[type="checkbox"]:disabled + label, [type="radio"]:disabled + label {
+  cursor: auto;
+}
+
 /* Text inputs */
 
 input:not([type]),
