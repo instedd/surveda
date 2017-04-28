@@ -72,7 +72,7 @@ defmodule Ask.MobileSurveyController do
               {end_step(), end_progress(), nil}
           end
         true ->
-          {end_step(), end_progress(), nil}
+          {end_step(fetch_survey_already_taken_message(respondent)), end_progress(), nil}
       end
 
     title = fetch_title(respondent_id)
@@ -115,6 +115,12 @@ defmodule Ask.MobileSurveyController do
     questionnaire = Repo.preload(respondent, :questionnaire).questionnaire
     language = respondent.language || questionnaire.default_language
     (questionnaire.settings["title"] || %{})[language] || ""
+  end
+
+  defp fetch_survey_already_taken_message(respondent) do
+    questionnaire = Repo.preload(respondent, :questionnaire).questionnaire
+    language = respondent.language || questionnaire.default_language
+    (questionnaire.settings["survey_already_taken_message"] || %{})[language] || "You already took this survey"
   end
 
 

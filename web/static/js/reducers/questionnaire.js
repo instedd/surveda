@@ -32,6 +32,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
     case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
+    case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
     default: return steps(state, action)
   }
 }
@@ -775,6 +776,21 @@ const setDisplayedTitle = (state, action) => {
       ...state.settings,
       title: {
         ...title,
+        [lang]: action.msg
+      }
+    }
+  }
+}
+
+const setSurveyAlreadyTakenMessage = (state, action) => {
+  const lang = state.activeLanguage
+  const surveyAlreadyTakenMessage = state.settings.surveyAlreadyTakenMessage || {}
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      surveyAlreadyTakenMessage: {
+        ...surveyAlreadyTakenMessage,
         [lang]: action.msg
       }
     }

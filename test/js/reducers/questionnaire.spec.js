@@ -1102,6 +1102,32 @@ describe('questionnaire reducer', () => {
         message: 'Title must not be blank'
       })
     })
+
+    it('should validate surveyAlreadyTakenMessage', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleMode('mobileweb')
+      ])
+
+      expect(state.errors).toInclude({
+        path: `surveyAlreadyTakenMessage['en']`,
+        lang: 'en',
+        mode: 'mobileweb',
+        message: '"Survey already taken" message must not be blank'
+      })
+
+      const newState = playActionsFromState(state, reducer)([
+        actions.setSurveyAlreadyTakenMessage('You already took this survey')
+      ])
+
+      expect(newState.errors).toExclude({
+        path: `surveyAlreadyTakenMessage['en['en']`,
+        lang: 'en',
+        mode: 'mobileweb',
+        message: '"Survey already taken" message must not be blank'
+      })
+    })
   })
 
   describe('multilanguage support', () => {
@@ -1465,7 +1491,8 @@ describe('questionnaire reducer', () => {
           errorMessage: {},
           mobileWebSmsMessage: '',
           mobileWebSurveyIsOverMessage: '',
-          title: {}
+          title: {},
+          surveyAlreadyTakenMessage: {}
         },
         steps: [
           {

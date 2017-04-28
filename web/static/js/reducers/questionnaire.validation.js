@@ -32,6 +32,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateTitle(data, context)
   validateMobileWebSmsMessage(data, context)
   validateMobileWebSurveyIsOverMessage(data, context)
+  validateSurveyAlreadyTakenMessage(data, context)
 
   state.errorsByPath = errorsByPath(state.errors)
   state.errorsByLang = errorsByLang(state.errors)
@@ -382,6 +383,17 @@ const validateMobileWebSurveyIsOverMessage = (data, context) => {
   if (isBlank(data.settings.mobileWebSurveyIsOverMessage)) {
     addError(context, 'mobileWebSurveyIsOverMessage', 'Mobile web "Survey is over" message must not be blank', null, 'mobileweb')
   }
+}
+
+const validateSurveyAlreadyTakenMessage = (data, context) => {
+  if (!context.mobileweb) return
+
+  context.languages.forEach(lang => {
+    const text = (data.settings.surveyAlreadyTakenMessage || {})[lang]
+    if (isBlank(text)) {
+      addError(context, `surveyAlreadyTakenMessage['${lang}']`, '"Survey already taken" message must not be blank', lang, 'mobileweb')
+    }
+  })
 }
 
 const addError = (context, path, message, lang = null, mode = null) => {

@@ -17,6 +17,7 @@ export type Settings = {
   mobileWebSmsMessage: ?string,
   mobileWebSurveyIsOverMessage: ?string,
   title: {[lang: string]: string},
+  surveyAlreadyTakenMessage: {[lang: string]: string},
 };
 
 export type ChoiceErrors = {

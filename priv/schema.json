@@ -19,7 +19,8 @@
         "error_message": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
         "mobile_web_sms_message": { "type": ["string", "null"] },
         "mobile_web_survey_is_over_message": { "type": ["string", "null"] },
-        "title": { "oneOf": [{ "type": "object" }, {"type":"null"}] }
+        "title": { "oneOf": [{ "type": "object" }, {"type":"null"}] },
+        "survey_already_taken_message": { "oneOf": [{ "type": "object" }, {"type":"null"}] }
       }
     },
 

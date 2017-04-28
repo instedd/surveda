@@ -136,7 +136,8 @@ const bareQuestionnaire: Questionnaire = {
     errorMessage: {},
     mobileWebSmsMessage: '',
     mobileWebSurveyIsOverMessage: '',
-    title: {}
+    title: {},
+    surveyAlreadyTakenMessage: {}
   },
   valid: true
 }

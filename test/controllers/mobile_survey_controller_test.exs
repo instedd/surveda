@@ -212,7 +212,7 @@ defmodule Ask.MobileSurveyControllerTest do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"survey_already_taken_message" => %{"en" => "Already took this"}})
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -229,8 +229,8 @@ defmodule Ask.MobileSurveyControllerTest do
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     assert %{
-      "prompts" => ["The survey has ended"],
-      "title" => "The survey has ended",
+      "prompts" => ["Already took this"],
+      "title" => "Already took this",
       "type" => "end"
     } = json_response(conn, 200)["step"]
   end
