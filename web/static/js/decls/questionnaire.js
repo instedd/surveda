@@ -16,6 +16,7 @@ export type Settings = {
   errorMessage: Prompt,
   mobileWebSmsMessage: ?string,
   mobileWebSurveyIsOverMessage: ?string,
+  title: {[lang: string]: string},
 };
 
 export type ChoiceErrors = {

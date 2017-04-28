@@ -1464,7 +1464,8 @@ describe('questionnaire reducer', () => {
           quotaCompletedMessage: {},
           errorMessage: {},
           mobileWebSmsMessage: '',
-          mobileWebSurveyIsOverMessage: ''
+          mobileWebSurveyIsOverMessage: '',
+          title: {}
         },
         steps: [
           {
