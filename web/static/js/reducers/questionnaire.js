@@ -917,6 +917,24 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     addMessageToCsvForTranslation(questionnaire.settings.errorMessage, defaultLang, context)
   }
 
+  if (questionnaire.settings.title) {
+    const defaultTitle = questionnaire.settings.title[defaultLang]
+    if (defaultTitle && defaultTitle.trim().length != 0) {
+      addToCsvForTranslation(defaultTitle, context, lang =>
+        questionnaire.settings.title[lang] || ''
+      )
+    }
+  }
+
+  if (questionnaire.settings.surveyAlreadyTakenMessage) {
+    const defaultMessage = questionnaire.settings.surveyAlreadyTakenMessage[defaultLang]
+    if (defaultMessage && defaultMessage.trim().length != 0) {
+      addToCsvForTranslation(defaultMessage, context, lang =>
+        questionnaire.settings.surveyAlreadyTakenMessage[lang] || ''
+      )
+    }
+  }
+
   return rows
 }
 
@@ -1136,6 +1154,12 @@ const uploadCsvForTranslation = (state, action) => {
   if (state.settings.errorMessage) {
     newState.settings.errorMessage = translatePrompt(state.settings.errorMessage, defaultLanguage, lookup)
   }
+  if (state.settings.title) {
+    newState.settings.title = translateLanguage(state.settings.title, defaultLanguage, lookup)
+  }
+  if (state.settings.title) {
+    newState.settings.surveyAlreadyTakenMessage = translateLanguage(state.settings.surveyAlreadyTakenMessage, defaultLanguage, lookup)
+  }
   return newState
 }
 
@@ -1196,6 +1220,22 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   }
 
   return newPrompt
+}
+
+const translateLanguage = (obj, defaultLanguage, lookup) => {
+  let defaultLanguageMessage = obj[defaultLanguage]
+  if (!defaultLanguageMessage) return obj
+
+  let translations = lookup[defaultLanguageMessage.trim()]
+  if (!translations) return obj
+
+  let newObj = {...obj}
+  for (let lang in translations) {
+    const text = translations[lang]
+    newObj[lang] = (text || '').trim()
+  }
+
+  return newObj
 }
 
 const addTranslations = (obj, translations, funcOrProperty) => {

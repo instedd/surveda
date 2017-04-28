@@ -1757,7 +1757,9 @@ describe('questionnaire reducer', () => {
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
         actions.setSmsQuestionnaireMsg('quotaCompletedMessage', 'Done'),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', {text: 'Done!', audioSource: 'tts'})
+        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', {text: 'Done!', audioSource: 'tts'}),
+        actions.setDisplayedTitle('Some title'),
+        actions.setSurveyAlreadyTakenMessage('Taken')
       ])
 
       const csv = csvForTranslation(state.data)
@@ -1772,7 +1774,9 @@ describe('questionnaire reducer', () => {
         ['Not at all', '', 'Para nada'],
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', ''],
-        ['Done!', '', '']
+        ['Done!', '', ''],
+        ['Some title', '', ''],
+        ['Taken', '', '']
       ]
 
       expect(csv.length).toEqual(expected.length)
@@ -1812,12 +1816,16 @@ describe('questionnaire reducer', () => {
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('es'),
+        actions.setDisplayedTitle('Some title'),
+        actions.setSurveyAlreadyTakenMessage('Already taken'),
         actions.uploadCsvForTranslation(
           [
             ['  English  ', '  Spanish  '],
             ['  Do you smoke?  ', '  Cxu vi fumas?  '],
             ['  Do you exercise?  ', '  Cxu vi ekzercas?  '],
-            ['  Yes, Y, 1  ', '  Jes, J, 1  ']
+            ['  Yes, Y, 1  ', '  Jes, J, 1  '],
+            ['  Some title  ', '  Algun titulo  '],
+            ['  Already taken  ', '  Ya tomado ']
           ]
         )
       ])
@@ -1829,6 +1837,9 @@ describe('questionnaire reducer', () => {
       expect(state.data.steps[1].choices[1].responses.sms.es).toEqual(['No', 'N', '2']) // original preserved
 
       expect(state.data.steps[1].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
+
+      expect(state.data.settings.title.es).toEqual('Algun titulo')
+      expect(state.data.settings.surveyAlreadyTakenMessage.es).toEqual('Ya tomado')
     })
 
     it('should upload csv with quota completed msg', () => {
