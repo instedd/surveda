@@ -3,18 +3,22 @@ import flatten from 'lodash/flatten'
 import isEqual from 'lodash/isEqual'
 import some from 'lodash/some'
 
-function modeIncludes(modes, target) {
+export function modeIncludes(modes: Array<Array<string>>, target: string) {
   return some(modes, ary => isEqual(ary, target))
 }
 
 export function availableOptions(surveyModes: Array<Array<string>>) {
-  const allModes = ['sms', 'ivr', 'mobileweb']
-  const availableOptions = flatten(allModes.map((primary) => {
-    return allModes.map((fallback) => {
+  const options = allOptions()
+  return (options.filter((mode) => {
+    return !modeIncludes(surveyModes, mode)
+  }))
+}
+
+export function allOptions() {
+  const modes = ['sms', 'ivr', 'mobileweb']
+  return flatten(modes.map((primary) => {
+    return modes.map((fallback) => {
       return (primary == fallback) ? [primary] : [primary, fallback]
     })
-  }))
-  return (availableOptions.filter((mode) => {
-    return !modeIncludes(surveyModes, mode)
   }))
 }
