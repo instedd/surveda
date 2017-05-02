@@ -241,6 +241,19 @@ export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
   return conditions.join()
 }
 
+export const labelFor = (mode: string) => {
+  if (mode == 'sms') {
+    return 'SMS'
+  }
+  if (mode == 'ivr') {
+    return 'Phone call'
+  }
+  if (mode == 'mobileweb') {
+    return 'Mobile Web'
+  }
+  return 'Unknown mode'
+}
+
 export const modeLabel = (mode: string[]) => {
   if (isEqual(mode, ['sms'])) {
     return 'SMS'

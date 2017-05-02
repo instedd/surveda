@@ -7,7 +7,7 @@ import uniq from 'lodash/uniq'
 import some from 'lodash/some'
 import each from 'lodash/each'
 import isEqual from 'lodash/isEqual'
-import { modeLabel } from '../../reducers/survey'
+import { modeLabel, labelFor } from '../../reducers/survey'
 import * as respondentActions from '../../actions/respondentGroups'
 import * as uiActions from '../../actions/ui'
 import { Input } from 'react-materialize'
@@ -146,7 +146,7 @@ class SurveyWizardModeStep extends Component {
   selectorForPrimaryMode = (comparison, primary, label, options, handler, readOnly) => {
     const lastPrimary = this.comparisonPrimarySelectedIfLast()
     const selectorOptions = options.map((mode, index) => (
-      <option value={mode} key={mode + index}>{mode}</option>
+      <option value={mode} key={mode + index}>{labelFor(mode)}</option>
     ))
     if (!primary) {
       selectorOptions.unshift(<option value='' key='select-primary-mode'>Select primary mode</option>)
@@ -154,7 +154,7 @@ class SurveyWizardModeStep extends Component {
     if (lastPrimary) {
       return (<div>
         <Input s={12} m={5} type='select' label={label} value={lastPrimary} disabled={readOnly} onChange={handler}>
-          <option value={lastPrimary} key={lastPrimary}>{lastPrimary}</option>
+          <option value={lastPrimary} key={lastPrimary}>{labelFor(lastPrimary)}</option>
         </Input>
       </div>)
     } else {
@@ -171,7 +171,7 @@ class SurveyWizardModeStep extends Component {
     if (lastFallback) {
       return (<div>
         <Input s={12} m={5} type='select' label={label} value={lastFallback} disabled={readOnly} onChange={handler}>
-          <option value={lastFallback} key={lastFallback}>{lastFallback}</option>
+          <option value={lastFallback} key={lastFallback}>{labelFor(lastFallback)}</option>
         </Input>
       </div>)
     } else {
@@ -179,7 +179,7 @@ class SurveyWizardModeStep extends Component {
         <Input s={12} m={5} type='select' label={label} value={fallback || ''} disabled={readOnly} onChange={handler}>
           {<option value=''>No fallback</option>}
           {options.map((mode, index) => {
-            return <option value={mode} key={mode + index}>{mode}</option>
+            return <option value={mode} key={mode + index}>{labelFor(mode)}</option>
           })}
         </Input>
       </div>)
