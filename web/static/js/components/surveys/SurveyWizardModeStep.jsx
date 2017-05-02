@@ -213,12 +213,12 @@ class SurveyWizardModeStep extends Component {
       selectFallbackHandler = this.selectFallbackModeForComparison
 
       modeDescriptions = mode.map((mode) => (
-        <div key={mode}>
+        <p key={mode}>
           {modeLabel(mode)}
           {
             !readOnly ? <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a> : null
           }
-        </div>
+        </p>
       ))
     } else {
       availableModes = this.availableModesForSingle()
