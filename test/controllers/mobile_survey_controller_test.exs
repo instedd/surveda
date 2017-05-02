@@ -23,7 +23,7 @@ defmodule Ask.MobileSurveyControllerTest do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, error_msg: %{"en" => %{"mobileweb" => "Invalid value"}})
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}})
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -32,6 +32,7 @@ defmodule Ask.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
     token = Respondent.token(respondent.id)
+    cookie_name = Respondent.mobile_web_cookie_name(respondent.id)
 
     {:ok, broker} = Broker.start_link
     Broker.poll
@@ -51,8 +52,19 @@ defmodule Ask.MobileSurveyControllerTest do
       get conn, mobile_survey_path(conn, :get_step, respondent.id)
     end
 
+    original_conn = conn
+
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     json = json_response(conn, 200)
+
+    # A cookie should have been generated
+    %{value: mobile_web_code} = conn.resp_cookies[cookie_name]
+    assert mobile_web_code
+
+    # Check again without a cookie
+    assert_error_sent :forbidden, fn ->
+      get original_conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
+    end
 
     assert %{
       "choices" => [],
@@ -61,6 +73,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "explanation"
     } = json["step"]
     assert json["progress"] == 0.0
+    assert json["title"] == "Survey"
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     json = json_response(conn, 200)
@@ -75,6 +88,11 @@ defmodule Ask.MobileSurveyControllerTest do
     # Check that send_reply without token gives error
     assert_error_sent :bad_request, fn ->
       post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{value: "", step_id: "s1"})
+    end
+
+    # Check without a cookie
+    assert_error_sent :forbidden, fn ->
+      post original_conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "", step_id: "s1"})
     end
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "", step_id: "s1"})
@@ -211,7 +229,7 @@ defmodule Ask.MobileSurveyControllerTest do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"survey_already_taken_message" => %{"en" => "Already took this"}})
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -228,8 +246,8 @@ defmodule Ask.MobileSurveyControllerTest do
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     assert %{
-      "prompts" => ["The survey has ended"],
-      "title" => "The survey has ended",
+      "prompts" => ["Already took this"],
+      "title" => "Already took this",
       "type" => "end"
     } = json_response(conn, 200)["step"]
   end
@@ -238,7 +256,7 @@ defmodule Ask.MobileSurveyControllerTest do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, mobile_web_survey_is_over_message: "Bye")
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"mobile_web_survey_is_over_message" => "Bye"})
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -260,56 +278,11 @@ defmodule Ask.MobileSurveyControllerTest do
     } = json_response(conn, 200)["step"]
   end
 
-  test "sets cookie", %{conn: conn} do
-    test_channel = TestChannel.new(false, true)
-
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
-    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
-
-    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
-
-    respondent = insert(:respondent, survey: survey, respondent_group: group)
-    phone_number = respondent.sanitized_phone_number
-
-    {:ok, _} = Broker.start_link
-    {:ok, _} = Ask.Config.start_link
-    Broker.poll
-
-    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
-
-    token = Respondent.token(respondent.id)
-    cookie_name = Respondent.mobile_web_cookie_name(respondent.id)
-
-    original_conn = conn
-
-    # First time generates a cookie
-    conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: token})
-    assert response(conn, 200)
-
-    %{value: mobile_web_code} = conn.resp_cookies[cookie_name]
-    assert mobile_web_code
-
-    # Try second time without a cookie
-    assert_error_sent :forbidden, fn ->
-      get original_conn, mobile_survey_path(conn, :index, respondent.id, %{token: token})
-    end
-
-    # Try again with a cookie
-    conn = original_conn
-    |> put_req_header("cookie", "#{cookie_name}=#{mobile_web_code}")
-
-    conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: token})
-    assert response(conn, 200)
-  end
-
   test "respondent flow via mobileweb with refusal + end", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    quiz = insert(:questionnaire, steps: @mobileweb_refusal_dummy_steps, error_msg: %{"en" => %{"mobileweb" => "Invalid value"}})
+    quiz = insert(:questionnaire, steps: @mobileweb_refusal_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}})
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 

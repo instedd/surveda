@@ -69,7 +69,7 @@ class NumericStep extends Component {
 
     return (
       <div>
-        <div>
+        <div className='numeric'>
           {(step.prompts || []).map(prompt =>
             <Prompt key={prompt} text={prompt} />
           )}

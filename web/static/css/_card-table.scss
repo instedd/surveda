@@ -39,6 +39,9 @@
           width: 50px;
           padding: 5px;
         }
+        &:empty {
+          padding: 0 !important;
+        }
       }
 
       td {
@@ -62,6 +65,16 @@
               @extend .black-text;
             }
           }
+        }
+        &.skipLogic {
+          min-width: 160px;
+          .col {
+            padding: 0;
+          }
+        }
+        &.tdDelete {
+          padding-left: 5px !important;
+          padding-right: 5px !important;
         }
       }
       &.noclick tr:hover {
@@ -125,6 +138,9 @@
     .card-table {
       overflow-x: auto;
     }
+  }
+  &.scrollX {
+    overflow-x: auto;
   }
 }
 .card-error {

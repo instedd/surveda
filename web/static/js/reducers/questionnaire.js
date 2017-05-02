@@ -32,6 +32,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
     case actions.SET_PRIMARY_COLOR: return setPrimaryColor(state, action)
+    case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
+    case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
     default: return steps(state, action)
   }
 }
@@ -630,8 +632,10 @@ const reorderLanguages = (state, action) => {
 const setQuestionnaireMsg = (state, action, mode) => {
   let questionnaireMsg
   let activeLanguageMsg
-  questionnaireMsg = Object.assign({}, state[action.msgKey])
-  if (state[action.msgKey] && state[action.msgKey][state.activeLanguage]) {
+
+  questionnaireMsg = Object.assign({}, state.settings[action.msgKey])
+
+  if (state.settings[action.msgKey] && state.settings[action.msgKey][state.activeLanguage]) {
     activeLanguageMsg = questionnaireMsg[state.activeLanguage]
   } else {
     activeLanguageMsg = {}
@@ -647,8 +651,12 @@ const setQuestionnaireMsg = (state, action, mode) => {
   }
 
   activeLanguageMsg[mode] = msg
-  let newState = {...state}
-  newState[action.msgKey] = questionnaireMsg
+
+  let newState = {
+    ...state,
+    settings: {...state.settings}
+  }
+  newState.settings[action.msgKey] = questionnaireMsg
   return newState
 }
 
@@ -743,14 +751,50 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
 const setMobileWebSmsMessage = (state, action) => {
   return {
     ...state,
-    mobileWebSmsMessage: action.text
+    settings: {
+      ...state.settings,
+      mobileWebSmsMessage: action.text
+    }
   }
 }
 
 const setMobileWebSurveyIsOverMessage = (state, action) => {
   return {
     ...state,
-    mobileWebSurveyIsOverMessage: action.text
+    settings: {
+      ...state.settings,
+      mobileWebSurveyIsOverMessage: action.text
+    }
+  }
+}
+
+const setDisplayedTitle = (state, action) => {
+  const lang = state.activeLanguage
+  const title = state.settings.title || {}
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      title: {
+        ...title,
+        [lang]: action.msg
+      }
+    }
+  }
+}
+
+const setSurveyAlreadyTakenMessage = (state, action) => {
+  const lang = state.activeLanguage
+  const surveyAlreadyTakenMessage = state.settings.surveyAlreadyTakenMessage || {}
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      surveyAlreadyTakenMessage: {
+        ...surveyAlreadyTakenMessage,
+        [lang]: action.msg
+      }
+    }
   }
 }
 
@@ -866,14 +910,30 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     }
   })
 
-  const q = questionnaire.quotaCompletedMsg
-  if (q) {
-    addMessageToCsvForTranslation(q, defaultLang, context)
+  if (questionnaire.settings.quotaCompletedMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.quotaCompletedMessage, defaultLang, context)
   }
 
-  const e = questionnaire.errorMsg
-  if (e) {
-    addMessageToCsvForTranslation(e, defaultLang, context)
+  if (questionnaire.settings.errorMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.errorMessage, defaultLang, context)
+  }
+
+  if (questionnaire.settings.title) {
+    const defaultTitle = questionnaire.settings.title[defaultLang]
+    if (defaultTitle && defaultTitle.trim().length != 0) {
+      addToCsvForTranslation(defaultTitle, context, lang =>
+        questionnaire.settings.title[lang] || ''
+      )
+    }
+  }
+
+  if (questionnaire.settings.surveyAlreadyTakenMessage) {
+    const defaultMessage = questionnaire.settings.surveyAlreadyTakenMessage[defaultLang]
+    if (defaultMessage && defaultMessage.trim().length != 0) {
+      addToCsvForTranslation(defaultMessage, context, lang =>
+        questionnaire.settings.surveyAlreadyTakenMessage[lang] || ''
+      )
+    }
   }
 
   return rows
@@ -906,8 +966,8 @@ const changeNumericRanges = (state, action) => {
   return changeStep(state, action.stepId, step => {
     // validate
     let rangesDelimiters = action.rangesDelimiters
-    let minValue: ?number = action.minValue ? parseInt(action.minValue) : null
-    let maxValue: ?number = action.maxValue ? parseInt(action.maxValue) : null
+    let minValue: ?number = safeParseInt(action.minValue)
+    let maxValue: ?number = safeParseInt(action.maxValue)
     let values: Array<number> = []
 
     if (minValue != null) {
@@ -1000,6 +1060,20 @@ const changeNumericRanges = (state, action) => {
   })
 }
 
+const safeParseInt = (obj) => {
+  if (typeof (obj) == 'string') {
+    if (obj.trim().length == 0) {
+      return null
+    } else {
+      return parseInt(obj)
+    }
+  } else if (obj != null) {
+    return parseInt(obj)
+  } else {
+    return null
+  }
+}
+
 const changeRangeSkipLogic = (state, action) => {
   return changeStep(state, action.stepId, step => {
     let newRange = {
@@ -1084,13 +1158,22 @@ const uploadCsvForTranslation = (state, action) => {
 
   const lookup = buildCsvLookup(csv, defaultLanguage)
 
-  let newState = {...state}
-  newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
-  if (state.quotaCompletedMsg) {
-    newState.quotaCompletedMsg = translatePrompt(state.quotaCompletedMsg, defaultLanguage, lookup)
+  let newState = {
+    ...state,
+    settings: {...state.settings},
+    steps: state.steps.map(step => translateStep(step, defaultLanguage, lookup))
   }
-  if (state.errorMsg) {
-    newState.errorMsg = translatePrompt(state.errorMsg, defaultLanguage, lookup)
+  if (state.settings.quotaCompletedMessage) {
+    newState.settings.quotaCompletedMessage = translatePrompt(state.settings.quotaCompletedMessage, defaultLanguage, lookup)
+  }
+  if (state.settings.errorMessage) {
+    newState.settings.errorMessage = translatePrompt(state.settings.errorMessage, defaultLanguage, lookup)
+  }
+  if (state.settings.title) {
+    newState.settings.title = translateLanguage(state.settings.title, defaultLanguage, lookup)
+  }
+  if (state.settings.title) {
+    newState.settings.surveyAlreadyTakenMessage = translateLanguage(state.settings.surveyAlreadyTakenMessage, defaultLanguage, lookup)
   }
   return newState
 }
@@ -1152,6 +1235,22 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   }
 
   return newPrompt
+}
+
+const translateLanguage = (obj, defaultLanguage, lookup) => {
+  let defaultLanguageMessage = obj[defaultLanguage]
+  if (!defaultLanguageMessage) return obj
+
+  let translations = lookup[defaultLanguageMessage.trim()]
+  if (!translations) return obj
+
+  let newObj = {...obj}
+  for (let lang in translations) {
+    const text = translations[lang]
+    newObj[lang] = (text || '').trim()
+  }
+
+  return newObj
 }
 
 const addTranslations = (obj, translations, funcOrProperty) => {

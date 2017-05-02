@@ -131,10 +131,14 @@ const bareQuestionnaire: Questionnaire = {
   defaultLanguage: 'en',
   activeLanguage: 'en',
   languages: ['en'],
-  quotaCompletedMsg: {},
-  errorMsg: {},
-  mobileWebSmsMessage: '',
-  mobileWebSurveyIsOverMessage: '',
+  settings: {
+    quotaCompletedMessage: {},
+    errorMessage: {},
+    mobileWebSmsMessage: '',
+    mobileWebSurveyIsOverMessage: '',
+    title: {},
+    surveyAlreadyTakenMessage: {}
+  },
   valid: true
 }
 

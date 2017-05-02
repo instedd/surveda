@@ -49,11 +49,14 @@ nav {
 }
 main {
   font-size: 1.2rem;
-  padding: 2rem 1.6rem;
+  padding: 2rem 2.6rem;
 }
 .prompt {
-  min-height: 150px;
+  min-height: 36vh;
   margin-bottom: 2rem;
+}
+.numeric .prompt {
+  min-height: 48vh;
 }
 h1 {
   font-size: 1.3rem;
@@ -62,12 +65,10 @@ h1 {
 .btn {
   display: inline-block;
   background: $white;
-  font-size: 1.6rem;
   color: $primarycolor;
   text-transform: uppercase;
   border: 3px solid $primarycolor;
   border-radius: 4px;
-  padding: .8rem .4rem;
   margin: 1rem .2rem;
 
   svg {
@@ -99,6 +100,20 @@ h1 {
   &:focus {
     outline: none;
   }
+  &.small {
+    font-size: 1rem;
+    min-height: 42px;
+  }
+  &.large {
+    min-height: 76px;
+    &.multiline {
+      font-size: 1rem;
+    }
+  }
+  span {
+    margin-left: 14px;
+    text-transform: capitalize;
+  }
 }
 input[type=number],
 input[type=email],
@@ -126,7 +141,7 @@ select {
 }
 .input-button-inline {
   input {
-    width: 60%;
+    width: 52%;
   }
   .btn {
     float: right;
@@ -187,3 +202,20 @@ select {
   color: #ff5722;
   font-size: 1rem;
 }
+
+.more-content-arrow {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  animation: jump 1s infinite;
+  background-image: url("../images/ic_arrow_downward.svg");
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+@keyframes jump {
+    0% { transform: translateY(-100%) }
+    50% { transform: translateY(0) }
+    100% { transform: translateY(-100%) }
+  }

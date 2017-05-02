@@ -79,7 +79,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mobile_contact_message(%Session{flow: flow, respondent: respondent}) do
-    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
+    msg = flow.questionnaire.settings["mobile_web_sms_message"] || "Please enter"
     prompts = Ask.Runtime.Step.split_by_newlines(msg)
 
     prompts
@@ -190,13 +190,7 @@ defmodule Ask.Runtime.Session do
 
   # If there is a fallback specified, switch session to use it
   def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session)
-
-  #if we have a last timeout, use it to fallback
-  # TODO: this should use fallback_delay
-  def timeout(%{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
-    switch_to_fallback(session)
-  end
-
+  
   # Let's try again
   def timeout(%{current_mode: %{retries: [_ | retries]}, channel_state: channel_state, respondent: respondent} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)

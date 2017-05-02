@@ -53,10 +53,13 @@ defmodule Ask.StepsValidatorTest do
     ~s({})
     |> invalid_questionnaire("Steps must be mandatory")
 
-    ~s({"steps": {}})
+    ~s({})
+    |> invalid_questionnaire("Settings must be mandatory")
+
+    ~s({"steps": {}, "settings" : {}})
     |> invalid_questionnaire("Questionnaire steps must be an array")
 
-    ~s({"steps": []})
+    ~s({"steps": [], "settings" : {}})
     |> valid_questionnaire
   end
 

@@ -2,7 +2,7 @@ defmodule Ask.QuestionnaireTest do
   use Ask.{ModelCase, DummySteps}
   alias Ask.Questionnaire
 
-  @valid_attrs %{project_id: 1, name: "some content", modes: ["sms", "ivr"], steps: []}
+  @valid_attrs %{project_id: 1, name: "some content", modes: ["sms", "ivr"], steps: [], settings: %{}}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
@@ -12,7 +12,7 @@ defmodule Ask.QuestionnaireTest do
 
   test "strips empty strings from mode list" do
     project = insert(:project)
-    attrs = %{project_id: project.id, name: "some content", modes: [], steps: []}
+    attrs = %{project_id: project.id, name: "some content", modes: [], steps: [], settings: %{}}
     changeset = Questionnaire.changeset(%Questionnaire{}, attrs)
     model = changeset |> Repo.insert!
     id = model.id

@@ -14,6 +14,8 @@ import QuestionnaireMsg from './QuestionnaireMsg'
 import MobileWebSmsMessage from './MobileWebSmsMessage'
 import MobileWebSurveyIsOverMessage from './MobileWebSurveyIsOverMessage'
 import ColorSelection from './ColorSelection'
+import QuestionnaireDisplayedTitle from './QuestionnaireDisplayedTitle'
+import SurveyAlreadyTakenMessage from './SurveyAlreadyTakenMessage'
 import csvString from 'csv-string'
 import { ConfirmationModal } from '../ui'
 import * as language from '../../language'
@@ -399,11 +401,14 @@ class QuestionnaireEditor extends Component {
           </div>
           }
           <div className='row'>
-            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMsg' readOnly={readOnly} icon='pie_chart' />
+            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMessage' readOnly={readOnly} icon='pie_chart' />
           </div>
           <div className='row'>
-            <QuestionnaireMsg title='Error' messageKey='errorMsg' readOnly={readOnly} icon='warning' />
+            <QuestionnaireMsg title='Error' messageKey='errorMessage' readOnly={readOnly} icon='warning' />
           </div>
+          {mobileweb
+          ? <QuestionnaireDisplayedTitle readOnly={readOnly} />
+          : null}
           {mobileweb
           ? <MobileWebSmsMessage readOnly={readOnly} />
           : null}
@@ -411,6 +416,9 @@ class QuestionnaireEditor extends Component {
           ? <MobileWebSurveyIsOverMessage readOnly={readOnly} />
           : null}
           <ColorSelection />
+          {mobileweb
+          ? <SurveyAlreadyTakenMessage readOnly={readOnly} />
+          : null}
         </div>
         : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
         }

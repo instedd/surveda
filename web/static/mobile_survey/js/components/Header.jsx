@@ -4,12 +4,13 @@ import { connect } from 'react-redux'
 
 class Header extends Component {
   render() {
-    const { progress } = this.props
+    const { progress, title } = this.props
     const percent = `${progress}%`
 
     return (
       <header>
         <nav>
+          <h1>{title}</h1>
           <div className='progressBar'>
             <span style={{ width: percent }} />
           </div>
@@ -20,11 +21,13 @@ class Header extends Component {
 }
 
 Header.propTypes = {
-  progress: PropTypes.number.isRequired
+  progress: PropTypes.number.isRequired,
+  title: PropTypes.string.isRequired
 }
 
 const mapStateToProps = (state) => ({
-  progress: state.step.progress
+  progress: state.step.progress,
+  title: state.step.title
 })
 
 export default connect(mapStateToProps)(Header)
