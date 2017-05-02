@@ -89,6 +89,8 @@ class IvrPrompt extends Component {
 
   render() {
     const { id, value, inputErrors, audioIdErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId } = this.props
+    let { label } = this.props
+    if (!label) label = 'Voice message'
 
     const shouldDisplayErrors = value == this.props.originalValue
 
@@ -125,7 +127,7 @@ class IvrPrompt extends Component {
       <div>
         <div className='row'>
           <div className='col input-field s12'>
-            <InputWithLabel id={id} value={value} label='Voice message' errors={inputErrors} >
+            <InputWithLabel id={id} value={value} label={label} errors={inputErrors} >
               <input
                 type='text'
                 disabled={readOnly}
@@ -179,6 +181,7 @@ class IvrPrompt extends Component {
 
 IvrPrompt.propTypes = {
   id: PropTypes.string.isRequired,
+  label: PropTypes.string,
   customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,

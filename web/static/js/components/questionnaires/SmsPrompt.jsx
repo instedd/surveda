@@ -94,13 +94,16 @@ class SmsPrompt extends Component {
       'validate invalid': (inputErrors != null && inputErrors.length > 0 && shouldDisplayReducerErrors) || limitExceeded(value)
     })
 
-    const label = total == 1 ? 'SMS message' : `SMS message (part ${index + 1})`
+    let { label } = this.props
+    if (!label) label = 'SMS message'
+
+    const labelComponent = total == 1 ? label : `${label} (part ${index + 1})`
     const last = index + 1 == total
     const fixedLength = last ? fixedEndLength : null
 
     const inputComponent = (
       <div>
-        <InputWithLabel id={`${id}-${index}`} value={value} readOnly={readOnly} label={label} errors={[errors]} >
+        <InputWithLabel id={`${id}-${index}`} value={value} readOnly={readOnly} label={labelComponent} errors={[errors]} >
           <input
             type='text'
             onChange={e => this.onChange(e)}
@@ -183,6 +186,7 @@ class SmsPrompt extends Component {
 
 SmsPrompt.propTypes = {
   id: PropTypes.string.isRequired,
+  label: PropTypes.string,
   originalValue: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
