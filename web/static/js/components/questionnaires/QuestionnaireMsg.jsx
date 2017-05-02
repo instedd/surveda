@@ -264,7 +264,7 @@ class QuestionnaireMsg extends Component {
             <div className='card-content closed-step'>
               <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
                 <i className={iconClass}>{icon}</i>
-                <span className={classNames({'text-error': hasErrors})}>{title} messages</span>
+                <span className={classNames({'text-error': hasErrors})}>{title} message</span>
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
               </a>
             </div>
@@ -346,7 +346,7 @@ class QuestionnaireMsg extends Component {
                 <div className='col s12'>
                   <i className='material-icons left'>{icon}</i>
                   <a className='page-title truncate'>
-                    <span>{title} messages</span>
+                    <span>{title} message</span>
                   </a>
                   <a className='collapse right' href='#!' onClick={(e) => this.handleClick(e)}>
                     <i className='material-icons'>expand_less</i>

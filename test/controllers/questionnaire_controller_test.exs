@@ -91,6 +91,16 @@ defmodule Ask.QuestionnaireControllerTest do
           },
           "mobile_web_sms_message" => "Please enter",
           "mobile_web_survey_is_over_message" => "Survey is over",
+          "thank_you_message" => %{
+            "en" => %{
+              "sms" => "Thanks for completing this survey",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "Thanks for completing this survey (ivr)"
+              },
+              "mobileweb" => "Thanks for completing this survey (mobileweb)"
+            }
+          },
         }
       }
     end
@@ -130,7 +140,8 @@ defmodule Ask.QuestionnaireControllerTest do
               "ivr" => %{
                 "audio_source" => "tts",
                 "text" => "Quota completed (ivr)"
-              }
+              },
+              "mobileweb" => "Quota completed (mobileweb)"
             }
           },
           "error_message" => %{
@@ -139,11 +150,22 @@ defmodule Ask.QuestionnaireControllerTest do
               "ivr" => %{
                 "audio_source" => "tts",
                 "text" => "You have entered an invalid answer (ivr)"
-              }
+              },
+              "mobileweb" => "You have entered an invalid answer (mobileweb)"
             }
           },
           "mobile_web_sms_message" => "Please enter",
           "mobile_web_survey_is_over_message" => "Survey is over",
+          "thank_you_message" => %{
+            "en" => %{
+              "sms" => "Thanks for completing this survey",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "Thanks for completing this survey (ivr)"
+              },
+              "mobileweb" => "Thanks for completing this survey (mobileweb)"
+            }
+          },
         }
       }
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: quiz

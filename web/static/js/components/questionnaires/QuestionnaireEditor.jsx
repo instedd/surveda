@@ -405,6 +405,9 @@ class QuestionnaireEditor extends Component {
           <div className='row'>
             <QuestionnaireMsg title='Error' messageKey='errorMessage' readOnly={readOnly} icon='warning' />
           </div>
+          <div className='row'>
+            <QuestionnaireMsg title='Thank you' messageKey='thankYouMessage' readOnly={readOnly} icon='chat_bubble_outline' />
+          </div>
           {mobileweb
           ? <QuestionnaireDisplayedTitle readOnly={readOnly} />
           : null}
