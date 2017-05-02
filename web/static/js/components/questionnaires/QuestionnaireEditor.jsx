@@ -10,11 +10,9 @@ import { csvForTranslation, csvTranslationFilename } from '../../reducers/questi
 import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
-import QuestionnaireMsg from './QuestionnaireMsg'
-import MobileWebSmsMessage from './MobileWebSmsMessage'
-import MobileWebSurveyIsOverMessage from './MobileWebSurveyIsOverMessage'
-import QuestionnaireDisplayedTitle from './QuestionnaireDisplayedTitle'
-import SurveyAlreadyTakenMessage from './SurveyAlreadyTakenMessage'
+import SmsSettings from './SmsSettings'
+import PhoneCallSettings from './PhoneCallSettings'
+import WebSettings from './WebSettings'
 import csvString from 'csv-string'
 import { ConfirmationModal } from '../ui'
 import * as language from '../../language'
@@ -399,27 +397,15 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           }
-          <div className='row'>
-            <QuestionnaireMsg title='Quota completed' messageKey='quotaCompletedMessage' readOnly={readOnly} icon='pie_chart' />
-          </div>
-          <div className='row'>
-            <QuestionnaireMsg title='Error' messageKey='errorMessage' readOnly={readOnly} icon='warning' />
-          </div>
-          <div className='row'>
-            <QuestionnaireMsg title='Thank you' messageKey='thankYouMessage' readOnly={readOnly} icon='chat_bubble_outline' />
-          </div>
-          {mobileweb
-          ? <QuestionnaireDisplayedTitle readOnly={readOnly} />
-          : null}
-          {mobileweb
-          ? <MobileWebSmsMessage readOnly={readOnly} />
-          : null}
-          {mobileweb
-          ? <MobileWebSurveyIsOverMessage readOnly={readOnly} />
-          : null}
-          {mobileweb
-          ? <SurveyAlreadyTakenMessage readOnly={readOnly} />
-          : null}
+          { sms
+          ? <SmsSettings readOnly={readOnly} />
+          : null }
+          { ivr
+          ? <PhoneCallSettings readOnly={readOnly} />
+          : null }
+          { mobileweb
+          ? <WebSettings readOnly={readOnly} />
+          : null }
         </div>
         : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
         }
