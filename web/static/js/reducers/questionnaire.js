@@ -32,6 +32,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
     case actions.SET_PRIMARY_COLOR: return setPrimaryColor(state, action)
+    case actions.SET_SECONDARY_COLOR: return setSecondaryColor(state, action)
     case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
     case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
     default: return steps(state, action)
@@ -921,18 +922,26 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
   if (questionnaire.settings.title) {
     const defaultTitle = questionnaire.settings.title[defaultLang]
     if (defaultTitle && defaultTitle.trim().length != 0) {
-      addToCsvForTranslation(defaultTitle, context, lang =>
-        questionnaire.settings.title[lang] || ''
-      )
+      addToCsvForTranslation(defaultTitle, context, lang => {
+        if (questionnaire.settings.title && questionnaire.settings.title[lang]) {
+          return questionnaire.settings.title[lang]
+        } else {
+          return ''
+        }
+      })
     }
   }
 
   if (questionnaire.settings.surveyAlreadyTakenMessage) {
     const defaultMessage = questionnaire.settings.surveyAlreadyTakenMessage[defaultLang]
     if (defaultMessage && defaultMessage.trim().length != 0) {
-      addToCsvForTranslation(defaultMessage, context, lang =>
-        questionnaire.settings.surveyAlreadyTakenMessage[lang] || ''
-      )
+      addToCsvForTranslation(defaultMessage, context, lang => {
+        if (questionnaire.settings.surveyAlreadyTakenMessage && questionnaire.settings.surveyAlreadyTakenMessage[lang]) {
+          return questionnaire.settings.surveyAlreadyTakenMessage[lang]
+        } else {
+          return ''
+        }
+      })
     }
   }
 
@@ -1238,6 +1247,7 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
 }
 
 const translateLanguage = (obj, defaultLanguage, lookup) => {
+  if (!obj) return obj
   let defaultLanguageMessage = obj[defaultLanguage]
   if (!defaultLanguageMessage) return obj
 
@@ -1360,6 +1370,27 @@ const buildCsvLookup = (csv, defaultLanguage) => {
 }
 
 const setPrimaryColor = (state, action) => {
-  console.log('setting primary color')
-  return state
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      mobileWebColorStyle: {
+        ...state.settings.mobileWebColorStyle,
+        primaryColor: action.color
+      }
+    }
+  }
+}
+
+const setSecondaryColor = (state, action) => {
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      mobileWebColorStyle: {
+        ...state.settings.mobileWebColorStyle,
+        secondaryColor: action.color
+      }
+    }
+  }
 }
