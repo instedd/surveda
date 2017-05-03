@@ -10,7 +10,6 @@ import { csvForTranslation, csvTranslationFilename } from '../../reducers/questi
 import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
-import ColorSelection from './ColorSelection'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
@@ -398,7 +397,6 @@ class QuestionnaireEditor extends Component {
             </div>
           </div>
           }
-          <ColorSelection />
           { sms
           ? <SmsSettings readOnly={readOnly} />
           : null }

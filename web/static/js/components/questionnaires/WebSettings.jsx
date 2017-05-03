@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { Card } from '../ui'
 import SmsPrompt from './SmsPrompt'
 import MobileWebPrompt from './MobileWebPrompt'
+import ColorSelection from './ColorSelection'
 import classNames from 'classnames'
 import propsAreEqual from '../../propsAreEqual'
 import { getPromptMobileWeb } from '../../step'
@@ -33,7 +34,9 @@ class WebSettings extends Component {
       title: props.title,
       smsMessage: props.smsMessage,
       surveyIsOverMessage: props.surveyIsOverMessage,
-      surveyAlreadyTakenMessage: props.surveyAlreadyTakenMessage
+      surveyAlreadyTakenMessage: props.surveyAlreadyTakenMessage,
+      primaryColor: props.primaryColor,
+      secondaryColor: props.secondaryColor
     }
   }
 
@@ -59,6 +62,15 @@ class WebSettings extends Component {
 
   surveyAlreadyTakenMessageBlur(text) {
     this.props.dispatch(actions.setSurveyAlreadyTakenMessage(text))
+  }
+
+  colorSelectionBlur(text, mode) {
+    const { dispatch } = this.props
+    if (mode == 'primary') {
+      dispatch(actions.setPrimaryColor(this.state.primaryColor))
+    } else {
+      dispatch(actions.setSecondaryColor(this.state.secondaryColor))
+    }
   }
 
   collapsed() {
@@ -105,6 +117,12 @@ class WebSettings extends Component {
                   </a>
                 </div>
               </div>
+            </li>
+            <li className='collection-item'>
+              {this.colorSelectionComponent()}
+            </li>
+            <li className='collection-item'>
+              {this.quotaCompletedMessageComponent()}
             </li>
             <li className='collection-item'>
               {this.quotaCompletedMessageComponent()}
@@ -218,6 +236,31 @@ class WebSettings extends Component {
       />
   }
 
+  colorSelectionComponent() {
+    return (
+      <div>
+        <MobileWebPrompt id='web_settings_primary_color'
+          label='PrimaryColor'
+          inputErrors={[]}
+          value={this.state.primaryColor}
+          originalValue={this.state.primaryColor}
+          onChange={text => this.messageChange(text, 'primaryColor')}
+          onBlur={text => this.colorSelectionBlur(text, 'primary')}
+          readOnly={this.props.readOnly}
+        />
+        <MobileWebPrompt id='web_settings_secondary_color'
+          label='SecondaryColor'
+          inputErrors={[]}
+          value={this.state.secondaryColor}
+          originalValue={this.state.secondaryColor}
+          onChange={text => this.messageChange(text, 'secondaryColor')}
+          onBlur={text => this.colorSelectionBlur(text, 'secondary')}
+          readOnly={this.props.readOnly}
+        />
+      </div>
+    )
+  }
+
   messageErrors(key) {
     const { questionnaire, errorsByPath } = this.props
     return errorsByPath[`${key}.prompt['${questionnaire.activeLanguage}'].mobileweb`]
@@ -278,6 +321,7 @@ WebSettings.propTypes = {
   smsMessage: PropTypes.string,
   surveyIsOverMessage: PropTypes.string,
   surveyAlreadyTakenMessage: PropTypes.string,
+  primaryColor: PropTypes.string,
   readOnly: PropTypes.bool
 }
 
@@ -292,7 +336,9 @@ const mapStateToProps = (state, ownProps) => {
     title: quiz.data ? (quiz.data.settings.title || {})[quiz.data.activeLanguage] || '' : '',
     smsMessage: quiz.data ? quiz.data.settings.mobileWebSmsMessage || '' : '',
     surveyIsOverMessage: quiz.data ? quiz.data.settings.mobileWebSurveyIsOverMessage || '' : '',
-    surveyAlreadyTakenMessage: quiz.data ? (quiz.data.settings.surveyAlreadyTakenMessage || {})[quiz.data.activeLanguage] || '' : ''
+    surveyAlreadyTakenMessage: quiz.data ? (quiz.data.settings.surveyAlreadyTakenMessage || {})[quiz.data.activeLanguage] || '' : '',
+    primaryColor: quiz.data && quiz.data.settings.mobileWebColorStyle && quiz.data.settings.mobileWebColorStyle.primaryColor ? quiz.data.settings.mobileWebColorStyle.primaryColor : '',
+    secondaryColor: quiz.data && quiz.data.settings.mobileWebColorStyle && quiz.data.settings.mobileWebColorStyle.secondaryColor ? quiz.data.settings.mobileWebColorStyle.secondaryColor : ''
   }
 }
 
