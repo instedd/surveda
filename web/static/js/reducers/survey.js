@@ -11,6 +11,7 @@ import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
 import every from 'lodash/every'
 import some from 'lodash/some'
+import React from 'react'
 
 export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
@@ -252,6 +253,19 @@ export const labelFor = (mode: string) => {
     return 'Mobile Web'
   }
   return 'Unknown mode'
+}
+
+export const iconFor = (mode: string) => {
+  if (mode == 'sms') {
+    return (<i className='material-icons v-middle '>sms</i>)
+  }
+  if (mode == 'ivr') {
+    return (<i className='material-icons v-middle '>phone</i>)
+  }
+  if (mode == 'mobileweb') {
+    return (<i className='material-icons v-middle '>phone_android</i>)
+  }
+  return null
 }
 
 export const modeLabel = (mode: string[]) => {
