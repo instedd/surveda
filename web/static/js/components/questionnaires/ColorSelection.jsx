@@ -6,7 +6,9 @@ import * as actions from '../../actions/questionnaire'
 class ColorSelection extends Component {
   constructor(props) {
     super(props)
-    this.state = {primaryColor: props.colorStyles.primaryColor || '', secondaryColor: props.colorStyles.secondaryColor || ''}
+    const primaryColor = props.colorStyles && props.colorStyles.primaryColor ? props.colorStyles.primaryColor : ''
+    const secondaryColor = props.colorStyles && props.colorStyles.secondaryColor ? props.colorStyles.secondaryColor : ''
+    this.state = {primaryColor: primaryColor, secondaryColor: secondaryColor}
   }
 
   onBlur(text, mode) {
@@ -33,14 +35,23 @@ class ColorSelection extends Component {
   }
 
   render() {
-    let valuePrimary = this.state.primaryColor
-    let valueSecondary = this.state.secondaryColor
+    const valuePrimary = this.state.primaryColor
+    const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+    const primary = colorRegex.test(valuePrimary) ? valuePrimary : '#000000'
+    const valueSecondary = this.state.secondaryColor
+    const secondary = colorRegex.test(valueSecondary) ? valueSecondary : '#000000'
     return (
       <div className='row'>
         <Card className='z-depth-0'>
           <ul className='collection collection-card dark'>
             <li className='collection-item'>
               <div className='row'>
+                <svg style={{width: '70px', height: '70px'}}>
+                  <circle className='a' cx='29' cy='29' r='29' fill={primary} />
+                </svg>
+                <svg style={{width: '70px', height: '70px'}}>
+                  <circle className='a' cx='29' cy='29' r='29' fill={secondary} />
+                </svg>
                 <div className='col input-field s12'>
                   <InputWithLabel id='primaryColorInput' value={valuePrimary} label='Primary color' errors={[]} >
                     <input

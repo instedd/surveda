@@ -33,6 +33,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateMobileWebSmsMessage(data, context)
   validateMobileWebSurveyIsOverMessage(data, context)
   validateSurveyAlreadyTakenMessage(data, context)
+  validateMobileWebColorStyle(data, context)
 
   state.errorsByPath = errorsByPath(state.errors)
   state.errorsByLang = errorsByLang(state.errors)
@@ -377,6 +378,25 @@ const validateMobileWebSmsMessage = (data, context) => {
   if (exceeds) {
     addError(context, 'mobileWebSmsMessage', 'limit exceeded', null, 'mobileweb')
   }
+}
+
+const validateMobileWebColorStyle = (data, context) => {
+  if (!context.mobileweb) return
+  if (!data.settings.mobileWebColorStyle) return
+  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+  const primary = data.settings.mobileWebColorStyle.primaryColor
+  const secondary = data.settings.mobileWebColorStyle.secondaryColor
+  if (primary) {
+    if (!colorRegex.test(primary)) {
+      addError(context, 'mobileWebColorStyle.primaryColor', 'invalid color', null, 'mobileweb')
+    }
+  }
+  if (secondary) {
+    if (!colorRegex.test(secondary)) {
+      addError(context, 'mobileWebColorStyle.secondaryColor', 'invalid color', null, 'mobileweb')
+    }
+  }
+  return
 }
 
 const validateMobileWebSurveyIsOverMessage = (data, context) => {
