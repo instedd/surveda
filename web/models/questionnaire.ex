@@ -11,6 +11,7 @@ defmodule Ask.Questionnaire do
     field :languages, Ask.Ecto.Type.JSON
     field :default_language, :string
     field :valid, :boolean
+    belongs_to :snapshot_of_questionnaire, Ask.Questionnaire, foreign_key: :snapshot_of
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
 
@@ -22,9 +23,10 @@ defmodule Ask.Questionnaire do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :valid, :settings])
+    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :valid, :settings, :snapshot_of])
     |> validate_required([:project_id, :modes, :steps, :settings])
     |> foreign_key_constraint(:project_id)
+    |> foreign_key_constraint(:snapshot_of)
   end
 
   def recreate_variables!(questionnaire) do
@@ -73,6 +75,8 @@ defmodule Ask.Questionnaire do
       var
       |> Repo.delete!
     end)
+
+    questionnaire
   end
 
   def sms_split_separator, do: "\u{1E}"

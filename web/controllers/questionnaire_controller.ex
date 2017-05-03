@@ -6,10 +6,12 @@ defmodule Ask.QuestionnaireController do
   plug :validate_params when action in [:create, :update]
 
   def index(conn, %{"project_id" => project_id}) do
-    questionnaires = conn
+    project = conn
     |> load_project(project_id)
-    |> assoc(:questionnaires)
-    |> Repo.all
+
+    questionnaires = Repo.all(from q in Questionnaire,
+      where: q.project_id == ^project.id,
+      where: is_nil(q.snapshot_of))
 
     render(conn, "index.json", questionnaires: questionnaires)
   end
@@ -43,10 +45,10 @@ defmodule Ask.QuestionnaireController do
   end
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
-    questionnaire = conn
+    project = conn
     |> load_project(project_id)
-    |> assoc(:questionnaires)
-    |> Repo.get!(id)
+
+    questionnaire = load_questionnaire(project, id)
 
     render(conn, "show.json", questionnaire: questionnaire)
   end
@@ -57,9 +59,7 @@ defmodule Ask.QuestionnaireController do
 
     params = conn.assigns[:questionnaire]
 
-    questionnaire = project
-    |> assoc(:questionnaires)
-    |> Repo.get!(id)
+    questionnaire = load_questionnaire(project, id)
 
     old_valid = questionnaire.valid
     old_modes = questionnaire.modes
@@ -111,9 +111,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    project
-    |> assoc(:questionnaires)
-    |> Repo.get!(id)
+    load_questionnaire(project, id)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!
@@ -123,13 +121,10 @@ defmodule Ask.QuestionnaireController do
   end
 
   def export_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
-    project = Project
-    |> Repo.get!(project_id)
+    project = conn
+    |> load_project(project_id)
 
-    questionnaire = project
-    |> authorize(conn)
-    |> assoc(:questionnaires)
-    |> Repo.get!(id)
+    questionnaire = load_questionnaire(project, id)
 
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["quota_completed_message"], audio_ids)
@@ -182,13 +177,10 @@ defmodule Ask.QuestionnaireController do
   end
 
   def import_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id, "file" => file}) do
-    project = Project
-    |> Repo.get!(project_id)
+    project = conn
+    |> load_project_for_change(project_id)
 
-    questionnaire = project
-    |> authorize(conn)
-    |> assoc(:questionnaires)
-    |> Repo.get!(id)
+    questionnaire = load_questionnaire(project, id)
 
     {:ok, files} = :zip.unzip(to_charlist(file.path), [:memory])
 
@@ -272,5 +264,12 @@ defmodule Ask.QuestionnaireController do
 
   defp collect_lang_prompt_audio_ids(_, audio_ids) do
     audio_ids
+  end
+
+  defp load_questionnaire(project, id) do
+    Repo.one!(from q in Questionnaire,
+      where: q.project_id == ^project.id,
+      where: q.id == ^id,
+      where: is_nil(q.snapshot_of))
   end
 end

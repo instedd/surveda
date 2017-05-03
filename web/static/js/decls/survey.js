@@ -3,6 +3,7 @@ export type Survey = {
   id: number,
   projectId: number,
   questionnaireIds: number[],
+  questionnaires?: {[id: string]: Questionnaire},
   channels: number[],
   name: string,
   cutoff: ?number,
