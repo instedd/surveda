@@ -54,6 +54,17 @@ defmodule Ask.QuestionnaireControllerTest do
         get conn, project_questionnaire_path(conn, :index, questionnaire.project)
       end
     end
+
+    test "doesn't show snapshots", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
+
+      conn = get conn, project_questionnaire_path(conn, :index, project.id)
+      data = json_response(conn, 200)["data"]
+      assert length(data) == 1
+      assert hd(data)["id"] == questionnaire.id
+    end
   end
 
   describe "show:" do
@@ -115,6 +126,15 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire)
       assert_error_sent :forbidden, fn ->
         get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
+      end
+    end
+
+    test "forbid access to snapshot", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      snapshot = insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
+      assert_error_sent :not_found, fn ->
+        get conn, project_questionnaire_path(conn, :show, questionnaire.project, snapshot)
       end
     end
   end
@@ -270,6 +290,15 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       assert_error_sent :forbidden, fn ->
         put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @invalid_attrs
+      end
+    end
+
+    test "rejects update for a snaphost", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      snapshot = insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
+      assert_error_sent :not_found, fn ->
+        put conn, project_questionnaire_path(conn, :update, questionnaire.project, snapshot), questionnaire: @valid_attrs
       end
     end
 
@@ -580,6 +609,15 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       assert_error_sent :forbidden, fn ->
         delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, questionnaire)
+      end
+    end
+
+    test "rejects delete for a snapshot", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      snapshot = insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
+      assert_error_sent :not_found, fn ->
+        delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, snapshot)
       end
     end
 

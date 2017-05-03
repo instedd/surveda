@@ -1,6 +1,7 @@
 defmodule Ask.SurveyControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
+  use Ask.DummySteps
 
   alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel}
   alias Ask.Runtime.{Flow, Session}
@@ -785,6 +786,29 @@ defmodule Ask.SurveyControllerTest do
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
+  end
+
+  test "when launching a survey, it creates questionnaire snapshots", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+
+    questionnaire |> Ask.Questionnaire.recreate_variables!
+
+    survey = insert(:survey, project: project, state: "ready", questionnaires: [questionnaire])
+    conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    assert json_response(conn, 200)
+
+    survey = Repo.get(Survey, survey.id)
+    |> Repo.preload(:questionnaires)
+
+    qs = survey.questionnaires
+    assert length(qs) == 1
+
+    q = hd(qs)
+    assert q.snapshot_of == questionnaire.id
+    assert q.name == questionnaire.name
+    assert q.steps == questionnaire.steps
+    assert q.modes == questionnaire.modes
   end
 
   test "forbids launch for project reader", %{conn: conn, user: user} do

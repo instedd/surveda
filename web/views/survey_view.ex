@@ -21,8 +21,11 @@ defmodule Ask.SurveyView do
   end
 
   def render("survey_detail.json", %{survey: survey}) do
+    questionnaires = Ask.Repo.preload(survey, :questionnaires).questionnaires
+    ids = Enum.map(questionnaires, &(&1.id))
     started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: ""
-    %{id: survey.id,
+
+    map = %{id: survey.id,
       name: survey.name,
       mode: survey.mode,
       project_id: survey.project_id,
@@ -47,6 +50,17 @@ defmodule Ask.SurveyView do
       },
       comparisons: survey.comparisons || []
     }
+
+    if Ask.Survey.launched?(survey) do
+      qs = questionnaires
+      |> Enum.map(fn q ->
+        {to_string(q.id), %{id: q.id, name: q.name, valid: true}}
+      end)
+      |> Enum.into(%{})
+      Map.put(map, :questionnaires, qs)
+    else
+      map
+    end
   end
 
   def render("survey_bucket.json", %{bucket: bucket}) do

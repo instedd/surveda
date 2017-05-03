@@ -289,4 +289,8 @@ defmodule Ask.Survey do
       next_available_date(survey, erl_date)
     end
   end
+
+  def launched?(survey) do
+    survey.state in ["running", "completed", "cancelled"]
+  end
 end

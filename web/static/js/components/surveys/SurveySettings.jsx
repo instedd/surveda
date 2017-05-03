@@ -65,7 +65,7 @@ const mapStateToProps = (state, ownProps) => ({
   project: state.project.data,
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items,
-  questionnaires: state.questionnaires.items || {},
+  questionnaires: (state.survey.data || {}).questionnaires || state.questionnaires.items || {},
   respondentGroups: state.respondentGroups.items || {},
   respondentGroupsUploading: state.respondentGroups.uploading,
   respondentGroupsUploadingExisting: state.respondentGroups.uploadingExisting,
