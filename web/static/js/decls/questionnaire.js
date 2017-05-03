@@ -19,6 +19,7 @@ export type Settings = {
   mobileWebColorStyle?: ColorStylePrompt,
   title?: {[lang: string]: string},
   surveyAlreadyTakenMessage?: {[lang: string]: string},
+  thankYouMessage?: Prompt,
 };
 
 export type ChoiceErrors = {

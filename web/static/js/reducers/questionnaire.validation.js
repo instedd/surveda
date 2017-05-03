@@ -27,6 +27,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateSteps(data.steps, context, 'steps')
 
   validateMessage('errorMessage', data.settings.errorMessage, context)
+  validateThankYouMessage(data.settings.thankYouMessage, context)
   validateMessage('quotaCompletedMessage', data.settings.quotaCompletedMessage, context)
 
   validateTitle(data, context)
@@ -345,6 +346,20 @@ const validateMessage = (msgKey: string, msg: ?Prompt, context: ValidationContex
       validatePrompt(msg[lang], context, lang, `${path}['${lang}']`)
     }
   })
+}
+
+const validateThankYouMessage = (msg: ?Prompt, context: ValidationContext) => {
+  msg = msg || {}
+
+  const path = 'thankYouMessage.prompt'
+
+  if (context.mobileweb) {
+    context.languages.forEach(lang => {
+      if (msg && msg[lang]) {
+        validateMobileWebLangPrompt(msg[lang], context, lang, `${path}['${lang}']`)
+      }
+    })
+  }
 }
 
 const validateTitle = (data, context) => {

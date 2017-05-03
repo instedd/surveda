@@ -193,6 +193,12 @@ defmodule Ask.Runtime.Flow do
     step = current_step(flow)
     case step do
       nil ->
+        msg = flow.questionnaire.settings["thank_you_message"]
+        visitor = if msg do
+          visitor |> Visitor.accept_message(msg, flow.language, "Thank you")
+        else
+          visitor
+        end
         {:end, nil, %{state | steps: Visitor.close(visitor)}}
       step ->
         case state |> run_step(step) do

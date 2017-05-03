@@ -148,9 +148,9 @@ class QuestionnaireIndex extends Component {
                         </a>
                       </Tooltip>
                     </td>}
-                  <td>
+                  <td className='tdError'>
                     {!questionnaire.valid
-                    ? <span className='questionnaire-tooltip-error' />
+                    ? <span className='questionnaire-error' />
                     : null}
                   </td>
                 </tr>

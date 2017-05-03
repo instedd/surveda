@@ -677,7 +677,7 @@ const autocompleteSmsQuestionnaireMsg = (state, action) => {
   let lang = state.defaultLanguage
   let msgKey = action.msgKey
   let item = action.item
-  let msg = Object.assign({}, state[msgKey])
+  let msg = Object.assign({}, state.settings[msgKey])
 
   // First default language
   let langPrompt = msg[lang] || {}
@@ -703,7 +703,10 @@ const autocompleteSmsQuestionnaireMsg = (state, action) => {
 
   return {
     ...state,
-    [msgKey]: msg
+    settings: {
+      ...state.settings,
+      [msgKey]: msg
+    }
   }
 }
 
@@ -711,7 +714,7 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
   let lang = state.defaultLanguage
   let msgKey = action.msgKey
   let item = action.item
-  let msg = Object.assign({}, state[msgKey])
+  let msg = Object.assign({}, state.settings[msgKey])
 
   // First default language
   let langPrompt = msg[lang] || {}
@@ -745,7 +748,10 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
 
   return {
     ...state,
-    [msgKey]: msg
+    settings: {
+      ...state.settings,
+      [msgKey]: msg
+    }
   }
 }
 

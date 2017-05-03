@@ -1450,12 +1450,12 @@ describe('questionnaire reducer', () => {
       actions.fetch(1, 1),
       actions.receive(questionnaire),
       actions.addLanguage('es'),
-      actions.autocompleteSmsQuestionnaireMsg('questionnaireMsg',
+      actions.autocompleteSmsQuestionnaireMsg('questionnaireMessage',
         {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 
-    const prompt = state.data.questionnaireMsg
+    const prompt = state.data.settings.questionnaireMessage
     expect(prompt['en'].sms).toEqual('New prompt')
     expect(prompt['es'].sms).toEqual('Nuevo prompt')
   })
@@ -1465,12 +1465,12 @@ describe('questionnaire reducer', () => {
       actions.fetch(1, 1),
       actions.receive(questionnaire),
       actions.addLanguage('es'),
-      actions.autocompleteIvrQuestionnaireMsg('questionnaireMsg',
+      actions.autocompleteIvrQuestionnaireMsg('questionnaireMessage',
         {text: '  New prompt  ', translations: [{language: 'es', text: '  Nuevo prompt  '}, {language: null, text: null}]}
       )]
     )
 
-    const prompt = state.data.questionnaireMsg
+    const prompt = state.data.settings.questionnaireMessage
     expect(prompt['en'].ivr.text).toEqual('New prompt')
     expect(prompt['en'].ivr.audioSource).toEqual('tts')
     expect(prompt['es'].ivr.text).toEqual('Nuevo prompt')
