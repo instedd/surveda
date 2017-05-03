@@ -22,7 +22,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   def quota_completed(flow, visitor) do
-    msg = flow.questionnaire.quota_completed_msg
+    msg = flow.questionnaire.settings["quota_completed_message"]
     if msg do
       visitor = visitor |> Visitor.accept_message(msg, flow.language, "Quota completed")
       {:ok, %Reply{steps: Visitor.close(visitor)}}
@@ -110,6 +110,16 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
+  defp accept_reply(flow, {:reply_with_step_id, reply, step_id}, visitor, mode) do
+    step = current_step(flow)
+    case step do
+      %{"id" => ^step_id} ->
+        accept_reply(flow, {:reply, reply}, visitor, mode)
+      _ ->
+        accept_reply(flow, :answer, visitor, mode)
+    end
+  end
+
   defp accept_reply_non_stop(flow, reply, visitor, mode) do
     step = current_step(flow)
 
@@ -128,7 +138,7 @@ defmodule Ask.Runtime.Flow do
         if flow.retries >=  @max_retries do
           :failed
         else
-          visitor = visitor |> Visitor.accept_message(flow.questionnaire.error_msg, flow.language, "Error")
+          visitor = visitor |> Visitor.accept_message(flow.questionnaire.settings["error_message"], flow.language, "Error")
           {%{flow | retries: flow.retries + 1}, %Reply{}, visitor}
         end
       nil ->
@@ -183,6 +193,12 @@ defmodule Ask.Runtime.Flow do
     step = current_step(flow)
     case step do
       nil ->
+        msg = flow.questionnaire.settings["thank_you_message"]
+        visitor = if msg do
+          visitor |> Visitor.accept_message(msg, flow.language, "Thank you")
+        else
+          visitor
+        end
         {:end, nil, %{state | steps: Visitor.close(visitor)}}
       step ->
         case state |> run_step(step) do
@@ -204,13 +220,26 @@ defmodule Ask.Runtime.Flow do
 
   defp reply(state, visitor, flow) do
     reply = %{state | steps: Visitor.close(visitor)}
-    reply = add_progress(reply, flow)
+    |> add_progress(flow)
+    |> add_error_message(flow)
+
     {:ok, flow, reply}
   end
 
   defp add_progress(reply, flow) do
     {current_step, total_steps} = compute_progress(flow)
     %{reply | current_step: current_step, total_steps: total_steps}
+  end
+
+  defp add_error_message(reply, flow) do
+    language = flow.language
+    mode = flow.mode
+    case flow.questionnaire.settings["error_message"] do
+      %{^language => %{^mode => error_message}} ->
+        %{reply | error_message: error_message}
+      _ ->
+        reply
+    end
   end
 
   defp compute_progress(flow) do

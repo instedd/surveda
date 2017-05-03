@@ -3,20 +3,26 @@ import * as actions from '../actions/respondentGroups'
 const initialState = {
   fetching: false,
   uploading: false,
+  uploadingExisting: {},
   items: null,
   surveyId: null,
-  invalidRespondents: null
+  invalidRespondents: null,
+  invalidRespondentsForGroup: false
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
     case actions.FETCH_RESPONDENT_GROUPS: return fetchRespondentGroups(state, action)
     case actions.UPLOAD_RESPONDENT_GROUP: return uploadRespondentGroup(state, action)
+    case actions.UPLOAD_EXISTING_RESPONDENT_GROUP_ID: return uploadExistingRespondentGroup(state, action)
+    case actions.DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID: return doneUploadExistingRespondentGroup(state, action)
     case actions.RECEIVE_RESPONDENT_GROUPS: return receiveRespondentGroups(state, action)
     case actions.RECEIVE_RESPONDENT_GROUP: return receiveRespondentGroup(state, action)
     case actions.REMOVE_RESPONDENT_GROUP: return removeRespondentGroup(state, action)
     case actions.INVALID_RESPONDENTS: return receiveInvalids(state, action)
     case actions.CLEAR_INVALIDS: return clearInvalids(state, action)
+    case actions.INVALID_RESPONDENTS_FOR_GROUP: return receiveInvalidsForGroup(state, action)
+    case actions.CLEAR_INVALID_RESPONDENTS_FOR_GROUP: return clearInvalidsForGroup(state, action)
     case actions.SELECT_CHANNELS: return selectChannels(state, action)
     default: return state
   }
@@ -37,6 +43,26 @@ const uploadRespondentGroup = (state, action) => {
   return {
     ...state,
     uploading: true
+  }
+}
+
+const uploadExistingRespondentGroup = (state, action) => {
+  return {
+    ...state,
+    uploadingExisting: {
+      ...state.uploadingExisting,
+      [action.id]: true
+    }
+  }
+}
+
+const doneUploadExistingRespondentGroup = (state, action) => {
+  return {
+    ...state,
+    uploadingExisting: {
+      ...state.uploadingExisting,
+      [action.id]: false
+    }
   }
 }
 
@@ -91,6 +117,16 @@ const clearInvalids = (state, action) => {
     uploading: false
   }
 }
+
+const receiveInvalidsForGroup = (state, action) => ({
+  ...state,
+  invalidRespondentsForGroup: true
+})
+
+const clearInvalidsForGroup = (state, action) => ({
+  ...state,
+  invalidRespondentsForGroup: false
+})
 
 const selectChannels = (state, action) => {
   return {

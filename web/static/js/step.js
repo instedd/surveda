@@ -1,14 +1,14 @@
 // @flow
 export function getStepPrompt(step: Step, language: string): LanguagePrompt {
+  let prompt = null
   if (step.type !== 'flag') {
     if (step.type === 'language-selection') {
-      return step.prompt
+      prompt = step.prompt
     } else {
-      return step.prompt[language]
+      prompt = step.prompt[language]
     }
-  } else {
-    return {}
   }
+  return prompt || newStepPrompt()
 }
 
 export function setStepPrompt<T: Step>(step: T, language: string, func: (prompt: Object) => T): T {
@@ -83,7 +83,8 @@ export function getChoiceResponseMobileWebJoined(choice: Choice, language: strin
 export const newStepPrompt = () => {
   return {
     sms: '',
-    ivr: newIvrPrompt()
+    ivr: newIvrPrompt(),
+    mobileweb: ''
   }
 }
 

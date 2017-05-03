@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.Reply do
-  defstruct stores: [], steps: [], disposition: nil, current_step: nil, total_steps: nil
+  defstruct stores: [], steps: [], disposition: nil, current_step: nil, total_steps: nil, error_message: nil
 
   def prompts(%{steps: steps}) do
     Enum.flat_map(steps, fn(step) -> step.prompts end)
@@ -23,17 +23,17 @@ defmodule Ask.Runtime.Reply do
 end
 
 defmodule Ask.Runtime.ReplyStep do
-  defstruct prompts: [], id: nil, title: nil, type: nil, choices: [], min: nil, max: nil
+  defstruct prompts: [], id: nil, title: nil, type: nil, choices: [], min: nil, max: nil, refusal: nil
   alias __MODULE__
 
-  def new(prompts, title, type \\ "explanation", id \\ nil, choices \\ [], min \\ nil, max \\ nil)
+  def new(prompts, title, type \\ "explanation", id \\ nil, choices \\ [], min \\ nil, max \\ nil, refusal \\ nil)
 
-  def new([nil], _, _, _, _, _, _) do
+  def new([nil], _, _, _, _, _, _, _) do
     nil
   end
 
-  def new(prompts, title, type, id, choices, min, max) do
-    %ReplyStep{prompts: prompts, id: id, title: title, type: type, choices: choices, min: min, max: max}
+  def new(prompts, title, type, id, choices, min, max, refusal) do
+    %ReplyStep{prompts: prompts, id: id, title: title, type: type, choices: choices, min: min, max: max, refusal: refusal}
   end
 
   def title_with_index(step, index) do

@@ -102,7 +102,7 @@ class SkipLogic extends Component {
     let { skipOptions, currentValueIsValid } = this.skipOptions(this.state.value, stepsAfter, stepsBefore)
 
     return (
-      <Input s={12} type='select'
+      <Input type='select'
         label={label}
         disabled={readOnly}
         onChange={e => this.change(e)}

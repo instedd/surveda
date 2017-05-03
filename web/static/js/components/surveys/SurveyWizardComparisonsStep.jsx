@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
 import { UntitledIfEmpty, PercentageInput } from '../ui'
 import find from 'lodash/find'
-import { modeLabel } from '../../reducers/survey'
+import { modeLabel } from '../../questionnaire.mode'
 
 class SurveyWizardComparisonsStep extends Component {
   static propTypes = {

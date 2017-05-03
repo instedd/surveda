@@ -79,7 +79,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mobile_contact_message(%Session{flow: flow, respondent: respondent}) do
-    msg = flow.questionnaire.mobile_web_sms_message || "Please enter"
+    msg = flow.questionnaire.settings["mobile_web_sms_message"] || "Please enter"
     prompts = Ask.Runtime.Step.split_by_newlines(msg)
 
     prompts
@@ -160,6 +160,10 @@ defmodule Ask.Runtime.Session do
     SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, disposition || respondent.disposition, :response, response)
   end
 
+  defp log_response({:reply_with_step_id, response, _step_id}, channel, mode, respondent, disposition) do
+    log_response({:reply, response}, channel, mode, respondent, disposition)
+  end
+
   defp handle_setup_response(setup_response) do
     case setup_response do
       {:ok, new_state} ->
@@ -186,13 +190,7 @@ defmodule Ask.Runtime.Session do
 
   # If there is a fallback specified, switch session to use it
   def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session)
-
-  #if we have a last timeout, use it to fallback
-  # TODO: this should use fallback_delay
-  def timeout(%{current_mode: %{retries: [_]}, fallback_mode: fallback} = session) when not is_nil(fallback) do
-    switch_to_fallback(session)
-  end
-
+  
   # Let's try again
   def timeout(%{current_mode: %{retries: [_ | retries]}, channel_state: channel_state, respondent: respondent} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
@@ -303,12 +301,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp handle_step_answer(_, {:end, _, reply}, respondent, _, _, _) do
-    case Reply.steps(reply) do
-      [] ->
-        {:end, respondent}
-      _ ->
-        {:end, reply, respondent}
-    end
+    {:end, reply, respondent}
   end
 
   defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets, current_mode) do

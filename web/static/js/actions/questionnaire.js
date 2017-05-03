@@ -44,6 +44,8 @@ export const TOGGLE_ACCEPT_REFUSALS = 'QUESTIONNAIRE_TOGGLE_ACCEPT_REFUSALS'
 export const CHANGE_REFUSAL = 'QUESTIONNAIRE_CHANGE_REFUSAL'
 export const SET_MOBILE_WEB_SMS_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SMS_MESSAGE'
 export const SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE = 'QUESTIONNAIRE_SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE'
+export const SET_DISPLAYED_TITLE = 'QUESTIONNAIRE_SET_DISPLAYED_TITLE'
+export const SET_SURVEY_ALREADY_TAKEN_MESSAGE = 'QUESTIONNAIRE_SET_SURVEY_ALREADY_TAKEN_MESSAGE'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -251,6 +253,16 @@ export const setMobileWebQuestionnaireMsg = (msgKey, msg) => ({
   msg
 })
 
+export const setDisplayedTitle = (msg) => ({
+  type: SET_DISPLAYED_TITLE,
+  msg
+})
+
+export const setSurveyAlreadyTakenMessage = (msg) => ({
+  type: SET_SURVEY_ALREADY_TAKEN_MESSAGE,
+  msg
+})
+
 export const autocompleteSmsQuestionnaireMsg = (msgKey, item) => ({
   type: AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG,
   msgKey,
@@ -270,7 +282,7 @@ export const save = () => (dispatch, getState) => {
 }
 
 export const createQuestionnaire = (projectId) => (dispatch) =>
-  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: [newMultipleChoiceStep()]})
+  api.createQuestionnaire(projectId, {name: '', modes: ['sms', 'ivr'], steps: [newMultipleChoiceStep()], settings: {}})
   .then(response => {
     const questionnaire = response.entities.questionnaires[response.result]
     dispatch(fetch(projectId, questionnaire.id))
@@ -332,11 +344,12 @@ export const toggleAcceptsRefusals = (stepId) => ({
   stepId
 })
 
-export const changeRefusal = (stepId, smsValues, ivrValues, skipLogic) => ({
+export const changeRefusal = (stepId, smsValues, ivrValues, mobilewebValues, skipLogic) => ({
   type: CHANGE_REFUSAL,
   stepId,
   smsValues,
   ivrValues,
+  mobilewebValues,
   skipLogic
 })
 

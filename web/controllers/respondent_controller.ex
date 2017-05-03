@@ -319,7 +319,7 @@ defmodule Ask.RespondentController do
     |> Enum.to_list
     |> to_string
 
-    filename = Timex.now |> Timex.format!("respondents_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+    filename = csv_filename(survey, "respondents")
 
     conn
       |> put_resp_content_type("text/csv")
@@ -358,7 +358,7 @@ defmodule Ask.RespondentController do
     |> Enum.to_list
     |> to_string
 
-    filename = Timex.now |> Timex.format!("respondents_disposition_history_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+    filename = csv_filename(survey, "respondents_disposition_history")
 
     conn
       |> put_resp_content_type("text/csv")
@@ -392,7 +392,7 @@ defmodule Ask.RespondentController do
     |> Enum.to_list
     |> to_string
 
-    filename = Timex.now |> Timex.format!("respondents_incentives_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+    filename = csv_filename(survey, "respondents_incentives")
 
     conn
       |> put_resp_content_type("text/csv")
@@ -441,7 +441,7 @@ defmodule Ask.RespondentController do
     |> Enum.to_list
     |> to_string
 
-    filename = Timex.now |> Timex.format!("respondents_interactions_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+    filename = csv_filename(survey, "respondents_interactions")
 
     conn
       |> put_resp_content_type("text/csv")
@@ -498,5 +498,12 @@ defmodule Ask.RespondentController do
       nil -> nil
       _ -> String.capitalize(disposition)
     end
+  end
+
+  defp csv_filename(survey, prefix) do
+    name = survey.name || "survey_id_#{survey.id}"
+    name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
+    prefix = "#{name}-#{prefix}"
+    Timex.format!(Timex.now, "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
 end

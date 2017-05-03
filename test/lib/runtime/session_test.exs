@@ -221,7 +221,8 @@ defmodule Ask.SessionTest do
       flow: %Flow{questionnaire: quiz, mode: fallback_channel.type, current_step: session.flow.current_step}
     }
 
-    {:ok, result = %Session{token: token}, _, 7, _} = Session.timeout(session)
+    {_, session_after_retry, _, _, _} = Session.timeout(session)
+    {:ok, result = %Session{token: token}, _, 7, _} = Session.timeout(session_after_retry)
     assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
     assert result.current_mode == expected_session.current_mode
@@ -251,7 +252,8 @@ defmodule Ask.SessionTest do
     refute_receive [:setup, _, _, _, _]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    {:ok, result = %Session{token: token}, _, 5, _} = Session.timeout(session)
+    {_, session_after_second_retry, _, _, _} = Session.timeout(session)
+    {:ok, result = %Session{token: token}, _, 5, _} = Session.timeout(session_after_second_retry)
     assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
 
     assert result.current_mode == expected_session.current_mode
@@ -297,7 +299,7 @@ defmodule Ask.SessionTest do
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("99"))
-    {:end, _} = Session.sync_step(session, Flow.Message.reply("11"))
+    {:end, _, _} = Session.sync_step(session, Flow.Message.reply("11"))
 
     responses = respondent
     |> Ecto.assoc(:responses)
@@ -317,7 +319,7 @@ defmodule Ask.SessionTest do
     {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms")
 
     {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("Y"))
-    {:end, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    {:end, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
 
     responses = respondent
     |> Ecto.assoc(:responses)
@@ -329,7 +331,7 @@ defmodule Ask.SessionTest do
   end
 
   test "ends when quota is reached at leaf", %{quiz: quiz, respondent: respondent, channel: channel, test_channel: test_channel} do
-    quiz = quiz |> Questionnaire.changeset(%{quota_completed_msg: %{"en" => %{"sms" => "Bye!"}}}) |> Repo.update!
+    quiz = quiz |> Questionnaire.changeset(%{settings: %{"quota_completed_message" => %{"en" => %{"sms" => "Bye!"}}}}) |> Repo.update!
 
     survey = respondent.survey
 

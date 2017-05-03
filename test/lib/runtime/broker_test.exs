@@ -604,7 +604,16 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
-    # Third poll, this time fallback to IVR channel
+    # Third poll, retry the question
+    Broker.handle_info(:poll, nil)
+    refute_received [:setup, _, _, _, _]
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Fourth poll, this time fallback to IVR channel
     Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
   end
@@ -646,6 +655,14 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time fallback to SMS channel
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
+
+    # Set for immediate timeout
+    respondent = Repo.get(Respondent, respondent.id)
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Fourth poll, this time fallback to SMS channel
     Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_fallback_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_fallback_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -1098,7 +1115,7 @@ defmodule Ask.BrokerTest do
     Broker.delivery_confirm(respondent, "What's the number of this question?")
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -1177,7 +1194,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.ivr("Thank you", "Thanks for completing this survey (ivr)")}} = reply
 
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -1272,7 +1289,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey (mobileweb)")}} = reply
 
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -1289,7 +1306,7 @@ defmodule Ask.BrokerTest do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
     quiz = hd(survey.questionnaires)
-    quiz |> Questionnaire.changeset(%{"mobile_web_sms_message" => "One#{Questionnaire.sms_split_separator}Two"}) |> Repo.update!
+    quiz |> Questionnaire.changeset(%{settings: %{"mobile_web_sms_message" => "One#{Questionnaire.sms_split_separator}Two"}}) |> Repo.update!
 
     {:ok, _} = Broker.start_link
     Broker.poll
@@ -1326,8 +1343,10 @@ defmodule Ask.BrokerTest do
     quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
     quiz
     |> Questionnaire.changeset(%{
-      quota_completed_msg: %{"en" => %{"sms" => "Bye!"}},
-      error_msg: %{"en" => %{"sms" => "Wrong answer"}}
+      settings: %{
+        "quota_completed_message" => %{"en" => %{"sms" => "Bye!"}},
+        "error_message" => %{"en" => %{"sms" => "Wrong answer"}}
+      }
     })
     |> Repo.update!
 
@@ -1418,8 +1437,10 @@ defmodule Ask.BrokerTest do
     quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
     quiz
     |> Questionnaire.changeset(%{
-      quota_completed_msg: %{"en" => %{"ivr" => "Bye!"}},
-      error_msg: %{"en" => %{"ivr" => %{"text" => "Wrong answer", "audio_source" => "tts"}}}
+      settings: %{
+        "quota_completed_message" => %{"en" => %{"ivr" => "Bye!"}},
+        "error_message" => %{"en" => %{"ivr" => %{"text" => "Wrong answer", "audio_source" => "tts"}}}
+      }
     })
     |> Repo.update!
 
@@ -1572,6 +1593,48 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
+  test "does poll surveys considering day of week according to timezone" do
+    # Survey runs on Wednesday on every hour, Mexico time (GMT-5)
+    attrs = %{
+      schedule_day_of_week: %Ask.DayOfWeek{wed: true},
+      schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
+      schedule_end_time: elem(Ecto.Time.cast("23:59:00"), 1),
+      state: "running",
+      timezone: "America/Mexico_City",
+    }
+    survey = insert(:survey, attrs)
+
+    # Now is Thursday 1AM UTC, so in Mexico it's still Wednesday
+    mock_now = Timex.parse!("2017-04-27T01:00:00Z", "{ISO:Extended}")
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    # The survey should have run and be completed (questionnaire is empty)
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "completed"
+  end
+
+  test "doesn't poll surveys considering day of week according to timezone" do
+    # Survey runs on Wednesday on every hour, Mexico time (GMT-5)
+    attrs = %{
+      schedule_day_of_week: %Ask.DayOfWeek{wed: true},
+      schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
+      schedule_end_time: elem(Ecto.Time.cast("23:59:00"), 1),
+      state: "running",
+      timezone: "America/Mexico_City",
+    }
+    survey = insert(:survey, attrs)
+
+    # Now is Thursday 6AM UTC, so in Mexico it's now Thursday
+    mock_now = Timex.parse!("2017-04-27T06:00:00Z", "{ISO:Extended}")
+
+    Broker.handle_info(:poll, nil, mock_now)
+
+    # Survey shouldn't have started yet
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
   test "increments quota bucket when a respondent completes the survey" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
@@ -1601,7 +1664,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
@@ -1644,7 +1707,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "completed"
@@ -1737,7 +1800,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
@@ -1780,7 +1843,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "completed"
@@ -1852,7 +1915,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
@@ -1924,7 +1987,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
-    assert :end = reply
+    assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1

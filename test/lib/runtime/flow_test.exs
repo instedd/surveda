@@ -528,7 +528,7 @@ defmodule Ask.FlowTest do
       assert {:end, _, reply} = flow_state
       prompts = Reply.prompts(reply)
 
-      assert prompts == ["Is this the last question?"]
+      assert prompts == ["Is this the last question?", "Thanks for completing this survey"]
     end
   end
 

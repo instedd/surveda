@@ -3,17 +3,16 @@ import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
 import reduce from 'lodash/reduce'
 import map from 'lodash/map'
-import each from 'lodash/each'
 import reject from 'lodash/reject'
 import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
 import uuid from 'node-uuid'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvr, getStepPromptIvr, getPromptIvrText, getChoiceResponseSmsJoined,
-  getChoiceResponseMobileWebJoined, newIvrPrompt, newRefusal, splitSmsText } from '../step'
+  getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvrText, getChoiceResponseSmsJoined,
+  getChoiceResponseMobileWebJoined, newIvrPrompt, newRefusal } from '../step'
 import * as language from '../language'
-import * as characterCounter from '../characterCounter'
+import { validate } from './questionnaire.validation'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -32,6 +31,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
     case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
+    case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
+    case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
     default: return steps(state, action)
   }
 }
@@ -630,8 +631,10 @@ const reorderLanguages = (state, action) => {
 const setQuestionnaireMsg = (state, action, mode) => {
   let questionnaireMsg
   let activeLanguageMsg
-  questionnaireMsg = Object.assign({}, state[action.msgKey])
-  if (state[action.msgKey] && state[action.msgKey][state.activeLanguage]) {
+
+  questionnaireMsg = Object.assign({}, state.settings[action.msgKey])
+
+  if (state.settings[action.msgKey] && state.settings[action.msgKey][state.activeLanguage]) {
     activeLanguageMsg = questionnaireMsg[state.activeLanguage]
   } else {
     activeLanguageMsg = {}
@@ -647,8 +650,12 @@ const setQuestionnaireMsg = (state, action, mode) => {
   }
 
   activeLanguageMsg[mode] = msg
-  let newState = {...state}
-  newState[action.msgKey] = questionnaireMsg
+
+  let newState = {
+    ...state,
+    settings: {...state.settings}
+  }
+  newState.settings[action.msgKey] = questionnaireMsg
   return newState
 }
 
@@ -743,14 +750,50 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
 const setMobileWebSmsMessage = (state, action) => {
   return {
     ...state,
-    mobileWebSmsMessage: action.text
+    settings: {
+      ...state.settings,
+      mobileWebSmsMessage: action.text
+    }
   }
 }
 
 const setMobileWebSurveyIsOverMessage = (state, action) => {
   return {
     ...state,
-    mobileWebSurveyIsOverMessage: action.text
+    settings: {
+      ...state.settings,
+      mobileWebSurveyIsOverMessage: action.text
+    }
+  }
+}
+
+const setDisplayedTitle = (state, action) => {
+  const lang = state.activeLanguage
+  const title = state.settings.title || {}
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      title: {
+        ...title,
+        [lang]: action.msg
+      }
+    }
+  }
+}
+
+const setSurveyAlreadyTakenMessage = (state, action) => {
+  const lang = state.activeLanguage
+  const surveyAlreadyTakenMessage = state.settings.surveyAlreadyTakenMessage || {}
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      surveyAlreadyTakenMessage: {
+        ...surveyAlreadyTakenMessage,
+        [lang]: action.msg
+      }
+    }
   }
 }
 
@@ -802,347 +845,6 @@ const setActiveLanguage = (state, action) => {
     ...state,
     activeLanguage: action.language
   }
-}
-
-type ValidationContext = {
-  sms: boolean,
-  ivr: boolean,
-  activeLanguage: string,
-  languages: string[],
-  errors: [ValidationError]
-};
-
-const validate = (state: DataStore<Questionnaire>) => {
-  const data = state.data
-  if (!data) return
-  state.errors = []
-
-  const context = {
-    sms: data.modes.indexOf('sms') != -1,
-    ivr: data.modes.indexOf('ivr') != -1,
-    mobileweb: data.modes.indexOf('mobileweb') != -1,
-    activeLanguage: data.activeLanguage,
-    languages: data.languages,
-    errors: state.errors
-  }
-
-  validateMsg('errorMsg', data.errorMsg, context)
-  validateMsg('quotaCompletedMsg', data.quotaCompletedMsg, context)
-
-  if (context.mobileweb) {
-    if (isBlank(data.mobileWebSmsMessage)) {
-      addError(context, 'mobileWebSmsMessage', 'Mobile web SMS message must not be blank', null, 'mobileweb')
-    }
-    if (isBlank(data.mobileWebSurveyIsOverMessage)) {
-      addError(context, 'mobileWebSurveyIsOverMessage', 'Mobile web "Survey is over" message must not be blank', null, 'mobileweb')
-    }
-  }
-
-  validateSteps(data.steps, context, 'steps')
-
-  state.errorsByPath = errorsByPath(state.errors)
-  state.errorsByLang = errorsByLang(state.errors)
-}
-
-const errorsByPath = (errors) => {
-  const errorsByPath = {}
-  for (const error of errors) {
-    errorsByPath[error.path] = errorsByPath[error.path] || []
-    errorsByPath[error.path].push(error.message)
-  }
-  return errorsByPath
-}
-
-const errorsByLang = (errors) => {
-  const errorsByLang = {}
-  for (const error of errors) {
-    if (error.lang) {
-      errorsByLang[error.lang] = true
-    }
-  }
-  return errorsByLang
-}
-
-const validateMsg = (msgKey: string, msg: Prompt, context: ValidationContext) => {
-  const path = `${msgKey}.prompt`
-
-  context.languages.forEach(lang => {
-    const langPath = `${path}['${lang}']`
-
-    if (context.sms) {
-      if (getPromptSms(msg, lang).length == 0) {
-        addError(context, `${langPath}.sms`, 'SMS prompt must not be blank', lang, 'sms')
-      }
-    }
-
-    if (context.ivr) {
-      let ivr = getPromptIvr(msg, lang)
-      if (isBlank(ivr.text)) {
-        addError(context, `${langPath}.ivr.text`, 'Voice prompt must not be blank', lang, 'ivr')
-      }
-      if (ivr.audioSource == 'upload' && !ivr.audioId) {
-        addError(context, `${langPath}.ivr.audioId`, 'An audio file must be uploaded', lang, 'ivr')
-      }
-    }
-
-    if (context.mobileweb) {
-      if (getPromptMobileWeb(msg, lang).length == 0) {
-        addError(context, `${langPath}.mobileweb`, 'Mobile web prompt must not be blank', lang, 'mobileweb')
-      }
-    }
-  })
-}
-
-const validateSteps = (steps, context: ValidationContext, path: string) => {
-  for (let i = 0; i < steps.length; i++) {
-    validateStep(steps[i], i, context, steps, `${path}[${i}]`)
-  }
-}
-
-const validateSmsLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string, path: string) => {
-  if (getStepPromptSms(step, lang).length == 0) {
-    addError(context, `${path}.sms`, 'SMS prompt must not be blank', lang, 'sms')
-  } else {
-    const parts = splitSmsText(getStepPromptSms(step, lang))
-    if (parts.some(p => characterCounter.limitExceeded(p))) {
-      addError(context, `${path}.sms`, 'limit exceeded', lang, 'sms')
-    }
-  }
-}
-
-const validateMobileWebLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string, path: string) => {
-  if (getStepPromptMobileWeb(step, lang).length == 0) {
-    addError(context, `${path}.mobileweb`, 'Mobile web prompt must not be blank', lang, 'mobileweb')
-  }
-}
-
-const validateIvrLangPrompt = (step: Step, stepIndex: number, context: ValidationContext, lang: string, path: string) => {
-  let ivr = getStepPromptIvr(step, lang)
-  if (isBlank(ivr.text)) {
-    addError(context, `${path}.ivr.text`, 'Voice prompt must not be blank', lang, 'ivr')
-  }
-  if (ivr.audioSource == 'upload' && !ivr.audioId) {
-    addError(context, `${path}.ivr.audioId`, 'An audio file must be uploaded', lang, 'ivr')
-  }
-}
-
-const validateStep = (step: Step, stepIndex: number, context: ValidationContext, steps, path: string) => {
-  switch (step.type) {
-    case 'flag':
-      return validateFlagStep(step, stepIndex, context, steps, path)
-    case 'multiple-choice':
-      return validateMultipleChoiceStep(step, stepIndex, context, steps, path)
-    case 'numeric':
-      return validateNumericStep(step, stepIndex, context, steps, path)
-    case 'explanation':
-      return validateExplanationStep(step, stepIndex, context, steps, path)
-    default:
-  }
-}
-
-const validateFlagStep = (step, stepIndex, context, steps, path) => {
-  validateStepSkipLogic(step, stepIndex, steps, context, path)
-}
-
-const validateMultipleChoiceStep = (step, stepIndex, context, steps, path) => {
-  validatePrompts(step, stepIndex, context, path)
-  validateChoices(step.choices, stepIndex, context, steps, path)
-}
-
-const validateNumericStep = (step, stepIndex, context, steps, path) => {
-  validatePrompts(step, stepIndex, context, path)
-  validateRanges(step.ranges, stepIndex, context, steps, path)
-}
-
-const validateExplanationStep = (step, stepIndex, context, steps, path) => {
-  validatePrompts(step, stepIndex, context, path)
-  validateStepSkipLogic(step, stepIndex, steps, context, path)
-}
-
-const validatePrompts = (step, stepIndex, context, path) => {
-  path = `${path}.prompt`
-
-  context.languages.forEach(lang => {
-    const langPath = `${path}['${lang}']`
-
-    if (context.sms) {
-      validateSmsLangPrompt(step, stepIndex, context, lang, langPath)
-    }
-
-    if (context.ivr) {
-      validateIvrLangPrompt(step, stepIndex, context, lang, langPath)
-    }
-
-    if (context.mobileweb) {
-      validateMobileWebLangPrompt(step, stepIndex, context, lang, langPath)
-    }
-  })
-}
-
-const validSkipLogic = (skipLogic, stepIndex, steps, context) => {
-  if (!skipLogic || skipLogic == 'end') {
-    return true
-  }
-  let currentValueIsValid = false
-  steps.slice(stepIndex + 1).map(s => {
-    if (skipLogic === s.id) {
-      currentValueIsValid = true
-    }
-  })
-  return currentValueIsValid
-}
-
-const validateStepSkipLogic = (step, stepIndex, steps, context, path) => {
-  if (!validSkipLogic(step.skipLogic, stepIndex, steps, context)) {
-    addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
-  }
-}
-
-const validateChoiceSkipLogic = (choice, stepIndex, choiceIndex, steps, context, path) => {
-  if (!validSkipLogic(choice.skipLogic, stepIndex, steps, context)) {
-    addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
-  }
-}
-
-const validateRangeSkipLogic = (range, stepIndex, steps, context, path) => {
-  if (!validSkipLogic(range.skipLogic, stepIndex, steps, context)) {
-    // TODO: missing range info in path
-    addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
-  }
-}
-
-const validateSmsResponseDuplicates = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number, lang: string, otherSms, path) => {
-  if (choice.responses.sms && choice.responses.sms[lang]) {
-    for (let choiceSms of choice.responses.sms[lang]) {
-      if (otherSms[lang] && otherSms[lang].includes(choiceSms)) {
-        addError(context, `${path}.sms`, `Value "${choiceSms}" already used in a previous response`, lang, 'sms')
-      }
-    }
-
-    if (!otherSms[lang]) {
-      otherSms[lang] = []
-    }
-
-    otherSms[lang].push(...choice.responses.sms[lang])
-  }
-}
-
-const validateRanges = (ranges, stepIndex, context, steps, path) => {
-  each(ranges, (range) => {
-    validateRangeSkipLogic(range, stepIndex, steps, context, path)
-  })
-}
-
-const validateChoices = (choices: Choice[], stepIndex: number, context: ValidationContext, steps, path) => {
-  path = `${path}.choices`
-
-  if (choices.length < 2) {
-    addError(context, path, 'You should define at least two response options')
-  }
-
-  for (let i = 0; i < choices.length; i++) {
-    validateChoice(choices[i], context, stepIndex, i, steps, `${path}[${i}]`)
-  }
-
-  const values = []
-  let sms = {}
-  let ivr = []
-
-  for (let i = 0; i < choices.length; i++) {
-    const choicePath = `${path}[${i}]`
-
-    let choice = choices[i]
-    if (values.includes(choice.value)) {
-      addError(context, `${choicePath}.value`, 'Value already used in a previous response')
-    }
-
-    if (context.sms) {
-      context.languages.forEach(lang => validateSmsResponseDuplicates(choice, context, stepIndex, i, lang, sms, `${choicePath}['${lang}']`))
-    }
-
-    if (context.ivr) {
-      if (choice.responses.ivr) {
-        for (let choiceIvr of choice.responses.ivr) {
-          if (ivr.includes(choiceIvr)) {
-            addError(context, `${choicePath}.ivr`, `Value "${choiceIvr}" already used in a previous response`, null, 'ivr')
-          }
-        }
-        ivr.push(...choice.responses.ivr)
-      }
-    }
-
-    values.push(choice.value)
-  }
-}
-
-const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string, path: string) => {
-  let sms = choice.responses.sms
-  if (!sms) return
-
-  sms = sms[lang]
-  if (!sms) return
-
-  path = `${path}.sms`
-
-  if (sms.length == 0) {
-    addError(context, path, 'SMS must not be blank', lang, 'sms')
-  }
-
-  if (sms.some(x => x.toLowerCase() == 'stop')) {
-    addError(context, path, "SMS must not be 'STOP'", lang, 'sms')
-  }
-}
-
-const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string, path: string) => {
-  if (!choice.responses.mobileweb || isBlank(choice.responses.mobileweb[lang])) {
-    addError(context, `${path}.mobileweb`, 'Mobile web must not be blank', lang, 'mobileweb')
-  }
-}
-
-const validateChoiceIvrResponse = (choice, context, stepIndex: number, choiceIndex: number, path: string) => {
-  path = `${path}.ivr`
-
-  if (choice.responses.ivr &&
-      choice.responses.ivr.length == 0) {
-    addError(context, path, '"Phone call" must not be blank', null, 'ivr')
-  }
-
-  if (choice.responses.ivr &&
-      choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
-    addError(context, path, '"Phone call" must only consist of single digits, "#" or "*"', null, 'ivr')
-  }
-}
-
-const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number, steps, path) => {
-  if (isBlank(choice.value)) {
-    addError(context, `${path}.value`, 'Response must not be blank')
-  }
-
-  context.languages.forEach(lang => {
-    const langPath = `${path}['${lang}']`
-
-    if (context.sms) {
-      validateChoiceSmsResponse(choice, context, stepIndex, choiceIndex, lang, langPath)
-    }
-
-    if (context.mobileweb) {
-      validateChoiceMobileWebResponse(choice, context, stepIndex, choiceIndex, lang, langPath)
-    }
-  })
-
-  if (context.ivr) {
-    validateChoiceIvrResponse(choice, context, stepIndex, choiceIndex, path)
-  }
-
-  validateChoiceSkipLogic(choice, stepIndex, choiceIndex, steps, context, path)
-}
-
-const addError = (context, path, message, lang = null, mode = null) => {
-  context.errors.push({path, lang, mode, message})
-}
-
-const isBlank = (value: ?string) => {
-  return !value || value.trim().length == 0
 }
 
 export const stepStoreValues = (questionnaire: Questionnaire) => {
@@ -1207,14 +909,30 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     }
   })
 
-  const q = questionnaire.quotaCompletedMsg
-  if (q) {
-    addMessageToCsvForTranslation(q, defaultLang, context)
+  if (questionnaire.settings.quotaCompletedMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.quotaCompletedMessage, defaultLang, context)
   }
 
-  const e = questionnaire.errorMsg
-  if (e) {
-    addMessageToCsvForTranslation(e, defaultLang, context)
+  if (questionnaire.settings.errorMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.errorMessage, defaultLang, context)
+  }
+
+  if (questionnaire.settings.title) {
+    const defaultTitle = questionnaire.settings.title[defaultLang]
+    if (defaultTitle && defaultTitle.trim().length != 0) {
+      addToCsvForTranslation(defaultTitle, context, lang =>
+        questionnaire.settings.title[lang] || ''
+      )
+    }
+  }
+
+  if (questionnaire.settings.surveyAlreadyTakenMessage) {
+    const defaultMessage = questionnaire.settings.surveyAlreadyTakenMessage[defaultLang]
+    if (defaultMessage && defaultMessage.trim().length != 0) {
+      addToCsvForTranslation(defaultMessage, context, lang =>
+        questionnaire.settings.surveyAlreadyTakenMessage[lang] || ''
+      )
+    }
   }
 
   return rows
@@ -1247,8 +965,8 @@ const changeNumericRanges = (state, action) => {
   return changeStep(state, action.stepId, step => {
     // validate
     let rangesDelimiters = action.rangesDelimiters
-    let minValue: ?number = action.minValue ? parseInt(action.minValue) : null
-    let maxValue: ?number = action.maxValue ? parseInt(action.maxValue) : null
+    let minValue: ?number = safeParseInt(action.minValue)
+    let maxValue: ?number = safeParseInt(action.maxValue)
     let values: Array<number> = []
 
     if (minValue != null) {
@@ -1341,6 +1059,20 @@ const changeNumericRanges = (state, action) => {
   })
 }
 
+const safeParseInt = (obj) => {
+  if (typeof (obj) == 'string') {
+    if (obj.trim().length == 0) {
+      return null
+    } else {
+      return parseInt(obj)
+    }
+  } else if (obj != null) {
+    return parseInt(obj)
+  } else {
+    return null
+  }
+}
+
 const changeRangeSkipLogic = (state, action) => {
   return changeStep(state, action.stepId, step => {
     let newRange = {
@@ -1400,6 +1132,10 @@ const changeRefusal = (state, action, quiz) => {
           sms: {
             ...step.refusal.responses.sms,
             [quiz.activeLanguage]: splitValues(action.smsValues)
+          },
+          mobileweb: {
+            ...step.refusal.responses.mobileweb,
+            [quiz.activeLanguage]: action.mobilewebValues
           }
         },
         skipLogic: action.skipLogic
@@ -1421,13 +1157,22 @@ const uploadCsvForTranslation = (state, action) => {
 
   const lookup = buildCsvLookup(csv, defaultLanguage)
 
-  let newState = {...state}
-  newState.steps = state.steps.map(step => translateStep(step, defaultLanguage, lookup))
-  if (state.quotaCompletedMsg) {
-    newState.quotaCompletedMsg = translatePrompt(state.quotaCompletedMsg, defaultLanguage, lookup)
+  let newState = {
+    ...state,
+    settings: {...state.settings},
+    steps: state.steps.map(step => translateStep(step, defaultLanguage, lookup))
   }
-  if (state.errorMsg) {
-    newState.errorMsg = translatePrompt(state.errorMsg, defaultLanguage, lookup)
+  if (state.settings.quotaCompletedMessage) {
+    newState.settings.quotaCompletedMessage = translatePrompt(state.settings.quotaCompletedMessage, defaultLanguage, lookup)
+  }
+  if (state.settings.errorMessage) {
+    newState.settings.errorMessage = translatePrompt(state.settings.errorMessage, defaultLanguage, lookup)
+  }
+  if (state.settings.title) {
+    newState.settings.title = translateLanguage(state.settings.title, defaultLanguage, lookup)
+  }
+  if (state.settings.title) {
+    newState.settings.surveyAlreadyTakenMessage = translateLanguage(state.settings.surveyAlreadyTakenMessage, defaultLanguage, lookup)
   }
   return newState
 }
@@ -1489,6 +1234,22 @@ const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
   }
 
   return newPrompt
+}
+
+const translateLanguage = (obj, defaultLanguage, lookup) => {
+  let defaultLanguageMessage = obj[defaultLanguage]
+  if (!defaultLanguageMessage) return obj
+
+  let translations = lookup[defaultLanguageMessage.trim()]
+  if (!translations) return obj
+
+  let newObj = {...obj}
+  for (let lang in translations) {
+    const text = translations[lang]
+    newObj[lang] = (text || '').trim()
+  }
+
+  return newObj
 }
 
 const addTranslations = (obj, translations, funcOrProperty) => {

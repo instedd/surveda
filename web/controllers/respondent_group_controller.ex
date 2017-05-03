@@ -24,26 +24,9 @@ defmodule Ask.RespondentGroupController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
-    if Path.extname(file.filename) == ".csv" do
-      rows =
-        file.path
-        |> File.read!
-        |> csv_rows
-        |> Enum.uniq_by(&keep_digits/1)
-
-      invalid_entries = rows
-      |> Enum.with_index
-      |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-      |> Enum.filter(fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
-
-      case invalid_entries do
-        [] -> create_respondent_group(conn, survey, file.filename, rows, project)
-        _ -> render_invalid(conn, file.filename, invalid_entries)
-      end
-    else
-      Logger.warn "Error when creating respondent group for survey: #{inspect survey}"
-      render_unprocessable_entity(conn)
-    end
+    process_file(conn, survey, file, fn rows ->
+      create_respondent_group(conn, survey, file.filename, rows, project)
+    end)
   end
 
   def update(conn, %{"project_id" => project_id, "survey_id" => survey_id, "id" => id, "respondent_group" => respondent_group_params}) do
@@ -77,6 +60,85 @@ defmodule Ask.RespondentGroupController do
 
     conn
     |> render("show.json", respondent_group: group)
+  end
+
+  def add(conn, %{"project_id" => project_id, "survey_id" => survey_id, "respondent_group_id" => id, "file" => file}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    group = survey
+    |> assoc(:respondent_groups)
+    |> Repo.get!(id)
+
+    project |> Project.touch!
+
+    process_file(conn, survey, file, fn rows ->
+      {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+
+      rows = rows
+      |> remove_duplicates_with_respect_to(group)
+
+      rows
+      |> to_entries(project, survey, group, local_time)
+      |> insert_all
+
+      new_count = group.respondents_count + length(rows)
+      new_sample = merge_sample(group.sample, rows)
+
+      group = group
+      |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
+      |> Repo.update!
+      |> Repo.preload(:respondent_group_channels)
+
+      conn
+      |> render("show.json", respondent_group: group)
+    end)
+  end
+
+  def replace(conn, %{"project_id" => project_id, "survey_id" => survey_id, "respondent_group_id" => id, "file" => file}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    group = survey
+    |> assoc(:respondent_groups)
+    |> Repo.get!(id)
+
+    process_file(conn, survey, file, fn rows ->
+      {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+
+      # First delete existing respondents from that group
+      Repo.delete_all(from r in Respondent,
+        where: r.respondent_group_id == ^group.id)
+
+      # Then create respondents from the CSV file
+      rows
+      |> to_entries(project, survey, group, local_time)
+      |> insert_all
+
+      sample = rows |> Enum.take(5)
+      respondents_count = rows |> length
+
+      group = group
+      |> RespondentGroup.changeset(%{
+        "sample" => sample,
+        "respondents_count" => respondents_count,
+      })
+      |> Repo.update!
+      |> Repo.preload(:respondent_group_channels)
+
+      project |> Project.touch!
+
+      conn
+      |> render("show.json", respondent_group: group)
+    end)
   end
 
   defp update_channels(id, %{"channels" => channels_params}) do
@@ -126,30 +188,22 @@ defmodule Ask.RespondentGroupController do
 
   defp create_respondent_group(conn, survey, filename, rows, project) do
     {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
-    survey_id = survey.id
 
     sample = rows |> Enum.take(5)
     respondents_count = rows |> length
 
     group = %RespondentGroup{
       name: filename,
-      survey_id: survey_id,
+      survey_id: survey.id,
       sample: sample,
       respondents_count: respondents_count
     }
     |> Repo.insert!
     |> Repo.preload(:respondent_group_channels)
 
-    entries = rows
-      |> Enum.map(fn row ->
-        %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey_id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt)}
-      end)
-
-    entries
-    |> Enum.chunk(1_000, 1_000, [])
-    |> Enum.each(fn(chunked_entries)  ->
-        Repo.insert_all(Respondent, chunked_entries)
-      end)
+    rows
+    |> to_entries(project, survey, group, local_time)
+    |> insert_all
 
     survey
     |> Repo.preload([:questionnaires])
@@ -213,6 +267,68 @@ defmodule Ask.RespondentGroupController do
       |> render("empty.json", %{})
   end
 
+  defp process_file(conn, survey, file, func) do
+    if Path.extname(file.filename) == ".csv" do
+      rows =
+        file.path
+        |> File.read!
+        |> csv_rows
+        |> Enum.uniq_by(&keep_digits/1)
+
+      invalid_entries = rows
+      |> Enum.with_index
+      |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
+      |> Enum.filter(fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
+
+      case invalid_entries do
+        [] -> func.(rows)
+        _ -> render_invalid(conn, file.filename, invalid_entries)
+      end
+    else
+      Logger.warn "Error when creating respondent group for survey: #{inspect survey}"
+      render_unprocessable_entity(conn)
+    end
+  end
+
+  defp merge_sample(old_sample, new_rows) do
+    if length(old_sample) == 5 do
+      old_sample
+    else
+      old_sample ++ Enum.take(new_rows, 5 - length(old_sample))
+    end
+  end
+
+  defp to_entries(rows, project, survey, group, local_time) do
+    rows
+    |> Enum.map(fn row ->
+      %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt)}
+    end)
+  end
+
+  defp insert_all(entries) do
+    entries
+    |> Enum.chunk(1_000, 1_000, [])
+    |> Enum.each(fn(chunked_entries)  ->
+        Repo.insert_all(Respondent, chunked_entries)
+      end)
+  end
+
+  defp remove_duplicates_with_respect_to(phone_numbers, group) do
+    # Select numbers that already exist in the DB
+    sanitized_numbers = Enum.map(phone_numbers, &Respondent.sanitize_phone_number/1)
+    existing_numbers = Repo.all(from r in Respondent,
+      where: r.respondent_group_id == ^group.id,
+      where: r.sanitized_phone_number in ^sanitized_numbers,
+      select: r.sanitized_phone_number)
+
+    # And then remove them from phone_numbers (because they are duplicates)
+    # (no easier way to do this, plus we expect `existing_numbers` to
+    # be empty or near empty)
+    Enum.reject(phone_numbers, fn num ->
+      Respondent.sanitize_phone_number(num) in existing_numbers
+    end)
+  end
+  
   defp keep_digits(string) do
     Regex.replace(~r/\D/, string, "", [:global])
   end

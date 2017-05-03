@@ -10,6 +10,7 @@ import * as userSettingsActions from '../../actions/userSettings'
 import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
+import { modeLabel, modeOrder } from '../../questionnaire.mode'
 
 class QuestionnaireIndex extends Component {
   componentDidMount() {
@@ -123,12 +124,13 @@ class QuestionnaireIndex extends Component {
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               <th>Modes</th>
               {readOnly ? null : <th className='duplicate' />}
+              <th style={{width: '20px'}} />
             </tr>
           </thead>
           <tbody>
             { range(0, pageSize).map(index => {
               const questionnaire = questionnaires[index]
-              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan={readOnly ? 2 : 3} /></tr>
+              if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan={readOnly ? 3 : 4} /></tr>
 
               return (
                 <tr key={questionnaire.id}>
@@ -136,7 +138,7 @@ class QuestionnaireIndex extends Component {
                     <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
                   </td>
                   <td onClick={() => this.goTo(questionnaire.id)}>
-                    { (questionnaire.modes || []).join(', ').toUpperCase() }
+                    { (questionnaire.modes || []).sort((x, y) => modeOrder(x) - modeOrder(y)).map(x => modeLabel(x)).join(', ') }
                   </td>
                   {readOnly ? null
                     : <td className='duplicate'>
@@ -146,6 +148,11 @@ class QuestionnaireIndex extends Component {
                         </a>
                       </Tooltip>
                     </td>}
+                  <td className='tdError'>
+                    {!questionnaire.valid
+                    ? <span className='questionnaire-error' />
+                    : null}
+                  </td>
                 </tr>
               )
             }

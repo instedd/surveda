@@ -16,6 +16,14 @@ export class Tooltip extends Component {
   }
 
   componentDidMount() {
+    this.updateTooltip()
+  }
+
+  componentDidUpdate() {
+    this.updateTooltip()
+  }
+
+  updateTooltip() {
     const node = ReactDOM.findDOMNode(this.refs.node)
     const tooltip = $(node).tooltip()[0]
     const tooltipId = tooltip.getAttribute('data-tooltip-id')

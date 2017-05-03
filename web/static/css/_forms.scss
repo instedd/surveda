@@ -116,6 +116,7 @@ label {
 .audio-section {
   position: relative;
   padding-left: 10px;
+  margin-bottom: 40px;
   .audio-dropdown {
     display: inline-block;
     width: 25%;
@@ -150,9 +151,12 @@ label {
   }
 }
 
-
-
-
+.preloader-wrapper {
+  &.tiny {
+    width: 16px;
+    height: 16px;
+  }
+}
 
 .invalidValue {
   color: red;

@@ -14,15 +14,28 @@ class SurveyWizardRespondentsStep extends Component {
     survey: PropTypes.object,
     respondentGroups: PropTypes.object.isRequired,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
+    invalidGroup: PropTypes.bool,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
-    readOnly: PropTypes.bool.isRequired
+    readOnly: PropTypes.bool.isRequired,
+    surveyStarted: PropTypes.bool.isRequired
   }
 
   handleSubmit(files) {
     const { survey, actions } = this.props
     if (files.length > 0) actions.uploadRespondentGroup(survey.projectId, survey.id, files)
+  }
+
+  addMoreRespondents(groupId, file) {
+    const { survey, actions } = this.props
+    actions.addMoreRespondentsToGroup(survey.projectId, survey.id, groupId, file)
+  }
+
+  replaceRespondents(groupId, file) {
+    const { survey, actions } = this.props
+    actions.replaceRespondents(survey.projectId, survey.id, groupId, file)
   }
 
   removeRespondents(groupId) {
@@ -38,6 +51,9 @@ class SurveyWizardRespondentsStep extends Component {
 
   invalidRespondentsContent(data) {
     if (!data) return null
+
+    let { surveyStarted } = this.props
+    if (surveyStarted) return
 
     const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
     const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
@@ -75,22 +91,88 @@ class SurveyWizardRespondentsStep extends Component {
     actions.selectChannels(survey.projectId, survey.id, group.id, currentChannels)
   }
 
-  renderGroup(group, channels, allModes, readOnly) {
+  openAddOrReplaceModal(group, files) {
+    if (files.length < 1) return
+    const file = files[0]
+
+    const { survey } = this.props
+
+    // If the survey is running, the only option is to add more respondents
+    if (survey.state == 'running') {
+      this.addMoreRespondents(group.id, file)
+      return
+    }
+
+    const addOrReplaceModal = this.refs.addOrReplaceModal
+    addOrReplaceModal.open({
+      modalText: <div>
+        <p>Do you want to add more respondents to this group or completely replace them?</p>
+      </div>,
+      confirmationText: 'Add',
+      noText: 'Replace',
+      onConfirm: e => {
+        this.addMoreRespondents(group.id, file)
+        addOrReplaceModal.close()
+      },
+      onNo: e => {
+        this.replaceRespondents(group.id, file)
+        addOrReplaceModal.close()
+      },
+      showCancel: true
+    })
+  }
+
+  renderGroup(group, channels, allModes, readOnly, surveyStarted, uploading) {
     let removeRespondents = null
+    let addMoreRespondents = null
+
+    const { survey } = this.props
+
     if (!readOnly) {
-      removeRespondents = <ConfirmationModal showLink
-        modalId={`removeRespondents${group.id}`} linkText='REMOVE RESPONDENTS'
-        modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one."
-        header='Please confirm that you want to delete the respondents list'
-        confirmationText='DELETE THE RESPONDENTS LIST'
-        style={{maxWidth: '600px'}} showCancel
-        onConfirm={() => this.removeRespondents(group.id)} />
+      const addMoreInputId = `addMoreRespondents${group.id}`
+
+      const addMoreClck = (e) => {
+        e.preventDefault()
+        $(`#${addMoreInputId}`).click()
+      }
+
+      const addMore = (e) => {
+        e.preventDefault()
+
+        const files = e.target.files
+        if (files.length < 1) return
+
+        const file = files[0]
+        this.addMoreRespondents(group.id, file)
+      }
+
+      if (!surveyFinished(survey)) {
+        if (uploading) {
+          addMoreRespondents = <Preloader size='small' className='tiny' />
+        } else {
+          addMoreRespondents = [
+            <input key='x' id={addMoreInputId} type='file' accept='.csv' style={{display: 'none'}} onChange={e => addMore(e)} />,
+            <a key='y' href='#' onClick={addMoreClck} className='blue-text'>ADD MORE RESPONDENTS</a>
+          ]
+        }
+      }
+
+      if (!surveyStarted && !uploading) {
+        removeRespondents = <ConfirmationModal showLink
+          modalId={`removeRespondents${group.id}`} linkText='REMOVE RESPONDENTS'
+          modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one."
+          header='Please confirm that you want to delete the respondents list'
+          confirmationText='DELETE THE RESPONDENTS LIST'
+          style={{maxWidth: '600px'}} showCancel
+          onConfirm={() => this.removeRespondents(group.id)} />
+      }
     }
 
     return (
-      <RespondentsList key={group.id} group={group} remove={removeRespondents} modes={allModes}
-        channels={channels} readOnly={readOnly}
+      <RespondentsList key={group.id} survey={survey} group={group} add={addMoreRespondents} remove={removeRespondents} modes={allModes}
+        channels={channels} readOnly={readOnly} surveyStarted={surveyStarted}
         onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+        onDrop={files => this.openAddOrReplaceModal(group, files)}
         >
         {group.sample.map((respondent, index) =>
           <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
@@ -99,8 +181,16 @@ class SurveyWizardRespondentsStep extends Component {
     )
   }
 
+  componentDidUpdate() {
+    let { actions, invalidGroup } = this.props
+    if (invalidGroup) {
+      window.Materialize.toast("Couldn't upload CSV: it contains rows that are not phone numbers", 5000)
+      actions.clearInvalidsRespondentsForGroup()
+    }
+  }
+
   render() {
-    let { survey, channels, respondentGroups, respondentGroupsUploading, invalidRespondents, readOnly } = this.props
+    let { survey, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, readOnly, surveyStarted } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
     if (!survey || !channels) {
       return <div>Loading...</div>
@@ -110,7 +200,7 @@ class SurveyWizardRespondentsStep extends Component {
     const allModes = uniq(flatMap(mode))
 
     let respondentsDropzone = null
-    if (!readOnly) {
+    if (!readOnly && !surveyStarted) {
       respondentsDropzone = (
         <RespondentsDropzone survey={survey} uploading={respondentGroupsUploading} onDrop={file => this.handleSubmit(file)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
       )
@@ -118,8 +208,9 @@ class SurveyWizardRespondentsStep extends Component {
 
     return (
       <RespondentsContainer>
-        {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly))}
+        {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly, surveyStarted, respondentGroupsUploadingExisting[groupId]))}
 
+        <ConfirmationModal modalId='addOrReplaceGroup' ref='addOrReplaceModal' header='Add or replace respondents' />
         <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' style={{maxWidth: '600px'}} />
         {invalidRespondentsCard || respondentsDropzone}
       </RespondentsContainer>
@@ -128,18 +219,6 @@ class SurveyWizardRespondentsStep extends Component {
 }
 
 const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
-  let commonProps = {className: 'dropfile', activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, onDrop: onDrop, accept: 'text/csv', onDropRejected: onDropRejected}
-
-  var isWindows = navigator.platform && navigator.platform.indexOf('Win') != -1
-
-  if (isWindows) {
-    commonProps = {
-      ...commonProps,
-      accept: '.csv',
-      rejectClassName: ''
-    }
-  }
-
   let className = 'drop-text csv'
   if (uploading) className += ' uploading'
 
@@ -157,11 +236,24 @@ const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
   }
 
   return (
-    <Dropzone {...commonProps} >
+    <Dropzone {...dropzoneProps()} className='dropfile' onDrop={onDrop} onDropRejected={onDropRejected}>
       {icon}
       <div className={className} />
     </Dropzone>
   )
+}
+
+const dropzoneProps = () => {
+  let commonProps = {activeClassName: 'active', rejectClassName: 'rejectedfile', multiple: false, accept: 'text/csv'}
+  var isWindows = navigator.platform && navigator.platform.indexOf('Win') != -1
+  if (isWindows) {
+    commonProps = {
+      ...commonProps,
+      accept: '.csv',
+      rejectClassName: ''
+    }
+  }
+  return commonProps
 }
 
 RespondentsDropzone.propTypes = {
@@ -171,7 +263,7 @@ RespondentsDropzone.propTypes = {
   onDropRejected: PropTypes.func.isRequired
 }
 
-const newChannelComponent = (mode, allChannels, currentChannels, onChange, readOnly) => {
+const newChannelComponent = (mode, allChannels, currentChannels, onChange, readOnly, surveyStarted) => {
   const currentChannel = currentChannels.find(channel => channel.mode == mode) || {}
 
   const type = mode == 'mobileweb' ? 'sms' : mode
@@ -195,7 +287,7 @@ const newChannelComponent = (mode, allChannels, currentChannels, onChange, readO
         <Input s={12} type='select' label={label}
           value={currentChannel.id || ''}
           onChange={e => onChange(e, mode, allChannels)}
-          disabled={readOnly}>
+          disabled={readOnly || surveyStarted}>
           <option value=''>
             Select a channel...
           </option>
@@ -210,12 +302,19 @@ const newChannelComponent = (mode, allChannels, currentChannels, onChange, readO
   )
 }
 
-const RespondentsList = ({ group, remove, channels, modes, onChannelChange, readOnly, children }) => {
+const RespondentsList = ({ survey, group, add, remove, channels, modes, onChannelChange, onDrop, readOnly, surveyStarted, children }) => {
   let footer = null
-  if (remove) {
+  if (add || remove) {
     footer = (
       <div className='card-action'>
-        {remove}
+        <div className='row'>
+          <div className='col s6 left-align'>
+            {add}
+          </div>
+          <div className='col s6 right-align'>
+            {remove}
+          </div>
+        </div>
       </div>
     )
   }
@@ -223,10 +322,10 @@ const RespondentsList = ({ group, remove, channels, modes, onChannelChange, read
   let currentChannels = group.channels || []
   let channelsComponent = []
   for (const targetMode of modes) {
-    channelsComponent.push(newChannelComponent(targetMode, channels, currentChannels, onChannelChange, readOnly))
+    channelsComponent.push(newChannelComponent(targetMode, channels, currentChannels, onChannelChange, readOnly, surveyStarted))
   }
 
-  return (
+  let card = (
     <Card>
       <div className='card-content'>
         <div className='row'>
@@ -261,16 +360,31 @@ const RespondentsList = ({ group, remove, channels, modes, onChannelChange, read
       {footer}
     </Card>
   )
+
+  // Only enable dropzone on existing respondent groups if the survey has not finished
+  if (readOnly || surveyFinished(survey)) {
+    return card
+  } else {
+    return (
+      <Dropzone {...dropzoneProps()} className='dropfile-existing' onDrop={onDrop} disableClick>
+        {card}
+      </Dropzone>
+    )
+  }
 }
 
 RespondentsList.propTypes = {
+  survey: PropTypes.object,
   group: PropTypes.object,
   modes: PropTypes.any,
   readOnly: PropTypes.bool,
+  surveyStarted: PropTypes.bool,
+  add: PropTypes.node,
   remove: PropTypes.node,
   channels: PropTypes.any,
   onChannelChange: PropTypes.func,
-  children: PropTypes.node
+  children: PropTypes.node,
+  onDrop: PropTypes.func
 }
 
 const PhoneNumberRow = ({ id, phoneNumber }) => {
@@ -317,5 +431,9 @@ RespondentsContainer.propTypes = {
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
+
+const surveyFinished = (survey) => {
+  return survey.state == 'completed' || survey.state == 'cancelled'
+}
 
 export default connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep)

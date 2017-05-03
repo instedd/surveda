@@ -9,7 +9,7 @@ describe('respondents reducer', () => {
   const playActions = playActionsFromState(initialState, reducer)
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, surveyId: null, items: null, invalidRespondents: null, uploading: false})
+    expect(initialState).toEqual({fetching: false, surveyId: null, items: null, invalidRespondents: null, invalidRespondentsForGroup: false, uploading: false, uploadingExisting: {}})
   })
 
   it('should start fetching respondent group', () => {

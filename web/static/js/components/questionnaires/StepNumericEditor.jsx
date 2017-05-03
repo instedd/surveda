@@ -109,8 +109,8 @@ class StepNumericEditor extends Component {
 
   changeRefusal() {
     const { questionnaireActions } = this.props
-    return (response, smsValues, ivrValues, skipLogic, autoComplete = false) => {
-      questionnaireActions.changeRefusal(this.state.stepId, smsValues, ivrValues, skipLogic)
+    return (response, smsValues, ivrValues, mobilewebValues, skipLogic, autoComplete = false) => {
+      questionnaireActions.changeRefusal(this.state.stepId, smsValues, ivrValues, mobilewebValues, skipLogic)
     }
   }
 
@@ -210,6 +210,11 @@ class StepNumericEditor extends Component {
         ivrHeader = <th style={{width: '30%'}}>Phone call</th>
       }
 
+      let mobilewebHeader = null
+      if (mobileweb) {
+        mobilewebHeader = <th style={{width: '30%'}}>Mobile web</th>
+      }
+
       refusalComponent = <Card>
         <div className='card-table'>
           <table className='responses-table'>
@@ -217,6 +222,7 @@ class StepNumericEditor extends Component {
               <tr>
                 {smsHeader}
                 {ivrHeader}
+                {mobilewebHeader}
                 <th style={{width: '30%'}}>Skip logic</th>
               </tr>
             </thead>

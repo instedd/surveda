@@ -6,13 +6,23 @@
     "questionnaire": {
       "type": "object",
       "properties": {
-        "steps": { "$ref": "#/definitions/steps" },
-        "quota_completed_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
-        "error_msg": { "oneOf": [{ "$ref": "#/definitions/prompt" }, {"type":"null"}] },
-        "mobile_web_sms_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] },
-        "mobile_web_survey_is_over_message": { "oneOf": [{ "type":"string"}, {"type":"null"}] }
+        "steps": {"$ref": "#/definitions/steps"},
+        "settings": {"$ref": "#/definitions/settings"}
       },
-      "required": ["steps"]
+      "required": ["steps", "settings"]
+    },
+
+    "settings": {
+      "type": "object",
+      "properties": {
+        "quota_completed_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]},
+        "error_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]},
+        "mobile_web_sms_message": {"type": ["string", "null"]},
+        "mobile_web_survey_is_over_message": {"type": ["string", "null"]},
+        "title": {"oneOf": [{"type": "object"}, {"type":"null"}]},
+        "survey_already_taken_message": {"oneOf": [{"type": "object"}, {"type":"null"}]},
+        "thank_you_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]}
+      }
     },
 
     "steps": {
@@ -24,11 +34,11 @@
 
     "step": {
       "oneOf": [
-        { "$ref": "#/definitions/multiple-choice" },
-        { "$ref": "#/definitions/numeric" },
-        { "$ref": "#/definitions/explanation" },
-        { "$ref": "#/definitions/language-selection" },
-        { "$ref": "#/definitions/flag" }
+        {"$ref": "#/definitions/multiple-choice"},
+        {"$ref": "#/definitions/numeric"},
+        {"$ref": "#/definitions/explanation"},
+        {"$ref": "#/definitions/language-selection"},
+        {"$ref": "#/definitions/flag"}
       ]
     },
 
@@ -36,11 +46,11 @@
       "type": "object",
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["multiple-choice"] },
+        "type": {"enum": ["multiple-choice"]},
         "title": {"type": "string"},
-        "prompt": { "$ref": "#/definitions/prompt"},
-        "choices": { "$ref": "#/definitions/choices" },
-        "store": { "type": "string" }
+        "prompt": {"$ref": "#/definitions/prompt"},
+        "choices": {"$ref": "#/definitions/choices"},
+        "store": {"type": "string"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "choices", "store"]
@@ -50,15 +60,15 @@
       "type": "object",
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["numeric"] },
+        "type": {"enum": ["numeric"]},
         "title": {"type": "string"},
-        "prompt": { "$ref": "#/definitions/prompt"},
+        "prompt": {"$ref": "#/definitions/prompt"},
         "min_value": {"type": ["integer", "null"]},
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
         "ranges": {"$ref": "#/definitions/ranges"},
-        "store": { "type": "string" },
-        "refusal": { "oneOf": [{ "$ref": "#/definitions/refusal" }, {"type":"null"}] }
+        "store": {"type": "string"},
+        "refusal": {"oneOf": [{"$ref": "#/definitions/refusal"}, {"type":"null"}]}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
@@ -79,9 +89,9 @@
       "type": "object",
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["explanation"] },
+        "type": {"enum": ["explanation"]},
         "title": {"type": "string"},
-        "prompt": { "$ref": "#/definitions/prompt"},
+        "prompt": {"$ref": "#/definitions/prompt"},
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
@@ -92,11 +102,11 @@
       "type": "object",
       "properties": {
         "id": {"type": "string"},
-        "type": { "enum": ["language-selection"] },
+        "type": {"enum": ["language-selection"]},
         "title": {"type": "string"},
-        "prompt": { "$ref": "#/definitions/lang_prompt"},
-        "language_choices": { "type": "array" },
-        "store": { "type": "string" }
+        "prompt": {"$ref": "#/definitions/lang_prompt"},
+        "language_choices": {"type": "array"},
+        "store": {"type": "string"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "language_choices", "store"]
@@ -108,7 +118,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["flag"]},
         "title": {"type": "string"},
-        "disposition": { "enum": ["partial", "completed", "ineligible", "refused"] },
+        "disposition": {"enum": ["partial", "completed", "ineligible", "refused"]},
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
@@ -157,12 +167,12 @@
           "type": "object",
           "additionalProperties": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {"type": "string"}
           }
         },
         "ivr": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {"type": "string"}
         },
         "mobileweb": {
           "type" : "object"
@@ -178,7 +188,7 @@
     "lang_prompt": {
       "type": "object",
       "properties": {
-        "sms": {"type": "string" },
+        "sms": {"type": "string"},
         "ivr": {"$ref": "#/definitions/ivr_prompt"},
         "mobileweb": {"type": "string"}
       },

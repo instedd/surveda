@@ -5,11 +5,14 @@ export const RECEIVE_RESPONDENT_GROUPS = 'RESPONDENT_GROUPS_RECEIVE'
 export const RECEIVE_RESPONDENT_GROUP = 'RESPONDENT_GROUP_RECEIVE'
 export const REMOVE_RESPONDENT_GROUP = 'RESPONDENT_GROUP_REMOVE'
 export const FETCH_RESPONDENT_GROUPS = 'RESPONDENT_GROUPS_FETCH'
-export const INVALID_RESPONDENT_GROUPS = 'RESPONDENT_GROUP_INVALID_GROUPS'
 export const INVALID_RESPONDENTS = 'RESPONDENT_GROUP_INVALID_RESPONDENTS'
+export const INVALID_RESPONDENTS_FOR_GROUP = 'RESPONDENT_GROUP_INVALID_RESPONDENTS_FOR_GROUP'
+export const CLEAR_INVALID_RESPONDENTS_FOR_GROUP = 'RESPONDENT_GROUP_CLEAR_INVALID_RESPONDENTS_FOR_GROUP'
 export const CLEAR_INVALIDS = 'RESPONDENT_GROUP_CLEAR_INVALIDS'
 export const SELECT_CHANNELS = 'RESPONDENT_GROUP_SELECT_CHANNELS'
 export const UPLOAD_RESPONDENT_GROUP = 'RESPONDENT_GROUP_UPLOAD'
+export const UPLOAD_EXISTING_RESPONDENT_GROUP_ID = 'RESPONDENT_GROUP_UPLOAD_EXISTING'
+export const DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID = 'RESPONDENT_GROUP_DONE_UPLOAD_EXISTING'
 
 export const fetchRespondentGroups = (projectId, surveyId) => dispatch => {
   dispatch(startFetchingRespondentGroups(surveyId))
@@ -40,8 +43,18 @@ export const receiveInvalids = (invalidRespondents) => ({
   invalidRespondents: invalidRespondents
 })
 
+export const receiveInvalidsForGroup = (groupId, invalidRespondents) => ({
+  type: INVALID_RESPONDENTS_FOR_GROUP,
+  groupId,
+  invalidRespondents
+})
+
 export const clearInvalids = () => ({
   type: CLEAR_INVALIDS
+})
+
+export const clearInvalidsRespondentsForGroup = () => ({
+  type: CLEAR_INVALID_RESPONDENTS_FOR_GROUP
 })
 
 // TODO (ary): after performing these actions we invoke surveyActions.save()
@@ -57,13 +70,40 @@ export const clearInvalids = () => ({
 
 export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, getState) => {
   dispatch(uploadingRespondentGroup())
-  api.uploadRespondentGroup(projectId, surveyId, files)
-  .then(response => {
+  handleRespondentGroupUpload(dispatch,
+    api.uploadRespondentGroup(projectId, surveyId, files)
+  )
+}
+
+export const addMoreRespondentsToGroup = (projectId, surveyId, groupId, file) => (dispatch, getState) => {
+  dispatch(uploadingExistingRespondentGroup(groupId))
+  handleRespondentGroupUpload(dispatch,
+    api.addMoreRespondentsToGroup(projectId, surveyId, groupId, file),
+    groupId
+  )
+}
+
+export const replaceRespondents = (projectId, surveyId, groupId, file) => (dispatch, getState) => {
+  dispatch(uploadingExistingRespondentGroup(groupId))
+  handleRespondentGroupUpload(dispatch,
+    api.replaceRespondents(projectId, surveyId, groupId, file),
+    groupId
+  )
+}
+
+const handleRespondentGroupUpload = (dispatch, promise, groupId = null) => {
+  promise.then(response => {
     const group = response.entities.respondentGroups[response.result]
+    if (groupId) dispatch(doneUploadingExistingRespondentGroup(groupId))
     dispatch(receiveRespondentGroup(group))
   }, (e) => {
+    if (groupId) dispatch(doneUploadingExistingRespondentGroup(groupId))
     e.json().then((value) => {
-      dispatch(receiveInvalids(value))
+      if (groupId) {
+        dispatch(receiveInvalidsForGroup(groupId, value))
+      } else {
+        dispatch(receiveInvalids(value))
+      }
     })
   })
   .then(() => dispatch(surveyActions.save()))
@@ -71,6 +111,16 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, 
 
 export const uploadingRespondentGroup = () => ({
   type: UPLOAD_RESPONDENT_GROUP
+})
+
+export const uploadingExistingRespondentGroup = (id) => ({
+  type: UPLOAD_EXISTING_RESPONDENT_GROUP_ID,
+  id
+})
+
+export const doneUploadingExistingRespondentGroup = (id) => ({
+  type: DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID,
+  id
 })
 
 export const removeRespondentGroup = (projectId, surveyId, groupId) => (dispatch, getState) => {

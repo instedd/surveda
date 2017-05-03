@@ -12,6 +12,7 @@ import * as routes from '../../routes'
 import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
+import { modeLabel } from '../../questionnaire.mode'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -82,36 +83,7 @@ class SurveyShow extends Component {
   }
 
   letterForIndex(index) {
-    switch (index) {
-      case 0:
-        return 'A'
-      case 1:
-        return 'B'
-      case 2:
-        return 'C'
-      case 3:
-        return 'D'
-      default:
-        throw new Error(`invalid modes`)
-    }
-  }
-
-  labelForMode(mode: string) {
-    let label = null
-    switch (mode) {
-      case 'sms':
-        label = 'SMS'
-        break
-      case 'ivr':
-        label = 'IVR'
-        break
-      case 'mobileweb':
-        label = 'Mobile Web'
-        break
-      default:
-        throw new Error(`Unhandled mode in labelForMode: ${mode}`)
-    }
-    return label
+    return String.fromCodePoint(65 + index) // A, B, C, ...
   }
 
   modeFor(index: number, mode: string) {
@@ -121,7 +93,7 @@ class SurveyShow extends Component {
         <label className='grey-text'>{type} Mode</label>
         <div>
           <i className='material-icons'>{this.iconForMode(mode)}</i>
-          <span className='mode-label name'>{this.labelForMode(mode)}</span>
+          <span className='mode-label name'>{modeLabel(mode)}</span>
         </div>
       </div>
     )
@@ -130,7 +102,7 @@ class SurveyShow extends Component {
   modeForComparison(mode: string) {
     return (<div className='mode-inline-block'>
       <i className='material-icons'>{this.iconForMode(mode)}</i>
-      <span className='mode-label name'>{this.labelForMode(mode)}</span>
+      <span className='mode-label name'>{modeLabel(mode)}</span>
     </div>
     )
   }
@@ -244,7 +216,7 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsStats) {
-    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'stalled', 'failed', 'cancelled']
+    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'refused', 'stalled', 'failed', 'cancelled']
     return (
       <div className='card'>
         <div className='card-table-title'>
