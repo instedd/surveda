@@ -42,7 +42,10 @@ config :ask, :channel,
   }
 
 config :ask, Ask.Runtime.Broker,
-  batch_size: {:system, "BROKER_BATCH_SIZE", 10}
+  batch_size: {:system, "BROKER_BATCH_SIZE", 10},
+  initial_valid_respondent_rate: {:system, "INITIAL_VALID_RESPONDENT_RATE", 1},
+  initial_eligibility_rate: {:system, "INITIAL_ELIGIBILITY_RATE", 1},
+  initial_response_rate: {:system, "INITIAL_RESPONSE_RATE", 1}
 
 config :ask, :sox,
   bin: System.get_env("SOX_BINARY") || "sox"

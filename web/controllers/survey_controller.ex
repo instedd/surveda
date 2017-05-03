@@ -179,6 +179,10 @@ defmodule Ask.SurveyController do
     |> Repo.update!
   end
 
+  def config(conn, %{"survey_id" => id}) do
+    render(conn, "config.json", config: Survey.config_rates())
+  end
+
   def stop(conn, %{"survey_id" => id}) do
     survey = Repo.get!(Survey, id)
     |> Repo.preload([:quota_buckets])
