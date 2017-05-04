@@ -9,7 +9,7 @@ class Header extends Component {
 
     return (
       <header>
-        <nav>
+        <nav style={{'background-color': window.colorStyle.primary_color}}>
           <h1>{title}</h1>
           <div className='progressBar'>
             <span style={{ width: percent }} />
