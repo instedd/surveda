@@ -152,37 +152,37 @@ class SurveyWizardModeStep extends Component {
       selectorOptions.unshift(<option value='' key='select-primary-mode'>Select primary mode</option>)
     }
     if (lastPrimary) {
-      return (<div>
+      return (
         <Input s={12} m={5} type='select' value={lastPrimary} disabled={readOnly} onChange={handler}>
           <option value={lastPrimary} key={lastPrimary}>{labelFor(lastPrimary)}</option>
         </Input>
-      </div>)
+      )
     } else {
-      return (<div>
+      return (
         <Input s={12} m={5} type='select' value={primary || ''} disabled={readOnly} onChange={handler}>
           {selectorOptions}
         </Input>
-      </div>)
+      )
     }
   }
 
   selectorForFallbackMode = (comparison, primary, fallback, options, handler, readOnly) => {
     const lastFallback = this.comparisonFallbackSelectedIfLast(primary)
     if (lastFallback) {
-      return (<div>
+      return (
         <Input s={12} m={5} type='select' value={lastFallback} disabled={readOnly} onChange={handler}>
           <option value={lastFallback} key={lastFallback}>{labelFor(lastFallback)}</option>
         </Input>
-      </div>)
+      )
     } else {
-      return (<div>
+      return (
         <Input s={12} m={5} type='select' value={fallback || ''} disabled={readOnly} onChange={handler}>
           {<option value=''>No fallback</option>}
           {options.map((mode, index) => {
             return <option value={mode} key={mode + index}>{labelFor(mode)}</option>
           })}
         </Input>
-      </div>)
+      )
     }
   }
 
@@ -221,6 +221,8 @@ class SurveyWizardModeStep extends Component {
           <td>
             {mode[1] ? iconFor(mode[1]) : null}
             {mode[1] ? labelFor(mode[1]) : 'No fallback'}
+          </td>
+          <td className='tdDelete'>
             {
               !readOnly ? <a href='#!' onClick={(e) => { this.modeChange(e, mode) }}><i className='material-icons grey-text'>delete</i></a> : null
             }
@@ -241,19 +243,21 @@ class SurveyWizardModeStep extends Component {
     const fallbackOptions = availableModes.filter((mode) => { return mode[0] == selectedPrimary && mode.length == 2 }).map((mode) => mode[1])
 
     addModeButton = (primaryOptions.length > 0 && modeComparison)
-    ? <a className={this.modeIncluded(this.modeFromPrimaryAndFallback(selectedPrimary, selectedFallback)) ? 'disabled' : ''} onClick={() => this.addModeComparison(selectedPrimary, selectedFallback)}>
-      <i className='material-icons'>add</i>
-    </a> : null
+    ? <div className='col s12 m1 offset-m1'>
+      <a className={this.modeIncluded(this.modeFromPrimaryAndFallback(selectedPrimary, selectedFallback)) ? 'disabled' : ''} onClick={() => this.addModeComparison(selectedPrimary, selectedFallback)}>
+        <i className='material-icons'>add</i>
+      </a>
+    </div> : null
 
     showSelectors = !modeComparison || (primaryOptions.length > 0 && !readOnly)
     const selectors = showSelectors
-    ? <tr>
-      <td>{this.selectorForPrimaryMode(modeComparison, selectedPrimary, primaryOptions, selectPrimaryHandler, readOnly)}</td>
-      <td>
+    ? <div className='card-action select-modes'>
+      <div className='row'>
+        {this.selectorForPrimaryMode(modeComparison, selectedPrimary, primaryOptions, selectPrimaryHandler, readOnly)}
         {this.selectorForFallbackMode(modeComparison, selectedPrimary, selectedFallback, fallbackOptions, selectFallbackHandler, readOnly)}
         {!readOnly ? addModeButton : null}
-      </td>
-    </tr> : null
+      </div>
+    </div> : null
 
     return (
       <div>
@@ -267,32 +271,35 @@ class SurveyWizardModeStep extends Component {
         </div>
         <div className='row'>
           <div className='col s12'>
-            <p>
-              <input
-                id='questionnaire_mode_comparison'
-                type='checkbox'
-                checked={modeComparison}
-                onChange={e => this.modeComparisonChange(e)}
-                className='filled-in'
-                disabled={readOnly}
-                />
-              <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
-            </p>
+            <input
+              id='questionnaire_mode_comparison'
+              type='checkbox'
+              checked={modeComparison}
+              onChange={e => this.modeComparisonChange(e)}
+              className='filled-in'
+              disabled={readOnly}
+              />
+            <label htmlFor='questionnaire_mode_comparison'>Run a comparison to contrast performance between different primary and fallback modes combinations (you can set up the allocations later in the comparisons section)</label>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
             <div className='card'>
               <div className='card-table'>
-                <table>
+                <table className='highlight'>
                   <thead>
                     <tr>
                       <th>Primary mode</th>
                       <th>Fallback mode</th>
+                      <th />
                     </tr>
                   </thead>
                   <tbody>
                     {modeDescriptions}
-                    {selectors}
                   </tbody>
                 </table>
               </div>
+              {selectors}
             </div>
           </div>
         </div>

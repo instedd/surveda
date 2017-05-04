@@ -257,13 +257,13 @@ export const labelFor = (mode: string) => {
 
 export const iconFor = (mode: string) => {
   if (mode == 'sms') {
-    return (<i className='material-icons v-middle '>sms</i>)
+    return (<i className='material-icons v-middle icon-text '>sms</i>)
   }
   if (mode == 'ivr') {
-    return (<i className='material-icons v-middle '>phone</i>)
+    return (<i className='material-icons v-middle icon-text '>phone</i>)
   }
   if (mode == 'mobileweb') {
-    return (<i className='material-icons v-middle '>phone_android</i>)
+    return (<i className='material-icons v-middle icon-text '>phone_android</i>)
   }
   return null
 }
