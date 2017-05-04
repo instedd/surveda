@@ -141,6 +141,9 @@
           display: inline-block;
           cursor: pointer;
           margin-top: 1.4rem;
+          &.disabled {
+            @extend .grey-text, .text-lighten-1;
+          }
         }
       }
     }
