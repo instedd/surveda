@@ -403,12 +403,12 @@ const validateMobileWebColorStyle = (data, context) => {
   const secondary = data.settings.mobileWebColorStyle.secondaryColor
   if (primary) {
     if (!colorRegex.test(primary)) {
-      addError(context, 'mobileWebColorStyle.primaryColor', 'invalid color', null, 'mobileweb')
+      addError(context, 'mobileWebColorStyle.primaryColor', 'Mobile web primary color is invalid ', null, 'mobileweb')
     }
   }
   if (secondary) {
     if (!colorRegex.test(secondary)) {
-      addError(context, 'mobileWebColorStyle.secondaryColor', 'invalid color', null, 'mobileweb')
+      addError(context, 'mobileWebColorStyle.secondaryColor', 'Mobile web secondary color is invalid', null, 'mobileweb')
     }
   }
   return

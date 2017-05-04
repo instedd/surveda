@@ -3,7 +3,6 @@ import { connect } from 'react-redux'
 import { Card } from '../ui'
 import SmsPrompt from './SmsPrompt'
 import MobileWebPrompt from './MobileWebPrompt'
-import ColorSelection from './ColorSelection'
 import classNames from 'classnames'
 import propsAreEqual from '../../propsAreEqual'
 import { getPromptMobileWeb } from '../../step'
@@ -125,9 +124,6 @@ class WebSettings extends Component {
               {this.quotaCompletedMessageComponent()}
             </li>
             <li className='collection-item'>
-              {this.quotaCompletedMessageComponent()}
-            </li>
-            <li className='collection-item'>
               {this.errorMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -237,20 +233,30 @@ class WebSettings extends Component {
   }
 
   colorSelectionComponent() {
+    const primaryErrors = this.colorStyleMessageErrors('primary')
+    const secondaryErrors = this.colorStyleMessageErrors('secondary')
+    const primary = primaryErrors && primaryErrors.length > 0 ? '#222222' : this.state.primaryColor
+    const secondary = secondaryErrors && secondaryErrors.length > 0 ? '#333333' : this.state.secondaryColor
     return (
       <div>
+        <svg style={{width: '70px', height: '70px'}}>
+          <circle className='a' cx='29' cy='29' r='29' fill={primary} />
+        </svg>
         <MobileWebPrompt id='web_settings_primary_color'
           label='PrimaryColor'
-          inputErrors={[]}
+          inputErrors={primaryErrors}
           value={this.state.primaryColor}
           originalValue={this.state.primaryColor}
           onChange={text => this.messageChange(text, 'primaryColor')}
           onBlur={text => this.colorSelectionBlur(text, 'primary')}
           readOnly={this.props.readOnly}
         />
+        <svg style={{width: '70px', height: '70px'}}>
+          <circle className='a' cx='29' cy='29' r='29' fill={secondary} />
+        </svg>
         <MobileWebPrompt id='web_settings_secondary_color'
           label='SecondaryColor'
-          inputErrors={[]}
+          inputErrors={secondaryErrors}
           value={this.state.secondaryColor}
           originalValue={this.state.secondaryColor}
           onChange={text => this.messageChange(text, 'secondaryColor')}
@@ -281,6 +287,15 @@ class WebSettings extends Component {
     return errorsByPath['mobileWebSurveyIsOverMessage']
   }
 
+  colorStyleMessageErrors(mode) {
+    const { errorsByPath } = this.props
+    if (mode == 'primary') {
+      return errorsByPath['mobileWebColorStyle.primaryColor']
+    } else {
+      return errorsByPath['mobileWebColorStyle.secondaryColor']
+    }
+  }
+
   surveyAlreadyTakenMessageErrors() {
     const { questionnaire, errorsByPath } = this.props
     return errorsByPath[`surveyAlreadyTakenMessage['${questionnaire.activeLanguage}']`]
@@ -293,7 +308,9 @@ class WebSettings extends Component {
       !!this.titleErrors() ||
       !!this.smsMessageErrors() ||
       !!this.surveyIsOverMessageErrors() ||
-      !!this.surveyAlreadyTakenMessageErrors()
+      !!this.surveyAlreadyTakenMessageErrors() ||
+      !!this.colorStyleMessageErrors('primary') ||
+      !!this.colorStyleMessageErrors('secondary')
   }
 
   render() {
