@@ -87,8 +87,9 @@ defmodule Ask.Runtime.Step do
     end
 
     refusal = fetch(:refusal, step, mode, language)
+    num_digits = fetch(:num_digits, step, mode, language)
 
-    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["type"], step["id"], choices, step["min_value"], step["max_value"], refusal)
+    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["type"], step["id"], choices, step["min_value"], step["max_value"], refusal, num_digits)
   end
 
   def fetch(:prompt, step = %{"type" => "language-selection"}, mode, _language) do
@@ -142,6 +143,39 @@ defmodule Ask.Runtime.Step do
     end
   end
 
+  def fetch(:num_digits, step, "ivr", _language) do
+    case step["type"] do
+      "language-selection" ->
+        # If we have 2 choices (en, es), then it's the length of "2", which is 1
+        # If we have 10 choices, then it's the length of "10", which is 2
+        step["language_choices"]
+        |> length
+        |> to_string
+        |> String.length
+      "multiple-choice" ->
+        step["choices"]
+        |> Enum.flat_map(&(&1["responses"]["ivr"]))
+        |> Enum.flat_map(fn v -> v |> String.split(",") end)
+        |> Enum.map(fn v -> v |> String.trim |> String.length end)
+        |> Enum.max
+      "numeric" ->
+        max_value = step["max_value"]
+        if max_value do
+          # If the max value is 123, then it's the length of "123", which is 3
+          max_value
+          |> to_string
+          |> String.length
+        else
+          nil
+        end
+      _ ->
+        nil
+    end
+  end
+
+  def fetch(:num_digits, _step, _mode, _language) do
+    nil
+  end
 
   def fetch(:reply_msg, msg, mode, language, title) do
     ReplyStep.new(fetch(:msg, msg, mode, language), title)

@@ -1,4 +1,15 @@
 defmodule Ask.StepBuilder do
+  def language_selection_step(id: id, title: title, prompt: prompt, store: store, choices: choices) do
+    %{
+      "id" => id,
+      "type" => "language-selection",
+      "title" => title,
+      "prompt" => prompt,
+      "store" => store,
+      "language_choices" => choices
+    }
+  end
+
   def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices) do
     %{
       "id" => id,

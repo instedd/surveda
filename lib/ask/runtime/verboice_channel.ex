@@ -49,21 +49,32 @@ defmodule Ask.Runtime.VerboiceChannel do
     client.token
   end
 
-  def gather(respondent, prompts = [prompt, _ | _]) do
-    [say_or_play(prompt) | gather(respondent, tl(prompts))]
+  def gather(respondent, prompts = [prompt, _ | _], num_digits) do
+    [say_or_play(prompt) | gather(respondent, tl(prompts), num_digits)]
   end
 
-  def gather(respondent, prompts) do
+  def gather(respondent, prompts, num_digits) do
+    gather_options = %{action: callback_url(respondent), finishOnKey: ""}
+    |> add_num_digits(num_digits)
+
     [
       # We need to set finishOnKey="" so that when a user presses '#'
       # the current question doesn't give a "timeout" from Verboice,
       # and '#' is sent here so it can be considered a refusal, a valid
       # option, etc.
-      element(:Gather, %{action: callback_url(respondent), finishOnKey: ""}, [
+      element(:Gather, gather_options, [
         say_or_play(prompts)
       ]),
       element(:Redirect, no_reply_callback_url(respondent))
     ]
+  end
+
+  defp add_num_digits(options, num_digits) do
+    if num_digits do
+      Map.put(options, :numDigits, num_digits)
+    else
+      options
+    end
   end
 
   def say_or_play([prompt]) do
@@ -180,7 +191,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         case broker.sync_step(respondent, response, "ivr") do
           {:reply, reply} ->
             prompts = Reply.prompts(reply)
-            gather(respondent, prompts)
+            num_digits = Reply.num_digits(reply)
+            gather(respondent, prompts, num_digits)
           {:end, {:reply, reply}} ->
             prompts = Reply.prompts(reply)
             say_or_play(prompts) ++ [hangup]
