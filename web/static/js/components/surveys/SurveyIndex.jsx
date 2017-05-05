@@ -90,7 +90,7 @@ class SurveyIndex extends Component {
           )) }
         </div>
         }
-        <ConfirmationModal ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete survey' showCancel />
+        <ConfirmationModal id='survey_index_delete' ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete survey' showCancel />
       </div>
     )
   }
