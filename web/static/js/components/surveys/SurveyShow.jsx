@@ -34,9 +34,16 @@ class SurveyShow extends Component {
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey => {
-      let questionnaireIds = survey.questionnaireIds || []
-      for (let questionnaireId of questionnaireIds) {
-        dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
+      if (survey.questionnaires && Object.keys(survey.questionnaires).length != 0) {
+        // The survey should have associated questionnaires embedded in them in the
+        // latest version of the app.
+      } else {
+        // If not, it means these are old surveys with non-snapshot questionnaires, so we
+        // fetch them here.
+        let questionnaireIds = survey.questionnaireIds || []
+        for (let questionnaireId of questionnaireIds) {
+          dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
+        }
       }
     })
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
@@ -123,8 +130,13 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire, project } = this.props
+    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, project } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
+
+    let { questionnaire } = this.props
+    if (!questionnaire && survey) {
+      questionnaire = survey.questionnaires[Object.keys(survey.questionnaires)[0]]
+    }
 
     if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats || !respondentsStats) {
       return <p>Loading...</p>
