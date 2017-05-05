@@ -1061,6 +1061,31 @@ defmodule Ask.BrokerTest do
     assert_respondents_by_state(survey, 10, 10)
   end
 
+  test "when a survey has any target of completed respondets the batch size depends on the success rate" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 50)
+
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 10}))
+
+    # set some respondents as active
+    Broker.handle_info(:poll, nil)
+
+    # mark half of the respondents as failed and half as completed
+    # so success_rate should be 0.5 and completion_rate should be 0.5
+    Repo.all(from r in Respondent, where: r.state == "active")
+    |> Enum.map(fn respondent ->
+      changes =
+        case rem(respondent.id, 2) == 0 do
+          true -> %{state: "failed"}
+          false -> %{state: "completed"}
+        end
+      Repo.update(respondent |> change |> Respondent.changeset(changes))
+    end)
+
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 6, 35)
+  end
+
   test "changes running survey state to 'completed' when there are no more running respondents" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 

@@ -97,21 +97,36 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp respondents_by_state(survey) do
+    by_state_defaults = %{
+      "active" => 0,
+      "pending" => 0,
+      "completed" => 0,
+      "stalled" => 0,
+      "rejected" => 0,
+      "failed" => 0,
+    }
+    Repo.all(
+      from r in assoc(survey, :respondents),
+      group_by: :state,
+      select: {r.state, count("*")})
+      |> Enum.into(%{})
+      |> (&Map.merge(by_state_defaults, &1)).()
+  end
+
   defp poll_survey(survey) do
     try do
-      by_state = Repo.all(
-        from r in assoc(survey, :respondents),
-        group_by: :state,
-        select: {r.state, count("*")}) |> Enum.into(%{})
+      by_state = respondents_by_state(survey)
+      %{
+        "active" => active,
+        "pending" => pending,
+        "completed" => completed,
+        "stalled" => stalled,
+      } = by_state
 
-      active = by_state["active"] || 0
-      pending = by_state["pending"] || 0
-      completed = by_state["completed"] || 0
-      stalled = by_state["stalled"] || 0
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
-      cutoff_target = cutoff_target(survey)
-      batch_size = batch_size(completed, cutoff_target)
+      batch_size = calculate_batch_size(survey, by_state)
 
       cond do
         (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
@@ -131,6 +146,9 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp current_completion_rate(_, completed_respondents_needed) when is_nil(completed_respondents_needed), do: 0
+  defp current_completion_rate(completed, completed_respondents_needed), do: completed/completed_respondents_needed
+
   defp reached_quotas?(survey) do
     case survey.quota_vars do
       [] -> false
@@ -143,7 +161,7 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp cutoff_target(survey) do
+  defp completed_respondents_needed_by(survey) do
     survey_id = survey.id
     quota_target = Repo.one(from q in QuotaBucket,
                       where: q.survey_id == ^survey_id,
@@ -152,13 +170,13 @@ defmodule Ask.Runtime.Broker do
     targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
 
     if targets_compacted |> Enum.empty? do
-      nil
+      {false, nil}
     else
       res = targets_compacted
             |> Enum.max()
             |> Decimal.new()
             |> Decimal.to_integer()
-      res
+      {true, res}
     end
   end
 
@@ -540,19 +558,39 @@ defmodule Ask.Runtime.Broker do
   end
 
   # Estimates the amount of respondents the broker will have to initiate contact with
-  # to complete the cutoff_target.
-  defp batch_size(completed, cutoff_target) when is_nil(cutoff_target) do
-    Survey.environment_variable_named(:batch_size)
+  # to get the completed respondents needed.
+  defp calculate_batch_size(survey, respondents_by_state) do
+    {survey_has_cutoff_target, completed_respondents_needed} = completed_respondents_needed_by(survey)
+    case survey_has_cutoff_target do
+      true -> 
+        current_success_rate = calculate_success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
+        completion_rate = current_completion_rate(respondents_by_state["completed"], completed_respondents_needed)
+        estimated_success_rate = estimate_success_rate(completion_rate, current_success_rate)
+
+        batch_size = (completed_respondents_needed-respondents_by_state["completed"])/estimated_success_rate
+
+        batch_size |> trunc
+      false ->
+        Survey.environment_variable_named(:batch_size)
+    end
   end
-  defp batch_size(completed, cutoff_target) do
-    %{:valid_respondent_rate => valid_respondent_rate,
-      :eligibility_rate => eligibility_rate,
-      :response_rate => response_rate } = Survey.config_rates()
 
-    success_rate = valid_respondent_rate * eligibility_rate * response_rate
-    batch_size = (cutoff_target-completed)/success_rate
+  defp estimate_success_rate(0, _), do: initial_estimated_success_rate()
+  defp estimate_success_rate(completion_rate, current_success_rate) do
+    %{:response_rate => initial_success_rate } = Survey.config_rates()
+    (1-completion_rate) * initial_success_rate + completion_rate * current_success_rate
+  end
 
-    batch_size |> trunc
+  defp initial_estimated_success_rate() do
+    %{:valid_respondent_rate => initial_valid_respondent_rate,
+      :eligibility_rate => initial_eligibility_rate,
+      :response_rate => initial_response_rate } = Survey.config_rates()
+    initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+  end
+
+  defp calculate_success_rate(0, _, _), do: 0
+  defp calculate_success_rate(completed_respondents, failed_respondents, rejected_respondents) do
+    completed_respondents/(completed_respondents + failed_respondents + rejected_respondents)
   end
 
 end
