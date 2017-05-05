@@ -11,6 +11,7 @@ import isEqual from 'lodash/isEqual'
 import uniqWith from 'lodash/uniqWith'
 import every from 'lodash/every'
 import some from 'lodash/some'
+import React from 'react'
 
 export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
@@ -239,6 +240,32 @@ export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
   conditions = flatten(conditions)
   conditions = uniqWith(conditions, isEqual)
   return conditions.join()
+}
+
+export const labelFor = (mode: string) => {
+  if (mode == 'sms') {
+    return 'SMS'
+  }
+  if (mode == 'ivr') {
+    return 'Phone call'
+  }
+  if (mode == 'mobileweb') {
+    return 'Mobile Web'
+  }
+  return 'Unknown mode'
+}
+
+export const iconFor = (mode: string) => {
+  if (mode == 'sms') {
+    return (<i className='material-icons v-middle icon-text '>sms</i>)
+  }
+  if (mode == 'ivr') {
+    return (<i className='material-icons v-middle icon-text '>phone</i>)
+  }
+  if (mode == 'mobileweb') {
+    return (<i className='material-icons v-middle icon-text '>phone_android</i>)
+  }
+  return null
 }
 
 export const modeLabel = (mode: string[]) => {

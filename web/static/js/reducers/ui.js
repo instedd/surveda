@@ -15,6 +15,10 @@ const initialState = {
   data: {
     questionnaireEditor: {
       uploadingAudio: null
+    },
+    surveyWizard: {
+      primaryModeSelected: null,
+      fallbackModeSelected: null
     }
   },
   errors: {}
@@ -24,6 +28,9 @@ export default (state = initialState, action) => {
   switch (action.type) {
     case actions.UPLOAD_AUDIO: return uploadingAudio(state, action)
     case actions.FINISH_AUDIO_UPLOAD: return finishAudioUpload(state, action)
+    case actions.SURVEY_COMPARISON_SELECT_PRIMARY: return selectPrimaryComparison(state, action)
+    case actions.SURVEY_COMPARISON_SELECT_FALLBACK: return selectFallbackComparison(state, action)
+    case actions.SURVEY_ADD_COMPARISON_MODE: return resetMode(state, action)
     default: return state
   }
 }
@@ -45,6 +52,46 @@ const finishAudioUpload = (state, action) => {
     data: {
       questionnaireEditor: {
         uploadingAudio: null
+      }
+    }
+  }
+}
+
+const selectPrimaryComparison = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      surveyWizard: {
+        ...state.data.surveyWizard,
+        primaryModeSelected: action.mode
+      }
+    }
+  }
+}
+
+const selectFallbackComparison = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      surveyWizard: {
+        ...state.data.surveyWizard,
+        fallbackModeSelected: action.mode
+      }
+    }
+  }
+}
+
+const resetMode = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      surveyWizard: {
+        ...state.data.surveyWizard,
+        primaryModeSelected: null,
+        fallbackModeSelected: null
       }
     }
   }
