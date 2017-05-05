@@ -242,7 +242,9 @@ defmodule Ask.RespondentController do
     # We first need to get all unique field names in all questionnaires
     all_fields = questionnaires
     |> Enum.flat_map(&Questionnaire.variables/1)
+    |> Enum.map(fn s -> String.trim(s) end)
     |> Enum.uniq
+    |> Enum.reject(fn s -> String.length(s) == 0 end)
 
     # Now traverse each respondent and create a row for it
     csv_rows = from(

@@ -123,7 +123,10 @@ class RespondentIndex extends Component {
     function allFieldNames(rs) {
       let fieldNames = Object.keys(rs).map((key) => (rs[key].responses))
       fieldNames = fieldNames.map((response) => Object.keys(response))
-      return [].concat.apply([], fieldNames)
+      fieldNames = [].concat.apply([], fieldNames)
+      // Don't show fields for empty variable names
+      fieldNames = fieldNames.filter(x => x.trim().length > 0)
+      return fieldNames
     }
 
     function hasResponded(rs, respondentId, fieldName) {
