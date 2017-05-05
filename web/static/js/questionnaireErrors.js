@@ -2,6 +2,6 @@
 import some from 'lodash/some'
 import startsWith from 'lodash/startsWith'
 
-export const hasErrorsInPrefix = (errors: ValidationError[], prefix: string) => {
-  return some(errors, error => startsWith(error.path, prefix))
+export const hasErrorsInPrefixWithLanguage = (errors: ValidationError[], prefix: string, language: string) => {
+  return some(errors, error => error.lang == language && startsWith(error.path, prefix))
 }
