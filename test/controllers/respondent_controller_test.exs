@@ -4,7 +4,7 @@ defmodule Ask.RespondentControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{Respondent, QuotaBucket, Survey}
+  alias Ask.{QuotaBucket, Survey}
 
   @valid_attrs %{phone_number: "some content"}
   @invalid_attrs %{}
@@ -37,7 +37,7 @@ defmodule Ask.RespondentControllerTest do
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == [%{
                                                      "id" => respondent.id,
-                                                     "phone_number" => Respondent.mask_phone_number(respondent.phone_number),
+                                                     "phone_number" => respondent.hashed_number,
                                                      "survey_id" => survey.id,
                                                      "mode" => ["sms"],
                                                      "questionnaire_id" => questionnaire.id,

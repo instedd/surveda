@@ -6,6 +6,8 @@ defmodule Ask.RespondentController do
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
+    sort_by = Map.get(params, "sort_by", "")
+    sort_asc = Map.get(params, "sort_asc", "")
 
     respondents = conn
     |> load_project(project_id)
@@ -19,6 +21,7 @@ defmodule Ask.RespondentController do
     respondents = respondents
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
+    |> sort_respondents(sort_by, sort_asc)
     |> Repo.all
     |> mask_phone_numbers
 
@@ -46,6 +49,21 @@ defmodule Ask.RespondentController do
         {page_number, _} = Integer.parse(page)
         offset = limit_number * (page_number - 1)
         query |> offset(^offset)
+    end
+  end
+
+  defp sort_respondents(query, sort_by, sort_asc) do
+    case {sort_by, sort_asc} do
+      {"phoneNumber", "true"} ->
+        query |> order_by([r], asc: r.hashed_number)
+      {"phoneNumber", "false"} ->
+        query |> order_by([r], desc: r.hashed_number)
+      {"date", "true"} ->
+        query |> order_by([r], asc: r.updated_at)
+      {"date", "false"} ->
+        query |> order_by([r], desc: r.updated_at)
+      _ ->
+        query
     end
   end
 

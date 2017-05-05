@@ -6,9 +6,8 @@ import * as actions from '../../actions/respondents'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
-import range from 'lodash/range'
 import values from 'lodash/values'
-import { CardTable, UntitledIfEmpty, Modal } from '../ui'
+import { CardTable, UntitledIfEmpty, Modal, SortableHeader } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../questionnaire.mode'
@@ -18,11 +17,14 @@ type Props = {
   surveyId: number,
   survey: Survey,
   project: Project,
-  questionnaires: Questionnaire[],
-  respondents: Respondent[],
+  questionnaires: {[id: any]: Questionnaire},
+  respondents: {[id: any]: Respondent},
+  order: any[],
   pageSize: number,
   pageNumber: number,
   totalCount: number,
+  sortBy: any,
+  sortAsc: any,
   startIndex: number,
   endIndex: number,
   hasPreviousPage: boolean,
@@ -91,12 +93,17 @@ class RespondentIndex extends Component {
     window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
   }
 
+  sortBy(name) {
+    const { projectId, surveyId } = this.props
+    this.props.actions.sortRespondentsBy(projectId, surveyId, name)
+  }
+
   render() {
     if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
       return <div>Loading...</div>
     }
 
-    const { survey, questionnaires, project, totalCount } = this.props
+    const { survey, questionnaires, project, totalCount, order, sortBy, sortAsc } = this.props
 
     const hasComparisons = survey.comparisons.length > 0
 
@@ -137,7 +144,7 @@ class RespondentIndex extends Component {
       return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
     }
 
-    const { startIndex, endIndex, hasPreviousPage, hasNextPage, pageSize } = this.props
+    const { startIndex, endIndex, hasPreviousPage, hasNextPage } = this.props
 
     const title = `${totalCount} ${(totalCount == 1) ? ' respondent' : ' respondents'}`
     const footer = (
@@ -243,18 +250,18 @@ class RespondentIndex extends Component {
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
-              <th>Phone number</th>
+              <SortableHeader text='Respondent ID' property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
               {respondentsFieldName.map(field =>
                 <th key={field}>{field}</th>
               )}
               {variantHeader}
               <th>Disposition</th>
-              <th>Date</th>
+              <SortableHeader text='Date' property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
             </tr>
           </thead>
           <tbody>
-            { range(0, pageSize).map(index => {
-              const respondent = respondentsList[index]
+            { order.map((respondentId, index) => {
+              const respondent = respondentsList.find(r => r.id == respondentId)
               if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={colspan} /></tr>
 
               let variantColumn = null
@@ -296,6 +303,8 @@ const mapStateToProps = (state, ownProps) => {
   const pageNumber = state.respondents.page.number
   const pageSize = state.respondents.page.size
   const totalCount = state.respondents.page.totalCount
+  const sortBy = state.respondents.sortBy
+  const sortAsc = state.respondents.sortAsc
   const startIndex = (pageNumber - 1) * state.respondents.page.size + 1
   const endIndex = Math.min(startIndex + state.respondents.page.size - 1, totalCount)
   const hasPreviousPage = state.respondents.page.number > 1
@@ -303,17 +312,20 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
-    respondents: state.respondents.items,
     survey: state.survey.data,
     project: state.project.data,
     questionnaires: state.questionnaires.items,
+    respondents: state.respondents.items,
+    order: state.respondents.order,
     pageNumber,
     pageSize,
     startIndex,
     endIndex,
     totalCount,
     hasPreviousPage,
-    hasNextPage
+    hasNextPage,
+    sortBy,
+    sortAsc
   }
 }
 
