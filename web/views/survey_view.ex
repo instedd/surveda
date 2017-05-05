@@ -22,7 +22,6 @@ defmodule Ask.SurveyView do
 
   def render("survey_detail.json", %{survey: survey}) do
     questionnaires = Ask.Repo.preload(survey, :questionnaires).questionnaires
-    ids = Enum.map(questionnaires, &(&1.id))
     started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: ""
 
     map = %{id: survey.id,
