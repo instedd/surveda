@@ -118,9 +118,15 @@ class WebSettings extends Component {
               </div>
             </li>
             <li className='collection-item'>
+              <h5>
+                Style
+              </h5>
               {this.colorSelectionComponent()}
             </li>
             <li className='collection-item'>
+              <h5>
+                Messages
+              </h5>
               {this.quotaCompletedMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -235,15 +241,16 @@ class WebSettings extends Component {
   colorSelectionComponent() {
     const primaryErrors = this.colorStyleMessageErrors('primary')
     const secondaryErrors = this.colorStyleMessageErrors('secondary')
-    const primary = primaryErrors && primaryErrors.length > 0 ? '#222222' : this.state.primaryColor
-    const secondary = secondaryErrors && secondaryErrors.length > 0 ? '#333333' : this.state.secondaryColor
+    // Default values for mobile web form are #6648a2 and #fb9a00
+    const primary = (primaryErrors && primaryErrors.length > 0) || !this.state.primaryColor ? '#6648a2' : this.state.primaryColor
+    const secondary = (secondaryErrors && secondaryErrors.length > 0) || !this.state.secondaryColor ? '#fb9a00' : this.state.secondaryColor
     return (
       <div>
         <svg style={{width: '70px', height: '70px'}}>
-          <circle className='a' cx='29' cy='29' r='29' fill={primary} />
+          <circle className='a' cx='10' cy='10' r='10' fill={primary} />
         </svg>
         <MobileWebPrompt id='web_settings_primary_color'
-          label='PrimaryColor'
+          label='Primary color'
           inputErrors={primaryErrors}
           value={this.state.primaryColor}
           originalValue={this.state.primaryColor}
@@ -252,10 +259,10 @@ class WebSettings extends Component {
           readOnly={this.props.readOnly}
         />
         <svg style={{width: '70px', height: '70px'}}>
-          <circle className='a' cx='29' cy='29' r='29' fill={secondary} />
+          <circle className='a' cx='10' cy='10' r='10' fill={secondary} />
         </svg>
         <MobileWebPrompt id='web_settings_secondary_color'
-          label='SecondaryColor'
+          label='Secondary color'
           inputErrors={secondaryErrors}
           value={this.state.secondaryColor}
           originalValue={this.state.secondaryColor}

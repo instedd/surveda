@@ -8,7 +8,6 @@ defmodule Ask.MobileSurveyController do
       |> Repo.get(respondent_id)
       |> Repo.preload(:questionnaire)).questionnaire
 
-    # color_style = Poison.encode!(questionnaire.settings["mobile_web_color_style"])
     color_style = questionnaire.settings["mobile_web_color_style"]
 
     authorize(conn, respondent_id, token, fn ->

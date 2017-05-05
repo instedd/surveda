@@ -16,9 +16,9 @@ class ExplanationStep extends Component {
         {(step.prompts || []).map(prompt =>
           <Prompt key={prompt} text={prompt} />
         )}
-        <button className='btn large block'>
-          <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
-            <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' />
+        <button className='btn large block' style={{borderColor: this.context.primaryColor, color: this.context.primaryColor}}>
+          <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg' >
+            <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' fill={this.context.primaryColor} />
           </svg>
           <span>Understood</span>
         </button>
@@ -29,6 +29,10 @@ class ExplanationStep extends Component {
 
 ExplanationStep.propTypes = {
   step: PropTypes.object
+}
+
+ExplanationStep.contextTypes = {
+  primaryColor: PropTypes.string
 }
 
 export default ExplanationStep

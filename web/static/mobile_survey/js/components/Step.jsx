@@ -68,7 +68,6 @@ class Step extends Component {
   isContentTallerThanViewport() {
     const viewportHeight = document.documentElement.clientHeight
     const contentHeight = this.refs.stepContent.offsetHeight
-    
     return contentHeight > viewportHeight
   }
 
@@ -117,9 +116,15 @@ class Step extends Component {
             {this.stepComponent()}
           </form>
         </main>
-        <div ref='moreContentHint' className='more-content-arrow'></div>
+        <div ref='moreContentHint' className='more-content-arrow' />
       </div>
     )
+  }
+
+  getChildContext() {
+    const primaryColor = window.colorStyle.primary_color || 'rgb(102,72,162)'
+    const secondaryColor = window.colorStyle.secondary_color || 'rgb(251,154,0)'
+    return {primaryColor: primaryColor, secondaryColor: secondaryColor}
   }
 }
 
@@ -129,5 +134,10 @@ const mapStateToProps = (state) => ({
   respondentId: window.respondentId,
   token: window.token
 })
+
+Step.childContextTypes = {
+  primaryColor: PropTypes.string,
+  secondaryColor: PropTypes.string
+}
 
 export default connect(mapStateToProps)(Step)
