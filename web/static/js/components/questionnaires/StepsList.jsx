@@ -3,7 +3,7 @@ import QuestionnaireClosedStep from './QuestionnaireClosedStep'
 
 class StepsList extends Component {
   render() {
-    const { steps, errorPath, onClick, readOnly } = this.props
+    const { steps, errorPath, onClick, readOnly, quotaCompletedSteps } = this.props
     if (steps.length != 0) {
       return (
         <ul className='collapsible'>
@@ -15,6 +15,7 @@ class StepsList extends Component {
                 errorPath={`${errorPath}[${index}]`}
                 onClick={stepId => onClick(stepId)}
                 readOnly={readOnly}
+                quotaCompletedSteps={quotaCompletedSteps}
               />
             </li>
           ))}
@@ -30,7 +31,8 @@ StepsList.propTypes = {
   steps: PropTypes.array,
   errorPath: PropTypes.string,
   onClick: PropTypes.func,
-  readOnly: PropTypes.bool
+  readOnly: PropTypes.bool,
+  quotaCompletedSteps: PropTypes.bool
 }
 
 export default StepsList

@@ -12,14 +12,15 @@ type Props = {
   errorPath: string,
   onClick: Function,
   hasErrors: boolean,
-  readOnly: boolean
+  readOnly: boolean,
+  quotaCompletedSteps: boolean
 };
 
 class QuestionnaireClosedStep extends Component {
   props: Props
 
   render() {
-    const { step, onClick, hasErrors, readOnly } = this.props
+    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps } = this.props
 
     const stepIconClass = classNames({
       'material-icons left': true,
@@ -45,7 +46,7 @@ class QuestionnaireClosedStep extends Component {
     })()
 
     return (
-      <DraggableStep step={step} readOnly={readOnly}>
+      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
         <Card>
           <div className='card-content closed-step'>
             <div>

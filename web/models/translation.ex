@@ -30,16 +30,16 @@ defmodule Ask.Translation do
 
     # First, collect questionnaire translations as
     # {mode, scope, source_lang, source_text, target_lang, target_text}
-    new_translations = questionnaire.steps
-    |> Enum.flat_map(&collect_step_translations(lang, &1))
-    |> collect_prompt_entry_translations("quota_completed", lang, questionnaire.settings["quota_completed_message"])
+    new_translations = []
+    |> collect_steps_translations(lang, questionnaire.steps)
+    |> collect_steps_translations(lang, questionnaire.quota_completed_steps)
     |> collect_prompt_entry_translations("error", lang, questionnaire.settings["error_message"])
 
     # Also collect all source texts, so later we can know which ones
     # don't have a translation yet (so we can still use them for autocomplete)
-    source_texts = questionnaire.steps
-    |> Enum.flat_map(&collect_step_source_texts(lang, &1))
-    |> collect_prompt_entry_source_texts("quota_completed", lang, questionnaire.settings["quota_completed_message"])
+    source_texts = []
+    |> collect_steps_source_texts(lang, questionnaire.steps)
+    |> collect_steps_source_texts(lang, questionnaire.quota_completed_steps)
     |> collect_prompt_entry_source_texts("error", lang, questionnaire.settings["error_message"])
 
     # Only keep source texts that are not already in `new_translations`
@@ -137,8 +137,18 @@ defmodule Ask.Translation do
   # Translations #
   # ------------ #
 
-  defp collect_step_translations(lang, step) do
-    []
+  defp collect_steps_translations(translations, _lang, nil) do
+    translations
+  end
+
+  defp collect_steps_translations(translations, lang, steps) do
+    Enum.reduce steps, translations, fn step, translations ->
+      collect_step_translations(translations, lang, step)
+    end
+  end
+
+  defp collect_step_translations(translations, lang, step) do
+    translations
     |> collect_prompt_translations(lang, step)
     |> collect_choices_translations(lang, step)
   end
@@ -265,8 +275,18 @@ defmodule Ask.Translation do
   # Source texts #
   # ------------ #
 
-  defp collect_step_source_texts(lang, step) do
-    []
+  defp collect_steps_source_texts(source_texts, _lang, nil) do
+    source_texts
+  end
+
+  defp collect_steps_source_texts(source_texts, lang, steps) do
+    Enum.reduce steps, source_texts, fn step, source_texts ->
+      collect_step_source_texts(source_texts, lang, step)
+    end
+  end
+
+  defp collect_step_source_texts(source_texts, lang, step) do
+    source_texts
     |> collect_prompt_source_texts(lang, step)
     |> collect_choices_source_texts(lang, step)
   end

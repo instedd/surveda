@@ -35,7 +35,6 @@ class PhoneCallSettings extends Component {
 
   stateFromProps(props) {
     return {
-      quotaCompletedMessage: props.quotaCompletedMessage,
       errorMessage: props.errorMessage,
       thankYouMessage: props.thankYouMessage
     }
@@ -130,9 +129,6 @@ class PhoneCallSettings extends Component {
                 </div>
               </div>
             </li>
-            <li className='collection-item quotaCompletedMessageAudio'>
-              {this.quotaCompletedMessageComponent()}
-            </li>
             <li className='collection-item errorMessageAudio'>
               {this.errorMessageComponent()}
             </li>
@@ -143,27 +139,6 @@ class PhoneCallSettings extends Component {
         </Card>
       </div>
     )
-  }
-
-  quotaCompletedMessageComponent() {
-    let ivrInputErrors = this.textErrors('quotaCompletedMessage')
-    let ivrAudioIdErrors = this.audioErrors('quotaCompletedMessage')
-    return <IvrPrompt id='settings_quota_completed_ivr'
-      label='Quota completed message'
-      inputErrors={ivrInputErrors}
-      audioIdErrors={ivrAudioIdErrors}
-      value={this.state.quotaCompletedMessage.text}
-      originalValue={this.state.quotaCompletedMessage.text}
-      onChange={e => this.textChange(e, 'quotaCompletedMessage')}
-      readOnly={this.props.readOnly}
-      onBlur={e => this.messageBlur(e, 'quotaCompletedMessage')}
-      changeIvrMode={(e, mode) => this.modeChange(e, mode, 'quotaCompletedMessage')}
-      ivrPrompt={this.state.quotaCompletedMessage}
-      customHandlerFileUpload={files => this.handleFileUpload(files, 'quotaCompletedMessage')}
-      autocomplete
-      autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'quotaCompletedMessage')}
-      autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'quotaCompletedMessage')}
-      />
   }
 
   errorMessageComponent() {
@@ -219,9 +194,7 @@ class PhoneCallSettings extends Component {
   }
 
   hasErrors() {
-    return !!this.textErrors('quotaCompletedMessage') ||
-      !!this.audioErrors('quotaCompletedMessage') ||
-      !!this.textErrors('errorMessage') ||
+    return !!this.textErrors('errorMessage') ||
       !!this.audioErrors('errorMessage')
   }
 
@@ -231,7 +204,7 @@ class PhoneCallSettings extends Component {
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
-    const scope = key == 'quotaCompletedMessage' ? 'quota_completed' : (key == 'errorMessage' ? 'error' : 'thank_you')
+    const scope = key == 'errorMessage' ? 'error' : 'thank_you'
 
     if (activeLanguage == defaultLanguage) {
       api.autocompletePrimaryLanguage(questionnaire.projectId, 'ivr', scope, defaultLanguage, value)
@@ -292,7 +265,6 @@ PhoneCallSettings.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
   errorsByPath: PropTypes.object,
-  quotaCompletedMessage: PropTypes.object,
   errorMessage: PropTypes.object,
   thankYouMessage: PropTypes.object,
   readOnly: PropTypes.bool
@@ -303,7 +275,6 @@ const mapStateToProps = (state, ownProps) => {
   return {
     questionnaire: quiz.data,
     errorsByPath: quiz.errorsByPath,
-    quotaCompletedMessage: quiz.data ? getPromptIvr(quiz.data.settings.quotaCompletedMessage, quiz.data.activeLanguage) : newIvrPrompt(),
     errorMessage: quiz.data ? getPromptIvr(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : newIvrPrompt(),
     thankYouMessage: quiz.data ? getPromptIvr(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : newIvrPrompt()
   }

@@ -2,6 +2,7 @@
 export type Questionnaire = {
   name: string,
   steps: Step[],
+  quotaCompletedSteps: ?(Step[]),
   modes: string[],
   languages: string[],
   defaultLanguage: string,
@@ -12,13 +13,12 @@ export type Questionnaire = {
 };
 
 export type Settings = {
-  quotaCompletedMessage?: Prompt,
-  errorMessage?: Prompt,
-  mobileWebSmsMessage?: ?string,
-  mobileWebSurveyIsOverMessage?: ?string,
+  errorMessage: Prompt,
+  mobileWebSmsMessage: ?string,
+  mobileWebSurveyIsOverMessage: ?string,
   mobileWebColorStyle?: ColorStylePrompt,
-  title?: {[lang: string]: string},
-  surveyAlreadyTakenMessage?: {[lang: string]: string},
+  title: {[lang: string]: string},
+  surveyAlreadyTakenMessage: {[lang: string]: string},
   thankYouMessage?: Prompt,
 };
 

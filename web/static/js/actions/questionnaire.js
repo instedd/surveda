@@ -8,6 +8,7 @@ export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
 export const TOGGLE_MODE = 'QUESTIONNAIRE_TOGGLE_MODE'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
+export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
 export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
@@ -48,6 +49,7 @@ export const SET_PRIMARY_COLOR = 'QUESTIONNAIRE_SET_PRIMARY_COLOR'
 export const SET_SECONDARY_COLOR = 'QUESTIONNAIRE_SET_SECONDARY_COLOR'
 export const SET_DISPLAYED_TITLE = 'QUESTIONNAIRE_SET_DISPLAYED_TITLE'
 export const SET_SURVEY_ALREADY_TAKEN_MESSAGE = 'QUESTIONNAIRE_SET_SURVEY_ALREADY_TAKEN_MESSAGE'
+export const TOGGLE_QUOTA_COMPLETED_STEPS = 'QUESTIONNAIRE_TOGGLE_QUOTA_COMPLETED_STEPS'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -181,6 +183,20 @@ export const addStep = () => ({
   type: ADD_STEP
 })
 
+export const addStepWithCallback = () => (dispatch, getState) => {
+  dispatch(addStep())
+  const q = getState().questionnaire.data
+  return Promise.resolve(q.steps[q.steps.length - 1])
+}
+
+export const addQuotaCompletedStep = () => (dispatch, getState) => {
+  dispatch({
+    type: ADD_QUOTA_COMPLETED_STEP
+  })
+  const q = getState().questionnaire.data
+  return Promise.resolve(q.quotaCompletedSteps[q.quotaCompletedSteps.length - 1])
+}
+
 export const moveStep = (sourceStepId, targetStepId) => ({
   type: MOVE_STEP,
   sourceStepId,
@@ -200,6 +216,10 @@ export const changeName = (newName) => ({
 export const toggleMode = (mode) => ({
   type: TOGGLE_MODE,
   mode
+})
+
+export const toggleQuotaCompletedSteps = () => ({
+  type: TOGGLE_QUOTA_COMPLETED_STEPS
 })
 
 export const saving = () => ({

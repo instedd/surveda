@@ -65,9 +65,11 @@ defmodule Ask.Factory do
       name: sequence(:questionnaire, &"Questionnaire #{&1}"),
       modes: ["sms", "ivr"],
       steps: [],
-      default_language: "en",
-      settings: %{
-        "quota_completed_message" => %{
+      quota_completed_steps: [%{
+        "id" => "quota-completed-step",
+        "type" => "explanation",
+        "title" => "Completed",
+        "prompt" => %{
           "en" => %{
             "sms" => "Quota completed",
             "ivr" => %{
@@ -76,6 +78,10 @@ defmodule Ask.Factory do
             }
           }
         },
+        "skip_logic" => nil
+      }],
+      default_language: "en",
+      settings: %{
         "error_message" => %{
           "en" => %{
             "sms" => "You have entered an invalid answer",

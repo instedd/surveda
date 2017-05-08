@@ -990,51 +990,6 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it('should validate quota completed message SMS prompt must not be blank if SMS mode is on', () => {
-      const state = playActions([
-        actions.fetch(1, 1),
-        actions.receive(questionnaire),
-        actions.setSmsQuestionnaireMsg('quotaCompletedMessage', '')
-      ])
-
-      expect(state.errors).toInclude({
-        path: `quotaCompletedMessage.prompt['en'].sms`,
-        lang: 'en',
-        mode: 'sms',
-        message: 'SMS prompt must not be blank'
-      })
-    })
-
-    it('should validate quota completed message Mobile Web prompt must not be blank if Mobile Web mode is on', () => {
-      const state = playActions([
-        actions.fetch(1, 1),
-        actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
-      ])
-
-      expect(state.errors).toInclude({
-        path: "quotaCompletedMessage.prompt['en'].mobileweb",
-        lang: 'en',
-        mode: 'mobileweb',
-        message: 'Mobile web prompt must not be blank'
-      })
-    })
-
-    it('should validate quota completed message IVR prompt must not be blank if IVR mode is on', () => {
-      const state = playActions([
-        actions.fetch(1, 1),
-        actions.receive(questionnaire),
-        actions.setSmsQuestionnaireMsg('quotaCompletedMessage', '')
-      ])
-
-      expect(state.errors).toInclude({
-        path: "quotaCompletedMessage.prompt['en'].ivr.text",
-        lang: 'en',
-        mode: 'ivr',
-        message: 'Voice prompt must not be blank'
-      })
-    })
-
     it('should consider "end" skip logic as valid', () => {
       const state = playActions([
         actions.fetch(1, 1),
@@ -1487,7 +1442,6 @@ describe('questionnaire reducer', () => {
         defaultLanguage: 'en',
         activeLanguage: 'en',
         settings: {
-          quotaCompletedMessage: {},
           errorMessage: {},
           mobileWebSmsMessage: '',
           mobileWebColorStyle: {},
@@ -1608,6 +1562,7 @@ describe('questionnaire reducer', () => {
             }
           }
         ],
+        quotaCompletedSteps: null,
         id: 1,
         valid: true
       }
@@ -1670,31 +1625,31 @@ describe('questionnaire reducer', () => {
   })
 
   describe('quotas', () => {
-    it('should set quota_completed_msg for the first time', () => {
+    it('should set errorMessage for the first time', () => {
       const smsText = '  Thanks for participating in the poll  '
       const ivrText = {text: '  Thank you very much  ', audioSource: 'tts'}
 
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.setSmsQuestionnaireMsg('quotaCompletedMessage', smsText),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', ivrText)
+        actions.setSmsQuestionnaireMsg('errorMessage', smsText),
+        actions.setIvrQuestionnaireMsg('errorMessage', ivrText)
       ])
 
-      expect(state.data.settings.quotaCompletedMessage['en']['sms']).toEqual(smsText.trim())
-      expect(state.data.settings.quotaCompletedMessage['en']['ivr']).toEqual({text: 'Thank you very much', audioSource: 'tts'})
+      expect(state.data.settings.errorMessage['en']['sms']).toEqual(smsText.trim())
+      expect(state.data.settings.errorMessage['en']['ivr']).toEqual({text: 'Thank you very much', audioSource: 'tts'})
     })
 
-    it('should set quota_completed_msg for mobile web', () => {
+    it('should set errorMessage for mobile web', () => {
       const mobilewebText = 'Thanks for participating in the poll'
 
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.setMobileWebQuestionnaireMsg('quotaCompletedMessage', mobilewebText)
+        actions.setMobileWebQuestionnaireMsg('errorMessage', mobilewebText)
       ])
 
-      expect(state.data.settings.quotaCompletedMessage['en']['mobileweb']).toEqual(mobilewebText)
+      expect(state.data.settings.errorMessage['en']['mobileweb']).toEqual(mobilewebText)
     })
 
     it('should set mobile web sms message', () => {
@@ -1721,8 +1676,8 @@ describe('questionnaire reducer', () => {
       expect(state.data.settings.mobileWebSurveyIsOverMessage).toEqual(mobileWebSurveyIsOverMessage)
     })
 
-    it('should not modify other mode quota message', () => {
-      const quotaMessage = {
+    it('should not modify other mode error message', () => {
+      const errorMessage = {
         'en': {
           'sms': 'thanks for answering sms',
           'ivr': { audioSource: 'tts', text: 'thanks for answering phone call' }
@@ -1733,7 +1688,7 @@ describe('questionnaire reducer', () => {
         ...questionnaire,
         settings: {
           ...questionnaire.settings,
-          quotaCompletedMessage: quotaMessage
+          errorMessage: errorMessage
         }
       }
 
@@ -1742,11 +1697,11 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(q),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', newIvrText)
+        actions.setIvrQuestionnaireMsg('errorMessage', newIvrText)
       ])
 
-      expect(state.data.settings.quotaCompletedMessage['en']['sms']).toEqual('thanks for answering sms')
-      expect(state.data.settings.quotaCompletedMessage['en']['ivr']).toEqual(newIvrText)
+      expect(state.data.settings.errorMessage['en']['sms']).toEqual('thanks for answering sms')
+      expect(state.data.settings.errorMessage['en']['ivr']).toEqual(newIvrText)
     })
   })
 
@@ -1757,8 +1712,8 @@ describe('questionnaire reducer', () => {
         actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
-        actions.setSmsQuestionnaireMsg('quotaCompletedMessage', 'Done'),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', {text: 'Done!', audioSource: 'tts'}),
+        actions.setSmsQuestionnaireMsg('errorMessage', 'Done'),
+        actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done!', audioSource: 'tts'}),
         actions.setDisplayedTitle('Some title'),
         actions.setSurveyAlreadyTakenMessage('Taken')
       ])
@@ -1784,14 +1739,14 @@ describe('questionnaire reducer', () => {
       expected.forEach((row, index) => expect(csv[index]).toEqual(row))
     })
 
-    it('should not duplicate sms and ivr quota completed msg (#421)', () => {
+    it('should not duplicate sms and ivr error msg (#421)', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('fr'),
         actions.addLanguage('es'),
-        actions.setSmsQuestionnaireMsg('quotaCompletedMessage', 'Done'),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', {text: 'Done', audioSource: 'tts'})
+        actions.setSmsQuestionnaireMsg('errorMessage', 'Done'),
+        actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done', audioSource: 'tts'})
       ])
 
       const csv = csvForTranslation(state.data)
@@ -1843,13 +1798,13 @@ describe('questionnaire reducer', () => {
       expect(state.data.settings.surveyAlreadyTakenMessage.es).toEqual('Ya tomado')
     })
 
-    it('should upload csv with quota completed msg', () => {
+    it('should upload csv with error msg', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('es'),
-        actions.setSmsQuestionnaireMsg('quotaCompletedMessage', 'Done'),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', {text: 'Done!', audioSource: 'tts'}),
+        actions.setSmsQuestionnaireMsg('errorMessage', 'Done'),
+        actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done!', audioSource: 'tts'}),
         actions.uploadCsvForTranslation(
           [
             ['English', 'Spanish'],
@@ -1862,16 +1817,16 @@ describe('questionnaire reducer', () => {
         )
       ])
 
-      expect(state.data.settings.quotaCompletedMessage.es.sms).toEqual('Listo')
-      expect(state.data.settings.quotaCompletedMessage.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
+      expect(state.data.settings.errorMessage.es.sms).toEqual('Listo')
+      expect(state.data.settings.errorMessage.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
     })
 
-    it('should upload csv with quota completed msg that lacks audioSource', () => {
+    it('should upload csv with error msg that lacks audioSource', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('es'),
-        actions.setIvrQuestionnaireMsg('quotaCompletedMessage', {text: 'Done!', audioSource: 'tts'}),
+        actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done!', audioSource: 'tts'}),
         actions.uploadCsvForTranslation(
           [
             ['English', 'Spanish'],
@@ -1880,7 +1835,7 @@ describe('questionnaire reducer', () => {
         )
       ])
 
-      expect(state.data.settings.quotaCompletedMessage.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
+      expect(state.data.settings.errorMessage.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
     })
 
     it('should compute a valid alphanumeric filename', () => {

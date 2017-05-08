@@ -8,6 +8,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 type Props = {
   stepType: string,
   readOnly: boolean,
+  quotaCompletedSteps?: boolean,
   stepId: any,
   questionnaireActions: any
 };
@@ -20,7 +21,7 @@ class StepTypeSelector extends Component {
   }
 
   render() {
-    const { stepType, readOnly } = this.props
+    const { stepType, readOnly, quotaCompletedSteps } = this.props
 
     const label = (() => {
       switch (stepType) {
@@ -60,13 +61,15 @@ class StepTypeSelector extends Component {
             {stepType == 'explanation' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
-        <DropdownItem>
+        { quotaCompletedSteps
+        ? null
+        : <DropdownItem>
           <a onClick={e => this.changeStepType('flag')}>
             <i className='material-icons left sharp'>flag</i>
             Flag
             {stepType == 'flag' ? <i className='material-icons right'>done</i> : ''}
           </a>
-        </DropdownItem>
+        </DropdownItem> }
       </Dropdown>
     </div>
     )

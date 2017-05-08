@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.Flow do
-  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0
+  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false
   alias Ask.{Repo, Questionnaire}
   alias Ask.Runtime.{Reply, Step}
   alias Ask.Runtime.Flow.Visitor
@@ -21,28 +21,18 @@ defmodule Ask.Runtime.Flow do
     |> eval(mode)
   end
 
-  def quota_completed(flow, visitor) do
-    msg = flow.questionnaire.settings["quota_completed_message"]
-    if msg do
-      visitor = visitor |> Visitor.accept_message(msg, flow.language, "Quota completed")
-      {:ok, %Reply{steps: Visitor.close(visitor)}}
-    else
-      :ok
-    end
-  end
-
   def retry(flow, visitor) do
     {flow, %Reply{}, visitor}
     |> eval(flow.mode)
   end
 
   def dump(flow) do
-    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language, retries: flow.retries}
+    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language, retries: flow.retries, in_quota_completed_steps: flow.in_quota_completed_steps}
   end
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"], retries: state["retries"]}
+    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"], retries: state["retries"], in_quota_completed_steps: state["in_quota_completed_steps"]}
   end
 
   defp next_step_by_skip_logic(flow, step, reply_value, mode) do
@@ -55,7 +45,8 @@ defmodule Ask.Runtime.Flow do
   def next_step("end", flow), do: flow |> end_flow
   def next_step(next_id, flow) do
     next_step_index =
-      flow.questionnaire.steps
+      flow
+      |> steps
       |> Enum.find_index(fn istep -> istep["id"] == next_id end)
 
     if (!next_step_index || flow.current_step > next_step_index) do
@@ -78,7 +69,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   def end_flow(flow) do
-    length(flow.questionnaire.steps)
+    length(steps(flow))
   end
 
   defp accept_reply(%Flow{current_step: nil} = flow, :answer, visitor, _mode) do
@@ -281,7 +272,8 @@ defmodule Ask.Runtime.Flow do
   defp compute_progress(flow) do
     current_step_id = current_step(flow)["id"]
 
-    steps = flow.questionnaire.steps
+    steps = flow
+    |> steps
     |> Enum.reject(fn step -> step["type"] == "flag" end)
 
     current_step_index = steps
@@ -309,7 +301,9 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp current_step(flow) do
-    flow.questionnaire.steps |> Enum.at(flow.current_step)
+    flow
+    |> steps
+    |> Enum.at(flow.current_step)
   end
 
   defp has_thank_you_message?(flow) do
@@ -320,6 +314,14 @@ defmodule Ask.Runtime.Flow do
         true
       _ ->
         false
+    end
+  end
+
+  defp steps(flow) do
+    if flow.in_quota_completed_steps do
+      flow.questionnaire.quota_completed_steps
+    else
+      flow.questionnaire.steps
     end
   end
 end
