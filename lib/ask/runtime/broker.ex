@@ -543,31 +543,31 @@ defmodule Ask.Runtime.Broker do
         Survey.environment_variable_named(:batch_size)
 
       respondents_target when is_integer(respondents_target) ->
-        current_success_rate = calculate_success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
-        completion_rate = current_completion_rate(respondents_by_state["completed"], respondents_target)
-        estimated_success_rate = estimate_success_rate(completion_rate, current_success_rate)
-
+        estimated_success_rate = estimated_success_rate(respondents_by_state, respondents_target)
         batch_size = (respondents_target-respondents_by_state["completed"])/estimated_success_rate
 
         batch_size |> trunc
     end
   end
 
-  defp estimate_success_rate(0, _), do: initial_estimated_success_rate()
-  defp estimate_success_rate(completion_rate, current_success_rate) do
-    %{:response_rate => initial_success_rate } = Survey.config_rates()
-    (1-completion_rate) * initial_success_rate + completion_rate * current_success_rate
+  defp estimated_success_rate(respondents_by_state, respondents_target) do
+    current_success_rate = success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
+    completion_rate = current_completion_rate(respondents_by_state["completed"], respondents_target)
+    case completion_rate do
+      0 ->
+        %{:valid_respondent_rate => initial_valid_respondent_rate,
+          :eligibility_rate => initial_eligibility_rate,
+          :response_rate => initial_response_rate } = Survey.config_rates()
+        initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+
+      _ ->
+        %{:response_rate => initial_success_rate } = Survey.config_rates()
+        (1-completion_rate) * initial_success_rate + completion_rate * current_success_rate
+    end
   end
 
-  defp initial_estimated_success_rate() do
-    %{:valid_respondent_rate => initial_valid_respondent_rate,
-      :eligibility_rate => initial_eligibility_rate,
-      :response_rate => initial_response_rate } = Survey.config_rates()
-    initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
-  end
-
-  defp calculate_success_rate(0, _, _), do: 0
-  defp calculate_success_rate(completed_respondents, failed_respondents, rejected_respondents) do
+  defp success_rate(0, _, _), do: 0
+  defp success_rate(completed_respondents, failed_respondents, rejected_respondents) do
     completed_respondents/(completed_respondents + failed_respondents + rejected_respondents)
   end
 
