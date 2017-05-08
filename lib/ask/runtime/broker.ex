@@ -126,7 +126,7 @@ defmodule Ask.Runtime.Broker do
 
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
-      batch_size = calculate_batch_size(survey, by_state)
+      batch_size = batch_size(survey, by_state)
 
       cond do
         (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
@@ -537,7 +537,7 @@ defmodule Ask.Runtime.Broker do
 
   # Estimates the amount of respondents the broker will have to initiate contact with
   # to get the completed respondents needed.
-  defp calculate_batch_size(survey, respondents_by_state) do
+  defp batch_size(survey, respondents_by_state) do
     case completed_respondents_needed_by(survey) do
       :all -> 
         Survey.environment_variable_named(:batch_size)
