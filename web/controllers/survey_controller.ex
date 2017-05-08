@@ -179,7 +179,7 @@ defmodule Ask.SurveyController do
     |> Repo.update!
   end
 
-  def config(conn, %{"survey_id" => id}) do
+  def config(conn, _params) do
     render(conn, "config.json", config: Survey.config_rates())
   end
 

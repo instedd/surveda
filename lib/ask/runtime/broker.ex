@@ -541,7 +541,7 @@ defmodule Ask.Runtime.Broker do
 
   # Estimates the amount of respondents the broker will have to initiate contact with
   # to complete the cutoff_target.
-  defp batch_size(completed, cutoff_target) when is_nil(cutoff_target) do
+  defp batch_size(_completed, cutoff_target) when is_nil(cutoff_target) do
     Survey.environment_variable_named(:batch_size)
   end
   defp batch_size(completed, cutoff_target) do
