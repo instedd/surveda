@@ -251,11 +251,40 @@ defmodule Ask.Runtime.Flow do
     current_step_index = steps
     |> Enum.find_index(fn step -> step["id"] == current_step_id end)
 
-    {current_step_index || 0, length(steps)}
+    # Add 1 to the current step, because if we have 3 steps and we
+    # are in the first one (index 0), we'd like it to be: 1/3, so 33%
+    current_step_index = if current_step_index do
+      current_step_index + 1
+    else
+      1
+    end
+
+    total_steps = length(steps)
+
+    # If there's a thank you message, assume there's one more step
+    total_steps =
+      if has_thank_you_message?(flow) do
+        total_steps + 1
+      else
+        total_steps
+      end
+
+    {current_step_index, total_steps}
   end
 
   defp current_step(flow) do
     flow.questionnaire.steps |> Enum.at(flow.current_step)
+  end
+
+  defp has_thank_you_message?(flow) do
+    language = flow.language
+    mode = flow.mode
+    case flow.questionnaire.settings do
+      %{"thank_you_message" => %{^language => %{^mode => _message}}} ->
+        true
+      _ ->
+        false
+    end
   end
 end
 

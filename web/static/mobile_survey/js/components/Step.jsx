@@ -17,6 +17,7 @@ class Step extends Component {
     respondentId: any,
     token: string,
     step: PropTypes.object.isRequired,
+    progress: number,
     errorMessage: ?string
   }
 
@@ -68,12 +69,12 @@ class Step extends Component {
   isContentTallerThanViewport() {
     const viewportHeight = document.documentElement.clientHeight
     const contentHeight = this.refs.stepContent.offsetHeight
-    
+
     return contentHeight > viewportHeight
   }
 
   stepComponent() {
-    const { step, errorMessage } = this.props
+    const { step, progress, errorMessage } = this.props
 
     switch (step.type) {
       case 'multiple-choice':
@@ -81,7 +82,7 @@ class Step extends Component {
       case 'numeric':
         return <NumericStep ref='step' step={step} errorMessage={errorMessage} onRefusal={value => this.handleValue(value)} />
       case 'explanation':
-        return <ExplanationStep ref='step' step={step} />
+        return <ExplanationStep ref='step' step={step} progress={progress} />
       case 'language-selection':
         return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
       case 'end':
@@ -117,7 +118,7 @@ class Step extends Component {
             {this.stepComponent()}
           </form>
         </main>
-        <div ref='moreContentHint' className='more-content-arrow'></div>
+        <div ref='moreContentHint' className='more-content-arrow' />
       </div>
     )
   }
@@ -125,6 +126,7 @@ class Step extends Component {
 
 const mapStateToProps = (state) => ({
   step: state.step.current,
+  progress: state.step.progress,
   errorMessage: state.step.errorMessage,
   respondentId: window.respondentId,
   token: window.token
