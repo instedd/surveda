@@ -542,12 +542,12 @@ defmodule Ask.Runtime.Broker do
       :all -> 
         Survey.environment_variable_named(:batch_size)
 
-      completed_respondents_needed when is_integer(completed_respondents_needed) ->
+      respondents_target when is_integer(respondents_target) ->
         current_success_rate = calculate_success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
-        completion_rate = current_completion_rate(respondents_by_state["completed"], completed_respondents_needed)
+        completion_rate = current_completion_rate(respondents_by_state["completed"], respondents_target)
         estimated_success_rate = estimate_success_rate(completion_rate, current_success_rate)
 
-        batch_size = (completed_respondents_needed-respondents_by_state["completed"])/estimated_success_rate
+        batch_size = (respondents_target-respondents_by_state["completed"])/estimated_success_rate
 
         batch_size |> trunc
     end
@@ -571,8 +571,8 @@ defmodule Ask.Runtime.Broker do
     completed_respondents/(completed_respondents + failed_respondents + rejected_respondents)
   end
 
-  defp current_completion_rate(_, completed_respondents_needed) when is_nil(completed_respondents_needed), do: 0
-  defp current_completion_rate(completed, completed_respondents_needed), do: completed/completed_respondents_needed
+  defp current_completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
+  defp current_completion_rate(completed, respondents_target), do: completed/respondents_target
 
   defp completed_respondents_needed_by(survey) do
     survey_id = survey.id
