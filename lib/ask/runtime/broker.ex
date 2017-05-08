@@ -146,9 +146,6 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp current_completion_rate(_, completed_respondents_needed) when is_nil(completed_respondents_needed), do: 0
-  defp current_completion_rate(completed, completed_respondents_needed), do: completed/completed_respondents_needed
-
   defp reached_quotas?(survey) do
     case survey.quota_vars do
       [] -> false
@@ -158,25 +155,6 @@ defmodule Ask.Runtime.Broker do
           where: q.survey_id == ^survey_id,
           where: q.count < q.quota,
           select: count(q.id)) == 0
-    end
-  end
-
-  defp completed_respondents_needed_by(survey) do
-    survey_id = survey.id
-    quota_target = Repo.one(from q in QuotaBucket,
-                      where: q.survey_id == ^survey_id,
-                      select: sum(q.quota))
-    cutoff_target = survey.cutoff
-    targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
-
-    if targets_compacted |> Enum.empty? do
-      {false, nil}
-    else
-      res = targets_compacted
-            |> Enum.max()
-            |> Decimal.new()
-            |> Decimal.to_integer()
-      {true, res}
     end
   end
 
@@ -591,6 +569,28 @@ defmodule Ask.Runtime.Broker do
   defp calculate_success_rate(0, _, _), do: 0
   defp calculate_success_rate(completed_respondents, failed_respondents, rejected_respondents) do
     completed_respondents/(completed_respondents + failed_respondents + rejected_respondents)
+  end
+
+  defp current_completion_rate(_, completed_respondents_needed) when is_nil(completed_respondents_needed), do: 0
+  defp current_completion_rate(completed, completed_respondents_needed), do: completed/completed_respondents_needed
+
+  defp completed_respondents_needed_by(survey) do
+    survey_id = survey.id
+    quota_target = Repo.one(from q in QuotaBucket,
+                      where: q.survey_id == ^survey_id,
+                      select: sum(q.quota))
+    cutoff_target = survey.cutoff
+    targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
+
+    if targets_compacted |> Enum.empty? do
+      {false, nil}
+    else
+      res = targets_compacted
+            |> Enum.max()
+            |> Decimal.new()
+            |> Decimal.to_integer()
+      {true, res}
+    end
   end
 
 end
