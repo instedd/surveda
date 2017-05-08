@@ -151,7 +151,7 @@ class SurveyWizardModeStep extends Component {
     if (!primary) {
       selectorOptions.unshift(<option value='' key='select-primary-mode'>Select primary mode</option>)
     }
-    if (lastPrimary) {
+    if (lastPrimary && comparison) {
       return (
         <Input s={12} m={5} type='select' value={lastPrimary} disabled={readOnly} onChange={handler}>
           <option value={lastPrimary} key={lastPrimary}>{labelFor(lastPrimary)}</option>
@@ -213,7 +213,7 @@ class SurveyWizardModeStep extends Component {
       selectFallbackHandler = this.selectFallbackModeForComparison
 
       modeDescriptions = mode.map((mode) => {
-        return (<tr>
+        return (<tr key={'row' + mode[0] + mode[1]}>
           <td>
             {iconFor(mode[0])}
             {labelFor(mode[0])}
