@@ -544,9 +544,8 @@ defmodule Ask.Runtime.Broker do
 
       respondents_target when is_integer(respondents_target) ->
         estimated_success_rate = estimated_success_rate(respondents_by_state, respondents_target)
-        batch_size = (respondents_target-respondents_by_state["completed"])/estimated_success_rate
-
-        batch_size |> trunc
+        (respondents_target - respondents_by_state["completed"]) / estimated_success_rate
+        |> trunc
     end
   end
 
@@ -562,17 +561,17 @@ defmodule Ask.Runtime.Broker do
 
       _ ->
         %{:response_rate => initial_success_rate } = Survey.config_rates()
-        (1-completion_rate) * initial_success_rate + completion_rate * current_success_rate
+        (1 - completion_rate) * initial_success_rate + completion_rate * current_success_rate
     end
   end
 
   defp success_rate(0, _, _), do: 0
   defp success_rate(completed_respondents, failed_respondents, rejected_respondents) do
-    completed_respondents/(completed_respondents + failed_respondents + rejected_respondents)
+    completed_respondents / (completed_respondents + failed_respondents + rejected_respondents)
   end
 
   defp current_completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
-  defp current_completion_rate(completed, respondents_target), do: completed/respondents_target
+  defp current_completion_rate(completed, respondents_target), do: completed / respondents_target
 
   defp completed_respondents_needed_by(survey) do
     survey_id = survey.id
