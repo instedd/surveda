@@ -737,39 +737,40 @@ i.survey-status { // icon for survey status on index
 // -----------------------------------------------------------------------------
 // ------- Questionnaire Mobile Web Prompt -------------------------------------
 
+
 .RichEditor-root {
-  background: #fff;
-  border: 1px solid #ddd;
-  font-family: 'Georgia', serif;
-  font-size: 14px;
-  padding: 15px;
+  position: relative;
+  margin-top: 30px;
+  .public-DraftEditor-content {
+    border-bottom: 1px solid #ddd;
+    cursor: text;
+    &:focus {
+      transition: all .26s;
+      border-bottom-color: color("green", "darken-2");
+      box-shadow: 0 1px 0 0 color("green", "darken-2");
+    }
+  }
+  label {
+    @extend .grey-text;
+    font-size: 1rem;
+    position: absolute;
+    transform: translate(0, -12px);
+    transition: all .26s;
+    &.focus {
+      color: color("green", "darken-2") !important;
+      font-size: .8rem;
+      transform: translate(0, -40px);
+    }
+    &.text {
+      font-size: .8rem;
+      transform: translate(0, -40px);
+    }
+  }
 }
 
-.RichEditor-editor {
-  border-top: 1px solid #ddd;
-  cursor: text;
-  font-size: 16px;
-  margin-top: 10px;
-}
 
-.RichEditor-styleButton {
-  color: #999;
-  cursor: pointer;
-  margin-right: 16px;
-  padding: 2px 0;
-  display: inline-block;
-}
 
-.RichEditor-controls {
-  font-family: 'Helvetica', sans-serif;
-  font-size: 14px;
-  margin-bottom: 5px;
-  user-select: none;
-}
 
-.RichEditor-activeButton {
-  color: #5890ff;
-}
 
 // -----------------------------------------------------------------------------
 // ------- Collaborators -------------------------------------------------------

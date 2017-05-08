@@ -8,12 +8,14 @@ import {
  RichUtils
 } from 'draft-js'
 
-import InlineStyleControls from './InlineStyleControls'
+// import InlineStyleControls from './InlineStyleControls'
 import {stateToHTML} from 'draft-js-export-html'
 
 class Draft extends React.Component {
   constructor(props) {
     super(props)
+
+    this.hasFocus = false
 
     const blocksFromHTML = convertFromHTML(props.initialValue)
     const state = ContentState.createFromBlockArray(
@@ -23,12 +25,35 @@ class Draft extends React.Component {
     this.state = {editorState: EditorState.createWithContent(state)}
 
     this.focus = () => this.refs.editor.focus()
+
+    this.onFocus = (editorState) => {
+      this.hasFocus = true
+      this.redraw()
+    }
+
     this.onChange = (editorState) => {
       this.setState({editorState})
+      this.redraw()
     }
 
     this.onBlur = (editorState) => {
+      this.hasFocus = false
+      this.redraw()
       props.onBlur(stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}}))
+    }
+
+    this.redraw = () => {
+      if (this.state.editorState.getCurrentContent().hasText()) {
+        $(this.refs.label).addClass('text')
+      } else {
+        $(this.refs.label).removeClass('text')
+      }
+
+      if (this.hasFocus) {
+        $(this.refs.label).addClass('focus')
+      } else {
+        $(this.refs.label).removeClass('focus')
+      }
     }
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
@@ -81,10 +106,14 @@ class Draft extends React.Component {
           onToggle={this.toggleInlineStyle}
         /> */}
         <div className={className} onClick={this.focus}>
+          <label ref='label'>
+            Mobile web message
+          </label>
           <Editor
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
             onChange={this.onChange}
+            onFocus={this.onFocus}
             onBlur={this.onBlur}
             onTab={this.onTab}
             ref='editor'

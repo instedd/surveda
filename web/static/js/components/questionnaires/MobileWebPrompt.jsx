@@ -27,7 +27,7 @@ class MobileWebPrompt extends Component {
     return (
       <div>
         <div className='row'>
-          <div className='col input-field s12'>
+          <div className='col s12 mobile-prompt'>
             <Draft onBlur={onBlur} initialValue={value} placeholder={'Mobile Web Message'} />
           </div>
         </div>
