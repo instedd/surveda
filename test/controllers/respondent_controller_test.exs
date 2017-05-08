@@ -330,18 +330,18 @@ defmodule Ask.RespondentControllerTest do
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
     channel = insert(:channel, name: "test_channel")
-    insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "1234", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-    insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
-    insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+    insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+    insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
 
     conn = get conn, project_survey_respondents_interactions_csv_path(conn, :interactions_csv, survey.project.id, survey.id)
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert lines == ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
-     "1234,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
-     "5678,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
-     "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
+     "1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
+     "5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+     "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC",
    ]
   end
 

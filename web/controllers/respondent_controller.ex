@@ -430,7 +430,8 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     csv_rows = (from e in SurveyLogEntry,
-      where: e.survey_id == ^survey.id)
+      where: e.survey_id == ^survey.id,
+      order_by: [e.respondent_hashed_number])
     |> preload(:channel)
     |> Repo.stream
     |> Stream.map(fn e ->
