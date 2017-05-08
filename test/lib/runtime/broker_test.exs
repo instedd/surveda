@@ -504,7 +504,7 @@ defmodule Ask.BrokerTest do
     assert hd(respondent.responses).value == "Yes"
   end
 
-  test "respondent answers after stalled with completed survey" do
+  test "stalled respondents are marked failed after the survey is completed" do
     [survey, group, _, respondent, _] = create_running_survey_with_channel_and_respondent()
     second_respondent = insert(:respondent, survey: survey, respondent_group: group)
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
@@ -522,7 +522,6 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
     second_respondent = Repo.get(Respondent, second_respondent.id) |> Repo.preload(:responses)
     assert respondent.state == "stalled"
-    assert second_respondent.state == "active"
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
 
@@ -677,14 +676,14 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
-    assert_respondents_by_state(survey, 10, 11)
+    assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
     Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
 
     Broker.handle_info(:poll, nil)
 
-    assert_respondents_by_state(survey, 9, 11)
+    assert_respondents_by_state(survey, 0, 20)
     assert survey.state == "running"
   end
 
@@ -697,7 +696,7 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
-    assert_respondents_by_state(survey, 10, 11)
+    assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
     Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
@@ -711,7 +710,7 @@ defmodule Ask.BrokerTest do
 
     survey = Repo.get(Survey, survey.id)
 
-    assert_respondents_by_state(survey, 0, 11)
+    assert_respondents_by_state(survey, 0, 20)
     assert survey.state == "completed"
   end
 
@@ -724,7 +723,7 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
-    assert_respondents_by_state(survey, 10, 11)
+    assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
     Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
@@ -738,7 +737,7 @@ defmodule Ask.BrokerTest do
 
     survey = Repo.get(Survey, survey.id)
 
-    assert_respondents_by_state(survey, 0, 11)
+    assert_respondents_by_state(survey, 0, 20)
     assert survey.state == "completed"
   end
 
@@ -754,7 +753,7 @@ defmodule Ask.BrokerTest do
 
     assert survey.state == "running"
 
-    assert_respondents_by_state(survey, 10, 11)
+    assert_respondents_by_state(survey, 6, 15)
 
     Repo.all(from r in Respondent, where: r.state == "active", limit: 5)
     |> Enum.map(fn respondent ->
@@ -763,7 +762,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    assert_respondents_by_state(survey, 10, 6)
+    assert_respondents_by_state(survey, 1, 15)
 
     Repo.all(from r in Respondent, where: r.state == "active")
     |> Enum.map(fn respondent ->
@@ -772,7 +771,7 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
-    assert_respondents_by_state(survey, 0, 6)
+    assert_respondents_by_state(survey, 0, 15)
 
     survey = Repo.get(Survey, survey.id)
 

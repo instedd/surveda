@@ -110,13 +110,15 @@ defmodule Ask.Runtime.Broker do
       stalled = by_state["stalled"] || 0
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
+      cutoff_target = cutoff_target(survey)
+      batch_size = batch_size(completed, cutoff_target)
 
       cond do
         (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
           complete(survey)
 
-        active < batch_size() && pending > 0 && !survey_completed ->
-          start_some(survey, batch_size() - active)
+        (active + stalled) < batch_size && pending > 0 && !survey_completed ->
+          start_some(survey, batch_size - (active + stalled))
 
         true -> :ok
       end
@@ -138,6 +140,25 @@ defmodule Ask.Runtime.Broker do
           where: q.survey_id == ^survey_id,
           where: q.count < q.quota,
           select: count(q.id)) == 0
+    end
+  end
+
+  defp cutoff_target(survey) do
+    survey_id = survey.id
+    quota_target = Repo.one(from q in QuotaBucket,
+                      where: q.survey_id == ^survey_id,
+                      select: sum(q.quota))
+    cutoff_target = survey.cutoff
+    targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
+
+    if targets_compacted |> Enum.empty? do
+      nil
+    else
+      res = targets_compacted
+            |> Enum.max()
+            |> Decimal.new()
+            |> Decimal.to_integer()
+      res
     end
   end
 
@@ -518,18 +539,20 @@ defmodule Ask.Runtime.Broker do
     }
   end
 
-  defp batch_size do
-    case Application.get_env(:ask, __MODULE__)[:batch_size] do
-      {:system, env_var} ->
-        String.to_integer(System.get_env(env_var))
-      {:system, env_var, default} ->
-        env_value = System.get_env(env_var)
-        if env_value do
-          String.to_integer(env_value)
-        else
-          default
-        end
-      value -> value
-    end
+  # Estimates the amount of respondents the broker will have to initiate contact with
+  # to complete the cutoff_target.
+  defp batch_size(completed, cutoff_target) when is_nil(cutoff_target) do
+    Survey.environment_variable_named(:batch_size)
   end
+  defp batch_size(completed, cutoff_target) do
+    %{:valid_respondent_rate => valid_respondent_rate,
+      :eligibility_rate => eligibility_rate,
+      :response_rate => response_rate } = Survey.config_rates()
+
+    success_rate = valid_respondent_rate * eligibility_rate * response_rate
+    batch_size = (cutoff_target-completed)/success_rate
+
+    batch_size |> trunc
+  end
+
 end

@@ -9,6 +9,10 @@ defmodule Ask.SurveyView do
     %{data: render_one(survey, Ask.SurveyView, "survey_detail.json")}
   end
 
+  def render("config.json", %{config: config}) do
+    config
+  end
+
   def render("survey.json", %{survey: survey}) do
     %{id: survey.id,
       name: survey.name,

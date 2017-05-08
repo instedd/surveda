@@ -242,6 +242,29 @@ defmodule Ask.Survey do
     end
   end
 
+  def config_rates() do
+    %{
+      :valid_respondent_rate => environment_variable_named(:initial_valid_respondent_rate),
+      :eligibility_rate      => environment_variable_named(:initial_eligibility_rate),
+      :response_rate         => environment_variable_named(:initial_response_rate)
+    }
+  end
+
+  def environment_variable_named(name) do
+    case Application.get_env(:ask, Ask.Runtime.Broker)[name] do
+      {:system, env_var} ->
+        String.to_integer(System.get_env(env_var))
+      {:system, env_var, default} ->
+        env_value = System.get_env(env_var)
+        if env_value do
+          String.to_integer(env_value)
+        else
+          default
+        end
+      value -> value
+    end
+  end
+
   defp day_of_week_available?(survey, erl_date) do
     case :calendar.day_of_the_week(erl_date) do
       1 -> survey.schedule_day_of_week.mon
