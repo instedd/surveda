@@ -538,9 +538,11 @@ defmodule Ask.Runtime.Broker do
   # Estimates the amount of respondents the broker will have to initiate contact with
   # to get the completed respondents needed.
   defp calculate_batch_size(survey, respondents_by_state) do
-    {survey_has_cutoff_target, completed_respondents_needed} = completed_respondents_needed_by(survey)
-    case survey_has_cutoff_target do
-      true -> 
+    case completed_respondents_needed_by(survey) do
+      :all -> 
+        Survey.environment_variable_named(:batch_size)
+
+      completed_respondents_needed when is_integer(completed_respondents_needed) ->
         current_success_rate = calculate_success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
         completion_rate = current_completion_rate(respondents_by_state["completed"], completed_respondents_needed)
         estimated_success_rate = estimate_success_rate(completion_rate, current_success_rate)
@@ -548,8 +550,6 @@ defmodule Ask.Runtime.Broker do
         batch_size = (completed_respondents_needed-respondents_by_state["completed"])/estimated_success_rate
 
         batch_size |> trunc
-      false ->
-        Survey.environment_variable_named(:batch_size)
     end
   end
 
@@ -583,13 +583,13 @@ defmodule Ask.Runtime.Broker do
     targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
 
     if targets_compacted |> Enum.empty? do
-      {false, nil}
+      :all
     else
       res = targets_compacted
             |> Enum.max()
             |> Decimal.new()
             |> Decimal.to_integer()
-      {true, res}
+      res
     end
   end
 
