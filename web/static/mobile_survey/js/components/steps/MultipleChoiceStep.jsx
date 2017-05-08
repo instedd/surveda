@@ -9,29 +9,19 @@ class MultipleChoiceStep extends Component {
 
   clearValue() {}
 
-  classNameForChoice(choice: String) {
-    const length = choice.length
-    let cssClass
-    switch (true) {
-      case (length < 7):
-        cssClass = 'choice-length-less-7'
-        break
-      case (length < 14):
-        cssClass = 'choice-length-less-14'
-        break
-      case (length < 20):
-        cssClass = 'choice-length-less-20'
-        break
-      case (length < 40):
-        cssClass = 'choice-length-less-40'
-        break
-      case (length < 60):
-        cssClass = 'choice-length-less-60'
-        break
-      default:
-        cssClass = 'choice-length-large'
+  classNameForButton(choices: Choice[], choice: Choice) {
+    // The usage of 16 as limit of multiline was obtained by trial and error.
+    // At that count, text start using 2 lines for being displayed.
+    const limit = 16
+    if (choices.length <= 3) {
+      if (choice[0].length > limit) {
+        return 'large multiline'
+      } else {
+        return 'large'
+      }
+    } else {
+      return 'small'
     }
-    return cssClass
   }
 
   render() {
@@ -44,7 +34,7 @@ class MultipleChoiceStep extends Component {
         {step.choices.map(choice => {
           return (
             <div key={choice}>
-              <button className={'btn block ' + this.classNameForChoice(choice[0])} value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
+              <button className={'btn block ' + this.classNameForButton(step.choices, choice)} value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
             </div>
           )
         })}
