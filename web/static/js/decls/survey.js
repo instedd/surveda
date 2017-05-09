@@ -69,7 +69,8 @@ export type Respondent = {
   mode: string[],
   disposition: Disposition,
   date: ?string,
-  responses: Response[]
+  responses: Response[],
+  questionnaireId: number
 };
 
 export type Response = {

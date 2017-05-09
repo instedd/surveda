@@ -65,6 +65,7 @@ h1 {
 .btn {
   display: inline-block;
   background: $white;
+  font-size: 1.6rem;
   color: $primarycolor;
   text-transform: uppercase;
   border: 3px solid $primarycolor;
@@ -170,32 +171,6 @@ select {
       vertical-align: middle;
     }
   }
-}
-
-// FONT-SIZE related with buttons of multiple choice steps
-
-.choice-length-less-7{
-  font-size: 1.6rem;
-}
-
-.choice-length-less-14{
-  font-size: 1.45rem;
-}
-
-.choice-length-less-20{
-  font-size: 1.3rem;
-}
-
-.choice-length-less-40{
-  font-size: 1.15rem;
-}
-
-.choice-length-less-60{
-  font-size: 1.0rem;
-}
-
-.choice-length-large{
-  font-size: 0.8rem;
 }
 
 .error-message {

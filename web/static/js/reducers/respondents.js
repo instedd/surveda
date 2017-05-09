@@ -3,6 +3,7 @@ import * as actions from '../actions/respondents'
 const initialState = {
   fetching: false,
   items: null,
+  order: [],
   surveyId: null,
   sortBy: null,
   sortAsc: true,
@@ -19,19 +20,22 @@ export default (state = initialState, action) => {
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
+    case actions.SORT: return sortRespondents(state, action)
     default: return state
   }
 }
 
 const fetchRespondents = (state, action) => {
-  const items = state.surveyId == action.surveyId ? state.items : null
+  const sameSurvey = state.surveyId == action.surveyId
+
+  const items = sameSurvey ? state.items : null
   return {
     ...state,
     items,
     fetching: true,
     surveyId: action.surveyId,
-    sortBy: null,
-    sortAsc: true,
+    sortBy: sameSurvey ? state.sortBy : null,
+    sortAsc: sameSurvey ? state.sortAsc : true,
     page: {
       ...state.page,
       number: action.page
@@ -51,15 +55,29 @@ const receiveRespondents = (state, action) => {
     return state
   }
 
-  const respondents = action.respondents
   return {
     ...state,
     fetching: false,
-    items: respondents,
+    items: action.respondents,
+    order: action.order,
     page: {
       ...state.page,
       number: action.page,
       totalCount: action.respondentsCount
     }
+  }
+}
+
+const sortRespondents = (state, action) => {
+  const sortAsc = state.sortBy == action.property ? !state.sortAsc : true
+  const sortBy = action.property
+  return {
+    ...state,
+    page: {
+      ...state.page,
+      number: 1
+    },
+    sortBy,
+    sortAsc
   }
 }

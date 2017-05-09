@@ -128,6 +128,24 @@
           }
         }
       }
+      &.select-modes {
+        padding: 7px 20px !important;
+        .row {
+          margin: 0;
+        }
+        .input-field {
+          margin-top: 0;
+        }
+        a {
+          @extend .blue-text;
+          display: inline-block;
+          cursor: pointer;
+          margin-top: 1.4rem;
+          &.disabled {
+            @extend .grey-text, .text-lighten-1;
+          }
+        }
+      }
     }
   }
   .card-action-error {

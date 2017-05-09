@@ -12,6 +12,10 @@ defmodule Ask.Runtime.ReplyHelper do
     end
   end
 
+  def simple_with_num_digits(title, prompt, num_digits) do
+    %{steps: [ %ReplyStep{prompts: [prompt], title: title, num_digits: num_digits} ]}
+  end
+
   defmacro ivr(title, prompt) do
     quote do
       %{

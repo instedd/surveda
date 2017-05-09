@@ -34,9 +34,16 @@ class SurveyShow extends Component {
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey => {
-      let questionnaireIds = survey.questionnaireIds || []
-      for (let questionnaireId of questionnaireIds) {
-        dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
+      if (survey.questionnaires && Object.keys(survey.questionnaires).length != 0) {
+        // The survey should have associated questionnaires embedded in them in the
+        // latest version of the app.
+      } else {
+        // If not, it means these are old surveys with non-snapshot questionnaires, so we
+        // fetch them here.
+        let questionnaireIds = survey.questionnaireIds || []
+        for (let questionnaireId of questionnaireIds) {
+          dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
+        }
       }
     })
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
@@ -89,7 +96,7 @@ class SurveyShow extends Component {
   modeFor(index: number, mode: string) {
     let type = (index == 0) ? 'Primary' : 'Fallback'
     return (
-      <div className='mode'>
+      <div className='mode' key={mode}>
         <label className='grey-text'>{type} Mode</label>
         <div>
           <i className='material-icons'>{this.iconForMode(mode)}</i>
@@ -100,7 +107,7 @@ class SurveyShow extends Component {
   }
 
   modeForComparison(mode: string) {
-    return (<div className='mode-inline-block'>
+    return (<div className='mode-inline-block' key={mode}>
       <i className='material-icons'>{this.iconForMode(mode)}</i>
       <span className='mode-label name'>{modeLabel(mode)}</span>
     </div>
@@ -111,10 +118,23 @@ class SurveyShow extends Component {
     let modesForComparisons = modes.map((m, index) => {
       return this.modeForComparison(m)
     })
-    const modeDescriptions = (modesForComparisons.length == 2) ? [modesForComparisons[0], (<div className='mode-inline-block'> + </div>), modesForComparisons[1], (<div className='mode-inline-block'>fallback</div>)] : modesForComparisons
+
+    let modeDescriptions
+    if (modesForComparisons.length == 2) {
+      modeDescriptions = [
+        modesForComparisons[0],
+        <div className='mode-inline-block' key='0' />,
+        modesForComparisons[1],
+        <div className='mode-inline-block' key='1'>fallback</div>
+      ]
+    } else {
+      modeDescriptions = modesForComparisons
+    }
+
+    const letter = this.letterForIndex(index)
     return (
-      <div className='mode'>
-        <label className='grey-text'>{'Mode ' + this.letterForIndex(index)}</label>
+      <div className='mode' key={letter}>
+        <label className='grey-text'>{'Mode ' + letter}</label>
         <div>
           {modeDescriptions}
         </div>
@@ -123,8 +143,13 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, questionnaire, project } = this.props
+    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, project } = this.props
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
+
+    let { questionnaire } = this.props
+    if (!questionnaire && survey) {
+      questionnaire = survey.questionnaires[Object.keys(survey.questionnaires)[0]]
+    }
 
     if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats || !respondentsStats) {
       return <p>Loading...</p>
@@ -165,7 +190,7 @@ class SurveyShow extends Component {
     return (
       <div className='row'>
         {stopComponent}
-        <ConfirmationModal ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
+        <ConfirmationModal modalId='survey_show_stop_modal' ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
         <div className='col s12 m8'>
           <h4>
             {questionnaire.name}
@@ -235,7 +260,7 @@ class SurveyShow extends Component {
               {dispositions.map(disposition => {
                 let stat = respondentsStats[disposition]
                 return (
-                  <tr>
+                  <tr key={disposition}>
                     <td>{capitalize(disposition)}</td>
                     <td className='right-align'>{ stat.count }</td>
                     <td className='right-align'>{ this.round(stat.percent) }%</td>
