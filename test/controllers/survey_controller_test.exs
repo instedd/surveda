@@ -811,6 +811,21 @@ defmodule Ask.SurveyControllerTest do
     assert q.modes == questionnaire.modes
   end
 
+  test "survey view contains questionnaire modes for each questionnaire after launching a survey", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps, modes: ["sms", "ivr"])
+    survey_ready = insert(:survey, project: project, state: "ready", questionnaires: [questionnaire])
+
+    post conn, project_survey_survey_path(conn, :launch, survey_ready.project, survey_ready)
+    survey_launched = Repo.get(Survey, survey_ready.id)
+
+    conn = get conn, project_survey_path(conn, :show, project, survey_launched)
+    questionnaire_snapshot_id = ((survey_launched |> Repo.preload(:questionnaires)).questionnaires |> hd).id |> Integer.to_string
+    response = json_response(conn, 200)["data"]
+
+    assert response["questionnaires"][questionnaire_snapshot_id]["modes"] == questionnaire.modes
+  end
+
   test "forbids launch for project reader", %{conn: conn, user: user} do
     project = create_project_for_user(user, level: "reader")
     survey = insert(:survey, project: project, state: "ready")

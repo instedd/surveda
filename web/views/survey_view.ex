@@ -57,7 +57,7 @@ defmodule Ask.SurveyView do
     if Ask.Survey.launched?(survey) do
       qs = questionnaires
       |> Enum.map(fn q ->
-        {to_string(q.id), %{id: q.id, name: q.name, valid: true}}
+        {to_string(q.id), %{id: q.id, name: q.name, valid: true, modes: q.modes}}
       end)
       |> Enum.into(%{})
       Map.put(map, :questionnaires, qs)
