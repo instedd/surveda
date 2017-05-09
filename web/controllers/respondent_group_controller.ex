@@ -301,7 +301,7 @@ defmodule Ask.RespondentGroupController do
   defp to_entries(rows, project, survey, group, local_time) do
     rows
     |> Enum.map(fn row ->
-      %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt)}
+      %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered"}
     end)
   end
 
@@ -328,7 +328,7 @@ defmodule Ask.RespondentGroupController do
       Respondent.sanitize_phone_number(num) in existing_numbers
     end)
   end
-  
+
   defp keep_digits(string) do
     Regex.replace(~r/\D/, string, "", [:global])
   end

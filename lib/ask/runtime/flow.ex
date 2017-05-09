@@ -157,12 +157,31 @@ defmodule Ask.Runtime.Flow do
   end
 
   def should_update_disposition(old_disposition, new_disposition)
-  def should_update_disposition("completed", _), do: false
-  def should_update_disposition("ineligible", _), do: false
-  def should_update_disposition("refused", _), do: false
-  def should_update_disposition("partial", "ineligible"), do: false
-  def should_update_disposition("partial", "refused"), do: false
-  def should_update_disposition(_, _), do: true
+  # This transitions are forced through flag steps and should always be allowed
+  def should_update_disposition("queued", "partial"), do: true
+  def should_update_disposition("queued", "completed"), do: true
+  def should_update_disposition("queued", "refused"), do: true
+  def should_update_disposition("queued", "ineligible"), do: true
+  def should_update_disposition("contacted", "partial"), do: true
+  def should_update_disposition("contacted", "completed"), do: true
+  def should_update_disposition("contacted", "ineligible"), do: true
+  def should_update_disposition("contacted", "refused"), do: true
+  def should_update_disposition("started", "partial"), do: true
+  def should_update_disposition("started", "refused"), do: true
+  def should_update_disposition("started", "ineligible"), do: true
+
+  def should_update_disposition("registered", "queued"), do: true
+  def should_update_disposition("queued", "failed"), do: true
+  def should_update_disposition("queued", "contacted"), do: true
+  def should_update_disposition("queued", "started"), do: true
+  def should_update_disposition("contacted", "unresponsive"), do: true
+  def should_update_disposition("contacted", "started"), do: true
+  def should_update_disposition("started", "rejected"), do: true
+  def should_update_disposition("started", "breakoff"), do: true
+  def should_update_disposition("started", "completed"), do: true
+  def should_update_disposition("partial", "completed"), do: true
+  def should_update_disposition(nil, _), do: true
+  def should_update_disposition(_, _), do: false
 
   # :next_step, :end_survey, {:jump, step_id}, :wait_for_reply
   defp run_step(state, %{"type" => "flag", "disposition" => disposition}) do

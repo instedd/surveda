@@ -123,12 +123,12 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
-    by_state = Repo.all(
+    by_disposition = Repo.all(
       from r in Respondent, where: r.survey_id == ^survey_id,
-      group_by: [:state, :disposition],
-      select: {r.state, r.disposition, count("*")})
-    |> Enum.reduce(%{}, fn {state, disposition, count}, map ->
-      key = disposition || state
+      group_by: [:disposition],
+      select: {r.disposition, count("*")})
+    |> Enum.reduce(%{}, fn {disposition, count}, map ->
+      key = disposition
       map |> Map.put(key, (map[key] || 0) + count)
     end)
 
@@ -151,15 +151,18 @@ defmodule Ask.RespondentController do
 
     cumulative_count = Enum.map(range, fn datetime -> cumulative_count_for(datetime, respondents_by_date, buckets) end)
 
-    active = by_state["active"] || 0
-    pending = by_state["pending"] || 0
-    completed = by_state["completed"] || 0
-    stalled = by_state["stalled"] || 0
-    failed = by_state["failed"] || 0
-    partial = by_state["partial"] || 0
-    ineligible = by_state["ineligible"] || 0
-    refused = by_state["refused"] || 0
-    cancelled = by_state["cancelled"] || 0
+    registered = by_disposition["registered"] || 0
+    queued = by_disposition["queued"] || 0
+    contacted = by_disposition["contacted"] || 0
+    failed = by_disposition["failed"] || 0
+    unresponsive = by_disposition["unresponsive"] || 0
+    started = by_disposition["started"] || 0
+    ineligible = by_disposition["ineligible"] || 0
+    rejected = by_disposition["rejected"] || 0
+    breakoff = by_disposition["breakoff"] || 0
+    refused = by_disposition["refused"] || 0
+    partial = by_disposition["partial"] || 0
+    completed = by_disposition["completed"] || 0
 
     total_quota = buckets
     |> Enum.reduce(0, fn bucket, total ->
@@ -168,16 +171,19 @@ defmodule Ask.RespondentController do
 
     stats = %{
       id: survey.id,
-      respondents_by_state: %{
-        pending: respondent_by_state(pending, total_respondents),
-        completed: respondent_by_state(completed, total_respondents),
-        active: respondent_by_state(active, total_respondents),
-        stalled: respondent_by_state(stalled, total_respondents),
-        failed: respondent_by_state(failed, total_respondents),
-        partial: respondent_by_state(partial, total_respondents),
-        ineligible: respondent_by_state(ineligible, total_respondents),
-        refused: respondent_by_state(refused, total_respondents),
-        cancelled: respondent_by_state(cancelled, total_respondents)
+      respondents_by_disposition: %{
+        registered: respondent_by_disposition(registered, total_respondents),
+        queued: respondent_by_disposition(queued, total_respondents),
+        contacted: respondent_by_disposition(contacted, total_respondents),
+        failed: respondent_by_disposition(failed, total_respondents),
+        unresponsive: respondent_by_disposition(unresponsive, total_respondents),
+        started: respondent_by_disposition(started, total_respondents),
+        ineligible: respondent_by_disposition(ineligible, total_respondents),
+        rejected: respondent_by_disposition(rejected, total_respondents),
+        breakoff: respondent_by_disposition(breakoff, total_respondents),
+        refused: respondent_by_disposition(refused, total_respondents),
+        partial: respondent_by_disposition(partial, total_respondents),
+        completed: respondent_by_disposition(completed, total_respondents),
       },
       respondents_by_date: cumulative_count,
       cutoff: survey.cutoff,
@@ -234,7 +240,7 @@ defmodule Ask.RespondentController do
     render(conn, "quotas_stats.json", stats: stats)
   end
 
-  defp respondent_by_state(count, total_respondents) do
+  defp respondent_by_disposition(count, total_respondents) do
     percent = case total_respondents do
       0 -> 0
       _ -> count / (total_respondents / 100)

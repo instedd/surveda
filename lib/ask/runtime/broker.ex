@@ -94,6 +94,7 @@ defmodule Ask.Runtime.Broker do
       session = respondent.session |> Session.load
       session_mode = session_mode(respondent, session, mode)
       Session.delivery_confirm(session, title, session_mode)
+      update_respondent_disposition(session, "contacted")
     end
   end
 
@@ -204,10 +205,16 @@ defmodule Ask.Runtime.Broker do
 
     {questionnaire, mode} = select_questionnaire_and_mode(survey)
 
+    {primary_mode, fallback_mode} = case mode do
+      [primary] -> {primary, nil}
+      [primary, fallback] -> {primary, fallback}
+    end
+
     # Set respondent questionnaire and mode
     respondent = respondent
-    |> Respondent.changeset(%{questionnaire_id: questionnaire.id, mode: mode})
+    |> Respondent.changeset(%{questionnaire_id: questionnaire.id, mode: mode, disposition: "queued"})
     |> Repo.update!
+    |> create_disposition_history(respondent.disposition, primary_mode)
 
     primary_channel = RespondentGroup.primary_channel(group, mode)
     fallback_channel = RespondentGroup.fallback_channel(group, mode)
@@ -219,11 +226,6 @@ defmodule Ask.Runtime.Broker do
     end
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
-
-    {primary_mode, fallback_mode} = case mode do
-      [primary] -> {primary, nil}
-      [primary, fallback] -> {primary, fallback}
-    end
 
     handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
   end
@@ -307,15 +309,20 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp sync_step_internal(session, reply, session_mode) do
-    respondent = session.respondent
-
     transaction_result = Repo.transaction(fn ->
       try do
+        session = if reply == Flow.Message.answer() do
+          update_respondent_disposition(session, "contacted")
+        else
+          update_respondent_disposition(session, "started")
+        end
+
         handle_session_step(Session.sync_step(session, reply, session_mode))
       rescue
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
         e ->
+          respondent = Repo.get(Respondent, session.respondent.id)
           Logger.error "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id}): #{inspect e} #{inspect System.stacktrace}"
           Sentry.capture_exception(e, [
             stacktrace: System.stacktrace(),
@@ -334,6 +341,7 @@ defmodule Ask.Runtime.Broker do
       {:ok, response} ->
         response
       {:error, %Ecto.StaleEntryError{}} ->
+        respondent = Repo.get(Respondent, session.respondent.id)
         # Maybe timeout or another action was executed while sync_step was executed, so we need to retry
         sync_step(respondent, reply)
       value ->
@@ -430,31 +438,21 @@ defmodule Ask.Runtime.Broker do
     update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, next_timeout(respondent, timeout), disposition, "active")
   end
 
+  def resulting_disposition(old, new) do
+    if Flow.should_update_disposition(old, new) do
+      new
+    else
+      old
+    end
+  end
+
   defp update_respondent(respondent, :end, reply_disposition) do
     old_disposition = respondent.disposition
 
-    # If the current disposition is ineligible we shouldn't mark the respondent
-    # as completed (#639).
-    # If the respondent has partial disposition, or no disposition at all,
-    # then it's OK to mark it as completed.
-    #
-    # Here we also consider the case where a flag step is used at the end of a
-    # survey: if the flag step must set the respondent as "ineligible" or
-    # "completed" we must do so, unless the respondent is already marked
-    # as "completed".
     new_disposition =
-      case {old_disposition, reply_disposition} do
-        # If the respondent is already completed, ineligible or refused, don't change it
-        {"completed", _} -> "completed"
-        {"ineligible", _} -> "ineligible"
-        {"refused", _} -> "refused"
-        # If a flag step sets the respondent as ineligible or refused, do so (the respondent
-        # will be an non-set or partial disposition here)
-        {_, "ineligible"} -> "ineligible"
-        {_, "refused"} -> "refused"
-        # In any other case the survey ends and the respondent is marked as completed
-        _ -> "completed"
-      end
+      old_disposition
+      |> resulting_disposition(reply_disposition)
+      |> resulting_disposition("completed")
 
     mode =
       if respondent.session do
@@ -469,6 +467,21 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
     |> create_disposition_history(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
+  end
+
+  defp update_respondent_disposition(session, disposition) do
+    respondent = session.respondent
+    old_disposition = respondent.disposition
+    if Flow.should_update_disposition(old_disposition, disposition) do
+      respondent = respondent
+      |> Respondent.changeset(%{disposition: disposition})
+      |> Repo.update!
+      |> create_disposition_history(old_disposition, session.current_mode |> SessionMode.mode)
+
+      %{session | respondent: respondent}
+    else
+      session
+    end
   end
 
   defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state) do

@@ -66,6 +66,8 @@ defmodule Ask.RespondentGroupControllerTest do
 
       assert length(respondents) == 14
 
+      assert hd(respondents).disposition == "registered"
+
       assert group
       assert group.name == "phone_numbers.csv"
       assert group.respondents_count == 14

@@ -19,7 +19,7 @@ defmodule Ask.BrokerTest do
     assert survey.state == "not_ready"
   end
 
-  test "set as 'completed' when there is no respondents" do
+  test "set as 'completed' when there are no respondents" do
     survey = insert(:survey, Map.merge(@always_schedule, %{state: "running"}))
     Broker.handle_info(:poll, nil)
 
@@ -56,9 +56,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "don't set the respondent as completed (disposition) if disposition is ineligible" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
-
-    respondent |> Respondent.changeset(%{disposition: "ineligible"}) |> Repo.update!
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@ineligible_step)
 
     Broker.handle_info(:poll, nil)
 
@@ -67,9 +65,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "don't set the respondent as completed (disposition) if disposition is refused" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
-
-    respondent |> Respondent.changeset(%{disposition: "refused"}) |> Repo.update!
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@refused_step)
 
     Broker.handle_info(:poll, nil)
 
@@ -78,9 +74,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "don't set the respondent as partial (disposition) if disposition is ineligible" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@partial_step)
-
-    respondent |> Respondent.changeset(%{disposition: "ineligible"}) |> Repo.update!
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@ineligible_step ++ @partial_step)
 
     Broker.handle_info(:poll, nil)
 
@@ -89,9 +83,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "don't set the respondent as partial (disposition) if disposition is refused" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@partial_step)
-
-    respondent |> Respondent.changeset(%{disposition: "refused"}) |> Repo.update!
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@refused_step ++ @partial_step)
 
     Broker.handle_info(:poll, nil)
 
@@ -118,9 +110,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "don't set the respondent as ineligible (disposition) if disposition is completed" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@ineligible_step)
-
-    respondent |> Respondent.changeset(%{disposition: "completed"}) |> Repo.update!
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@completed_step ++ @ineligible_step)
 
     Broker.handle_info(:poll, nil)
 
@@ -129,9 +119,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "set the respondent as complete (disposition) if disposition is partial" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
-
-    respondent |> Respondent.changeset(%{disposition: "partial"}) |> Repo.update!
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@partial_step)
 
     Broker.handle_info(:poll, nil)
 
@@ -145,9 +133,9 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 1
+    assert length(histories) == 2
 
-    history = histories |> hd
+    history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "completed"
     assert history.mode == nil
@@ -211,6 +199,82 @@ defmodule Ask.BrokerTest do
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
     assert updated_respondent.timeout_at in interval
+  end
+
+  test "changes the respondent disposition from registered to queued" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+
+    Broker.handle_info(:poll, nil)
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.disposition == "queued"
+  end
+
+  test "changes the respondent disposition from queued to contacted on delivery confirm (SMS)" do
+    [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "queued"
+
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.state == "active"
+    assert updated_respondent.disposition == "contacted"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "changes the respondent disposition from queued to contacted on answer (IVR)" do
+    [_survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "queued"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.state == "active"
+    assert updated_respondent.disposition == "contacted"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "changes the respondent disposition from contacted to started on first answer received" do
+    [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "queued"
+
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "contacted"
+
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    updated_respondent = Repo.get(Respondent, respondent.id)
+    assert updated_respondent.state == "active"
+    assert updated_respondent.disposition == "started"
+
+    :ok = broker |> GenServer.stop
   end
 
   test "set timeout_at according to retries if they're present" do
@@ -369,9 +433,9 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 1
+    assert length(histories) == 2
 
-    history = histories |> hd
+    history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "partial"
     assert history.mode == "sms"
@@ -388,6 +452,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get!(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Do you exercise?")
     Broker.sync_step(respondent, Flow.Message.reply("Yes"))
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -395,9 +460,9 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "ineligible"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 1
+    assert length(histories) == 4
 
-    history = histories |> hd
+    history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "ineligible"
   end
@@ -420,9 +485,9 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "refused"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 1
+    assert length(histories) == 3
 
-    history = histories |> hd
+    history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "refused"
   end
@@ -445,9 +510,9 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "refused"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 1
+    assert length(histories) == 3
 
-    history = histories |> hd
+    history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "refused"
   end
@@ -470,9 +535,9 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 1
+    assert length(histories) == 3
 
-    history = histories |> hd
+    history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "completed"
   end
@@ -1879,9 +1944,14 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Do you smoke?")
 
+    respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "partial"
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
@@ -1889,8 +1959,6 @@ defmodule Ask.BrokerTest do
            |> Repo.all
            |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
            |> Enum.all?( fn (b) -> b.count == 0 end)
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "partial"
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
@@ -2056,7 +2124,7 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.state == "active"
 
     now = Timex.now
-    interval = Interval.new(from: Timex.shift(now, minutes: 1), until: Timex.shift(now, minutes: 3), step: [seconds: 1])
+    interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
     assert updated_respondent.timeout_at in interval
   end
 
