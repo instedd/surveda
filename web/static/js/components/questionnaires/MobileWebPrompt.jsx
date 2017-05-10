@@ -22,20 +22,16 @@ class MobileWebPrompt extends Component {
     const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
 
     return (
-      <div>
-        <div className='row'>
-          <div className='col input-field s12'>
-            <InputWithLabel id={id} value={value} label={label} errors={[inputErrors]}>
-              <input
-                type='text'
-                disabled={readOnly}
-                onChange={e => onChange(e.target.value)}
-                onBlur={e => onBlur(e.target.value)}
-                className={maybeInvalidClass}
-              />
-            </InputWithLabel>
-          </div>
-        </div>
+      <div className='input-field'>
+        <InputWithLabel id={id} value={value} label={label} errors={[inputErrors]}>
+          <input
+            type='text'
+            disabled={readOnly}
+            onChange={e => onChange(e.target.value)}
+            onBlur={e => onBlur(e.target.value)}
+            className={maybeInvalidClass}
+          />
+        </InputWithLabel>
       </div>
     )
   }

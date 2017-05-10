@@ -118,9 +118,6 @@ class WebSettings extends Component {
               </div>
             </li>
             <li className='collection-item'>
-              <h5>
-                Style
-              </h5>
               {this.colorSelectionComponent()}
             </li>
             <li className='collection-item'>
@@ -245,31 +242,32 @@ class WebSettings extends Component {
     const primary = (primaryErrors && primaryErrors.length > 0) || !this.state.primaryColor ? '#6648a2' : this.state.primaryColor
     const secondary = (secondaryErrors && secondaryErrors.length > 0) || !this.state.secondaryColor ? '#fb9a00' : this.state.secondaryColor
     return (
-      <div>
-        <svg style={{width: '70px', height: '70px'}}>
-          <circle className='a' cx='10' cy='10' r='10' fill={primary} />
-        </svg>
-        <MobileWebPrompt id='web_settings_primary_color'
-          label='Primary color'
-          inputErrors={primaryErrors}
-          value={this.state.primaryColor}
-          originalValue={this.state.primaryColor}
-          onChange={text => this.messageChange(text, 'primaryColor')}
-          onBlur={text => this.colorSelectionBlur(text, 'primary')}
-          readOnly={this.props.readOnly}
-        />
-        <svg style={{width: '70px', height: '70px'}}>
-          <circle className='a' cx='10' cy='10' r='10' fill={secondary} />
-        </svg>
-        <MobileWebPrompt id='web_settings_secondary_color'
-          label='Secondary color'
-          inputErrors={secondaryErrors}
-          value={this.state.secondaryColor}
-          originalValue={this.state.secondaryColor}
-          onChange={text => this.messageChange(text, 'secondaryColor')}
-          onBlur={text => this.colorSelectionBlur(text, 'secondary')}
-          readOnly={this.props.readOnly}
-        />
+      <div className='style row'>
+        <h5>Style</h5>
+        <div className='col s12 m6 l4'>
+          <div className='circle' style={{background: primary}} />
+          <MobileWebPrompt id='web_settings_primary_color'
+            label='Primary color'
+            inputErrors={primaryErrors}
+            value={this.state.primaryColor}
+            originalValue={this.state.primaryColor}
+            onChange={text => this.messageChange(text, 'primaryColor')}
+            onBlur={text => this.colorSelectionBlur(text, 'primary')}
+            readOnly={this.props.readOnly}
+          />
+        </div>
+        <div className='col s12 m6 l4'>
+          <div className='circle' style={{background: secondary}} />
+          <MobileWebPrompt id='web_settings_secondary_color'
+            label='Secondary color'
+            inputErrors={secondaryErrors}
+            value={this.state.secondaryColor}
+            originalValue={this.state.secondaryColor}
+            onChange={text => this.messageChange(text, 'secondaryColor')}
+            onBlur={text => this.colorSelectionBlur(text, 'secondary')}
+            readOnly={this.props.readOnly}
+          />
+        </div>
       </div>
     )
   }
