@@ -169,8 +169,19 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp set_stalled_respondents_as_failed(survey) do
+    from(r in assoc(survey, :respondents), where: r.state == "stalled" and r.disposition == "queued")
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("queued")])
+
+
+    from(r in assoc(survey, :respondents), where: r.state == "stalled" and r.disposition == "contacted")
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("contacted")])
+
+
+    from(r in assoc(survey, :respondents), where: r.state == "stalled" and r.disposition == "started")
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("started")])
+
     from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("failed")])
   end
 
   defp start_some(survey, count) do
@@ -412,13 +423,18 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, :rejected) do
     respondent
-    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
+    |> Respondent.changeset(%{
+      state: "rejected",
+      session: nil,
+      timeout_at: nil,
+      disposition: Flow.resulting_disposition(respondent.disposition, "rejected")
+    })
     |> Repo.update!
   end
 
   defp update_respondent(respondent, :failed) do
     respondent
-    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil})
+    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from(respondent.disposition)})
     |> Repo.update!
   end
 
@@ -438,21 +454,13 @@ defmodule Ask.Runtime.Broker do
     update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, next_timeout(respondent, timeout), disposition, "active")
   end
 
-  def resulting_disposition(old, new) do
-    if Flow.should_update_disposition(old, new) do
-      new
-    else
-      old
-    end
-  end
-
   defp update_respondent(respondent, :end, reply_disposition) do
     old_disposition = respondent.disposition
 
     new_disposition =
       old_disposition
-      |> resulting_disposition(reply_disposition)
-      |> resulting_disposition("completed")
+      |> Flow.resulting_disposition(reply_disposition)
+      |> Flow.resulting_disposition("completed")
 
     mode =
       if respondent.session do
@@ -567,5 +575,4 @@ defmodule Ask.Runtime.Broker do
 
     batch_size |> trunc
   end
-
 end

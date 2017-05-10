@@ -183,6 +183,23 @@ defmodule Ask.Runtime.Flow do
   def should_update_disposition(nil, _), do: true
   def should_update_disposition(_, _), do: false
 
+  def failed_disposition_from(old_disposition) do
+    case old_disposition do
+      "queued" -> "failed"
+      "contacted" -> "unresponsive"
+      "started" -> "breakoff"
+      _ -> "failed"
+    end
+  end
+
+  def resulting_disposition(old, new) do
+    if Flow.should_update_disposition(old, new) do
+      new
+    else
+      old
+    end
+  end
+
   # :next_step, :end_survey, {:jump, step_id}, :wait_for_reply
   defp run_step(state, %{"type" => "flag", "disposition" => disposition}) do
     if should_update_disposition(state.disposition, disposition) do
