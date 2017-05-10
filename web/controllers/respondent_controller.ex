@@ -163,6 +163,9 @@ defmodule Ask.RespondentController do
     refused = by_disposition["refused"] || 0
     partial = by_disposition["partial"] || 0
     completed = by_disposition["completed"] || 0
+    responsive = started + ineligible + rejected + breakoff + refused + partial + completed
+    contacted_group = contacted + unresponsive
+    uncontacted = registered + queued + failed
 
     total_quota = buckets
     |> Enum.reduce(0, fn bucket, total ->
@@ -172,18 +175,36 @@ defmodule Ask.RespondentController do
     stats = %{
       id: survey.id,
       respondents_by_disposition: %{
-        registered: respondent_by_disposition(registered, total_respondents),
-        queued: respondent_by_disposition(queued, total_respondents),
-        contacted: respondent_by_disposition(contacted, total_respondents),
-        failed: respondent_by_disposition(failed, total_respondents),
-        unresponsive: respondent_by_disposition(unresponsive, total_respondents),
-        started: respondent_by_disposition(started, total_respondents),
-        ineligible: respondent_by_disposition(ineligible, total_respondents),
-        rejected: respondent_by_disposition(rejected, total_respondents),
-        breakoff: respondent_by_disposition(breakoff, total_respondents),
-        refused: respondent_by_disposition(refused, total_respondents),
-        partial: respondent_by_disposition(partial, total_respondents),
-        completed: respondent_by_disposition(completed, total_respondents),
+        uncontacted: %{
+          count: uncontacted,
+          percent: respondent_percentage(uncontacted, total_respondents),
+          detail: %{
+            registered: %{count: registered, percent: respondent_percentage(registered, total_respondents)},
+            queued: %{count: queued, percent: respondent_percentage(queued, total_respondents)},
+            failed: %{count: failed, percent: respondent_percentage(failed, total_respondents)},
+          },
+        },
+        contacted: %{
+          count: contacted_group,
+          percent: respondent_percentage(contacted_group, total_respondents),
+          detail: %{
+            contacted: %{count: contacted, percent: respondent_percentage(contacted, total_respondents)},
+            unresponsive: %{count: unresponsive, percent: respondent_percentage(unresponsive, total_respondents)},
+          },
+        },
+        responsive: %{
+          count: responsive,
+          percent: respondent_percentage(responsive, total_respondents),
+          detail: %{
+            started: %{count: started, percent: respondent_percentage(started, total_respondents)},
+            ineligible: %{count: ineligible, percent: respondent_percentage(ineligible, total_respondents)},
+            rejected: %{count: rejected, percent: respondent_percentage(rejected, total_respondents)},
+            breakoff: %{count: breakoff, percent: respondent_percentage(breakoff, total_respondents)},
+            refused: %{count: refused, percent: respondent_percentage(refused, total_respondents)},
+            partial: %{count: partial, percent: respondent_percentage(partial, total_respondents)},
+            completed: %{count: completed, percent: respondent_percentage(completed, total_respondents)},
+          },
+        },
       },
       respondents_by_date: cumulative_count,
       cutoff: survey.cutoff,
@@ -240,14 +261,8 @@ defmodule Ask.RespondentController do
     render(conn, "quotas_stats.json", stats: stats)
   end
 
-  defp respondent_by_disposition(count, total_respondents) do
-    percent = case total_respondents do
-      0 -> 0
-      _ -> count / (total_respondents / 100)
-    end
-
-    %{count: count, percent: percent}
-  end
+  defp respondent_percentage(_, 0), do: 0
+  defp respondent_percentage(count, total_respondents), do: count / (total_respondents / 100)
 
   def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id, "offset" => offset}) do
     project = conn
