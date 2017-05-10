@@ -1,9 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { InputWithLabel } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
-import classNames from 'classnames/bind'
+import Draft from './Draft'
 
 class MobileWebPrompt extends Component {
   state: State
@@ -14,26 +13,16 @@ class MobileWebPrompt extends Component {
   }
 
   render() {
-    const { id, value, onChange, readOnly, onBlur, inputErrors } = this.props
+    const { value, readOnly, onChange, onBlur, inputErrors } = this.props
     let { label } = this.props
     if (!label) label = 'Mobile Web Message'
 
     const shouldDisplayErrors = value == this.props.originalValue
-    const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
-
     return (
       <div>
         <div className='row'>
-          <div className='col input-field s12'>
-            <InputWithLabel id={id} value={value} label={label} errors={[inputErrors]}>
-              <input
-                type='text'
-                disabled={readOnly}
-                onChange={e => onChange(e.target.value)}
-                onBlur={e => onBlur(e.target.value)}
-                className={maybeInvalidClass}
-              />
-            </InputWithLabel>
+          <div className='col s12 mobile-prompt'>
+            <Draft label={label} onChange={onChange} onBlur={onBlur} errors={shouldDisplayErrors && inputErrors} initialValue={value} readOnly={readOnly} />
           </div>
         </div>
       </div>
@@ -42,7 +31,6 @@ class MobileWebPrompt extends Component {
 }
 
 MobileWebPrompt.propTypes = {
-  id: PropTypes.string.isRequired,
   label: PropTypes.string,
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,

@@ -1277,6 +1277,27 @@ defmodule Ask.BrokerTest do
     assert_respondents_by_state(survey, 10, 10)
   end
 
+  test "when a survey has any target of completed respondents the batch size depends on the success rate" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 200)
+
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 50}))
+
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 50, 151)
+
+    mark_n_active_respondents_as("failed", 20)
+    mark_n_active_respondents_as("completed", 30)
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 26, 125)
+
+    # since all the previous ones failed the success rate decreases
+    # and the batch size increases
+    mark_n_active_respondents_as("failed", 26)
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 31, 94)
+  end
+
   test "changes running survey state to 'completed' when there are no more running respondents" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
@@ -2375,5 +2396,12 @@ defmodule Ask.BrokerTest do
       6 -> %Ask.DayOfWeek{sun: true}
       7 -> %Ask.DayOfWeek{mon: true}
     end
+  end
+
+  defp mark_n_active_respondents_as(new_state, n) do
+    Repo.all(from r in Respondent, where: r.state == "active", limit: ^n)
+    |> Enum.map(fn respondent ->
+      Repo.update(respondent |> change |> Respondent.changeset(%{state: new_state}))
+    end)
   end
 end
