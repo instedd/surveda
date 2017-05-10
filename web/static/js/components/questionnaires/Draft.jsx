@@ -34,22 +34,26 @@ class Draft extends React.Component {
     this.onChange = (editorState) => {
       this.setState({editorState})
       this.redraw()
-      props.onChange(this.getHTML())
+      props.onChange(this.getText())
     }
 
     this.onBlur = (editorState) => {
       this.hasFocus = false
       this.redraw()
-      props.onBlur(this.getHTML())
+      props.onBlur(this.getText())
     }
 
-    this.getHTML = () => {
+    this.getText = () => {
       const content = this.state.editorState.getCurrentContent()
       const plainText = content.getPlainText('\n')
       if (plainText.trim().length == 0) {
         return ''
       } else {
-        return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
+        if (props.plainText) {
+          return plainText
+        } else {
+          return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
+        }
       }
     }
 
@@ -156,7 +160,8 @@ Draft.propTypes = {
   onChange: PropTypes.func,
   onBlur: PropTypes.func,
   initialValue: PropTypes.string,
-  readOnly: PropTypes.bool
+  readOnly: PropTypes.bool,
+  plainText: PropTypes.bool
 }
 
 export default Draft
