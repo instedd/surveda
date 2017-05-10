@@ -45,10 +45,11 @@ class Draft extends React.Component {
 
     this.getHTML = () => {
       const content = this.state.editorState.getCurrentContent()
-      if (content.hasText()) {
-        return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
-      } else {
+      const plainText = content.getPlainText('\n')
+      if (plainText.trim().length == 0) {
         return ''
+      } else {
+        return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
       }
     }
 
