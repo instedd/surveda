@@ -4,9 +4,6 @@
 // -----------------------------------------------------------------------------
 // ------- Surveys -------------------------------------------------------------
 
-.survey-chart {
-  padding-top: 6rem;
-}
 .respondent-chart {
   margin: .5rem 0 2rem;
 }
@@ -105,7 +102,45 @@
     }
   }
 }
+.questionnaires-color-references {
+  padding-top: 8rem;
+  padding-left: 0.75rem;
 
+  .questionnaire-color-reference {
+    margin-bottom: 10px;
+    position: relative;
+
+    .color-circle-reference {
+      display: inline-block;
+      position: absolute;
+      top: 3px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+    }
+
+    .questionnaire-name {
+      padding-left: 23px;
+    }
+  }
+}
+
+div.card-table td.referenceColor0 { color: #673ab7 !important; }
+div.card-table td.referenceColor1 { color: #3f51b5 !important; }
+div.card-table td.referenceColor2 { color: #2196f3 !important; }
+div.card-table td.referenceColor3 { color: #03a9f4 !important; }
+div.card-table td.referenceColor4 { color: #00bcd4 !important; }
+div.card-table td.referenceColor5 { color: #009688 !important; }
+div.card-table td.referenceColor6 { color: #4caf50 !important; }
+div.card-table td.referenceColor7 { color: #8bc34a !important; }
+div.card-table td.referenceColor8 { color: #cddc39 !important; }
+div.card-table td.referenceColor9 { color: #ffeb3b !important; }
+div.card-table td.referenceColor10 { color: #ffc107 !important; }
+div.card-table td.referenceColor11 { color: #ff9800 !important; }
+div.card-table td.referenceColor12 { color: #ff5722 !important; }
+div.card-table td.referenceColor13 { color: #f44336 !important; }
+div.card-table td.referenceColor14 { color: #e91e63 !important; }
+div.card-table td.referenceColor15 { color: #9c27b0 !important; }
 
 // ------- Survey Card index page ----
 

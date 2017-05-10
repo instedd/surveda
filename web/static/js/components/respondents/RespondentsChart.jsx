@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import rd3 from 'react-d3-library'
+import { referenceColorsFor } from '../../referenceColors'
 const RD3Component = rd3.Component
 
 class RespondentsChart extends Component {
@@ -9,7 +10,7 @@ class RespondentsChart extends Component {
   }
 
   static propTypes = {
-    completedByDate: React.PropTypes.array.isRequired
+    cumulativePercentages: React.PropTypes.object.isRequired
   }
 
   componentDidMount() {
@@ -22,25 +23,35 @@ class RespondentsChart extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setData(nextProps.completedByDate)
+    this.setData(nextProps.cumulativePercentages)
   }
 
-  setData(completedByDate) {
+  setData(cumulativePercentages) {
     let initialDate
     let nextThreeMonths
     let lastDate
-    if (!completedByDate || completedByDate.length < 1) {
+    let totalQuestionnairesWithAnyCompletion = Object.keys(cumulativePercentages)
+    if (!cumulativePercentages || totalQuestionnairesWithAnyCompletion < 1) {
       initialDate = new Date(Date.now())
       lastDate = new Date(Date.now())
       lastDate.setDate(lastDate.getDate() + 90)
     } else {
-      initialDate = new Date(Date.parse(completedByDate[0].date))
-      nextThreeMonths = new Date(Date.parse(completedByDate[0].date))
+      // Uses random one because all questionnaires have the same range of dates.
+      let randomQuestionnaireId = Object.keys(cumulativePercentages)[0]
+      let randomQuestionnaireByDate = cumulativePercentages[randomQuestionnaireId]
+      initialDate = new Date(Date.parse(randomQuestionnaireByDate[0].date))
+      nextThreeMonths = new Date(Date.parse(randomQuestionnaireByDate[0].date))
       nextThreeMonths.setDate(nextThreeMonths.getDate() + 90)
-      lastDate = new Date(Math.max(Date.parse(completedByDate[completedByDate.length - 1].date), nextThreeMonths))
+      lastDate = new Date(Math.max(Date.parse(randomQuestionnaireByDate[randomQuestionnaireByDate.length - 1].date), nextThreeMonths))
     }
     const formatDate = function(date) { return new Date(Date.parse(date)) }
-    this.data = completedByDate.map((d) => { return { date: formatDate(d.date), count: Number(d.count) } });
+    this.datas = Object.entries(cumulativePercentages).map((entry) => {
+      let completedPercentagesByDate = entry[1]
+      return completedPercentagesByDate.map((v) => {
+        return { date: formatDate(v.date), count: Number(v.percentage) }
+      })
+    });
+
     (this._x).domain([initialDate, lastDate])
 
     this.xaxis = d3.svg.axis()
@@ -62,9 +73,11 @@ class RespondentsChart extends Component {
         .attr('dy', 7)
         .attr('x', 10)
 
-    this.path.datum(this.data)
-        .attr('class', 'line respondentsData')
-        .attr('d', this.line)
+    this.datas.forEach((data, index) => {
+      this.paths[index].datum(data)
+          .attr('class', 'line respondentsData')
+          .attr('d', this.line)
+    })
 
     this.backgroundPath.datum(this.backgroundData)
         .attr('class', 'line backgroundData')
@@ -77,15 +90,20 @@ class RespondentsChart extends Component {
     this._y.range([this.chartHeight, 0])
   }
 
-  init() {
+  init(totalQuestionnaires) {
     this.container = this.svg.append('g')
     this.YAxis = this.container.append('g')
                           .attr('class', 'y axis')
     this.XAxis = this.container.append('g')
                           .attr('class', 'x axis')
                           .attr('transform', 'translate(0,' + (this.chartHeight) + ')')
-    this.path = this.container.append('path')
-                          .attr('class', 'line')
+    this.paths = []
+    let referenceColors = referenceColorsFor(totalQuestionnaires)
+    for (let i = 0; i < totalQuestionnaires; ++i) {
+      this.paths.push(this.container.append('path')
+                                    .attr('class', 'line')
+                                    .style('stroke', referenceColors[i]))
+    }
 
     this.backgroundPath = this.container.append('path')
                                     .attr('class', 'line')
@@ -113,13 +131,14 @@ class RespondentsChart extends Component {
       return
     }
 
-    const { completedByDate } = this.props
+    const { cumulativePercentages } = this.props
     const node = document.createElement('div')
     this.svg = d3.select(node).append('svg')
 
-    this.init()
+    let totalQuestionnaires = Object.keys(cumulativePercentages).length
+    this.init(totalQuestionnaires)
     this.setSize()
-    this.setData(completedByDate)
+    this.setData(cumulativePercentages)
 
     this.svg.attr('width', this.width)
         .attr('height', this.height)

@@ -3,16 +3,15 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
-import * as questionnaireActions from '../../actions/questionnaire'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
-import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
 import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import { modeLabel } from '../../questionnaire.mode'
+import { referenceColorsFor, referenceColorClasses } from '../../referenceColors'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -22,13 +21,14 @@ class SurveyShow extends Component {
     projectId: React.PropTypes.string.isRequired,
     surveyId: React.PropTypes.string.isRequired,
     survey: React.PropTypes.object,
-    questionnaire: React.PropTypes.object,
+    questionnaires: React.PropTypes.object,
     respondentsStats: React.PropTypes.object,
     respondentsQuotasStats: React.PropTypes.array,
-    completedByDate: React.PropTypes.array,
+    completedByDate: React.PropTypes.object,
     contactedRespondents: React.PropTypes.number,
-    target: React.PropTypes.number,
-    totalRespondents: React.PropTypes.number
+    totalRespondents: React.PropTypes.number,
+    completionPercentage: React.PropTypes.number,
+    cumulativePercentages: React.PropTypes.object
   }
 
   state: {
@@ -46,19 +46,7 @@ class SurveyShow extends Component {
 
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
-    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey => {
-      if (survey.questionnaires && Object.keys(survey.questionnaires).length != 0) {
-        // The survey should have associated questionnaires embedded in them in the
-        // latest version of the app.
-      } else {
-        // If not, it means these are old surveys with non-snapshot questionnaires, so we
-        // fetch them here.
-        let questionnaireIds = survey.questionnaireIds || []
-        for (let questionnaireId of questionnaireIds) {
-          dispatch(questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId))
-        }
-      }
-    })
+    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsQuotasStats(projectId, surveyId))
   }
@@ -155,16 +143,60 @@ class SurveyShow extends Component {
     )
   }
 
-  render() {
-    const { survey, respondentsStats, respondentsQuotasStats, contactedRespondents, completedByDate, target, totalRespondents, project } = this.props
-    const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
+  questionnairesColorReferences(questionnaires) {
+    let questionnairesQuantity = Object.keys(questionnaires).length
+    let referenceColors = referenceColorsFor(questionnairesQuantity)
 
-    let { questionnaire } = this.props
-    if (!questionnaire && survey && survey.questionnaires) {
-      questionnaire = survey.questionnaires[Object.keys(survey.questionnaires)[0]]
+    let colorReferences = []
+    if (questionnaires.length > 1) {
+      let i = 0
+      for (var questionnaireId in questionnaires) {
+        colorReferences.push((
+          <div className='questionnaire-color-reference' key={questionnaireId}>
+            <div className='color-circle-reference' style={{backgroundColor: referenceColors[i]}} />
+            <div className='questionnaire-name'> {questionnaires[questionnaireId].name} </div>
+          </div>
+        ))
+        i += 1
+      }
     }
 
-    if (!survey || !completedByDate || !questionnaire || !respondentsQuotasStats || !respondentsStats) {
+    return colorReferences
+  }
+
+  addColorClasses(questionnaires) {
+    let questionnairesQuantity = Object.keys(questionnaires).length
+    let colorClasses = referenceColorClasses(questionnairesQuantity)
+    if (questionnaires.length > 1) {
+      let i = 0
+      for (var questionnaireId in questionnaires) {
+        questionnaires[questionnaireId]['colorClass'] = colorClasses[i]
+      }
+    }
+  }
+
+  titleFor(questionnaires) {
+    let isComparison = Object.keys(questionnaires).length > 1
+    let title = ''
+    if (isComparison) {
+      title = 'Questionnaire performance comparison'
+    } else {
+      let questionnaireId = Object.keys(questionnaires)[0]
+      title = questionnaires[questionnaireId].name
+    }
+
+    return title
+  }
+
+  render() {
+    const { questionnaires, survey, respondentsStats, respondentsQuotasStats, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
+
+    if (!survey || !cumulativePercentages || !questionnaires || !respondentsQuotasStats || !respondentsStats) {
+      console.log('survey', survey)
+      console.log('cumulateivePercentages', cumulativePercentages)
+      console.log('questionnaires', questionnaires)
+      console.log('respondentsQuotaStats', respondentsQuotasStats)
+      console.log('respondentsStats', respondentsStats)
       return <p>Loading...</p>
     }
 
@@ -184,7 +216,7 @@ class SurveyShow extends Component {
     if (respondentsQuotasStats.length > 0) {
       table = this.quotasForAnswers(respondentsQuotasStats)
     } else {
-      table = this.dispositions(respondentsStats)
+      table = this.dispositions(respondentsStats, questionnaires)
     }
 
     const readOnly = !project || project.readOnly
@@ -200,30 +232,40 @@ class SurveyShow extends Component {
       )
     }
 
+    let title = this.titleFor(questionnaires)
+    let questionnaireColorReferences = this.questionnairesColorReferences(questionnaires)
+    this.addColorClasses(questionnaires)
+
     return (
       <div className='row'>
         {stopComponent}
         <ConfirmationModal modalId='survey_show_stop_modal' ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
         <div className='col s12 m8'>
           <h4>
-            {questionnaire.name}
+            {title}
           </h4>
           <SurveyStatus survey={survey} />
           {table}
         </div>
         <div className='col s12 m4'>
+          <div className='row questionnaires-color-references'>
+            {questionnaireColorReferences}
+          </div>
+
           <div className='row survey-chart'>
             <div className='col s12'>
               <label className='grey-text'>
-                { RespondentsChartCount.respondentsReachedPercentage(completedByDate, target) + '% of target completed' }
+                { completionPercentage + '% of target completed' }
               </label>
             </div>
           </div>
+
           <div className='row respondent-chart'>
             <div className='col s12'>
-              <RespondentsChart completedByDate={cumulativeCount} />
+              <RespondentsChart cumulativePercentages={cumulativePercentages} />
             </div>
           </div>
+
           <div className='row'>
             <div className='col s12'>
               <label className='grey-text'>
@@ -234,6 +276,7 @@ class SurveyShow extends Component {
               </div>
             </div>
           </div>
+
           <div className='row'>
             <div className='col s12'>
               {modes}
@@ -261,7 +304,7 @@ class SurveyShow extends Component {
     this.setState(newState)
   }
 
-  groupRows(group, groupStats) {
+  groupRows(group, groupStats, questionnaires) {
     let details = groupStats.detail
     let detailsKeys = Object.keys(details)
     const groupRow =
@@ -280,18 +323,36 @@ class SurveyShow extends Component {
     ? <tr>
       <td colSpan={100}>
         <table>
-          {
-            detailsKeys.map((detail) => {
-              let individualStat = details[detail]
-              return (
-                <tr>
-                  <td>{capitalize(detail)}</td>
-                  <td className='right-align'>{individualStat.count}</td>
-                  <td className='right-align'>{individualStat.percent}%</td>
-                </tr>
-              )
-            })
-          }
+          <tbody>
+            {
+              detailsKeys.map((detail) => {
+                let individualStat = details[detail]
+                let questionnairesIds = Object.keys(questionnaires)
+                let byQuestionnaire = individualStat['byQuestionnaire']
+                let questionnairesColumns = []
+                if (questionnairesIds.length > 1) {
+                  questionnairesColumns = questionnairesIds.map((questionnaireId) => {
+                    if (detail == 'registered') {
+                      return (
+                        <td key={questionnaireId} className='right-align' >-</td>
+                      )
+                    }
+                    return (
+                      <td key={questionnaireId} className={'right-align' + ' ' + questionnaires[questionnaireId]['colorClass']} >{byQuestionnaire[questionnaireId] || 0}</td>
+                    )
+                  })
+                }
+                return (
+                  <tr key={detail}>
+                    <td>{capitalize(detail)}</td>
+                    {questionnairesColumns}
+                    <td className='right-align'>{individualStat.count}</td>
+                    <td className='right-align'>{this.round(individualStat.percent)}%</td>
+                  </tr>
+                )
+              })
+            }
+          </tbody>
         </table>
       </td>
     </tr> : null
@@ -299,8 +360,9 @@ class SurveyShow extends Component {
     return [groupRow, rows]
   }
 
-  dispositions(respondentsStats) {
+  dispositions(respondentsStats, questionnaires) {
     const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
+    let questionnairesIds = Object.keys(questionnaires)
     return (
       <div className='card'>
         <div className='card-table-title'>
@@ -311,6 +373,7 @@ class SurveyShow extends Component {
             <thead>
               <tr>
                 <th>Status</th>
+                {questionnairesIds.length > 1 ? questionnairesIds.map((questionnaireId) => (<th key={questionnaireId} className='right-align' />)) : []}
                 <th className='right-align'>Quantity</th>
                 <th className='right-align'>
                   Percent
@@ -321,7 +384,7 @@ class SurveyShow extends Component {
               {
                 dispositionsGroup.map(group => {
                   let groupStats = respondentsStats[group]
-                  return this.groupRows(group, groupStats)
+                  return this.groupRows(group, groupStats, questionnaires)
                 })
               }
             </tbody>
@@ -385,17 +448,17 @@ const mapStateToProps = (state, ownProps) => {
   const respondentsQuotasStats = state.respondentsQuotasStats.data
 
   let respondentsStats = null
-  let completedRespondentsByDate = []
+  let cumulativePercentages = {}
   let contactedRespondents = 0
-  let target = 1
-  let totalRespondents = 1
+  let totalRespondents = 0
+  let completionPercentage = 0
 
   if (respondentsStatsRoot) {
     respondentsStats = respondentsStatsRoot.respondentsByDisposition
-    completedRespondentsByDate = respondentsStatsRoot.respondentsByDate
-    target = respondentsStatsRoot.totalQuota || respondentsStatsRoot.cutoff || totalRespondents
+    cumulativePercentages = respondentsStatsRoot.cumulativePercentages
+    contactedRespondents = respondentsStatsRoot.contactedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
-    contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByDisposition.uncontacted.detail.registered.count
+    completionPercentage = respondentsStatsRoot.completionPercentage
   }
 
   return ({
@@ -403,13 +466,13 @@ const mapStateToProps = (state, ownProps) => {
     project: state.project.data,
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,
-    questionnaire: state.questionnaire.data,
+    questionnaires: !state.survey.data ? {} : state.survey.data.questionnaires,
     respondentsStats: respondentsStats,
     respondentsQuotasStats: respondentsQuotasStats,
-    completedByDate: completedRespondentsByDate,
+    cumulativePercentages: cumulativePercentages,
     contactedRespondents: contactedRespondents,
-    target: target,
-    totalRespondents: totalRespondents
+    totalRespondents: totalRespondents,
+    completionPercentage: completionPercentage
   })
 }
 
