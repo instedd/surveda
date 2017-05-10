@@ -67,14 +67,17 @@ defmodule Ask.RespondentControllerTest do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
-    insert_list(10, :respondent, survey: survey, disposition: "partial")
-    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-    insert_list(3, :respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
+    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
     total = 15.0
+
+    string_questionnaire_id = to_string(questionnaire.id)
 
     assert data["id"] == survey.id
     assert data["respondents_by_disposition"] == %{
@@ -82,40 +85,41 @@ defmodule Ask.RespondentControllerTest do
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "registered" => %{"count" => 0, "percent" => 0.0},
-          "queued" => %{"count" => 0, "percent" => 0.0},
-          "failed" => %{"count" => 0, "percent" => 0.0},
+          "registered" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
       "contacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "contacted" => %{"count" => 0, "percent" => 0.0},
-          "unresponsive" => %{"count" => 0, "percent" => 0.0},
+          "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
       "responsive" => %{
         "count" => 15,
         "percent" => 100.0,
         "detail" => %{
-          "started" => %{"count" => 0, "percent" => 0.0},
-          "breakoff" => %{"count" => 0, "percent" => 0.0},
-          "partial" => %{"count" => 10, "percent" => 100*10/total},
-          "completed" => %{"count" => 5, "percent" => 100*5/total},
-          "ineligible" => %{"count" => 0, "percent" => 0.0},
-          "refused" => %{"count" => 0, "percent" => 0.0},
-          "rejected" => %{"count" => 0, "percent" => 0.0},
+          "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "partial" => %{"count" => 10, "percent" => 100*10/total, "by_questionnaire" => %{string_questionnaire_id => 10}},
+          "completed" => %{"count" => 5, "percent" => 100*5/total, "by_questionnaire" => %{string_questionnaire_id => 5}},
+          "ineligible" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "rejected" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
     }
 
-    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(data["respondents_by_date"], 0)["count"] == 2
-    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(data["respondents_by_date"], 1)["count"] == 5
+    cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
+
+    assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
+    assert Enum.at(cumulative_percentages, 0)["percent"] == 20
+    assert Enum.at(cumulative_percentages, 1)["date"] == "2016-01-02"
+    assert Enum.at(cumulative_percentages, 1)["percent"] == 50
     assert data["total_respondents"] == 15
-    assert data["cutoff"] == 10
   end
 
   test "lists stats for a given survey with quotas", %{conn: conn, user: user} do
@@ -124,141 +128,142 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     bucket_1 = insert(:quota_bucket, survey: survey, quota: 4, count: 2)
     bucket_2 = insert(:quota_bucket, survey: survey, quota: 3, count: 3)
-    insert_list(10, :respondent, survey: survey, disposition: "partial")
-    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
-    insert(:respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
-    insert_list(4, :respondent, survey: survey, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
+    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
+    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
+    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
+    insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
     total = 16.0
 
+    string_questionnaire_id = to_string(questionnaire.id)
     assert data["id"] == survey.id
     assert data["respondents_by_disposition"] == %{
       "uncontacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "registered" => %{"count" => 0, "percent" => 0.0},
-          "queued" => %{"count" => 0, "percent" => 0.0},
-          "failed" => %{"count" => 0, "percent" => 0.0},
+          "registered" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
       "contacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "contacted" => %{"count" => 0, "percent" => 0.0},
-          "unresponsive" => %{"count" => 0, "percent" => 0.0},
+          "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
       "responsive" => %{
         "count" => 16,
         "percent" => 100.0,
         "detail" => %{
-          "started" => %{"count" => 0, "percent" => 0.0},
-          "breakoff" => %{"count" => 0, "percent" => 0.0},
-          "partial" => %{"count" => 10, "percent" => 100*10/total},
-          "completed" => %{"count" => 6, "percent" => 100*6/total},
-          "ineligible" => %{"count" => 0, "percent" => 0.0},
-          "refused" => %{"count" => 0, "percent" => 0.0},
-          "rejected" => %{"count" => 0, "percent" => 0.0},
+          "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "partial" => %{"count" => 10, "percent" => 100*10/total, "by_questionnaire" => %{string_questionnaire_id => 10}},
+          "completed" => %{"count" => 5, "percent" => 100*5/total, "by_questionnaire" => %{string_questionnaire_id => 5}},
+          "ineligible" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "rejected" => %{"count" => 1, "percent" => 100*1/total, "by_questionnaire" => %{string_questionnaire_id => 1}},
         },
       },
     }
 
-    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(data["respondents_by_date"], 0)["count"] == 2
-    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(data["respondents_by_date"], 1)["count"] == 5
+    cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
+
+    assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
+    assert abs(Enum.at(cumulative_percentages, 0)["percent"] - 28) < 1
+    assert Enum.at(cumulative_percentages, 1)["date"] == "2016-01-02"
+    assert abs(Enum.at(cumulative_percentages, 1)["percent"] - 71) < 1
     assert data["total_respondents"] == 16
-    assert data["cutoff"] == 10
   end
 
   test "lists stats for a given survey, with dispositions", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-    insert(:respondent, survey: survey, state: "completed", disposition: "partial", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, state: "completed", disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-    insert_list(3, :respondent, survey: survey, state: "completed", disposition: "ineligible", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    insert_list(10, :respondent, survey: survey, state: "pending", disposition: "registered")
+    insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert_list(3, :respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "ineligible", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
     total = 15.0
 
+    string_questionnaire_id = to_string(questionnaire.id)
     assert data["id"] == survey.id
     assert data["respondents_by_disposition"] == %{
       "uncontacted" => %{
         "count" => 10,
         "percent" => 100*10/total,
         "detail" => %{
-          "registered" => %{"count" => 10, "percent" => 100*10/total},
-          "queued" => %{"count" => 0, "percent" => 0.0},
-          "failed" => %{"count" => 0, "percent" => 0.0},
+          "registered" => %{"count" => 10, "percent" => 100*10/total, "by_questionnaire" => %{"" => 10}},
+          "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
       "contacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "contacted" => %{"count" => 0, "percent" => 0.0},
-          "unresponsive" => %{"count" => 0, "percent" => 0.0},
+          "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
       "responsive" => %{
         "count" => 5,
         "percent" => 100*5/total,
         "detail" => %{
-          "started" => %{"count" => 0, "percent" => 0.0},
-          "breakoff" => %{"count" => 0, "percent" => 0.0},
-          "partial" => %{"count" => 1, "percent" => 100*1/total},
-          "completed" => %{"count" => 1, "percent" => 100*1/total},
-          "ineligible" => %{"count" => 3, "percent" => 100*3/total},
-          "refused" => %{"count" => 0, "percent" => 0.0},
-          "rejected" => %{"count" => 0, "percent" => 0.0},
+          "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "partial" => %{"count" => 1, "percent" => 100*1/total, "by_questionnaire" => %{string_questionnaire_id => 1}},
+          "completed" => %{"count" => 1, "percent" => 100*1/total, "by_questionnaire" => %{string_questionnaire_id => 1}},
+          "ineligible" => %{"count" => 3, "percent" => 100*3/total, "by_questionnaire" => %{string_questionnaire_id => 3}},
+          "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "rejected" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
         },
       },
     }
 
-    assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
-    assert Enum.at(data["respondents_by_date"], 0)["count"] == 1
-    assert Enum.at(data["respondents_by_date"], 1)["date"] == "2016-01-02"
-    assert Enum.at(data["respondents_by_date"], 1)["count"] == 1
+    cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
+
+    assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
+    assert Enum.at(cumulative_percentages, 0)["percent"] == 10
+    assert Enum.at(cumulative_percentages, 1)["date"] == "2016-01-02"
+    assert Enum.at(cumulative_percentages, 1)["percent"] == 10
     assert data["total_respondents"] == 15
-    assert data["cutoff"] == 10
-  end
-
-  test "first value of respondents by date corresponds to started_at date", %{conn: conn, user: user} do
-    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project, cutoff: 10, started_at: t)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-
-    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-
-    assert (List.first(json_response(conn, 200)["data"]["respondents_by_date"])["date"]) == "2016-01-01"
+    assert data["completion_percentage"] == 20
   end
 
   test "fills dates when any respondent completed the survey with 0's", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     insert_list(10, :respondent, survey: survey, state: "pending")
-    insert(:respondent, survey: survey, state: "completed", completed_at: Timex.parse!("2016-01-03T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, questionnaire: questionnaire, state: "completed", disposition: "completed", completed_at: Timex.parse!("2016-01-03T10:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-    date_with_no_respondents = Enum.at(json_response(conn, 200)["data"]["respondents_by_date"], 1)
+    date_with_no_respondents =
+      json_response(conn, 200)["data"]["cumulative_percentages"]
+      |> Map.get(to_string(questionnaire.id))
+      |> Enum.at(1)
 
     assert date_with_no_respondents["date"] == "2016-01-02"
-    assert date_with_no_respondents["count"] == 0
+    assert date_with_no_respondents["percent"] == 0
   end
 
   test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project)
-    insert_list(5, :respondent, survey: survey, state: "pending")
+    insert_list(5, :respondent, survey: survey, state: "pending", disposition: "registered")
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
@@ -271,37 +276,37 @@ defmodule Ask.RespondentControllerTest do
           "count" => 5,
           "percent" => 100*5/total,
           "detail" => %{
-            "registered" => %{"count" => 5, "percent" => 100*5/total},
-            "queued" => %{"count" => 0, "percent" => 0.0},
-            "failed" => %{"count" => 0, "percent" => 0.0},
+            "registered" => %{"count" => 5, "percent" => 100*5/total, "by_questionnaire" => %{"" => 5}},
+            "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
           },
         },
         "contacted" => %{
           "count" => 0,
           "percent" => 0.0,
           "detail" => %{
-            "contacted" => %{"count" => 0, "percent" => 0.0},
-            "unresponsive" => %{"count" => 0, "percent" => 0.0},
+            "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
           },
         },
         "responsive" => %{
           "count" => 0,
           "percent" => 0.0,
           "detail" => %{
-            "started" => %{"count" => 0, "percent" => 0.0},
-            "breakoff" => %{"count" => 0, "percent" => 0.0},
-            "partial" => %{"count" => 0, "percent" => 0.0},
-            "completed" => %{"count" => 0, "percent" => 0.0},
-            "ineligible" => %{"count" => 0, "percent" => 0.0},
-            "refused" => %{"count" => 0, "percent" => 0.0},
-            "rejected" => %{"count" => 0, "percent" => 0.0},
+            "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "partial" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "completed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "ineligible" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "rejected" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
           },
         },
       },
-      "respondents_by_date" => [],
-      "cutoff" => nil,
-      "total_quota" => 0,
-      "total_respondents" => 5
+      "cumulative_percentages" => %{},
+      "total_respondents" => 5,
+      "contacted_respondents" => 0,
+      "completion_percentage" => 0
     }
   end
 

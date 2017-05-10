@@ -12,7 +12,6 @@ import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
-import * as RespondentsChartCount from '../respondents/RespondentsChartCount'
 import * as routes from '../../routes'
 
 class SurveyIndex extends Component {
@@ -120,9 +119,11 @@ class SurveyIndex extends Component {
         { surveys.length == 0
         ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
         : <div className='row'>
-          { surveys.map(survey => (
-            <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} />
-          )) }
+          { surveys.map(survey => {
+            return (
+              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} />
+            )
+          }) }
           { footer }
         </div>
         }
@@ -171,24 +172,13 @@ export default withRouter(connect(mapStateToProps)(SurveyIndex))
 
 class SurveyCard extends PureComponent {
   props: {
-    completedByDate: Object,
+    respondentsStats: Object,
     survey: Survey,
     onDelete: (survey: Survey) => void
   };
 
   render() {
-    const { survey, completedByDate, onDelete } = this.props
-    let cumulativeCount = []
-    let reached = 0
-
-    if (survey && completedByDate) {
-      const data = completedByDate.respondentsByDate
-      const target = completedByDate.totalQuota || completedByDate.cutoff || completedByDate.totalRespondents
-      cumulativeCount = RespondentsChartCount.cumulativeCount(data, target)
-      if (survey.state == 'running' || survey.state == 'completed') {
-        reached = RespondentsChartCount.respondentsReachedPercentage(data, target)
-      }
-    }
+    const { survey, respondentsStats, onDelete } = this.props
 
     var deleteButton = null
     if (survey.state != 'running') {
@@ -203,16 +193,19 @@ class SurveyCard extends PureComponent {
         </a>
     }
 
+    let cumulativePercentages = respondentsStats['cumulativePercentages'] || {}
+    let completionPercentage = respondentsStats['completionPercentage'] || 0
+
     return (
       <div className='col s12 m6 l4'>
         <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
           <Card>
             <div className='card-content'>
               <div className='grey-text'>
-                { reached + '% of target completed' }
+                { String(Math.round(completionPercentage)) + '% of target completed' }
               </div>
               <div className='card-chart'>
-                <RespondentsChart completedByDate={cumulativeCount} />
+                <RespondentsChart cumulativePercentages={cumulativePercentages} />
               </div>
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>

@@ -37,14 +37,19 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, respondents_by_date: respondents_by_date, total_quota: total_quota, cutoff: cutoff, total_respondents: total_respondents}}) do
+  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, completion_percentage: completion_percentage}}) do
     %{
       data: %{
         id: id,
         respondents_by_disposition: respondents_by_disposition,
-        respondents_by_date: render_many(respondents_by_date, Ask.RespondentView, "completed_by_date.json", as: :completed),
-        total_quota: total_quota,
-        cutoff: cutoff,
+        cumulative_percentages:
+          cumulative_percentages
+          |> Enum.map(fn {questionnaire_id, date_percentages} ->
+            {to_string(questionnaire_id), render_many(date_percentages, Ask.RespondentView, "date_percentages.json", as: :completed)}
+          end)
+          |> Enum.into(%{}),
+        completion_percentage: completion_percentage,
+        contacted_respondents: contacted_respondents,
         total_respondents: total_respondents
       }
     }
@@ -56,10 +61,10 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("completed_by_date.json", %{completed: {date, respondents_count}}) do
+  def render("date_percentages.json", %{completed: {date, percentage}}) do
     %{
       date: Ecto.Date.cast!(date) |> Ecto.Date.to_string,
-      count: respondents_count
+      percent: percentage
     }
   end
 end

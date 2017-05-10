@@ -67,54 +67,23 @@ defmodule Ask.RespondentController do
     end
   end
 
-  def responded_on(date, by_date) do
-    value = Enum.filter(by_date, fn x -> elem(x, 0) == date end)
-    {date, value}
-  end
-
-  def cumulative_count_for(date, by_date, buckets) do
-    value = if buckets |> length == 0 do
-      by_date
-      |> Enum.reduce(0, fn respondents_by_date, total ->
-        if(elem(respondents_by_date, 0) <= date) do
-          case elem(respondents_by_date, 1) do
-            [] -> total
-            [{_, _, count}] -> total + count
+  defp cumulative_percent_for(range, percent_by_date) do
+    range
+    |> Enum.reduce({percent_by_date, 0, []}, fn date, acc ->
+      {percents_by_date, cumulative_percent, cumulative_percent_by_date} = acc
+      case percents_by_date do
+        [] ->
+          {[], cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
+        [{next_date, next_percent} | rest_percents_by_date] ->
+          cond do
+            date < next_date ->
+              {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
+            date == next_date ->
+              {rest_percents_by_date, cumulative_percent + next_percent, cumulative_percent_by_date ++ [{date, cumulative_percent + next_percent}]}
           end
-        else
-          total
-        end
-      end)
-    else
-      buckets = buckets |> Enum.map(fn bucket ->
-        {bucket.id, 0, bucket.quota || 0}
-      end)
-      by_date
-      |> Enum.reduce(buckets, fn respondents_by_date, buckets ->
-        {respondents_date, respondents} = respondents_by_date
-        if(respondents_date <= date) do
-          respondents |> Enum.reduce(buckets, fn respondent, buckets ->
-            {_, bucket_id, count} = respondent
-            bucket = buckets |> Enum.find(fn bucket -> elem(bucket, 0) == bucket_id end)
-            case bucket do
-              nil -> buckets
-              {bucket_id, total, quota} ->
-                (buckets -- [bucket]) ++ [{
-                  bucket_id,
-                  min(quota, total + count),
-                  quota
-                }]
-            end
-          end)
-        else
-          buckets
-        end
-      end)
-      |> Enum.reduce(0, fn bucket, total ->
-        total + elem(bucket, 1)
-      end)
-    end
-    {date, value}
+      end
+    end)
+    |> elem(2)
   end
 
   def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -123,23 +92,75 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
-    by_disposition = Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey_id,
-      group_by: [:disposition],
-      select: {r.disposition, count("*")})
-    |> Enum.reduce(%{}, fn {disposition, count}, map ->
-      key = disposition
-      map |> Map.put(key, (map[key] || 0) + count)
-    end)
+    # Respondents counts by disposition
 
-    by_date = Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey_id and r.disposition == "completed",
-      group_by: fragment("DATE(completed_at), quota_bucket_id"),
-      select: {fragment("DATE(completed_at)"), r.quota_bucket_id, count("*")})
+    respondents_counts =
+      Repo.all(
+        from r in Respondent, where: r.survey_id == ^survey_id,
+        group_by: [:state, :disposition, :questionnaire_id],
+        select: {r.state, r.disposition, r.questionnaire_id, count("*")})
+      |> Enum.reduce(%{}, fn {state, disposition, questionnaire_id, count}, counts ->
+        disposition = disposition || state
+
+        default_for_disposition = %{disposition => %{by_questionnaire: %{}, count: 0}}
+        counts = default_for_disposition |> Map.merge(counts)
+
+        default_for_questionnaire = %{to_string(questionnaire_id) => count}
+        by_questionnaire =
+          default_for_questionnaire
+          |> Map.merge(counts[disposition][:by_questionnaire], fn (_, count, current_count) ->
+            count + current_count
+          end)
+
+        disposition_total_count = counts[disposition][:count] + count
+
+        counts |> Map.put(disposition, %{by_questionnaire: by_questionnaire, count: disposition_total_count})
+      end)
+    dispositions = ["registered", "queued", "failed", "contacted", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
+    respondents_counts =
+      dispositions
+      |> Enum.reduce(respondents_counts, fn (disposition, respondents_counts) ->
+          respondents_counts |> Map.put_new(disposition, %{
+            by_questionnaire: %{},
+            count: 0
+          })
+        end)
 
     total_respondents = survey |> assoc(:respondents) |> Repo.aggregate(:count, :id)
+    respondents_counts = add_disposition_percent(respondents_counts, total_respondents)
 
+
+    groups = %{
+      uncontacted: ["registered", "queued", "failed"],
+      contacted: ["contacted", "unresponsive"],
+      responsive: ["started", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
+    }
+
+    respondents_counts =
+      groups
+      |> Enum.map(fn {name, dispositions} ->
+          {count, percent, detail} =
+            dispositions
+            |> Enum.reduce({0, 0, %{}}, fn disposition, {count_sum, percent_sum, detail} ->
+                {respondents_counts[disposition][:count] + count_sum, respondents_counts[disposition][:percent] + percent_sum, Map.put(detail, disposition, respondents_counts[disposition])}
+              end)
+          {name, %{ count: count, percent: percent, detail: detail }}
+        end)
+      |> Enum.into(%{})
+
+    # Cumulative percentages by questionnaire by date
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
+    total_quota =
+      buckets
+      |> Enum.reduce(0, fn bucket, total ->
+        total + (bucket.quota || 0)
+      end)
+    target =
+      cond do
+        total_quota > 0 -> total_quota
+        !is_nil(survey.cutoff) -> survey.cutoff
+        true -> total_respondents
+      end
 
     range =
       Timex.Interval.new(from: survey.started_at, until: Timex.now)
@@ -147,70 +168,51 @@ defmodule Ask.RespondentController do
         { date, _ } = Timex.to_erl(datetime)
         date
       end)
-    respondents_by_date = Enum.map(range, fn datetime -> responded_on(datetime, by_date) end)
 
-    cumulative_count = Enum.map(range, fn datetime -> cumulative_count_for(datetime, respondents_by_date, buckets) end)
+    cumulative_percentage_by_questionnaire =
+      Repo.all(
+        from r in Respondent, where: r.survey_id == ^survey_id and r.disposition == "completed",
+        group_by: fragment("questionnaire_id, DATE(completed_at)"),
+        order_by: fragment("DATE(completed_at) ASC"),
+        select: {r.questionnaire_id, fragment("DATE(completed_at)"), count("*")})
+      |> Enum.reduce(%{}, fn {questionnaire_id, date, count}, acc ->
+          {_, next_acc} =
+            acc
+            |> Map.put_new(questionnaire_id, [])
+            |> Map.get_and_update(questionnaire_id, fn date_percent ->
+                {date_percent, date_percent ++ [{date, (count / target) * 100}]}
+              end)
+          next_acc
+        end)
+      |> Enum.map(fn {questionnaire_id, percents_by_date} ->
+          {questionnaire_id, cumulative_percent_for(range, percents_by_date)}
+        end)
+      |> Enum.into(%{})
 
-    registered = by_disposition["registered"] || 0
-    queued = by_disposition["queued"] || 0
-    contacted = by_disposition["contacted"] || 0
-    failed = by_disposition["failed"] || 0
-    unresponsive = by_disposition["unresponsive"] || 0
-    started = by_disposition["started"] || 0
-    ineligible = by_disposition["ineligible"] || 0
-    rejected = by_disposition["rejected"] || 0
-    breakoff = by_disposition["breakoff"] || 0
-    refused = by_disposition["refused"] || 0
-    partial = by_disposition["partial"] || 0
-    completed = by_disposition["completed"] || 0
-    responsive = started + ineligible + rejected + breakoff + refused + partial + completed
-    contacted_group = contacted + unresponsive
-    uncontacted = registered + queued + failed
-
-    total_quota = buckets
-    |> Enum.reduce(0, fn bucket, total ->
-      total + (bucket.quota || 0)
-    end)
+    # Completion percentage
+    pending_respondents =
+      Repo.one(
+        from r in Respondent,
+        where: r.survey_id == ^survey_id and r.state == "pending",
+        select: count("*")
+      )
+    completed_or_partial =
+      Repo.one(
+        from r in Respondent,
+        where: r.survey_id == ^survey_id and r.disposition in ["completed", "partial"],
+        select: count("*")
+      )
+    completion_percentage = (completed_or_partial / target) * 100
 
     stats = %{
       id: survey.id,
-      respondents_by_disposition: %{
-        uncontacted: %{
-          count: uncontacted,
-          percent: respondent_percentage(uncontacted, total_respondents),
-          detail: %{
-            registered: %{count: registered, percent: respondent_percentage(registered, total_respondents)},
-            queued: %{count: queued, percent: respondent_percentage(queued, total_respondents)},
-            failed: %{count: failed, percent: respondent_percentage(failed, total_respondents)},
-          },
-        },
-        contacted: %{
-          count: contacted_group,
-          percent: respondent_percentage(contacted_group, total_respondents),
-          detail: %{
-            contacted: %{count: contacted, percent: respondent_percentage(contacted, total_respondents)},
-            unresponsive: %{count: unresponsive, percent: respondent_percentage(unresponsive, total_respondents)},
-          },
-        },
-        responsive: %{
-          count: responsive,
-          percent: respondent_percentage(responsive, total_respondents),
-          detail: %{
-            started: %{count: started, percent: respondent_percentage(started, total_respondents)},
-            ineligible: %{count: ineligible, percent: respondent_percentage(ineligible, total_respondents)},
-            rejected: %{count: rejected, percent: respondent_percentage(rejected, total_respondents)},
-            breakoff: %{count: breakoff, percent: respondent_percentage(breakoff, total_respondents)},
-            refused: %{count: refused, percent: respondent_percentage(refused, total_respondents)},
-            partial: %{count: partial, percent: respondent_percentage(partial, total_respondents)},
-            completed: %{count: completed, percent: respondent_percentage(completed, total_respondents)},
-          },
-        },
-      },
-      respondents_by_date: cumulative_count,
-      cutoff: survey.cutoff,
-      total_quota: total_quota,
-      total_respondents: total_respondents
+      respondents_by_disposition: respondents_counts,
+      cumulative_percentages: cumulative_percentage_by_questionnaire,
+      completion_percentage: completion_percentage,
+      total_respondents: total_respondents,
+      contacted_respondents: total_respondents - pending_respondents
     }
+
     render(conn, "stats.json", stats: stats)
   end
 
@@ -221,6 +223,20 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     quotas_stats(conn, survey, survey.quota_vars)
+  end
+
+  defp add_disposition_percent(respondents_count_by_disposition_and_questionnaire, total_respondents) do
+    respondents_count_by_disposition_and_questionnaire
+    |> Enum.map(fn {disposition, counts} ->
+        percent_of_disposition =
+          case total_respondents do
+            0 -> 0
+            _ -> respondents_count_by_disposition_and_questionnaire[disposition][:count] / (total_respondents / 100)
+          end
+        counts_with_percent = counts |> Map.put(:percent, percent_of_disposition)
+        {disposition, counts_with_percent}
+      end)
+    |> Enum.into(%{})
   end
 
   defp quotas_stats(conn, _survey, []) do
@@ -260,9 +276,6 @@ defmodule Ask.RespondentController do
 
     render(conn, "quotas_stats.json", stats: stats)
   end
-
-  defp respondent_percentage(_, 0), do: 0
-  defp respondent_percentage(count, total_respondents), do: count / (total_respondents / 100)
 
   def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
