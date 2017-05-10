@@ -13,22 +13,16 @@ class MobileWebPrompt extends Component {
   }
 
   render() {
-    const { id, value, onChange, readOnly, onBlur, inputErrors } = this.props
+    const { value, readOnly, onChange, onBlur, inputErrors } = this.props
     let { label } = this.props
     if (!label) label = 'Mobile Web Message'
 
     const shouldDisplayErrors = value == this.props.originalValue
-    const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
-
-    // Missing props:
-    // disabled={readOnly}
-    // className={maybeInvalidClass}
-
     return (
       <div>
         <div className='row'>
           <div className='col s12 mobile-prompt'>
-            <Draft onBlur={onBlur} initialValue={value} placeholder={'Mobile Web Message'} />
+            <Draft label={label} onChange={onChange} onBlur={onBlur} errors={shouldDisplayErrors && inputErrors} initialValue={value} readOnly={readOnly} />
           </div>
         </div>
       </div>
@@ -37,7 +31,6 @@ class MobileWebPrompt extends Component {
 }
 
 MobileWebPrompt.propTypes = {
-  id: PropTypes.string.isRequired,
   label: PropTypes.string,
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,

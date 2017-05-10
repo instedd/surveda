@@ -34,25 +34,21 @@ class Draft extends React.Component {
     this.onChange = (editorState) => {
       this.setState({editorState})
       this.redraw()
+      props.onChange(this.getHTML())
     }
 
     this.onBlur = (editorState) => {
       this.hasFocus = false
       this.redraw()
-      props.onBlur(stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}}))
+      props.onBlur(this.getHTML())
     }
 
-    this.redraw = () => {
-      if (this.state.editorState.getCurrentContent().hasText()) {
-        $(this.refs.label).addClass('text')
+    this.getHTML = () => {
+      const content = this.state.editorState.getCurrentContent()
+      if (content.hasText()) {
+        return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
       } else {
-        $(this.refs.label).removeClass('text')
-      }
-
-      if (this.hasFocus) {
-        $(this.refs.label).addClass('focus')
-      } else {
-        $(this.refs.label).removeClass('focus')
+        return ''
       }
     }
 
@@ -85,8 +81,27 @@ class Draft extends React.Component {
     )
   }
 
+  componentDidMount() {
+    this.redraw()
+  }
+
+  redraw() {
+    if (this.state.editorState.getCurrentContent().hasText()) {
+      $(this.refs.label).addClass('text')
+    } else {
+      $(this.refs.label).removeClass('text')
+    }
+
+    if (this.hasFocus) {
+      $(this.refs.label).addClass('focus')
+    } else {
+      $(this.refs.label).removeClass('focus')
+    }
+  }
+
   render() {
-    const {editorState} = this.state
+    const { editorState } = this.state
+    const { label, errors, readOnly } = this.props
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
@@ -98,6 +113,13 @@ class Draft extends React.Component {
       }
     }
 
+    let errorComponent = null
+    if (errors) {
+      const errorMessage = errors.join(', ')
+      errorComponent = <div className='error'>{errorMessage}</div>
+      className = `${className} invalid`
+    }
+
     return (
       <div className='RichEditor-root'>
         {/*
@@ -107,7 +129,7 @@ class Draft extends React.Component {
         /> */}
         <div className={className} onClick={this.focus}>
           <label ref='label'>
-            Mobile web message
+            {label}
           </label>
           <Editor
             editorState={editorState}
@@ -116,19 +138,24 @@ class Draft extends React.Component {
             onFocus={this.onFocus}
             onBlur={this.onBlur}
             onTab={this.onTab}
+            readOnly={readOnly}
             ref='editor'
             spellCheck={false}
           />
         </div>
+        {errorComponent}
       </div>
     )
   }
 }
 
 Draft.propTypes = {
+  label: PropTypes.string,
+  errors: PropTypes.any,
+  onChange: PropTypes.func,
   onBlur: PropTypes.func,
   initialValue: PropTypes.string,
-  placeholder: PropTypes.string
+  readOnly: PropTypes.bool
 }
 
 export default Draft
