@@ -2,13 +2,16 @@ defmodule Ask.PageController do
   use Ask.Web, :controller
   import Ask.Router.Helpers
 
-  def index(conn, %{"path" => path}) do
+  def index(conn, params = %{"path" => path}) do
+    explicit = params["explicit"]
     user = conn.assigns[:current_user]
 
-    case {path, user} do
-      {[], nil} ->
+    case {path, user, explicit} do
+      {_, _, "true"} ->
         conn |> render("landing.html")
-      {path, nil} ->
+      {[], nil, _} ->
+        conn |> render("landing.html")
+      {path, nil, _} ->
         conn |> redirect(to: "#{session_path(conn, :new)}?redirect=/#{Enum.join path, "/"}")
       _ ->
         conn |> render("index.html", user: user, body_class: compute_body_class(path))

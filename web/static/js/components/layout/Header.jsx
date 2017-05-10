@@ -40,6 +40,9 @@ const Header = ({ tabs, logout, user, project, showProjectLink }) => {
                       <span>{user}</span>
                     </DropdownItem>
                     <DropdownItem>
+                      <a href='/?explicit=true' target='_blank'>About Surveda</a>
+                    </DropdownItem>
+                    <DropdownItem>
                       <a onClick={logout}>Logout</a>
                     </DropdownItem>
                   </Dropdown>
