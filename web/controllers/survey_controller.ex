@@ -70,7 +70,7 @@ defmodule Ask.SurveyController do
     |> update_questionnaires(survey_params)
     |> Survey.update_state
 
-    case Repo.update(changeset) do
+    case Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires)) do
       {:ok, survey} ->
         project |> Project.touch!
         render(conn, "show.json", survey: survey)
