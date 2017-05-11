@@ -26,6 +26,33 @@ class StepEditor extends Component {
   props: Props
   clickedVarAutocomplete: boolean
 
+  // Remember last step shown (expanded)
+  lastStepId: any
+
+  // Whenever the component is rendered (or re-rendered)
+  // we scroll to the step if it changed from the last time
+  // we checked.
+  componentDidMount() {
+    this.scrollIfNeeded()
+  }
+
+  componentDidUpdate() {
+    this.scrollIfNeeded()
+  }
+
+  componentWillUnmount() {
+    this.lastStepId = null
+  }
+
+  scrollIfNeeded() {
+    const { step } = this.props
+    if (step.id != this.lastStepId) {
+      const elem = $(`#step-id-${step.id}`)
+      $('body').animate({scrollTop: elem.offset().top}, 500)
+    }
+    this.lastStepId = step.id
+  }
+
   render() {
     const {step, ...commonProps} = this.props
 

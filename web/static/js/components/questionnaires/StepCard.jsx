@@ -16,7 +16,7 @@ class StepCard extends Component {
 
     return (
       <Card key={stepId}>
-        <ul className='collection collection-card'>
+        <ul className='collection collection-card' id={`step-id-${stepId}`}>
           <li className='collection-item input-field header'>
             <div className='row'>
               <div className='col s12'>
