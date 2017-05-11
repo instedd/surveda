@@ -28,7 +28,7 @@ class SaveStatus extends Component {
         )
       } else {
         return (
-          <div className='right grey-text'>Last saved <TimeAgo minPeriod='10' date={saveStatus.updatedAt} /></div>
+          <div className='right grey-text'>Last saved <TimeAgo minPeriod='10' date={saveStatus.updatedAt + '+0000'} /></div>
         )
       }
     } else {
