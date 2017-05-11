@@ -56,14 +56,14 @@
           </a>
           <ul class="right hide-on-med-and-down">
             <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
-            <% unless @current_user do %>
+            <%= unless @current_user do %>
               <li><a href='<%= session_path @conn, :new %>' class="btn-flat btn-large">Login</a></li>
               <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined">Sign up for free</a></li>
             <% end %>
           </ul>
           <ul class="side-nav" id="mobile-demo">
             <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
-            <% unless @current_user do %>
+            <%= unless @current_user do %>
               <li><a href='<%= session_path @conn, :new %>' class="btn-flat btn-large">Login</a></li>
               <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined">Sign up for free</a></li>
             <% end %>
