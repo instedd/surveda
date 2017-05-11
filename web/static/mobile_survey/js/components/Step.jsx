@@ -69,7 +69,6 @@ class Step extends Component {
   isContentTallerThanViewport() {
     const viewportHeight = document.documentElement.clientHeight
     const contentHeight = this.refs.stepContent.offsetHeight
-
     return contentHeight > viewportHeight
   }
 
@@ -121,11 +120,23 @@ class Step extends Component {
         <div ref='moreContentHint' className='more-content-arrow'>
           <svg fill='#000000' height='100' viewBox='0 0 60 60' width='100' xmlns='http://www.w3.org/2000/svg'>
             <path d='M0 0h24v24H0V0z' fill='none' />
-            <path d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z' fill='#fa9a06' />
+            <path d='M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z' fill={this.primaryColor()} />
           </svg>
         </div>
       </div>
     )
+  }
+
+  primaryColor() {
+    return window.colorStyle && window.colorStyle.primary_color ? window.colorStyle.primary_color : 'rgb(102,72,162)'
+  }
+
+  secondaryColor() {
+    return window.colorStyle && window.colorStyle.secondary_color ? window.colorStyle.secondary_color : 'rgb(251,154,0)'
+  }
+
+  getChildContext() {
+    return {primaryColor: this.primaryColor(), secondaryColor: this.secondaryColor()}
   }
 }
 
@@ -136,5 +147,10 @@ const mapStateToProps = (state) => ({
   respondentId: window.respondentId,
   token: window.token
 })
+
+Step.childContextTypes = {
+  primaryColor: PropTypes.string,
+  secondaryColor: PropTypes.string
+}
 
 export default connect(mapStateToProps)(Step)

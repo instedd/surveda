@@ -9,10 +9,10 @@ class Header extends Component {
 
     return (
       <header>
-        <nav>
+        <nav style={{'backgroundColor': this.context.primaryColor}}>
           <h1>{title}</h1>
           <div className='progressBar'>
-            <span style={{ width: percent }} />
+            <span style={{ width: percent, backgroundColor: this.context.secondaryColor }} />
           </div>
         </nav>
       </header>
@@ -23,6 +23,11 @@ class Header extends Component {
 Header.propTypes = {
   progress: PropTypes.number.isRequired,
   title: PropTypes.string.isRequired
+}
+
+Header.contextTypes = {
+  primaryColor: PropTypes.string,
+  secondaryColor: PropTypes.string
 }
 
 const mapStateToProps = (state) => ({

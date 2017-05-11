@@ -67,6 +67,9 @@ class NumericStep extends Component {
       )
     }
 
+    const disabled = !this.state.valid
+    const fillColor = disabled ? '' : this.context.primaryColor
+
     return (
       <div>
         <div className='numeric'>
@@ -75,9 +78,9 @@ class NumericStep extends Component {
           )}
           <div className='input-button-inline'>
             <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} className={inputClassName} />
-            <button className='btn square' disabled={!this.state.valid}>
+            <button className='btn square' style={{borderColor: fillColor}} disabled={disabled} >
               <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
-                <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' />
+                <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' fill={fillColor} />
               </svg>
             </button>
             {errorDiv}
@@ -95,5 +98,8 @@ NumericStep.propTypes = {
   onRefusal: PropTypes.func
 }
 
-export default NumericStep
+NumericStep.contextTypes = {
+  primaryColor: PropTypes.string
+}
 
+export default NumericStep

@@ -34,7 +34,7 @@ class MultipleChoiceStep extends Component {
         {step.choices.map(choice => {
           return (
             <div key={choice}>
-              <button className={'btn block ' + this.classNameForButton(step.choices, choice)} value={choice} onClick={e => { e.preventDefault(); onClick(choice) }}>{choice}</button>
+              <button className={'btn block ' + this.classNameForButton(step.choices, choice)} value={choice} onClick={e => { e.preventDefault(); onClick(choice) }} style={{color: this.context.primaryColor, borderColor: this.context.primaryColor}}>{choice}</button>
             </div>
           )
         })}
@@ -46,6 +46,10 @@ class MultipleChoiceStep extends Component {
 MultipleChoiceStep.propTypes = {
   step: PropTypes.object,
   onClick: PropTypes.func
+}
+
+MultipleChoiceStep.contextTypes = {
+  primaryColor: PropTypes.string
 }
 
 export default MultipleChoiceStep

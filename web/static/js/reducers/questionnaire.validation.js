@@ -34,6 +34,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateMobileWebSmsMessage(data, context)
   validateMobileWebSurveyIsOverMessage(data, context)
   validateSurveyAlreadyTakenMessage(data, context)
+  validateMobileWebColorStyle(data, context)
 
   state.errorsByPath = errorsByPath(state.errors)
   state.errorsByLang = errorsByLang(state.errors)
@@ -113,7 +114,7 @@ const validatePrompts = (step, context, path) => {
   })
 }
 
-const validatePrompt = (prompt, context, lang, langPath) => {
+const validatePrompt = (prompt: ?LanguagePrompt, context, lang, langPath) => {
   prompt = prompt || newStepPrompt()
 
   if (context.sms) {
@@ -335,13 +336,15 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
   validateChoiceSkipLogic(choice, stepIndex, choiceIndex, steps, context, path)
 }
 
-const validateMessage = (msgKey: string, msg: Prompt, context: ValidationContext) => {
+const validateMessage = (msgKey: string, msg: ?Prompt, context: ValidationContext) => {
   msg = msg || {}
 
   const path = `${msgKey}.prompt`
 
   context.languages.forEach(lang => {
-    validatePrompt(msg[lang], context, lang, `${path}['${lang}']`)
+    if (msg) {
+      validatePrompt(msg[lang], context, lang, `${path}['${lang}']`)
+    }
   })
 }
 
@@ -390,6 +393,25 @@ const validateMobileWebSmsMessage = (data, context) => {
   if (exceeds) {
     addError(context, 'mobileWebSmsMessage', 'limit exceeded', null, 'mobileweb')
   }
+}
+
+const validateMobileWebColorStyle = (data, context) => {
+  if (!context.mobileweb) return
+  if (!data.settings.mobileWebColorStyle) return
+  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+  const primary = data.settings.mobileWebColorStyle.primaryColor
+  const secondary = data.settings.mobileWebColorStyle.secondaryColor
+  if (primary) {
+    if (!colorRegex.test(primary)) {
+      addError(context, 'mobileWebColorStyle.primaryColor', 'Mobile web primary color is invalid ', null, 'mobileweb')
+    }
+  }
+  if (secondary) {
+    if (!colorRegex.test(secondary)) {
+      addError(context, 'mobileWebColorStyle.secondaryColor', 'Mobile web secondary color is invalid', null, 'mobileweb')
+    }
+  }
+  return
 }
 
 const validateMobileWebSurveyIsOverMessage = (data, context) => {

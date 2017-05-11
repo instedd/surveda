@@ -12,12 +12,13 @@ export type Questionnaire = {
 };
 
 export type Settings = {
-  quotaCompletedMessage: Prompt,
-  errorMessage: Prompt,
-  mobileWebSmsMessage: ?string,
-  mobileWebSurveyIsOverMessage: ?string,
-  title: {[lang: string]: string},
-  surveyAlreadyTakenMessage: {[lang: string]: string},
+  quotaCompletedMessage?: Prompt,
+  errorMessage?: Prompt,
+  mobileWebSmsMessage?: ?string,
+  mobileWebSurveyIsOverMessage?: ?string,
+  mobileWebColorStyle?: ColorStylePrompt,
+  title?: {[lang: string]: string},
+  surveyAlreadyTakenMessage?: {[lang: string]: string},
   thankYouMessage?: Prompt,
 };
 
@@ -37,6 +38,11 @@ export type LanguagePrompt = {
   sms?: string,
   ivr?: AudioPrompt,
   mobileweb?: string
+};
+
+export type ColorStylePrompt = {
+  primaryColor?: string,
+  secondaryColor?: string
 };
 
 export type Prompt = { [lang: string]: LanguagePrompt };
