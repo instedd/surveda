@@ -4,9 +4,18 @@ defmodule Ask.MobileSurveyController do
   use Ask.Web, :controller
 
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
-    authorize(conn, respondent_id, token, fn ->
-      render_index(conn, respondent_id, token)
-    end)
+    respondent = Respondent |> Repo.get(respondent_id)
+    case respondent do
+      nil ->
+        conn
+          |> put_status(:not_found)
+          |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+          |> render("404.html")
+      _ ->
+        authorize(conn, respondent_id, token, fn ->
+          render_index(conn, respondent_id, token)
+        end)
+    end
   end
 
   defp render_index(conn, respondent_id, token) do
