@@ -16,7 +16,14 @@ class WebSettings extends Component {
 
   handleClick(e) {
     e.preventDefault()
-    this.setState({editing: !this.state.editing})
+    this.setState({editing: !this.state.editing}, this.scrollIfNeeded)
+  }
+
+  scrollIfNeeded() {
+    if (this.state.editing) {
+      const elem = $(this.refs.self)
+      $('body').animate({scrollTop: elem.offset().top}, 500)
+    }
   }
 
   componentWillReceiveProps(newProps) {
@@ -33,7 +40,9 @@ class WebSettings extends Component {
       title: props.title,
       smsMessage: props.smsMessage,
       surveyIsOverMessage: props.surveyIsOverMessage,
-      surveyAlreadyTakenMessage: props.surveyAlreadyTakenMessage
+      surveyAlreadyTakenMessage: props.surveyAlreadyTakenMessage,
+      primaryColor: props.primaryColor,
+      secondaryColor: props.secondaryColor
     }
   }
 
@@ -59,6 +68,15 @@ class WebSettings extends Component {
 
   surveyAlreadyTakenMessageBlur(text) {
     this.props.dispatch(actions.setSurveyAlreadyTakenMessage(text))
+  }
+
+  colorSelectionBlur(text, mode) {
+    const { dispatch } = this.props
+    if (mode == 'primary') {
+      dispatch(actions.setPrimaryColor(this.state.primaryColor))
+    } else {
+      dispatch(actions.setSecondaryColor(this.state.secondaryColor))
+    }
   }
 
   collapsed() {
@@ -90,7 +108,7 @@ class WebSettings extends Component {
 
   expanded() {
     return (
-      <div className='row'>
+      <div className='row' ref='self'>
         <Card className='z-depth-0'>
           <ul className='collection collection-card dark'>
             <li className='collection-item header'>
@@ -107,6 +125,12 @@ class WebSettings extends Component {
               </div>
             </li>
             <li className='collection-item'>
+              {this.colorSelectionComponent()}
+            </li>
+            <li className='collection-item'>
+              <h5>
+                Messages
+              </h5>
               {this.quotaCompletedMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -218,6 +242,43 @@ class WebSettings extends Component {
       />
   }
 
+  colorSelectionComponent() {
+    const primaryErrors = this.colorStyleMessageErrors('primary')
+    const secondaryErrors = this.colorStyleMessageErrors('secondary')
+    // Default values for mobile web form are #6648a2 and #fb9a00
+    const primary = (primaryErrors && primaryErrors.length > 0) || !this.state.primaryColor ? '#6648a2' : this.state.primaryColor
+    const secondary = (secondaryErrors && secondaryErrors.length > 0) || !this.state.secondaryColor ? '#fb9a00' : this.state.secondaryColor
+    return (
+      <div className='style row'>
+        <h5>Style</h5>
+        <div className='col s12 m6 l4'>
+          <div className='circle' style={{background: primary}} />
+          <MobileWebPrompt id='web_settings_primary_color'
+            label='Primary color'
+            inputErrors={primaryErrors}
+            value={this.state.primaryColor}
+            originalValue={this.state.primaryColor}
+            onChange={text => this.messageChange(text, 'primaryColor')}
+            onBlur={text => this.colorSelectionBlur(text, 'primary')}
+            readOnly={this.props.readOnly}
+          />
+        </div>
+        <div className='col s12 m6 l4'>
+          <div className='circle' style={{background: secondary}} />
+          <MobileWebPrompt id='web_settings_secondary_color'
+            label='Secondary color'
+            inputErrors={secondaryErrors}
+            value={this.state.secondaryColor}
+            originalValue={this.state.secondaryColor}
+            onChange={text => this.messageChange(text, 'secondaryColor')}
+            onBlur={text => this.colorSelectionBlur(text, 'secondary')}
+            readOnly={this.props.readOnly}
+          />
+        </div>
+      </div>
+    )
+  }
+
   messageErrors(key) {
     const { questionnaire, errorsByPath } = this.props
     return errorsByPath[`${key}.prompt['${questionnaire.activeLanguage}'].mobileweb`]
@@ -238,6 +299,15 @@ class WebSettings extends Component {
     return errorsByPath['mobileWebSurveyIsOverMessage']
   }
 
+  colorStyleMessageErrors(mode) {
+    const { errorsByPath } = this.props
+    if (mode == 'primary') {
+      return errorsByPath['mobileWebColorStyle.primaryColor']
+    } else {
+      return errorsByPath['mobileWebColorStyle.secondaryColor']
+    }
+  }
+
   surveyAlreadyTakenMessageErrors() {
     const { questionnaire, errorsByPath } = this.props
     return errorsByPath[`surveyAlreadyTakenMessage['${questionnaire.activeLanguage}']`]
@@ -250,7 +320,9 @@ class WebSettings extends Component {
       !!this.titleErrors() ||
       !!this.smsMessageErrors() ||
       !!this.surveyIsOverMessageErrors() ||
-      !!this.surveyAlreadyTakenMessageErrors()
+      !!this.surveyAlreadyTakenMessageErrors() ||
+      !!this.colorStyleMessageErrors('primary') ||
+      !!this.colorStyleMessageErrors('secondary')
   }
 
   render() {
@@ -278,6 +350,7 @@ WebSettings.propTypes = {
   smsMessage: PropTypes.string,
   surveyIsOverMessage: PropTypes.string,
   surveyAlreadyTakenMessage: PropTypes.string,
+  primaryColor: PropTypes.string,
   readOnly: PropTypes.bool
 }
 
@@ -292,7 +365,9 @@ const mapStateToProps = (state, ownProps) => {
     title: quiz.data ? (quiz.data.settings.title || {})[quiz.data.activeLanguage] || '' : '',
     smsMessage: quiz.data ? quiz.data.settings.mobileWebSmsMessage || '' : '',
     surveyIsOverMessage: quiz.data ? quiz.data.settings.mobileWebSurveyIsOverMessage || '' : '',
-    surveyAlreadyTakenMessage: quiz.data ? (quiz.data.settings.surveyAlreadyTakenMessage || {})[quiz.data.activeLanguage] || '' : ''
+    surveyAlreadyTakenMessage: quiz.data ? (quiz.data.settings.surveyAlreadyTakenMessage || {})[quiz.data.activeLanguage] || '' : '',
+    primaryColor: quiz.data && quiz.data.settings.mobileWebColorStyle && quiz.data.settings.mobileWebColorStyle.primaryColor ? quiz.data.settings.mobileWebColorStyle.primaryColor : '',
+    secondaryColor: quiz.data && quiz.data.settings.mobileWebColorStyle && quiz.data.settings.mobileWebColorStyle.secondaryColor ? quiz.data.settings.mobileWebColorStyle.secondaryColor : ''
   }
 }
 

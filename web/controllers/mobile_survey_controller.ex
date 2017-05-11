@@ -12,16 +12,22 @@ defmodule Ask.MobileSurveyController do
           |> put_layout({Ask.LayoutView, "mobile_survey.html"})
           |> render("404.html")
       _ ->
+        questionnaire = (Respondent
+          |> Repo.get(respondent_id)
+          |> Repo.preload(:questionnaire)).questionnaire
+
+        color_style = questionnaire.settings["mobile_web_color_style"]
+
         authorize(conn, respondent_id, token, fn ->
-          render_index(conn, respondent_id, token)
+          render_index(conn, respondent_id, token, color_style)
         end)
     end
   end
 
-  defp render_index(conn, respondent_id, token) do
+  defp render_index(conn, respondent_id, token, color_style) do
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", respondent_id: respondent_id, token: token)
+    |> render("index.html", respondent_id: respondent_id, token: token, color_style: color_style)
   end
 
   def get_step(conn, %{"respondent_id" => respondent_id, "token" => token}) do

@@ -1490,6 +1490,7 @@ describe('questionnaire reducer', () => {
           quotaCompletedMessage: {},
           errorMessage: {},
           mobileWebSmsMessage: '',
+          mobileWebColorStyle: {},
           mobileWebSurveyIsOverMessage: '',
           title: {},
           surveyAlreadyTakenMessage: {}
@@ -1961,6 +1962,25 @@ describe('questionnaire reducer', () => {
       ]
 
       expect(isEqual(step.ranges, expected)).toEqual(true)
+    })
+  })
+  describe('color setting', () => {
+    it('should set primary color', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setPrimaryColor('#aaa000')
+      ])
+      expect(result.data.settings.mobileWebColorStyle.primaryColor).toEqual('#aaa000')
+    })
+
+    it('should set secondary color', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setSecondaryColor('#bbbaaa')
+      ])
+      expect(result.data.settings.mobileWebColorStyle.secondaryColor).toEqual('#bbbaaa')
     })
   })
 })

@@ -17,7 +17,14 @@ class PhoneCallSettings extends Component {
 
   handleClick(e) {
     e.preventDefault()
-    this.setState({editing: !this.state.editing})
+    this.setState({editing: !this.state.editing}, this.scrollIfNeeded)
+  }
+
+  scrollIfNeeded() {
+    if (this.state.editing) {
+      const elem = $(this.refs.self)
+      $('body').animate({scrollTop: elem.offset().top}, 500)
+    }
   }
 
   componentWillReceiveProps(newProps) {
@@ -107,7 +114,7 @@ class PhoneCallSettings extends Component {
 
   expanded() {
     return (
-      <div className='row'>
+      <div className='row' ref='self'>
         <Card className='z-depth-0'>
           <ul className='collection collection-card dark'>
             <li className='collection-item header'>

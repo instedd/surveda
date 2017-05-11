@@ -1,3 +1,4 @@
+
 // --------- NCD classes ---------------
 
 // -----------------------------------------------------------------------------
@@ -492,6 +493,34 @@ i.survey-status { // icon for survey status on index
   }
 
   // ------- / Questionnaires language selector ----------
+
+
+
+  // ------- Questionnaires web settings ----------
+.style.row {
+  border-top: 1px solid color('grey', 'lighten-1');
+  border-bottom: 1px solid color('grey', 'lighten-1');
+  margin-left: -18px;
+  margin-right: -18px;
+  padding-left: 18px;
+  padding-right: 18px;
+  .col {
+    white-space: nowrap;
+  }
+}
+
+  .circle {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    + div {
+      display: inline-block;
+      margin-left: 10px;
+    }
+  }
+
+  // ------- / Questionnaires web settings ----------
 
 
 .collapsible { // class for collapsed questionnaires
