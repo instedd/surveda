@@ -4,15 +4,24 @@ defmodule Ask.MobileSurveyController do
   use Ask.Web, :controller
 
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
-    questionnaire = (Respondent
-      |> Repo.get(respondent_id)
-      |> Repo.preload(:questionnaire)).questionnaire
+    respondent = Respondent |> Repo.get(respondent_id)
+    case respondent do
+      nil ->
+        conn
+          |> put_status(:not_found)
+          |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+          |> render("404.html")
+      _ ->
+        questionnaire = (Respondent
+          |> Repo.get(respondent_id)
+          |> Repo.preload(:questionnaire)).questionnaire
 
-    color_style = questionnaire.settings["mobile_web_color_style"]
+        color_style = questionnaire.settings["mobile_web_color_style"]
 
-    authorize(conn, respondent_id, token, fn ->
-      render_index(conn, respondent_id, token, color_style)
-    end)
+        authorize(conn, respondent_id, token, fn ->
+          render_index(conn, respondent_id, token, color_style)
+        end)
+    end
   end
 
   defp render_index(conn, respondent_id, token, color_style) do

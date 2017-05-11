@@ -1,0 +1,14 @@
+<body>
+  <div id="root" role="main"></div>
+    <div ref='stepContent'>
+      <header>
+        <nav>
+          <h1>Sorry</h1>
+        </nav>
+      </header>
+      <main>
+        <div className={'prompt'}><h1>This survey is no longer available</h1></div>
+      </main>
+    </div>
+  </div>
+</body>

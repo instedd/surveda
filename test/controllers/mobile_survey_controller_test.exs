@@ -323,4 +323,26 @@ defmodule Ask.MobileSurveyControllerTest do
 
     :ok = broker |> GenServer.stop
   end
+
+  test "gets 404 when respondent is not found after survey deletion", %{conn: conn} do
+    test_channel = TestChannel.new(false, true)
+
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    Broker.start_link
+    Ask.Config.start_link
+    Broker.poll
+
+    Survey |> Repo.get(survey.id) |> Repo.delete
+
+    conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
+    assert conn.status == 404
+  end
 end
