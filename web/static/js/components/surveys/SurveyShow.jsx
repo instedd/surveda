@@ -241,7 +241,7 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsStats) {
-    const dispositions = ['pending', 'active', 'completed', 'partial', 'ineligible', 'refused', 'stalled', 'failed', 'cancelled']
+    const dispositions = ['registered', 'queued', 'contacted', 'failed', 'unresponsive', 'started', 'ineligible', 'rejected', 'breakoff', 'refused', 'partial', 'completed']
     return (
       <div className='card'>
         <div className='card-table-title'>
@@ -334,11 +334,11 @@ const mapStateToProps = (state, ownProps) => {
   let totalRespondents = 1
 
   if (respondentsStatsRoot) {
-    respondentsStats = respondentsStatsRoot.respondentsByState
+    respondentsStats = respondentsStatsRoot.respondentsByDisposition
     completedRespondentsByDate = respondentsStatsRoot.respondentsByDate
     target = respondentsStatsRoot.totalQuota || respondentsStatsRoot.cutoff || totalRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
-    contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByState.pending.count
+    contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByDisposition.registered.count
   }
 
   return ({

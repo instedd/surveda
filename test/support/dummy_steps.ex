@@ -571,11 +571,27 @@ defmodule Ask.DummySteps do
         )
       ]
 
+      @completed_step [
+        flag_step(
+          id: "b",
+          title: "Let there be rock",
+          disposition: "completed"
+        )
+      ]
+
       @ineligible_step [
         flag_step(
-          id: "aaa",
+          id: "c",
           title: "Let there be rock",
           disposition: "ineligible"
+        )
+      ]
+
+      @refused_step [
+        flag_step(
+          id: "s3",
+          title: "Let there be rock",
+          disposition: "refused"
         )
       ]
 

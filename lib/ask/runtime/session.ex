@@ -190,7 +190,7 @@ defmodule Ask.Runtime.Session do
 
   # If there is a fallback specified, switch session to use it
   def timeout(%{current_mode: %{retries: []}} = session), do: switch_to_fallback(session)
-  
+
   # Let's try again
   def timeout(%{current_mode: %{retries: [_ | retries]}, channel_state: channel_state, respondent: respondent} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)

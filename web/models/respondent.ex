@@ -17,18 +17,20 @@ defmodule Ask.Respondent do
     field :state, :string, default: "pending"
 
     # Valid dispositions are:
-    # * completed: when the main part of the quiz is complete, even if there are more
-    #              steps in the quiz, they aren't of too much importance
-    #              (ie: "Thank you for your patience")
-    # * partial: when the respondent completed a significant part of the questionnaire,
-    #            but there is something more to ask that is also important
-    # * ineligible: when the respondent belongs to a group of people that shouldn't be
-    #               answering the questionnaire (ie: under 18)
-    # * refused: when the respondent when it skips a key question or doesn't want to answer
-    #            any more questions and sends the STOP keyword
-    # * NULL: if there is no disposition yet (ie: when the survey is still running or about to run,
-    #         or if the survey ended without contacting that particular respondent)
-    field :disposition, :string
+    # https://cloud.githubusercontent.com/assets/22697/25618659/3126839e-2f1e-11e7-8a3a-7908f8cd1749.png
+    # - registered: just created
+    # - queued: call queued / SMS queued to be sent
+    # - contacted: call answered (or no_answer reply from Verboice) / SMS delivery confirmed
+    # - failed: call was never answered / SMS was never sent => the channel was broken or the number doesn't exist
+    # - unresponsive: after contacted, when no more retries are available
+    # - started: after the first answered question
+    # - ineligible: through flag step, only from started, not partial nor completed
+    # - rejected: quota completed
+    # - breakoff: stopped responding with no more retries, only from started
+    # - refused: respondent refused to take the survey, only from started
+    # - partial: through flag step, from started
+    # - completed: through flag step from started or partial / survey finished with the respondent on started or partial disposition
+    field :disposition, :string, default: "registered"
 
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime

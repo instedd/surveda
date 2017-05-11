@@ -74,18 +74,22 @@ defmodule Ask.RespondentControllerTest do
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
+    total = 15.0
 
     assert data["id"] == survey.id
-    assert data["respondents_by_state"] == %{
-      "partial" => %{"count" => 10, "percent" => 66.66666666666667},
-      "active" => %{"count" => 0, "percent" => 0.0},
-      "completed" => %{"count" => 5, "percent" => 33.333333333333336},
+    assert data["respondents_by_disposition"] == %{
+      "registered" => %{"count" => 0, "percent" => 0.0},
+      "queued" => %{"count" => 0, "percent" => 0.0},
+      "contacted" => %{"count" => 0, "percent" => 0.0},
       "failed" => %{"count" => 0, "percent" => 0.0},
-      "stalled" => %{"count" => 0, "percent" => 0.0},
+      "unresponsive" => %{"count" => 0, "percent" => 0.0},
+      "started" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "rejected" => %{"count" => 0, "percent" => 0.0},
+      "breakoff" => %{"count" => 0, "percent" => 0.0},
       "refused" => %{"count" => 0, "percent" => 0.0},
-      "pending" => %{"count" => 0, "percent" => 0.0},
-      "cancelled" => %{"count" => 0, "percent" => 0.0}
+      "partial" => %{"count" => 10, "percent" => 100*10/total},
+      "completed" => %{"count" => 5, "percent" => 100*5/total},
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -109,18 +113,22 @@ defmodule Ask.RespondentControllerTest do
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
+    total = 16.0
 
     assert data["id"] == survey.id
-    assert data["respondents_by_state"] == %{
-      "partial" => %{"count" => 10, "percent" => 62.5},
-      "active" => %{"count" => 0, "percent" => 0.0},
-      "completed" => %{"count" => 6, "percent" => 37.5},
+    assert data["respondents_by_disposition"] == %{
+      "registered" => %{"count" => 0, "percent" => 0.0},
+      "queued" => %{"count" => 0, "percent" => 0.0},
+      "contacted" => %{"count" => 0, "percent" => 0.0},
       "failed" => %{"count" => 0, "percent" => 0.0},
-      "stalled" => %{"count" => 0, "percent" => 0.0},
+      "unresponsive" => %{"count" => 0, "percent" => 0.0},
+      "started" => %{"count" => 0, "percent" => 0.0},
       "ineligible" => %{"count" => 0, "percent" => 0.0},
+      "rejected" => %{"count" => 0, "percent" => 0.0},
+      "breakoff" => %{"count" => 0, "percent" => 0.0},
       "refused" => %{"count" => 0, "percent" => 0.0},
-      "pending" => %{"count" => 0, "percent" => 0.0},
-      "cancelled" => %{"count" => 0, "percent" => 0.0}
+      "partial" => %{"count" => 10, "percent" => 100*10/total},
+      "completed" => %{"count" => 6, "percent" => 100*6/total},
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -145,16 +153,19 @@ defmodule Ask.RespondentControllerTest do
     total = 15.0
 
     assert data["id"] == survey.id
-    assert data["respondents_by_state"] == %{
-      "partial" => %{"count" => 1, "percent" => 100*1/total},
-      "ineligible" => %{"count" => 3, "percent" => 100*3/total},
-      "refused" => %{"count" => 0, "percent" => 0.0},
-      "completed" => %{"count" => 1, "percent" => 100*1/total},
-      "pending" => %{"count" => 10, "percent" => 100*10/total},
-      "active" => %{"count" => 0, "percent" => 0.0},
+    assert data["respondents_by_disposition"] == %{
+      "registered" => %{"count" => 10, "percent" => 100*10/total},
+      "queued" => %{"count" => 0, "percent" => 0.0},
+      "contacted" => %{"count" => 0, "percent" => 0.0},
       "failed" => %{"count" => 0, "percent" => 0.0},
-      "stalled" => %{"count" => 0, "percent" => 0.0},
-      "cancelled" => %{"count" => 0, "percent" => 0.0}
+      "unresponsive" => %{"count" => 0, "percent" => 0.0},
+      "started" => %{"count" => 0, "percent" => 0.0},
+      "ineligible" => %{"count" => 3, "percent" => 100*3/total},
+      "rejected" => %{"count" => 0, "percent" => 0.0},
+      "breakoff" => %{"count" => 0, "percent" => 0.0},
+      "refused" => %{"count" => 0, "percent" => 0.0},
+      "partial" => %{"count" => 1, "percent" => 100*1/total},
+      "completed" => %{"count" => 1, "percent" => 100*1/total},
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -197,18 +208,23 @@ defmodule Ask.RespondentControllerTest do
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
+    total = 5.0
+
     assert json_response(conn, 200)["data"] == %{
       "id" => survey.id,
-      "respondents_by_state" => %{
-        "pending" => %{"count" => 5, "percent" => 100.0},
-        "completed" => %{"count" => 0, "percent" => 0.0},
-        "active" => %{"count" => 0, "percent" => 0.0},
+      "respondents_by_disposition" => %{
+        "registered" => %{"count" => 5, "percent" => 100*5/total},
+        "queued" => %{"count" => 0, "percent" => 0.0},
+        "contacted" => %{"count" => 0, "percent" => 0.0},
         "failed" => %{"count" => 0, "percent" => 0.0},
-        "stalled" => %{"count" => 0, "percent" => 0.0},
+        "unresponsive" => %{"count" => 0, "percent" => 0.0},
+        "started" => %{"count" => 0, "percent" => 0.0},
         "ineligible" => %{"count" => 0, "percent" => 0.0},
+        "rejected" => %{"count" => 0, "percent" => 0.0},
+        "breakoff" => %{"count" => 0, "percent" => 0.0},
         "refused" => %{"count" => 0, "percent" => 0.0},
         "partial" => %{"count" => 0, "percent" => 0.0},
-        "cancelled" => %{"count" => 0, "percent" => 0.0}
+        "completed" => %{"count" => 0, "percent" => 0.0},
       },
       "respondents_by_date" => [],
       "cutoff" => nil,
@@ -243,7 +259,7 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_hashed_number == respondent_2.hashed_number
     assert line_3_smoke == "No"
     assert line_3_exercises == ""
-    assert line_3_disp == ""
+    assert line_3_disp == "Registered"
   end
 
   test "download csv with comparisons", %{conn: conn, user: user} do
