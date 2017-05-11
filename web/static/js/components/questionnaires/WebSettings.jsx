@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { Card } from '../ui'
+import { Card, InputWithLabel } from '../ui'
 import SmsPrompt from './SmsPrompt'
 import MobileWebPrompt from './MobileWebPrompt'
 import classNames from 'classnames'
@@ -246,34 +246,39 @@ class WebSettings extends Component {
     const primaryErrors = this.colorStyleMessageErrors('primary')
     const secondaryErrors = this.colorStyleMessageErrors('secondary')
     // Default values for mobile web form are #6648a2 and #fb9a00
-    const primary = (primaryErrors && primaryErrors.length > 0) || !this.state.primaryColor ? '#6648a2' : this.state.primaryColor
-    const secondary = (secondaryErrors && secondaryErrors.length > 0) || !this.state.secondaryColor ? '#fb9a00' : this.state.secondaryColor
+    const hasPrimaryErrors = primaryErrors && primaryErrors.length > 0
+    const hasSecondaryErrors = secondaryErrors && secondaryErrors.length > 0
+    const primary = hasPrimaryErrors || !this.state.primaryColor ? '#6648a2' : this.state.primaryColor
+    const secondary = hasSecondaryErrors || !this.state.secondaryColor ? '#fb9a00' : this.state.secondaryColor
+    const primaryClassName = hasPrimaryErrors ? 'invalid' : ''
+    const secondaryClassName = hasSecondaryErrors ? 'invalid' : ''
+
     return (
       <div className='style row'>
         <h5>Style</h5>
-        <div className='col s12 m6 l4'>
+        <div className='col s12 m6 l4 input-field'>
           <div className='circle' style={{background: primary}} />
-          <MobileWebPrompt id='web_settings_primary_color'
-            label='Primary color'
-            inputErrors={primaryErrors}
-            value={this.state.primaryColor}
-            originalValue={this.state.primaryColor}
-            onChange={text => this.messageChange(text, 'primaryColor')}
-            onBlur={text => this.colorSelectionBlur(text, 'primary')}
-            readOnly={this.props.readOnly}
-          />
+          <InputWithLabel id='web_settings_primary_color' value={this.state.primaryColor} label='Primary color' errors={primaryErrors}>
+            <input
+              type='text'
+              disabled={this.props.readOnly}
+              onChange={text => this.messageChange(text.target.value, 'primaryColor')}
+              onBlur={text => this.colorSelectionBlur(text.target.value, 'primary')}
+              className={primaryClassName}
+           />
+          </InputWithLabel>
         </div>
-        <div className='col s12 m6 l4'>
+        <div className='col s12 m6 l4 input-field'>
           <div className='circle' style={{background: secondary}} />
-          <MobileWebPrompt id='web_settings_secondary_color'
-            label='Secondary color'
-            inputErrors={secondaryErrors}
-            value={this.state.secondaryColor}
-            originalValue={this.state.secondaryColor}
-            onChange={text => this.messageChange(text, 'secondaryColor')}
-            onBlur={text => this.colorSelectionBlur(text, 'secondary')}
-            readOnly={this.props.readOnly}
-          />
+          <InputWithLabel id='web_settings_secondary_color' value={this.state.secondaryColor} label='Secondary color' errors={secondaryErrors}>
+            <input
+              type='text'
+              disabled={this.props.readOnly}
+              onChange={text => this.messageChange(text.target.value, 'secondaryColor')}
+              onBlur={text => this.colorSelectionBlur(text.target.value, 'secondary')}
+              className={secondaryClassName}
+           />
+          </InputWithLabel>
         </div>
       </div>
     )
