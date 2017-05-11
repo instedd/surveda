@@ -7,11 +7,13 @@ export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 export const RECEIVE_RESPONDENTS_QUOTAS_STATS = 'RECEIVE_RESPONDENTS_QUOTAS_STATS'
+export const SORT = 'RESPONDENTS_SORT'
 
-export const fetchRespondents = (projectId, surveyId, limit, page = 1) => dispatch => {
+export const fetchRespondents = (projectId, surveyId, limit, page = 1) => (dispatch, getState) => {
+  const state = getState().respondents
   dispatch(startFetchingRespondents(surveyId, page))
-  api.fetchRespondents(projectId, surveyId, limit, page)
-    .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount)))
+  api.fetchRespondents(projectId, surveyId, limit, page, state.sortBy, state.sortAsc)
+    .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount, response.result)))
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
@@ -34,12 +36,13 @@ export const receiveRespondentsQuotasStats = (data) => ({
   data
 })
 
-export const receiveRespondents = (surveyId, page, respondents, respondentsCount) => ({
+export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order) => ({
   type: RECEIVE_RESPONDENTS,
   surveyId,
   page,
   respondents,
-  respondentsCount
+  respondentsCount,
+  order
 })
 
 export const createRespondent = (response) => ({
@@ -64,3 +67,15 @@ export const startFetchingRespondents = (surveyId, page) => ({
   surveyId,
   page
 })
+
+export const sortRespondentsBy = (projectId, surveyId, property) => (dispatch, getState) => {
+  const state = getState().respondents
+  const sortAsc = state.sortBy == property ? !state.sortAsc : true
+  api.fetchRespondents(projectId, surveyId, state.page.size, 1, property, sortAsc)
+    .then(response => dispatch(receiveRespondents(surveyId, 1, response.entities.respondents || {}, response.respondentsCount, response.result)))
+
+  dispatch({
+    type: SORT,
+    property
+  })
+}

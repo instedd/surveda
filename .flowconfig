@@ -1,6 +1,7 @@
 [ignore]
 <PROJECT_ROOT>/node_modules/react-timeago
 <PROJECT_ROOT>/node_modules/csv-info
+<PROJECT_ROOT>/node_modules/draft-js
 [include]
 [libs]
 web/static/js/decls/

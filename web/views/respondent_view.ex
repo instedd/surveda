@@ -17,7 +17,7 @@ defmodule Ask.RespondentView do
     responses = respondent.responses
     %{
       id: respondent.id,
-      phone_number: respondent.phone_number,
+      phone_number: respondent.hashed_number,
       survey_id: respondent.survey_id,
       mode: respondent.mode,
       questionnaire_id: respondent.questionnaire_id,

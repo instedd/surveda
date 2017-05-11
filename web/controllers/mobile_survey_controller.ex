@@ -80,7 +80,9 @@ defmodule Ask.MobileSurveyController do
     if reply.current_step && reply.total_steps && reply.total_steps > 0 do
       100 * (reply.current_step / reply.total_steps)
     else
-      0.0
+      # If no explicit progress is set in the reply, assume we are at the end.
+      # This happens in the "thank you" and "quota completed" messages.
+      100.0
     end
   end
 

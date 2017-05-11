@@ -72,7 +72,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Let there be rock",
       "type" => "explanation"
     } = json["step"]
-    assert json["progress"] == 0.0
+    assert json["progress"] == 20.0
     assert json["title"] == "Survey"
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
@@ -83,7 +83,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Let there be rock",
       "type" => "explanation"
     } = json["step"]
-    assert json["progress"] == 0.0
+    assert json["progress"] == 20.0
 
     # Check that send_reply without token gives error
     assert_error_sent :bad_request, fn ->
@@ -103,7 +103,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
     } = json["step"]
-    assert json["progress"] == 20.0
+    assert json["progress"] == 40.0
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     json = json_response(conn, 200)
@@ -113,7 +113,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
     } = json["step"]
-    assert json["progress"] == 20.0
+    assert json["progress"] == 40.0
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     json = json_response(conn, 200)
@@ -123,7 +123,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
     } = json["step"]
-    assert json["progress"] == 20.0
+    assert json["progress"] == 40.0
 
     # Check before flag step
     respondent = Repo.get(Respondent, respondent.id)
@@ -137,7 +137,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Do you exercise",
       "type" => "multiple-choice"
     } = json["step"]
-    assert json["progress"] == 40.0
+    assert json["progress"] == 60.0
 
     # Check after flag step
     respondent = Repo.get(Respondent, respondent.id)
@@ -151,7 +151,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "numeric",
       "refusal" => "skip me"
     } = json["step"]
-    assert json["progress"] == 60.0
+    assert json["progress"] == 80.0
     assert json["error_message"] == "Invalid value"
 
     # Reply a previous step (should reply with the current step)
@@ -162,7 +162,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Which is the second perfect number?",
       "type" => "numeric"
     } = json["step"]
-    assert json["progress"] == 60.0
+    assert json["progress"] == 80.0
     assert json["error_message"] == "Invalid value"
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "99", step_id: "s5"})
@@ -172,7 +172,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "What's the number of this question?",
       "type" => "numeric"
     } = json["step"]
-    assert json["progress"] == 80.0
+    assert json["progress"] == 100.0
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "11", step_id: "s6"})
     json = json_response(conn, 200)
@@ -314,7 +314,7 @@ defmodule Ask.MobileSurveyControllerTest do
       "title" => "Let there be rock",
       "type" => "explanation"
     } = json["step"]
-    assert json["progress"] == 0.0
+    assert json["progress"] == 100.0
 
     post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "", step_id: "s1"})
 

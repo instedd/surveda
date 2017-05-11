@@ -97,26 +97,43 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp respondents_by_state(survey) do
+    by_state_defaults = %{
+      "active" => 0,
+      "pending" => 0,
+      "completed" => 0,
+      "stalled" => 0,
+      "rejected" => 0,
+      "failed" => 0,
+    }
+    Repo.all(
+      from r in assoc(survey, :respondents),
+      group_by: :state,
+      select: {r.state, count("*")})
+      |> Enum.into(%{})
+      |> (&Map.merge(by_state_defaults, &1)).()
+  end
+
   defp poll_survey(survey) do
     try do
-      by_state = Repo.all(
-        from r in assoc(survey, :respondents),
-        group_by: :state,
-        select: {r.state, count("*")}) |> Enum.into(%{})
+      by_state = respondents_by_state(survey)
+      %{
+        "active" => active,
+        "pending" => pending,
+        "completed" => completed,
+        "stalled" => stalled,
+      } = by_state
 
-      active = by_state["active"] || 0
-      pending = by_state["pending"] || 0
-      completed = by_state["completed"] || 0
-      stalled = by_state["stalled"] || 0
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
+      batch_size = batch_size(survey, by_state)
 
       cond do
         (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
           complete(survey)
 
-        active < batch_size() && pending > 0 && !survey_completed ->
-          start_some(survey, batch_size() - active)
+        (active + stalled) < batch_size && pending > 0 && !survey_completed ->
+          start_some(survey, batch_size - (active + stalled))
 
         true -> :ok
       end
@@ -518,18 +535,61 @@ defmodule Ask.Runtime.Broker do
     }
   end
 
-  defp batch_size do
-    case Application.get_env(:ask, __MODULE__)[:batch_size] do
-      {:system, env_var} ->
-        String.to_integer(System.get_env(env_var))
-      {:system, env_var, default} ->
-        env_value = System.get_env(env_var)
-        if env_value do
-          String.to_integer(env_value)
-        else
-          default
-        end
-      value -> value
+  # Estimates the amount of respondents the broker will have to initiate contact with
+  # to get the completed respondents needed.
+  defp batch_size(survey, respondents_by_state) do
+    case completed_respondents_needed_by(survey) do
+      :all -> 
+        Survey.environment_variable_named(:batch_size)
+
+      respondents_target when is_integer(respondents_target) ->
+        estimated_success_rate = estimated_success_rate(respondents_by_state, respondents_target)
+        (respondents_target - respondents_by_state["completed"]) / estimated_success_rate
+        |> trunc
     end
   end
+
+  defp estimated_success_rate(respondents_by_state, respondents_target) do
+    current_success_rate = success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
+    completion_rate = current_completion_rate(respondents_by_state["completed"], respondents_target)
+    case completion_rate do
+      0 ->
+        %{:valid_respondent_rate => initial_valid_respondent_rate,
+          :eligibility_rate => initial_eligibility_rate,
+          :response_rate => initial_response_rate } = Survey.config_rates()
+        initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+
+      _ ->
+        %{:response_rate => initial_success_rate } = Survey.config_rates()
+        (1 - completion_rate) * initial_success_rate + completion_rate * current_success_rate
+    end
+  end
+
+  defp success_rate(0, _, _), do: 0
+  defp success_rate(completed_respondents, failed_respondents, rejected_respondents) do
+    completed_respondents / (completed_respondents + failed_respondents + rejected_respondents)
+  end
+
+  defp current_completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
+  defp current_completion_rate(completed, respondents_target), do: completed / respondents_target
+
+  defp completed_respondents_needed_by(survey) do
+    survey_id = survey.id
+    quota_target = Repo.one(from q in QuotaBucket,
+                      where: q.survey_id == ^survey_id,
+                      select: sum(q.quota))
+    cutoff_target = survey.cutoff
+    targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
+
+    if targets_compacted |> Enum.empty? do
+      :all
+    else
+      res = targets_compacted
+            |> Enum.max()
+            |> Decimal.new()
+            |> Decimal.to_integer()
+      res
+    end
+  end
+
 end

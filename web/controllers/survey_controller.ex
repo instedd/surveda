@@ -124,7 +124,9 @@ defmodule Ask.SurveyController do
 
   def launch(conn, %{"survey_id" => id}) do
     survey = Repo.get!(Survey, id)
+    |> Repo.preload([:project])
     |> Repo.preload([:quota_buckets])
+    |> Repo.preload([:questionnaires])
     |> Repo.preload(respondent_groups: :channels)
 
     if survey.state != "ready" do
@@ -145,6 +147,7 @@ defmodule Ask.SurveyController do
           changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
           case Repo.update(changeset) do
             {:ok, survey} ->
+              survey = create_survey_questionnaires_snapshot(survey)
               project |> Project.touch!
               render(conn, "show.json", survey: survey)
             {:error, changeset} ->
@@ -161,6 +164,23 @@ defmodule Ask.SurveyController do
           |> render("show.json", survey: survey)
       end
     end
+  end
+
+  defp create_survey_questionnaires_snapshot(survey) do
+    new_questionnaires = Enum.map(survey.questionnaires, fn questionnaire ->
+      %{questionnaire | id: nil, snapshot_of_questionnaire: questionnaire, questionnaire_variables: [], project: survey.project}
+      |> Repo.insert!
+      |> Questionnaire.recreate_variables!
+    end)
+
+    survey
+    |> Ecto.Changeset.change
+    |> Ecto.Changeset.put_assoc(:questionnaires, new_questionnaires)
+    |> Repo.update!
+  end
+
+  def config(conn, _params) do
+    render(conn, "config.json", config: Survey.config_rates())
   end
 
   def stop(conn, %{"survey_id" => id}) do

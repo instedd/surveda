@@ -9,6 +9,10 @@ defmodule Ask.SurveyView do
     %{data: render_one(survey, Ask.SurveyView, "survey_detail.json")}
   end
 
+  def render("config.json", %{config: config}) do
+    config
+  end
+
   def render("survey.json", %{survey: survey}) do
     %{id: survey.id,
       name: survey.name,
@@ -21,8 +25,10 @@ defmodule Ask.SurveyView do
   end
 
   def render("survey_detail.json", %{survey: survey}) do
+    questionnaires = Ask.Repo.preload(survey, :questionnaires).questionnaires
     started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: ""
-    %{id: survey.id,
+
+    map = %{id: survey.id,
       name: survey.name,
       mode: survey.mode,
       project_id: survey.project_id,
@@ -47,6 +53,17 @@ defmodule Ask.SurveyView do
       },
       comparisons: survey.comparisons || []
     }
+
+    if Ask.Survey.launched?(survey) do
+      qs = questionnaires
+      |> Enum.map(fn q ->
+        {to_string(q.id), %{id: q.id, name: q.name, valid: true, modes: q.modes}}
+      end)
+      |> Enum.into(%{})
+      Map.put(map, :questionnaires, qs)
+    else
+      map
+    end
   end
 
   def render("survey_bucket.json", %{bucket: bucket}) do
