@@ -571,9 +571,8 @@ defmodule Ask.BrokerTest do
     assert hd(respondent.responses).value == "Yes"
   end
 
-  test "stalled respondents are marked failed (unresponsive) after the survey is completed if contacted" do
-    [survey, group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    second_respondent = insert(:respondent, survey: survey, respondent_group: group)
+  test "contacted respondents are marked as unresponsive after 8 hours" do
+    [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = Broker.start_link
@@ -592,20 +591,22 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "contacted"
 
+    now = Timex.now
+
     # Set for immediate timeout
-    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
     assert respondent.disposition == "contacted"
 
-    second_respondent = Repo.get(Respondent, second_respondent.id)
-    Repo.update(second_respondent |> change |> Respondent.changeset(%{state: "completed"}))
+    # After eight hours it should be marked as failed
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
+
     Broker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "unresponsive"
@@ -613,9 +614,8 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
-  test "stalled respondents are marked failed after the survey is completed" do
-    [survey, group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    second_respondent = insert(:respondent, survey: survey, respondent_group: group)
+  test "queued respondents are marked failed after 8 hours" do
+    [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = Broker.start_link
@@ -629,20 +629,22 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
+    now = Timex.now
+
     # Set for immediate timeout
-    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
     assert respondent.disposition == "queued"
 
-    second_respondent = Repo.get(Respondent, second_respondent.id)
-    Repo.update(second_respondent |> change |> Respondent.changeset(%{state: "completed"}))
+    # After eight hours it should be marked as failed
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
+
     Broker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "failed"
@@ -669,7 +671,59 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
-  test "started respondents are marked as breakoff if stalled on survey complete" do
+  test "started respondents are marked as breakoff after 8 hours" do
+    [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "queued"
+
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "contacted"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("yes"))
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "started"
+
+    Broker.delivery_confirm(respondent, "Do you exercise?")
+
+    now = Timex.now
+
+    Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "stalled"
+    assert respondent.disposition == "started"
+
+    # After eight hours it should be marked as failed
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "breakoff"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "stalled respondents are marked as failed after survey completes but disposition is kept" do
     [survey, group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     second_respondent = insert(:respondent, survey: survey, respondent_group: group)
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
@@ -709,13 +763,12 @@ defmodule Ask.BrokerTest do
 
     second_respondent = Repo.get(Respondent, second_respondent.id)
     Repo.update(second_respondent |> change |> Respondent.changeset(%{state: "completed"}))
+
     Broker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
-    assert respondent.disposition == "breakoff"
+    assert respondent.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end
@@ -747,6 +800,33 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "breakoff"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "contacted respondents are marked as unresponsive after all retries are met (IVR)" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "queued"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "contacted"
+
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "unresponsive"
 
     :ok = broker |> GenServer.stop
   end

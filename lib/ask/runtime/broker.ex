@@ -165,19 +165,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp set_stalled_respondents_as_failed(survey) do
-    from(r in assoc(survey, :respondents), where: r.state == "stalled" and r.disposition == "queued")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("queued")])
-
-
-    from(r in assoc(survey, :respondents), where: r.state == "stalled" and r.disposition == "contacted")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("contacted")])
-
-
-    from(r in assoc(survey, :respondents), where: r.state == "stalled" and r.disposition == "started")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("started")])
-
     from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from("failed")])
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
   end
 
   defp start_some(survey, count) do
@@ -560,7 +549,7 @@ defmodule Ask.Runtime.Broker do
   # to get the completed respondents needed.
   defp batch_size(survey, respondents_by_state) do
     case completed_respondents_needed_by(survey) do
-      :all -> 
+      :all ->
         Survey.environment_variable_named(:batch_size)
 
       respondents_target when is_integer(respondents_target) ->
