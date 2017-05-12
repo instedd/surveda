@@ -261,7 +261,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'ivr'}
               onChange={e => this.ivrChange(e)}
               onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e, 'ivr')} />
+              onKeyDown={e => this.onKeyDown(e, 'mobileweb')} />
           </td> : null
           }
           {
@@ -274,7 +274,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'mobileweb'}
               onChange={e => this.mobilewebChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e, 'mobileweb')} />
+              onKeyDown={e => this.onKeyDown(e, null)} />
           </td> : null
           }
           {skipLogicInput}
