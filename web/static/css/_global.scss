@@ -924,6 +924,13 @@ i.survey-status { // icon for survey status on index
 
   // ------- Error classes -----------
 
+  .reg-error {
+    font-size: .85rem;
+    color: #ff5722;
+    position: absolute;
+    top: 45px;
+  }
+
   .back-error {
     background-color: #ff5722 !important;
   }
@@ -931,6 +938,9 @@ i.survey-status { // icon for survey status on index
   .text-error {
     color: #ff5722 !important;
   }
+
+
+
 
 // ----- Static empty pages ------
 
