@@ -13,7 +13,7 @@ class MobileWebPrompt extends Component {
   }
 
   render() {
-    const { value, readOnly, onChange, onBlur, inputErrors } = this.props
+    const { value, readOnly, onBlur, inputErrors } = this.props
     let { label } = this.props
     if (!label) label = 'Mobile Web Message'
 
@@ -22,7 +22,7 @@ class MobileWebPrompt extends Component {
       <div>
         <div className='row'>
           <div className='col s12 mobile-prompt'>
-            <Draft label={label} onChange={onChange} onBlur={onBlur} errors={shouldDisplayErrors && inputErrors} initialValue={value} readOnly={readOnly} />
+            <Draft label={label} onBlur={onBlur} errors={shouldDisplayErrors && inputErrors} value={value} readOnly={readOnly} />
           </div>
         </div>
       </div>
@@ -34,7 +34,6 @@ MobileWebPrompt.propTypes = {
   label: PropTypes.string,
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   inputErrors: PropTypes.array,
   readOnly: PropTypes.bool,
