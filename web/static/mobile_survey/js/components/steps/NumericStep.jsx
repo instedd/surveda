@@ -43,9 +43,7 @@ class NumericStep extends Component {
     if (hasError) {
       inputClassName = 'error'
       errorDiv = (
-        <div className='error-message'>
-          {errorMessage}
-        </div>
+        <div className='error-message' dangerouslySetInnerHTML={{__html: errorMessage}} />
       )
     }
 
