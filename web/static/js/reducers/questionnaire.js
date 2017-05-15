@@ -13,11 +13,14 @@ import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getChoiceResponseMobileWebJoined, newIvrPrompt, newRefusal } from '../step'
 import * as language from '../language'
 import { validate } from './questionnaire.validation'
+import { defaultActiveMode } from '../questionnaire.mode'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
-    case actions.TOGGLE_MODE: return toggleMode(state, action)
+    case actions.SET_ACTIVE_MODE: return setActiveMode(state, action)
+    case actions.ADD_MODE: return addMode(state, action)
+    case actions.REMOVE_MODE: return removeMode(state, action)
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
@@ -534,17 +537,35 @@ export const newMultipleChoiceStep = () => {
   }
 }
 
-const toggleMode = (state, action) => {
-  let modes = state.modes
-  if (modes.indexOf(action.mode) == -1) {
-    modes = modes.slice()
-    modes.push(action.mode)
+const setActiveMode = (state, action) => {
+  if (state.activeMode != action.mode) {
+    return {
+      ...state,
+      activeMode: action.mode
+    }
   } else {
-    modes = modes.filter(mode => mode != action.mode)
+    return state
   }
+}
+
+const addMode = (state, action) => {
+  const modes = [...state.modes, ...[action.mode]]
+  const activeMode = state.modes.length == 0 ? action.mode : state.activeMode
   return {
     ...state,
-    modes
+    modes,
+    activeMode
+  }
+}
+
+const removeMode = (state, action) => {
+  const modes = state.modes.filter(mode => mode != action.mode)
+  const activeMode = state.activeMode == action.mode ? defaultActiveMode(modes) : state.activeMode
+  console.log(activeMode)
+  return {
+    ...state,
+    modes,
+    activeMode
   }
 }
 

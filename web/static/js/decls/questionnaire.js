@@ -6,6 +6,7 @@ export type Questionnaire = {
   languages: string[],
   defaultLanguage: string,
   activeLanguage: string,
+  activeMode: ?string,
   settings: Settings,
   projectId: number,
   valid: ?boolean

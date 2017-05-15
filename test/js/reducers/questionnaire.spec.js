@@ -168,62 +168,49 @@ describe('questionnaire reducer', () => {
   })
 
   describe('modes', () => {
-    it('should toggle mode', () => {
+    it('should add mode', () => {
       const result = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr')
+        actions.addMode('mobileweb')
+      ])
+
+      expect(result.data.modes.length).toEqual(3)
+      expect(result.data.modes).toEqual(['sms', 'ivr', 'mobileweb'])
+    })
+
+    it('should remove mode', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.removeMode('ivr')
       ])
 
       expect(result.data.modes.length).toEqual(1)
       expect(result.data.modes).toEqual(['sms'])
     })
 
-    it('should toggle other mode', () => {
+    it('removes all modes and sets active mode to null', () => {
       const result = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('sms'),
-        actions.toggleMode('ivr')
+        actions.removeMode('sms'),
+        actions.removeMode('ivr')
       ])
 
-      /* Expectations on arrays must include a check for length
-      because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
-      expect(result.data.modes.length).toEqual(0)
+      expect(result.data.activeMode).toEqual(null)
     })
 
-    it('should toggle modes multiple times', () => {
+    it('adds mode after removing all, sets active mode to that mode', () => {
       const result = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
-        actions.toggleMode('sms'),
-        actions.toggleMode('sms')
+        actions.removeMode('sms'),
+        actions.removeMode('ivr'),
+        actions.addMode('mobileweb')
       ])
 
-      /* Expectations on arrays must include a check for length
-      because for JS 'Foo,Bar' == ['Foo', 'Bar']        -_- */
-      expect(result.data.modes.length).toEqual(1)
-      expect(result.data.modes).toEqual(['sms'])
-    })
-
-    it('should toggle mobileweb mode on', () => {
-      const result = playActions([
-        actions.fetch(1, 1),
-        actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
-      ])
-      expect(result.data.modes).toInclude(['mobileweb'])
-    })
-
-    it('should toggle mobileweb mode off', () => {
-      const result = playActions([
-        actions.fetch(1, 1),
-        actions.receive(questionnaire),
-        actions.toggleMode('mobileweb'),
-        actions.toggleMode('mobileweb')
-      ])
-      expect(result.data.modes).toExclude(['mobileweb'])
+      expect(result.data.activeMode).toEqual('mobileweb')
     })
   })
 
@@ -526,7 +513,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
+        actions.removeMode('ivr'),
         actions.addLanguage('es'),
         actions.addLanguage('fr'),
         actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', ''),
@@ -566,7 +553,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb'),
+        actions.addMode('mobileweb'),
         actions.changeStepPromptMobileWeb('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
       ])
 
@@ -630,7 +617,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb'),
+        actions.addMode('mobileweb'),
         actions.setMobileWebSmsMessage(prompt)
       ])
 
@@ -646,7 +633,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('sms'),
+        actions.removeMode('sms'),
         actions.addLanguage('es'),
         actions.addLanguage('fr'),
         actions.changeStepPromptIvr('17141bea-a81c-4227-bdda-f5f69188b0e7', {text: '', audioSource: 'tts'}),
@@ -690,7 +677,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
+        actions.removeMode('ivr'),
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0),
         actions.deleteChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0)
       ])
@@ -707,7 +694,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
+        actions.removeMode('ivr'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, '', 'a', 'a', '1', null)
       ])
 
@@ -723,7 +710,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
+        actions.removeMode('ivr'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', '', 'a', '1', null),
         actions.addLanguage('es'),
         actions.setActiveLanguage('es'),
@@ -753,7 +740,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
+        actions.removeMode('ivr'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'stop', 'a', '1', null),
         actions.addLanguage('es'),
         actions.setActiveLanguage('es'),
@@ -782,7 +769,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb'),
+        actions.addMode('mobileweb'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'a', '', '', null)
       ])
 
@@ -798,7 +785,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('sms'),
+        actions.removeMode('sms'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b', '', '', null),
         actions.addLanguage('es'),
         actions.setActiveLanguage('es'),
@@ -900,7 +887,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('sms'),
+        actions.removeMode('sms'),
         actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'b, c', '1', 'b', null),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'd, c', '2', 'b', null)
@@ -932,7 +919,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('ivr'),
+        actions.removeMode('ivr'),
         actions.changeStepPromptIvr(questionnaire.steps[1].id, {text: 'Some IVR Prompt'}),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1, 2', 'a', null),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '3, 2', 'b', null)
@@ -947,7 +934,7 @@ describe('questionnaire reducer', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb'),
+        actions.addMode('mobileweb'),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 0, 'a', 'x', '1', 'b', null),
         actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'b', 'y', '2', 'b', null)
       ])
@@ -1009,7 +996,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
+        actions.addMode('mobileweb')
       ])
 
       expect(state.errors).toInclude({
@@ -1052,8 +1039,7 @@ describe('questionnaire reducer', () => {
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addLanguage('es'),
-        // actions.toggleMode('ivr'),
-        actions.toggleMode('mobileweb')
+        actions.addMode('mobileweb')
       ])
 
       const errors = resultState.errors
@@ -1081,7 +1067,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
+        actions.addMode('mobileweb')
       ])
 
       expect(state.errors).toInclude({
@@ -1107,7 +1093,7 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.toggleMode('mobileweb')
+        actions.addMode('mobileweb')
       ])
 
       expect(state.errors).toInclude({
@@ -1486,6 +1472,7 @@ describe('questionnaire reducer', () => {
         languages: [],
         defaultLanguage: 'en',
         activeLanguage: 'en',
+        activeMode: 'sms',
         settings: {
           quotaCompletedMessage: {},
           errorMessage: {},

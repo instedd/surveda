@@ -160,9 +160,9 @@ class StepPrompts extends Component {
     const { step, questionnaire, readOnly, errorPath, errorsByPath, classes, title } = this.props
 
     const activeLanguage = questionnaire.activeLanguage
-    const sms = questionnaire.modes.indexOf('sms') != -1
-    const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
+    const sms = questionnaire.activeMode == 'sms'
+    const ivr = questionnaire.activeMode == 'ivr'
+    const mobileweb = questionnaire.activeMode == 'mobileweb'
     const autocomplete = step.type != 'language-selection'
     let path = `${errorPath}.prompt`
 

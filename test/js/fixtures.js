@@ -130,6 +130,7 @@ const bareQuestionnaire: Questionnaire = {
   id: 1,
   defaultLanguage: 'en',
   activeLanguage: 'en',
+  activeMode: 'sms',
   languages: ['en'],
   settings: {
     quotaCompletedMessage: {},
