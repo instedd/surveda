@@ -21,6 +21,7 @@ type Props = {
   onCollapse: Function,
   questionnaire: Questionnaire,
   readOnly: boolean,
+  quotaCompletedSteps: boolean,
   errorPath: string,
   errorsByPath: ErrorsByPath,
   stepsAfter: Step[],
@@ -62,13 +63,13 @@ class MultipleChoiceStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, questionnaire, readOnly, errorPath, errorsByPath, stepsAfter, stepsBefore, onDelete } = this.props
+    const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, errorPath, errorsByPath, stepsAfter, stepsBefore, onDelete } = this.props
 
     return (
-      <DraggableStep step={step} readOnly={readOnly}>
+      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
         <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle}
           icon={
-            <StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />
+            <StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
           } >
           <StepPrompts
             step={step}

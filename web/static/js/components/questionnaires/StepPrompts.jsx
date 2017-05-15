@@ -72,10 +72,6 @@ class StepPrompts extends Component {
     })
   }
 
-  stepPromptMobileWebChange(text) {
-    this.setState({stepPromptMobileWeb: text})
-  }
-
   changeIvrMode(e, mode) {
     const { step } = this.props
     this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: this.state.stepPromptIvrText, audioSource: mode})
@@ -216,7 +212,6 @@ class StepPrompts extends Component {
         originalValue={this.state.mobilewebOriginalValue}
         inputErrors={mobilewebInputErrors}
         readOnly={readOnly}
-        onChange={text => this.stepPromptMobileWebChange(text)}
         onBlur={text => this.stepPromptMobileWebSubmit(text)}
         autocomplete={autocomplete}
         stepId={step.id}

@@ -7,6 +7,7 @@ defmodule Ask.Questionnaire do
     field :name, :string
     field :modes, Ask.Ecto.Type.StringList
     field :steps, Ask.Ecto.Type.JSON
+    field :quota_completed_steps, Ask.Ecto.Type.JSON
     field :settings, Ask.Ecto.Type.JSON
     field :languages, Ask.Ecto.Type.JSON
     field :default_language, :string
@@ -23,7 +24,7 @@ defmodule Ask.Questionnaire do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :name, :modes, :steps, :languages, :default_language, :valid, :settings, :snapshot_of])
+    |> cast(params, [:project_id, :name, :modes, :steps, :quota_completed_steps, :languages, :default_language, :valid, :settings, :snapshot_of])
     |> validate_required([:project_id, :modes, :steps, :settings])
     |> foreign_key_constraint(:project_id)
     |> foreign_key_constraint(:snapshot_of)
@@ -35,13 +36,9 @@ defmodule Ask.Questionnaire do
       where: v.questionnaire_id == ^questionnaire.id)
     |> Repo.all
 
-    # # Delete previous variables
-    # (from v in QuestionnaireVariable,
-    #   where: v.questionnaire_id == ^questionnaire.id)
-    # |> Repo.delete_all
-
     # Get new names
-    new_names = questionnaire.steps
+    new_names = questionnaire
+    |> all_steps
     |> Enum.map(&Map.get(&1, "store"))
     |> Enum.reject(fn store -> store == nil end)
     |> Enum.uniq
@@ -81,14 +78,15 @@ defmodule Ask.Questionnaire do
 
   def sms_split_separator, do: "\u{1E}"
 
-  def variables(%Questionnaire{steps: steps}) do
-    variables(steps)
+  def variables(questionnaire = %Questionnaire{}) do
+    variables(all_steps(questionnaire))
   end
 
   def variables(steps) when is_list(steps) do
     steps
     |> Enum.map(&variables/1)
     |> Enum.reject(fn x -> x == nil end)
+    |> Enum.uniq
   end
 
   def variables(%{"store" => var}) do
@@ -97,5 +95,13 @@ defmodule Ask.Questionnaire do
 
   def variables(_) do
     nil
+  end
+
+  def all_steps(%Questionnaire{steps: steps, quota_completed_steps: nil}) do
+    steps
+  end
+
+  def all_steps(%Questionnaire{steps: steps, quota_completed_steps: quota_completed_steps}) do
+    steps ++ quota_completed_steps
   end
 end

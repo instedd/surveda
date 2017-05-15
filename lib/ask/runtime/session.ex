@@ -269,15 +269,17 @@ defmodule Ask.Runtime.Session do
     sync_step(session, response, session.current_mode)
   end
 
-  def sync_step(session, response, current_mode) do
+  def sync_step(session, response, current_mode, want_log_response \\ true) do
     step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode))
     respondent = session.respondent
 
-    # Log raw response from user including new disposition
-    case step_answer do
-      {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-      {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-      _ -> :ok
+    if want_log_response do
+      # Log raw response from user including new disposition
+      case step_answer do
+        {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
+        {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
+        _ -> :ok
+      end
     end
 
     survey = (respondent |> Repo.preload(:survey)).survey
@@ -297,6 +299,7 @@ defmodule Ask.Runtime.Session do
     {respondent, responses} =
       store_responses_and_assign_bucket(respondent, step_answer, buckets, session)
 
+    session = %{session | respondent: respondent}
     session |> handle_step_answer(step_answer, respondent, responses, buckets, current_mode)
   end
 
@@ -305,13 +308,19 @@ defmodule Ask.Runtime.Session do
   end
 
   defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets, current_mode) do
-    case falls_in_quota_already_completed?(buckets, responses) do
+    case falls_in_quota_already_completed?(flow, buckets, responses) do
       true ->
-        case Flow.quota_completed(session.flow, current_mode |> SessionMode.visitor) do
-        {:ok, reply} ->
-          log_prompts(reply, current_mode.channel, flow.mode, respondent, true)
-          {:rejected, reply, respondent}
-        :ok ->
+        if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
+          # Update here the state and disposition to rejected,
+          # and continue with the quota completed steps
+          respondent = respondent
+          |> Respondent.changeset(%{state: "rejected", disposition: "rejected"})
+          |> Repo.update!
+
+          flow = %{flow | current_step: nil, in_quota_completed_steps: true}
+          session = %{session | flow: flow, respondent: respondent}
+          sync_step(session, :answer, session.current_mode, false)
+        else
           {:rejected, respondent}
         end
       false ->
@@ -423,32 +432,36 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp falls_in_quota_already_completed?(buckets, responses) do
-    case buckets do
-      # No quotas: not completed
-      [] -> false
-      _ ->
-        # Filter buckets that contain each of the responses
-        buckets = responses |> Enum.reduce(buckets, fn(response, buckets) ->
-          {response_key, response_value} = response
-          buckets |> Enum.filter(fn bucket ->
-            # The response must be in the bucket, otherwise we keep the bucket
-            if bucket.condition |> Map.keys |> Enum.member?(response_key) do
-              bucket.condition |> Map.to_list |> Enum.any?(fn {key, value} ->
-                key == response_key && (response_value |> QuotaBucket.matches_condition?(value))
-              end)
-            else
-              true
-            end
+  defp falls_in_quota_already_completed?(flow, buckets, responses) do
+    if flow.in_quota_completed_steps do
+      false
+    else
+      case buckets do
+        # No quotas: not completed
+        [] -> false
+        _ ->
+          # Filter buckets that contain each of the responses
+          buckets = responses |> Enum.reduce(buckets, fn(response, buckets) ->
+            {response_key, response_value} = response
+            buckets |> Enum.filter(fn bucket ->
+              # The response must be in the bucket, otherwise we keep the bucket
+              if bucket.condition |> Map.keys |> Enum.member?(response_key) do
+                bucket.condition |> Map.to_list |> Enum.any?(fn {key, value} ->
+                  key == response_key && (response_value |> QuotaBucket.matches_condition?(value))
+                end)
+              else
+                true
+              end
+            end)
           end)
-        end)
 
-        # The answer is: there it at least one bucket, and all of the buckets are full
-        case buckets do
-          [] -> false
-          _ ->
-            buckets |> Enum.all?(fn bucket -> bucket.count >= bucket.quota end)
-        end
+          # The answer is: there it at least one bucket, and all of the buckets are full
+          case buckets do
+            [] -> false
+            _ ->
+              buckets |> Enum.all?(fn bucket -> bucket.count >= bucket.quota end)
+          end
+      end
     end
   end
 end

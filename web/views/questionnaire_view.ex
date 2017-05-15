@@ -16,6 +16,7 @@ defmodule Ask.QuestionnaireView do
       updated_at: questionnaire.updated_at,
       project_id: questionnaire.project_id,
       steps: questionnaire.steps,
+      quota_completed_steps: questionnaire.quota_completed_steps,
       default_language: questionnaire.default_language,
       languages: questionnaire.languages,
       settings: questionnaire.settings,

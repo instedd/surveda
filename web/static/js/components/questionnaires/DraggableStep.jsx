@@ -13,6 +13,7 @@ type Props = {
   connectDropTarget: Function,
   children: any,
   questionnaireActions: any,
+  quotaCompletedSteps: boolean,
   readOnly: boolean
 };
 
@@ -95,7 +96,15 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-const source = DragSource('STEPS', stepSource, collectSource)(DraggableStep)
-const target = DropTarget('STEPS', stepTarget, collectTarget)(source)
+const typeFromProps = (props) => {
+  if (props.quotaCompletedSteps) {
+    return 'QUOTA_COMPLETED_STEPS'
+  } else {
+    return 'STEPS'
+  }
+}
+
+const source = DragSource(typeFromProps, stepSource, collectSource)(DraggableStep)
+const target = DropTarget(typeFromProps, stepTarget, collectTarget)(source)
 
 export default connect(null, mapDispatchToProps)(target)

@@ -78,18 +78,36 @@ defmodule Ask.RespondentControllerTest do
 
     assert data["id"] == survey.id
     assert data["respondents_by_disposition"] == %{
-      "registered" => %{"count" => 0, "percent" => 0.0},
-      "queued" => %{"count" => 0, "percent" => 0.0},
-      "contacted" => %{"count" => 0, "percent" => 0.0},
-      "failed" => %{"count" => 0, "percent" => 0.0},
-      "unresponsive" => %{"count" => 0, "percent" => 0.0},
-      "started" => %{"count" => 0, "percent" => 0.0},
-      "ineligible" => %{"count" => 0, "percent" => 0.0},
-      "rejected" => %{"count" => 0, "percent" => 0.0},
-      "breakoff" => %{"count" => 0, "percent" => 0.0},
-      "refused" => %{"count" => 0, "percent" => 0.0},
-      "partial" => %{"count" => 10, "percent" => 100*10/total},
-      "completed" => %{"count" => 5, "percent" => 100*5/total},
+      "uncontacted" => %{
+        "count" => 0,
+        "percent" => 0.0,
+        "detail" => %{
+          "registered" => %{"count" => 0, "percent" => 0.0},
+          "queued" => %{"count" => 0, "percent" => 0.0},
+          "failed" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
+      "contacted" => %{
+        "count" => 0,
+        "percent" => 0.0,
+        "detail" => %{
+          "contacted" => %{"count" => 0, "percent" => 0.0},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
+      "responsive" => %{
+        "count" => 15,
+        "percent" => 100.0,
+        "detail" => %{
+          "started" => %{"count" => 0, "percent" => 0.0},
+          "breakoff" => %{"count" => 0, "percent" => 0.0},
+          "partial" => %{"count" => 10, "percent" => 100*10/total},
+          "completed" => %{"count" => 5, "percent" => 100*5/total},
+          "ineligible" => %{"count" => 0, "percent" => 0.0},
+          "refused" => %{"count" => 0, "percent" => 0.0},
+          "rejected" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -117,18 +135,36 @@ defmodule Ask.RespondentControllerTest do
 
     assert data["id"] == survey.id
     assert data["respondents_by_disposition"] == %{
-      "registered" => %{"count" => 0, "percent" => 0.0},
-      "queued" => %{"count" => 0, "percent" => 0.0},
-      "contacted" => %{"count" => 0, "percent" => 0.0},
-      "failed" => %{"count" => 0, "percent" => 0.0},
-      "unresponsive" => %{"count" => 0, "percent" => 0.0},
-      "started" => %{"count" => 0, "percent" => 0.0},
-      "ineligible" => %{"count" => 0, "percent" => 0.0},
-      "rejected" => %{"count" => 0, "percent" => 0.0},
-      "breakoff" => %{"count" => 0, "percent" => 0.0},
-      "refused" => %{"count" => 0, "percent" => 0.0},
-      "partial" => %{"count" => 10, "percent" => 100*10/total},
-      "completed" => %{"count" => 6, "percent" => 100*6/total},
+      "uncontacted" => %{
+        "count" => 0,
+        "percent" => 0.0,
+        "detail" => %{
+          "registered" => %{"count" => 0, "percent" => 0.0},
+          "queued" => %{"count" => 0, "percent" => 0.0},
+          "failed" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
+      "contacted" => %{
+        "count" => 0,
+        "percent" => 0.0,
+        "detail" => %{
+          "contacted" => %{"count" => 0, "percent" => 0.0},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
+      "responsive" => %{
+        "count" => 16,
+        "percent" => 100.0,
+        "detail" => %{
+          "started" => %{"count" => 0, "percent" => 0.0},
+          "breakoff" => %{"count" => 0, "percent" => 0.0},
+          "partial" => %{"count" => 10, "percent" => 100*10/total},
+          "completed" => %{"count" => 6, "percent" => 100*6/total},
+          "ineligible" => %{"count" => 0, "percent" => 0.0},
+          "refused" => %{"count" => 0, "percent" => 0.0},
+          "rejected" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -154,18 +190,36 @@ defmodule Ask.RespondentControllerTest do
 
     assert data["id"] == survey.id
     assert data["respondents_by_disposition"] == %{
-      "registered" => %{"count" => 10, "percent" => 100*10/total},
-      "queued" => %{"count" => 0, "percent" => 0.0},
-      "contacted" => %{"count" => 0, "percent" => 0.0},
-      "failed" => %{"count" => 0, "percent" => 0.0},
-      "unresponsive" => %{"count" => 0, "percent" => 0.0},
-      "started" => %{"count" => 0, "percent" => 0.0},
-      "ineligible" => %{"count" => 3, "percent" => 100*3/total},
-      "rejected" => %{"count" => 0, "percent" => 0.0},
-      "breakoff" => %{"count" => 0, "percent" => 0.0},
-      "refused" => %{"count" => 0, "percent" => 0.0},
-      "partial" => %{"count" => 1, "percent" => 100*1/total},
-      "completed" => %{"count" => 1, "percent" => 100*1/total},
+      "uncontacted" => %{
+        "count" => 10,
+        "percent" => 100*10/total,
+        "detail" => %{
+          "registered" => %{"count" => 10, "percent" => 100*10/total},
+          "queued" => %{"count" => 0, "percent" => 0.0},
+          "failed" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
+      "contacted" => %{
+        "count" => 0,
+        "percent" => 0.0,
+        "detail" => %{
+          "contacted" => %{"count" => 0, "percent" => 0.0},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
+      "responsive" => %{
+        "count" => 5,
+        "percent" => 100*5/total,
+        "detail" => %{
+          "started" => %{"count" => 0, "percent" => 0.0},
+          "breakoff" => %{"count" => 0, "percent" => 0.0},
+          "partial" => %{"count" => 1, "percent" => 100*1/total},
+          "completed" => %{"count" => 1, "percent" => 100*1/total},
+          "ineligible" => %{"count" => 3, "percent" => 100*3/total},
+          "refused" => %{"count" => 0, "percent" => 0.0},
+          "rejected" => %{"count" => 0, "percent" => 0.0},
+        },
+      },
     }
 
     assert Enum.at(data["respondents_by_date"], 0)["date"] == "2016-01-01"
@@ -213,18 +267,36 @@ defmodule Ask.RespondentControllerTest do
     assert json_response(conn, 200)["data"] == %{
       "id" => survey.id,
       "respondents_by_disposition" => %{
-        "registered" => %{"count" => 5, "percent" => 100*5/total},
-        "queued" => %{"count" => 0, "percent" => 0.0},
-        "contacted" => %{"count" => 0, "percent" => 0.0},
-        "failed" => %{"count" => 0, "percent" => 0.0},
-        "unresponsive" => %{"count" => 0, "percent" => 0.0},
-        "started" => %{"count" => 0, "percent" => 0.0},
-        "ineligible" => %{"count" => 0, "percent" => 0.0},
-        "rejected" => %{"count" => 0, "percent" => 0.0},
-        "breakoff" => %{"count" => 0, "percent" => 0.0},
-        "refused" => %{"count" => 0, "percent" => 0.0},
-        "partial" => %{"count" => 0, "percent" => 0.0},
-        "completed" => %{"count" => 0, "percent" => 0.0},
+        "uncontacted" => %{
+          "count" => 5,
+          "percent" => 100*5/total,
+          "detail" => %{
+            "registered" => %{"count" => 5, "percent" => 100*5/total},
+            "queued" => %{"count" => 0, "percent" => 0.0},
+            "failed" => %{"count" => 0, "percent" => 0.0},
+          },
+        },
+        "contacted" => %{
+          "count" => 0,
+          "percent" => 0.0,
+          "detail" => %{
+            "contacted" => %{"count" => 0, "percent" => 0.0},
+            "unresponsive" => %{"count" => 0, "percent" => 0.0},
+          },
+        },
+        "responsive" => %{
+          "count" => 0,
+          "percent" => 0.0,
+          "detail" => %{
+            "started" => %{"count" => 0, "percent" => 0.0},
+            "breakoff" => %{"count" => 0, "percent" => 0.0},
+            "partial" => %{"count" => 0, "percent" => 0.0},
+            "completed" => %{"count" => 0, "percent" => 0.0},
+            "ineligible" => %{"count" => 0, "percent" => 0.0},
+            "refused" => %{"count" => 0, "percent" => 0.0},
+            "rejected" => %{"count" => 0, "percent" => 0.0},
+          },
+        },
       },
       "respondents_by_date" => [],
       "cutoff" => nil,

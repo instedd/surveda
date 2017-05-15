@@ -6,7 +6,7 @@ defmodule Ask.ErrorView do
   end
 
   def render("500.html", _assigns) do
-    "Internal server error"
+    "There was an error. Please try again later"
   end
 
   def render("403.html", _assigns) do

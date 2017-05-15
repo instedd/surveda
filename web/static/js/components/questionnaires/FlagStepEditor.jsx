@@ -77,7 +77,7 @@ class FlagStepEditor extends Component {
     const { step, onCollapse, stepsAfter, stepsBefore, onDelete, readOnly } = this.props
 
     return (
-      <DraggableStep step={step} readOnly={readOnly}>
+      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={false}>
         <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />} >
           <li className='collection-item' key='dispositions'>
             <h5>Disposition</h5>

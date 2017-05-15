@@ -20,9 +20,6 @@ import * as routes from '../../routes'
 import * as api from '../../api'
 
 type State = {
-  addingStep: boolean,
-  currentStep: ?Step,
-  currentStepIsNew: boolean,
   isNew: boolean
 };
 
@@ -32,6 +29,7 @@ class QuestionnaireEditor extends Component {
   setActiveMode: Function
   addMode: Function
   removeMode: Function
+  deleteStep: Function
 
   constructor(props) {
     super(props)
@@ -41,11 +39,8 @@ class QuestionnaireEditor extends Component {
     this.removeMode = this.removeMode.bind(this)
     const initialState = props.location.state
     const isNew = initialState && initialState.isNew
-    if (isNew) {
-      this.state = this.internalState(null, false, false, true)
-    } else {
-      this.state = this.internalState(null)
-    }
+    this.state = {isNew}
+    this.deleteStep = this.deleteStep.bind(this)
   }
 
   setActiveMode(e, mode) {
@@ -66,22 +61,25 @@ class QuestionnaireEditor extends Component {
     this.props.questionnaireActions.removeMode(mode)
   }
 
-  selectStep(stepId) {
-    this.setState(this.internalState(stepId))
-  }
-
-  deselectStep() {
-    this.setState(this.internalState(null))
+  toggleQuotaCompletedSteps(e) {
+    this.props.questionnaireActions.toggleQuotaCompletedSteps()
   }
 
   questionnaireAddStep(e) {
     e.preventDefault()
-    this.setState({
-      ...this.state,
-      addingStep: true
-    }, () => {
-      // Add the step then automatically expand it
-      this.props.questionnaireActions.addStep()
+
+    // Add the step then automatically expand it
+    this.props.questionnaireActions.addStepWithCallback().then(step => {
+      this.stepsComponent().selectStep(step.id, true)
+    })
+  }
+
+  questionnaireAddQuotaCompletedStep(e) {
+    e.preventDefault()
+
+    // Add the step then automatically expand it
+    this.props.questionnaireActions.addQuotaCompletedStep().then(step => {
+      this.quotaCompletedStepsComponent().selectStep(step.id, true)
     })
   }
 
@@ -89,45 +87,33 @@ class QuestionnaireEditor extends Component {
     this.props.userSettingsActions.hideOnboarding()
   }
 
-  deleteStep() {
-    const currentStepId = this.state.currentStep
-
-    this.setState({
-      currentStep: null,
-      addingStep: false
-    }, () => {
-      this.props.questionnaireActions.deleteStep(currentStepId)
-    })
+  deleteStep(stepId) {
+    this.props.questionnaireActions.deleteStep(stepId)
   }
 
-  internalState(currentStep, addingStep = false, currentStepIsNew = false, isNew = false) {
-    return {
-      currentStep,
-      addingStep,
-      currentStepIsNew,
-      isNew
-    }
+  stepsComponent() {
+    // Because QuestionnaireSteps is inside a DragDropContext
+    return this.refs.stepsComponent.child
+  }
+
+  quotaCompletedStepsComponent() {
+    // Because QuestionnaireSteps is inside a DragDropContext
+    return this.refs.quotaCompletedStepsComponent.child
   }
 
   componentWillReceiveProps(newProps) {
-    // This feels a bit hacky, but it let's us expand the step we just created.
-    // I couldn't find a better way. Ideally this should be a sort of "callback"
-    // to the addStep method, without involving additional component state handling
-    // or explicit management via Redux reducers.
-    const questionnaireData = newProps.questionnaire
+    const questionnaire = newProps.questionnaire
 
-    if (this.state.addingStep && questionnaireData && questionnaireData.steps != null && questionnaireData.steps.length > 0) {
-      const newStep = questionnaireData.steps[questionnaireData.steps.length - 1]
-      if (newStep != null) {
-        this.setState(this.internalState(newStep.id, false, true))
-      }
+    // If it's a new questionnaire, expand the first step
+    if (questionnaire && questionnaire.steps && questionnaire.steps.length > 0 && this.state.isNew) {
+      this.stepsComponent().selectStep(questionnaire.steps[0].id, true)
     }
-    // A questionnaireData.steps.length > 0 check is added because it's possible
-    // having a new questionnaire with 0 steps (deleting the first step and refreshing
-    // the page
-    if (questionnaireData && questionnaireData.steps && questionnaireData.steps.length > 0 && this.state.isNew) {
-      this.selectStep(questionnaireData.steps[0].id)
-    }
+
+    // Don't consider the questionnaire as new anymore, so the first step
+    // is not expanded again
+    this.setState({
+      isNew: false
+    })
   }
 
   componentWillMount() {
@@ -246,10 +232,7 @@ class QuestionnaireEditor extends Component {
     .then(response => {
       const questionnaire = response.entities.questionnaires[response.result]
       // Make sure to deselect any step before receiving the questionnaire
-      this.setState({
-        ...this.state,
-        currentStep: null
-      }, () => {
+      this.stepsComponent().deselectStep(() => {
         this.props.questionnaireActions.receive(questionnaire)
         importModal.close()
       })
@@ -284,11 +267,8 @@ class QuestionnaireEditor extends Component {
 
     // If only one language will be left, and the language select step
     // is selected, make sure to unselect it first
-    if (questionnaire.languages.length == 2 && questionnaire.steps[0].id == this.state.currentStep) {
-      this.setState({
-        ...this.state,
-        currentStep: null
-      })
+    if (questionnaire.languages.length == 2 && questionnaire.steps[0].id == this.stepsComponent().getCurrentStepId()) {
+      this.stepsComponent().deselectStep()
     }
 
     this.props.questionnaireActions.removeLanguage(lang)
@@ -360,6 +340,7 @@ class QuestionnaireEditor extends Component {
 
     const settings = userSettings.settings
     const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
+    const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
 
     if (!readOnly) {
       csvButtons = <div>
@@ -423,14 +404,11 @@ class QuestionnaireEditor extends Component {
         {skipOnboarding
         ? <div className='col s12 m8 offset-m1'>
           <QuestionnaireSteps
+            ref='stepsComponent'
             steps={questionnaire.steps}
             errorPath='steps'
             errorsByPath={errorsByPath}
-            current={this.state.currentStep}
-            currentStepIsNew={this.state.currentStepIsNew}
-            onSelectStep={stepId => this.selectStep(stepId)}
-            onDeselectStep={() => this.deselectStep()}
-            onDeleteStep={() => this.deleteStep()}
+            onDeleteStep={this.deleteStep}
             readOnly={readOnly}
             />
           {readOnly ? null
@@ -439,6 +417,36 @@ class QuestionnaireEditor extends Component {
               <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
             </div>
           </div>
+          }
+          <div className='row'>
+            <div className='col s12'>
+              <div className='switch'>
+                <label>
+                  <input type='checkbox' checked={hasQuotaCompletedSteps} onChange={e => this.toggleQuotaCompletedSteps(e)} disabled={readOnly} />
+                  <span className='lever' />
+                </label>
+                Quota completed steps
+              </div>
+            </div>
+          </div>
+          {hasQuotaCompletedSteps
+          ? <QuestionnaireSteps
+            ref='quotaCompletedStepsComponent'
+            quotaCompletedSteps
+            steps={questionnaire.quotaCompletedSteps}
+            errorPath='quotaCompletedSteps'
+            errorsByPath={errorsByPath}
+            onDeleteStep={this.deleteStep}
+            readOnly={readOnly}
+            />
+          : null}
+          {!readOnly && hasQuotaCompletedSteps
+          ? <div className='row'>
+            <div className='col s12'>
+              <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddQuotaCompletedStep(e)}>Add Quota Completed Step</a>
+            </div>
+          </div>
+          : null
           }
           { questionnaire.activeMode == 'sms'
           ? <SmsSettings readOnly={readOnly} />

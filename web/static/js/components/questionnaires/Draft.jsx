@@ -8,7 +8,7 @@ import {
  RichUtils
 } from 'draft-js'
 
-// import InlineStyleControls from './InlineStyleControls'
+import InlineStyleControls from './InlineStyleControls'
 import {stateToHTML} from 'draft-js-export-html'
 
 class Draft extends React.Component {
@@ -17,12 +17,7 @@ class Draft extends React.Component {
 
     this.hasFocus = false
 
-    const blocksFromHTML = convertFromHTML(props.initialValue)
-    const state = ContentState.createFromBlockArray(
-      blocksFromHTML.contentBlocks,
-      blocksFromHTML.entityMap
-    )
-    this.state = {editorState: EditorState.createWithContent(state)}
+    this.state = this.stateFromProps(props)
 
     this.focus = () => this.refs.editor.focus()
 
@@ -34,7 +29,6 @@ class Draft extends React.Component {
     this.onChange = (editorState) => {
       this.setState({editorState})
       this.redraw()
-      props.onChange(this.getText())
     }
 
     this.onBlur = (editorState) => {
@@ -104,6 +98,19 @@ class Draft extends React.Component {
     }
   }
 
+  componentWillReceiveProps(newProps) {
+    this.setState(this.stateFromProps(newProps))
+  }
+
+  stateFromProps(props) {
+    const blocksFromHTML = convertFromHTML(props.value)
+    const state = ContentState.createFromBlockArray(
+      blocksFromHTML.contentBlocks,
+      blocksFromHTML.entityMap
+    )
+    return {editorState: EditorState.createWithContent(state)}
+  }
+
   render() {
     const { editorState } = this.state
     const { label, errors, readOnly } = this.props
@@ -127,11 +134,6 @@ class Draft extends React.Component {
 
     return (
       <div className='RichEditor-root'>
-        {/*
-        <InlineStyleControls
-          editorState={editorState}
-          onToggle={this.toggleInlineStyle}
-        /> */}
         <div className={className} onClick={this.focus}>
           <label ref='label'>
             {label}
@@ -149,6 +151,10 @@ class Draft extends React.Component {
           />
         </div>
         {errorComponent}
+        <InlineStyleControls
+          editorState={editorState}
+          onToggle={this.toggleInlineStyle}
+        />
       </div>
     )
   }
@@ -157,9 +163,8 @@ class Draft extends React.Component {
 Draft.propTypes = {
   label: PropTypes.string,
   errors: PropTypes.any,
-  onChange: PropTypes.func,
   onBlur: PropTypes.func,
-  initialValue: PropTypes.string,
+  value: PropTypes.string,
   readOnly: PropTypes.bool,
   plainText: PropTypes.bool
 }

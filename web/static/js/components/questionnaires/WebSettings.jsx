@@ -34,7 +34,6 @@ class WebSettings extends Component {
 
   stateFromProps(props) {
     return {
-      quotaCompletedMessage: props.quotaCompletedMessage,
       errorMessage: props.errorMessage,
       thankYouMessage: props.thankYouMessage,
       title: props.title,
@@ -131,9 +130,6 @@ class WebSettings extends Component {
               <h5>
                 Messages
               </h5>
-              {this.quotaCompletedMessageComponent()}
-            </li>
-            <li className='collection-item'>
               {this.errorMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -157,25 +153,12 @@ class WebSettings extends Component {
     )
   }
 
-  quotaCompletedMessageComponent() {
-    return <MobileWebPrompt id='web_settings_quota_completed'
-      label='Quota completed message'
-      inputErrors={this.messageErrors('quotaCompletedMessage')}
-      value={this.state.quotaCompletedMessage}
-      originalValue={this.state.quotaCompletedMessage}
-      onChange={text => this.messageChange(text, 'quotaCompletedMessage')}
-      onBlur={text => this.messageBlur(text, 'quotaCompletedMessage')}
-      readOnly={this.props.readOnly}
-      />
-  }
-
   errorMessageComponent() {
     return <MobileWebPrompt id='web_settings_error'
       label='Error message'
       inputErrors={this.messageErrors('errorMessage')}
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
-      onChange={text => this.messageChange(text, 'errorMessage')}
       onBlur={text => this.messageBlur(text, 'errorMessage')}
       readOnly={this.props.readOnly}
       />
@@ -187,7 +170,6 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
-      onChange={text => this.messageChange(text, 'thankYouMessage')}
       onBlur={text => this.messageBlur(text, 'thankYouMessage')}
       readOnly={this.props.readOnly}
       />
@@ -199,7 +181,6 @@ class WebSettings extends Component {
       inputErrors={this.titleErrors()}
       value={this.state.title}
       originalValue={this.state.title}
-      onChange={text => this.messageChange(text, 'title')}
       onBlur={text => this.titleBlur(text)}
       readOnly={this.props.readOnly}
       />
@@ -224,7 +205,6 @@ class WebSettings extends Component {
       inputErrors={this.surveyIsOverMessageErrors()}
       value={this.state.surveyIsOverMessage}
       originalValue={this.state.surveyIsOverMessage}
-      onChange={text => this.messageChange(text, 'surveyIsOverMessage')}
       onBlur={text => this.surveyIsOverMessageBlur(text)}
       readOnly={this.props.readOnly}
       />
@@ -236,7 +216,6 @@ class WebSettings extends Component {
       inputErrors={this.surveyAlreadyTakenMessageErrors()}
       value={this.state.surveyAlreadyTakenMessage}
       originalValue={this.state.surveyAlreadyTakenMessage}
-      onChange={text => this.messageChange(text, 'surveyAlreadyTakenMessage')}
       onBlur={text => this.surveyAlreadyTakenMessageBlur(text)}
       readOnly={this.props.readOnly}
       />
@@ -319,8 +298,7 @@ class WebSettings extends Component {
   }
 
   hasErrors() {
-    return !!this.messageErrors('quotaCompletedMessage') ||
-      !!this.messageErrors('errorMessage') ||
+    return !!this.messageErrors('errorMessage') ||
       !!this.messageErrors('thankYouMessage') ||
       !!this.titleErrors() ||
       !!this.smsMessageErrors() ||
@@ -348,7 +326,6 @@ WebSettings.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
   errorsByPath: PropTypes.object,
-  quotaCompletedMessage: PropTypes.string,
   errorMessage: PropTypes.string,
   thankYouMessage: PropTypes.string,
   title: PropTypes.string,
@@ -364,7 +341,6 @@ const mapStateToProps = (state, ownProps) => {
   return {
     questionnaire: quiz.data,
     errorsByPath: quiz.errorsByPath,
-    quotaCompletedMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.quotaCompletedMessage, quiz.data.activeLanguage) : '',
     errorMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : '',
     thankYouMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : '',
     title: quiz.data ? (quiz.data.settings.title || {})[quiz.data.activeLanguage] || '' : '',

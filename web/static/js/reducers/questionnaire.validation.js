@@ -26,9 +26,12 @@ export const validate = (state: DataStore<Questionnaire>) => {
 
   validateSteps(data.steps, context, 'steps')
 
+  if (data.quotaCompletedSteps) {
+    validateSteps(data.quotaCompletedSteps, context, 'quotaCompletedSteps')
+  }
+
   validateMessage('errorMessage', data.settings.errorMessage, context)
   validateThankYouMessage(data.settings.thankYouMessage, context)
-  validateMessage('quotaCompletedMessage', data.settings.quotaCompletedMessage, context)
 
   validateTitle(data, context)
   validateMobileWebSmsMessage(data, context)

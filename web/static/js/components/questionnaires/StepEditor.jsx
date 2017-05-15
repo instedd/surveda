@@ -16,6 +16,7 @@ type Props = {
   errorsByPath: ErrorsByPath,
   questionnaireActions: any,
   readOnly: boolean,
+  quotaCompletedSteps: boolean,
   onDelete: Function,
   onCollapse: Function,
   stepsAfter: Step[],

@@ -11,11 +11,11 @@ defmodule Ask.ErrorViewTest do
 
   test "render 500.html" do
     assert render_to_string(Ask.ErrorView, "500.html", []) ==
-           "Internal server error"
+           "There was an error. Please try again later"
   end
 
   test "render any other" do
     assert render_to_string(Ask.ErrorView, "505.html", []) ==
-           "Internal server error"
+           "There was an error. Please try again later"
   end
 end
