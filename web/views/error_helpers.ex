@@ -14,6 +14,14 @@ defmodule Ask.ErrorHelpers do
     end
   end
 
+  def input_class(form, field) do
+    if form.errors[field] do
+      "form-control invalid"
+    else
+      nil
+    end
+  end
+
   @doc """
   Translates an error message using gettext.
   """

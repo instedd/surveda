@@ -2,35 +2,35 @@
   <div class="col s12">
     <div class="card">
       <div class="card-content">
-        <%= form_for @changeset, registration_path(@conn, :create), [as: :registration], fn f  -> %>            
+        <%= form_for @changeset, registration_path(@conn, :create), [as: :registration], fn f  -> %>
           <div class="row">
             <div class="col s12">
               <%= if @changeset.action do %>
                 <div class="alert alert-danger">
-                  <p>Oops, something went wrong! Please check the errors below.</p>
+                  <p>Oops, something went wrong!! Please check the errors below.</p>
                 </div>
               <% end %>
               <span class="card-title">Sign up</span>
               <div class="input-field">
-                <%= text_input f, :name, required: "" %>
+                <%= text_input f, :name, required: "", class: input_class(f, :name) %>
                 <%= label f, :name %>
                 <%= error_tag f, :name %>
               </div>
               <div class="input-field">
-                <%= text_input f, :email, required: "" %>
+                <%= text_input f, :email, required: "", class: input_class(f, :email) %>
                 <%= label f, :email %>
                 <%= error_tag f, :email %>
               </div>
               <div class="input-field">
-                <%= password_input f, :password, required: "" %>
+                <%= password_input f, :password, required: "", class: input_class(f, :password) %>
                 <%= label f, :password %>
                 <%= error_tag f, :password %>
               </div>
               <div class="input-field">
-                <%= password_input f, :password_confirmation, required: "" %>
+                <%= password_input f, :password_confirmation, required: "", class: input_class(f, :password_confirmation) %>
                 <%= label f, :password_confirmation %>
                 <%= error_tag f, :password_confirmation %>
-              </div>              
+              </div>
             </div>
           </div>
           <div class="row">
@@ -38,7 +38,7 @@
               <button id="btn-register" class="btn-large blue waves-effect waves-light btn-block">SIGN UP</button>
             </div>
           </div>
-        <% end %>              
+        <% end %>
         <div class="row">
           <div class="col s12 right-align">
             <%= coherence_links(@conn, :new_session, register: false, confirm: false) %>
