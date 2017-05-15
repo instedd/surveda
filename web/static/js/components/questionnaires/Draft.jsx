@@ -8,7 +8,7 @@ import {
  RichUtils
 } from 'draft-js'
 
-// import InlineStyleControls from './InlineStyleControls'
+import InlineStyleControls from './InlineStyleControls'
 import {stateToHTML} from 'draft-js-export-html'
 
 class Draft extends React.Component {
@@ -134,11 +134,6 @@ class Draft extends React.Component {
 
     return (
       <div className='RichEditor-root'>
-        {/*
-        <InlineStyleControls
-          editorState={editorState}
-          onToggle={this.toggleInlineStyle}
-        /> */}
         <div className={className} onClick={this.focus}>
           <label ref='label'>
             {label}
@@ -156,6 +151,10 @@ class Draft extends React.Component {
           />
         </div>
         {errorComponent}
+        <InlineStyleControls
+          editorState={editorState}
+          onToggle={this.toggleInlineStyle}
+        />
       </div>
     )
   }

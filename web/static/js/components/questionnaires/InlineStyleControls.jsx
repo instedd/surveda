@@ -4,9 +4,9 @@ import StyleButton from './StyleButton'
 class InlineStyleControls extends React.Component {
   INLINE_STYLES() {
     return ([
-      {label: 'Bold', style: 'BOLD'},
-      {label: 'Italic', style: 'ITALIC'},
-      {label: 'Underline', style: 'UNDERLINE'}
+      {label: 'Bold', style: 'BOLD', icon: 'format_bold'},
+      {label: 'Italic', style: 'ITALIC', icon: 'format_italic'},
+      {label: 'Underline', style: 'UNDERLINE', icon: 'format_underline'}
     ])
   }
 
@@ -19,6 +19,7 @@ class InlineStyleControls extends React.Component {
             key={type.label}
             active={currentStyle.has(type.style)}
             label={type.label}
+            icon={type.icon}
             onToggle={this.props.onToggle}
             style={type.style}
           />

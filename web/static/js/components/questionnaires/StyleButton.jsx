@@ -10,15 +10,13 @@ class StyleButton extends Component {
   }
 
   render() {
-    let className = 'RichEditor-styleButton'
-    if (this.props.active) {
-      className += ' RichEditor-activeButton'
+    let className = 'material-icons'
+    if (!this.props.active) {
+      className += ' grey-text'
     }
 
     return (
-      <span className={className} onMouseDown={this.onToggle}>
-        {this.props.label}
-      </span>
+      <span style={{cursor: 'pointer'}} title={this.props.label} className={className} onMouseDown={this.onToggle}>{this.props.icon}</span>
     )
   }
 }
@@ -27,6 +25,7 @@ StyleButton.propTypes = {
   onToggle: PropTypes.func,
   active: PropTypes.bool,
   label: PropTypes.string,
+  icon: PropTypes.string,
   style: PropTypes.string
 }
 

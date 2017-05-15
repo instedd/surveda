@@ -801,6 +801,13 @@ i.survey-status { // icon for survey status on index
   }
 }
 
+.RichEditor-controls {
+  padding-top: 4px;
+  .material-icons {
+    padding-right: 10px;
+  }
+}
+
 .collection.dark .collection-item .RichEditor-root .public-DraftEditor-content {
   border-bottom-color: #757575;
 }
