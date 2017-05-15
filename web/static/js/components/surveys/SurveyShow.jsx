@@ -31,6 +31,19 @@ class SurveyShow extends Component {
     totalRespondents: React.PropTypes.number
   }
 
+  state: {
+    responsive: boolean,
+    contacted: boolean,
+    uncontacted: boolean
+  }
+
+  constructor(props) {
+    super(props)
+    this.state = {
+      responsive: false, contacted: false, uncontacted: false
+    }
+  }
+
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then(survey => {
@@ -147,7 +160,7 @@ class SurveyShow extends Component {
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
     let { questionnaire } = this.props
-    if (!questionnaire && survey) {
+    if (!questionnaire && survey && survey.questionnaires) {
       questionnaire = survey.questionnaires[Object.keys(survey.questionnaires)[0]]
     }
 
@@ -240,12 +253,58 @@ class SurveyShow extends Component {
     }
   }
 
+  expandGroup(group) {
+    let newState = {
+      ...this.state
+    }
+    newState[group] = !this.state[group]
+    this.setState(newState)
+  }
+
+  groupRows(group, groupStats) {
+    let details = groupStats.detail
+    let detailsKeys = Object.keys(details)
+    const groupRow =
+      <tr key={group}>
+        <td>{capitalize(group)}</td>
+        <td className='right-align'>{groupStats.count}</td>
+        <td className='right-align'>
+          {this.round(groupStats.percent)}%
+          <a onClick={e => this.expandGroup(group)}>
+            <i className='material-icons right grey-text'>expand_more</i>
+          </a>
+        </td>
+      </tr>
+
+    const rows = this.state[group]
+    ? <tr>
+      <td colSpan={100}>
+        <table>
+          {
+            detailsKeys.map((detail) => {
+              let individualStat = details[detail]
+              return (
+                <tr>
+                  <td>{capitalize(detail)}</td>
+                  <td className='right-align'>{individualStat.count}</td>
+                  <td className='right-align'>{individualStat.percent}%</td>
+                </tr>
+              )
+            })
+          }
+        </table>
+      </td>
+    </tr> : null
+
+    return [groupRow, rows]
+  }
+
   dispositions(respondentsStats) {
-    const dispositions = ['registered', 'queued', 'contacted', 'failed', 'unresponsive', 'started', 'ineligible', 'rejected', 'breakoff', 'refused', 'partial', 'completed']
+    const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
     return (
       <div className='card'>
         <div className='card-table-title'>
-        Dispositions
+          Dispositions
         </div>
         <div className='card-table'>
           <table>
@@ -253,20 +312,18 @@ class SurveyShow extends Component {
               <tr>
                 <th>Status</th>
                 <th className='right-align'>Quantity</th>
-                <th className='right-align'>Percent</th>
+                <th className='right-align'>
+                  Percent
+                </th>
               </tr>
             </thead>
             <tbody>
-              {dispositions.map(disposition => {
-                let stat = respondentsStats[disposition]
-                return (
-                  <tr key={disposition}>
-                    <td>{capitalize(disposition)}</td>
-                    <td className='right-align'>{ stat.count }</td>
-                    <td className='right-align'>{ this.round(stat.percent) }%</td>
-                  </tr>
-                )
-              })}
+              {
+                dispositionsGroup.map(group => {
+                  let groupStats = respondentsStats[group]
+                  return this.groupRows(group, groupStats)
+                })
+              }
             </tbody>
           </table>
         </div>
@@ -338,7 +395,7 @@ const mapStateToProps = (state, ownProps) => {
     completedRespondentsByDate = respondentsStatsRoot.respondentsByDate
     target = respondentsStatsRoot.totalQuota || respondentsStatsRoot.cutoff || totalRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
-    contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByDisposition.registered.count
+    contactedRespondents = totalRespondents - respondentsStatsRoot.respondentsByDisposition.uncontacted.detail.registered.count
   }
 
   return ({

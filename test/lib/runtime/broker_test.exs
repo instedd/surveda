@@ -346,6 +346,48 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
   end
 
+  test "retry respondent (mobileweb mode)" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
+    survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    # Set for immediate timeout
+    respondent = Repo.get!(Respondent, respondent.id)
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Second poll, retry the question
+    Broker.poll
+    refute_received [:setup, _, _, _, _]
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    # Set for immediate timeout
+    respondent = Repo.get!(Respondent, respondent.id)
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Third poll, this time it should stall
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "stalled"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "respondent answers after stalled with active survey" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 

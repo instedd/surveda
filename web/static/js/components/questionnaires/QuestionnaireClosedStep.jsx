@@ -66,8 +66,15 @@ class QuestionnaireClosedStep extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  hasErrors: hasErrorsInPrefixWithLanguage(state.questionnaire.errors, ownProps.errorPath, (state.questionnaire.data || {}).activeLanguage)
-})
+const mapStateToProps = (state, ownProps) => {
+  // For a language-selection step the errors are without a language
+  let lang = (state.questionnaire.data || {}).activeLanguage
+  if (ownProps.step.type == 'language-selection') {
+    lang = null
+  }
+  return {
+    hasErrors: hasErrorsInPrefixWithLanguage(state.questionnaire.errors, ownProps.errorPath, lang)
+  }
+}
 
 export default connect(mapStateToProps)(QuestionnaireClosedStep)

@@ -215,10 +215,10 @@ defmodule Ask.Runtime.Broker do
     primary_channel = RespondentGroup.primary_channel(group, mode)
     fallback_channel = RespondentGroup.fallback_channel(group, mode)
 
-    retries = Survey.retries_configuration(survey, primary_channel.type)
+    retries = Survey.retries_configuration(survey, primary_mode)
     fallback_retries = case fallback_channel do
       nil -> []
-      _ -> Survey.retries_configuration(survey, fallback_channel.type)
+      _ -> Survey.retries_configuration(survey, fallback_mode)
     end
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
