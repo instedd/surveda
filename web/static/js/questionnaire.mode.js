@@ -41,3 +41,11 @@ export const modeOrder = (mode: string) => {
     default: throw new Error(`Unknown mode: ${mode}`)
   }
 }
+
+export const defaultActiveMode = (modes: string[]) => {
+  if (modes.indexOf('sms') != -1) return 'sms'
+  if (modes.indexOf('ivr') != -1) return 'ivr'
+  if (modes.indexOf('mobileweb') != -1) return 'mobileweb'
+  if (modes.length > 0) return modes[0]
+  return null
+}

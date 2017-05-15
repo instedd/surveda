@@ -118,9 +118,9 @@ class StepNumericEditor extends Component {
     const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errorPath, errorsByPath, readOnly } = this.props
     const { ranges } = step
 
-    const sms = questionnaire.modes.indexOf('sms') != -1
-    const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
+    const sms = questionnaire.activeMode == 'sms'
+    const ivr = questionnaire.activeMode == 'ivr'
+    const mobileweb = questionnaire.activeMode == 'mobileweb'
 
     const refusal = step.refusal || newRefusal()
     const acceptsRefusals = !!refusal.enabled

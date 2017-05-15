@@ -1,11 +1,14 @@
 // @flow weak
 import * as api from '../api'
 import { newMultipleChoiceStep } from '../reducers/questionnaire'
+import { defaultActiveMode } from '../questionnaire.mode'
 
 export const FETCH = 'QUESTIONNAIRE_FETCH'
 export const RECEIVE = 'QUESTIONNAIRE_RECEIVE'
 export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
-export const TOGGLE_MODE = 'QUESTIONNAIRE_TOGGLE_MODE'
+export const SET_ACTIVE_MODE = 'QUESTIONNAIRE_SET_ACTIVE_MODE'
+export const ADD_MODE = 'QUESTIONNAIRE_ADD_MODE'
+export const REMOVE_MODE = 'QUESTIONNAIRE_REMOVE_MODE'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
@@ -82,12 +85,14 @@ export const fetchQuestionnaireIfNeeded = (projectId, id) => {
 export const receive = (questionnaire: Questionnaire): ReceiveDataAction => {
   // When we receive a questionnaire from the server, set the
   // activeLanguage property to be the same as the defaultLanguage,
-  // so we don't have to do `defaultLanguage || activeLanguage` everywhere
+  // so we don't have to do `defaultLanguage || activeLanguage` everywhere.
+  // Set activeMode too for the same reason.
   return {
     type: RECEIVE,
     data: {
       ...questionnaire,
-      activeLanguage: questionnaire.defaultLanguage
+      activeLanguage: questionnaire.defaultLanguage,
+      activeMode: defaultActiveMode(questionnaire.modes)
     }
   }
 }
@@ -213,8 +218,18 @@ export const changeName = (newName) => ({
   newName
 })
 
-export const toggleMode = (mode) => ({
-  type: TOGGLE_MODE,
+export const setActiveMode = (mode) => ({
+  type: SET_ACTIVE_MODE,
+  mode
+})
+
+export const addMode = (mode) => ({
+  type: ADD_MODE,
+  mode
+})
+
+export const removeMode = (mode) => ({
+  type: REMOVE_MODE,
   mode
 })
 

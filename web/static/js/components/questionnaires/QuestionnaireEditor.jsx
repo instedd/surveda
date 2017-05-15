@@ -14,7 +14,7 @@ import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
 import csvString from 'csv-string'
-import { ConfirmationModal } from '../ui'
+import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
 import * as language from '../../language'
 import * as routes from '../../routes'
 import * as api from '../../api'
@@ -26,19 +26,39 @@ type State = {
 class QuestionnaireEditor extends Component {
   state: State
   preventSecondImportZipDialog: boolean
+  setActiveMode: Function
+  addMode: Function
+  removeMode: Function
   deleteStep: Function
 
   constructor(props) {
     super(props)
     this.preventSecondImportZipDialog = false
+    this.setActiveMode = this.setActiveMode.bind(this)
+    this.addMode = this.addMode.bind(this)
+    this.removeMode = this.removeMode.bind(this)
     const initialState = props.location.state
     const isNew = initialState && initialState.isNew
     this.state = {isNew}
     this.deleteStep = this.deleteStep.bind(this)
   }
 
-  toggleMode(event, mode) {
-    this.props.questionnaireActions.toggleMode(mode)
+  setActiveMode(e, mode) {
+    e.preventDefault()
+    e.stopPropagation()
+    this.props.questionnaireActions.setActiveMode(mode)
+  }
+
+  addMode(e, mode) {
+    e.preventDefault()
+    e.stopPropagation()
+    this.props.questionnaireActions.addMode(mode)
+  }
+
+  removeMode(e, mode) {
+    e.preventDefault()
+    e.stopPropagation()
+    this.props.questionnaireActions.removeMode(mode)
   }
 
   toggleQuotaCompletedSteps(e) {
@@ -254,6 +274,61 @@ class QuestionnaireEditor extends Component {
     this.props.questionnaireActions.removeLanguage(lang)
   }
 
+  modeComponent(mode, label, icon, enabled) {
+    if (!enabled) return null
+
+    const { questionnaire } = this.props
+
+    let className = 'mode-label'
+    if (questionnaire.activeMode == mode) {
+      className += ' active'
+      icon = 'done'
+    }
+
+    return (
+      <div className='row mode-list' onClick={e => this.setActiveMode(e, mode)}>
+        <div className='col s12'>
+          <i className='material-icons v-middle left delete-mode' onClick={e => this.removeMode(e, mode)}>highlight_off</i>
+          <i className='material-icons v-middle left'>{icon}</i>
+          <span className={className}>{label}</span>
+        </div>
+      </div>
+    )
+  }
+
+  addModeSubcomponent(mode, label, icon, enabled) {
+    if (!enabled) return null
+
+    return (
+      <DropdownItem>
+        <a onClick={e => this.addMode(e, mode)}><i className='material-icons'>{icon}</i>{label}</a>
+      </DropdownItem>
+    )
+  }
+
+  addModeComponent(sms, ivr, mobileweb) {
+    if (sms && ivr && mobileweb) return null
+
+    const label = (
+      <span>
+        <i className='material-icons v-middle left'>add</i>
+        <span className='mode-label'>Add</span>
+      </span>
+    )
+
+    return (
+      <div className='row add-mode'>
+        <div className='col s12'>
+          <Dropdown label={label} dataBelowOrigin={false}>
+            { this.addModeSubcomponent('sms', 'SMS', 'sms', !sms) }
+            { this.addModeSubcomponent('ivr', 'Phone call', 'phone', !ivr) }
+            { this.addModeSubcomponent('mobileweb', 'Mobile web', 'phonelink', !mobileweb) }
+          </Dropdown>
+        </div>
+      </div>
+    )
+  }
+
   render() {
     const { questionnaire, project, readOnly, userSettings, errorsByPath } = this.props
 
@@ -321,42 +396,10 @@ class QuestionnaireEditor extends Component {
               <p className='grey-text'>Modes</p>
             </div>
           </div>
-          <div className='row'>
-            <div className='col s12'>
-              <i className='material-icons v-middle left'>sms</i>
-              <span className='mode-label'>SMS</span>
-              <div className='switch right'>
-                <label>
-                  <input type='checkbox' checked={sms} onChange={e => this.toggleMode(e, 'sms')} disabled={readOnly} />
-                  <span className='lever' />
-                </label>
-              </div>
-            </div>
-          </div>
-          <div className='row'>
-            <div className='col s12'>
-              <i className='material-icons v-middle left'>phone</i>
-              <span className='mode-label'>Phone call</span>
-              <div className='switch right'>
-                <label>
-                  <input type='checkbox' checked={ivr} onChange={e => this.toggleMode(e, 'ivr')} disabled={readOnly} />
-                  <span className='lever' />
-                </label>
-              </div>
-            </div>
-          </div>
-          <div className='row'>
-            <div className='col s12'>
-              <i className='material-icons v-middle left'>phonelink</i>
-              <span className='mode-label'>Mobile web</span>
-              <div className='switch right'>
-                <label>
-                  <input type='checkbox' checked={mobileweb} onChange={e => this.toggleMode(e, 'mobileweb')} disabled={readOnly} />
-                  <span className='lever' />
-                </label>
-              </div>
-            </div>
-          </div>
+          { this.modeComponent('sms', 'SMS', 'sms', sms) }
+          { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
+          { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
+          { this.addModeComponent(sms, ivr, mobileweb) }
         </div>
         {skipOnboarding
         ? <div className='col s12 m8 offset-m1'>
@@ -405,13 +448,13 @@ class QuestionnaireEditor extends Component {
           </div>
           : null
           }
-          { sms
+          { questionnaire.activeMode == 'sms'
           ? <SmsSettings readOnly={readOnly} />
           : null }
-          { ivr
+          { questionnaire.activeMode == 'ivr'
           ? <PhoneCallSettings readOnly={readOnly} />
           : null }
-          { mobileweb
+          { questionnaire.activeMode == 'mobileweb'
           ? <WebSettings readOnly={readOnly} />
           : null }
         </div>

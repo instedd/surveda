@@ -91,9 +91,9 @@ class StepMultipleChoiceEditor extends Component {
     const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath } = this.props
     const { choices } = step
 
-    const sms = questionnaire.modes.indexOf('sms') != -1
-    const ivr = questionnaire.modes.indexOf('ivr') != -1
-    const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
+    const sms = questionnaire.activeMode == 'sms'
+    const ivr = questionnaire.activeMode == 'ivr'
+    const mobileweb = questionnaire.activeMode == 'mobileweb'
 
     const choicesErrorPath = `${errorPath}.choices`
 
