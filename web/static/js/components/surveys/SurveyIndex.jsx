@@ -34,7 +34,9 @@ class SurveyIndex extends Component {
     dispatch(actions.fetchSurveys(projectId))
     .then(value => {
       for (const surveyId in value) {
-        dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+        if (value[surveyId].state != 'not_ready') {
+          dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+        }
       }
     })
     dispatch(channelsActions.fetchChannels())

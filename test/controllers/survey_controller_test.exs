@@ -30,7 +30,7 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "questionnaire_ids" => [], "state" => "not_ready"}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready"}
       ]
     end
 

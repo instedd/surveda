@@ -19,7 +19,6 @@ defmodule Ask.SurveyView do
       mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
-      questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
     }
   end
