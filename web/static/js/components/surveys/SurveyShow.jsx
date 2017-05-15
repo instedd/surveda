@@ -31,6 +31,12 @@ class SurveyShow extends Component {
     totalRespondents: React.PropTypes.number
   }
 
+  state: {
+    responsive: boolean,
+    contacted: boolean,
+    uncontacted: boolean
+  }
+
   constructor(props) {
     super(props)
     this.state = {
