@@ -127,7 +127,7 @@ defmodule Ask.QuestionnaireController do
     questionnaire = load_questionnaire(project, id)
 
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
-    audio_ids = collect_prompt_audio_ids(questionnaire.settings["quota_completed_message"], audio_ids)
+    audio_ids = collect_steps_audio_ids(questionnaire.quota_completed_steps, audio_ids)
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
 
     audios =
@@ -156,7 +156,7 @@ defmodule Ask.QuestionnaireController do
       name: questionnaire.name,
       modes: questionnaire.modes,
       steps: questionnaire.steps,
-      quota_completed_message: questionnaire.settings["quota_completed_message"],
+      quota_completed_steps: questionnaire.quota_completed_steps,
       error_message: questionnaire.settings["error_message"],
       mobile_web_sms_message: questionnaire.settings["mobile_web_sms_message"],
       mobile_web_survey_is_over_message: questionnaire.settings["mobile_web_survey_is_over_message"],
@@ -205,8 +205,8 @@ defmodule Ask.QuestionnaireController do
       name: Map.get(manifest, "name"),
       modes: Map.get(manifest, "modes"),
       steps: Map.get(manifest, "steps"),
+      quota_completed_steps: Map.get(manifest, "quota_completed_steps"),
       settings: %{
-        quota_completed_message: Map.get(manifest, "quota_completed_message"),
         error_message: Map.get(manifest, "error_message"),
         mobile_web_sms_message: Map.get(manifest, "mobile_web_sms_message"),
         mobile_web_survey_is_over_message: Map.get(manifest, "mobile_web_survey_is_over_message")
@@ -232,6 +232,10 @@ defmodule Ask.QuestionnaireController do
         IO.inspect(json_errors)
         conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
     end
+  end
+
+  defp collect_steps_audio_ids(nil, audio_ids) do
+    audio_ids
   end
 
   defp collect_steps_audio_ids(steps, audio_ids) do

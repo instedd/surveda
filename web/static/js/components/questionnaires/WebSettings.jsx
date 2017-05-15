@@ -34,7 +34,6 @@ class WebSettings extends Component {
 
   stateFromProps(props) {
     return {
-      quotaCompletedMessage: props.quotaCompletedMessage,
       errorMessage: props.errorMessage,
       thankYouMessage: props.thankYouMessage,
       title: props.title,
@@ -131,9 +130,6 @@ class WebSettings extends Component {
               <h5>
                 Messages
               </h5>
-              {this.quotaCompletedMessageComponent()}
-            </li>
-            <li className='collection-item'>
               {this.errorMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -155,17 +151,6 @@ class WebSettings extends Component {
         </Card>
       </div>
     )
-  }
-
-  quotaCompletedMessageComponent() {
-    return <MobileWebPrompt id='web_settings_quota_completed'
-      label='Quota completed message'
-      inputErrors={this.messageErrors('quotaCompletedMessage')}
-      value={this.state.quotaCompletedMessage}
-      originalValue={this.state.quotaCompletedMessage}
-      onBlur={text => this.messageBlur(text, 'quotaCompletedMessage')}
-      readOnly={this.props.readOnly}
-      />
   }
 
   errorMessageComponent() {
@@ -313,8 +298,7 @@ class WebSettings extends Component {
   }
 
   hasErrors() {
-    return !!this.messageErrors('quotaCompletedMessage') ||
-      !!this.messageErrors('errorMessage') ||
+    return !!this.messageErrors('errorMessage') ||
       !!this.messageErrors('thankYouMessage') ||
       !!this.titleErrors() ||
       !!this.smsMessageErrors() ||
@@ -342,7 +326,6 @@ WebSettings.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
   errorsByPath: PropTypes.object,
-  quotaCompletedMessage: PropTypes.string,
   errorMessage: PropTypes.string,
   thankYouMessage: PropTypes.string,
   title: PropTypes.string,
@@ -358,7 +341,6 @@ const mapStateToProps = (state, ownProps) => {
   return {
     questionnaire: quiz.data,
     errorsByPath: quiz.errorsByPath,
-    quotaCompletedMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.quotaCompletedMessage, quiz.data.activeLanguage) : '',
     errorMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : '',
     thankYouMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : '',
     title: quiz.data ? (quiz.data.settings.title || {})[quiz.data.activeLanguage] || '' : '',

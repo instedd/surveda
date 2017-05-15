@@ -122,6 +122,7 @@ const bareQuestionnaire: Questionnaire = {
       }
     }
   ],
+  quotaCompletedSteps: null,
   projectId: 1,
   name: 'Foo',
   modes: [
@@ -132,7 +133,6 @@ const bareQuestionnaire: Questionnaire = {
   activeLanguage: 'en',
   languages: ['en'],
   settings: {
-    quotaCompletedMessage: {},
     errorMessage: {},
     mobileWebSmsMessage: '',
     mobileWebSurveyIsOverMessage: '',

@@ -21,6 +21,7 @@ type Props = {
   errorPath: string,
   errorsByPath: ErrorsByPath,
   readOnly: boolean,
+  quotaCompletedSteps: boolean,
   stepsAfter: Step[],
   stepsBefore: Step[]
 };
@@ -70,11 +71,11 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, readOnly } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, readOnly, quotaCompletedSteps } = this.props
 
     return (
-      <DraggableStep step={step} readOnly={readOnly}>
-        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />} >
+      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
+        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />} >
           <StepPrompts
             step={step}
             readOnly={readOnly}

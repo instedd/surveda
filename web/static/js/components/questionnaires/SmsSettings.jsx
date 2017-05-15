@@ -34,7 +34,6 @@ class SmsSettings extends Component {
 
   stateFromProps(props) {
     return {
-      quotaCompletedMessage: props.quotaCompletedMessage,
       errorMessage: props.errorMessage,
       thankYouMessage: props.thankYouMessage
     }
@@ -94,9 +93,6 @@ class SmsSettings extends Component {
               </div>
             </li>
             <li className='collection-item'>
-              {this.quotaCompletedMessageComponent()}
-            </li>
-            <li className='collection-item'>
               {this.errorMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -106,21 +102,6 @@ class SmsSettings extends Component {
         </Card>
       </div>
     )
-  }
-
-  quotaCompletedMessageComponent() {
-    return <SmsPrompt id='sms_settings_quota_completed'
-      label='Quota completed message'
-      inputErrors={this.messageErrors('quotaCompletedMessage')}
-      value={this.state.quotaCompletedMessage}
-      originalValue={this.state.quotaCompletedMessage}
-      readOnly={this.props.readOnly}
-      onChange={text => this.messageChange(text, 'quotaCompletedMessage')}
-      onBlur={text => this.messageBlur(text, 'quotaCompletedMessage')}
-      autocomplete
-      autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'quotaCompletedMessage')}
-      autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'quotaCompletedMessage')}
-      />
   }
 
   errorMessageComponent() {
@@ -159,7 +140,7 @@ class SmsSettings extends Component {
   }
 
   hasErrors() {
-    return !!this.messageErrors('quotaCompletedMessage') || !!this.messageErrors('errorMessage')
+    return !!this.messageErrors('errorMessage')
   }
 
   autocompleteGetData(value, callback, key) {
@@ -168,7 +149,7 @@ class SmsSettings extends Component {
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
-    const scope = key == 'quotaCompletedMessage' ? 'quota_completed' : (key == 'errorMessage' ? 'error' : 'thank_you')
+    const scope = key == 'errorMessage' ? 'error' : 'thank_you'
 
     if (activeLanguage == defaultLanguage) {
       api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', scope, defaultLanguage, value)
@@ -225,7 +206,6 @@ SmsSettings.propTypes = {
   dispatch: PropTypes.any,
   questionnaire: PropTypes.object,
   errorsByPath: PropTypes.object,
-  quotaCompletedMessage: PropTypes.string,
   errorMessage: PropTypes.string,
   thankYouMessage: PropTypes.string,
   readOnly: PropTypes.bool
@@ -236,7 +216,6 @@ const mapStateToProps = (state, ownProps) => {
   return {
     questionnaire: quiz.data,
     errorsByPath: quiz.errorsByPath,
-    quotaCompletedMessage: quiz.data ? getPromptSms(quiz.data.settings.quotaCompletedMessage, quiz.data.activeLanguage) : '',
     errorMessage: quiz.data ? getPromptSms(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : '',
     thankYouMessage: quiz.data ? getPromptSms(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : ''
 
