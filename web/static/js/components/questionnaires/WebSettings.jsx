@@ -163,7 +163,6 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('quotaCompletedMessage')}
       value={this.state.quotaCompletedMessage}
       originalValue={this.state.quotaCompletedMessage}
-      onChange={text => this.messageChange(text, 'quotaCompletedMessage')}
       onBlur={text => this.messageBlur(text, 'quotaCompletedMessage')}
       readOnly={this.props.readOnly}
       />
@@ -175,7 +174,6 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('errorMessage')}
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
-      onChange={text => this.messageChange(text, 'errorMessage')}
       onBlur={text => this.messageBlur(text, 'errorMessage')}
       readOnly={this.props.readOnly}
       />
@@ -187,7 +185,6 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
-      onChange={text => this.messageChange(text, 'thankYouMessage')}
       onBlur={text => this.messageBlur(text, 'thankYouMessage')}
       readOnly={this.props.readOnly}
       />
@@ -199,7 +196,6 @@ class WebSettings extends Component {
       inputErrors={this.titleErrors()}
       value={this.state.title}
       originalValue={this.state.title}
-      onChange={text => this.messageChange(text, 'title')}
       onBlur={text => this.titleBlur(text)}
       readOnly={this.props.readOnly}
       />
@@ -224,7 +220,6 @@ class WebSettings extends Component {
       inputErrors={this.surveyIsOverMessageErrors()}
       value={this.state.surveyIsOverMessage}
       originalValue={this.state.surveyIsOverMessage}
-      onChange={text => this.messageChange(text, 'surveyIsOverMessage')}
       onBlur={text => this.surveyIsOverMessageBlur(text)}
       readOnly={this.props.readOnly}
       />
@@ -236,7 +231,6 @@ class WebSettings extends Component {
       inputErrors={this.surveyAlreadyTakenMessageErrors()}
       value={this.state.surveyAlreadyTakenMessage}
       originalValue={this.state.surveyAlreadyTakenMessage}
-      onChange={text => this.messageChange(text, 'surveyAlreadyTakenMessage')}
       onBlur={text => this.surveyAlreadyTakenMessageBlur(text)}
       readOnly={this.props.readOnly}
       />

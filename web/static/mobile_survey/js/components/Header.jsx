@@ -10,7 +10,7 @@ class Header extends Component {
     return (
       <header>
         <nav style={{'backgroundColor': this.context.primaryColor}}>
-          <h1>{title}</h1>
+          <h1 dangerouslySetInnerHTML={{__html: title}} />
           <div className='progressBar'>
             <span style={{ width: percent, backgroundColor: this.context.secondaryColor }} />
           </div>

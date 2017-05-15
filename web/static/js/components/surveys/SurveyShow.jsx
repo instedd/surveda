@@ -147,7 +147,7 @@ class SurveyShow extends Component {
     const cumulativeCount = RespondentsChartCount.cumulativeCount(completedByDate, target)
 
     let { questionnaire } = this.props
-    if (!questionnaire && survey) {
+    if (!questionnaire && survey && survey.questionnaires) {
       questionnaire = survey.questionnaires[Object.keys(survey.questionnaires)[0]]
     }
 
