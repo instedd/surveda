@@ -427,7 +427,7 @@ describe('questionnaire reducer', () => {
           actions.receive(questionnaire),
           actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'M', 'end'),
           actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
-          actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', 'M', 'some-id', true)
+          actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', '', 'some-id', true)
         ])
 
         const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')

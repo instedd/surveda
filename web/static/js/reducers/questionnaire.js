@@ -136,7 +136,7 @@ const changeChoice = (state, action) => {
   let mobilewebValues = action.choiceChange.mobilewebValues.trim()
 
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
-    [smsValues, ivrValues] = autoComplete(state, response)
+    [smsValues, ivrValues, mobilewebValues] = autoComplete(state, response)
   }
 
   return changeStep(state, action.stepId, (step) => {
@@ -213,6 +213,7 @@ const autoComplete = (state, value) => {
 
   let smsValues = ''
   let ivrValues = ''
+  let mobilewebValues = ''
 
   const steps = state.steps
   steps.forEach((step) => {
@@ -228,11 +229,15 @@ const autoComplete = (state, value) => {
           if (choice.responses.ivr) {
             ivrValues = choice.responses.ivr.join(',')
           }
+
+          if (choice.responses.mobileweb && choice.responses.mobileweb[state.activeLanguage]) {
+            mobilewebValues = choice.responses.mobileweb[state.activeLanguage]
+          }
         }
       })
     }
   })
-  return [smsValues, ivrValues]
+  return [smsValues, ivrValues, mobilewebValues]
 }
 
 const splitValues = (values) => {
