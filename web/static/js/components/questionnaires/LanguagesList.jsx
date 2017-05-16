@@ -6,13 +6,14 @@ import 'materialize-autocomplete'
 import iso6393 from 'iso-639-3'
 import classNames from 'classnames/bind'
 import AddLanguage from './AddLanguage'
+import { hasErrorsInLanguage } from '../../questionnaireErrors'
 
 type Props = {
   defaultLanguage: string,
   activeLanguage: string,
   languages: string[],
   loading: boolean,
-  errorsByLang: ErrorsByLang,
+  errors: ValidationError[],
   onRemoveLanguage: Function,
   dispatch: Function,
   readOnly: boolean
@@ -40,7 +41,7 @@ class LanguagesList extends Component {
   }
 
   render() {
-    const { loading, languages, defaultLanguage, activeLanguage, onRemoveLanguage, errorsByLang, readOnly } = this.props
+    const { loading, languages, defaultLanguage, activeLanguage, onRemoveLanguage, errors, readOnly } = this.props
 
     if (loading) {
       return <div>Loading...</div>
@@ -50,7 +51,7 @@ class LanguagesList extends Component {
     otherLanguages = otherLanguages.map((lang: string) => [lang, this.translateLangCode(lang)])
     otherLanguages = otherLanguages.sort((l1, l2) => (l1[1] <= l2[1]) ? -1 : 1)
     otherLanguages = otherLanguages.map((lang) =>
-      <li key={lang[0]} className={classNames({'active-language': lang[0] == activeLanguage, 'tooltip-error': !!errorsByLang[lang[0]]})}>
+      <li key={lang[0]} className={classNames({'active-language': lang[0] == activeLanguage, 'tooltip-error': hasErrorsInLanguage(errors, lang[0])})}>
         {readOnly
         ? null
         : <div>
@@ -96,7 +97,7 @@ class LanguagesList extends Component {
           <div className='col s12'>
             <p className='grey-text'>Primary language:</p>
             <ul className={defaultLanguageClassnames}>
-              <li className={classNames({'tooltip-error': !!errorsByLang[defaultLanguage]})}>
+              <li className={classNames({'tooltip-error': hasErrorsInLanguage(errors, defaultLanguage)})}>
                 <span>{this.translateLangCode(defaultLanguage)}</span>
                 <span href='#' className='right-arrow' onClick={e => this.setActiveLanguage(e, defaultLanguage)}>
                   <i className='material-icons'>keyboard_arrow_right</i>
@@ -122,7 +123,7 @@ const mapStateToProps = (state, ownProps) => ({
   activeLanguage: (state.questionnaire.data || {}).activeLanguage,
   languages: (state.questionnaire.data || {}).languages,
   loading: !state.questionnaire.data,
-  errorsByLang: state.questionnaire.errorsByLang
+  errors: state.questionnaire.errors
 })
 
 export default connect(mapStateToProps)(LanguagesList)

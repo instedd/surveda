@@ -301,6 +301,7 @@ i.survey-status { // icon for survey status on index
   }
   .mode-list {
     cursor: pointer;
+    height: 28px;
     .delete-mode {
       opacity: 0;
     }
@@ -308,6 +309,20 @@ i.survey-status { // icon for survey status on index
       .delete-mode {
         @extend .grey-text;
         opacity: 1;
+      }
+    }
+    &.tooltip-error {
+      position: relative;
+      &:after {
+        content: '';
+        @extend .back-error;
+        display: block;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        position: absolute;
+        top: 5px;
+        right: 37px;
       }
     }
   }

@@ -114,7 +114,7 @@ class QuestionnaireSteps extends Component {
             onDelete={this.deleteStep}
             stepsAfter={stepsAfter}
             stepsBefore={stepsBefore} />
-          <StepsList steps={stepsAfter} onClick={this.selectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+          <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={this.selectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
         </div>
       )
     }
