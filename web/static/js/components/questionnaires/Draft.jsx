@@ -1,4 +1,5 @@
 import React, {PropTypes} from 'react'
+import { Autocomplete } from '../ui'
 
 import {
  Editor,
@@ -16,6 +17,7 @@ class Draft extends React.Component {
     super(props)
 
     this.hasFocus = false
+    this.autocompleteTimer = null
 
     this.state = this.stateFromProps(props)
 
@@ -24,22 +26,46 @@ class Draft extends React.Component {
     this.onFocus = (editorState) => {
       this.hasFocus = true
       this.redraw()
+
+      if (this.refs.autocomplete) {
+        this.refs.autocomplete.unhide()
+      }
     }
 
     this.onChange = (editorState) => {
       this.setState({editorState})
       this.redraw()
+
+      if (this.refs.hidden_input) {
+        if (this.autocompleteTimer) {
+          clearTimeout(this.autocompleteTimer)
+          this.autocompleteTimer = null
+        }
+
+        const oldPlainText = this.getPlainText()
+        const plainText = this.getPlainText(editorState)
+        if (oldPlainText != plainText) {
+          this.autocompleteTimer = setTimeout(() => {
+            this.refs.hidden_input.value = plainText
+            $(this.refs.hidden_input).trigger('input')
+          }, 300)
+        }
+      }
     }
 
     this.onBlur = (editorState) => {
       this.hasFocus = false
       this.redraw()
+
+      if (this.refs.autocomplete) {
+        this.refs.autocomplete.hide()
+      }
+
       props.onBlur(this.getText())
     }
 
     this.getText = () => {
-      const content = this.state.editorState.getCurrentContent()
-      const plainText = content.getPlainText('\n')
+      const plainText = this.getPlainText()
       if (plainText.trim().length == 0) {
         return ''
       } else {
@@ -49,6 +75,11 @@ class Draft extends React.Component {
           return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
         }
       }
+    }
+
+    this.getPlainText = (editorState = this.state.editorState) => {
+      const content = editorState.getCurrentContent()
+      return content.getPlainText('\n')
     }
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
@@ -132,6 +163,21 @@ class Draft extends React.Component {
       className = `${className} invalid`
     }
 
+    let autocompleteComponents = null
+    if (this.props.autocomplete) {
+      autocompleteComponents = [
+        <input key='one' ref='hidden_input' type='hidden' />,
+        <Autocomplete
+          key='two'
+          ref='autocomplete'
+          getInput={() => this.refs.hidden_input}
+          getData={(value, callback) => { console.log(value); this.props.autocompleteGetData(value, callback) }}
+          onSelect={(item) => this.props.autocompleteOnSelect(item)}
+          className='language-dropdown'
+        />
+      ]
+    }
+
     return (
       <div className='RichEditor-root'>
         <div className={className} onClick={this.focus}>
@@ -151,6 +197,7 @@ class Draft extends React.Component {
           />
         </div>
         {errorComponent}
+        {autocompleteComponents}
         <InlineStyleControls
           editorState={editorState}
           onToggle={this.toggleInlineStyle}
@@ -164,6 +211,9 @@ Draft.propTypes = {
   label: PropTypes.string,
   errors: PropTypes.any,
   onBlur: PropTypes.func,
+  autocomplete: PropTypes.bool,
+  autocompleteGetData: PropTypes.func,
+  autocompleteOnSelect: PropTypes.func,
   value: PropTypes.string,
   readOnly: PropTypes.bool,
   plainText: PropTypes.bool
