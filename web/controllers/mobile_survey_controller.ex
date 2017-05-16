@@ -5,22 +5,16 @@ defmodule Ask.MobileSurveyController do
 
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     respondent = Respondent |> Repo.get(respondent_id)
-    case respondent do
-      nil ->
-        conn
-          |> put_status(:not_found)
-          |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-          |> render("404.html")
-      _ ->
-        questionnaire = (Respondent
-          |> Repo.get(respondent_id)
-          |> Repo.preload(:questionnaire)).questionnaire
-
-        color_style = questionnaire.settings["mobile_web_color_style"]
-
-        authorize(conn, respondent_id, token, fn ->
-          render_index(conn, respondent_id, token, color_style)
-        end)
+    if !respondent do
+      conn
+        |> put_status(:not_found)
+        |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+        |> render("404.html")
+    else
+      color_style = color_style_for(respondent_id)
+      authorize(conn, respondent_id, token, fn ->
+        render_index(conn, respondent_id, token, color_style)
+      end)
     end
   end
 
@@ -28,6 +22,21 @@ defmodule Ask.MobileSurveyController do
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
     |> render("index.html", respondent_id: respondent_id, token: token, color_style: color_style)
+  end
+
+  defp color_style_for(respondent_id) do
+    (Respondent
+      |> Repo.get(respondent_id)
+      |> Repo.preload(:questionnaire)).questionnaire.settings["mobile_web_color_style"]
+  end
+
+  defp primary_color_for(color_style) do
+    case color_style do
+      nil ->
+        ''
+      color_style ->
+        color_style["primary_color"]
+    end
   end
 
   def get_step(conn, %{"respondent_id" => respondent_id, "token" => token}) do
@@ -124,7 +133,15 @@ defmodule Ask.MobileSurveyController do
     if Respondent.token(respondent_id) == token do
       success_fn.()
     else
-      raise Ask.UnauthorizedError, conn: conn
+      respondent = Respondent |> Repo.get(respondent_id)
+      color_style = color_style_for(respondent_id)
+
+      primary_color = primary_color_for(color_style)
+
+      conn
+        |> put_status(403)
+        |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+        |> render("unauthorized.html", header_color: primary_color)
     end
   end
 
@@ -151,5 +168,14 @@ defmodule Ask.MobileSurveyController do
 
       success_fn.(conn)
     end
+  end
+
+  def unauthorized_error(conn, %{"id" => respondent_id}) do
+    color_style = color_style_for(respondent_id)
+    primary_color = primary_color_for(color_style)
+    conn
+      |> put_status(401)
+      |> put_layout({Ask.LayoutView, "mobile_survey.html"})
+      |> render("unauthorized.html", header_color: primary_color)
   end
 end

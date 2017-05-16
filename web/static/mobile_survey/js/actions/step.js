@@ -5,9 +5,13 @@ export const RECEIVE = 'STEP_RECEIVE'
 
 export const fetchStep = (dispatch: (action: any) => any, respondentId: any, token: string) => {
   return api.fetchStep(respondentId, token).then((response: any) => {
-    response.json().then(json => {
-      dispatch(receiveStep(json))
-    })
+    if (response.status == 401 || response.status == 403) {
+      window.location = window.location.origin + '/mobile_survey/errors/unauthorized?id=' + respondentId
+    } else {
+      response.json().then(json => {
+        dispatch(receiveStep(json))
+      })
+    }
   })
 }
 
