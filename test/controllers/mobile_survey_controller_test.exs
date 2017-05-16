@@ -217,9 +217,8 @@ defmodule Ask.MobileSurveyControllerTest do
     conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
     assert response(conn, 200)
 
-    assert_error_sent :forbidden, fn ->
-      get conn, mobile_survey_path(conn, :index, respondent.id, %{token: "some invalid token"})
-    end
+    conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: "some invalid token"})
+    assert conn.status == 403
 
     :ok = broker |> GenServer.stop
     :ok = config |> GenServer.stop
