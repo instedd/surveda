@@ -1,12 +1,14 @@
 import React, {PropTypes} from 'react'
 import { Autocomplete } from '../ui'
+import CharacterCounter from '../CharacterCounter'
 
 import {
  Editor,
  ContentState,
  convertFromHTML,
  EditorState,
- RichUtils
+ RichUtils,
+ getDefaultKeyBinding
 } from 'draft-js'
 
 import InlineStyleControls from './InlineStyleControls'
@@ -20,6 +22,13 @@ class Draft extends React.Component {
     this.autocompleteTimer = null
 
     this.state = this.stateFromProps(props)
+
+    this.keyBindingFn = (e) => {
+      if (e.keyCode === 13 /* `Enter` key */ && e.nativeEvent.shiftKey) {
+        return 'split'
+      }
+      return getDefaultKeyBinding(e)
+    }
 
     this.focus = () => this.refs.editor.focus()
 
@@ -54,6 +63,12 @@ class Draft extends React.Component {
     }
 
     this.onBlur = (editorState) => {
+      // Prevent `onBlur` being fired when an autocomplete option is being clicked,
+      // because we want the autocomplete to have precedence
+      if (this.refs.autocomplete && this.refs.autocomplete.clickingAutocomplete) {
+        return
+      }
+
       this.hasFocus = false
       this.redraw()
 
@@ -89,6 +104,35 @@ class Draft extends React.Component {
 
   _handleKeyCommand(command) {
     const {editorState} = this.state
+
+    if (command == 'split') {
+      if (this.props.onSplit) {
+        // The editor content is made of a list of content blocks,
+        // and the selection info gives as the caret position at
+        // a given block. We need to find that block and sum all
+        // of the text of the previous blocks to know the *real*
+        // caret position in the whole text.
+        const selection = editorState.getSelection()
+        const startKey = selection.getStartKey()
+        const startOffset = selection.getStartOffset()
+        const blocks = editorState.getCurrentContent().getBlocksAsArray()
+        let caretIndex = startOffset
+        for (let i = 0; i < blocks.length; i++) {
+          const block = blocks[i]
+          if (block.getKey() == startKey) {
+            break
+          }
+          caretIndex += block.getText().length
+        }
+
+        this.props.onSplit(caretIndex)
+      }
+      return
+    }
+
+    // Disallow bold, italic, etc., when plain-text
+    if (this.props.plainText) return
+
     const newState = RichUtils.handleKeyCommand(editorState, command)
     if (newState) {
       this.onChange(newState)
@@ -134,7 +178,15 @@ class Draft extends React.Component {
   }
 
   stateFromProps(props) {
-    const blocksFromHTML = convertFromHTML(props.value)
+    let value = props.value
+
+    // Because we use `convertFromHTML`, in the case of a plain text
+    // we need to replace `\n` with `<br/>` so that newlines are preserved
+    if (props.plainText) {
+      value = value.replace(/\n/g, '<br/>')
+    }
+
+    const blocksFromHTML = convertFromHTML(value)
     const state = ContentState.createFromBlockArray(
       blocksFromHTML.contentBlocks,
       blocksFromHTML.entityMap
@@ -171,11 +223,26 @@ class Draft extends React.Component {
           key='two'
           ref='autocomplete'
           getInput={() => this.refs.hidden_input}
-          getData={(value, callback) => { console.log(value); this.props.autocompleteGetData(value, callback) }}
+          getData={(value, callback) => this.props.autocompleteGetData(value, callback)}
           onSelect={(item) => this.props.autocompleteOnSelect(item)}
           className='language-dropdown'
         />
       ]
+    }
+
+    let styleControls = null
+    if (!this.props.plainText) {
+      styleControls = (
+        <InlineStyleControls
+          editorState={editorState}
+          onToggle={this.toggleInlineStyle}
+        />
+      )
+    }
+
+    let characterCounter = null
+    if (this.props.characterCounter) {
+      characterCounter = <CharacterCounter ref='characterCounter' text={this.getPlainText(editorState)} fixedLength={this.props.characterCounterFixedLength} />
     }
 
     return (
@@ -187,6 +254,7 @@ class Draft extends React.Component {
           <Editor
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
+            keyBindingFn={this.keyBindingFn}
             onChange={this.onChange}
             onFocus={this.onFocus}
             onBlur={this.onBlur}
@@ -197,11 +265,9 @@ class Draft extends React.Component {
           />
         </div>
         {errorComponent}
+        {characterCounter}
         {autocompleteComponents}
-        <InlineStyleControls
-          editorState={editorState}
-          onToggle={this.toggleInlineStyle}
-        />
+        {styleControls}
       </div>
     )
   }
@@ -214,9 +280,12 @@ Draft.propTypes = {
   autocomplete: PropTypes.bool,
   autocompleteGetData: PropTypes.func,
   autocompleteOnSelect: PropTypes.func,
+  onSplit: PropTypes.func,
   value: PropTypes.string,
   readOnly: PropTypes.bool,
-  plainText: PropTypes.bool
+  plainText: PropTypes.bool,
+  characterCounter: PropTypes.bool,
+  characterCounterFixedLength: PropTypes.number
 }
 
 export default Draft

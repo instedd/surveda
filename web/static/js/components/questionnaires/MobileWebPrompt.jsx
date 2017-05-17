@@ -22,7 +22,13 @@ class MobileWebPrompt extends Component {
       <div>
         <div className='row'>
           <div className='col s12 mobile-prompt'>
-            <Draft label={label} onBlur={onBlur} errors={shouldDisplayErrors && inputErrors} value={value} readOnly={readOnly} />
+            <Draft
+              label={label}
+              onBlur={onBlur}
+              errors={shouldDisplayErrors && inputErrors}
+              value={value}
+              readOnly={readOnly}
+              />
           </div>
         </div>
       </div>

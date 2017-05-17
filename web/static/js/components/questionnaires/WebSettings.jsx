@@ -193,7 +193,6 @@ class WebSettings extends Component {
       value={this.state.smsMessage}
       originalValue={this.state.smsMessage}
       readOnly={this.props.readOnly}
-      onChange={text => this.messageChange(text, 'smsMessage')}
       onBlur={text => this.smsMessageBlur(text)}
       fixedEndLength={20}
       />

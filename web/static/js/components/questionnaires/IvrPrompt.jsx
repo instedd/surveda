@@ -1,11 +1,11 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { InputWithLabel, ConfirmationModal, AudioDropzone, Dropdown, DropdownItem, Autocomplete } from '../ui'
+import { ConfirmationModal, AudioDropzone, Dropdown, DropdownItem } from '../ui'
+import Draft from './Draft'
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
-import classNames from 'classnames/bind'
 import propsAreEqual from '../../propsAreEqual'
 import { Preloader } from 'react-materialize'
 
@@ -42,24 +42,6 @@ class IvrPrompt extends Component {
     }
   }
 
-  onBlur(e) {
-    const autocomplete = this.refs.autocomplete
-    if (autocomplete) {
-      if (autocomplete.clickingAutocomplete) return
-      autocomplete.hide()
-    }
-
-    const { onBlur } = this.props
-    onBlur(e)
-  }
-
-  onFocus() {
-    const { autocomplete } = this.refs
-    if (autocomplete) {
-      autocomplete.unhide()
-    }
-  }
-
   componentWillReceiveProps(newProps) {
     if (propsAreEqual(this.props, newProps)) return
 
@@ -88,13 +70,11 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { id, value, inputErrors, audioIdErrors, onChange, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId } = this.props
+    const { value, inputErrors, audioIdErrors, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId } = this.props
     let { label } = this.props
     if (!label) label = 'Voice message'
 
     const shouldDisplayErrors = value == this.props.originalValue
-
-    const maybeInvalidClass = classNames({'validate invalid': inputErrors && shouldDisplayErrors})
 
     let audioComponent = <AudioDropzone error={!!audioIdErrors} onDrop={files => this.state.handleFileUpload(files)} onDropRejected={() => $('#invalidTypeFile').modal('open')} />
     if (uploadingAudio && uploadingAudio == stepId) {
@@ -111,34 +91,21 @@ class IvrPrompt extends Component {
         </div>
     }
 
-    let autocompleteComponent = null
-    if (autocomplete) {
-      autocompleteComponent = (
-        <Autocomplete
-          getInput={() => this.ivrInput}
-          getData={(value, callback) => autocompleteGetData(value, callback)}
-          onSelect={(item) => autocompleteOnSelect(item)}
-          ref='autocomplete'
-        />
-      )
-    }
-
     return (
       <div>
         <div className='row'>
-          <div className='col input-field s12'>
-            <InputWithLabel id={id} value={value} label={label} errors={inputErrors} >
-              <input
-                type='text'
-                disabled={readOnly}
-                onChange={e => onChange(e)}
-                onBlur={e => this.onBlur(e)}
-                onFocus={e => this.onFocus()}
-                className={maybeInvalidClass}
-                ref={ref => { this.ivrInput = ref; $(ref).addClass(maybeInvalidClass) }}
-              />
-            </InputWithLabel>
-            {autocompleteComponent}
+          <div className='col s12'>
+            <Draft
+              label={label}
+              value={value}
+              errors={shouldDisplayErrors && inputErrors}
+              readOnly={readOnly}
+              onBlur={text => this.props.onBlur(text)}
+              plainText
+              autocomplete={autocomplete}
+              autocompleteGetData={autocompleteGetData}
+              autocompleteOnSelect={autocompleteOnSelect}
+            />
           </div>
         </div>
 
@@ -180,14 +147,12 @@ class IvrPrompt extends Component {
 }
 
 IvrPrompt.propTypes = {
-  id: PropTypes.string.isRequired,
   label: PropTypes.string,
   customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
   audioIdErrors: PropTypes.array,
-  onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   autocomplete: PropTypes.bool.isRequired,
   autocompleteGetData: PropTypes.func.isRequired,

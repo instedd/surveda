@@ -46,10 +46,6 @@ class StepPrompts extends Component {
     this.state = this.stateFromProps(props)
   }
 
-  stepPromptSmsChange(text) {
-    this.setState({stepPromptSms: text})
-  }
-
   stepPromptSmsSubmit(text) {
     this.props.questionnaireActions.changeStepPromptSms(this.props.step.id, text)
   }
@@ -58,16 +54,10 @@ class StepPrompts extends Component {
     this.props.questionnaireActions.changeStepPromptMobileWeb(this.props.step.id, text)
   }
 
-  stepPromptIvrChange(e) {
-    e.preventDefault()
-    this.setState({stepPromptIvrText: e.target.value})
-  }
-
-  stepPromptIvrSubmit(e) {
-    e.preventDefault()
+  stepPromptIvrSubmit(text) {
     const { step } = this.props
     this.props.questionnaireActions.changeStepPromptIvr(step.id, {
-      text: e.target.value,
+      text,
       audioSource: this.state.stepPromptIvr.audioSource
     })
   }
@@ -174,7 +164,6 @@ class StepPrompts extends Component {
         value={this.state.stepPromptSms}
         inputErrors={smsInputErrors}
         readOnly={readOnly}
-        onChange={text => this.stepPromptSmsChange(text)}
         onBlur={text => this.stepPromptSmsSubmit(text)}
         autocomplete={autocomplete}
         autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'sms')}
@@ -186,15 +175,14 @@ class StepPrompts extends Component {
     if (ivr) {
       let ivrInputErrors = errorsByPath[`${path}.ivr.text`]
       let ivrAudioIdErrors = errorsByPath[`${path}.ivr.audioId`]
-      ivrInput = <IvrPrompt id='step_editor_ivr_prompt'
+      ivrInput = <IvrPrompt
         key={`${questionnaire.activeLanguage}-ivr-prompt`}
         value={this.state.stepPromptIvrText}
         originalValue={this.state.ivrOriginalValue}
         inputErrors={ivrInputErrors}
         audioIdErrors={ivrAudioIdErrors}
         readOnly={readOnly}
-        onChange={e => this.stepPromptIvrChange(e)}
-        onBlur={e => this.stepPromptIvrSubmit(e)}
+        onBlur={text => this.stepPromptIvrSubmit(text)}
         autocomplete={autocomplete}
         autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'ivr')}
         autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'ivr')}

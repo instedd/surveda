@@ -1,15 +1,11 @@
 import React, { Component, PropTypes } from 'react'
-import { InputWithLabel, Autocomplete } from '../ui'
-import classNames from 'classnames/bind'
+import Draft from './Draft'
 import { splitSmsText, joinSmsPieces } from '../../step'
-import CharacterCounter from '../CharacterCounter'
 import {limitExceeded} from '../../characterCounter'
 import filter from 'lodash/filter'
 
 class SmsPrompt extends Component {
-  onBlur(e) {
-    e.preventDefault()
-
+  onBlur() {
     let autocomplete = this.refs.autocomplete
     if (autocomplete) {
       if (autocomplete.clickingAutocomplete) return
@@ -20,79 +16,53 @@ class SmsPrompt extends Component {
     onBlur(this.getText())
   }
 
-  onChange(e) {
-    e.preventDefault()
-
-    const { onChange } = this.props
-    onChange(this.getText())
-  }
-
-  checkKeyUp(e, index) {
-    if (e.shiftKey && e.key == 'Enter') {
-      e.preventDefault()
-      this.splitPiece(e, index)
-    }
-    // This is due to a materialize css bug. The onChange event doesn't get fired when erasing the last character of the input, so a manual trigger is needed in that case
-    if (!e.target.value) {
-      this.onChange(e)
-    }
-  }
-
-  splitPiece(e, index) {
-    let caretIndex = e.target.selectionStart
-    let value = e.target.value || ''
+  splitPiece(caretIndex, index) {
+    let value = this.allInputs[index].getText()
     let before = value.slice(0, caretIndex)
     let after = value.slice(caretIndex)
 
-    let pieces = this.allInputs.map(x => (x.value || ''))
+    let pieces = this.allInputs.map(x => x.getText())
     pieces.splice(index, 1, before, after)
 
     const text = joinSmsPieces(pieces)
 
-    const { onChange, onBlur } = this.props
-    onChange(text)
+    const { onBlur } = this.props
     onBlur(text)
   }
 
   joinPieceWithPreviousOne(e, index) {
     e.preventDefault()
 
-    let pieces = this.allInputs.slice().map(x => x.value || '')
+    let pieces = this.allInputs.slice().map(x => x.getText())
     pieces[index - 1] = `${pieces[index - 1].trim()} ${pieces[index].trim()}`
     pieces.splice(index, 1)
 
     const text = joinSmsPieces(pieces)
 
-    const { onChange, onBlur } = this.props
-    onChange(text)
+    const { onBlur } = this.props
     onBlur(text)
   }
 
   getText() {
-    return joinSmsPieces(this.allInputs.map(x => (x.value || '')))
+    return joinSmsPieces(this.allInputs.map(x => (x.getText() || '')))
   }
 
-  onFocus() {
-    const { autocomplete } = this.refs
-    if (autocomplete) {
-      autocomplete.unhide()
-    }
-  }
-
-  renderSmsInput(total, index, value, autocompleteComponent) {
-    const { id, inputErrors, readOnly, fixedEndLength } = this.props
+  renderSmsInput(total, index, value) {
+    const { inputErrors, readOnly, fixedEndLength } = this.props
 
     const shouldDisplayReducerErrors = (value == this.props.originalValue)
     const reducerErrors = filter(inputErrors, (err) => err !== 'limit exceeded')
 
-    const errors = [
-      (shouldDisplayReducerErrors ? reducerErrors : []) +
-      (limitExceeded(value) ? ['SMS is too long. Use SHIFT+ENTER to split in multiple parts'] : [])
-    ]
-
-    const maybeInvalidClass = classNames({
-      'validate invalid': (inputErrors != null && inputErrors.length > 0 && shouldDisplayReducerErrors) || limitExceeded(value)
-    })
+    let errors = []
+    if (shouldDisplayReducerErrors) {
+      errors.push(...reducerErrors)
+    }
+    if (limitExceeded(value)) {
+      errors.push('SMS is too long. Use SHIFT+ENTER to split in multiple parts')
+    }
+    if (errors.length == 0) {
+      errors = null
+    }
 
     let { label } = this.props
     if (!label) label = 'SMS message'
@@ -101,46 +71,45 @@ class SmsPrompt extends Component {
     const last = index + 1 == total
     const fixedLength = last ? fixedEndLength : null
 
+    let autocompleteProps = {}
+    if (index == 0) {
+      autocompleteProps = {
+        autocomplete: this.props.autocomplete,
+        autocompleteGetData: this.props.autocompleteGetData,
+        autocompleteOnSelect: this.props.autocompleteOnSelect
+      }
+    }
+
     const inputComponent = (
       <div>
-        <InputWithLabel id={`${id}-${index}`} value={value} readOnly={readOnly} label={labelComponent} errors={[errors]} >
-          <input
-            type='text'
-            onChange={e => this.onChange(e)}
-            onKeyUp={e => this.checkKeyUp(e, index)}
-            onBlur={e => this.onBlur(e)}
-            onFocus={e => this.onFocus()}
-            ref={ref => {
-              if (ref) {
-                this.allInputs.push(ref)
-              }
-              if (index == 0) {
-                this.smsInput = ref
-              }
-              $(ref).characterCounter()
-              $(ref).addClass(maybeInvalidClass)
-            }}
-            className={maybeInvalidClass}
+        <Draft
+          label={labelComponent}
+          value={value}
+          readOnly={readOnly}
+          errors={errors}
+          onSplit={caretIndex => this.splitPiece(caretIndex, index)}
+          onBlur={e => this.onBlur()}
+          characterCounter
+          characterCounterFixedLength={fixedLength}
+          plainText
+          ref={ref => { if (ref) { this.allInputs.push(ref) } }}
+          {...autocompleteProps}
           />
-        </InputWithLabel>
-        <CharacterCounter text={value} fixedLength={fixedLength} />
       </div>
     )
     if (total <= 1 || index == 0) {
       return (
         <div className='row' key={index}>
-          <div className='col input-field s12'>
+          <div className='col s12'>
             {inputComponent}
-            {index == 0 ? autocompleteComponent : null}
           </div>
         </div>
       )
     } else {
       return (
         <div className='row' key={index}>
-          <div className='col input-field s11'>
+          <div className='col s11'>
             {inputComponent}
-            {index == 0 ? autocompleteComponent : null}
           </div>
           <div className='col s1'>
             <a href='#' onClick={e => this.joinPieceWithPreviousOne(e, index)} style={{position: 'relative', top: 38}}>
@@ -153,19 +122,7 @@ class SmsPrompt extends Component {
   }
 
   render() {
-    const { value, autocomplete, autocompleteGetData, autocompleteOnSelect } = this.props
-
-    let autocompleteComponent = null
-    if (autocomplete) {
-      autocompleteComponent = (
-        <Autocomplete
-          getInput={() => this.smsInput}
-          getData={(value, callback) => autocompleteGetData(value, callback)}
-          onSelect={(item) => autocompleteOnSelect(item)}
-          ref='autocomplete'
-        />
-      )
-    }
+    const { value } = this.props
 
     // We store all inputs in the component, so later we
     // know the whole text by joining the inputs' values
@@ -173,7 +130,7 @@ class SmsPrompt extends Component {
 
     const smsPieces = splitSmsText(value)
     const inputs = smsPieces.map((piece, index) => {
-      return this.renderSmsInput(smsPieces.length, index, piece, autocompleteComponent)
+      return this.renderSmsInput(smsPieces.length, index, piece)
     })
 
     return (
@@ -190,7 +147,6 @@ SmsPrompt.propTypes = {
   originalValue: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   inputErrors: PropTypes.array,
-  onChange: PropTypes.func.isRequired,
   onBlur: PropTypes.func.isRequired,
   readOnly: PropTypes.bool,
   fixedEndLength: PropTypes.number,

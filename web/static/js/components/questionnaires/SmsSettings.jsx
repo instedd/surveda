@@ -39,10 +39,6 @@ class SmsSettings extends Component {
     }
   }
 
-  messageChange(text, key) {
-    this.setState({[key]: text})
-  }
-
   messageBlur(text, key) {
     this.props.dispatch(actions.setSmsQuestionnaireMsg(key, text))
   }
@@ -111,7 +107,6 @@ class SmsSettings extends Component {
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
       readOnly={this.props.readOnly}
-      onChange={text => this.messageChange(text, 'errorMessage')}
       onBlur={text => this.messageBlur(text, 'errorMessage')}
       autocomplete
       autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'errorMessage')}
@@ -126,7 +121,6 @@ class SmsSettings extends Component {
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
       readOnly={this.props.readOnly}
-      onChange={text => this.messageChange(text, 'thankYouMessage')}
       onBlur={text => this.messageBlur(text, 'thankYouMessage')}
       autocomplete
       autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'thankYouMessage')}

@@ -144,13 +144,12 @@ class PhoneCallSettings extends Component {
   errorMessageComponent() {
     let ivrInputErrors = this.textErrors('errorMessage')
     let ivrAudioIdErrors = this.audioErrors('errorMessage')
-    return <IvrPrompt id='settings_error_ivr'
+    return <IvrPrompt
       label='Error message'
       inputErrors={ivrInputErrors}
       audioIdErrors={ivrAudioIdErrors}
       value={this.state.errorMessage.text}
       originalValue={this.state.errorMessage.text}
-      onChange={e => this.textChange(e, 'errorMessage')}
       readOnly={this.props.readOnly}
       onBlur={e => this.messageBlur(e, 'errorMessage')}
       changeIvrMode={(e, mode) => this.modeChange(e, mode, 'errorMessage')}
@@ -165,13 +164,12 @@ class PhoneCallSettings extends Component {
   thankYouMessageComponent() {
     let ivrInputErrors = this.textErrors('thankYouMessage')
     let ivrAudioIdErrors = this.audioErrors('thankYouMessage')
-    return <IvrPrompt id='settings_thank_you_ivr'
+    return <IvrPrompt
       label='Thank you message'
       inputErrors={ivrInputErrors}
       audioIdErrors={ivrAudioIdErrors}
       value={this.state.thankYouMessage.text}
       originalValue={this.state.thankYouMessage.text}
-      onChange={e => this.textChange(e, 'thankYouMessage')}
       readOnly={this.props.readOnly}
       onBlur={e => this.messageBlur(e, 'thankYouMessage')}
       changeIvrMode={(e, mode) => this.modeChange(e, mode, 'thankYouMessage')}
