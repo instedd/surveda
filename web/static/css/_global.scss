@@ -336,6 +336,8 @@ i.survey-status { // icon for survey status on index
   .add-mode {
     @extend .black-text;
 
+    padding-left: 34px;
+
     a {
       @extend .black-text;
     }
