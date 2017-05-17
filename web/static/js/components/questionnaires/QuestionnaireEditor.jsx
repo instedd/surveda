@@ -15,7 +15,6 @@ import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
 import csvString from 'csv-string'
 import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
-import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
 import * as language from '../../language'
 import * as routes from '../../routes'
 import * as api from '../../api'
@@ -278,25 +277,20 @@ class QuestionnaireEditor extends Component {
   modeComponent(mode, label, icon, enabled) {
     if (!enabled) return null
 
-    const { questionnaire, errors } = this.props
+    const { questionnaire } = this.props
 
-    let spanClassName = 'mode-label'
+    let className = 'col s12'
     if (questionnaire.activeMode == mode) {
-      spanClassName += ' active'
+      className += ' active'
       icon = 'done'
     }
 
-    let rowClassName = 'row mode-list'
-    if (hasErrorsInModeWithLanguage(errors, mode, questionnaire.activeLanguage)) {
-      rowClassName += ' tooltip-error'
-    }
-
     return (
-      <div className={rowClassName} onClick={e => this.setActiveMode(e, mode)}>
-        <div className='col s12'>
+      <div className='row mode-list' onClick={e => this.setActiveMode(e, mode)}>
+        <div className={className}>
           <i className='material-icons v-middle left delete-mode' onClick={e => this.removeMode(e, mode)}>highlight_off</i>
           <i className='material-icons v-middle left'>{icon}</i>
-          <span className={spanClassName}>{label}</span>
+          <span className='mode-label'>{label}</span>
         </div>
       </div>
     )
@@ -482,7 +476,6 @@ QuestionnaireEditor.propTypes = {
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object,
-  errors: PropTypes.array,
   errorsByPath: PropTypes.object,
   location: PropTypes.object
 }
@@ -494,7 +487,6 @@ const mapStateToProps = (state, ownProps) => ({
   readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data,
-  errors: state.questionnaire.errors,
   errorsByPath: state.questionnaire.errorsByPath || {}
 })
 

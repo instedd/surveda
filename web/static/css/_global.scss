@@ -300,6 +300,7 @@ i.survey-status { // icon for survey status on index
     }
   }
   .mode-list {
+    @extend .grey-text;
     cursor: pointer;
     height: 28px;
     .delete-mode {
@@ -310,6 +311,12 @@ i.survey-status { // icon for survey status on index
         @extend .grey-text;
         opacity: 1;
       }
+      > .active .delete-mode {
+        @extend .black-text;
+      }
+    }
+    > .active {
+      @extend .black-text;
     }
     &.tooltip-error {
       position: relative;
@@ -503,8 +510,8 @@ i.survey-status { // icon for survey status on index
         width: 12px;
         height: 12px;
         position: absolute;
-        top: 20px;
-        right: 36px;
+        top: 1.4rem;
+        right: 2.3rem;
       }
     }
   }
@@ -534,7 +541,7 @@ i.survey-status { // icon for survey status on index
       }
       .set-default-language {
         position: absolute;
-        right: 2rem;
+        right: 2.6rem;
         top: 8px;
         cursor: pointer;
         opacity: 0;
