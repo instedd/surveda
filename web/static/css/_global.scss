@@ -524,6 +524,7 @@ i.survey-status { // icon for survey status on index
 
   .other-languages-list {
     li {
+      @extend .grey-text;
       position: relative;
       padding-left: 30px;
       height: 54px;
@@ -566,6 +567,10 @@ i.survey-status { // icon for survey status on index
           opacity: 1;
         }
 
+      }
+      &.active-language,
+      &.active-language i {
+        @extend .black-text;
       }
     }
   }
