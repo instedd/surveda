@@ -6,6 +6,7 @@ import SurveyEdit from './components/surveys/SurveyEdit'
 import SurveyIndex from './components/surveys/SurveyIndex'
 import SurveyShow from './components/surveys/SurveyShow'
 import SurveySettings from './components/surveys/SurveySettings'
+import SurveySimulation from './components/surveys/SurveySimulation'
 import QuestionnaireIndex from './components/questionnaires/QuestionnaireIndex'
 import QuestionnaireEditor from './components/questionnaires/QuestionnaireEditor'
 import ChannelIndex from './components/ChannelIndex'
@@ -36,6 +37,7 @@ export default (
             <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
             <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} showSavingStatus />
+            <Route path='simulation' component={SurveySimulation} />
           </Route>
         </Route>
 
@@ -68,6 +70,7 @@ export const projects = '/projects'
 export const project = (id) => `${projects}/${id}`
 export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
+export const surveySimulation = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}/simulation`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
 export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
 export const respondentsCSV = (projectId, surveyId, offset) => `/api/v1${surveyRespondents(projectId, surveyId)}/csv?offset=${offset}`

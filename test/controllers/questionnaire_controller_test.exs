@@ -120,15 +120,6 @@ defmodule Ask.QuestionnaireControllerTest do
         get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
       end
     end
-
-    test "forbid access to snapshot", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
-      snapshot = insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
-      assert_error_sent :not_found, fn ->
-        get conn, project_questionnaire_path(conn, :show, questionnaire.project, snapshot)
-      end
-    end
   end
 
   describe "create:" do

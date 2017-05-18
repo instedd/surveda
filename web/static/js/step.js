@@ -117,3 +117,20 @@ export const containsSeparator = (text: string): boolean => {
 }
 
 export const smsSplitSeparator = '\u001E'
+
+export const icon = (stepType: string): string => {
+  switch (stepType) {
+    case 'language-selection':
+      return 'language'
+    case 'multiple-choice':
+      return 'list'
+    case 'numeric':
+      return 'dialpad'
+    case 'explanation':
+      return 'chat_bubble_outline'
+    case 'flag':
+      return 'flag'
+    default:
+      throw new Error(`unknown step type: ${stepType}`)
+  }
+}

@@ -300,7 +300,7 @@ defmodule Ask.Runtime.Flow do
     {current_step_index, total_steps}
   end
 
-  defp current_step(flow) do
+  def current_step(flow) do
     flow
     |> steps
     |> Enum.at(flow.current_step)

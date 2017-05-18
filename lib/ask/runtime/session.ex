@@ -369,6 +369,19 @@ defmodule Ask.Runtime.Session do
     }
   end
 
+  def current_step_index(session) do
+    session.flow.current_step
+  end
+
+  def current_step_id(session) do
+    flow = session.flow
+    if flow && flow.current_step do
+      Flow.current_step(flow)["id"]
+    else
+      nil
+    end
+  end
+
   defp store_responses_and_assign_bucket(respondent, {_, _, reply}, buckets, session) do
     # Add response to responses
     Reply.stores(reply) |> Enum.each(fn {field_name, value} ->

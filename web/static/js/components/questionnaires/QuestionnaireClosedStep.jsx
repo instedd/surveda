@@ -2,6 +2,7 @@
 import React, { Component } from 'react'
 import classNames from 'classnames'
 import { UntitledIfEmpty, Card } from '../ui'
+import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
 import { hasErrorsInPrefixWithModeAndLanguage } from '../../questionnaireErrors'
@@ -28,22 +29,7 @@ class QuestionnaireClosedStep extends Component {
       'text-error': hasErrors
     })
 
-    const stepIconFont = (() => {
-      switch (step.type) {
-        case 'multiple-choice':
-          return 'list'
-        case 'numeric':
-          return 'dialpad'
-        case 'explanation':
-          return 'chat_bubble_outline'
-        case 'flag':
-          return 'flag'
-        case 'language-selection':
-          return 'language'
-        default:
-          throw new Error(`unknown step type: ${step.type}`)
-      }
-    })()
+    const stepIconFont = icon(step.type)
 
     return (
       <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
