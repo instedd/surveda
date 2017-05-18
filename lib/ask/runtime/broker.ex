@@ -562,16 +562,14 @@ defmodule Ask.Runtime.Broker do
   defp estimated_success_rate(respondents_by_state, respondents_target) do
     current_success_rate = success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
     completion_rate = current_completion_rate(respondents_by_state["completed"], respondents_target)
+    %{:valid_respondent_rate => initial_valid_respondent_rate,
+      :eligibility_rate => initial_eligibility_rate,
+      :response_rate => initial_response_rate } = Survey.config_rates()
     case completion_rate do
       0 ->
-        %{:valid_respondent_rate => initial_valid_respondent_rate,
-          :eligibility_rate => initial_eligibility_rate,
-          :response_rate => initial_response_rate } = Survey.config_rates()
         initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
-
       _ ->
-        %{:response_rate => initial_success_rate } = Survey.config_rates()
-        (1 - completion_rate) * initial_success_rate + completion_rate * current_success_rate
+        (1 - completion_rate) * initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate + completion_rate * current_success_rate
     end
   end
 
