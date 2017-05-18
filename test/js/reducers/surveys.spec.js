@@ -9,7 +9,7 @@ describe('surveys reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, filter: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 5}})
+    expect(initialState).toEqual({fetching: false, filter: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 6}})
   })
 
   it('should start fetching surveys', () => {
@@ -52,11 +52,11 @@ describe('surveys reducer', () => {
 
   it('should go to next and previous page', () => {
     const r1 = reducer(initialState, actions.nextSurveysPage())
-    expect(r1.page).toEqual({index: 5, size: 5})
+    expect(r1.page).toEqual({index: 6, size: 6})
     const r2 = reducer(r1, actions.nextSurveysPage())
-    expect(r2.page).toEqual({index: 10, size: 5})
+    expect(r2.page).toEqual({index: 12, size: 6})
     const r3 = reducer(r2, actions.previousSurveysPage())
-    expect(r3.page).toEqual({index: 5, size: 5})
+    expect(r3.page).toEqual({index: 6, size: 6})
   })
 
   it('should delete survey', () => {

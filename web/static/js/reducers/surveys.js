@@ -15,4 +15,17 @@ const deleteItem = (state: IndexedList<Survey>, action: any) => {
   return items
 }
 
-export default collectionReducer(actions, itemsReducer, projectFilterProvider)
+const initialState = {
+  fetching: false,
+  filter: null,
+  items: null,
+  order: null,
+  sortBy: null,
+  sortAsc: true,
+  page: {
+    index: 0,
+    size: 6
+  }
+}
+
+export default collectionReducer(actions, itemsReducer, projectFilterProvider, initialState)

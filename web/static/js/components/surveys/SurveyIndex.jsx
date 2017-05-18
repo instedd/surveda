@@ -22,6 +22,11 @@ class SurveyIndex extends Component {
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
     surveys: PropTypes.array,
+    startIndex: PropTypes.number.isRequired,
+    endIndex: PropTypes.number.isRequired,
+    hasPreviousPage: PropTypes.bool.isRequired,
+    hasNextPage: PropTypes.bool.isRequired,
+    totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired
   }
 
@@ -63,14 +68,44 @@ class SurveyIndex extends Component {
     })
   }
 
+  nextPage(e) {
+    const { dispatch } = this.props
+    console.log('disparando nextPage')
+    e.preventDefault()
+    dispatch(actions.nextSurveysPage())
+  }
+
+  previousPage(e) {
+    const { dispatch } = this.props
+    console.log('disparando previousPage')
+    e.preventDefault()
+    dispatch(actions.previousSurveysPage())
+  }
+
   render() {
-    const { surveys, respondentsStats, project } = this.props
+    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage } = this.props
 
     if (!surveys) {
       return (
         <div>Loading surveys...</div>
       )
     }
+
+    const footer = (
+      <div className='card-action right-align'>
+        <ul className='pagination'>
+          <li className='grey-text'>{startIndex}-{endIndex} of {totalCount}</li>
+          { hasPreviousPage
+            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
+            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
+          }
+          { hasNextPage
+            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
+            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
+          }
+        </ul>
+      </div>
+    )
 
     const readOnly = !project || project.readOnly
 
@@ -90,6 +125,7 @@ class SurveyIndex extends Component {
           { surveys.map(survey => (
             <SurveyCard survey={survey} completedByDate={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} />
           )) }
+          { footer }
         </div>
         }
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete survey' showCancel />
@@ -104,12 +140,29 @@ const mapStateToProps = (state, ownProps) => {
   if (surveys) {
     surveys = values(surveys)
   }
+  const totalCount = surveys ? surveys.length : 0
+  const pageIndex = state.surveys.page.index
+  const pageSize = state.surveys.page.size
+
+  if (surveys) {
+    surveys = values(surveys).slice(pageIndex, pageIndex + pageSize)
+  }
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  const hasPreviousPage = startIndex > 1
+  const hasNextPage = endIndex < totalCount
+
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
     surveys,
     channels: state.channels.items,
-    respondentsStats: state.respondentsStats
+    respondentsStats: state.respondentsStats,
+    startIndex,
+    endIndex,
+    hasPreviousPage,
+    hasNextPage,
+    totalCount
   }
 }
 

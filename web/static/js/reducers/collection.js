@@ -81,8 +81,8 @@ const fetch = (state, action, filterProvider) => {
     filter: newFilter,
     items: newItems,
     page: {
-      index: 0,
-      size: 5
+      ...state.page,
+      index: 0
     }
   }
 }
