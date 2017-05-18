@@ -453,7 +453,11 @@ i.survey-status { // icon for survey status on index
   font-size: 10px;
 }
 
-
+.web-color.input-field {
+  label {
+    left: 2.7rem;
+  }
+}
   // ------- Questionnaires language selector ----------
 
   .language-selection {

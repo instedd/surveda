@@ -234,7 +234,7 @@ class WebSettings extends Component {
     return (
       <div className='style row'>
         <h5>Style</h5>
-        <div className='col s12 m6 l4 input-field'>
+        <div className='col s12 m6 l4 web-color input-field'>
           <div className='circle' style={{background: primary}} />
           <InputWithLabel id='web_settings_primary_color' value={this.state.primaryColor} label='Primary color' errors={primaryErrors}>
             <input
@@ -246,7 +246,7 @@ class WebSettings extends Component {
            />
           </InputWithLabel>
         </div>
-        <div className='col s12 m6 l4 input-field'>
+        <div className='col s12 m6 l4 web-color input-field'>
           <div className='circle' style={{background: secondary}} />
           <InputWithLabel id='web_settings_secondary_color' value={this.state.secondaryColor} label='Secondary color' errors={secondaryErrors}>
             <input
