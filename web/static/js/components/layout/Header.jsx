@@ -6,6 +6,7 @@ import * as routes from '../../routes'
 
 const Header = ({ tabs, logout, user, project, showProjectLink }) => {
   let projectLink
+  let questionnairesLink
 
   if (showProjectLink) {
     projectLink = (
@@ -13,6 +14,11 @@ const Header = ({ tabs, logout, user, project, showProjectLink }) => {
         <Link to={routes.project(project.id)} className=''>
           <UntitledIfEmpty text={project.name} entityName='project' />
         </Link>
+      </li>
+    )
+    questionnairesLink = (
+      <li className='breadcrumb-item'>
+        <Link to={routes.questionnaireIndex(project.id)} className=''>Questionnaires</Link>
       </li>
     )
   }
@@ -28,6 +34,7 @@ const Header = ({ tabs, logout, user, project, showProjectLink }) => {
                   <Link to={routes.projects} className=''> Projects </Link>
                 </li>
                 { projectLink }
+                { questionnairesLink }
                 <li className='channels-tab'>
                   <Link to={routes.channels}> Channels </Link>
                 </li>

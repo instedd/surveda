@@ -35,7 +35,7 @@ class HeaderContainer extends Component {
     }
 
     return (
-      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} project={project || null} />
+      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} />
     )
   }
 }
