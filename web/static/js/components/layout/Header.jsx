@@ -18,7 +18,7 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
     )
   }
 
-  if (showQuestionnairesLink) {
+  if (project && showQuestionnairesLink) {
     questionnairesLink = (
       <li className='breadcrumb-item'>
         <Link to={routes.questionnaireIndex(project.id)} className=''>Questionnaires</Link>
