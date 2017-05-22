@@ -30,6 +30,8 @@ export const validate = (state: DataStore<Questionnaire>) => {
     validateSteps(data.quotaCompletedSteps, context, 'quotaCompletedSteps')
   }
 
+  validateDuplicateStepStore(data.steps, data.quotaCompletedSteps, context)
+
   validateMessage('errorMessage', data.settings.errorMessage, context)
   validateThankYouMessage(data.settings.thankYouMessage, context)
 
@@ -434,6 +436,42 @@ const validateSurveyAlreadyTakenMessage = (data, context) => {
       addError(context, `surveyAlreadyTakenMessage['${lang}']`, '"Survey already taken" message must not be blank', lang, 'mobileweb')
     }
   })
+}
+
+const validateDuplicateStepStore = (steps, quotaCompletedSteps, context) => {
+  const stores = {}
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i]
+    validateDuplicateStepStore0(step, stores, context, `steps[${i}].store`)
+  }
+
+  if (quotaCompletedSteps) {
+    for (let i = 0; i < quotaCompletedSteps.length; i++) {
+      const step = quotaCompletedSteps[i]
+      validateDuplicateStepStore0(step, stores, context, `quotaCompletedSteps[${i}].store`)
+    }
+  }
+}
+
+const validateDuplicateStepStore0 = (step, stores, context, path) => {
+  if (step.type !== 'language-selection' &&
+    step.type !== 'multiple-choice' &&
+    step.type !== 'numeric') {
+    return
+  }
+
+  let store = step.store
+  if (!store) return
+
+  store = store.trim()
+  if (store.length == 0) return
+
+  if (stores[store]) {
+    addError(context, path, 'Variable already used in a previous step')
+  }
+
+  stores[store] = true
 }
 
 const addError = (context, path, message, lang = null, mode = null) => {

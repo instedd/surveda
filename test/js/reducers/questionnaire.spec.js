@@ -1069,6 +1069,22 @@ describe('questionnaire reducer', () => {
         message: '"Survey already taken" message must not be blank'
       })
     })
+
+    it('should validate duplicate variable names', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ' Smokes ')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: 'steps[1].store',
+        lang: null,
+        mode: null,
+        message: 'Variable already used in a previous step'
+      })
+    })
   })
 
   describe('multilanguage support', () => {

@@ -10,6 +10,8 @@ import propsAreEqual from '../../propsAreEqual'
 type Props = {
   step: StoreStep & BaseStep,
   questionnaireActions: any,
+  errorPath: string,
+  errorsByPath: ErrorsByPath,
   project: any,
   readOnly: boolean
 };
@@ -71,6 +73,16 @@ class StepStoreVariable extends Component {
   }
 
   render() {
+    const { errorPath, errorsByPath } = this.props
+    let errors = errorsByPath[`${errorPath}.store`]
+
+    let dataError = null
+    let className = 'autocomplete'
+    if (errors && errors.length > 0) {
+      className += ' validate invalid'
+      dataError = errors.join(', ')
+    }
+
     return (<li className='collection-item' key='variable_name'>
       <div className='row'>
         <div className='col s12'>
@@ -83,9 +95,10 @@ class StepStoreVariable extends Component {
               onChange={e => this.stepStoreChange(e, e.target.value)}
               onBlur={e => this.stepStoreSubmit(e, e.target.value)}
               autoComplete='off'
-              className='autocomplete'
+              className={className}
               ref='varInput'
             />
+            <label data-error={dataError} />
             <Autocomplete
               getInput={() => this.refs.varInput}
               getData={(value, callback) => this.autocompleteGetData(value, callback)}

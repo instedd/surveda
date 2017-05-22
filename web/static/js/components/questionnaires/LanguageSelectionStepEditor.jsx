@@ -75,7 +75,7 @@ class LanguageSelectionStepEditor extends Component {
               </div>
             </div>
           </li>
-          <StepStoreVariable step={step} readOnly={readOnly} />
+          <StepStoreVariable step={step} readOnly={readOnly} errorPath={errorPath} errorsByPath={errorsByPath} />
         </StepCard>
       </DraggableStep>
     )
