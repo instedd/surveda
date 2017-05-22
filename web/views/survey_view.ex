@@ -1,6 +1,8 @@
 defmodule Ask.SurveyView do
   use Ask.Web, :view
 
+  alias Ask.Survey
+
   def render("index.json", %{surveys: surveys}) do
     %{data: render_many(surveys, Ask.SurveyView, "survey.json")}
   end
@@ -20,6 +22,8 @@ defmodule Ask.SurveyView do
       project_id: survey.project_id,
       state: survey.state,
       cutoff: survey.cutoff,
+      timezone: survey.timezone,
+      next_schedule_time: next_schedule_time(survey)
     }
   end
 
@@ -50,7 +54,8 @@ defmodule Ask.SurveyView do
         buckets: render_many(survey.quota_buckets, Ask.SurveyView, "survey_bucket.json", as: :bucket),
         vars: survey.quota_vars || []
       },
-      comparisons: survey.comparisons || []
+      comparisons: survey.comparisons || [],
+      next_schedule_time: next_schedule_time(survey),
     }
 
     if Ask.Survey.launched?(survey) do
@@ -82,5 +87,18 @@ defmodule Ask.SurveyView do
     (survey
     |> Ask.Repo.preload(:questionnaires)).questionnaires
     |> Enum.map(&(&1.id))
+  end
+
+  defp next_schedule_time(survey) do
+    now = Timex.now
+    now_date_time = now |> Timex.to_erl |> Ecto.DateTime.from_erl
+    next_schedule_time = Survey.next_available_date_time(survey, now)
+    if next_schedule_time == now_date_time  do
+      nil
+    else
+      next_schedule_time
+      |> Ecto.DateTime.to_erl
+      |> Timex.Timezone.convert(survey.timezone)
+    end
   end
 end

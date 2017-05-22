@@ -30,7 +30,7 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready"}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "timezone" => "UTC", "next_schedule_time" => nil}
       ]
     end
 
@@ -63,7 +63,7 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+          "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
         "schedule_start_time" => "09:00:00",
         "schedule_end_time" => "18:00:00",
@@ -78,7 +78,9 @@ defmodule Ask.SurveyControllerTest do
           "vars" => [],
           "buckets" => []
         },
-        "comparisons" => []
+        "comparisons" => [],
+        "timezone" => "UTC",
+        "next_schedule_time" => nil,
       }
     end
 
@@ -100,7 +102,7 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
-          "fri" => false, "mon" => false, "sat" => false, "sun" => false, "thu" => false, "tue" => false, "wed" => false
+          "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
         "schedule_start_time" => "09:00:00",
         "schedule_end_time" => "18:00:00",
@@ -136,7 +138,8 @@ defmodule Ask.SurveyControllerTest do
             },
           ]
         },
-        "comparisons" => []
+        "comparisons" => [],
+        "next_schedule_time" => nil
       }
     end
 

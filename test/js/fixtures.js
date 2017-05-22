@@ -177,7 +177,9 @@ const bareSurvey: Survey = {
     vars: [],
     buckets: []
   },
-  mode: [['sms']]
+  mode: [['sms']],
+  nextScheduleTime: null,
+  timezone: 'UTC'
 }
 
 export const survey: Survey = deepFreeze(bareSurvey)

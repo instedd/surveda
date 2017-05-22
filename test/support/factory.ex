@@ -29,6 +29,7 @@ defmodule Ask.Factory do
   def survey_factory do
     %Ask.Survey{
       project: build(:project),
+      schedule_day_of_week: Ask.DayOfWeek.every_day,
       schedule_start_time: Ecto.Time.cast!("09:00:00"),
       schedule_end_time: Ecto.Time.cast!("18:00:00"),
       name: sequence(:survey, &"Survey #{&1}"),

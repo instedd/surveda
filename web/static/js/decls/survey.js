@@ -24,7 +24,9 @@ export type Survey = {
     vars: string[],
     buckets: Bucket[]
   },
-  comparisons: Comparison[]
+  comparisons: Comparison[],
+  timezone: string,
+  nextScheduleTime: ?string
 };
 
 export type DayOfWeek = {

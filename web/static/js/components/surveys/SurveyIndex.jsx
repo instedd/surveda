@@ -218,7 +218,7 @@ class SurveyCard extends PureComponent {
                   <UntitledIfEmpty text={survey.name} entityName='survey' />
                   {deleteButton}
                 </span>
-                <SurveyStatus survey={survey} />
+                <SurveyStatus survey={survey} short />
               </div>
             </div>
           </Card>

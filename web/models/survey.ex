@@ -266,14 +266,19 @@ defmodule Ask.Survey do
   end
 
   defp day_of_week_available?(survey, erl_date) do
-    case :calendar.day_of_the_week(erl_date) do
-      1 -> survey.schedule_day_of_week.mon
-      2 -> survey.schedule_day_of_week.tue
-      3 -> survey.schedule_day_of_week.wed
-      4 -> survey.schedule_day_of_week.thu
-      5 -> survey.schedule_day_of_week.fri
-      6 -> survey.schedule_day_of_week.sat
-      7 -> survey.schedule_day_of_week.sun
+    if survey.schedule_day_of_week == Ask.DayOfWeek.never do
+      # Just in case a schedule remains empty (can happen in a test)
+      true
+    else
+      case :calendar.day_of_the_week(erl_date) do
+        1 -> survey.schedule_day_of_week.mon
+        2 -> survey.schedule_day_of_week.tue
+        3 -> survey.schedule_day_of_week.wed
+        4 -> survey.schedule_day_of_week.thu
+        5 -> survey.schedule_day_of_week.fri
+        6 -> survey.schedule_day_of_week.sat
+        7 -> survey.schedule_day_of_week.sun
+      end
     end
   end
 
