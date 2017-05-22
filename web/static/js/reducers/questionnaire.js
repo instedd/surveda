@@ -651,7 +651,6 @@ const addMode = (state, action) => {
 const removeMode = (state, action) => {
   const modes = state.modes.filter(mode => mode != action.mode)
   const activeMode = state.activeMode == action.mode ? defaultActiveMode(modes) : state.activeMode
-  console.log(activeMode)
   return {
     ...state,
     modes,
