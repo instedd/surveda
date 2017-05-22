@@ -4,7 +4,7 @@ import TitleContainer from './TitleContainer'
 import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
 
-const Header = ({ tabs, logout, user, project, showProjectLink }) => {
+const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnairesLink }) => {
   let projectLink
   let questionnairesLink
 
@@ -16,6 +16,9 @@ const Header = ({ tabs, logout, user, project, showProjectLink }) => {
         </Link>
       </li>
     )
+  }
+
+  if (showQuestionnairesLink) {
     questionnairesLink = (
       <li className='breadcrumb-item'>
         <Link to={routes.questionnaireIndex(project.id)} className=''>Questionnaires</Link>
@@ -70,7 +73,8 @@ Header.propTypes = {
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
   project: PropTypes.object,
-  showProjectLink: PropTypes.bool
+  showProjectLink: PropTypes.bool,
+  showQuestionnairesLink: PropTypes.bool
 }
 
 export default Header
