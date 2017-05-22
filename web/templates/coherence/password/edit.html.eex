@@ -94,15 +94,19 @@
                   <%= hidden_input f, :reset_password_token %>
 
                   <div class="row">
-                    <%= label f, :password %>
-                    <%= password_input f, :password, required: "" %>
-                    <%= error_tag f, :password %>
+                    <div class="input-field">
+                      <%= label f, :password %>
+                      <%= password_input f, :password, required: "", class: input_class(f, :password) %>
+                      <%= error_tag f, :password %>
+                    </div>
                   </div>
 
                   <div class="row">
-                    <%= label f, :password_confirmation %>
-                    <%= password_input f, :password_confirmation, required: "" %>
-                    <%= error_tag f, :password_confirmation %>
+                    <div class="input-field">
+                      <%= label f, :password_confirmation %>
+                      <%= password_input f, :password_confirmation, required: "", class: input_class(f, :password_confirmation) %>
+                      <%= error_tag f, :password_confirmation %>
+                    </div>
                   </div>
 
                   <div class="row">

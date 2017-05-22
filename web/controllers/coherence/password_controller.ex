@@ -126,6 +126,8 @@ defmodule Ask.Coherence.PasswordController do
             |> redirect_to(:password_update, params)
           {:error, changeset} ->
             conn
+            |> put_layout({Ask.LayoutView, "app.html"})
+            |> put_view(Coherence.PasswordView)
             |> render("edit.html", changeset: changeset)
         end
     end
