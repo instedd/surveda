@@ -1,20 +1,17 @@
 import * as actions from '../actions/ui'
-// import fetchReducer from './fetch'
-// import drop from 'lodash/drop'
-// import flatten from 'lodash/flatten'
-// import map from 'lodash/map'
-// import split from 'lodash/split'
-// import find from 'lodash/find'
-// import findIndex from 'lodash/findIndex'
-// import isEqual from 'lodash/isEqual'
-// import uniqWith from 'lodash/uniqWith'
-// import every from 'lodash/every'
-// import some from 'lodash/some'
 
 const initialState = {
   data: {
     questionnaireEditor: {
-      uploadingAudio: null
+      uploadingAudio: null,
+      steps: {
+        currentStepId: null,
+        currentStepIsNew: false
+      },
+      quotaCompletedSteps: {
+        currentStepId: null,
+        currentStepIsNew: false
+      }
     },
     surveyWizard: {
       primaryModeSelected: null,
@@ -31,6 +28,10 @@ export default (state = initialState, action) => {
     case actions.SURVEY_COMPARISON_SELECT_PRIMARY: return selectPrimaryComparison(state, action)
     case actions.SURVEY_COMPARISON_SELECT_FALLBACK: return selectFallbackComparison(state, action)
     case actions.SURVEY_ADD_COMPARISON_MODE: return resetMode(state, action)
+    case actions.QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP: return selectQuotaCompletedStep(state, action)
+    case actions.QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP: return deselectQuotaCompletedStep(state, action)
+    case actions.QUESTIONNAIRE_SELECT_STEP: return selectStep(state, action)
+    case actions.QUESTIONNAIRE_DESELECT_STEP: return deselectStep(state, action)
     default: return state
   }
 }
@@ -92,6 +93,70 @@ const resetMode = (state, action) => {
         ...state.data.surveyWizard,
         primaryModeSelected: null,
         fallbackModeSelected: null
+      }
+    }
+  }
+}
+
+const selectStep = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      questionnaireEditor: {
+        ...state.data.questionnaireEditor,
+        steps: {
+          currentStepId: action.stepId,
+          currentStepIsNew: action.isNew
+        }
+      }
+    }
+  }
+}
+
+const selectQuotaCompletedStep = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      questionnaireEditor: {
+        ...state.data.questionnaireEditor,
+        quotaCompletedSteps: {
+          currentStepId: action.stepId,
+          currentStepIsNew: action.isNew
+        }
+      }
+    }
+  }
+}
+
+const deselectStep = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      questionnaireEditor: {
+        ...state.data.questionnaireEditor,
+        steps: {
+          currentStepId: null,
+          currentStepIsNew: false
+        }
+      }
+    }
+  }
+}
+
+const deselectQuotaCompletedStep = (state, action) => {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      questionnaireEditor: {
+        ...state.data.questionnaireEditor,
+        quotaCompletedSteps: {
+          currentStepId: null,
+          currentStepIsNew: false
+        }
       }
     }
   }

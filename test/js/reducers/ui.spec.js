@@ -12,7 +12,15 @@ describe('ui reducer', () => {
     expect(initialState).toEqual({
       data: {
         questionnaireEditor: {
-          uploadingAudio: null
+          uploadingAudio: null,
+          steps: {
+            currentStepId: null,
+            currentStepIsNew: false
+          },
+          quotaCompletedSteps: {
+            currentStepId: null,
+            currentStepIsNew: false
+          }
         },
         surveyWizard: {
           primaryModeSelected: null,

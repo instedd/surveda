@@ -3,6 +3,10 @@ export const FINISH_AUDIO_UPLOAD = 'FINISH_AUDIO_UPLOAD'
 export const SURVEY_COMPARISON_SELECT_PRIMARY = 'SURVEY_COMPARISON_SELECT_PRIMARY'
 export const SURVEY_COMPARISON_SELECT_FALLBACK = 'SURVEY_COMPARISON_SELECT_FALLBACK'
 export const SURVEY_ADD_COMPARISON_MODE = 'SURVEY_ADD_COMPARISON_MODE'
+export const QUESTIONNAIRE_DESELECT_STEP = 'QUESTIONNAIRE_DESELECT_STEP'
+export const QUESTIONNAIRE_SELECT_STEP = 'QUESTIONNAIRE_SELECT_STEP'
+export const QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP'
+export const QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP'
 
 export const uploadAudio = (stepId) => ({
   type: UPLOAD_AUDIO,
@@ -26,4 +30,24 @@ export const comparisonFallbackSelected = (mode: string) => ({
 
 export const addModeComparison = () => ({
   type: SURVEY_ADD_COMPARISON_MODE
+})
+
+export const deselectStep = () => ({
+  type: QUESTIONNAIRE_DESELECT_STEP
+})
+
+export const selectStep = (stepId, isNew) => ({
+  type: QUESTIONNAIRE_SELECT_STEP,
+  stepId,
+  isNew
+})
+
+export const deselectQuotaCompletedStep = () => ({
+  type: QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP
+})
+
+export const selectQuotaCompletedStep = (stepId, isNew) => ({
+  type: QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP,
+  stepId,
+  isNew
 })

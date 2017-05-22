@@ -2,6 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import { EditableTitleLabel } from '../ui'
+import QuestionnaireMenu from './QuestionnaireMenu'
 import * as questionnaireActions from '../../actions/questionnaire'
 
 class QuestionnaireTitle extends Component {
@@ -22,7 +23,7 @@ class QuestionnaireTitle extends Component {
     const { questionnaire, readOnly } = this.props
     if (questionnaire == null) return null
 
-    return <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} entityName='questionnaire' readOnly={readOnly} />
+    return <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} entityName='questionnaire' readOnly={readOnly} more={<QuestionnaireMenu />} />
   }
 }
 

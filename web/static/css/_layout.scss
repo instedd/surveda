@@ -146,6 +146,7 @@ header {
   a.page-title {
     font-size: 20px;
     padding-top: 4px;
+    vertical-align: middle;
     display: inline-block;
     i {
       @extend .grey-text, .lighten-2;
@@ -157,6 +158,17 @@ header {
   }
   input#questionnaire_name {
     margin: 0;
+  }
+  .title {
+    display: inline-block;
+  }
+  span.title-options {
+    vertical-align: middle;
+    margin-left: 20px;
+    display: inline-block;
+    i {
+      line-height: 2;
+    }
   }
 }
 

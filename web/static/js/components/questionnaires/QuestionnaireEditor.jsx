@@ -3,10 +3,10 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
+import * as uiActions from '../../actions/ui'
 import * as projectActions from '../../actions/project'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as userSettingsActions from '../../actions/userSettings'
-import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
 import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import LanguagesList from './LanguagesList'
@@ -14,12 +14,8 @@ import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
 import TestQuestionnaireModal from './TestQuestionnaireModal'
-import csvString from 'csv-string'
-import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
-import * as language from '../../language'
-import * as routes from '../../routes'
-import * as api from '../../api'
 
 type State = {
   isNew: boolean
@@ -32,6 +28,11 @@ class QuestionnaireEditor extends Component {
   addMode: Function
   removeMode: Function
   deleteStep: Function
+  deleteQuotaCompletedStep: Function
+  selectStep: Function
+  deselectStep: Function
+  selectQuotaCompletedStep: Function
+  deselectQuotaCompletedStep: Function
 
   constructor(props) {
     super(props)
@@ -43,6 +44,12 @@ class QuestionnaireEditor extends Component {
     const isNew = initialState && initialState.isNew
     this.state = {isNew}
     this.deleteStep = this.deleteStep.bind(this)
+    this.deleteQuotaCompletedStep = this.deleteQuotaCompletedStep.bind(this)
+    this.deleteStep = this.deleteStep.bind(this)
+    this.selectStep = this.selectStep.bind(this)
+    this.deselectStep = this.deselectStep.bind(this)
+    this.selectQuotaCompletedStep = this.selectQuotaCompletedStep.bind(this)
+    this.deselectQuotaCompletedStep = this.deselectQuotaCompletedStep.bind(this)
   }
 
   setActiveMode(e, mode) {
@@ -72,7 +79,7 @@ class QuestionnaireEditor extends Component {
 
     // Add the step then automatically expand it
     this.props.questionnaireActions.addStepWithCallback().then(step => {
-      this.stepsComponent().selectStep(step.id, true)
+      this.props.uiActions.selectStep(step.id, true)
     })
   }
 
@@ -81,7 +88,7 @@ class QuestionnaireEditor extends Component {
 
     // Add the step then automatically expand it
     this.props.questionnaireActions.addQuotaCompletedStep().then(step => {
-      this.quotaCompletedStepsComponent().selectStep(step.id, true)
+      this.props.uiActions.selectQuotaCompletedStep(step.id, true)
     })
   }
 
@@ -89,8 +96,32 @@ class QuestionnaireEditor extends Component {
     this.props.userSettingsActions.hideOnboarding()
   }
 
-  deleteStep(stepId) {
-    this.props.questionnaireActions.deleteStep(stepId)
+  deleteStep() {
+    const currentStepId = this.props.selectedSteps.currentStepId
+    this.props.questionnaireActions.deleteStep(currentStepId)
+    this.props.uiActions.deselectStep()
+  }
+
+  deleteQuotaCompletedStep() {
+    const currentStepId = this.props.selectedQuotaCompletedSteps.currentStepId
+    this.props.questionnaireActions.deleteStep(currentStepId)
+    this.props.uiActions.deselectQuotaCompletedStep()
+  }
+
+  selectStep(stepId) {
+    this.props.uiActions.selectStep(stepId, this.state.isNew)
+  }
+
+  deselectStep() {
+    this.props.uiActions.deselectStep()
+  }
+
+  selectQuotaCompletedStep(stepId) {
+    this.props.uiActions.selectQuotaCompletedStep(stepId, this.state.isNew)
+  }
+
+  deselectQuotaCompletedStep() {
+    this.props.uiActions.deselectQuotaCompletedStep()
   }
 
   stepsComponent() {
@@ -108,7 +139,7 @@ class QuestionnaireEditor extends Component {
 
     // If it's a new questionnaire, expand the first step
     if (questionnaire && questionnaire.steps && questionnaire.steps.length > 0 && this.state.isNew) {
-      this.stepsComponent().selectStep(questionnaire.steps[0].id, true)
+      this.props.uiActions.selectStep(questionnaire.steps[0].id, true)
     }
 
     // Don't consider the questionnaire as new anymore, so the first step
@@ -128,149 +159,13 @@ class QuestionnaireEditor extends Component {
     }
   }
 
-  downloadCsv(e) {
-    e.preventDefault()
-
-    const { questionnaire } = this.props
-
-    const data = csvForTranslation(questionnaire)
-    let csvContent = 'data:text/csv;charset=utf-8,'
-    csvContent += csvString.stringify(data)
-    const encodedUri = encodeURI(csvContent)
-    const a = document.createElement('a')
-    a.href = encodedUri
-    a.download = csvTranslationFilename(questionnaire)
-    a.click()
-  }
-
-  openUploadCsvDialog(e) {
-    e.preventDefault()
-
-    $('#questionnaire_file_upload').trigger('click')
-  }
-
-  uploadCsv(e) {
-    e.preventDefault()
-
-    let files = e.target.files
-    if (files.length < 1) return
-
-    let file = files[0]
-    let reader = new FileReader()
-    reader.onload = (e2) => {
-      let contents = e2.target.result
-      let csv = csvString.parse(contents)
-
-      // Do some validations before uploading the CSV
-      if (csv.length == 0) {
-        window.Materialize.toast('Error: CSV is empty', 5000)
-        return
-      }
-
-      let primaryLanguageCode = this.props.questionnaire.defaultLanguage
-      let primaryLanguageName = language.codeToName(primaryLanguageCode)
-      if (!primaryLanguageName) {
-        window.Materialize.toast(`Error: primary language name not found for code ${primaryLanguageCode}`, 5000)
-        return
-      }
-
-      let headers = csv[0]
-      let defaultLanguageIndex = headers.indexOf(primaryLanguageName)
-      if (defaultLanguageIndex == -1) {
-        window.Materialize.toast(`Error: CSV doesn't have a header for the primary language '${primaryLanguageName}'`, 5000)
-        return
-      }
-
-      this.props.questionnaireActions.uploadCsvForTranslation(csv)
-
-      window.Materialize.toast(`CSV uploaded successfully! ${csv.length - 1} keys were updated in ${headers.length - 1} languages`, 5000)
-    }
-    reader.readAsText(file)
-
-    // Make sure to clear the input's value so a same file
-    // can be uploaded multiple times
-    e.target.value = null
-  }
-
-  exportZip(e) {
-    e.preventDefault()
-
-    const { projectId, questionnaireId } = this.props
-    window.location = routes.exportQuestionnaireZip(projectId, questionnaireId)
-  }
-
-  openImportZipDialog(e) {
-    e.preventDefault()
-
-    // This is a workaround for issue https://github.com/instedd/ask/issues/908
-    //
-    // On Chrome, when a file input has an accept=".zip" attributes one can
-    // click multiple times on it and it will open several dialogs (one
-    // after another). This doesn't happen with other values for the accept
-    // attribute.
-    //
-    // What we do is we prevent the user from triggering another click
-    // until 2 seconds have passed. 2 seconds is big enough for the user
-    // to click the link, wait for the dialog to open, maybe cancel it,
-    // and then want to click the link again. This way accidental multiple
-    // clicks are prevented.
-    if (this.preventSecondImportZipDialog) return
-    this.preventSecondImportZipDialog = true
-    setTimeout(() => { this.preventSecondImportZipDialog = false }, 2000)
-
-    $('#questionnaire_import_zip').trigger('click')
-  }
-
-  importZip(e) {
-    e.preventDefault()
-
-    let files = e.target.files
-    if (files.length != 1) return
-
-    const { projectId, questionnaireId } = this.props
-    const importModal = this.refs.importModal
-
-    api.importQuestionnaireZip(projectId, questionnaireId, files)
-    .then(response => {
-      const questionnaire = response.entities.questionnaires[response.result]
-      // Make sure to deselect any step before receiving the questionnaire
-      this.stepsComponent().deselectStep(() => {
-        this.props.questionnaireActions.receive(questionnaire)
-        importModal.close()
-      })
-    })
-
-    // Make sure to clear the input's value so a same file
-    // can be uploaded multiple times
-    e.target.value = null
-
-    importModal.open({
-      modalText: <div>
-        <p>Your questionnaire is being imported, please wait...</p>
-        <div className='center-align'>
-          <div className='preloader-wrapper active center'>
-            <div className='spinner-layer spinner-blue-only'>
-              <div className='circle-clipper left'>
-                <div className='circle' />
-              </div><div className='gap-patch'>
-                <div className='circle' />
-              </div><div className='circle-clipper right'>
-                <div className='circle' />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    })
-  }
-
   removeLanguage(lang) {
-    const { questionnaire } = this.props
+    const { questionnaire, selectedSteps } = this.props
 
     // If only one language will be left, and the language select step
     // is selected, make sure to unselect it first
-    if (questionnaire.languages.length == 2 && questionnaire.steps[0].id == this.stepsComponent().getCurrentStepId()) {
-      this.stepsComponent().deselectStep()
+    if (questionnaire.languages.length == 2 && questionnaire.steps[0].id == selectedSteps.currentStepId) {
+      this.props.uiActions.deselectStep()
     }
 
     this.props.questionnaireActions.removeLanguage(lang)
@@ -343,9 +238,7 @@ class QuestionnaireEditor extends Component {
   }
 
   render() {
-    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath } = this.props
-
-    let csvButtons = null
+    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps } = this.props
 
     if (questionnaire == null || project == null || userSettings.settings == null) {
       return <div>Loading...</div>
@@ -354,28 +247,6 @@ class QuestionnaireEditor extends Component {
     const settings = userSettings.settings
     const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
     const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
-
-    if (!readOnly) {
-      csvButtons = <div>
-        <div className='row'>
-          <div className='col s12'>
-            <a className='btn-icon-grey' href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
-              <i className='material-icons'>file_download</i>
-              <span>Download contents as CSV</span>
-            </a>
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col s12'>
-            <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
-            <a className='btn-icon-grey' href='#' onClick={e => this.openUploadCsvDialog(e)}>
-              <i className='material-icons'>file_upload</i>
-              <span>Upload contents as CSV</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    }
 
     let testControls = null
     if (!readOnly && errors.length == 0) {
@@ -397,25 +268,6 @@ class QuestionnaireEditor extends Component {
         <div className='row'>
           <div className='col s12 m3 questionnaire-modes'>
             <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
-            {csvButtons}
-            <div className='row'>
-              <div className='col s12'>
-                <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
-                  <i className='material-icons'>file_download</i>
-                  <span>Export questionnaire</span>
-                </a>
-              </div>
-            </div>
-            <div className='row'>
-              <div className='col s12'>
-                <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
-                <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
-                <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
-                  <i className='material-icons'>file_upload</i>
-                  <span>Import questionnaire</span>
-                </a>
-              </div>
-            </div>
             <div className='row'>
               <div className='col s12'>
                 <p className='grey-text'>Modes</p>
@@ -434,7 +286,10 @@ class QuestionnaireEditor extends Component {
             errorPath='steps'
             errorsByPath={errorsByPath}
             onDeleteStep={this.deleteStep}
+            onSelectStep={this.selectStep}
+            onDeselectStep={this.deselectStep}
             readOnly={readOnly}
+            selectedSteps={selectedSteps}
             />
           {readOnly ? null
           : <div className='row'>
@@ -461,8 +316,11 @@ class QuestionnaireEditor extends Component {
             steps={questionnaire.quotaCompletedSteps}
             errorPath='quotaCompletedSteps'
             errorsByPath={errorsByPath}
-            onDeleteStep={this.deleteStep}
+            onDeleteStep={this.deleteQuotaCompletedStep}
+            onSelectStep={this.selectQuotaCompletedStep}
+            onDeselectStep={this.deselectQuotaCompletedStep}
             readOnly={readOnly}
+            selectedSteps={selectedQuotaCompletedSteps}
             />
           : null}
           {!readOnly && hasQuotaCompletedSteps
@@ -493,6 +351,7 @@ class QuestionnaireEditor extends Component {
 
 QuestionnaireEditor.propTypes = {
   projectActions: PropTypes.object.isRequired,
+  uiActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
   userSettingsActions: PropTypes.object.isRequired,
   router: PropTypes.object,
@@ -504,7 +363,9 @@ QuestionnaireEditor.propTypes = {
   questionnaire: PropTypes.object,
   errors: PropTypes.array,
   errorsByPath: PropTypes.object,
-  location: PropTypes.object
+  location: PropTypes.object,
+  selectedSteps: PropTypes.object,
+  selectedQuotaCompletedSteps: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
@@ -515,13 +376,16 @@ const mapStateToProps = (state, ownProps) => ({
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data,
   errors: state.questionnaire.errors,
-  errorsByPath: state.questionnaire.errorsByPath || {}
+  errorsByPath: state.questionnaire.errorsByPath || {},
+  selectedSteps: state.ui.data.questionnaireEditor.steps,
+  selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps
 })
 
 const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch),
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
-  userSettingsActions: bindActionCreators(userSettingsActions, dispatch)
+  userSettingsActions: bindActionCreators(userSettingsActions, dispatch),
+  uiActions: bindActionCreators(uiActions, dispatch)
 })
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireEditor))
