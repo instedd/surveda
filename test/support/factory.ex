@@ -30,8 +30,8 @@ defmodule Ask.Factory do
     %Ask.Survey{
       project: build(:project),
       schedule_day_of_week: Ask.DayOfWeek.every_day,
-      schedule_start_time: Ecto.Time.cast!("09:00:00"),
-      schedule_end_time: Ecto.Time.cast!("18:00:00"),
+      schedule_start_time: Ecto.Time.cast!("00:00:00"),
+      schedule_end_time: Ecto.Time.cast!("23:59:59"),
       name: sequence(:survey, &"Survey #{&1}"),
       timezone: "UTC",
       mode: [["sms"]],

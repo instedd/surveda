@@ -65,8 +65,8 @@ defmodule Ask.SurveyControllerTest do
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
-        "schedule_start_time" => "09:00:00",
-        "schedule_end_time" => "18:00:00",
+        "schedule_start_time" => "00:00:00",
+        "schedule_end_time" => "23:59:59",
         "timezone" => "UTC",
         "started_at" => "",
         "ivr_retry_configuration" => nil,
@@ -104,8 +104,8 @@ defmodule Ask.SurveyControllerTest do
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
-        "schedule_start_time" => "09:00:00",
-        "schedule_end_time" => "18:00:00",
+        "schedule_start_time" => "00:00:00",
+        "schedule_end_time" => "23:59:59",
         "timezone" => "UTC",
         "started_at" => "",
         "ivr_retry_configuration" => nil,
