@@ -1,7 +1,7 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { InputWithLabel, Card } from '../ui'
+import { InputWithLabel, Card, Tooltip } from '../ui'
 import { bindActionCreators } from 'redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { newRefusal } from '../../step'
@@ -32,7 +32,7 @@ class StepNumericEditor extends Component {
       minValue: step.minValue == null ? '' : step.minValue,
       maxValue: step.maxValue == null ? '' : step.maxValue,
       ranges: step.ranges || [],
-      rangesDelimiters: step.ranges ? this.delimitersFromRanges(step.ranges) : ''
+      rangesDelimiters: step.rangesDelimiters == null ? '' : step.rangesDelimiters
     }
   }
 
@@ -40,17 +40,6 @@ class StepNumericEditor extends Component {
     if (propsAreEqual(this.props, newProps)) return
 
     this.setState(this.stateFromProps(newProps))
-  }
-
-  delimitersFromRanges(ranges) {
-    let delimiters = []
-    for (let [index, value] of ranges.entries()) {
-      if (index > 0) {
-        delimiters.push(value.from)
-      }
-    }
-
-    return delimiters.join(',')
   }
 
   minValueChange(e) {
@@ -114,6 +103,18 @@ class StepNumericEditor extends Component {
     }
   }
 
+  maybeTooltip(component, errors) {
+    if (errors && errors.length > 0) {
+      return (
+        <Tooltip text={errors.join(', ')} position='bottom' className='error'>
+          {component}
+        </Tooltip>
+      )
+    } else {
+      return component
+    }
+  }
+
   render() {
     const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errorPath, errorsByPath, readOnly } = this.props
     const { ranges } = step
@@ -125,6 +126,9 @@ class StepNumericEditor extends Component {
     const refusal = step.refusal || newRefusal()
     const acceptsRefusals = !!refusal.enabled
 
+    let minErrors = errorsByPath[`${errorPath}.minValue`]
+    let minClassName = minErrors && minErrors.length > 0 ? 'invalid' : null
+
     let minValue =
       <div className='col s12 m2 input-field inline'>
         <InputWithLabel id='step_numeric_editor_min_value'
@@ -133,23 +137,34 @@ class StepNumericEditor extends Component {
           <input
             disabled={readOnly}
             type='number'
+            className={minClassName}
             onChange={e => this.minValueChange(e)}
             onBlur={e => this.minValueSubmit(e)} />
         </InputWithLabel>
       </div>
+    minValue = this.maybeTooltip(minValue, minErrors)
+
+    let rangeErrors = errorsByPath[`${errorPath}.rangesDelimiters`]
+    let rangeClassName = rangeErrors && rangeErrors.length > 0 ? 'invalid' : null
 
     let rangesDelimiters =
-      <div className='col s12 m2 input-field inline'>
+      <div className='col s12 m2 input-field inline delimiters'>
         <InputWithLabel id='step_numeric_editor_range_delimiters'
           value={this.state.rangesDelimiters}
-          label='Range delimiters' >
+          label='Range delimiters'
+          >
           <input
             type='text'
+            className={rangeClassName}
             disabled={readOnly}
             onChange={e => this.rangesDelimitersChange(e)}
             onBlur={e => this.rangesDelimitersSubmit(e)} />
         </InputWithLabel>
       </div>
+    rangesDelimiters = this.maybeTooltip(rangesDelimiters, rangeErrors)
+
+    let maxErrors = errorsByPath[`${errorPath}.maxValue`]
+    let maxClassName = maxErrors && maxErrors.length > 0 ? 'invalid' : null
 
     let maxValue =
       <div className='col s12 m2 input-field inline'>
@@ -158,11 +173,13 @@ class StepNumericEditor extends Component {
           label='Max value' >
           <input
             type='number'
+            className={maxClassName}
             disabled={readOnly}
             onChange={e => this.maxValueChange(e)}
             onBlur={e => this.maxValueSubmit(e)} />
         </InputWithLabel>
       </div>
+    maxValue = this.maybeTooltip(maxValue, maxErrors)
 
     let skipLogicTable = null
     if (ranges) {

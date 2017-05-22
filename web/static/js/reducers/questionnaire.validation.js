@@ -101,6 +101,7 @@ const validateMultipleChoiceStep = (step, stepIndex, context, steps, path) => {
 
 const validateNumericStep = (step, stepIndex, context, steps, path) => {
   validatePrompts(step, context, path)
+  validateRangeDelimiters(step, context, path)
   validateRanges(step.ranges, stepIndex, context, steps, path)
 }
 
@@ -192,6 +193,43 @@ const validateRangeSkipLogic = (range, stepIndex, steps, context, path) => {
   if (!validSkipLogic(range.skipLogic, stepIndex, steps, context)) {
     // TODO: missing range info in path
     addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
+  }
+}
+
+const validateRangeDelimiters = (step, context, path) => {
+  if (step.minValue != null && step.maxValue != null && step.minValue >= step.maxValue) {
+    addError(context, `${path}.maxValue`, 'Max value must be greater than the min value')
+  }
+
+  let delimiters = step.rangesDelimiters
+  if (!delimiters) return
+
+  delimiters = delimiters.split(',').map(x => x.trim())
+
+  let previous = null
+
+  for (const delimiter of delimiters) {
+    const int = parseInt(delimiter)
+
+    if (isNaN(int)) {
+      addError(context, `${path}.rangesDelimiters`, `Delimiter '${delimiter}' must be a number`)
+    }
+
+    if (previous == null && step.minValue != null && step.minValue > int) {
+      addError(context, `${path}.minValue`, `Min value must be less than or equal to the first delimiter (${int})`)
+    }
+
+    if (previous != null && int <= previous) {
+      addError(context, `${path}.rangesDelimiters`, `Delimiter ${delimiter} must be greater than the previous one (${previous})`)
+    }
+
+    if (!isNaN(int)) {
+      previous = int
+    }
+  }
+
+  if (previous != null && step.maxValue != null && step.maxValue < previous) {
+    addError(context, `${path}.maxValue`, `Max value must be greater than or equal to the last delimiter (${previous})`)
   }
 }
 

@@ -1085,6 +1085,126 @@ describe('questionnaire reducer', () => {
         message: 'Variable already used in a previous step'
       })
     })
+
+    it('should validate max value must be greater than min value', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '10', '5', '')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: `steps[${i}].maxValue`,
+        lang: null,
+        mode: null,
+        message: 'Max value must be greater than the min value'
+      })
+    })
+
+    it('should validate delimiter must be a value', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '1, a, 2')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: `steps[${i}].rangesDelimiters`,
+        lang: null,
+        mode: null,
+        message: "Delimiter 'a' must be a number"
+      })
+    })
+
+    it('should validate delimiter must be greater than the previous one', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '1, 10, 5')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: `steps[${i}].rangesDelimiters`,
+        lang: null,
+        mode: null,
+        message: 'Delimiter 5 must be greater than the previous one (10)'
+      })
+    })
+
+    it('should validate min value must be less or equal than the first delimiter', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '10', '', '5, 20')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: `steps[${i}].minValue`,
+        lang: null,
+        mode: null,
+        message: 'Min value must be less than or equal to the first delimiter (5)'
+      })
+    })
+
+    it('should validate max value must be greater or equal than the first delimiter', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '15', '5, 20')
+      ])
+
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: `steps[${i}].maxValue`,
+        lang: null,
+        mode: null,
+        message: 'Max value must be greater than or equal to the last delimiter (20)'
+      })
+    })
   })
 
   describe('multilanguage support', () => {

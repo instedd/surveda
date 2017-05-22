@@ -32,7 +32,7 @@ export class InputWithLabel extends Component {
 
     let errorMessage = null
 
-    if (errors) {
+    if (errors && errors.length > 0) {
       errorMessage = errors.join(', ')
     }
 
