@@ -1136,3 +1136,33 @@ body.bdfh {
 a.disabled {
   color: grey;
 }
+
+// -------------- Simulation -------------
+
+.collection.simulation {
+  li {
+    padding: 20px;
+    padding-bottom: 6px;
+
+    .title {
+      font-size: 20px;
+    }
+    .value {
+      padding-left: 40px;
+      font-size: 12px;
+    }
+
+    &.active {
+      color: black;
+      background-color: #E0E0E0;
+    }
+
+    &.done {
+      color: #3FA43E;
+    }
+
+    &.skipped {
+      color: #C2C2C2;
+    }
+  }
+}

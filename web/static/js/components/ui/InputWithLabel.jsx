@@ -10,12 +10,13 @@ export class InputWithLabel extends Component {
       PropTypes.string,
       PropTypes.number ]),
     label: PropTypes.node,
+    className: PropTypes.string,
     errors: PropTypes.array,
     readOnly: PropTypes.bool
   }
 
   render() {
-    const { children, value, label, errors, readOnly } = this.props
+    const { children, className, value, label, errors, readOnly } = this.props
     const id = this.props.id || uuid.v4()
 
     var childrenWithProps = React.Children.map(children, function(child) {
@@ -36,7 +37,7 @@ export class InputWithLabel extends Component {
     }
 
     return (
-      <div>
+      <div className={className}>
         {childrenWithProps}
         <label htmlFor={id} className={classNames({'active': (value != null && value !== '')})} data-error={errorMessage}>{label}</label>
       </div>

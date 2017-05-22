@@ -1,14 +1,17 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Questionnaire, Logger}
+  alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel}
   alias Ask.Runtime.Session
 
   def index(conn, %{"project_id" => project_id}) do
-    surveys = conn
+    project = conn
     |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.all
+
+    # Hide simulations from the index
+    surveys = Repo.all(from s in Survey,
+      where: s.project_id == ^project.id,
+      where: s.simulation == false)
 
     render(conn, "index.json", surveys: surveys)
   end
@@ -164,6 +167,137 @@ defmodule Ask.SurveyController do
           |> render("show.json", survey: survey)
       end
     end
+  end
+
+  def simulate_questionanire(conn, %{"project_id" => project_id, "questionnaire_id" => questionnaire_id, "phone_number" => phone_number, "mode" => mode, "channel_id" => channel_id}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
+    questionnaire = Repo.one!(from q in Questionnaire,
+      where: q.project_id == ^project.id,
+      where: q.id == ^questionnaire_id)
+
+    channel = Repo.get!(Channel, channel_id)
+
+    survey = %Survey{
+      simulation: true,
+      project_id: project.id,
+      name: questionnaire.name,
+      mode: [[mode]],
+      state: "ready",
+      cutoff: 1,
+      schedule_day_of_week: Ask.DayOfWeek.every_day,
+      schedule_start_time: Ecto.Time.cast!("00:00:00"),
+      schedule_end_time: Ecto.Time.cast!("23:59:59"),
+      timezone: "UTC"}
+    |> Ecto.Changeset.change
+    |> Repo.insert!
+
+    respondent_group = %RespondentGroup{
+      survey_id: survey.id,
+      name: "default",
+      sample: [phone_number],
+      respondents_count: 1}
+    |> Ecto.Changeset.change
+    |> Repo.insert!
+
+    %Ask.SurveyQuestionnaire{
+      survey_id: survey.id,
+      questionnaire_id: String.to_integer(questionnaire_id)}
+    |> Ecto.Changeset.change
+    |> Repo.insert!
+
+    %Ask.RespondentGroupChannel{
+      respondent_group_id: respondent_group.id,
+      channel_id: channel.id,
+      mode: mode}
+    |> Ecto.Changeset.change
+    |> Repo.insert!
+
+    %Respondent{
+      survey_id: survey.id,
+      respondent_group_id: respondent_group.id,
+      phone_number: phone_number,
+      sanitized_phone_number: phone_number,
+      hashed_number: phone_number}
+    |> Ecto.Changeset.change
+    |> Repo.insert!
+
+    conn
+    |> launch(%{"survey_id" => survey.id})
+  end
+
+  def simulation_status(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = conn
+    |> load_project(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    # The simulation has only one respondent
+    respondent = Repo.one!(from r in Respondent,
+      where: r.survey_id == ^survey.id)
+
+    responses = respondent
+    |> assoc(:responses)
+    |> Repo.all
+    |> Enum.map(fn response ->
+      {response.field_name, response.value}
+    end)
+    |> Enum.into(%{})
+
+    session = respondent.session
+    session =
+      if session do
+        session = Session.load(session)
+      else
+        nil
+      end
+
+    {step_id, step_index} =
+      if session do
+        {
+          Session.current_step_id(session),
+          Session.current_step_index(session),
+        }
+      else
+        {nil, nil}
+      end
+
+    conn
+    |> json(%{
+      "data" => %{
+        "state" => respondent.state,
+        "disposition" => respondent.disposition,
+        "step_id" => step_id,
+        "step_index" => step_index,
+        "responses" => responses,
+      }
+    })
+  end
+
+  def stop_simulation(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = conn
+    |> load_project(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    questionnaire = survey
+    |> assoc(:questionnaires)
+    |> Repo.one!
+
+    Repo.delete!(survey)
+    Project.touch!(project)
+
+    conn
+    |> json(%{
+      "data" => %{
+        "questionnaire_id" => questionnaire.snapshot_of
+      }
+    })
   end
 
   defp create_survey_questionnaires_snapshot(survey) do

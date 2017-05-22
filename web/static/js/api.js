@@ -322,3 +322,16 @@ export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
   return apiPostFile(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
     questionnaireSchema, files[0])
 }
+
+export const simulateQuestionnaire = (projectId, questionnaireId, phoneNumber, mode, channelId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/simulate_questionanire?questionnaire_id=${questionnaireId}&phone_number=${encodeURIComponent(phoneNumber)}&mode=${encodeURIComponent(mode)}&channel_id=${encodeURIComponent(channelId)}`,
+    surveySchema, {})
+}
+
+export const fetchSurveySimulationStatus = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/simulation_status`)
+}
+
+export const stopSurveySimulation = (projectId, surveyId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop_simulation`, null, {})
+}

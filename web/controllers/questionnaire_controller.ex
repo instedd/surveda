@@ -59,7 +59,7 @@ defmodule Ask.QuestionnaireController do
 
     params = conn.assigns[:questionnaire]
 
-    questionnaire = load_questionnaire(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project, id)
 
     old_valid = questionnaire.valid
     old_modes = questionnaire.modes
@@ -111,7 +111,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    load_questionnaire(project, id)
+    load_questionnaire_not_snapshot(project, id)
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     |> Repo.delete!
@@ -124,7 +124,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project(project_id)
 
-    questionnaire = load_questionnaire(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project, id)
 
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
     audio_ids = collect_steps_audio_ids(questionnaire.quota_completed_steps, audio_ids)
@@ -180,7 +180,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    questionnaire = load_questionnaire(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project, id)
 
     {:ok, files} = :zip.unzip(to_charlist(file.path), [:memory])
 
@@ -271,6 +271,12 @@ defmodule Ask.QuestionnaireController do
   end
 
   defp load_questionnaire(project, id) do
+    project
+    |> assoc(:questionnaires)
+    |> Repo.get!(id)
+  end
+
+  defp load_questionnaire_not_snapshot(project, id) do
     Repo.one!(from q in Questionnaire,
       where: q.project_id == ^project.id,
       where: q.id == ^id,

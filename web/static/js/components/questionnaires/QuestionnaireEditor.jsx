@@ -13,6 +13,7 @@ import LanguagesList from './LanguagesList'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
+import TestQuestionnaireModal from './TestQuestionnaireModal'
 import csvString from 'csv-string'
 import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
@@ -335,8 +336,14 @@ class QuestionnaireEditor extends Component {
     )
   }
 
+  openTestQuestionnaireModal(e) {
+    e.preventDefault()
+
+    $('#test-questionnaire-modal').modal('open')
+  }
+
   render() {
-    const { questionnaire, project, readOnly, userSettings, errorsByPath } = this.props
+    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath } = this.props
 
     let csvButtons = null
 
@@ -370,44 +377,56 @@ class QuestionnaireEditor extends Component {
       </div>
     }
 
+    let testControls = null
+    if (!readOnly && errors.length == 0) {
+      testControls = [
+        <a key='one' className='btn-floating btn-large waves-effect waves-light green right mtop' href='#' onClick={e => this.openTestQuestionnaireModal(e)}>
+          <i className='material-icons'>videogame_asset</i>
+        </a>,
+        <TestQuestionnaireModal key='two' modalId='test-questionnaire-modal' />
+      ]
+    }
+
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
     return (
-      <div className='row'>
-        <div className='col s12 m3 questionnaire-modes'>
-          <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
-          {csvButtons}
-          <div className='row'>
-            <div className='col s12'>
-              <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
-                <i className='material-icons'>file_download</i>
-                <span>Export questionnaire</span>
-              </a>
+      <div>
+        {testControls}
+        <div className='row'>
+          <div className='col s12 m3 questionnaire-modes'>
+            <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
+            {csvButtons}
+            <div className='row'>
+              <div className='col s12'>
+                <a className='btn-icon-grey' href='#' onClick={e => this.exportZip(e)}>
+                  <i className='material-icons'>file_download</i>
+                  <span>Export questionnaire</span>
+                </a>
+              </div>
             </div>
-          </div>
-          <div className='row'>
-            <div className='col s12'>
-              <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
-              <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
-              <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
-                <i className='material-icons'>file_upload</i>
-                <span>Import questionnaire</span>
-              </a>
+            <div className='row'>
+              <div className='col s12'>
+                <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
+                <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
+                <a className='btn-icon-grey' href='#' onClick={e => this.openImportZipDialog(e)}>
+                  <i className='material-icons'>file_upload</i>
+                  <span>Import questionnaire</span>
+                </a>
+              </div>
             </div>
-          </div>
-          <div className='row'>
-            <div className='col s12'>
-              <p className='grey-text'>Modes</p>
+            <div className='row'>
+              <div className='col s12'>
+                <p className='grey-text'>Modes</p>
+              </div>
             </div>
+            { this.modeComponent('sms', 'SMS', 'sms', sms) }
+            { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
+            { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
+            { this.addModeComponent(sms, ivr, mobileweb) }
           </div>
-          { this.modeComponent('sms', 'SMS', 'sms', sms) }
-          { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
-          { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
-          { this.addModeComponent(sms, ivr, mobileweb) }
-        </div>
-        {skipOnboarding
+          {skipOnboarding
         ? <div className='col s12 m8 offset-m1'>
           <QuestionnaireSteps
             ref='stepsComponent'
@@ -466,6 +485,7 @@ class QuestionnaireEditor extends Component {
         </div>
         : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
         }
+        </div>
       </div>
     )
   }

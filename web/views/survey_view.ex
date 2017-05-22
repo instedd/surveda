@@ -58,7 +58,7 @@ defmodule Ask.SurveyView do
       next_schedule_time: next_schedule_time(survey),
     }
 
-    if Ask.Survey.launched?(survey) do
+    if Ask.Survey.launched?(survey) || survey.simulation do
       qs = questionnaires
       |> Enum.map(fn q ->
         {to_string(q.id), %{id: q.id, name: q.name, valid: true, modes: q.modes}}

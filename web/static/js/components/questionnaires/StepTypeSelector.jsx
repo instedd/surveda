@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { Dropdown, DropdownItem } from '../ui'
+import { icon } from '../../step'
 import * as questionnaireActions from '../../actions/questionnaire'
 
 type Props = {
@@ -23,20 +24,7 @@ class StepTypeSelector extends Component {
   render() {
     const { stepType, readOnly, quotaCompletedSteps } = this.props
 
-    const label = (() => {
-      switch (stepType) {
-        case 'multiple-choice':
-          return <i className='material-icons'>list</i>
-        case 'numeric':
-          return <i className='material-icons sharp'>dialpad</i>
-        case 'explanation':
-          return <i className='material-icons sharp'>chat_bubble_outline</i>
-        case 'flag':
-          return <i className='material-icons sharp'>flag</i>
-        default:
-          throw new Error(`unknown step type: ${stepType}`)
-      }
-    })()
+    const label = <i className='material-icons sharp'>{icon(stepType)}</i>
 
     return (<div className='left'>
       <Dropdown className='step-mode' readOnly={readOnly} label={label} constrainWidth={false} dataBelowOrigin={false}>
