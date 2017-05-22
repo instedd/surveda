@@ -190,8 +190,8 @@ class ChoiceEditor extends Component {
       ? <div>
         <UntitledIfEmpty
           text={value}
-          emptyText={'Missing'}
-          className={classNames({'basic-error tooltip-error': errors})} />
+          emptyText={'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}
+          className={classNames({'basic-error': errors})} />
       </div>
     : null
 
