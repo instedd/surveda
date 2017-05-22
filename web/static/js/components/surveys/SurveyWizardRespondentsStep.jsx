@@ -181,6 +181,25 @@ class SurveyWizardRespondentsStep extends Component {
     )
   }
 
+  componentWillReceiveProps(props) {
+    // Check if any respondent group's respondentsCount changed, to show a toast
+    const groups = this.props.respondentGroups
+    if (!groups) return
+
+    for (const id in groups) {
+      const group = groups[id]
+      const newGroup = props.respondentGroups && props.respondentGroups[id]
+      if (!newGroup) continue
+
+      const diff = newGroup.respondentsCount - group.respondentsCount
+      if (diff == 1) {
+        window.Materialize.toast('1 respondent has been added', 5000)
+      } else if (diff > 0) {
+        window.Materialize.toast(`${diff} respondents have been added`, 5000)
+      }
+    }
+  }
+
   componentDidUpdate() {
     let { actions, invalidGroup } = this.props
     if (invalidGroup) {
