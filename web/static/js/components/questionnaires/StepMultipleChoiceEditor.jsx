@@ -24,7 +24,21 @@ class StepMultipleChoiceEditor extends Component {
   props: Props
   smsAutocompleteItems: AutocompleteItem[]
 
+  // When adding a choice, we set this var to `true`.
+  // Then in `componentWillUpdate` we check for this,
+  // and if it's true we trigger the 'response' field
+  // edition of the newly created choice, and reset
+  // the variable to `false`.
+  addingChoice: boolean
+
+  constructor(props) {
+    super(props)
+    this.addingChoice = false
+  }
+
   addChoice(e) {
+    this.addingChoice = true
+
     const { step, actions } = this.props
     e.preventDefault()
     actions.addChoice(step.id)
@@ -85,6 +99,16 @@ class StepMultipleChoiceEditor extends Component {
     }
 
     editor.exitEditMode()
+  }
+
+  componentDidUpdate() {
+    if (!this.addingChoice) return
+
+    const { choices } = this.props.step
+
+    const editor = this.refs[`choiceEditor${choices.length - 1}`]
+    editor.enterEditMode(null, 'response')
+    this.addingChoice = false
   }
 
   render() {

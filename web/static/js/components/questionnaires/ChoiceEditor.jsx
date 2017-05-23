@@ -102,8 +102,9 @@ class ChoiceEditor extends Component {
     }
   }
 
-  enterEditMode(event: Event, focus: Focus) {
-    event.preventDefault()
+  enterEditMode(event: ?Event, focus: Focus) {
+    if (event) event.preventDefault()
+
     const {readOnly} = this.props
     if (!readOnly) {
       this.setState({
