@@ -40,20 +40,10 @@ class PhoneCallSettings extends Component {
     }
   }
 
-  textChange(e, key) {
-    e.preventDefault()
-    this.setState({
-      [key]: {
-        ...this.state[key],
-        text: e.target.value
-      }
-    })
-  }
-
-  messageBlur(e, key) {
+  messageBlur(text, key) {
     this.props.dispatch(actions.setIvrQuestionnaireMsg(key, {
       ...this.state[key],
-      text: e.target.value
+      text
     }))
   }
 
