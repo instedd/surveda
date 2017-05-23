@@ -180,6 +180,11 @@ class Draft extends React.Component {
   stateFromProps(props) {
     let value = props.value
 
+    // Ignore calls with the same value in case the user has changed the content already
+    if (this.state && value == this.props.value) {
+      return {}
+    }
+
     // Because we use `convertFromHTML`, in the case of a plain text
     // we need to replace `\n` with `<br/>` so that newlines are preserved
     if (props.plainText) {
