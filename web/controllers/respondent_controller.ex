@@ -1,7 +1,7 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, SurveyLogEntry}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -264,7 +264,7 @@ defmodule Ask.RespondentController do
   defp respondent_percentage(_, 0), do: 0
   defp respondent_percentage(count, total_respondents), do: count / (total_respondents / 100)
 
-  def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id, "offset" => offset}) do
+  def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
     |> load_project(project_id)
 
@@ -275,8 +275,6 @@ defmodule Ask.RespondentController do
 
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
     has_comparisons = length(survey.comparisons) > 0
-
-    {offset, ""} = Integer.parse(offset)
 
     # We first need to get all unique field names in all questionnaires
     all_fields = questionnaires
@@ -342,9 +340,7 @@ defmodule Ask.RespondentController do
           _ -> responses
                |> Enum.map(fn r -> r.updated_at end)
                |> Enum.max
-               |> Ecto.DateTime.to_erl
-               |> Timex.Ecto.DateTime.cast!
-               |> Timex.shift(minutes: -offset)
+               |> Survey.adjust_timezone(survey)
         end
 
         if date do
@@ -395,9 +391,8 @@ defmodule Ask.RespondentController do
     |> Repo.stream
     |> Stream.map(fn history ->
       date = history.inserted_at
-      |> Ecto.DateTime.to_erl
-      |> Timex.Ecto.DateTime.cast!
-      |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
+      |> Survey.adjust_timezone(survey)
+      |> Timex.format!("%Y-%m-%d %H:%M:%S", :strftime)
       [history.respondent.hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
@@ -478,9 +473,8 @@ defmodule Ask.RespondentController do
       action_type = action_type_label(e.action_type)
 
       timestamp = e.timestamp
-      |> Ecto.DateTime.to_erl
-      |> Timex.Ecto.DateTime.cast!
-      |> Timex.format!("%Y-%m-%d %H:%M:%S UTC", :strftime)
+      |> Survey.adjust_timezone(survey)
+      |> Timex.format!("%Y-%m-%d %H:%M:%S", :strftime)
 
       [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
     end)

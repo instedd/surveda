@@ -322,4 +322,11 @@ defmodule Ask.Survey do
   def launched?(survey) do
     survey.state in ["running", "completed", "cancelled"]
   end
+
+  def adjust_timezone(date = %Ecto.DateTime{}, survey) do
+    date
+    |> Ecto.DateTime.to_erl
+    |> Timex.Ecto.DateTime.cast!
+    |> Timex.Timezone.convert(survey.timezone)
+  end
 end

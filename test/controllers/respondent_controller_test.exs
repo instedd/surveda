@@ -423,10 +423,10 @@ defmodule Ask.RespondentControllerTest do
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert lines == ["Respondent ID,Disposition,Mode,Timestamp",
-     "1asd12451eds,partial,SMS,2000-01-01 01:02:03 UTC",
-     "1asd12451eds,completed,SMS,2000-01-01 02:03:04 UTC",
-     "34y5345tjyet,partial,Phone call,2000-01-01 03:04:05 UTC",
-     "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06 UTC"]
+     "1asd12451eds,partial,SMS,2000-01-01 01:02:03",
+     "1asd12451eds,completed,SMS,2000-01-01 02:03:04",
+     "34y5345tjyet,partial,Phone call,2000-01-01 03:04:05",
+     "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06"]
   end
 
   test "download incentives_csv", %{conn: conn, user: user} do
@@ -461,9 +461,9 @@ defmodule Ask.RespondentControllerTest do
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert lines == ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
-     "1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC",
-     "5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
-     "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC",
+     "1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04",
+     "5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03",
+     "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05",
    ]
   end
 

@@ -74,8 +74,7 @@ class RespondentIndex extends Component {
 
   downloadCSV() {
     const { projectId, surveyId } = this.props
-    const offset = new Date().getTimezoneOffset()
-    window.location = routes.respondentsCSV(projectId, surveyId, offset)
+    window.location = routes.respondentsCSV(projectId, surveyId)
   }
 
   downloadDispositionHistoryCSV() {
