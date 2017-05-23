@@ -176,14 +176,25 @@ class WebSettings extends Component {
   }
 
   titleComponent() {
-    return <MobileWebPrompt id='web_settings_title'
-      label='Title'
-      inputErrors={this.titleErrors()}
-      value={this.state.title}
-      originalValue={this.state.title}
-      onBlur={text => this.titleBlur(text)}
-      readOnly={this.props.readOnly}
-      />
+    const errors = this.titleErrors()
+    const className = errors && errors.length > 0 ? 'invalid' : ''
+
+    return <div className='row'>
+      <div className='col s12 input-field'>
+        <InputWithLabel id='web_settings_title'
+          value={this.state.title}
+          label='Title'
+          errors={this.titleErrors()}>
+          <input
+            type='text'
+            disabled={this.props.readOnly}
+            onChange={text => this.messageChange(text.target.value, 'title')}
+            onBlur={text => this.titleBlur(text.target.value)}
+            className={className}
+           />
+        </InputWithLabel>
+      </div>
+    </div>
   }
 
   smsMessageComponent() {
