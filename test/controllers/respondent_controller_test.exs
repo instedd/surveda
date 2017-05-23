@@ -371,6 +371,40 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_disp == "Completed"
   end
 
+  test "download csv with language", %{conn: conn, user: user} do
+    languageStep = %{
+      "id" => "1234-5678",
+      "type" => "language-selection",
+      "title" => "Language selection",
+      "store" => "language",
+      "prompt" => %{
+        "sms" => "1 for English, 2 for Spanish",
+        "ivr" => %{
+          "text" => "1 para ingles, 2 para español",
+          "audioSource" => "tts",
+        }
+      },
+      "language_choices" => ["en", "es"],
+    }
+    steps = [languageStep]
+
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
+    insert(:response, respondent: respondent_1, field_name: "language", value: "es")
+
+    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
+    csv = response(conn, 200)
+
+    [line1, line2, _] = csv |> String.split("\r\n")
+    assert line1 == "Respondent ID,language,Disposition,Date"
+
+    [line_2_hashed_number, line_2_language, _, _] = line2 |> String.split(",", parts: 4)
+    assert line_2_hashed_number == respondent_1.hashed_number
+    assert line_2_language == "español"
+  end
+
   test "download disposition history csv", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)

@@ -300,8 +300,19 @@ defmodule Ask.RespondentController do
           response = responses
           |> Enum.filter(fn response -> response.field_name == field_name end)
           case response do
-            [resp] -> acc ++ [resp.value]
-            _ -> acc ++ [""]
+            [resp] ->
+              value = resp.value
+
+              # For the 'language' variable we convert the code to the native name
+              value = if resp.field_name == "language" do
+                LanguageNames.for(value) || value
+              else
+                value
+              end
+
+              acc ++ [value]
+            _ ->
+              acc ++ [""]
           end
         end)
 

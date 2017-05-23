@@ -55,7 +55,8 @@ defmodule Ask.Mixfile do
       {:deep_merge, "~> 0.1.0"},
       {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"},
       {:gen_smtp, "~> 0.11"},
-      {:xml_builder, "~> 0.0.9"}
+      {:xml_builder, "~> 0.0.9"},
+      {:language_names, "~> 0.1.0"},
    ]
   end
 
