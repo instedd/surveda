@@ -2,6 +2,7 @@
 import React, { Component } from 'react'
 import dateformat from 'dateformat'
 import { show } from '../../disposition'
+import languageNames from 'language-names'
 
 type Props = {
   respondent: Respondent,
@@ -18,7 +19,13 @@ class RespondentRow extends Component {
       <tr key={respondent.id}>
         <td> {respondent.phoneNumber}</td>
         {responses.map((response) => {
-          return <td key={parseInt(respondent.id) + response.name}>{response.value}</td>
+          // For the 'language' variable we convert the code to the native name
+          let value = response.value
+          if (response.name == 'language') {
+            value = languageNames[value] || value
+          }
+
+          return <td key={parseInt(respondent.id) + response.name}>{value}</td>
         })}
         {variantColumn}
         <td>
