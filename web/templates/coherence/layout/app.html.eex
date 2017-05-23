@@ -67,12 +67,12 @@
               <a href="#" data-activates="mobile-demo" class="button-collapse grey-text"><i class="material-icons">menu</i></a>
             </a>
             <ul class="right hide-on-med-and-down">
-            <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
+            <li><a href="http://instedd.org/technologies/" class="btn-flat btn-large">About Instedd Platform</a></li>
             <li><a href="<%= session_path @conn, :new %>" class="btn-flat btn-large">Login</a></li>
             <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined">Sign up for free</a></li>
           </ul>
             <ul class="side-nav" id="mobile-demo">
-              <li><a href="#" class="btn-flat btn-large">About Instedd Platform</a></li>
+              <li><a href="http://instedd.org/technologies/" class="btn-flat btn-large">About Instedd Platform</a></li>
               <li><a href="<%= session_path @conn, :new %>" class="btn-flat btn-large">Login</a></li>
               <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined">Sign up for free</a></li>
             </ul>
