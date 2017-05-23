@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <%= render "_favicon.html" %>
 
-    <title>InSTEDD Surveda</title>
+    <title><%= @title %></title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/mobileSurvey.css") %>">
     <script>
       window.mixEnv = "<%= Mix.env %>"

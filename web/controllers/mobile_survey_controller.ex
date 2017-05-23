@@ -13,15 +13,28 @@ defmodule Ask.MobileSurveyController do
     else
       color_style = color_style_for(respondent_id)
       authorize(conn, respondent_id, token, fn ->
-        render_index(conn, respondent_id, token, color_style)
+        render_index(conn, respondent, token, color_style)
       end)
     end
   end
 
-  defp render_index(conn, respondent_id, token, color_style) do
+  defp render_index(conn, respondent, token, color_style) do
+    questionnaire = respondent
+    |> assoc(:questionnaire)
+    |> Repo.one
+
+    default_language = questionnaire.default_language
+
+    title = case questionnaire do
+      %{settings: %{"title" => %{^default_language => some_title}}} ->
+        some_title
+      _ ->
+        "Your survey"
+    end
+
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", respondent_id: respondent_id, token: token, color_style: color_style)
+    |> render("index.html", respondent_id: respondent.id, token: token, color_style: color_style, title: title)
   end
 
   defp color_style_for(respondent_id) do
