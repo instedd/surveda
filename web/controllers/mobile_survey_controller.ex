@@ -3,13 +3,15 @@ defmodule Ask.MobileSurveyController do
   alias Ask.Respondent
   use Ask.Web, :controller
 
+  @default_title "InSTEDD Surveda"
+
   def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     respondent = Respondent |> Repo.get(respondent_id)
     if !respondent do
       conn
         |> put_status(:not_found)
         |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-        |> render("404.html")
+        |> render("404.html", title: @default_title)
     else
       color_style = color_style_for(respondent_id)
       authorize(conn, respondent_id, token, fn ->
@@ -154,7 +156,7 @@ defmodule Ask.MobileSurveyController do
       conn
         |> put_status(403)
         |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-        |> render("unauthorized.html", header_color: primary_color)
+        |> render("unauthorized.html", header_color: primary_color, title: @default_title)
     end
   end
 
@@ -189,6 +191,6 @@ defmodule Ask.MobileSurveyController do
     conn
       |> put_status(401)
       |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-      |> render("unauthorized.html", header_color: primary_color)
+      |> render("unauthorized.html", header_color: primary_color, title: @default_title)
   end
 end
