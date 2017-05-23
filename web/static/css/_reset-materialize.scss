@@ -88,6 +88,7 @@ textarea.materialize-textarea {
     top: 30px;
     opacity: 0;
     transition: .2s opacity ease-out, .2s color ease-out;
+    white-space: nowrap;
   }
   & + label.active:after {
     top: 60px;
