@@ -20,7 +20,7 @@ import collaborators from './collaborators'
 import guest from './guest'
 import invite from './invite'
 import userSettings from './userSettings'
-import ui from './ui'
+import ui from './ui/index'
 
 export default combineReducers({
   authorizations,
