@@ -160,7 +160,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp complete(survey) do
-    Repo.update Survey.changeset(survey, %{state: "completed"})
+    Repo.update Survey.changeset(survey, %{state: "terminated", exit_code: 0, exit_message: "Successfully completed"})
     set_stalled_respondents_as_failed(survey)
   end
 

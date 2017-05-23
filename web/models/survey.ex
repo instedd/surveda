@@ -8,7 +8,9 @@ defmodule Ask.Survey do
   schema "surveys" do
     field :name, :string
     field :mode, Ask.Ecto.Type.JSON
-    field :state, :string, default: "not_ready" # not_ready, ready, pending, running, completed, cancelled
+    field :state, :string, default: "not_ready" # not_ready, ready, pending, running, terminated
+    field :exit_code, :integer
+    field :exit_message, :string
     field :cutoff, :integer
     field :count_partial_results, :boolean, default: false
     field :respondents_count, :integer, virtual: true
@@ -41,7 +43,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :state, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation])
+    |> cast(params, [:name, :project_id, :mode, :state, :exit_code, :exit_message, :cutoff, :respondents_count, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation])
     |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
@@ -320,7 +322,7 @@ defmodule Ask.Survey do
   end
 
   def launched?(survey) do
-    survey.state in ["running", "completed", "cancelled"]
+    survey.state in ["running", "terminated"]
   end
 
   def adjust_timezone(date = %Ecto.DateTime{}, survey) do
@@ -340,6 +342,22 @@ defmodule Ask.Survey do
       hours == 0 -> "UTC"
       hours < 0 -> "GMT#{hours}"
       hours > 0 -> "GMT+#{hours}"
+    end
+  end
+
+  def completed?(survey) do
+    survey.state == "terminated" && survey.exit_code == 0
+  end
+
+  def cancelled?(survey) do
+    survey.state == "terminated" && survey.exit_code == 1
+  end
+
+  def state_for_view(survey) do
+    cond do
+      survey.state == "terminated" && survey.exit_code == 0 -> "completed"
+      survey.state == "terminated" && survey.exit_code == 1 -> "cancelled"
+      true -> survey.state
     end
   end
 end

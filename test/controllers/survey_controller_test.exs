@@ -897,7 +897,8 @@ defmodule Ask.SurveyControllerTest do
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "cancelled"
+    survey = Repo.get(Survey, survey.id)
+    assert Survey.cancelled?(survey)
 
     assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
     assert_receive [:cancel_message, ^test_channel, ^channel_state]
@@ -939,22 +940,24 @@ defmodule Ask.SurveyControllerTest do
 
   test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "completed")
+    survey = insert(:survey, project: project, state: "terminated", exit_code: 0, exit_message: "Successfully completed")
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "completed"
+    survey = Repo.get(Survey, survey.id)
+    assert Survey.completed?(survey)
   end
 
   test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "cancelled")
+    survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "cancelled"
+    survey = Repo.get(Survey, survey.id)
+    assert Survey.cancelled?(survey)
   end
 
   def prepare_for_state_update(user) do
