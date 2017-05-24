@@ -302,7 +302,7 @@ defmodule Ask.RespondentController do
         end
 
         row = if date do
-          row ++ [date |> Timex.format!("%b %e, %Y %H:%M", :strftime)]
+          row ++ [date |> Timex.format!("%b %e, %Y %H:%M #{Survey.timezone_offset(survey)}", :strftime)]
         else
           row ++ ["-"]
         end
@@ -400,7 +400,7 @@ defmodule Ask.RespondentController do
     |> Stream.map(fn history ->
       date = history.inserted_at
       |> Survey.adjust_timezone(survey)
-      |> Timex.format!("%Y-%m-%d %H:%M:%S", :strftime)
+      |> Timex.format!("%Y-%m-%d %H:%M:%S #{Survey.timezone_offset(survey)}", :strftime)
       [history.respondent.hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
@@ -482,7 +482,7 @@ defmodule Ask.RespondentController do
 
       timestamp = e.timestamp
       |> Survey.adjust_timezone(survey)
-      |> Timex.format!("%Y-%m-%d %H:%M:%S", :strftime)
+      |> Timex.format!("%Y-%m-%d %H:%M:%S #{Survey.timezone_offset(survey)}", :strftime)
 
       [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
     end)

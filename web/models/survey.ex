@@ -329,4 +329,17 @@ defmodule Ask.Survey do
     |> Timex.Ecto.DateTime.cast!
     |> Timex.Timezone.convert(survey.timezone)
   end
+
+  def timezone_offset(survey) do
+    offset = survey.timezone
+    |> Timex.Timezone.get
+    |> Timex.Timezone.total_offset
+
+    hours = round(offset / 60 / 60)
+    cond do
+      hours == 0 -> "UTC"
+      hours < 0 -> "GMT#{hours}"
+      hours > 0 -> "GMT+#{hours}"
+    end
+  end
 end
