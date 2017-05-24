@@ -192,11 +192,6 @@ class SurveyShow extends Component {
     const { questionnaires, survey, respondentsStats, respondentsQuotasStats, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsQuotasStats || !respondentsStats) {
-      console.log('survey', survey)
-      console.log('cumulateivePercentages', cumulativePercentages)
-      console.log('questionnaires', questionnaires)
-      console.log('respondentsQuotaStats', respondentsQuotasStats)
-      console.log('respondentsStats', respondentsStats)
       return <p>Loading...</p>
     }
 
