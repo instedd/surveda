@@ -84,7 +84,7 @@ defmodule Ask.Router do
       get "/authorizations/synchronize", OAuthClientController, :synchronize
       get "/accept_invitation", InviteController, :accept_invitation, as: :accept_invitation
       get "/invite", InviteController, :invite, as: :invite
-      get "/invite_mail", InviteController, :invite_mail, as: :invite_mail
+      get "/send_invitation", InviteController, :send_invitation, as: :send_invitation
       get "/invite_show", InviteController, :show, as: :invite_show
       get "/get_invite_by_email_and_project", InviteController, :get_by_email_and_project
       get "/settings", UserController, :settings, as: :settings

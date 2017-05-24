@@ -1,0 +1,5 @@
+<%= @invited_by %> has added you as a collaborator on <%= @project_name %>.
+
+<%= @explanation %>
+
+Follow this link to see the project: <%= @url %>
