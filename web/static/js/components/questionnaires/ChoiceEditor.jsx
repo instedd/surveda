@@ -185,7 +185,7 @@ class ChoiceEditor extends Component {
     }
   }
 
-  cell(value: string, errors: string[], shouldDisplay: boolean, onClick: Function) {
+  cell(value: string, errors: ?string[], shouldDisplay: boolean, onClick: Function) {
     const { isNew } = this.props
 
     const tooltip = (errors || [value]).join(', ')
