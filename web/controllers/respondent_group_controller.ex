@@ -155,35 +155,10 @@ defmodule Ask.RespondentGroupController do
   defp update_channels(_, _), do: nil
 
   defp csv_rows(csv_string) do
-    delimiters = ["\r\n", "\r", "\n"]
-    [{_, delimiter} | _] =
-      delimiters
-      |> Enum.map(fn d ->
-          case :binary.match(csv_string, d) do
-            {index, _} -> {index, d}
-            _ -> {d, -1}
-          end
-        end)
-      |> Enum.filter(fn {index, _} -> index != -1 end)
-      |> Enum.sort
-
-    # If we didn't find a delimiter it probably means
-    # there's just a single line in the file.
-    # In that case any delimiter, like "\n", is good.
-    delimiter = case delimiter do
-      -1 -> "\n"
-      _  -> delimiter
-    end
-
     csv_string
-    |> String.split(delimiter)
-    |> Enum.filter(fn r ->
-      length = r |> String.trim |> String.split(",") |> Enum.at(0) |> String.length
-      length != 0
-    end)
-    |> Enum.map(fn r ->
-      r |> String.trim |> String.split(",") |> Enum.at(0)
-    end)
+    |> String.splitter(["\r\n", "\r", "\n"])
+    |> Stream.map(fn r -> r |> String.split(",") |> Enum.at(0) |> String.trim end)
+    |> Stream.filter(fn r -> String.length(r) != 0 end)
   end
 
   defp create_respondent_group(conn, survey, filename, rows, project) do
@@ -276,9 +251,10 @@ defmodule Ask.RespondentGroupController do
         |> Enum.uniq_by(&keep_digits/1)
 
       invalid_entries = rows
-      |> Enum.with_index
-      |> Enum.map( fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-      |> Enum.filter(fn entry -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry.phone_number) end)
+        |> Stream.with_index
+        |> Stream.filter(fn {row, _} -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, row) end)
+        |> Stream.map(fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
+        |> Enum.to_list
 
       case invalid_entries do
         [] -> func.(rows)
@@ -300,17 +276,18 @@ defmodule Ask.RespondentGroupController do
 
   defp to_entries(rows, project, survey, group, local_time) do
     rows
-    |> Enum.map(fn row ->
+    |> Stream.map(fn row ->
       %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered"}
     end)
   end
 
   defp insert_all(entries) do
     entries
-    |> Enum.chunk(1_000, 1_000, [])
-    |> Enum.each(fn(chunked_entries)  ->
+    |> Stream.chunk(1_000, 1_000, [])
+    |> Stream.each(fn(chunked_entries)  ->
         Repo.insert_all(Respondent, chunked_entries)
       end)
+    |> Stream.run
   end
 
   defp remove_duplicates_with_respect_to(phone_numbers, group) do
