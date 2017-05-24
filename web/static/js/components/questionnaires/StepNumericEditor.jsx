@@ -116,7 +116,7 @@ class StepNumericEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errorPath, errorsByPath, readOnly } = this.props
+    const { step, stepIndex, questionnaire, stepsAfter, stepsBefore, errorPath, errorsByPath, isNew, readOnly } = this.props
     const { ranges } = step
 
     const sms = questionnaire.activeMode == 'sms'
@@ -126,7 +126,7 @@ class StepNumericEditor extends Component {
     const refusal = step.refusal || newRefusal()
     const acceptsRefusals = !!refusal.enabled
 
-    let minErrors = errorsByPath[`${errorPath}.minValue`]
+    let minErrors = isNew ? null : errorsByPath[`${errorPath}.minValue`]
     let minClassName = minErrors && minErrors.length > 0 ? 'invalid' : null
 
     let minValue =
@@ -144,7 +144,7 @@ class StepNumericEditor extends Component {
       </div>
     minValue = this.maybeTooltip(minValue, minErrors)
 
-    let rangeErrors = errorsByPath[`${errorPath}.rangesDelimiters`]
+    let rangeErrors = isNew ? null : errorsByPath[`${errorPath}.rangesDelimiters`]
     let rangeClassName = rangeErrors && rangeErrors.length > 0 ? 'invalid' : null
 
     let rangesDelimiters =
@@ -163,7 +163,7 @@ class StepNumericEditor extends Component {
       </div>
     rangesDelimiters = this.maybeTooltip(rangesDelimiters, rangeErrors)
 
-    let maxErrors = errorsByPath[`${errorPath}.maxValue`]
+    let maxErrors = isNew ? null : errorsByPath[`${errorPath}.maxValue`]
     let maxClassName = maxErrors && maxErrors.length > 0 ? 'invalid' : null
 
     let maxValue =
@@ -259,6 +259,7 @@ class StepNumericEditor extends Component {
                 mobileweb={mobileweb}
                 errorPath={`${errorPath}.refusal`}
                 errorsByPath={errorsByPath}
+                isNew={isNew}
                 smsAutocompleteGetData={(value, callback) => null}
                 smsAutocompleteOnSelect={item => null}
               />
@@ -302,7 +303,8 @@ StepNumericEditor.propTypes = {
   stepsAfter: PropTypes.array.isRequired,
   stepsBefore: PropTypes.array.isRequired,
   errorPath: PropTypes.string,
-  errorsByPath: PropTypes.object
+  errorsByPath: PropTypes.object,
+  isNew: PropTypes.bool
 }
 
 const mapStateToProps = (state, ownProps) => ({})

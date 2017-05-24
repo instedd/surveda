@@ -20,7 +20,8 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   stepsAfter: Step[],
-  stepsBefore: Step[]
+  stepsBefore: Step[],
+  isNew: boolean
 };
 
 class StepEditor extends Component {

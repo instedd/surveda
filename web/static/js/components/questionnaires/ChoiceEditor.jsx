@@ -23,6 +23,7 @@ type Props = {
   errorsByPath: ErrorsByPath,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
+  isNew: boolean
 };
 
 type Focus = null | 'response' | 'sms' | 'ivr' | 'mobileweb';
@@ -185,6 +186,8 @@ class ChoiceEditor extends Component {
   }
 
   cell(value: string, errors: string[], shouldDisplay: boolean, onClick: Function) {
+    const { isNew } = this.props
+
     const tooltip = (errors || [value]).join(', ')
 
     const elem = shouldDisplay
@@ -192,7 +195,7 @@ class ChoiceEditor extends Component {
         <UntitledIfEmpty
           text={value}
           emptyText={'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}
-          className={classNames({'basic-error': errors})} />
+          className={classNames({'basic-error': errors, 'isNew-error': isNew && (!value || value.trim().length == 0)})} />
       </div>
     : null
 
@@ -203,7 +206,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, isNew, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
 
     const isRefusal = choiceIndex == 'refusal'
 
@@ -288,10 +291,17 @@ class ChoiceEditor extends Component {
     } else {
       const path = `${errorPath}[${choiceIndex}]`
 
-      let responseErrors = !isRefusal ? errorsByPath[`${path}.value`] : []
-      let smsErrors = errorsByPath[`${path}['${lang}'].sms`]
-      let ivrErrors = errorsByPath[`${path}.ivr`]
-      let mobilewebErrors = errorsByPath[`${path}['${lang}'].mobileweb`]
+      let responseErrors = null
+      let smsErrors = null
+      let ivrErrors = null
+      let mobilewebErrors = null
+
+      if (!isNew) {
+        responseErrors = !isRefusal ? errorsByPath[`${path}.value`] : []
+        smsErrors = errorsByPath[`${path}['${lang}'].sms`]
+        ivrErrors = errorsByPath[`${path}.ivr`]
+        mobilewebErrors = errorsByPath[`${path}['${lang}'].mobileweb`]
+      }
 
       return (
         <tr>

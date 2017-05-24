@@ -25,7 +25,8 @@ type Props = {
   errorPath: string,
   errorsByPath: ErrorsByPath,
   stepsAfter: Step[],
-  stepsBefore: Step[]
+  stepsBefore: Step[],
+  isNew: boolean
 };
 
 type State = {
@@ -63,7 +64,7 @@ class NumericStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath } = this.props
+    const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, isNew } = this.props
 
     return (
       <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
@@ -73,7 +74,9 @@ class NumericStepEditor extends Component {
             readOnly={readOnly}
             stepIndex={stepIndex}
             errorPath={errorPath}
-            errorsByPath={errorsByPath} />
+            errorsByPath={errorsByPath}
+            isNew={isNew}
+            />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>
@@ -86,6 +89,7 @@ class NumericStepEditor extends Component {
                   stepsBefore={stepsBefore}
                   errorPath={errorPath}
                   errorsByPath={errorsByPath}
+                  isNew={isNew}
                   />
               </div>
             </div>

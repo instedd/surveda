@@ -23,7 +23,8 @@ type Props = {
   readOnly: boolean,
   quotaCompletedSteps: boolean,
   stepsAfter: Step[],
-  stepsBefore: Step[]
+  stepsBefore: Step[],
+  isNew: boolean
 };
 
 type State = {
@@ -71,7 +72,7 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, readOnly, quotaCompletedSteps } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, isNew, readOnly, quotaCompletedSteps } = this.props
 
     return (
       <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
@@ -82,6 +83,7 @@ class ExplanationStepEditor extends Component {
             stepIndex={stepIndex}
             errorPath={errorPath}
             errorsByPath={errorsByPath}
+            isNew={isNew}
             classes='no-separator'
             title='Message'
           />

@@ -17,7 +17,8 @@ type Props = {
   stepsBefore: Step[],
   stepsAfter: Step[],
   errorPath: string,
-  errorsByPath: ErrorsByPath
+  errorsByPath: ErrorsByPath,
+  isNew: boolean
 };
 
 class StepMultipleChoiceEditor extends Component {
@@ -112,7 +113,7 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath } = this.props
+    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath, isNew } = this.props
     const { choices } = step
 
     const sms = questionnaire.activeMode == 'sms'
@@ -121,7 +122,7 @@ class StepMultipleChoiceEditor extends Component {
 
     const choicesErrorPath = `${errorPath}.choices`
 
-    let myErrors = errorsByPath[choicesErrorPath]
+    let myErrors = isNew ? null : errorsByPath[choicesErrorPath]
     if (myErrors) {
       myErrors.join(', ')
     }
@@ -173,6 +174,7 @@ class StepMultipleChoiceEditor extends Component {
                     errorsByPath={errorsByPath}
                     smsAutocompleteGetData={(value, callback) => this.smsAutocompleteGetData(value, callback, choice, index)}
                     smsAutocompleteOnSelect={item => this.smsAutocompleteOnSelect(item, choice, index)}
+                    isNew={isNew}
                     />
                   )}
               </tbody>

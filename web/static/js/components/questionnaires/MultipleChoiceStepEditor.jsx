@@ -25,7 +25,8 @@ type Props = {
   errorPath: string,
   errorsByPath: ErrorsByPath,
   stepsAfter: Step[],
-  stepsBefore: Step[]
+  stepsBefore: Step[],
+  isNew: boolean
 };
 
 type State = {
@@ -63,7 +64,7 @@ class MultipleChoiceStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, errorPath, errorsByPath, stepsAfter, stepsBefore, onDelete } = this.props
+    const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, errorPath, errorsByPath, stepsAfter, stepsBefore, onDelete, isNew } = this.props
 
     return (
       <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
@@ -76,7 +77,9 @@ class MultipleChoiceStepEditor extends Component {
             readOnly={readOnly}
             stepIndex={stepIndex}
             errorPath={errorPath}
-            errorsByPath={errorsByPath} />
+            errorsByPath={errorsByPath}
+            isNew={isNew}
+            />
           <li className='collection-item' key='editor'>
             <div className='row'>
               <div className='col s12'>
@@ -88,7 +91,8 @@ class MultipleChoiceStepEditor extends Component {
                   stepsBefore={stepsBefore}
                   readOnly={readOnly}
                   errorPath={errorPath}
-                  errorsByPath={errorsByPath} />
+                  errorsByPath={errorsByPath}
+                  isNew={isNew} />
               </div>
             </div>
           </li>

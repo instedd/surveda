@@ -101,6 +101,10 @@
       @extend .text-error;
       border-bottom: dotted 1px #ff5722 ;
     }
+    .isNew-error {
+      @extend .text-error;
+      border-bottom: dotted 1px black ;
+    }
     .tooltip-error {
       position: relative;
       &:after {
