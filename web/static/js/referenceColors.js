@@ -13,7 +13,7 @@ const singleColor = '#4faf55'
 export function referenceColorClasses(totalNeeded: number) {
   let nextColorIncrement = referenceColors.length / totalNeeded
   return range(0, totalNeeded).map((i) => {
-    return 'referenceColor' + (i * nextColorIncrement)
+    return 'referenceColor' + ((i * nextColorIncrement) % 16)
   })
 }
 
