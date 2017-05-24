@@ -30,8 +30,8 @@ class RespondentsChart extends Component {
     let initialDate
     let nextThreeMonths
     let lastDate
-    let totalQuestionnairesWithAnyCompletion = Object.keys(cumulativePercentages)
-    if (!cumulativePercentages || totalQuestionnairesWithAnyCompletion < 1) {
+    let totalQuestionnaires = Object.keys(cumulativePercentages)
+    if (!cumulativePercentages || totalQuestionnaires < 1) {
       initialDate = new Date(Date.now())
       lastDate = new Date(Date.now())
       lastDate.setDate(lastDate.getDate() + 90)
@@ -48,7 +48,7 @@ class RespondentsChart extends Component {
     this.datas = Object.entries(cumulativePercentages).map((entry) => {
       let completedPercentagesByDate = entry[1]
       return completedPercentagesByDate.map((v) => {
-        return { date: formatDate(v.date), count: Number(v.percentage) }
+        return { date: formatDate(v.date), percent: Number(v.percent) }
       })
     });
 
@@ -62,9 +62,9 @@ class RespondentsChart extends Component {
     const _y = this._y
     this.line = d3.svg.line()
                         .x(function(d) { return _x(d.date) })
-                        .y(function(d) { return _y(d.count) })
+                        .y(function(d) { return _y(d.percent) })
 
-    this.backgroundData = [{date: initialDate, count: 0}, {date: lastDate, count: 100}]
+    this.backgroundData = [{date: initialDate, percent: 0}, {date: lastDate, percent: 100}]
 
     this.XAxis.call(this.xaxis
         .ticks(3)
@@ -73,6 +73,7 @@ class RespondentsChart extends Component {
         .attr('dy', 7)
         .attr('x', 10)
 
+    this.refreshPaths(totalQuestionnaires)
     this.datas.forEach((data, index) => {
       this.paths[index].datum(data)
           .attr('class', 'line respondentsData')
@@ -83,6 +84,16 @@ class RespondentsChart extends Component {
         .attr('class', 'line backgroundData')
         .style('stroke-dasharray', '2,2')
         .attr('d', this.line)
+  }
+
+  refreshPaths(total) {
+    this.paths = []
+    let referenceColors = referenceColorsFor(total)
+    for (let i = 0; i < total; ++i) {
+      this.paths.push(this.container.append('path')
+                                    .attr('class', 'line')
+                                    .style('stroke', referenceColors[i]))
+    }
   }
 
   setSize() {
@@ -97,13 +108,6 @@ class RespondentsChart extends Component {
     this.XAxis = this.container.append('g')
                           .attr('class', 'x axis')
                           .attr('transform', 'translate(0,' + (this.chartHeight) + ')')
-    this.paths = []
-    let referenceColors = referenceColorsFor(totalQuestionnaires)
-    for (let i = 0; i < totalQuestionnaires; ++i) {
-      this.paths.push(this.container.append('path')
-                                    .attr('class', 'line')
-                                    .style('stroke', referenceColors[i]))
-    }
 
     this.backgroundPath = this.container.append('path')
                                     .attr('class', 'line')
@@ -123,7 +127,7 @@ class RespondentsChart extends Component {
     const _y = this._y
     this.line = d3.svg.line()
                         .x(function(d) { return _x(d.date) })
-                        .y(function(d) { return _y(d.count) })
+                        .y(function(d) { return _y(d.percent) })
   }
 
   renderD3() {
