@@ -5,4 +5,14 @@ defmodule Ask.PageControllerTest do
     conn = get conn, "/foo"
     assert redirected_to(conn) =~ "/sessions/new?redirect=/foo"
   end
+
+  test "GET /foo/bar/baz", %{conn: conn} do
+    conn = get conn, "/foo/bar/baz"
+    assert redirected_to(conn) =~ "/sessions/new?redirect=/foo/bar/baz"
+  end
+
+  test "GET /foo with parameters", %{conn: conn} do
+    conn = get conn, "/foo?param1=33&param2=54"
+    assert redirected_to(conn) =~ "/sessions/new?redirect=/foo?param1=33&param2=54"
+  end
 end
