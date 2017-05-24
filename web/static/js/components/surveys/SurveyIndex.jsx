@@ -188,9 +188,9 @@ class SurveyCard extends PureComponent {
       }
 
       deleteButton =
-        <a onClick={onDeleteClick} className='right card-hover grey-text'>
+        <span onClick={onDeleteClick} className='right card-hover grey-text'>
           <i className='material-icons'>delete</i>
-        </a>
+        </span>
     }
 
     let cumulativePercentages = respondentsStats['cumulativePercentages'] || {}
