@@ -429,9 +429,18 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, nil) do
+    effective_modes = respondent.effective_modes || []
+    effective_modes =
+      if session do
+        mode = Ask.Runtime.SessionMode.mode(session.current_mode)
+        Enum.uniq(effective_modes ++ [mode])
+      else
+        effective_modes
+      end
+
     timeout_at = next_timeout(respondent, timeout)
     respondent
-    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language})
+    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language, effective_modes: effective_modes})
     |> Repo.update!
   end
 

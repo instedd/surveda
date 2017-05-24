@@ -293,6 +293,28 @@ defmodule Ask.RespondentController do
         row = [respondent.hashed_number]
         responses = respondent.responses
 
+        date = case responses do
+          [] -> nil
+          _ -> responses
+               |> Enum.map(fn r -> r.updated_at end)
+               |> Enum.max
+               |> Survey.adjust_timezone(survey)
+        end
+
+        row = if date do
+          row ++ [date |> Timex.format!("%b %e, %Y %H:%M", :strftime)]
+        else
+          row ++ ["-"]
+        end
+
+        IO.inspect(respondent.effective_modes)
+
+        modes = (respondent.effective_modes || [])
+        |> Enum.map(fn mode -> mode_label([mode]) end)
+        |> Enum.join(", ")
+
+        row = row ++ [modes]
+
         # We traverse all fields and see if there's a response for this respondent
         row = all_fields |> Enum.reduce(row, fn field_name, acc ->
           response = responses
@@ -335,30 +357,18 @@ defmodule Ask.RespondentController do
 
         row = row ++ [Respondent.show_disposition(respondent.disposition)]
 
-        date = case responses do
-          [] -> nil
-          _ -> responses
-               |> Enum.map(fn r -> r.updated_at end)
-               |> Enum.max
-               |> Survey.adjust_timezone(survey)
-        end
-
-        if date do
-          row ++ [date |> Timex.format!("%b %e, %Y %H:%M", :strftime)]
-        else
-          row ++ ["-"]
-        end
+        row
     end)
 
     # Add header to csv_rows
-    header = ["Respondent ID"]
+    header = ["Respondent ID", "Date", "Modes"]
     header = header ++ all_fields
     header = if has_comparisons do
       header ++ ["Variant"]
     else
       header
     end
-    header = header ++ ["Disposition", "Date"]
+    header = header ++ ["Disposition"]
     rows = Stream.concat([[header], csv_rows])
 
     # # Convert to CSV string

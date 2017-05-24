@@ -107,6 +107,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "partial"
+    assert respondent.effective_modes == ["sms"]
   end
 
   test "don't set the respondent as ineligible (disposition) if disposition is completed" do
