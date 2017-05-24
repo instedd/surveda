@@ -193,8 +193,8 @@ class SurveyCard extends PureComponent {
         </span>
     }
 
-    let cumulativePercentages = respondentsStats['cumulativePercentages'] || {}
-    let completionPercentage = respondentsStats['completionPercentage'] || 0
+    let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
+    let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
 
     return (
       <div className='col s12 m6 l4'>
