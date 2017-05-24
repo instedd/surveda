@@ -30,7 +30,7 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "timezone" => "UTC", "next_schedule_time" => nil}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "timezone" => "UTC", "next_schedule_time" => nil, "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 

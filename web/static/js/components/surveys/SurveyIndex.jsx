@@ -145,6 +145,9 @@ const mapStateToProps = (state, ownProps) => {
   const pageSize = state.surveys.page.size
 
   if (surveys) {
+    // Sort by updated at, descending
+    surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+    // Show only the current page
     surveys = values(surveys).slice(pageIndex, pageIndex + pageSize)
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)

@@ -23,7 +23,8 @@ defmodule Ask.SurveyView do
       state: survey.state,
       cutoff: survey.cutoff,
       timezone: survey.timezone,
-      next_schedule_time: next_schedule_time(survey)
+      next_schedule_time: next_schedule_time(survey),
+      updated_at: survey.updated_at,
     }
   end
 
