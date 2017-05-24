@@ -307,8 +307,6 @@ defmodule Ask.RespondentController do
           row ++ ["-"]
         end
 
-        IO.inspect(respondent.effective_modes)
-
         modes = (respondent.effective_modes || [])
         |> Enum.map(fn mode -> mode_label([mode]) end)
         |> Enum.join(", ")
