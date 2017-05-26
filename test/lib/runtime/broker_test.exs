@@ -24,7 +24,7 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "does nothing when there are no pending respondents" do
@@ -901,7 +901,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "failed"
 
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "fallback respondent (SMS => IVR)" do
@@ -1050,7 +1050,7 @@ defmodule Ask.BrokerTest do
     survey = Repo.get(Survey, survey.id)
 
     assert_respondents_by_state(survey, 0, 20)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "marks survey as complete when the cutoff is reached and actives become failed" do
@@ -1077,7 +1077,7 @@ defmodule Ask.BrokerTest do
     survey = Repo.get(Survey, survey.id)
 
     assert_respondents_by_state(survey, 0, 20)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "marks the survey as completed when the cutoff is reached and actives become completed" do
@@ -1113,8 +1113,7 @@ defmodule Ask.BrokerTest do
     assert_respondents_by_state(survey, 0, 15)
 
     survey = Repo.get(Survey, survey.id)
-
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "marks the survey as completed when all the quotas are reached and actives become completed" do
@@ -1188,7 +1187,7 @@ defmodule Ask.BrokerTest do
       where: q.survey_id == ^survey_id
 
     survey = Survey |> Repo.get(survey.id)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "should not keep setting pending to actives when all the quotas are completed" do
@@ -1311,7 +1310,7 @@ defmodule Ask.BrokerTest do
 
     survey = Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 0, 11)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "marks the survey as completed when all the quotas are reached and actives become failed" do
@@ -1373,7 +1372,7 @@ defmodule Ask.BrokerTest do
 
     survey = Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 0, 11)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "always keeps batch_size number of respondents running" do
@@ -1434,8 +1433,7 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
-
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "respondent flow via sms" do
@@ -1903,7 +1901,7 @@ defmodule Ask.BrokerTest do
 
     survey1 = Repo.get(Survey, survey1.id)
     survey2 = Repo.get(Survey, survey2.id)
-    assert survey1.state == "completed"
+    assert Survey.completed?(survey1)
     assert survey2.state == "running"
   end
 
@@ -1968,7 +1966,7 @@ defmodule Ask.BrokerTest do
     Broker.handle_info(:poll, nil, mock_now)
 
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "does poll surveys considering day of week according to timezone" do
@@ -1989,7 +1987,7 @@ defmodule Ask.BrokerTest do
 
     # The survey should have run and be completed (questionnaire is empty)
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "completed"
+    assert Survey.completed?(survey)
   end
 
   test "doesn't poll surveys considering day of week according to timezone" do

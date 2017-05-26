@@ -20,7 +20,7 @@ defmodule Ask.SurveyView do
       name: survey.name,
       mode: survey.mode,
       project_id: survey.project_id,
-      state: survey.state,
+      state: Survey.state_for_view(survey),
       cutoff: survey.cutoff,
       timezone: survey.timezone,
       next_schedule_time: next_schedule_time(survey),
