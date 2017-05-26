@@ -6,6 +6,7 @@ export const FETCH = 'QUESTIONNAIRES_FETCH'
 export const NEXT_PAGE = 'QUESTIONNAIRES_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
 export const SORT = 'QUESTIONNAIRES_SORT'
+export const DELETED = 'QUESTIONNAIRES_DELETED'
 
 export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
   const state = getState()
@@ -46,4 +47,15 @@ export const previousQuestionnairesPage = () => ({
 export const sortQuestionnairesBy = (property: string) => ({
   type: SORT,
   property
+})
+
+export const deleteQuestionnaire = (projectId: number, questionnaire: Questionnaire) => (dispatch: Function, getState: () => Store) => {
+  return api
+    .deleteQuestionnaire(projectId, questionnaire)
+    .then(response => dispatch(deleted(questionnaire)))
+}
+
+export const deleted = (questionnaire: Questionnaire) => ({
+  type: DELETED,
+  id: questionnaire.id
 })

@@ -1,5 +1,6 @@
 // @flow
 export type Questionnaire = {
+  id: number,
   name: string,
   steps: Step[],
   quotaCompletedSteps: ?(Step[]),

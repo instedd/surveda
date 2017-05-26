@@ -58,4 +58,14 @@ describe('questionnaires reducer', () => {
     const r3 = reducer(r2, actions.previousQuestionnairesPage())
     expect(r3.page).toEqual({index: 5, size: 5})
   })
+
+  it('should delete questionnaire', () => {
+    const projectId = 100
+    const questionnaires = {'1': {...questionnaire, 'id': 1}}
+    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
+    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
+    const r3 = reducer(r2, actions.deleted(questionnaires['1']))
+    expect(r3.items).toEqual({})
+    expect(r3.order).toEqual([])
+  })
 })

@@ -15,6 +15,7 @@ defmodule Ask.Questionnaire do
     belongs_to :snapshot_of_questionnaire, Ask.Questionnaire, foreign_key: :snapshot_of
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
+    has_many :translations, Ask.Translation, on_delete: :delete_all
 
     timestamps()
   end

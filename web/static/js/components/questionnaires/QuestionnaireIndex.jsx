@@ -1,3 +1,4 @@
+// @flow
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
@@ -10,9 +11,13 @@ import * as userSettingsActions from '../../actions/userSettings'
 import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
+import { ConfirmationModal } from '../ui/ConfirmationModal'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
 
 class QuestionnaireIndex extends Component {
+  creatingQuestionnaire: boolean
+  duplicatingQuestionnaire: boolean
+
   componentDidMount() {
     this.creatingQuestionnaire = false
     this.duplicatingQuestionnaire = false
@@ -75,6 +80,20 @@ class QuestionnaireIndex extends Component {
       })
   }
 
+  delete(questionnaire: Questionnaire) {
+    const { projectId, actions } = this.props
+
+    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+    deleteConfirmationModal.open({
+      modalText: <span>
+        <p>Are you sure you want to delete the questionnaire <b><UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' /></b>?</p>
+      </span>,
+      onConfirm: () => {
+        actions.deleteQuestionnaire(projectId, questionnaire)
+      }
+    })
+  }
+
   render() {
     const { questionnaires, project, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, userSettings } = this.props
@@ -123,7 +142,8 @@ class QuestionnaireIndex extends Component {
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               <th>Modes</th>
-              {readOnly ? null : <th className='duplicate' />}
+              {readOnly ? null : <th className='action' />}
+              {readOnly ? null : <th className='action' />}
               <th style={{width: '20px'}} />
             </tr>
           </thead>
@@ -141,10 +161,18 @@ class QuestionnaireIndex extends Component {
                     { (questionnaire.modes || []).sort((x, y) => modeOrder(x) - modeOrder(y)).map(x => modeLabel(x)).join(', ') }
                   </td>
                   {readOnly ? null
-                    : <td className='duplicate'>
+                    : <td className='action'>
                       <Tooltip text='Duplicate questionnaire'>
                         <a onClick={() => this.duplicate(questionnaire)}>
                           <i className='material-icons'>content_copy</i>
+                        </a>
+                      </Tooltip>
+                    </td>}
+                  {readOnly ? null
+                    : <td className='action'>
+                      <Tooltip text='Delete questionnaire'>
+                        <a onClick={() => this.delete(questionnaire)}>
+                          <i className='material-icons'>delete</i>
                         </a>
                       </Tooltip>
                     </td>}
@@ -160,6 +188,7 @@ class QuestionnaireIndex extends Component {
           </tbody>
         </CardTable>
         }
+        <ConfirmationModal modalId='questionnaire_index_delete' ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete questionnaire' showCancel />
       </div>
     )
   }

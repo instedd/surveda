@@ -17,7 +17,7 @@
       @extend .bordered;
 
       tr:hover {
-        .duplicate i {
+        .action i {
           display: block;
         }
       }
@@ -35,7 +35,7 @@
             margin-right: 9px;
           }
         }
-        &.duplicate {
+        &.action {
           width: 50px;
           padding: 5px;
         }
@@ -53,7 +53,7 @@
         &.project-name {
           word-break: break-all;
         }
-        &.duplicate {
+        &.action {
           width: 50px;
           padding: 0;
           text-align: center;
@@ -64,12 +64,6 @@
             &:hover {
               @extend .black-text;
             }
-          }
-        }
-        &.skipLogic {
-          min-width: 160px;
-          .col {
-            padding: 0;
           }
         }
         &.tdDelete {
