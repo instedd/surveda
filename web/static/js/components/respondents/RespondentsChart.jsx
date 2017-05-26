@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import rd3 from 'react-d3-library'
-import { referenceColorsFor } from '../../referenceColors'
+import { referenceStrokeColorClasses } from '../../referenceColors'
 const RD3Component = rd3.Component
 
 class RespondentsChart extends Component {
@@ -30,7 +30,7 @@ class RespondentsChart extends Component {
     let initialDate
     let nextThreeMonths
     let lastDate
-    let totalQuestionnaires = Object.keys(cumulativePercentages)
+    let totalQuestionnaires = Object.keys(cumulativePercentages).length
     if (!cumulativePercentages || totalQuestionnaires < 1) {
       initialDate = new Date(Date.now())
       lastDate = new Date(Date.now())
@@ -73,10 +73,11 @@ class RespondentsChart extends Component {
         .attr('dy', 7)
         .attr('x', 10)
 
-    this.refreshPaths(totalQuestionnaires)
+    this.paths = this.buildPaths(totalQuestionnaires)
+    let referenceClasses = referenceStrokeColorClasses(totalQuestionnaires)
     this.datas.forEach((data, index) => {
       this.paths[index].datum(data)
-          .attr('class', 'line respondentsData')
+          .attr('class', `line respondentsData ${referenceClasses[index]}`)
           .attr('d', this.line)
     })
 
@@ -86,14 +87,14 @@ class RespondentsChart extends Component {
         .attr('d', this.line)
   }
 
-  refreshPaths(total) {
-    this.paths = []
-    let referenceColors = referenceColorsFor(total)
+  buildPaths(total) {
+    let paths = []
     for (let i = 0; i < total; ++i) {
-      this.paths.push(this.container.append('path')
-                                    .attr('class', 'line')
-                                    .style('stroke', referenceColors[i]))
+      paths.push(this.container.append('path')
+                               .attr('class', 'line'))
     }
+
+    return paths
   }
 
   setSize() {
