@@ -250,15 +250,19 @@ defmodule Ask.RespondentGroupController do
         |> csv_rows
         |> Enum.uniq_by(&keep_digits/1)
 
-      invalid_entries = rows
-        |> Stream.with_index
-        |> Stream.filter(fn {row, _} -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, row) end)
-        |> Stream.map(fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-        |> Enum.to_list
+      if length(rows) == 0 do
+        render_invalid(conn, file.filename, [])
+      else
+        invalid_entries = rows
+          |> Stream.with_index
+          |> Stream.filter(fn {row, _} -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, row) end)
+          |> Stream.map(fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
+          |> Enum.to_list
 
-      case invalid_entries do
-        [] -> func.(rows)
-        _ -> render_invalid(conn, file.filename, invalid_entries)
+        case invalid_entries do
+          [] -> func.(rows)
+          _ -> render_invalid(conn, file.filename, invalid_entries)
+        end
       end
     else
       Logger.warn "Error when creating respondent group for survey: #{inspect survey}"

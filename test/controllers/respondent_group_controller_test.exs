@@ -134,6 +134,18 @@ defmodule Ask.RespondentGroupControllerTest do
       assert length(all) == 0
     end
 
+    test "uploads empty CSV file", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_empty.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
+      assert conn.status == 422
+      all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      assert length(all) == 0
+    end
+
     test "uploads CSV file with phone numbers rejecting duplicated entries", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)

@@ -55,16 +55,34 @@ class SurveyWizardRespondentsStep extends Component {
     let { surveyStarted } = this.props
     if (surveyStarted) return
 
-    const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
-    const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
-    const extraLinesCount = data.invalidEntries.length - lineNumbers.length
-    const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
-    return (
-      <Card>
+    let content = null
+
+    if (data.invalidEntries.length == 0) {
+      content = (
+        <div className='card-content card-error'>
+          <div><b>The file you uploaded does not contain any phone number.</b></div>
+          <div>Please upload antother file.</div>
+        </div>
+      )
+    } else {
+      const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
+      const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
+      const extraLinesCount = data.invalidEntries.length - lineNumbers.length
+      const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
+
+      content = (
         <div className='card-content card-error'>
           <div><b>Errors found at '{data.filename}', file was not imported</b></div>
           <div>{invalidEntriesText} {lineNumbersText}</div>
           <div>Please fix those errors and upload again.</div>
+        </div>
+      )
+    }
+
+    return (
+      <Card>
+        <div className='card-content card-error'>
+          {content}
         </div>
         <div className='card-action right-align'>
           <a className='blue-text' href='#' onClick={e => this.clearInvalids(e)}>
