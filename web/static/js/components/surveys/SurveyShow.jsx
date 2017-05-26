@@ -11,7 +11,7 @@ import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import { modeLabel } from '../../questionnaire.mode'
-import { referenceColorsFor, referenceColorClasses } from '../../referenceColors'
+import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -145,7 +145,7 @@ class SurveyShow extends Component {
 
   questionnairesColorReferences(questionnaires) {
     let questionnairesQuantity = Object.keys(questionnaires).length
-    let referenceColors = referenceColorsFor(questionnairesQuantity)
+    let referenceClasses = referenceBackgroundColorClasses(questionnairesQuantity)
 
     let colorReferences = []
     if (questionnaires.length > 1) {
@@ -153,7 +153,7 @@ class SurveyShow extends Component {
       for (var questionnaireId in questionnaires) {
         colorReferences.push((
           <div className='questionnaire-color-reference' key={questionnaireId}>
-            <div className='color-circle-reference' style={{backgroundColor: referenceColors[i]}} />
+            <div className={`color-circle-reference ${referenceClasses[i]}`} />
             <div className='questionnaire-name'> {questionnaires[questionnaireId].name} </div>
           </div>
         ))
