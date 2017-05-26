@@ -303,6 +303,7 @@ defmodule Ask.SurveyController do
   defp create_survey_questionnaires_snapshot(survey) do
     new_questionnaires = Enum.map(survey.questionnaires, fn questionnaire ->
       %{questionnaire | id: nil, snapshot_of_questionnaire: questionnaire, questionnaire_variables: [], project: survey.project}
+      |> Repo.preload(:translations)
       |> Repo.insert!
       |> Questionnaire.recreate_variables!
     end)
