@@ -70,14 +70,12 @@ class SurveyIndex extends Component {
 
   nextPage(e) {
     const { dispatch } = this.props
-    console.log('disparando nextPage')
     e.preventDefault()
     dispatch(actions.nextSurveysPage())
   }
 
   previousPage(e) {
     const { dispatch } = this.props
-    console.log('disparando previousPage')
     e.preventDefault()
     dispatch(actions.previousSurveysPage())
   }
