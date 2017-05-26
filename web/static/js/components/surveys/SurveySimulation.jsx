@@ -7,6 +7,8 @@ import * as api from '../../api'
 import * as routes from '../../routes'
 import { icon } from '../../step'
 import { Tooltip, ConfirmationModal, Card } from '../ui'
+import includes from 'lodash/includes'
+import classNames from 'classnames'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -15,6 +17,7 @@ class SurveySimulation extends Component {
     this.state = {
       state: 'pending',
       disposition: 'registered',
+      dispositionHistory: ['registered'],
       stepId: null,
       stepIndex: null,
       responses: {},
@@ -48,9 +51,16 @@ class SurveySimulation extends Component {
 
     api.fetchSurveySimulationStatus(projectId, surveyId)
     .then(status => {
+      let dispositionHistory = this.state.dispositionHistory
+
+      if (status.disposition != this.state.disposition) {
+        dispositionHistory += status.disposition
+      }
+
       this.setState({
         state: status.state,
         disposition: status.disposition,
+        dispositionHistory: dispositionHistory,
         stepId: status.step_id,
         stepIndex: status.step_index,
         responses: status.responses
@@ -130,9 +140,191 @@ class SurveySimulation extends Component {
 
         <div className='row'>
           <div className='col s4'>
-            <p>
-              Disposition: {this.state.disposition}
-            </p>
+            <h4>
+              Disposition
+            </h4>
+            <p> {
+              // this.state.disposition
+            } </p>
+            <ul>
+              <li>
+                <div className='row'>
+                  <div className='col s6'>
+                    <p>
+                      Uncontacted
+                    </p>
+                  </div>
+                  <div className='col s6'>
+                    <ul>
+                      <li className={classNames({'active': this.state.disposition == 'registered'})}>
+                        <input
+                          id='registered'
+                          type='radio'
+                          name='registered'
+                          value='default'
+                          checked={includes(this.state.dispositionHistory, 'registered')}
+                          className='with-gap'
+                        />
+                        <label htmlFor='registered'>Registered</label>
+                      </li>
+                      <li className={classNames({'active': this.state.disposition == 'queued'})}>
+                        <input
+                          id='queued'
+                          type='radio'
+                          name='queued'
+                          value='default'
+                          checked={includes(this.state.dispositionHistory, 'queued')}
+                          className='with-gap'
+                        />
+                        <label htmlFor='queued'>Queued</label>
+                        <ul>
+                          <li className={classNames({'active': this.state.disposition == 'failed'})}>
+                            <input
+                              id='failed'
+                              type='radio'
+                              name='failed'
+                              value='default'
+                              checked={includes(this.state.dispositionHistory, 'failed')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='failed'>Failed</label>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div className='row'>
+                  <div className='col s6'>
+                    <p>
+                      Contacted
+                    </p>
+                  </div>
+                  <div className='col s6'>
+                    <ul>
+                      <li className={classNames({'active': this.state.disposition == 'contacted'})}>
+                        <input
+                          id='contacted'
+                          type='radio'
+                          name='contacted'
+                          value='default'
+                          checked={includes(this.state.dispositionHistory, 'contacted')}
+                          className='with-gap'
+                        />
+                        <label htmlFor='contacted'>Contacted</label>
+                        <ul>
+                          <li className={classNames({'active': this.state.disposition == 'unresponsive'})}>
+                            <input
+                              id='unresponsive'
+                              type='radio'
+                              name='unresponsive'
+                              value='default'
+                              checked={includes(this.state.dispositionHistory, 'unresponsive')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='unresponsive'>Unresponsive</label>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div className='row'>
+                  <div className='col s6'>
+                    <p>
+                      Responsive
+                    </p>
+                  </div>
+                  <div className='col s6'>
+                    <ul>
+                      <li className={classNames({'active': this.state.disposition == 'started'})}>
+                        <input
+                          id='started'
+                          type='radio'
+                          name='started'
+                          value='default'
+                          checked={includes(this.state.dispositionHistory, 'started')}
+                          className='with-gap'
+                        />
+                        <label htmlFor='started'>Started</label>
+                        <ul>
+                          <li className={classNames({'active': this.state.disposition == 'refused'})}>
+                            <input
+                              id='refused'
+                              type='radio'
+                              name='refused'
+                              value='default'
+                              checked={includes(this.state.dispositionHistory, 'refused')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='refused'>Refused</label>
+                          </li>
+                          <li className={classNames({'active': this.state.disposition == 'ineligible'})}>
+                            <input
+                              id='ineligible'
+                              type='radio'
+                              name='ineligible'
+                              value='default'
+                              checked={includes(this.state.dispositionHistory, 'ineligible')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='ineligible'>Ineligible</label>
+                          </li>
+                          <li className={classNames({'active': this.state.disposition == 'rejected'})}>
+                            <input
+                              id='rejected'
+                              type='radio'
+                              name='rejected'
+                              value='default'
+                              checked={includes(this.state.dispositionHistory, 'rejected')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='rejected'>Rejected</label>
+                          </li>
+                          <li className={classNames({'active': this.state.disposition == 'breakoff'})}>
+                            <input
+                              id='breakoff'
+                              type='radio'
+                              name='breakoff'
+                              value='default'
+                              checked={includes(this.state.dispositionHistory, 'breakoff')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='breakoff'>Breakoff</label>
+                          </li>
+                        </ul>
+                      </li>
+                      <li className={classNames({'active': this.state.disposition == 'partial'})}>
+                        <input
+                          id='partial'
+                          type='radio'
+                          name='partial'
+                          value='default'
+                          checked={includes(this.state.dispositionHistory, 'partial')}
+                          className='with-gap'
+                        />
+                        <label htmlFor='partial'>Partial</label>
+                      </li>
+                      <li className={classNames({'active': this.state.disposition == 'completed'})}>
+                        <input
+                          id='completed'
+                          type='radio'
+                          name='completed'
+                          value='default'
+                          checked={includes(this.state.dispositionHistory, 'completed')}
+                          className='with-gap'
+                        />
+                        <label htmlFor='completed'>Completed</label>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </li>
+            </ul>
           </div>
           <div className='col s8'>
             {this.stepsComponent()}
