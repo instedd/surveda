@@ -470,7 +470,7 @@ const mapDispatchToProps = (dispatch) => ({
 })
 
 const surveyFinished = (survey) => {
-  return survey.state == 'completed' || survey.state == 'cancelled'
+  return survey.state == 'terminated'
 }
 
 export default connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep)

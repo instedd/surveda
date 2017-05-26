@@ -30,7 +30,7 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "timezone" => "UTC", "next_schedule_time" => nil, "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "exit_code" => nil, "exit_message" => nil, "timezone" => "UTC", "next_schedule_time" => nil, "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -61,6 +61,8 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "exit_code" => nil,
+        "exit_message" => nil,
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
@@ -100,6 +102,8 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "exit_code" => nil,
+        "exit_message" => nil,
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true

@@ -11,6 +11,8 @@ export type Survey = {
   mode: [?string[]],
   modeComparison: boolean,
   state: string,
+  exitCode: ?number,
+  exitMessage: ?string,
   questionnaireComparison: boolean,
   ivrRetryConfiguration: string,
   smsRetryConfiguration: string,

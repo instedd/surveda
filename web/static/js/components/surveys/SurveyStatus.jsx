@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react'
 import TimeAgo from 'react-timeago'
+import { Tooltip } from '../ui'
 
 export default class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -55,22 +56,46 @@ export default class SurveyStatus extends PureComponent {
         color = 'black-text'
         text = 'Ready to launch'
         break
-      case 'completed':
-        icon = 'done'
-        color = 'black-text'
-        text = 'Completed'
-        break
-      case 'cancelled':
-        icon = 'error'
-        color = 'black-text'
-        text = 'Cancelled'
+      case 'terminated':
+        switch (survey.exitCode) {
+          case 0:
+            icon = 'done'
+            color = 'black-text'
+            text = 'Completed'
+            break
+          case 1:
+            icon = 'error'
+            color = 'black-text'
+            text = 'Cancelled'
+            break
+          case 3:
+            icon = 'error'
+            color = 'black-text'
+            text = 'Failed'
+            break
+        }
         break
     }
-    return (
-      <p className={color}>
+
+    let component = (
+      <span>
         <i className='material-icons survey-status'>{icon}</i>
         { text }
         { time }
+      </span>
+    )
+
+    if (survey.exitCode != null && survey.exitCode != 0 && survey.exitMessage) {
+      component = (
+        <Tooltip text={survey.exitMessage} position='top'>
+          {component}
+        </Tooltip>
+      )
+    }
+
+    return (
+      <p className={color}>
+        {component}
       </p>
     )
   }
