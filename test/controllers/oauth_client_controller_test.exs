@@ -79,6 +79,44 @@ defmodule Ask.OAuthClientControllerTest do
     assert [] = Ask.RespondentGroupChannel |> Repo.all
   end
 
+  test "delete channels and marks related ready surveys as not ready", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+
+    survey = insert(:survey, state: "ready")
+    respondent_group = insert(:respondent_group, survey: survey)
+    insert(:respondent_group_channel, respondent_group: respondent_group, channel: channel, mode: "sms")
+
+    delete conn, o_auth_client_path(conn, :delete, "provider", base_url: "http://test.com")
+
+    survey = Repo.get!(Ask.Survey, survey.id)
+    assert survey.state == "not_ready"
+
+    refute Ask.Channel |> Repo.get(channel.id)
+  end
+
+  test "delete channels and marks related running surveys as terminated", %{conn: conn, user: user} do
+    insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+
+    survey = insert(:survey, state: "running")
+    respondent_group = insert(:respondent_group, survey: survey)
+    respondent = insert(:respondent, respondent_group: respondent_group, survey: survey, state: "active")
+    insert(:respondent_group_channel, respondent_group: respondent_group, channel: channel, mode: "sms")
+
+    delete conn, o_auth_client_path(conn, :delete, "provider", base_url: "http://test.com")
+
+    survey = Repo.get!(Ask.Survey, survey.id)
+    assert survey.state == "terminated"
+    assert survey.exit_code == 3
+    assert survey.exit_message == "Channel '#{channel.name}' no longer exists"
+
+    respondent = Repo.get!(Ask.Respondent, respondent.id)
+    assert respondent.state == "cancelled"
+
+    refute Ask.Channel |> Repo.get(channel.id)
+  end
+
   test "synchronize channels", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "test")
     get conn, o_auth_client_path(conn, :synchronize)

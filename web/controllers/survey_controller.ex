@@ -338,9 +338,7 @@ defmodule Ask.SurveyController do
           |> load_project_for_change(survey.project_id)
 
         cancel_messages(survey)
-
-        from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
-        |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
+        Survey.cancel_respondents(survey)
 
         changeset = Survey.changeset(survey, %{"state": "terminated", "exit_code": 1, "exit_message": "Cancelled by user"})
         case Repo.update(changeset) do

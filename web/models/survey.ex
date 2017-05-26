@@ -357,7 +357,13 @@ defmodule Ask.Survey do
     cond do
       survey.state == "terminated" && survey.exit_code == 0 -> "completed"
       survey.state == "terminated" && survey.exit_code == 1 -> "cancelled"
+      survey.state == "terminated" && survey.exit_code == 3 -> "cancelled"
       true -> survey.state
     end
+  end
+
+  def cancel_respondents(survey) do
+    from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
+    |> Ask.Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
   end
 end

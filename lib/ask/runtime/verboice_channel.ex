@@ -128,7 +128,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     channels |> Enum.each(fn channel ->
       exists = channel_names |> Enum.any?(fn name -> channel.settings["verboice_channel"] == name end)
       if !exists do
-        channel |> Repo.delete
+        Ask.Channel.delete(channel)
       end
     end)
 

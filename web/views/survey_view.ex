@@ -36,7 +36,7 @@ defmodule Ask.SurveyView do
       name: survey.name,
       mode: survey.mode,
       project_id: survey.project_id,
-      state: survey.state,
+      state: Survey.state_for_view(survey),
       questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
