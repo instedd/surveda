@@ -15,10 +15,10 @@
 //          animation-play-state($state)
 //          animation-timing-function($function)
 //      background-size($args)
-//          inner-shadow($args)
+//          inner-shadow($args) *
 //      box-sizing($args)
-//          border-box()
-//          content-box()
+//          border-box() *
+//          content-box() *
 //      columns($args)
 //          column-count($count)
 //          column-gap($gap)
@@ -29,9 +29,9 @@
 //          order($args)
 //          align($args)
 //          justify-content($args)
-//      gradient($default,$start,$stop)
-//          linear-gradient-top($default,$color1,$stop1,$color2,$stop2,[$color3,$stop3,$color4,$stop4])
-//          linear-gradient-left($default,$color1,$stop1,$color2,$stop2,[$color3,$stop3,$color4,$stop4])
+//      gradient($default,$start,$stop) *
+//          linear-gradient-top($default,$color1,$stop1,$color2,$stop2,[$color3,$stop3,$color4,$stop4])*
+//          linear-gradient-left($default,$color1,$stop1,$color2,$stop2,[$color3,$stop3,$color4,$stop4])*
 //      perspective($pixels)
 //      transform($args)
 //          transform-origin($args)
@@ -40,7 +40,7 @@
 //          scale($factor)
 //          translate($x,$y)
 //          translate3d($x,$y,$z)
-//          translateHardware($x,$y)
+//          translateHardware($x,$y) *
 //      text-shadow($args)
 //      transition($args)
 //          transition-delay($delay)
@@ -186,7 +186,7 @@
     column-rule: $args;
 }
 
-//Filter
+// Filter
 @mixin filter($args) {
     -webkit-filter: $args;
     -moz-filter: $args;
@@ -202,30 +202,30 @@
   display: -webkit-flex;
   display: flex;
 }
-    @mixin flex($values) {
-      -webkit-box-flex: $values;
-      -moz-box-flex:  $values;
-      -webkit-flex:  $values;
-      -ms-flex:  $values;
-      flex:  $values;
-    }
-    @mixin order($val) {
-      -webkit-box-ordinal-group: $val;
-      -moz-box-ordinal-group: $val;
-      -ms-flex-order: $val;
-      -webkit-order: $val;
-      order: $val;
-    }
-    @mixin align($align) {
-      -webkit-flex-align: $align;
-      -ms-flex-align: $align;
-      -webkit-align-items: $align;
-      align-items: $align;
-    }
-    @mixin justify-content($val) {
-      -webkit-justify-content: $val;
-      justify-content: $val;
-    }
+@mixin flex($values) {
+  -webkit-box-flex: $values;
+  -moz-box-flex:  $values;
+  -webkit-flex:  $values;
+  -ms-flex:  $values;
+  flex:  $values;
+}
+@mixin order($val) {
+  -webkit-box-ordinal-group: $val;
+  -moz-box-ordinal-group: $val;
+  -ms-flex-order: $val;
+  -webkit-order: $val;
+  order: $val;
+}
+@mixin align($align) {
+  -webkit-flex-align: $align;
+  -ms-flex-align: $align;
+  -webkit-align-items: $align;
+  align-items: $align;
+}
+@mixin justify-content($val) {
+  -webkit-justify-content: $val;
+  justify-content: $val;
+}
 // Gradients
 
 @mixin gradient($default: #F5F5F5, $start: #EEE, $stop: #FFF) {

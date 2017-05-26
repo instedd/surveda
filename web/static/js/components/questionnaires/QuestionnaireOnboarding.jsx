@@ -19,7 +19,7 @@ class QuestionnaireOnboarding extends Component {
 
   componentDidMount() {
     $('.carousel.carousel-slider').carousel({
-      full_width: true
+      fullWidth: true
     })
   }
 
