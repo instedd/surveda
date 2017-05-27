@@ -55,8 +55,8 @@ main {
   min-height: 36vh;
   margin-bottom: 2rem;
 }
-.numeric .prompt {
-  min-height: 48vh;
+.numeric {
+  position: relative;
 }
 h1 {
   font-size: 1.3rem;
@@ -141,8 +141,11 @@ select {
   margin: .8rem 0 1.3rem;
 }
 .input-button-inline {
+  display: flex;
   input {
-    width: 52%;
+    flex: 1;
+    margin-right: 15px;
+    // width: 46%;
   }
   .btn {
     float: right;
@@ -157,7 +160,7 @@ select {
 .refusal {
   position: absolute;
   text-align: center;
-  bottom: 30px;
+  bottom: -35px;
   left: 0;
   width: 100%;
   a {
