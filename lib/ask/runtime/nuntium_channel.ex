@@ -150,7 +150,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     channels |> Enum.each(fn channel ->
       exists = nuntium_channels |> Enum.any?(fn {account, nuntium_channel} -> same_channel?(channel, account, nuntium_channel) end)
       if !exists do
-        channel |> Repo.delete
+        Ask.Channel.delete(channel)
       end
     end)
 

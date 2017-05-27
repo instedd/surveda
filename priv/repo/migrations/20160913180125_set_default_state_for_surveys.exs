@@ -10,9 +10,6 @@ defmodule Ask.Repo.Migrations.SetDefaultStateForSurveys do
 
     from(s in Ask.Survey, where: is_nil(s.state))
     |> Ask.Repo.update_all(set: [state: "pending"])
-
-    # Ask.Repo.update_all("surveys", set: [state: "pending"])
-    # Ask.Survey |> where([s], is_nil(s.state)) |> update(set: [state: "pending"])
   end
 
   def down do

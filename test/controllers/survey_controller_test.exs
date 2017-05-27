@@ -30,7 +30,7 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project)
       conn = get conn, project_survey_path(conn, :index, project.id)
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "timezone" => "UTC", "next_schedule_time" => nil, "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "exit_code" => nil, "exit_message" => nil, "timezone" => "UTC", "next_schedule_time" => nil, "updated_at" => Ecto.DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -61,6 +61,8 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "exit_code" => nil,
+        "exit_message" => nil,
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
@@ -100,6 +102,8 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "exit_code" => nil,
+        "exit_message" => nil,
         "respondents_count" => 0,
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
@@ -897,7 +901,8 @@ defmodule Ask.SurveyControllerTest do
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "cancelled"
+    survey = Repo.get(Survey, survey.id)
+    assert Survey.cancelled?(survey)
 
     assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
     assert_receive [:cancel_message, ^test_channel, ^channel_state]
@@ -939,22 +944,24 @@ defmodule Ask.SurveyControllerTest do
 
   test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "completed")
+    survey = insert(:survey, project: project, state: "terminated", exit_code: 0, exit_message: "Successfully completed")
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "completed"
+    survey = Repo.get(Survey, survey.id)
+    assert Survey.completed?(survey)
   end
 
   test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "cancelled")
+    survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
 
     conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "cancelled"
+    survey = Repo.get(Survey, survey.id)
+    assert Survey.cancelled?(survey)
   end
 
   def prepare_for_state_update(user) do

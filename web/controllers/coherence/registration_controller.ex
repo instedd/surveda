@@ -48,6 +48,7 @@ defmodule Ask.Coherence.RegistrationController do
     cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__, registration_params)
     case Config.repo.insert(cs) do
       {:ok, user} ->
+        accept_all_pending_invitations_for_a_new_user user
         conn
         |> send_confirmation(user, user_schema)
         |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
@@ -115,4 +116,18 @@ defmodule Ask.Coherence.RegistrationController do
   def confirmation_expired(conn, _) do
     render(conn, "confirmation_expired.html")
   end
+
+  def accept_all_pending_invitations_for_a_new_user(user) do
+    invites = Ask.Repo.all(from i in Ask.Invite, where: i.email == ^user.email)
+
+    Enum.each invites, fn(invite) ->
+      changeset = %{"user_id" => user.id, "project_id" => invite.project_id, "level" => invite.level}
+
+      Ask.Repo.transaction fn ->
+        Ask.ProjectMembership.changeset(%Ask.ProjectMembership{}, changeset) |> Ask.Repo.insert
+        invite |> Ask.Repo.delete!
+      end
+    end
+  end
+
 end

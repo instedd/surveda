@@ -128,13 +128,17 @@ defmodule Ask.Runtime.Broker do
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
       batch_size = batch_size(survey, by_state)
+      Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, stalled=#{stalled}, batch_size=#{batch_size})"
 
       cond do
         (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
+          Logger.info "Survey #{survey.id} completed"
           complete(survey)
 
         (active + stalled) < batch_size && pending > 0 && !survey_completed ->
-          start_some(survey, batch_size - (active + stalled))
+          count = batch_size - (active + stalled)
+          Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
+          start_some(survey, count)
 
         true -> :ok
       end
@@ -160,7 +164,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp complete(survey) do
-    Repo.update Survey.changeset(survey, %{state: "completed"})
+    Repo.update Survey.changeset(survey, %{state: "terminated", exit_code: 0, exit_message: "Successfully completed"})
     set_stalled_respondents_as_failed(survey)
   end
 

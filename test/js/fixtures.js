@@ -160,6 +160,8 @@ const bareSurvey: Survey = {
   cutoff: 123,
   countPartialResults: false,
   state: 'ready',
+  exitCode: 0,
+  exitMessage: null,
   questionnaireIds: [1],
   scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
   scheduleStartTime: '02:00:00',

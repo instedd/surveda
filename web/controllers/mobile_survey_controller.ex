@@ -76,7 +76,7 @@ defmodule Ask.MobileSurveyController do
 
     {step, progress, error_message} =
       cond do
-        survey.state in ["completed", "cancelled"] ->
+        survey.state == "terminated" ->
           questionnaires = Repo.preload(survey, :questionnaires).questionnaires
           questionnaire = Enum.random(questionnaires)
           msg = questionnaire.settings["mobile_web_survey_is_over_message"] || "The survey is over"

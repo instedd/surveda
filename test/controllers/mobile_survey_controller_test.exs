@@ -267,7 +267,7 @@ defmodule Ask.MobileSurveyControllerTest do
     {:ok, _} = Broker.start_link
     Broker.poll
 
-    survey |> Survey.changeset(%{"state" => "completed"}) |> Repo.update!
+    survey |> Survey.changeset(%{"state" => "terminated", "exit_code" => 0, "exit_message" => "Successfully completed"}) |> Repo.update!
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     assert %{

@@ -323,14 +323,11 @@ defmodule Ask.SurveyController do
     |> Repo.preload([:quota_buckets])
 
     case survey.state do
-      "cancelled" ->
+      "terminated" ->
         # Cancelling a cancelled survey is idempotent.
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey is cancelled
         # from another tab.
-        conn
-          |> render("show.json", survey: survey)
-      "completed" ->
         # Cancelling a completed survey should have no effect.
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey finished
@@ -341,11 +338,9 @@ defmodule Ask.SurveyController do
           |> load_project_for_change(survey.project_id)
 
         cancel_messages(survey)
+        Survey.cancel_respondents(survey)
 
-        from(r in Ask.Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
-        |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
-
-        changeset = Survey.changeset(survey, %{"state": "cancelled"})
+        changeset = Survey.changeset(survey, %{"state": "terminated", "exit_code": 1, "exit_message": "Cancelled by user"})
         case Repo.update(changeset) do
           {:ok, survey} ->
             project |> Project.touch!
