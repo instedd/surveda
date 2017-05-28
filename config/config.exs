@@ -73,11 +73,6 @@ config :sentry,
   use_error_logger: true,
   release: version
 
-config :appsignal, :config,
-  name: :ask,
-  env: Mix.env || :dev,
-  revision: version
-
 # %% Coherence Configuration %%   Don't remove this line
 config :coherence,
   user_schema: Ask.User,
