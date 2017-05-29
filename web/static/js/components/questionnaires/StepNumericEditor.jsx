@@ -139,7 +139,10 @@ class StepNumericEditor extends Component {
             type='number'
             className={minClassName}
             onChange={e => this.minValueChange(e)}
-            onBlur={e => this.minValueSubmit(e)} />
+            onBlur={e => this.minValueSubmit(e)}
+            draggable
+            onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+            />
         </InputWithLabel>
       </div>
     minValue = this.maybeTooltip(minValue, minErrors)
@@ -158,7 +161,10 @@ class StepNumericEditor extends Component {
             className={rangeClassName}
             disabled={readOnly}
             onChange={e => this.rangesDelimitersChange(e)}
-            onBlur={e => this.rangesDelimitersSubmit(e)} />
+            onBlur={e => this.rangesDelimitersSubmit(e)}
+            draggable
+            onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+            />
         </InputWithLabel>
       </div>
     rangesDelimiters = this.maybeTooltip(rangesDelimiters, rangeErrors)
@@ -176,7 +182,10 @@ class StepNumericEditor extends Component {
             className={maxClassName}
             disabled={readOnly}
             onChange={e => this.maxValueChange(e)}
-            onBlur={e => this.maxValueSubmit(e)} />
+            onBlur={e => this.maxValueSubmit(e)}
+            draggable
+            onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+            />
         </InputWithLabel>
       </div>
     maxValue = this.maybeTooltip(maxValue, maxErrors)

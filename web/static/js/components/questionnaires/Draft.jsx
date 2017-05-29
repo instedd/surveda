@@ -251,7 +251,10 @@ class Draft extends React.Component {
     }
 
     return (
-      <div className='RichEditor-root'>
+      <div className='RichEditor-root'
+        draggable
+        onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+        >
         <div className={className} onClick={this.focus}>
           <label ref='label'>
             {label}

@@ -233,7 +233,10 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onBlur={e => this.autoComplete(e)}
-              onKeyDown={(e: Event) => this.onKeyDown(e, 'sms', true)} />
+              onKeyDown={(e: Event) => this.onKeyDown(e, 'sms', true)}
+              draggable
+              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+              />
           </td>
           : null }
           { sms
@@ -247,7 +250,10 @@ class ChoiceEditor extends Component {
               onChange={e => this.smsChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
               onKeyUp={e => this.smsCheckEmptyString(e)}
-              onKeyDown={e => this.onKeyDown(e, 'ivr')} />
+              onKeyDown={e => this.onKeyDown(e, 'ivr')}
+              draggable
+              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+              />
             <Autocomplete
               getInput={() => this.refs.smsInput}
               getData={(value, callback) => smsAutocompleteGetData(value, callback)}
@@ -265,7 +271,10 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'ivr'}
               onChange={e => this.ivrChange(e)}
               onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e, 'mobileweb')} />
+              onKeyDown={e => this.onKeyDown(e, 'mobileweb')}
+              draggable
+              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+              />
           </td> : null
           }
           {
@@ -278,7 +287,10 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'mobileweb'}
               onChange={e => this.mobilewebChange(e, e.target.value)}
               onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e, null)} />
+              onKeyDown={e => this.onKeyDown(e, null)}
+              draggable
+              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+              />
           </td> : null
           }
           {skipLogicInput}

@@ -96,6 +96,8 @@ class StepStoreVariable extends Component {
               onBlur={e => this.stepStoreSubmit(e, e.target.value)}
               autoComplete='off'
               className={className}
+              draggable
+              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
               ref='varInput'
             />
             <label data-error={dataError} />
