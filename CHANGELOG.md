@@ -1,5 +1,59 @@
 # InSTEDD Surveda Changelog
 
+## Ironwood 0.9.2
+
+### Features
+
+* Added more internal logging for survey scheduling (useful to diagnose issues with dynamic queue calculations)
+
+## Ironwood 0.9.1
+
+### Bugfixes
+
+* Fix issue with dynamic queue size calculation
+
+## Ironwood 0.9
+
+Deployment considerations:
+* A Google Api key is required to enable the URL shortening. Get one from https://console.developers.google.com/ and specify the value through GOOGLE_URL_SHORTENER_API_KEY environment variable.
+
+### Bugfixes
+
+* Show validation error when a multiple choice has less than two options [#883](https://github.com/instedd/ask/issues/883)
+* Show validation error for missing prompt messages in language selection step [#882](https://github.com/instedd/ask/issues/882)
+* Show error messages in mobile web form [#919](https://github.com/instedd/ask/issues/919)
+* Fix skip logic for flag steps [#932](https://github.com/instedd/ask/issues/932)
+* Respect timezone when scheduling new surveys [#938](https://github.com/instedd/ask/issues/938)
+* Fix issue with min value of numeric questions not being saved [#726](https://github.com/instedd/ask/issues/726)
+* Do not show received values for steps without variable names set [#950](https://github.com/instedd/ask/issues/950)
+* Mobile web link to deleted survey was hanging on "loading" [#902](https://github.com/instedd/ask/issues/902)
+* Fix last saved time sometimes displaying time in the future [#958](https://github.com/instedd/ask/issues/958)
+
+### Features
+
+* Properly handle mobile surveys opened many times (ie: on different tabs) [#870](https://github.com/instedd/ask/issues/870)
+* Shorten URL links to mobile web form [#862](https://github.com/instedd/ask/issues/862)
+* Show progress bar in mobile web form [#836](https://github.com/instedd/ask/issues/836)
+* Ignore alphanumeric characters in responses for numeric steps [#867](https://github.com/instedd/ask/issues/867)
+* Allow customization of "survey is over" message [#844](https://github.com/instedd/ask/issues/844)
+* Allow customization of "thank you" message [#865](https://github.com/instedd/ask/issues/865)
+* Disallow opening the link to mobile web form by different users [#863](https://github.com/instedd/ask/issues/863)
+* New respondents can be added to a running survey [#845](https://github.com/instedd/ask/issues/845), [#926](https://github.com/instedd/ask/issues/926)
+* Disable the submit button in mobile web form when the value is invalid [#931](https://github.com/instedd/ask/issues/931)
+* Mark questionnaires with validation errors on the questionnaire list [#829](https://github.com/instedd/ask/issues/829)
+* Added title setting for mobile web form [#837](https://github.com/instedd/ask/issues/837)
+* Allow customization of "survey already taken" message [#866](https://github.com/instedd/ask/issues/866)
+* Exported CSV files has the survey ID in the file names [#940](https://github.com/instedd/ask/issues/940)
+* Re-design of questionnaire settings UI [#947](https://github.com/instedd/ask/issues/947)
+* Run surveys over a 'snapshot' of the questionnaires [#913](https://github.com/instedd/ask/issues/913)
+* Minimize time required to receive responses to multiple choice and numeric questions [#961](https://github.com/instedd/ask/issues/961)
+* Allow sorting respondents table by hash or timestamp [#922](https://github.com/instedd/ask/issues/922)
+* Show a "scroll indicator" for long mobile web forms [#917](https://github.com/instedd/ask/issues/917)
+* Dynamically adjust the respondent queue size according to success rates [#939](https://github.com/instedd/ask/issues/939), [#957](https://github.com/instedd/ask/issues/957)
+* Allow text formatting for mobile web forms [#710](https://github.com/instedd/ask/issues/710)
+* Allow customization of mobile web form colors [#929](https://github.com/instedd/ask/issues/929)
+* New disposition states [#946](https://github.com/instedd/ask/issues/946)
+
 ## Hazel 0.8.2
 
 ### Bugfixes
