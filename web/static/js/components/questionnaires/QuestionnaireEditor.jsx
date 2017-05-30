@@ -16,6 +16,7 @@ import WebSettings from './WebSettings'
 import TestQuestionnaireModal from './TestQuestionnaireModal'
 import { Dropdown, DropdownItem } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
+import classNames from 'classnames/bind'
 
 type State = {
   isNew: boolean
@@ -176,25 +177,27 @@ class QuestionnaireEditor extends Component {
 
     const { questionnaire, errors } = this.props
 
-    let rowClassName = 'row mode-list'
-    if (hasErrorsInModeWithLanguage(errors, mode, questionnaire.activeLanguage)) {
-      rowClassName += ' tooltip-error'
-    }
+    const isActive = questionnaire.activeMode == mode
+    const hasErrors = hasErrorsInModeWithLanguage(errors, mode, questionnaire.activeLanguage)
 
-    let className = 'col s12'
-    if (questionnaire.activeMode == mode) {
-      className += ' active'
+    if (isActive) {
       icon = 'done'
     }
 
+    let removeModeControl = null
+    if (!isActive) {
+      removeModeControl = <span className='remove-mode' onClick={(e) => this.removeMode(e, mode)}>
+        <i className='material-icons'>highlight_off</i>
+      </span>
+    }
+
     return (
-      <div className={rowClassName} onClick={e => this.setActiveMode(e, mode)}>
-        <div className={className}>
-          <i className='material-icons v-middle left delete-mode' onClick={e => this.removeMode(e, mode)}>highlight_off</i>
-          <i className='material-icons v-middle left'>{icon}</i>
-          <span className='mode-label'>{label}</span>
-        </div>
-      </div>
+      <li key={mode} onClick={e => this.setActiveMode(e, mode)}
+        className={classNames({'active-mode': isActive, 'tooltip-error': hasErrors})} >
+        <i className='material-icons v-middle left icon'>{icon}</i>
+        {removeModeControl}
+        <span className='mode-name'>{label}</span>
+      </li>
     )
   }
 
@@ -271,12 +274,14 @@ class QuestionnaireEditor extends Component {
             <div className='row'>
               <div className='col s12'>
                 <p className='grey-text'>Modes</p>
+                <ul className='modes-list'>
+                  { this.modeComponent('sms', 'SMS', 'sms', sms) }
+                  { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
+                  { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
+                </ul>
+                { this.addModeComponent(sms, ivr, mobileweb) }
               </div>
             </div>
-            { this.modeComponent('sms', 'SMS', 'sms', sms) }
-            { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
-            { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
-            { this.addModeComponent(sms, ivr, mobileweb) }
           </div>
           {skipOnboarding
         ? <div className='col s12 m8 offset-m1'>
