@@ -2566,6 +2566,11 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "it doesn't crash on channel_failed when there's no session" do
+    respondent = insert(:respondent)
+    assert Broker.channel_failed(respondent) == :ok
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(false, mode == "sms")
 
