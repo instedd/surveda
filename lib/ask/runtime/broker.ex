@@ -77,11 +77,16 @@ defmodule Ask.Runtime.Broker do
   end
 
   def channel_failed(respondent, reason \\ "failed") do
-    session = respondent.session |> Session.load
-    case Session.channel_failed(session, reason) do
-      :ok -> :ok
-      :failed ->
-        update_respondent(respondent, :failed)
+    session = respondent.session
+    if session do
+      session = session |> Session.load
+      case Session.channel_failed(session, reason) do
+        :ok -> :ok
+        :failed ->
+          update_respondent(respondent, :failed)
+      end
+    else
+      :ok
     end
   end
 
