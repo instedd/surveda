@@ -139,22 +139,22 @@ class SurveySimulation extends Component {
         <ConfirmationModal modalId='survey_stop_simulation_modal' ref='stopSimulationModal' confirmationText='STOP' header='Stop simulation' showCancel />
 
         <div className='row'>
-          <div className='col s4'>
+          <div className='col s12 m4'>
             <h4>
               Disposition
             </h4>
             <p> {
               // this.state.disposition
             } </p>
-            <ul>
+            <ul className='disposition'>
               <li>
                 <div className='row'>
-                  <div className='col s6'>
+                  <div className='col s3'>
                     <p>
                       Uncontacted
                     </p>
                   </div>
-                  <div className='col s6'>
+                  <div className='col s9'>
                     <ul>
                       <li className={classNames({'active': this.state.disposition == 'registered'})}>
                         <input
@@ -197,12 +197,12 @@ class SurveySimulation extends Component {
               </li>
               <li>
                 <div className='row'>
-                  <div className='col s6'>
+                  <div className='col s3'>
                     <p>
                       Contacted
                     </p>
                   </div>
-                  <div className='col s6'>
+                  <div className='col s9'>
                     <ul>
                       <li className={classNames({'active': this.state.disposition == 'contacted'})}>
                         <input
@@ -234,13 +234,13 @@ class SurveySimulation extends Component {
               </li>
               <li>
                 <div className='row'>
-                  <div className='col s6'>
+                  <div className='col s3'>
                     <p>
                       Responsive
                     </p>
                   </div>
-                  <div className='col s6'>
-                    <ul>
+                  <div className='col s9'>
+                    <ul className='last'>
                       <li className={classNames({'active': this.state.disposition == 'started'})}>
                         <input
                           id='started'
@@ -326,7 +326,7 @@ class SurveySimulation extends Component {
               </li>
             </ul>
           </div>
-          <div className='col s8'>
+          <div className='col s12 m8'>
             {this.stepsComponent()}
           </div>
         </div>

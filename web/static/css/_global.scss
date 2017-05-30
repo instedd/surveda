@@ -671,6 +671,85 @@ i.survey-status { // icon for survey status on index
 
   // ------- / Questionnaires web settings ----------
 
+  ul.disposition {
+
+    .row {
+      margin-bottom: 0;
+      border-bottom: 1px dashed #cdcdcd;
+
+      p {
+        @extend .grey-text;
+        font-size: .8rem;
+        line-height: .6rem;
+        font-style: italic;
+      }
+    }
+    li:last-child .row {
+      border-bottom: none;
+    }
+
+    ul {
+      position: relative;
+      padding-bottom: 2rem;
+      &:before {
+        content: '';
+        @extend .grey;
+        width: 5px;
+        position: absolute;
+        bottom: -5px;
+        top: 3px;
+        left: 9px;
+      }
+      li {
+        padding-top: 1rem;
+        &:first-child {
+          padding-top: 0;
+        }
+      }
+      ul {
+        margin-left: 3rem;
+        padding-top: 1rem;
+        padding-bottom: 0;
+        li {
+          padding-bottom: 0;
+          padding-top: 0;
+          padding-left: 2rem;
+          position: relative;
+          &:before {
+            content: '';
+            @extend .grey;
+            height: 5px;
+            width: 1.4rem;
+            position: absolute;
+            top: .74rem;
+            left: .9rem;
+          }
+        }
+        &:before {
+          top: -.1rem;
+          bottom: .65rem;
+        }
+      }
+      label:before {
+        @extend .grey, .lighten-3;
+      }
+      &.last {
+        padding-bottom: 0;
+        &:before {
+          bottom: 5px;
+        }
+      }
+    }
+
+  }
+
+
+  // ------- Questionnaires Disposition ----------
+
+
+
+  // ------- /Questionnaires Disposition ----------
+
 
 .collapsible { // class for collapsed questionnaires
   @include transition(all ease-in-out .25s);
