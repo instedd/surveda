@@ -903,6 +903,20 @@ defmodule Ask.BrokerTest do
     assert survey.state == "completed"
   end
 
+  test "IVR no reply shouldn't change disposition to started (#1028)" do
+    [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.no_reply)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "queued"
+  end
+
   test "fallback respondent (SMS => IVR)" do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")

@@ -311,10 +311,14 @@ defmodule Ask.Runtime.Broker do
   defp sync_step_internal(session, reply, session_mode) do
     transaction_result = Repo.transaction(fn ->
       try do
-        session = if reply == Flow.Message.answer() do
-          update_respondent_disposition(session, "contacted")
-        else
-          update_respondent_disposition(session, "started")
+        session = cond do
+          reply == Flow.Message.no_reply ->
+            # no_reply is produced, for example, from a timeout in Verboice
+            session
+          reply == Flow.Message.answer ->
+            update_respondent_disposition(session, "contacted")
+          true ->
+            update_respondent_disposition(session, "started")
         end
 
         handle_session_step(Session.sync_step(session, reply, session_mode))
