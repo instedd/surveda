@@ -873,6 +873,36 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "contacted respondents are marked as partial after all retries are met, not breakoff (#1036)" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "contacted"
+
+    respondent
+    |> Respondent.changeset(%{
+      disposition: "partial",
+      timeout_at: Timex.now |> Timex.shift(minutes: -1)
+    })
+    |> Repo.update!
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "partial"
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "retry respondent (IVR mode)" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
     survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
