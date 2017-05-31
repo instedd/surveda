@@ -91,7 +91,7 @@ class SurveyIndex extends Component {
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
-          <li className='grey-text'>{startIndex}-{endIndex} of {totalCount}</li>
+          <li style={{lineHeight: 2}}><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
           { hasPreviousPage
             ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
             : <li className='disabled'><i className='material-icons'>chevron_left</i></li>

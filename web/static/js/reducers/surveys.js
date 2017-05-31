@@ -24,7 +24,7 @@ const initialState = {
   sortAsc: true,
   page: {
     index: 0,
-    size: 6
+    size: 15
   }
 }
 
