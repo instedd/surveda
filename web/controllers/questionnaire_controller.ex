@@ -157,9 +157,7 @@ defmodule Ask.QuestionnaireController do
       modes: questionnaire.modes,
       steps: questionnaire.steps,
       quota_completed_steps: questionnaire.quota_completed_steps,
-      error_message: questionnaire.settings["error_message"],
-      mobile_web_sms_message: questionnaire.settings["mobile_web_sms_message"],
-      mobile_web_survey_is_over_message: questionnaire.settings["mobile_web_survey_is_over_message"],
+      settings: questionnaire.settings,
       languages: questionnaire.languages,
       default_language: questionnaire.default_language,
       audio_files: audio_files,
@@ -206,11 +204,7 @@ defmodule Ask.QuestionnaireController do
       modes: Map.get(manifest, "modes"),
       steps: Map.get(manifest, "steps"),
       quota_completed_steps: Map.get(manifest, "quota_completed_steps"),
-      settings: %{
-        error_message: Map.get(manifest, "error_message"),
-        mobile_web_sms_message: Map.get(manifest, "mobile_web_sms_message"),
-        mobile_web_survey_is_over_message: Map.get(manifest, "mobile_web_survey_is_over_message")
-      },
+      settings: Map.get(manifest, "settings"),
       languages: Map.get(manifest, "languages"),
       default_language: Map.get(manifest, "default_language"),
     })
