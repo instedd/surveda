@@ -36,7 +36,7 @@ defmodule Ask.FlowTest do
     assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
   end
 
-  test "first step (ivr mode) with multiple choice for num digits" do
+  test "first step (ivr mode) with multiple choice for num digits, different lengths" do
     steps = [
       multiple_choice_step(
         id: Ecto.UUID.generate,
@@ -54,7 +54,28 @@ defmodule Ask.FlowTest do
     quiz = build(:questionnaire, steps: steps)
     step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
     assert {:ok, %Flow{}, reply} = step
-    assert Reply.num_digits(reply) == 4
+    assert Reply.num_digits(reply) == nil
+  end
+
+  test "first step (ivr mode) with multiple choice for num digits, all same length" do
+    steps = [
+      multiple_choice_step(
+        id: Ecto.UUID.generate,
+        title: "Do you smoke?",
+        prompt: prompt(
+          sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+          ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+        ),
+        store: "Smokes",
+        choices: [
+          choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8, 7, 6"])),
+          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9, 1, #, 2"]))
+        ]
+      )]
+    quiz = build(:questionnaire, steps: steps)
+    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    assert {:ok, %Flow{}, reply} = step
+    assert Reply.num_digits(reply) == 1
   end
 
   test "first step (ivr mode) with language selection for num digits" do
@@ -73,6 +94,24 @@ defmodule Ask.FlowTest do
     step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 1
+  end
+
+  test "first step (ivr mode) with language selection for num digits, too many languages" do
+    steps = [
+      language_selection_step(
+        id: Ecto.UUID.generate,
+        title: "Do you smoke?",
+        prompt: %{
+          "sms" => sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+          "ivr" => tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+        },
+        store: "Smokes",
+        choices: ["en", "es", "a", "b", "c", "d", "e", "f", "g", "h"]
+      )]
+    quiz = build(:questionnaire, steps: steps)
+    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    assert {:ok, %Flow{}, reply} = step
+    assert Reply.num_digits(reply) == nil
   end
 
   test "first step (ivr mode) with numeric, no min/max, for num digits" do
@@ -94,7 +133,7 @@ defmodule Ask.FlowTest do
     assert Reply.num_digits(reply) == nil
   end
 
-  test "first step (ivr mode) with numeric, with max, for num digits" do
+  test "first step (ivr mode) with numeric, with max and min, for num digits, different lengths" do
     steps = [
       numeric_step(
         id: Ecto.UUID.generate,
@@ -110,7 +149,49 @@ defmodule Ask.FlowTest do
     quiz = build(:questionnaire, steps: steps)
     step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
     assert {:ok, %Flow{}, reply} = step
+    assert Reply.num_digits(reply) == nil
+  end
+
+  test "first step (ivr mode) with numeric, with max and min, for num digits, same lengths" do
+    steps = [
+      numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        refusal: nil,
+      )]
+    quiz = build(:questionnaire, steps: steps)
+    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 5
+  end
+
+  test "first step (ivr mode) with numeric, with max and min, for num digits, same lengths but refusal different length" do
+    steps = [
+      numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        refusal: %{
+          "responses" => %{
+            "ivr" => ["#", "12"]
+          }
+        },
+      )]
+    quiz = build(:questionnaire, steps: steps)
+    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    assert {:ok, %Flow{}, reply} = step
+    assert Reply.num_digits(reply) == nil
   end
 
   test "retry step" do
