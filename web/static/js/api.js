@@ -152,6 +152,10 @@ export const createProject = (project) => {
   return apiPostJSON('projects', projectSchema, { project })
 }
 
+export const leaveProject = (projectId) => {
+  return apiPostJSON(`projects/${projectId}/leave`, projectSchema)
+}
+
 export const createSurvey = (projectId) => {
   const timezone = getTimezone()
   let data

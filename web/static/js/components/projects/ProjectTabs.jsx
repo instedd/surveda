@@ -1,16 +1,34 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import {Tabs, TabLink, Dropdown, DropdownItem} from '../ui'
+import { withRouter } from 'react-router'
+import {Tabs, TabLink, Dropdown, DropdownItem, ConfirmationModal} from '../ui'
 import * as routes from '../../routes'
 import ColourSchemeModal from './ColourSchemeModal'
+import { leaveProject } from '../../api'
 
 class ProjectTabs extends Component {
   openColorSchemePopup(e) {
     $('#colourSchemeModal').modal('open')
   }
 
+  leaveProject(event, projectId) {
+    const { router } = this.props
+    event.preventDefault()
+
+    const leaveConfirmationModal: ConfirmationModal = this.refs.leaveConfirmationModal
+    leaveConfirmationModal.open({
+      modalText: <span>
+        <p><b>Are you sure?</b><br /> You won't be able to access this project anymore</p>
+      </span>,
+      onConfirm: () => {
+        leaveProject(projectId)
+        .then(() => router.push(routes.projects))
+      }
+    })
+  }
+
   render() {
-    const { projectId } = this.props
+    const { projectId, project } = this.props
 
     let more = (
       <div className='col'>
@@ -21,6 +39,12 @@ class ProjectTabs extends Component {
           <DropdownItem>
             <a onClick={e => this.openColorSchemePopup(e)}><i className='material-icons'>palette</i>Change color scheme</a>
           </DropdownItem>
+          { project && !project.fetching && !project.data.owner
+            ? <DropdownItem>
+              <a onClick={e => this.leaveProject(e, projectId)}><i className='material-icons'>exit_to_app</i>Leave project</a>
+            </DropdownItem>
+            : ''
+          }
         </Dropdown>
       </div>
     )
@@ -33,6 +57,7 @@ class ProjectTabs extends Component {
           <TabLink tabId='project_tabs' to={routes.collaboratorIndex(projectId)}>Collaborators</TabLink>
         </Tabs>
         <ColourSchemeModal modalId='colourSchemeModal' />
+        <ConfirmationModal modalId='leave_project' ref='leaveConfirmationModal' confirmationText='LEAVE' header='Leave Project' showCancel />
       </div>
     )
   }
@@ -43,11 +68,14 @@ class ProjectTabs extends Component {
 }
 
 ProjectTabs.propTypes = {
-  projectId: PropTypes.any.isRequired
+  projectId: PropTypes.any.isRequired,
+  router: PropTypes.object.isRequired,
+  project: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId
+  projectId: ownProps.params.projectId,
+  project: state.project
 })
 
-export default connect(mapStateToProps)(ProjectTabs)
+export default withRouter(connect(mapStateToProps)(ProjectTabs))

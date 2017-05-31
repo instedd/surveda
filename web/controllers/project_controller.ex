@@ -124,6 +124,22 @@ defmodule Ask.ProjectController do
     end
   end
 
+  def leave(conn, %{"project_id" => project_id}) do
+    user = conn
+    |> current_user
+
+    membership = Project
+    |> Repo.get!(project_id)
+    |> assoc(:project_memberships)
+    |> where([m], m.user_id == ^user.id)
+    |> Repo.one
+
+    membership
+    |> Repo.delete!()
+
+    send_resp(conn, :no_content, "")
+  end
+
   def delete(conn, %{"id" => id}) do
     conn
     |> load_project_for_change(id)
