@@ -794,7 +794,10 @@ defmodule Ask.SurveyControllerTest do
 
     questionnaire |> Ask.Questionnaire.recreate_variables!
 
-    survey = insert(:survey, project: project, state: "ready", questionnaires: [questionnaire])
+    survey = insert(:survey, project: project, state: "ready", questionnaires: [questionnaire], comparisons: [
+        %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "one" => 50},
+        %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "two" => 40},
+      ])
     conn = post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
     assert json_response(conn, 200)
 
@@ -809,6 +812,11 @@ defmodule Ask.SurveyControllerTest do
     assert q.name == questionnaire.name
     assert q.steps == questionnaire.steps
     assert q.modes == questionnaire.modes
+
+    assert survey.comparisons == [
+      %{"mode" => ["sms"], "questionnaire_id" => q.id, "one" => 50},
+      %{"mode" => ["sms"], "questionnaire_id" => q.id, "two" => 40},
+    ]
   end
 
   test "survey view contains questionnaire modes for each questionnaire after launching a survey", %{conn: conn, user: user} do
