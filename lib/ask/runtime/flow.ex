@@ -179,6 +179,10 @@ defmodule Ask.Runtime.Flow do
       "queued" -> "failed"
       "contacted" -> "unresponsive"
       "started" -> "breakoff"
+      "partial" -> old_disposition
+      "ineligible" -> old_disposition
+      "rejected" -> old_disposition
+      "refused" -> old_disposition
       _ -> "failed"
     end
   end

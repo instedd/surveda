@@ -301,6 +301,7 @@ defmodule Ask.SurveyController do
   end
 
   defp create_survey_questionnaires_snapshot(survey) do
+    # Create copies of questionnaires
     new_questionnaires = Enum.map(survey.questionnaires, fn questionnaire ->
       %{questionnaire | id: nil, snapshot_of_questionnaire: questionnaire, questionnaire_variables: [], project: survey.project}
       |> Repo.preload(:translations)
@@ -308,8 +309,21 @@ defmodule Ask.SurveyController do
       |> Questionnaire.recreate_variables!
     end)
 
+    # Update references in comparisons, if any
+    comparisons = survey.comparisons
+    comparisons = if comparisons do
+      comparisons
+      |> Enum.map(fn comparison ->
+        questionnaire_id = Map.get(comparison, "questionnaire_id")
+        snapshot = Enum.find(new_questionnaires, fn q -> q.snapshot_of == questionnaire_id end)
+        Map.put(comparison, "questionnaire_id", snapshot.id)
+      end)
+    else
+      comparisons
+    end
+
     survey
-    |> Ecto.Changeset.change
+    |> Survey.changeset(%{comparisons: comparisons})
     |> Ecto.Changeset.put_assoc(:questionnaires, new_questionnaires)
     |> Repo.update!
   end

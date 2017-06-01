@@ -146,25 +146,50 @@ defmodule Ask.Runtime.Step do
   def fetch(:num_digits, step, "ivr", _language) do
     case step["type"] do
       "language-selection" ->
-        # If we have 2 choices (en, es), then it's the length of "2", which is 1
-        # If we have 10 choices, then it's the length of "10", which is 2
-        step["language_choices"]
-        |> length
-        |> to_string
-        |> String.length
+        # If we have 9 choices (1..9) then we can set numDigits to 1,
+        # otherwise we can't (it's either 1 or 2 digits).
+        choices = step["language_choices"]
+        if length(choices) < 9 do
+          1
+        else
+          nil
+        end
       "multiple-choice" ->
-        step["choices"]
+        lengths = step["choices"]
         |> Enum.flat_map(&(&1["responses"]["ivr"]))
         |> Enum.flat_map(fn v -> v |> String.split(",") end)
         |> Enum.map(fn v -> v |> String.trim |> String.length end)
-        |> Enum.max
+        |> Enum.uniq
+
+        # Only send numDigits if all choices have the same length
+        if length(lengths) == 1 do
+          hd(lengths)
+        else
+          nil
+        end
       "numeric" ->
+        # Only send numDigits if the min and max values have the same string length,
+        # also taking into account the values of refusal responses
+        refusal = step["refusal"]
+
+        values = if refusal do
+          refusal["responses"]["ivr"]
+        else
+          []
+        end
+
+        min_value = step["min_value"]
         max_value = step["max_value"]
-        if max_value do
-          # If the max value is 123, then it's the length of "123", which is 3
-          max_value
-          |> to_string
-          |> String.length
+        if min_value && max_value do
+          values = [min_value, max_value | values]
+          |> Enum.map(fn v -> v |> to_string |> String.length end)
+          |> Enum.uniq
+
+          if length(values) == 1 do
+            hd(values)
+          else
+            nil
+          end
         else
           nil
         end
