@@ -73,9 +73,9 @@ class SurveyWizardModeStep extends Component {
     return primaryOptions.length == 1 ? primaryOptions[0] : null
   }
 
-  comparisonFallbackSelectedIfLast = (primarySelected) => {
+  comparisonFallbackSelectedIfLast = (primarySelected, comparison) => {
     const { survey } = this.props
-    const options = this.availableModesForComparisons(survey.mode).filter((mode) => (mode[0] == primarySelected))
+    const options = comparison ? this.availableModesForComparisons(survey.mode).filter((mode) => (mode[0] == primarySelected)) : this.availableModesForSingle(survey.mode).filter((mode) => (mode[0] == primarySelected))
     return options.length == 1 && options[0].length == 2 ? options[0][1] : null
   }
 
@@ -167,7 +167,7 @@ class SurveyWizardModeStep extends Component {
   }
 
   selectorForFallbackMode = (comparison, primary, fallback, options, handler, readOnly) => {
-    const lastFallback = this.comparisonFallbackSelectedIfLast(primary)
+    const lastFallback = this.comparisonFallbackSelectedIfLast(primary, comparison)
     if (lastFallback) {
       return (
         <Input s={12} m={5} type='select' value={lastFallback} disabled={readOnly} onChange={handler}>
@@ -208,7 +208,7 @@ class SurveyWizardModeStep extends Component {
     if (modeComparison) {
       availableModes = this.availableModesForComparisons(survey.mode)
       selectedPrimary = comparisonModes.primaryModeSelected || this.comparisonPrimarySelectedIfLast()
-      selectedFallback = comparisonModes.fallbackModeSelected || this.comparisonFallbackSelectedIfLast(selectedPrimary)
+      selectedFallback = comparisonModes.fallbackModeSelected || this.comparisonFallbackSelectedIfLast(selectedPrimary, modeComparison)
       selectPrimaryHandler = this.selectPrimaryModeForComparison
       selectFallbackHandler = this.selectFallbackModeForComparison
 
