@@ -2507,6 +2507,26 @@ defmodule Ask.BrokerTest do
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
   end
 
+  test "when channel fails a survey log entry is created" do
+    [_survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.channel_failed(respondent, "The channel failed")
+
+    disposition_histories = Repo.all(RespondentDispositionHistory)
+    assert disposition_histories |> length == 2
+
+    [queued_history, failed_history] = disposition_histories
+    assert queued_history.disposition == "queued"
+    assert failed_history.disposition == "failed"
+
+    :ok = broker |> GenServer.stop
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(false, mode == "sms")
 
