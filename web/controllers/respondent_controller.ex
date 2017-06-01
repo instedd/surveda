@@ -435,11 +435,28 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
-    csv_rows = (from e in SurveyLogEntry,
-      where: e.survey_id == ^survey.id,
-      order_by: [e.respondent_hashed_number])
-    |> preload(:channel)
-    |> Repo.stream
+    log_stream = Stream.resource(fn -> {"", 0} end,
+      fn {last_seen_respondent_hashed_number, last_seen_id} ->
+        results =
+          (from e in SurveyLogEntry,
+          where: e.survey_id == ^survey.id and (
+            (e.respondent_hashed_number == ^last_seen_respondent_hashed_number and e.id > ^last_seen_id) or
+            (e.respondent_hashed_number > ^last_seen_respondent_hashed_number)),
+          order_by: [e.respondent_hashed_number, e.id])
+          |> preload(:channel)
+          |> limit(500)
+          |> Repo.all
+
+        case List.last(results) do
+          %{respondent_hashed_number: last_respondent_hashed_number, id: last_id} ->
+            {results, {last_respondent_hashed_number, last_id}}
+          nil ->
+            {:halt, nil}
+        end
+      end,
+      fn _ -> [] end)
+
+    csv_rows = log_stream
     |> Stream.map(fn e ->
       channel_name =
         if e.channel do
