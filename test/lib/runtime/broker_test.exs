@@ -3,7 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper}
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry}
   require Ask.Runtime.ReplyHelper
 
   @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
@@ -874,6 +874,30 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "logs a timeout for each retry in IVR" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    {:ok, _} = SurveyLogger.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.answer())
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
+
+    [{"contact", nc}, {"prompt", np}] = Repo.all(from s in SurveyLogEntry, select: {s.action_type, count("*")}, group_by: s.action_type)
+    assert nc == 4
+    assert np == 3
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "contacted respondents are marked as partial after all retries are met, not breakoff (#1036)" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
@@ -1462,6 +1486,21 @@ defmodule Ask.BrokerTest do
     mark_n_active_respondents_as("failed", 26)
     Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 31, 94)
+  end
+
+  test "" do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 10)
+    survey |> Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
+    insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 0)
+
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 1, 10)
+
+    mark_n_active_respondents_as("completed", 1)
+
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 1, 9)
   end
 
   test "changes running survey state to 'completed' when there are no more running respondents" do

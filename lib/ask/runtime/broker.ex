@@ -579,33 +579,43 @@ defmodule Ask.Runtime.Broker do
         Survey.environment_variable_named(:batch_size)
 
       respondents_target when is_integer(respondents_target) ->
-        estimated_success_rate = estimated_success_rate(respondents_by_state, respondents_target)
-        (respondents_target - respondents_by_state["completed"]) / estimated_success_rate
+        successful = successful_respondents(survey, respondents_by_state)
+        estimated_success_rate = estimated_success_rate(successful, respondents_by_state, respondents_target)
+        (respondents_target - successful) / estimated_success_rate
         |> trunc
     end
   end
 
-  defp estimated_success_rate(respondents_by_state, respondents_target) do
-    current_success_rate = success_rate(respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
-    completion_rate = current_completion_rate(respondents_by_state["completed"], respondents_target)
+  defp estimated_success_rate(successful, respondents_by_state, respondents_target) do
+    current_success_rate = success_rate(successful, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
+    completion_rate = current_completion_rate(successful, respondents_target)
     %{:valid_respondent_rate => initial_valid_respondent_rate,
       :eligibility_rate => initial_eligibility_rate,
       :response_rate => initial_response_rate } = Survey.config_rates()
-    case completion_rate do
-      0 ->
-        initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
-      _ ->
-        (1 - completion_rate) * initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate + completion_rate * current_success_rate
-    end
+
+    initial_success_rate = initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+    (1 - completion_rate) * initial_success_rate + completion_rate * current_success_rate
   end
 
-  defp success_rate(0, _, _), do: 0
-  defp success_rate(completed_respondents, failed_respondents, rejected_respondents) do
-    completed_respondents / (completed_respondents + failed_respondents + rejected_respondents)
+  defp success_rate(_, 0, 0, 0), do: 1
+  defp success_rate(successful, completed_respondents, failed_respondents, rejected_respondents) do
+    successful / (completed_respondents + failed_respondents + rejected_respondents)
   end
 
   defp current_completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
   defp current_completion_rate(completed, respondents_target), do: completed / respondents_target
+
+  defp successful_respondents(survey, respondents_by_state) do
+    quota_completed = Repo.one(
+      from q in (survey |> assoc(:quota_buckets)),
+      select: sum(q.count)
+    )
+
+    case quota_completed do
+      nil -> respondents_by_state["completed"]
+      value -> value |> Decimal.to_integer
+    end
+  end
 
   defp completed_respondents_needed_by(survey) do
     survey_id = survey.id
