@@ -333,13 +333,24 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _, _) do
-    {:failed, respondent}
+  defp handle_step_answer(session, {:no_retries_left, _, _}, respondent, _, _, _) do
+    case check_retries_left_or_fallback session do
+      :none -> {:failed, respondent}
+      _ -> {:no_retries_left_for_a_question, session, current_timeout(session), respondent}
+    end
   end
 
   defp handle_step_answer(session, {:stopped, _, reply}, respondent, _, _, current_mode) do
     log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, respondent, reply.disposition)
     {:stopped, reply, respondent}
+  end
+
+  def check_retries_left_or_fallback(%{current_mode: %{retries: []}, fallback_mode: nil, respondent: respondent} = session) do
+    :none
+  end
+
+  def check_retries_left_or_fallback(_) do
+    :ok
   end
 
   def cancel(session) do

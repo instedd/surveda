@@ -363,6 +363,11 @@ defmodule Ask.Runtime.Broker do
     {:reply, reply}
   end
 
+  defp handle_session_step({:no_retries_left_for_a_question, session, timeout, respondent}) do
+    update_respondent(respondent, {:ok, session, timeout}, nil)
+    :end
+  end
+
   defp handle_session_step({:end, reply, respondent}) do
     update_respondent(respondent, :end, Reply.disposition(reply))
 

@@ -714,6 +714,90 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "when the respondent does not reply anything 3 times, but there are retries left the state stays as active" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+    right_first_answer = "8"
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.answer())
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.reply(right_first_answer))
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.no_reply)
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.no_reply)
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    assert respondent.state       == "active"
+    assert respondent.disposition == "started"
+
+    Broker.sync_step(respondent, Flow.Message.no_reply)
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    assert respondent.state       == "active"
+    assert respondent.disposition == "started"
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
+    assert respondent.timeout_at in interval
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "when the respondent does not reply anything 3 times or gives an incorrect answer, but there are retries left the state stays as active" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+    right_first_answer = "8"
+    wrong_second_answer = "16"
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.answer())
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.reply(right_first_answer))
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.no_reply)
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.reply(wrong_second_answer))
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    Broker.sync_step(respondent, Flow.Message.no_reply)
+
+    respondent = Repo.get(Respondent, respondent.id)
+
+    assert respondent.state       == "active"
+    assert respondent.disposition == "started"
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
+    assert respondent.timeout_at in interval
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "started respondents are marked as breakoff after 8 hours" do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
@@ -2554,7 +2638,7 @@ defmodule Ask.BrokerTest do
     # Respondent says 1 (i.e.: Yes), causing an invalid skip_logic to be inspected
     Broker.sync_step(respondent, Flow.Message.reply("1"))
 
-    # If there's a probelm with one respondent, continue the survey with others
+    # If there's a problem with one respondent, continue the survey with others
     # and mark this one as failed
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -2586,7 +2670,7 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.timeout_at in interval
   end
 
-  test "marks as failed after 3 successive wrong replies" do
+  test "marks as failed after 3 successive wrong replies if there are no more retries" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
     {:ok, _} = Broker.start_link
@@ -2601,6 +2685,23 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "failed"
     assert respondent.disposition == "breakoff"
   end
+
+  # test "does not mark as failed after 3 successive wrong replies when there are retries left" do
+  #   [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+  #   survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+
+  #   {:ok, _} = Broker.start_link
+  #   Broker.handle_info(:poll, nil)
+
+  #   (1..3) |> Enum.each(fn _ ->
+  #     respondent = Repo.get(Respondent, respondent.id)
+  #     Broker.sync_step(respondent, Flow.Message.reply("Oops"))
+  #   end)
+
+  #   respondent = Repo.get(Respondent, respondent.id)
+  #   assert respondent.state == "active"
+  #   assert respondent.disposition == "started"
+  # end
 
   test "reply via another channel (sms when ivr is the current one)" do
     sms_test_channel = TestChannel.new(false, true)
