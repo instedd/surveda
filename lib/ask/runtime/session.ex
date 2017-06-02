@@ -277,6 +277,7 @@ defmodule Ask.Runtime.Session do
     case step_answer do
       {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
       {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
+      {:failed, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
       _ -> :ok
     end
 
