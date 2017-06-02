@@ -1,8 +1,8 @@
 // @flow
 import React, { Component } from 'react'
 import dateformat from 'dateformat'
-import { show } from '../../disposition'
 import languageNames from 'language-names'
+import capitalize from 'lodash/capitalize'
 
 type Props = {
   respondent: Respondent,
@@ -29,7 +29,7 @@ class RespondentRow extends Component {
         })}
         {variantColumn}
         <td>
-          {show(respondent.disposition)}
+          {capitalize(respondent.disposition)}
         </td>
         <td>
           {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}

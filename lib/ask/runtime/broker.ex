@@ -431,9 +431,13 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :failed) do
+    session = respondent.session |> Session.load
+    mode = session.current_mode |> SessionMode.mode
+    old_disposition = respondent.disposition
     respondent
     |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from(respondent.disposition)})
     |> Repo.update!
+    |> create_disposition_history(old_disposition, mode)
   end
 
   defp update_respondent(respondent, :stopped, disposition) do
