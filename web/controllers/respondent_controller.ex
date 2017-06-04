@@ -273,7 +273,8 @@ defmodule Ask.RespondentController do
     # Now traverse each respondent and create a row for it
     csv_rows = from(
       r in Respondent,
-      where: r.survey_id == ^survey_id)
+      where: r.survey_id == ^survey_id,
+      order_by: r.id)
     |> preload(:responses)
     |> Repo.stream
     |> Stream.map(fn respondent ->
@@ -364,7 +365,8 @@ defmodule Ask.RespondentController do
 
     csv_rows = (from h in RespondentDispositionHistory,
       join: r in Respondent,
-      where: h.respondent_id == r.id and r.survey_id == ^survey.id)
+      where: h.respondent_id == r.id and r.survey_id == ^survey.id,
+      order_by: h.id)
     |> preload(:respondent)
     |> Repo.stream
     |> Stream.map(fn history ->
@@ -402,7 +404,8 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     csv_rows = (from r in Respondent,
-      where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id))
+      where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id),
+      order_by: r.id)
     |> preload(:questionnaire)
     |> Repo.stream
     |> Stream.map(fn r ->
