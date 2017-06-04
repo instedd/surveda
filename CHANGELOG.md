@@ -1,5 +1,21 @@
 # InSTEDD Surveda Changelog
 
+## Ironwood 0.9.3
+
+This release will convert all stored WAV audios to MP3 to improve the overall performance and reduce the time required to export a questionnaire ([#1029](https://github.com/instedd/ask/issues/1029))
+
+### Bugfixes
+
+* Fix error running surveys with questionnaire comparisons [#1030](https://github.com/instedd/ask/issues/1030)
+* Cannot receive responses from some numeric questions [#1032](https://github.com/instedd/ask/issues/1032)
+* Respondent marked as "started" with a timeout [#1028](https://github.com/instedd/ask/issues/1028)
+* A breakoff when the disposition is already "partial" marks the respondent as failed [#1036](https://github.com/instedd/ask/issues/1036)
+* Respondents CSV files contains duplicate or missing rows [#1037](https://github.com/instedd/ask/issues/1037), [#1046](https://github.com/instedd/ask/issues/1046)
+* Fix issues with mode selection UI [#1033](https://github.com/instedd/ask/issues/1033)
+* Failed respondents not being recorded in CSVs and Respondents tab [#1016](https://github.com/instedd/ask/issues/1016)
+* Last "timeout" is not recorded in the respondent interactions [#1039](https://github.com/instedd/ask/issues/1039)
+* Survey stops scheduling respondents when quotas are defined [#1041](https://github.com/instedd/ask/issues/1041)
+
 ## Ironwood 0.9.2
 
 ### Features
