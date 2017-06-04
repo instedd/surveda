@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Ask.ConvertWavFilesToMp3InDb do
       Mix.Task.run "app.start"
       File.mkdir_p!("tmpaudios")
 
-      stream = Repo.stream(from a in Audio, where: like(a.filename, "%.wav"))
+      stream = Repo.stream(from a in Audio, where: like(a.filename, "%.wav"), order_by: a.id)
       Repo.transaction(fn() ->
         Enum.each(stream, &convert_audio/1)
       end)
