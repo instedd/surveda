@@ -10,8 +10,10 @@ import * as routes from '../../routes'
 import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
+import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
+import classNames from 'classnames/bind'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -148,7 +150,7 @@ class SurveyShow extends Component {
     let referenceClasses = referenceBackgroundColorClasses(questionnairesQuantity)
 
     let colorReferences = []
-    if (questionnaires.length > 1) {
+    if (questionnairesQuantity > 1) {
       let i = 0
       for (var questionnaireId in questionnaires) {
         colorReferences.push((
@@ -162,17 +164,6 @@ class SurveyShow extends Component {
     }
 
     return colorReferences
-  }
-
-  addColorClasses(questionnaires) {
-    let questionnairesQuantity = Object.keys(questionnaires).length
-    let colorClasses = referenceColorClasses(questionnairesQuantity)
-    if (questionnaires.length > 1) {
-      let i = 0
-      for (var questionnaireId in questionnaires) {
-        questionnaires[questionnaireId]['colorClass'] = colorClasses[i]
-      }
-    }
   }
 
   titleFor(questionnaires) {
@@ -229,7 +220,6 @@ class SurveyShow extends Component {
 
     let title = this.titleFor(questionnaires)
     let questionnaireColorReferences = this.questionnairesColorReferences(questionnaires)
-    this.addColorClasses(questionnaires)
 
     return (
       <div className='row'>
@@ -302,55 +292,62 @@ class SurveyShow extends Component {
   groupRows(group, groupStats, questionnaires) {
     let details = groupStats.detail
     let detailsKeys = Object.keys(details)
+    let questionnairesIds = Object.keys(questionnaires)
+    let colorClasses = referenceColorClasses(questionnairesIds.length)
+
+    const groupStatsByQuestionnaire = () => {
+      if (questionnairesIds.length > 1) {
+        return questionnairesIds.map((questionnaireId, i) => {
+          const totals = detailsKeys.map((detail) => details[detail].byQuestionnaire[questionnairesIds] || 0)
+          return <td key={questionnaireId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
+        })
+      }
+    }
+
     const groupRow =
       <tr key={group}>
         <td>{capitalize(group)}</td>
+        {groupStatsByQuestionnaire()}
         <td className='right-align'>{groupStats.count}</td>
-        <td className='right-align'>
-          {this.round(groupStats.percent)}%
+        <td className='right-align'>{this.round(groupStats.percent)}%</td>
+        <td className='expand-column'>
           <a onClick={e => this.expandGroup(group)}>
-            <i className='material-icons right grey-text'>expand_more</i>
+            <i className='material-icons right grey-text'>{this.state[group] ? 'expand_less' : 'expand_more'}</i>
           </a>
         </td>
       </tr>
 
-    const rows = this.state[group]
-    ? <tr>
-      <td colSpan={100}>
-        <table>
-          <tbody>
-            {
-              detailsKeys.map((detail) => {
-                let individualStat = details[detail]
-                let questionnairesIds = Object.keys(questionnaires)
-                let byQuestionnaire = individualStat['byQuestionnaire']
-                let questionnairesColumns = []
-                if (questionnairesIds.length > 1) {
-                  questionnairesColumns = questionnairesIds.map((questionnaireId) => {
-                    if (detail == 'registered') {
-                      return (
-                        <td key={questionnaireId} className='right-align' >-</td>
-                      )
-                    }
-                    return (
-                      <td key={questionnaireId} className={'right-align' + ' ' + questionnaires[questionnaireId]['colorClass']} >{byQuestionnaire[questionnaireId] || 0}</td>
-                    )
-                  })
-                }
-                return (
-                  <tr key={detail}>
-                    <td>{capitalize(detail)}</td>
-                    {questionnairesColumns}
-                    <td className='right-align'>{individualStat.count}</td>
-                    <td className='right-align'>{this.round(individualStat.percent)}%</td>
-                  </tr>
-                )
-              })
+    let rows = null
+    if (this.state[group]) {
+      rows = detailsKeys.map((detail) => {
+        let individualStat = details[detail]
+
+        let byQuestionnaire = individualStat['byQuestionnaire']
+        let questionnairesColumns = null
+        if (questionnairesIds.length > 1) {
+          questionnairesColumns = questionnairesIds.map((questionnaireId, i) => {
+            let value = null
+            if (detail == 'registered') {
+              value = '-'
+            } else {
+              value = byQuestionnaire[questionnaireId] || 0
             }
-          </tbody>
-        </table>
-      </td>
-    </tr> : null
+
+            return <td key={questionnaireId} className={classNames('right-align', colorClasses[i])}>{value}</td>
+          })
+        }
+
+        return (
+          <tr className='detail-row' key={detail}>
+            <td>{capitalize(detail)}</td>
+            {questionnairesColumns}
+            <td className='right-align'>{individualStat.count}</td>
+            <td className='right-align'>{this.round(individualStat.percent)}%</td>
+            <td className='expand-column' />
+          </tr>
+        )
+      })
+    }
 
     return [groupRow, rows]
   }
