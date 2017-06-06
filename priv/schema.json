@@ -183,13 +183,14 @@
 
     "localized-string": {
       "type": "object",
-      "patternProperties": { "^.{2,3}$": {"type": "string"}},
+      "patternProperties": {"^[a-z]{2,3}$": {"type": "string"}},
       "additionalProperties": false
     },
 
     "prompt": {
       "type": "object",
-      "additionalProperties": {"$ref": "#/definitions/lang_prompt"}
+      "patternProperties": {"^[a-z]{2,3}$": {"$ref": "#/definitions/lang_prompt"}},
+      "additionalProperties": false
     },
 
     "lang_prompt": {

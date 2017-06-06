@@ -182,6 +182,14 @@ defmodule Ask.StepsValidatorTest do
     }) |> invalid_prompt("Prompt must have a lang prompt structure")
 
     ~s({
+      "foobar": {}
+    }) |> invalid_prompt("Prompt keys must be language indentifiers")
+
+    ~s({
+      "123": {}
+    }) |> invalid_prompt("Prompt keys must be language indentifiers")
+
+    ~s({
       "en": {},
       "fr": {}
     }) |> valid_prompt
