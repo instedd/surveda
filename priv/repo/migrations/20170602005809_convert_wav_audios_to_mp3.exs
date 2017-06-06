@@ -19,12 +19,17 @@ defmodule Ask.Repo.Migrations.ConvertWavAudiosToMp3 do
 
       # Convert the WAV to MP3
       IO.puts "Converting #{filename} (#{byte_size(wav_data)} bytes)"
-      {:ok, mp3_data} = Ask.Sox.convert("wav", wav_data_path, "mp3")
-      IO.puts "Converted #{filename} into MP3 (#{byte_size(mp3_data)} bytes)"
+      case Ask.Sox.convert("wav", wav_data_path, "mp3") do
+        {:ok, mp3_data} ->
+          IO.puts "Converted #{filename} into MP3 (#{byte_size(mp3_data)} bytes)"
 
-      # Update DB
-      from(a in "audios", where: a.id == ^id)
-        |> Ask.Repo.update_all(set: [data: mp3_data, filename: "#{Path.basename(filename, ".wav")}.mp3"])
+          # Update DB
+          from(a in "audios", where: a.id == ^id)
+            |> Ask.Repo.update_all(set: [data: mp3_data, filename: "#{Path.basename(filename, ".wav")}.mp3"])
+
+        {:error, error} ->
+          IO.puts "Error converting #{filename} into MP3: #{error}"
+      end
 
       # Remove temporary file
       File.rm(wav_data_path)
