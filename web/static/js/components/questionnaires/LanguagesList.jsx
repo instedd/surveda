@@ -98,7 +98,7 @@ class LanguagesList extends Component {
 
     return (
       <div className='languages'>
-        <LanguageSection title='Primary language:'>
+        <LanguageSection title='Primary language'>
           {this.renderLanguageRow(defaultLanguage, this.translateLangCode(defaultLanguage), true)}
         </LanguageSection>
         {otherLanguagesComponent}
