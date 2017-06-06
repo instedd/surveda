@@ -1,6 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Ask JSON Schemas",
+  "type": "object",
+  "oneOf": [{"$ref": "#/definitions/questionnaire"}],
 
   "definitions": {
     "questionnaire": {
@@ -18,8 +20,8 @@
         "error_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]},
         "mobile_web_sms_message": {"type": ["string", "null"]},
         "mobile_web_survey_is_over_message": {"type": ["string", "null"]},
-        "title": {"oneOf": [{"type": "object"}, {"type":"null"}]},
-        "survey_already_taken_message": {"oneOf": [{"type": "object"}, {"type":"null"}]},
+        "title": {"oneOf": [{"$ref": "#/definitions/localized-string"}, {"type":"null"}]},
+        "survey_already_taken_message": {"oneOf": [{"$ref": "#/definitions/localized-string"}, {"type":"null"}]},
         "thank_you_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]}
       }
     },
@@ -177,6 +179,12 @@
           "type" : "object"
         }
       }
+    },
+
+    "localized-string": {
+      "type": "object",
+      "patternProperties": { "^.{2,3}$": {"type": "string"}},
+      "additionalProperties": false
     },
 
     "prompt": {

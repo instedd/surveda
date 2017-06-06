@@ -49,6 +49,9 @@ defmodule Ask.StepsValidatorTest do
   defp valid_responses(json), do: valid_thing(json, :responses)
   defp invalid_responses(json, case_desc), do: invalid_thing(json, :responses, case_desc)
 
+  defp valid_settings(json), do: valid_thing(json, :settings)
+  defp invalid_settings(json, case_desc), do: invalid_thing(json, :settings, case_desc)
+
   test "questionnaire" do
     ~s({})
     |> invalid_questionnaire("Steps must be mandatory")
@@ -317,5 +320,55 @@ defmodule Ask.StepsValidatorTest do
         },
       "ivr": []
     }) |> valid_responses
+  end
+
+  test "title" do
+    ~s({
+      "title": []
+    }) |> invalid_settings("title must be an object")
+
+    ~s({
+      "title": {
+        "en": 1
+      }
+    }) |> invalid_settings("title values must be strings")
+
+    ~s({
+      "title": {
+        "foobar": ""
+      }
+    }) |> invalid_settings("title keys must be language identifiers")
+
+    ~s({
+      "title": {
+        "en": "foo",
+        "es": "bar"
+      }
+    }) |> valid_settings
+  end
+
+  test "survey_already_taken_message" do
+    ~s({
+      "survey_already_taken_message": []
+    }) |> invalid_settings("survey_already_taken_message must be an object")
+
+    ~s({
+      "survey_already_taken_message": {
+        "en": 1
+      }
+    }) |> invalid_settings("survey_already_taken_message values must be strings")
+
+    ~s({
+      "survey_already_taken_message": {
+        "foobar": ""
+      }
+    }) |> invalid_settings("survey_already_taken_message keys must be language identifiers")
+
+    ~s({
+      "survey_already_taken_message": {
+        "en": "foo",
+        "es": "bar"
+      }
+    }) |> valid_settings
   end
 end
