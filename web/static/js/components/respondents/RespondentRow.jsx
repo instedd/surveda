@@ -25,7 +25,7 @@ class RespondentRow extends Component {
             value = languageNames[value] || value
           }
 
-          return <td key={parseInt(respondent.id) + response.name}>{value}</td>
+          return <td className='tdNowrap' key={parseInt(respondent.id) + response.name}>{value}</td>
         })}
         {variantColumn}
         <td>
