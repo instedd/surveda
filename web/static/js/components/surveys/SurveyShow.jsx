@@ -311,7 +311,7 @@ class SurveyShow extends Component {
         <td className='right-align'>{groupStats.count}</td>
         <td className='right-align'>{this.round(groupStats.percent)}%</td>
         <td className='expand-column'>
-          <a onClick={e => this.expandGroup(group)}>
+          <a className='link' onClick={e => this.expandGroup(group)}>
             <i className='material-icons right grey-text'>{this.state[group] ? 'expand_less' : 'expand_more'}</i>
           </a>
         </td>

@@ -21,6 +21,27 @@
           display: block;
         }
       }
+      tr.detail-row {
+        border: none;
+        border-top: 2px solid transparent;
+        td {
+          @extend .grey-text;
+          &:first-child {
+            padding-left: 3.8rem;
+            position: relative;
+            &:before {
+              @extend .grey, .lighten-2;
+              content: '';
+              display: block;
+              position: absolute;
+              top: -2px;
+              left: 2rem;
+              height: calc(100% + 2px);
+              width: 3px;
+            }
+          }
+        }
+      }
 
       th {
         @extend .grey-text, .lighten-2;
@@ -145,6 +166,7 @@
         }
       }
     }
+
   }
   .card-action-error {
     padding-bottom:20px;

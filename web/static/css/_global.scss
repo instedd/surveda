@@ -1126,6 +1126,9 @@ i.survey-status { // icon for survey status on index
 .no-padd {
   padding: 0;
 }
+.link {
+  cursor: pointer;
+}
 
 .empty-projects {
   @extend .grey-text;
