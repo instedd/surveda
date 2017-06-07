@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import { ScrollToTopButton, CollectionItem, ScrollToLink, Tooltip } from '../ui'
+import { ScrollToTopButton, CollectionItem, ScrollToLink, Tooltip, PositionFixer } from '../ui'
 import SurveyWizardQuestionnaireStep from './SurveyWizardQuestionnaireStep'
 import SurveyWizardRespondentsStep from './SurveyWizardRespondentsStep'
 import SurveyWizardModeStep from './SurveyWizardModeStep'
@@ -37,8 +37,6 @@ class SurveyForm extends Component {
   componentDidMount() {
     window.scrollTo(0, 0)
     $('.scrollspy').scrollSpy()
-    const sidebar = $(this.refs.sidebar)
-    sidebar.pushpin({ top: sidebar.offset().top, offset: 60 })
   }
 
   allModesHaveAChannel(modes, channels) {
@@ -119,7 +117,7 @@ class SurveyForm extends Component {
     return (
       <div className='row'>
         <div className='col s12 m4'>
-          <div className='sidebar' ref='sidebar'>
+          <PositionFixer offset={60}>
             <ul className='collection with-header wizard'>
               <li className='collection-header'>
                 <h5>Progress <span className='right'>{percentage}</span></h5>
@@ -141,7 +139,7 @@ class SurveyForm extends Component {
                 ? <CollectionItem path='#comparisons' icon='call_split' text='Comparisons' completed={!!comparisonsStepCompleted} />
               : ''}
             </ul>
-          </div>
+          </PositionFixer>
         </div>
         <div className='col s12 m7 offset-m1 wizard-content'>
           <div id='questionnaire' className='row scrollspy'>
