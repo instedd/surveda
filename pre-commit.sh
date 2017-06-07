@@ -8,13 +8,13 @@ else
   echo "${MIX_TESTS}"
 fi
 
-echo "Running Brunch tests"
-BRUNCH_TESTS="$(docker-compose run --rm brunch npm test)"
+echo "Running JS tests"
+JS_TESTS="$(docker-compose run --rm webpack yarn test)"
 
 if [ $? -eq 0 ]; then
   echo "OK";
 else
-  echo "${BRUNCH_TESTS}"
+  echo "${JS_TESTS}"
 fi
 
 echo "Running Flow tests"
@@ -31,7 +31,7 @@ else
 fi
 
 echo "Running Eslint tests"
-ESLINT_TESTS="$(docker-compose run --rm brunch node_modules/.bin/eslint --ext .jsx,.js web/static/js/ test/js)"
+ESLINT_TESTS="$(docker-compose run --rm webpack yarn eslint)"
 
 if [ $? -eq 0 ]; then
   echo "OK";

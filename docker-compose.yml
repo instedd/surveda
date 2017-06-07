@@ -32,11 +32,11 @@ services:
     ports:
       - 4000:80
 
-  brunch:
+  webpack:
     build:
       context: ./
-      dockerfile: Dockerfile.brunch
-    command: node_modules/brunch/bin/brunch watch
+      dockerfile: Dockerfile.webpack
+    command: yarn run watch
     restart: always
     working_dir: /app
     stop_signal: SIGKILL

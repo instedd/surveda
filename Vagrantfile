@@ -99,7 +99,7 @@ export VERBOICE_GUISSO_BASE_URL=https://login.example.com
     mix deps.compile
     mix compile
     yarn install
-    ./node_modules/brunch/bin/brunch build -p
+    yarn deploy
     mix phoenix.digest
 
     # Register ask server in upstart

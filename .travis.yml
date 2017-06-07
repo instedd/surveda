@@ -16,14 +16,14 @@ install:
 before_script:
   - docker-compose build
   - docker-compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
-  - docker-compose run --rm brunch yarn install --no-progress
+  - docker-compose run --rm webpack yarn install --no-progress
 
 script:
   - docker-compose run --rm app mix test
-  - docker-compose run --rm brunch npm test
-  - docker-compose run --rm brunch ./node_modules/brunch/bin/brunch build
-  - docker-compose run --rm brunch sh -c 'apt-get update && apt-get install libelf1 && ./node_modules/.bin/flow check'
-  - docker-compose run --rm brunch node_modules/.bin/eslint --ext .jsx,.js web/static/js/ test/js
+  - docker-compose run --rm webpack yarn test
+  - docker-compose run --rm webpack yarn webpack
+  - docker-compose run --rm webpack sh -c 'apt-get update && apt-get install libelf1 && yarn flow check'
+  - docker-compose run --rm webpack yarn eslint
 
 deploy:
   skip_cleanup: true

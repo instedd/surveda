@@ -45,7 +45,7 @@ echo "Version: $VERSION"
 echo $VERSION > VERSION
 
 # Build assets
-docker-compose run --rm brunch ./node_modules/brunch/bin/brunch build -p
+docker-compose run --rm webpack yarn deploy
 
 # Build and push Docker image
 echo "Docker tag: $DOCKER_TAG"
