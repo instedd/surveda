@@ -14,7 +14,7 @@ import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
 import TestQuestionnaireModal from './TestQuestionnaireModal'
-import { Dropdown, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem, PositionFixer } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
 import classNames from 'classnames/bind'
 
@@ -270,18 +270,20 @@ class QuestionnaireEditor extends Component {
         {testControls}
         <div className='row'>
           <div className='col s12 m3 questionnaire-modes'>
-            <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
-            <div className='row'>
-              <div className='col s12'>
-                <p className='grey-text'>Modes</p>
-                <ul className='modes-list'>
-                  { this.modeComponent('sms', 'SMS', 'sms', sms) }
-                  { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
-                  { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
-                </ul>
-                { this.addModeComponent(sms, ivr, mobileweb) }
+            <PositionFixer>
+              <LanguagesList onRemoveLanguage={(lang) => this.removeLanguage(lang)} readOnly={readOnly} />
+              <div className='row'>
+                <div className='col s12'>
+                  <p className='grey-text'>Modes</p>
+                  <ul className='modes-list'>
+                    { this.modeComponent('sms', 'SMS', 'sms', sms) }
+                    { this.modeComponent('ivr', 'Phone call', 'phone', ivr) }
+                    { this.modeComponent('mobileweb', 'Mobile web', 'phonelink', mobileweb) }
+                  </ul>
+                  { this.addModeComponent(sms, ivr, mobileweb) }
+                </div>
               </div>
-            </div>
+            </PositionFixer>
           </div>
           {skipOnboarding
         ? <div className='col s12 m8 offset-m1'>
