@@ -5,7 +5,7 @@ export default (state = {}, action) => {
     case actions.RECEIVE_RESPONDENTS_QUOTAS_STATS:
       return {
         ...state,
-        data: action.data
+        ...action.response
       }
     default:
       return state

@@ -11,6 +11,7 @@ import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import sum from 'lodash/sum'
+import reduce from 'lodash/reduce'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
 import classNames from 'classnames/bind'
@@ -24,8 +25,9 @@ class SurveyShow extends Component {
     surveyId: React.PropTypes.string.isRequired,
     survey: React.PropTypes.object,
     questionnaires: React.PropTypes.object,
+    respondentsByDisposition: React.PropTypes.object,
+    respondentsQuotasStats: React.PropTypes.object,
     respondentsStats: React.PropTypes.object,
-    respondentsQuotasStats: React.PropTypes.array,
     completedByDate: React.PropTypes.object,
     contactedRespondents: React.PropTypes.number,
     totalRespondents: React.PropTypes.number,
@@ -166,6 +168,35 @@ class SurveyShow extends Component {
     return colorReferences
   }
 
+  quotaBucketColorReferences(quotaBuckets) {
+    let numberOfBuckets = Object.keys(quotaBuckets).length
+    let referenceClasses = referenceBackgroundColorClasses(numberOfBuckets)
+
+    let colorReferences = []
+    if (numberOfBuckets > 1) {
+      let i = 0
+      for (var questionnaireId in quotaBuckets) {
+        colorReferences.push((
+          <div className='questionnaire-color-reference' key={questionnaireId}>
+            <div className={`color-circle-reference ${referenceClasses[i]}`} />
+            <div className='questionnaire-name'> {this.quotaBucketReferenceName(quotaBuckets[questionnaireId].condition)} </div>
+          </div>
+        ))
+        i += 1
+      }
+    }
+
+    return colorReferences
+  }
+
+  quotaBucketReferenceName(bucketConditions) {
+    // console.log('bucketConditions: ', bucketConditions)
+    return reduce(Object.keys(bucketConditions), (conditions, key) => {
+      conditions.push([`${key}: ${bucketConditions[key]}`])
+      return conditions
+    }, []).join(' - ')
+  }
+
   titleFor(questionnaires) {
     let isComparison = Object.keys(questionnaires).length > 1
     let title = ''
@@ -180,9 +211,9 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { questionnaires, survey, respondentsStats, respondentsQuotasStats, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
+    const { questionnaires, survey, respondentsByDisposition, respondentsQuotasStats, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
 
-    if (!survey || !cumulativePercentages || !questionnaires || !respondentsQuotasStats || !respondentsStats) {
+    if (!survey || !cumulativePercentages || !questionnaires || !respondentsQuotasStats || !respondentsByDisposition) {
       return <p>Loading...</p>
     }
 
@@ -199,10 +230,10 @@ class SurveyShow extends Component {
     }
 
     let table
-    if (respondentsQuotasStats.length > 0) {
-      table = this.quotasForAnswers(respondentsQuotasStats)
+    if (respondentsQuotasStats && respondentsQuotasStats.buckets) {
+      table = this.quotas(respondentsQuotasStats.respondentsByDisposition, respondentsQuotasStats.buckets)
     } else {
-      table = this.dispositions(respondentsStats, questionnaires)
+      table = this.dispositions(respondentsByDisposition, questionnaires)
     }
 
     const readOnly = !project || project.readOnly
@@ -219,7 +250,12 @@ class SurveyShow extends Component {
     }
 
     let title = this.titleFor(questionnaires)
-    let questionnaireColorReferences = this.questionnairesColorReferences(questionnaires)
+    let colorReferences
+    if (respondentsQuotasStats && respondentsQuotasStats.buckets) {
+      colorReferences = this.quotaBucketColorReferences(respondentsQuotasStats.buckets)
+    } else {
+      colorReferences = this.questionnairesColorReferences(questionnaires)
+    }
 
     return (
       <div className='row'>
@@ -234,7 +270,7 @@ class SurveyShow extends Component {
         </div>
         <div className='col s12 m4'>
           <div className='row questionnaires-color-references'>
-            {questionnaireColorReferences}
+            {colorReferences}
           </div>
 
           <div className='row survey-chart'>
@@ -247,7 +283,7 @@ class SurveyShow extends Component {
 
           <div className='row respondent-chart'>
             <div className='col s12'>
-              <RespondentsChart cumulativePercentages={cumulativePercentages} />
+              <RespondentsChart cumulativePercentages={respondentsQuotasStats && respondentsQuotasStats.cumulativePercentages ? respondentsQuotasStats.cumulativePercentages : cumulativePercentages} />
             </div>
           </div>
 
@@ -295,7 +331,7 @@ class SurveyShow extends Component {
     let questionnairesIds = Object.keys(questionnaires)
     let colorClasses = referenceColorClasses(questionnairesIds.length)
 
-    const groupStatsByQuestionnaire = () => {
+    const groupStatsByQuestionnaire = (questionnairesIds, detailsKeys, colorClasses, details) => {
       if (questionnairesIds.length > 1) {
         return questionnairesIds.map((questionnaireId, i) => {
           const totals = detailsKeys.map((detail) => details[detail].byQuestionnaire[questionnairesIds] || 0)
@@ -303,11 +339,10 @@ class SurveyShow extends Component {
         })
       }
     }
-
     const groupRow =
       <tr key={group}>
         <td>{capitalize(group)}</td>
-        {groupStatsByQuestionnaire()}
+        {groupStatsByQuestionnaire(questionnairesIds, detailsKeys, colorClasses, details)}
         <td className='right-align'>{groupStats.count}</td>
         <td className='right-align'>{this.round(groupStats.percent)}%</td>
         <td className='expand-column'>
@@ -352,7 +387,76 @@ class SurveyShow extends Component {
     return [groupRow, rows]
   }
 
-  dispositions(respondentsStats, questionnaires) {
+  groupRowsByQuotaBucket(group, groupStats, quotaBuckets) {
+    let details = groupStats.detail
+    let detailsKeys = Object.keys(details)
+    let quotaBucketIds = Object.keys(quotaBuckets)
+    let colorClasses = referenceColorClasses(quotaBucketIds.length)
+
+    console.log('group: ', group)
+    console.log('groupStats: ', groupStats)
+    console.log('quotaBuckets: ', quotaBuckets)
+    console.log('this.state[group]: ', this.state[group])
+
+    const groupStatsByQuotaBucket = (quotaBucketIds, detailsKeys, colorClasses, details) => {
+      if (quotaBucketIds.length > 1) {
+        return quotaBucketIds.map((quotaBucketId, i) => {
+          const totals = detailsKeys.map((detail) => details[detail].byQuotaBucket[quotaBucketIds] || 0)
+          return <td key={quotaBucketId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
+        })
+      }
+    }
+
+    const groupRow =
+      <tr key={group}>
+        <td>{capitalize(group)}</td>
+        {groupStatsByQuotaBucket(quotaBucketIds, detailsKeys, colorClasses, details)}
+        <td className='right-align'>{groupStats.count}</td>
+        <td className='right-align'>{this.round(groupStats.percent)}%</td>
+        <td className='expand-column'>
+          <a className='link' onClick={e => this.expandGroup(group)}>
+            <i className='material-icons right grey-text'>{this.state[group] ? 'expand_less' : 'expand_more'}</i>
+          </a>
+        </td>
+      </tr>
+
+    let rows = null
+    if (this.state[group]) {
+      rows = detailsKeys.map((detail) => {
+        let individualStat = details[detail]
+
+        let byQuotaBucket = individualStat.byQuotaBucket
+        console.log('byQuotaBucket: ', byQuotaBucket)
+        let quotaBucketColumns = null
+        if (quotaBucketIds.length > 1) {
+          quotaBucketColumns = quotaBucketIds.map((quotaBucketId, i) => {
+            let value = null
+            if (detail == 'registered') {
+              value = '-'
+            } else {
+              value = byQuotaBucket[quotaBucketId] || 0
+            }
+
+            return <td key={quotaBucketId} className={classNames('right-align', colorClasses[i])}>{value}</td>
+          })
+        }
+
+        return (
+          <tr className='detail-row' key={detail}>
+            <td>{capitalize(detail)}</td>
+            {quotaBucketColumns}
+            <td className='right-align'>{individualStat.count}</td>
+            <td className='right-align'>{this.round(individualStat.percent)}%</td>
+            <td className='expand-column' />
+          </tr>
+        )
+      })
+    }
+
+    return [groupRow, rows]
+  }
+
+  dispositions(respondentsByDisposition, questionnaires) {
     const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
     let questionnairesIds = Object.keys(questionnaires)
     return (
@@ -375,7 +479,7 @@ class SurveyShow extends Component {
             <tbody>
               {
                 dispositionsGroup.map(group => {
-                  let groupStats = respondentsStats[group]
+                  let groupStats = respondentsByDisposition[group]
                   return this.groupRows(group, groupStats, questionnaires)
                 })
               }
@@ -386,47 +490,33 @@ class SurveyShow extends Component {
     )
   }
 
-  quotasForAnswers(stats) {
+  quotas(respondentsByDisposition, quotaBuckets) {
+    const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
+    let quotaBucketIds = Object.keys(quotaBuckets)
     return (
       <div className='card'>
         <div className='card-table-title'>
-          {stats.length} quotas for answers
+          Dispositions
         </div>
         <div className='card-table'>
           <table>
             <thead>
               <tr>
-                <th>Quota</th>
-                <th className='right-align'>Target</th>
-                <th className='right-align'>Percent</th>
-                <th className='right-align'>Full</th>
-                <th className='right-align'>Partials</th>
+                <th>Status</th>
+                {quotaBucketIds.length > 1 ? quotaBucketIds.map((quotaBucketId) => (<th key={quotaBucketId} className='right-align' />)) : []}
+                <th className='right-align'>Quantity</th>
+                <th className='right-align'>
+                  Percent
+                </th>
               </tr>
             </thead>
             <tbody>
-              { stats.map((stat, index) => {
-                let conditions = []
-                for (let key in stat.condition) {
-                  conditions.push([`${key}: ${stat.condition[key]}`])
-                }
-                const quota = stat.quota == null ? 0 : stat.quota
-                return (
-                  <tr key={index}>
-                    <td>
-                      { conditions.map((condition, index2) => (
-                        <span key={index2}>
-                          {condition}
-                          <br />
-                        </span>
-                    )) }
-                    </td>
-                    <td className='right-align'>{quota}</td>
-                    <td className='right-align'>{quota == 0 ? '-' : `${Math.min(Math.round(stat.count * 100.0 / quota), 100)}%`}</td>
-                    <td className='right-align'>{quota == 0 ? '-' : stat.full}</td>
-                    <td className='right-align'>{quota == 0 ? '-' : stat.partials}</td>
-                  </tr>
-                )
-              }) }
+              {
+                dispositionsGroup.map(group => {
+                  let groupStats = respondentsByDisposition[group]
+                  return this.groupRowsByQuotaBucket(group, groupStats, quotaBuckets)
+                })
+              }
             </tbody>
           </table>
         </div>
@@ -437,16 +527,15 @@ class SurveyShow extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   const respondentsStatsRoot = state.respondentsStats[ownProps.params.surveyId]
-  const respondentsQuotasStats = state.respondentsQuotasStats.data
 
-  let respondentsStats = null
+  let respondentsByDisposition = null
   let cumulativePercentages = {}
   let contactedRespondents = 0
   let totalRespondents = 0
   let completionPercentage = 0
 
   if (respondentsStatsRoot) {
-    respondentsStats = respondentsStatsRoot.respondentsByDisposition
+    respondentsByDisposition = respondentsStatsRoot.respondentsByDisposition
     cumulativePercentages = respondentsStatsRoot.cumulativePercentages
     contactedRespondents = respondentsStatsRoot.contactedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
@@ -459,8 +548,9 @@ const mapStateToProps = (state, ownProps) => {
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,
     questionnaires: !state.survey.data ? {} : state.survey.data.questionnaires,
-    respondentsStats: respondentsStats,
-    respondentsQuotasStats: respondentsQuotasStats,
+    respondentsStats: state.respondentsStats[ownProps.params.surveyId] || { cumulativePercentages: {} },
+    respondentsByDisposition: respondentsByDisposition,
+    respondentsQuotasStats: state.respondentsQuotasStats,
     cumulativePercentages: cumulativePercentages,
     contactedRespondents: contactedRespondents,
     totalRespondents: totalRespondents,

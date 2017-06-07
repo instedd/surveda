@@ -518,11 +518,49 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent, survey: survey, state: "active", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
     conn = get conn, project_survey_respondents_quotas_stats_path(conn, :quotas_stats, project.id, survey.id)
-    assert json_response(conn, 200) == %{"data" =>
-      [%{"condition" => %{"Exercises" => "No", "Smokes" => "No"}, "count" => 1,
-         "full" => 1, "partials" => 0, "quota" => 1},
-       %{"condition" => %{"Exercises" => "Yes", "Smokes" => "No"}, "count" => 2,
-         "full" => 1, "partials" => 1, "quota" => 4}]}
+    assert json_response(conn, 200) == %{ "data" => %{
+      "buckets" => [
+       %{"condition" => %{"Exercises" => "No", "Smokes" => "No"}, "count" => 1, "id" => qb1.id, "quota" => 1},
+        %{"condition" => %{"Exercises" => "Yes", "Smokes" => "No"}, "count" => 2, "id" => qb4.id, "quota" => 4}
+      ],
+      "completion_percentage" => 0.0,
+      "contacted_respondents" => 3,
+      "cumulative_percentages" => %{},
+      "id" => survey.id,
+      "respondents_by_disposition" => %{
+        "contacted" => %{
+          "count" => 0,
+          "detail" => %{
+            "contacted" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "unresponsive" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0}
+          },
+          "percent" => 0.0
+        },
+        "responsive" => %{
+          "count" => 0,
+          "detail" => %{
+            "breakoff" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "completed" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "ineligible" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "partial" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "refused" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "rejected" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "started" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0}
+          },
+          "percent" => 0.0
+        },
+        "uncontacted" => %{
+          "count" => 3,
+          "detail" => %{
+            "failed" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "queued" => %{"by_quota_bucket" => %{}, "count" => 0, "percent" => 0.0},
+            "registered" => %{"by_quota_bucket" => %{"#{qb1.id}" => 1, "#{qb4.id}" => 2}, "count" => 3, "percent" => 100.0}
+          },
+          "percent" => 100.0
+        }
+      },
+      "total_respondents" => 3
+    }}
   end
 
   def completed_schedule do

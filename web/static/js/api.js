@@ -9,6 +9,7 @@ const respondentSchema = new Schema('respondents')
 const respondentGroupSchema = new Schema('respondentGroups')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
+const quotaBucketsSchema = new Schema('buckets')
 const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
 
@@ -215,7 +216,19 @@ export const fetchRespondentsStats = (projectId, surveyId) => {
 }
 
 export const fetchRespondentsQuotasStats = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, null)
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, arrayOf(quotaBucketsSchema), {}, (json, schema) => {
+    return () => {
+      if (!json) { return null }
+      if (json.errors) {
+        console.log(json.errors)
+      }
+      const camelizedData = camelizeKeys(json.data)
+      return {
+        ...camelizedData,
+        buckets: normalize(camelizedData.buckets, schema).entities.buckets
+      }
+    }
+  })
 }
 
 export const fetchRespondentGroups = (projectId, surveyId) => {

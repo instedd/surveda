@@ -31,9 +31,9 @@ export const receiveRespondentsStats = (response) => ({
   response
 })
 
-export const receiveRespondentsQuotasStats = (data) => ({
+export const receiveRespondentsQuotasStats = (response) => ({
   type: RECEIVE_RESPONDENTS_QUOTAS_STATS,
-  data
+  response
 })
 
 export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order) => ({
