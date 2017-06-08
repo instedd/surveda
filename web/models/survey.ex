@@ -244,9 +244,9 @@ defmodule Ask.Survey do
 
   def config_rates() do
     %{
-      :valid_respondent_rate => environment_variable_named(:initial_valid_respondent_rate),
-      :eligibility_rate      => environment_variable_named(:initial_eligibility_rate),
-      :response_rate         => environment_variable_named(:initial_response_rate)
+      :valid_respondent_rate => environment_variable_named(:initial_valid_respondent_rate) / 100,
+      :eligibility_rate      => environment_variable_named(:initial_eligibility_rate) / 100,
+      :response_rate         => environment_variable_named(:initial_response_rate) / 100
     }
   end
 
