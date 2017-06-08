@@ -24,8 +24,9 @@ defmodule Ask.MembershipController do
 
   def update(conn, params) do
     project_id = params["project_id"]
-    user_id = params["user_id"]
-    new_level = params["new_level"]
+    new_level = params["level"]
+
+    user_id = Repo.one(from u in User, where: u.email == ^params["email"], select: u.id)
 
     Repo.one(from m in ProjectMembership, where: m.user_id == ^user_id and m.project_id == ^project_id)
     |> ProjectMembership.changeset(%{level: new_level})

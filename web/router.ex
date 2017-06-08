@@ -50,7 +50,7 @@ defmodule Ask.Router do
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
-        post "/memberships/update", MembershipController, :update, as: :membership_update
+        put "/memberships/update", MembershipController, :update, as: :membership_update
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop

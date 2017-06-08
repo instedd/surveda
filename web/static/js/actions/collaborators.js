@@ -3,6 +3,7 @@ import * as api from '../api'
 export const RECEIVE_COLLABORATORS = 'RECEIVE_COLLABORATORS'
 export const FETCH_COLLABORATORS = 'FETCH_COLLABORATORS'
 export const COLLABORATOR_REMOVED = 'COLLABORATOR_REMOVED'
+export const COLLABORATOR_LEVEL_UPDATED = 'COLLABORATOR_LEVEL_UPDATED'
 
 export const fetchCollaborators = (projectId) => dispatch => {
   dispatch(startFetchingCollaborators(projectId))
@@ -19,9 +20,22 @@ export const removeCollaborator = (projectId, collaborator) => dispatch => {
     })
 }
 
+export const updateLevel = (projectId, collaborator, level) => dispatch => {
+  api.updateCollaboratorLevel(projectId, collaborator.email, level)
+    .then(response => {
+      dispatch(collaboratorLevelUpdated(collaborator, level))
+    })
+}
+
 export const collaboratorRemoved = (collaborator) => ({
   type: COLLABORATOR_REMOVED,
   collaborator
+})
+
+export const collaboratorLevelUpdated = (collaborator, level) => ({
+  type: COLLABORATOR_LEVEL_UPDATED,
+  collaborator,
+  level
 })
 
 export const receiveCollaborators = (response, projectId) => ({

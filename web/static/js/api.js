@@ -316,6 +316,10 @@ export const removeCollaborator = (projectId, collaboratorEmail) => {
   return apiDelete(`projects/${projectId}/memberships/remove?email=${encodeURIComponent(collaboratorEmail)}`)
 }
 
+export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) => {
+  return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
+}
+
 export const fetchSettings = () => {
   return apiFetchJSON(`settings`)
 }
