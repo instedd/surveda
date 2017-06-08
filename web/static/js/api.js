@@ -312,6 +312,10 @@ export const fetchCollaborators = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/collaborators`)
 }
 
+export const removeCollaborator = (projectId, collaboratorEmail) => {
+  return apiDelete(`projects/${projectId}/memberships/remove?email=${encodeURIComponent(collaboratorEmail)}`)
+}
+
 export const fetchSettings = () => {
   return apiFetchJSON(`settings`)
 }

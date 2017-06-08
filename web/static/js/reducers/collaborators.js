@@ -10,6 +10,7 @@ export default (state = initialState, action) => {
   switch (action.type) {
     case actions.FETCH_COLLABORATORS: return fetchCollaborators(state, action)
     case actions.RECEIVE_COLLABORATORS: return receiveCollaborators(state, action)
+    case actions.COLLABORATOR_REMOVED: return collaboratorRemoved(state, action)
     default: return state
   }
 }
@@ -31,5 +32,14 @@ const fetchCollaborators = (state, action) => {
     items,
     fetching: true,
     projectId: action.projectId
+  }
+}
+
+const collaboratorRemoved = (state, action) => {
+  const items = state.items
+  const index = items.indexOf(action.collaborator)
+  return {
+    ...state,
+    items: [...items.slice(0, index), ...items.slice(index + 1)]
   }
 }
