@@ -74,7 +74,7 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "sass-loader": "^6.0.5",
-    "webpack": "^3.0.0-rc.1"
+    "webpack": "^2.6.1"
   },
   "babel": {
     "presets": [
