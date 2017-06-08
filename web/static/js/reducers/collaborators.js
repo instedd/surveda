@@ -11,6 +11,7 @@ export default (state = initialState, action) => {
     case actions.FETCH_COLLABORATORS: return fetchCollaborators(state, action)
     case actions.RECEIVE_COLLABORATORS: return receiveCollaborators(state, action)
     case actions.COLLABORATOR_REMOVED: return collaboratorRemoved(state, action)
+    case actions.COLLABORATOR_LEVEL_UPDATED: return collaboratorLevelUpdated(state, action)
     default: return state
   }
 }
@@ -41,5 +42,18 @@ const collaboratorRemoved = (state, action) => {
   return {
     ...state,
     items: [...items.slice(0, index), ...items.slice(index + 1)]
+  }
+}
+
+const collaboratorLevelUpdated = (state, action) => {
+  const updatedCollaborator = {
+    ...action.collaborator,
+    role: action.level
+  }
+  const items = state.items
+  const index = items.indexOf(action.collaborator)
+  return {
+    ...state,
+    items: [...items.slice(0, index), updatedCollaborator, ...items.slice(index + 1)]
   }
 }

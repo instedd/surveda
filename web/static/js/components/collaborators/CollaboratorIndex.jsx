@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { CardTable, AddButton, Tooltip } from '../ui'
+import { Input } from 'react-materialize'
 import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
 import * as projectActions from '../../actions/project'
@@ -29,6 +30,31 @@ class CollaboratorIndex extends Component {
       this.props.guestActions.setCode(collaborator.code)
       $('#addCollaborator').modal('open')
     }
+  }
+
+  levelChanged(e, collaborator) {
+    const { projectId } = this.props
+    const level = e.target.value
+    this.props.actions.updateLevel(projectId, collaborator, level)
+  }
+
+  levelEditor(collaborator) {
+    const options = ['reader', 'editor']
+    return (
+      <Input type='select'
+        onChange={e => this.levelChanged(e, collaborator)}
+      >
+        {options.map((option) =>
+          <option
+            key={option}
+            id={option}
+            name={option}
+            value={option}>
+            {option}
+          </option>
+        )}
+      </Input>
+    )
   }
 
   remove(collaborator) {
@@ -70,6 +96,9 @@ class CollaboratorIndex extends Component {
                   <tr key={c.email} style={c.invited ? {cursor: 'pointer'} : {}} onClick={(e) => this.loadCollaboratorToEdit(e, c)}>
                     <td> {c.email} </td>
                     <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
+                    <td>
+                      {this.levelEditor(c)}
+                    </td>
                     <td className='action'>
                       <Tooltip text='Delete questionnaire'>
                         <a onClick={() => this.remove(c)}>
