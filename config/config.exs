@@ -71,6 +71,7 @@ config :sentry,
   environment_name: Mix.env || :dev,
   included_environments: ~w(prod)a,
   use_error_logger: true,
+  enable_source_code_context: false,
   release: version
 
 # %% Coherence Configuration %%   Don't remove this line

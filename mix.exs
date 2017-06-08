@@ -46,7 +46,7 @@ defmodule Ask.Mixfile do
       {:mock, "~> 0.1.1", only: :test},
       {:timex, "~> 3.0", override: true},
       {:timex_ecto, "~> 3.0", override: true},
-      {:sentry, "~> 1.0"},
+      {:sentry, "~> 4.0"},
       {:hackney, "~> 1.0"},
       {:tributary, "~> 0.2.1"},
       {:ex_json_schema, "~> 0.5.2"},
