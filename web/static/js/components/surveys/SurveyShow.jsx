@@ -11,7 +11,6 @@ import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import sum from 'lodash/sum'
-import reduce from 'lodash/reduce'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
 import classNames from 'classnames/bind'
@@ -26,8 +25,7 @@ class SurveyShow extends Component {
     survey: React.PropTypes.object,
     questionnaires: React.PropTypes.object,
     respondentsByDisposition: React.PropTypes.object,
-    respondentsQuotasStats: React.PropTypes.object,
-    respondentsStats: React.PropTypes.object,
+    reference: React.PropTypes.object,
     completedByDate: React.PropTypes.object,
     contactedRespondents: React.PropTypes.number,
     totalRespondents: React.PropTypes.number,
@@ -52,7 +50,6 @@ class SurveyShow extends Component {
     const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
-    dispatch(respondentActions.fetchRespondentsQuotasStats(projectId, surveyId))
   }
 
   componentDidUpdate() {
@@ -147,18 +144,18 @@ class SurveyShow extends Component {
     )
   }
 
-  questionnairesColorReferences(questionnaires) {
-    let questionnairesQuantity = Object.keys(questionnaires).length
-    let referenceClasses = referenceBackgroundColorClasses(questionnairesQuantity)
+  colorReferences(references) {
+    let numberOfKeys = Object.keys(references).length
+    let referenceClasses = referenceBackgroundColorClasses(numberOfKeys)
 
     let colorReferences = []
-    if (questionnairesQuantity > 1) {
+    if (numberOfKeys > 1) {
       let i = 0
-      for (var questionnaireId in questionnaires) {
+      for (var referenceId in references) {
         colorReferences.push((
-          <div className='questionnaire-color-reference' key={questionnaireId}>
+          <div className='questionnaire-color-reference' key={referenceId}>
             <div className={`color-circle-reference ${referenceClasses[i]}`} />
-            <div className='questionnaire-name'> {questionnaires[questionnaireId].name} </div>
+            <div className='questionnaire-name'> {references[referenceId].name} </div>
           </div>
         ))
         i += 1
@@ -166,35 +163,6 @@ class SurveyShow extends Component {
     }
 
     return colorReferences
-  }
-
-  quotaBucketColorReferences(quotaBuckets) {
-    let numberOfBuckets = Object.keys(quotaBuckets).length
-    let referenceClasses = referenceBackgroundColorClasses(numberOfBuckets)
-
-    let colorReferences = []
-    if (numberOfBuckets > 1) {
-      let i = 0
-      for (var questionnaireId in quotaBuckets) {
-        colorReferences.push((
-          <div className='questionnaire-color-reference' key={questionnaireId}>
-            <div className={`color-circle-reference ${referenceClasses[i]}`} />
-            <div className='questionnaire-name'> {this.quotaBucketReferenceName(quotaBuckets[questionnaireId].condition)} </div>
-          </div>
-        ))
-        i += 1
-      }
-    }
-
-    return colorReferences
-  }
-
-  quotaBucketReferenceName(bucketConditions) {
-    // console.log('bucketConditions: ', bucketConditions)
-    return reduce(Object.keys(bucketConditions), (conditions, key) => {
-      conditions.push([`${key}: ${bucketConditions[key]}`])
-      return conditions
-    }, []).join(' - ')
   }
 
   titleFor(questionnaires) {
@@ -211,9 +179,9 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, respondentsQuotasStats, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
 
-    if (!survey || !cumulativePercentages || !questionnaires || !respondentsQuotasStats || !respondentsByDisposition) {
+    if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
       return <p>Loading...</p>
     }
 
@@ -227,13 +195,6 @@ class SurveyShow extends Component {
         {this.modesForComparisons(modes, index)}
       </div>)
       )
-    }
-
-    let table
-    if (respondentsQuotasStats && respondentsQuotasStats.buckets) {
-      table = this.quotas(respondentsQuotasStats.respondentsByDisposition, respondentsQuotasStats.buckets)
-    } else {
-      table = this.dispositions(respondentsByDisposition, questionnaires)
     }
 
     const readOnly = !project || project.readOnly
@@ -250,12 +211,6 @@ class SurveyShow extends Component {
     }
 
     let title = this.titleFor(questionnaires)
-    let colorReferences
-    if (respondentsQuotasStats && respondentsQuotasStats.buckets) {
-      colorReferences = this.quotaBucketColorReferences(respondentsQuotasStats.buckets)
-    } else {
-      colorReferences = this.questionnairesColorReferences(questionnaires)
-    }
 
     return (
       <div className='row'>
@@ -266,11 +221,11 @@ class SurveyShow extends Component {
             {title}
           </h4>
           <SurveyStatus survey={survey} />
-          {table}
+          {this.dispositions(respondentsByDisposition, reference)}
         </div>
         <div className='col s12 m4'>
           <div className='row questionnaires-color-references'>
-            {colorReferences}
+            {this.colorReferences(reference)}
           </div>
 
           <div className='row survey-chart'>
@@ -283,7 +238,7 @@ class SurveyShow extends Component {
 
           <div className='row respondent-chart'>
             <div className='col s12'>
-              <RespondentsChart cumulativePercentages={respondentsQuotasStats && respondentsQuotasStats.cumulativePercentages ? respondentsQuotasStats.cumulativePercentages : cumulativePercentages} />
+              <RespondentsChart cumulativePercentages={cumulativePercentages} />
             </div>
           </div>
 
@@ -331,10 +286,10 @@ class SurveyShow extends Component {
     let questionnairesIds = Object.keys(questionnaires)
     let colorClasses = referenceColorClasses(questionnairesIds.length)
 
-    const groupStatsByQuestionnaire = (questionnairesIds, detailsKeys, colorClasses, details) => {
+    const groupStatsbyReference = (questionnairesIds, detailsKeys, colorClasses, details) => {
       if (questionnairesIds.length > 1) {
         return questionnairesIds.map((questionnaireId, i) => {
-          const totals = detailsKeys.map((detail) => details[detail].byQuestionnaire[questionnairesIds] || 0)
+          const totals = detailsKeys.map((detail) => details[detail].byReference[questionnairesIds] || 0)
           return <td key={questionnaireId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
         })
       }
@@ -342,7 +297,7 @@ class SurveyShow extends Component {
     const groupRow =
       <tr key={group}>
         <td>{capitalize(group)}</td>
-        {groupStatsByQuestionnaire(questionnairesIds, detailsKeys, colorClasses, details)}
+        {groupStatsbyReference(questionnairesIds, detailsKeys, colorClasses, details)}
         <td className='right-align'>{groupStats.count}</td>
         <td className='right-align'>{this.round(groupStats.percent)}%</td>
         <td className='expand-column'>
@@ -357,7 +312,7 @@ class SurveyShow extends Component {
       rows = detailsKeys.map((detail) => {
         let individualStat = details[detail]
 
-        let byQuestionnaire = individualStat['byQuestionnaire']
+        let byReference = individualStat['byReference']
         let questionnairesColumns = null
         if (questionnairesIds.length > 1) {
           questionnairesColumns = questionnairesIds.map((questionnaireId, i) => {
@@ -365,7 +320,7 @@ class SurveyShow extends Component {
             if (detail == 'registered') {
               value = '-'
             } else {
-              value = byQuestionnaire[questionnaireId] || 0
+              value = byReference[questionnaireId] || 0
             }
 
             return <td key={questionnaireId} className={classNames('right-align', colorClasses[i])}>{value}</td>
@@ -387,78 +342,9 @@ class SurveyShow extends Component {
     return [groupRow, rows]
   }
 
-  groupRowsByQuotaBucket(group, groupStats, quotaBuckets) {
-    let details = groupStats.detail
-    let detailsKeys = Object.keys(details)
-    let quotaBucketIds = Object.keys(quotaBuckets)
-    let colorClasses = referenceColorClasses(quotaBucketIds.length)
-
-    console.log('group: ', group)
-    console.log('groupStats: ', groupStats)
-    console.log('quotaBuckets: ', quotaBuckets)
-    console.log('this.state[group]: ', this.state[group])
-
-    const groupStatsByQuotaBucket = (quotaBucketIds, detailsKeys, colorClasses, details) => {
-      if (quotaBucketIds.length > 1) {
-        return quotaBucketIds.map((quotaBucketId, i) => {
-          const totals = detailsKeys.map((detail) => details[detail].byQuotaBucket[quotaBucketIds] || 0)
-          return <td key={quotaBucketId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
-        })
-      }
-    }
-
-    const groupRow =
-      <tr key={group}>
-        <td>{capitalize(group)}</td>
-        {groupStatsByQuotaBucket(quotaBucketIds, detailsKeys, colorClasses, details)}
-        <td className='right-align'>{groupStats.count}</td>
-        <td className='right-align'>{this.round(groupStats.percent)}%</td>
-        <td className='expand-column'>
-          <a className='link' onClick={e => this.expandGroup(group)}>
-            <i className='material-icons right grey-text'>{this.state[group] ? 'expand_less' : 'expand_more'}</i>
-          </a>
-        </td>
-      </tr>
-
-    let rows = null
-    if (this.state[group]) {
-      rows = detailsKeys.map((detail) => {
-        let individualStat = details[detail]
-
-        let byQuotaBucket = individualStat.byQuotaBucket
-        console.log('byQuotaBucket: ', byQuotaBucket)
-        let quotaBucketColumns = null
-        if (quotaBucketIds.length > 1) {
-          quotaBucketColumns = quotaBucketIds.map((quotaBucketId, i) => {
-            let value = null
-            if (detail == 'registered') {
-              value = '-'
-            } else {
-              value = byQuotaBucket[quotaBucketId] || 0
-            }
-
-            return <td key={quotaBucketId} className={classNames('right-align', colorClasses[i])}>{value}</td>
-          })
-        }
-
-        return (
-          <tr className='detail-row' key={detail}>
-            <td>{capitalize(detail)}</td>
-            {quotaBucketColumns}
-            <td className='right-align'>{individualStat.count}</td>
-            <td className='right-align'>{this.round(individualStat.percent)}%</td>
-            <td className='expand-column' />
-          </tr>
-        )
-      })
-    }
-
-    return [groupRow, rows]
-  }
-
-  dispositions(respondentsByDisposition, questionnaires) {
+  dispositions(respondentsByDisposition, reference) {
     const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
-    let questionnairesIds = Object.keys(questionnaires)
+    let referenceIds = Object.keys(reference)
     return (
       <div className='card'>
         <div className='card-table-title'>
@@ -469,7 +355,7 @@ class SurveyShow extends Component {
             <thead>
               <tr>
                 <th>Status</th>
-                {questionnairesIds.length > 1 ? questionnairesIds.map((questionnaireId) => (<th key={questionnaireId} className='right-align' />)) : []}
+                {referenceIds.length > 1 ? referenceIds.map((referenceId) => (<th key={referenceId} className='right-align' />)) : []}
                 <th className='right-align'>Quantity</th>
                 <th className='right-align'>
                   Percent
@@ -480,41 +366,7 @@ class SurveyShow extends Component {
               {
                 dispositionsGroup.map(group => {
                   let groupStats = respondentsByDisposition[group]
-                  return this.groupRows(group, groupStats, questionnaires)
-                })
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )
-  }
-
-  quotas(respondentsByDisposition, quotaBuckets) {
-    const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
-    let quotaBucketIds = Object.keys(quotaBuckets)
-    return (
-      <div className='card'>
-        <div className='card-table-title'>
-          Dispositions
-        </div>
-        <div className='card-table'>
-          <table>
-            <thead>
-              <tr>
-                <th>Status</th>
-                {quotaBucketIds.length > 1 ? quotaBucketIds.map((quotaBucketId) => (<th key={quotaBucketId} className='right-align' />)) : []}
-                <th className='right-align'>Quantity</th>
-                <th className='right-align'>
-                  Percent
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {
-                dispositionsGroup.map(group => {
-                  let groupStats = respondentsByDisposition[group]
-                  return this.groupRowsByQuotaBucket(group, groupStats, quotaBuckets)
+                  return this.groupRows(group, groupStats, reference)
                 })
               }
             </tbody>
@@ -533,6 +385,7 @@ const mapStateToProps = (state, ownProps) => {
   let contactedRespondents = 0
   let totalRespondents = 0
   let completionPercentage = 0
+  let reference = null
 
   if (respondentsStatsRoot) {
     respondentsByDisposition = respondentsStatsRoot.respondentsByDisposition
@@ -540,6 +393,7 @@ const mapStateToProps = (state, ownProps) => {
     contactedRespondents = respondentsStatsRoot.contactedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
     completionPercentage = respondentsStatsRoot.completionPercentage
+    reference = respondentsStatsRoot.reference
   }
 
   return ({
@@ -548,12 +402,11 @@ const mapStateToProps = (state, ownProps) => {
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,
     questionnaires: !state.survey.data ? {} : state.survey.data.questionnaires,
-    respondentsStats: state.respondentsStats[ownProps.params.surveyId] || { cumulativePercentages: {} },
     respondentsByDisposition: respondentsByDisposition,
-    respondentsQuotasStats: state.respondentsQuotasStats,
     cumulativePercentages: cumulativePercentages,
     contactedRespondents: contactedRespondents,
     totalRespondents: totalRespondents,
+    reference: reference,
     completionPercentage: completionPercentage
   })
 }

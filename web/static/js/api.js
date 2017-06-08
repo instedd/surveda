@@ -9,7 +9,7 @@ const respondentSchema = new Schema('respondents')
 const respondentGroupSchema = new Schema('respondentGroups')
 const responseSchema = new Schema('response')
 const respondentsStatsSchema = new Schema('respondents')
-const quotaBucketsSchema = new Schema('buckets')
+const referenceSchema = new Schema('reference')
 const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
 
@@ -212,20 +212,21 @@ export const fetchRespondents = (projectId, surveyId, limit, page, sortBy, sortA
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, respondentsStatsSchema)
-}
-
-export const fetchRespondentsQuotasStats = (projectId, surveyId) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/quotas_stats`, arrayOf(quotaBucketsSchema), {}, (json, schema) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, arrayOf(referenceSchema), {}, (json, schema) => {
     return () => {
       if (!json) { return null }
       if (json.errors) {
         console.log(json.errors)
       }
       const camelizedData = camelizeKeys(json.data)
-      return {
-        ...camelizedData,
-        buckets: normalize(camelizedData.buckets, schema).entities.buckets
+
+      if (camelizedData.reference) {
+        return normalize({
+          ...camelizedData,
+          reference: normalize(camelizedData.reference, schema).entities.reference
+        }, respondentsStatsSchema)
+      } else {
+        return normalize(camelizedData, respondentsStatsSchema)
       }
     }
   })
