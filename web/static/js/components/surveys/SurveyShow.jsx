@@ -280,24 +280,24 @@ class SurveyShow extends Component {
     this.setState(newState)
   }
 
-  groupRows(group, groupStats, questionnaires) {
+  groupRows(group, groupStats, reference) {
     let details = groupStats.detail
     let detailsKeys = Object.keys(details)
-    let questionnairesIds = Object.keys(questionnaires)
-    let colorClasses = referenceColorClasses(questionnairesIds.length)
+    let referenceIds = Object.keys(reference)
+    let colorClasses = referenceColorClasses(referenceIds.length)
 
-    const groupStatsbyReference = (questionnairesIds, detailsKeys, colorClasses, details) => {
-      if (questionnairesIds.length > 1) {
-        return questionnairesIds.map((questionnaireId, i) => {
-          const totals = detailsKeys.map((detail) => details[detail].byReference[questionnairesIds] || 0)
-          return <td key={questionnaireId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
+    const groupStatsbyReference = (referenceIds, detailsKeys, colorClasses, details) => {
+      if (referenceIds.length > 1) {
+        return referenceIds.map((referenceId, i) => {
+          const totals = detailsKeys.map((detail) => details[detail].byReference[referenceId] || 0)
+          return <td key={referenceId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
         })
       }
     }
     const groupRow =
       <tr key={group}>
         <td>{capitalize(group)}</td>
-        {groupStatsbyReference(questionnairesIds, detailsKeys, colorClasses, details)}
+        {groupStatsbyReference(referenceIds, detailsKeys, colorClasses, details)}
         <td className='right-align'>{groupStats.count}</td>
         <td className='right-align'>{this.round(groupStats.percent)}%</td>
         <td className='expand-column'>
@@ -313,24 +313,24 @@ class SurveyShow extends Component {
         let individualStat = details[detail]
 
         let byReference = individualStat['byReference']
-        let questionnairesColumns = null
-        if (questionnairesIds.length > 1) {
-          questionnairesColumns = questionnairesIds.map((questionnaireId, i) => {
+        let referenceColumns = null
+        if (referenceIds.length > 1) {
+          referenceColumns = referenceIds.map((referenceId, i) => {
             let value = null
             if (detail == 'registered') {
               value = '-'
             } else {
-              value = byReference[questionnaireId] || 0
+              value = byReference[referenceId] || 0
             }
 
-            return <td key={questionnaireId} className={classNames('right-align', colorClasses[i])}>{value}</td>
+            return <td key={referenceId} className={classNames('right-align', colorClasses[i])}>{value}</td>
           })
         }
 
         return (
           <tr className='detail-row' key={detail}>
             <td>{capitalize(detail)}</td>
-            {questionnairesColumns}
+            {referenceColumns}
             <td className='right-align'>{individualStat.count}</td>
             <td className='right-align'>{this.round(individualStat.percent)}%</td>
             <td className='expand-column' />
