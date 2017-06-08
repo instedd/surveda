@@ -3,7 +3,7 @@
   "license": "MIT",
   "scripts": {
     "deploy": "webpack -p --devtool source-map",
-    "watch": "webpack --watch-stdin --progress --color",
+    "watch": "webpack --watch --progress --color",
     "test": "mocha --compilers js:babel-register -r jsdom-global/register test/js/**/*.js",
     "eslint": "eslint --ext .jsx,.js web/static/js/ test/js"
   },
