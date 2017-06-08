@@ -18,25 +18,26 @@ defmodule Ask.MembershipControllerTest do
 
   test "removes member", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    other_user = insert(:user, name: "user2", email: "user2@suveda.instedd.org")
-    other_membership = %{"user_id" => other_user.id, "project_id" => project.id, "level" => "editor"}
-    ProjectMembership.changeset(%ProjectMembership{}, other_membership) |> Repo.insert
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
 
-    post conn, project_membership_remove_path(conn, :remove, project.id), user_id: other_user.id
+    delete conn, project_membership_remove_path(conn, :remove, project.id), email: collaborator_email
     ProjectMembership |> Repo.all |> Repo.preload(:user)
 
-    assert !(ProjectMembership |> Repo.all |> Enum.any?( fn pm -> pm.user_id == other_user.id end))
+    assert !(ProjectMembership |> Repo.all |> Enum.any?( fn pm -> pm.user_id == collaborator.id end ))
   end
 
   test "updates member's level", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    other_user = insert(:user, name: "user2", email: "user2@suveda.instedd.org")
-    other_membership = %{"user_id" => other_user.id, "project_id" => project.id, "level" => "editor"}
-    ProjectMembership.changeset(%ProjectMembership{}, other_membership) |> Repo.insert
+    collaborator = insert(:user, name: "user2", email: "user2@suveda.instedd.org")
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
 
-    post conn, project_membership_update_path(conn, :update, project.id), user_id: other_user.id, new_level: "reader"
+    post conn, project_membership_update_path(conn, :update, project.id), user_id: collaborator.id, new_level: "reader"
 
-    updated_membership = Repo.one(from p in ProjectMembership, where: p.user_id == ^other_user.id)
+    updated_membership = Repo.one(from p in ProjectMembership, where: p.user_id == ^collaborator.id)
     assert updated_membership.level == "reader"
   end
 end

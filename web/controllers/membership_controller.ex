@@ -1,11 +1,11 @@
 defmodule Ask.MembershipController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, ProjectMembership}
+  alias Ask.{Project, ProjectMembership, User}
 
   def remove(conn, params) do
     project_id = params["project_id"]
-    user_id = params["user_id"]
+    user_id = Repo.one(from u in User, where: u.email == ^params["email"], select: u.id)
 
     conn
     |> load_project_for_change(project_id)

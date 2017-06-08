@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { CardTable, AddButton } from '../ui'
+import { CardTable, AddButton, Tooltip } from '../ui'
 import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
 import * as projectActions from '../../actions/project'
@@ -29,6 +29,11 @@ class CollaboratorIndex extends Component {
       this.props.guestActions.setCode(collaborator.code)
       $('#addCollaborator').modal('open')
     }
+  }
+
+  remove(collaborator) {
+    const { projectId } = this.props
+    this.props.actions.removeCollaborator(projectId, collaborator)
   }
 
   render() {
@@ -65,6 +70,13 @@ class CollaboratorIndex extends Component {
                   <tr key={c.email} style={c.invited ? {cursor: 'pointer'} : {}} onClick={(e) => this.loadCollaboratorToEdit(e, c)}>
                     <td> {c.email} </td>
                     <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
+                    <td className='action'>
+                      <Tooltip text='Delete questionnaire'>
+                        <a onClick={() => this.remove(c)}>
+                          <i className='material-icons'>delete</i>
+                        </a>
+                      </Tooltip>
+                    </td>
                   </tr>
                 )
               })}
