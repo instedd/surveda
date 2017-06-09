@@ -11,24 +11,28 @@ export class Dropdown extends Component {
     className: PropTypes.string
   }
 
+  constructor(props) {
+    super(props)
+    this.dropdownId = uniqueId('dropdown')
+  }
+
   componentDidMount() {
     if (!this.props.readOnly) $(this.refs.node).dropdown()
   }
 
   render() {
     const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly } = this.props
-    const dropdownId = uniqueId('dropdown')
     const onButtonClick = (event) => {
       event.preventDefault()
     }
 
     return (
       <span className={className}>
-        <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin={dataBelowOrigin} data-activates={dropdownId} data-constrainwidth={constrainWidth} ref='node'>
+        <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin={dataBelowOrigin} data-activates={this.dropdownId} data-constrainwidth={constrainWidth} ref='node'>
           {label}
           {readOnly ? null : <i className='material-icons right'>{icon}</i> }
         </a>
-        <ul id={dropdownId} className='dropdown-content'>
+        <ul id={this.dropdownId} className='dropdown-content'>
           {children}
         </ul>
       </span>
