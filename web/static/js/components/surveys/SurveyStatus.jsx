@@ -33,23 +33,20 @@ export default class SurveyStatus extends PureComponent {
       return <p>Loading...</p>
     }
 
-    let time = null
-    if (survey.state == 'running' && survey.nextScheduleTime) {
-      const date = new Date(survey.nextScheduleTime)
-      time = <p className='black-text'>
-        <i className='material-icons survey-status'>access_time</i>
-        {this.nextCallDescription(survey, date)}
-      </p>
-    }
-
     let icon = 'mode_edit'
     let color = 'black-text'
     let text = 'Editing'
     switch (survey.state) {
       case 'running':
-        icon = 'play_arrow'
+        if (survey.nextScheduleTime) {
+          icon = 'access_time'
+          const date = new Date(survey.nextScheduleTime)
+          text = this.nextCallDescription(survey, date)
+        } else {
+          icon = 'play_arrow'
+          text = 'Running'
+        }
         color = 'green-text'
-        text = 'Running'
         break
       case 'ready':
         icon = 'play_circle_outline'
@@ -81,7 +78,6 @@ export default class SurveyStatus extends PureComponent {
       <span>
         <i className='material-icons survey-status'>{icon}</i>
         { text }
-        { time }
       </span>
     )
 
