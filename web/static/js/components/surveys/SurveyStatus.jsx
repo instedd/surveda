@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react'
 import TimeAgo from 'react-timeago'
 import { Tooltip } from '../ui'
+import { formatTimezone } from '../timezones/util'
 
 export default class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -23,7 +24,7 @@ export default class SurveyStatus extends PureComponent {
       amOrPm = 'pm'
       hours -= 12
     }
-    return `${hours}${amOrPm} ${survey.timezone}`
+    return `${hours}${amOrPm} (${formatTimezone(survey.timezone)})`
   }
 
   render() {
@@ -33,10 +34,22 @@ export default class SurveyStatus extends PureComponent {
       return <p>Loading...</p>
     }
 
-    let icon = 'mode_edit'
+    let icon = null
     let color = 'black-text'
-    let text = 'Editing'
+    let text = null
+    let tooltip = null
+
     switch (survey.state) {
+      case 'not_ready':
+        icon = 'mode_edit'
+        text = 'Editing'
+        break
+
+      case 'ready':
+        icon = 'play_circle_outline'
+        text = 'Ready to launch'
+        break
+
       case 'running':
         if (survey.nextScheduleTime) {
           icon = 'access_time'
@@ -48,30 +61,33 @@ export default class SurveyStatus extends PureComponent {
         }
         color = 'green-text'
         break
-      case 'ready':
-        icon = 'play_circle_outline'
-        color = 'black-text'
-        text = 'Ready to launch'
-        break
+
       case 'terminated':
         switch (survey.exitCode) {
           case 0:
             icon = 'done'
-            color = 'black-text'
             text = 'Completed'
             break
+
           case 1:
             icon = 'error'
-            color = 'black-text'
             text = 'Cancelled'
+            tooltip = survey.exitMessage
             break
-          case 3:
+
+          default:
             icon = 'error'
-            color = 'black-text'
+            color = 'text-error'
             text = 'Failed'
+            tooltip = survey.exitMessage
             break
         }
         break
+
+      default:
+        icon = 'warning'
+        color = 'text-error'
+        text = 'Unknown'
     }
 
     let component = (
@@ -81,9 +97,9 @@ export default class SurveyStatus extends PureComponent {
       </span>
     )
 
-    if (survey.exitCode != null && survey.exitCode != 0 && survey.exitMessage) {
+    if (tooltip) {
       component = (
-        <Tooltip text={survey.exitMessage} position='top'>
+        <Tooltip text={tooltip} position='top'>
           {component}
         </Tooltip>
       )

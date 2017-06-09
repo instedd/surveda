@@ -1,5 +1,6 @@
 import React, { PropTypes, PureComponent } from 'react'
 import { fetchTimezones } from '../../actions/timezones'
+import { formatTimezone } from './util'
 import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
 
@@ -17,18 +18,6 @@ class TimezoneDropdown extends PureComponent {
     dispatch(fetchTimezones())
   }
 
-  formatTimezone(tz) {
-    const split = tz.replace('_', ' ').split('/')
-    switch (split.length) {
-      case 2:
-        return `${split[0]} - ${split[1]}`
-      case 3:
-        return `${split[0]} - ${split[2]}, ${split[1]}`
-      default:
-        return split[0]
-    }
-  }
-
   render() {
     const { timezones, selectedTz, onChange, readOnly } = this.props
 
@@ -41,7 +30,7 @@ class TimezoneDropdown extends PureComponent {
     return (
       <Input s={12} m={6} type='select' label='Timezones' value={selectedTz} onChange={onChange} disabled={readOnly}>
         {timezones.items.map((tz) => (
-          <option value={tz} key={tz}>{this.formatTimezone(tz)}</option>
+          <option value={tz} key={tz}>{formatTimezone(tz)}</option>
         ))}
       </Input>
     )
