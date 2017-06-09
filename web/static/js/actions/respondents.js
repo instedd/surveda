@@ -6,7 +6,6 @@ export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
-export const RECEIVE_RESPONDENTS_QUOTAS_STATS = 'RECEIVE_RESPONDENTS_QUOTAS_STATS'
 export const SORT = 'RESPONDENTS_SORT'
 
 export const fetchRespondents = (projectId, surveyId, limit, page = 1) => (dispatch, getState) => {
@@ -21,19 +20,9 @@ export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
     .then(stats => dispatch(receiveRespondentsStats(stats)))
 }
 
-export const fetchRespondentsQuotasStats = (projectId, surveyId) => dispatch => {
-  api.fetchRespondentsQuotasStats(projectId, surveyId)
-    .then(stats => dispatch(receiveRespondentsQuotasStats(stats)))
-}
-
 export const receiveRespondentsStats = (response) => ({
   type: RECEIVE_RESPONDENTS_STATS,
   response
-})
-
-export const receiveRespondentsQuotasStats = (data) => ({
-  type: RECEIVE_RESPONDENTS_QUOTAS_STATS,
-  data
 })
 
 export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order) => ({

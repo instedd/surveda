@@ -85,30 +85,30 @@ defmodule Ask.RespondentControllerTest do
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "registered" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "registered" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "queued" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "failed" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
       "contacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "contacted" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
       "responsive" => %{
         "count" => 15,
         "percent" => 100.0,
         "detail" => %{
-          "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "partial" => %{"count" => 10, "percent" => 100*10/total, "by_questionnaire" => %{string_questionnaire_id => 10}},
-          "completed" => %{"count" => 5, "percent" => 100*5/total, "by_questionnaire" => %{string_questionnaire_id => 5}},
-          "ineligible" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "rejected" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "started" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "partial" => %{"count" => 10, "percent" => 100*10/total, "by_reference" => %{string_questionnaire_id => 10}},
+          "completed" => %{"count" => 5, "percent" => 100*5/total, "by_reference" => %{string_questionnaire_id => 5}},
+          "ineligible" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "rejected" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
     }
@@ -146,30 +146,30 @@ defmodule Ask.RespondentControllerTest do
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "registered" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "registered" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "queued" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "failed" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
       "contacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "contacted" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
       "responsive" => %{
         "count" => 16,
         "percent" => 100.0,
         "detail" => %{
-          "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "partial" => %{"count" => 10, "percent" => 100*10/total, "by_questionnaire" => %{string_questionnaire_id => 10}},
-          "completed" => %{"count" => 5, "percent" => 100*5/total, "by_questionnaire" => %{string_questionnaire_id => 5}},
-          "ineligible" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "rejected" => %{"count" => 1, "percent" => 100*1/total, "by_questionnaire" => %{string_questionnaire_id => 1}},
+          "started" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "partial" => %{"count" => 10, "percent" => 100*10/total, "by_reference" => %{string_questionnaire_id => 10}},
+          "completed" => %{"count" => 5, "percent" => 100*5/total, "by_reference" => %{string_questionnaire_id => 5}},
+          "ineligible" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "rejected" => %{"count" => 1, "percent" => 100*1/total, "by_reference" => %{string_questionnaire_id => 1}},
         },
       },
     }
@@ -204,30 +204,30 @@ defmodule Ask.RespondentControllerTest do
         "count" => 10,
         "percent" => 100*10/total,
         "detail" => %{
-          "registered" => %{"count" => 10, "percent" => 100*10/total, "by_questionnaire" => %{"" => 10}},
-          "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "registered" => %{"count" => 10, "percent" => 100*10/total, "by_reference" => %{"" => 10}},
+          "queued" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "failed" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
       "contacted" => %{
         "count" => 0,
         "percent" => 0.0,
         "detail" => %{
-          "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "contacted" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
       "responsive" => %{
         "count" => 5,
         "percent" => 100*5/total,
         "detail" => %{
-          "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "partial" => %{"count" => 1, "percent" => 100*1/total, "by_questionnaire" => %{string_questionnaire_id => 1}},
-          "completed" => %{"count" => 1, "percent" => 100*1/total, "by_questionnaire" => %{string_questionnaire_id => 1}},
-          "ineligible" => %{"count" => 3, "percent" => 100*3/total, "by_questionnaire" => %{string_questionnaire_id => 3}},
-          "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-          "rejected" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+          "started" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "breakoff" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "partial" => %{"count" => 1, "percent" => 100*1/total, "by_reference" => %{string_questionnaire_id => 1}},
+          "completed" => %{"count" => 1, "percent" => 100*1/total, "by_reference" => %{string_questionnaire_id => 1}},
+          "ineligible" => %{"count" => 3, "percent" => 100*3/total, "by_reference" => %{string_questionnaire_id => 3}},
+          "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+          "rejected" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
         },
       },
     }
@@ -276,37 +276,38 @@ defmodule Ask.RespondentControllerTest do
           "count" => 5,
           "percent" => 100*5/total,
           "detail" => %{
-            "registered" => %{"count" => 5, "percent" => 100*5/total, "by_questionnaire" => %{"" => 5}},
-            "queued" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "failed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "registered" => %{"count" => 5, "percent" => 100*5/total, "by_reference" => %{"" => 5}},
+            "queued" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "failed" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
           },
         },
         "contacted" => %{
           "count" => 0,
           "percent" => 0.0,
           "detail" => %{
-            "contacted" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "contacted" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "unresponsive" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
           },
         },
         "responsive" => %{
           "count" => 0,
           "percent" => 0.0,
           "detail" => %{
-            "started" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "breakoff" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "partial" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "completed" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "ineligible" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "refused" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
-            "rejected" => %{"count" => 0, "percent" => 0.0, "by_questionnaire" => %{}},
+            "started" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "breakoff" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "partial" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "completed" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "ineligible" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "rejected" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
           },
         },
       },
       "cumulative_percentages" => %{},
       "total_respondents" => 5,
       "contacted_respondents" => 0,
-      "completion_percentage" => 0
+      "completion_percentage" => 0,
+      "reference" => []
     }
   end
 
@@ -517,12 +518,50 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
     insert(:respondent, survey: survey, state: "active", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
-    conn = get conn, project_survey_respondents_quotas_stats_path(conn, :quotas_stats, project.id, survey.id)
-    assert json_response(conn, 200) == %{"data" =>
-      [%{"condition" => %{"Exercises" => "No", "Smokes" => "No"}, "count" => 1,
-         "full" => 1, "partials" => 0, "quota" => 1},
-       %{"condition" => %{"Exercises" => "Yes", "Smokes" => "No"}, "count" => 2,
-         "full" => 1, "partials" => 1, "quota" => 4}]}
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    assert json_response(conn, 200) == %{ "data" => %{
+      "reference" => [
+       %{"name" => "Smokes: No - Exercises: No", "id" => qb1.id},
+        %{"name" => "Smokes: No - Exercises: Yes", "id" => qb4.id}
+      ],
+      "completion_percentage" => 0.0,
+      "contacted_respondents" => 3,
+      "cumulative_percentages" => %{},
+      "id" => survey.id,
+      "respondents_by_disposition" => %{
+        "contacted" => %{
+          "count" => 0,
+          "detail" => %{
+            "contacted" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "unresponsive" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+          },
+          "percent" => 0.0
+        },
+        "responsive" => %{
+          "count" => 0,
+          "detail" => %{
+            "breakoff" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "completed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "ineligible" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "refused" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "rejected" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+          },
+          "percent" => 0.0
+        },
+        "uncontacted" => %{
+          "count" => 3,
+          "detail" => %{
+            "failed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "queued" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+            "registered" => %{"by_reference" => %{"#{qb1.id}" => 1, "#{qb4.id}" => 2}, "count" => 3, "percent" => 100.0}
+          },
+          "percent" => 100.0
+        }
+      },
+      "total_respondents" => 3
+    }}
   end
 
   def completed_schedule do

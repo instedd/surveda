@@ -37,10 +37,17 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, completion_percentage: completion_percentage}}) do
+  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, reference: questionnaires, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, completion_percentage: completion_percentage}}) do
+
+    qs = questionnaires
+      |> Enum.map(fn q ->
+        %{id: q.id, name: q.name}
+      end)
+
     %{
       data: %{
         id: id,
+        reference: qs,
         respondents_by_disposition: respondents_by_disposition,
         cumulative_percentages:
           cumulative_percentages
@@ -55,9 +62,35 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("quotas_stats.json", %{stats: stats}) do
+  def render("quotas_stats.json", %{stats: %{id: id, reference: buckets, respondents_by_disposition: respondents_by_disposition, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, completion_percentage: completion_percentage}}) do
     %{
-      data: stats
+      data: %{
+        id: id,
+        respondents_by_disposition: respondents_by_disposition,
+        reference: render_many(buckets, Ask.RespondentView, "survey_bucket.json", as: :bucket),
+        cumulative_percentages:
+          cumulative_percentages
+          |> Enum.map(fn {questionnaire_id, date_percentages} ->
+            {to_string(questionnaire_id), render_many(date_percentages, Ask.RespondentView, "date_percentages.json", as: :completed)}
+          end)
+          |> Enum.into(%{}),
+        completion_percentage: completion_percentage,
+        contacted_respondents: contacted_respondents,
+        total_respondents: total_respondents
+      }
+    }
+  end
+
+  def render("survey_bucket.json", %{bucket: bucket}) do
+    condition =
+      bucket.condition
+      |> Enum.reduce([], fn {store, value}, conditions ->
+        ["#{store}: #{value}" | conditions]
+      end)
+      |> Enum.join(" - ")
+    %{
+      "id" => bucket.id,
+      "name" => condition
     }
   end
 
