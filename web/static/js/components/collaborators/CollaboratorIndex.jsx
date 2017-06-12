@@ -10,6 +10,14 @@ import * as projectActions from '../../actions/project'
 import * as guestActions from '../../actions/guest'
 
 class CollaboratorIndex extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      displayLevelEditor: false,
+      currentCollaborator: null
+    }
+  }
+
   componentDidMount() {
     const { projectId } = this.props
     if (projectId) {
@@ -35,6 +43,7 @@ class CollaboratorIndex extends Component {
 
   levelChanged(e, collaborator) {
     const { projectId, inviteActions, actions } = this.props
+    this.setState({displayLevelEditor: false, currentCollaborator: null})
     const level = e.target.value
     const action = collaborator.invited ? inviteActions.updateLevel : actions.updateLevel
     action(projectId, collaborator, level)
@@ -52,7 +61,7 @@ class CollaboratorIndex extends Component {
             id={option}
             name={option}
             value={option}>
-            {option}
+            {option + (collaborator.invited ? ' (invited)' : '')}
           </option>
         )}
       </Input>
@@ -63,6 +72,10 @@ class CollaboratorIndex extends Component {
     const { projectId, inviteActions, actions } = this.props
     const action = collaborator.invited ? inviteActions.removeInvite : actions.removeCollaborator
     action(projectId, collaborator)
+  }
+
+  displayLevelEditor(c) {
+    this.setState({displayLevelEditor: true, currentCollaborator: c.email})
   }
 
   render() {
@@ -79,6 +92,18 @@ class CollaboratorIndex extends Component {
       addButton = (
         <AddButton text='Invite collaborator' onClick={(e) => this.inviteCollaborator(e)} />
       )
+    }
+
+    const roleSelector = (c) => {
+      if (!readOnly && this.state.displayLevelEditor && c.role != 'owner' && c.email == this.state.currentCollaborator) {
+        return (<td>
+          {this.levelEditor(c)}
+        </td>)
+      } else {
+        return (<td onClick={() => this.displayLevelEditor(c)}>
+          {c.role + (c.invited ? ' (invited)' : '') }
+        </td>)
+      }
     }
 
     return (
@@ -98,10 +123,7 @@ class CollaboratorIndex extends Component {
                 return (
                   <tr key={c.email}>
                     <td> {c.email} </td>
-                    <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
-                    <td>
-                      {this.levelEditor(c)}
-                    </td>
+                    {roleSelector(c)}
                     <td className='action'>
                       <Tooltip text='Delete questionnaire'>
                         <a onClick={() => this.remove(c)}>
