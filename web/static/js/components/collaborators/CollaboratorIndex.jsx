@@ -5,6 +5,7 @@ import { CardTable, AddButton, Tooltip } from '../ui'
 import { Input } from 'react-materialize'
 import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
+import * as inviteActions from '../../actions/invites'
 import * as projectActions from '../../actions/project'
 import * as guestActions from '../../actions/guest'
 
@@ -33,9 +34,10 @@ class CollaboratorIndex extends Component {
   }
 
   levelChanged(e, collaborator) {
-    const { projectId } = this.props
+    const { projectId, inviteActions, actions } = this.props
     const level = e.target.value
-    this.props.actions.updateLevel(projectId, collaborator, level)
+    const action = collaborator.invited ? inviteActions.updateLevel : actions.updateLevel
+    action(projectId, collaborator, level)
   }
 
   levelEditor(collaborator) {
@@ -93,7 +95,7 @@ class CollaboratorIndex extends Component {
             <tbody>
               { collaborators.map(c => {
                 return (
-                  <tr key={c.email} style={c.invited ? {cursor: 'pointer'} : {}} onClick={(e) => this.loadCollaboratorToEdit(e, c)}>
+                  <tr key={c.email}>
                     <td> {c.email} </td>
                     <td> {c.role + (c.invited ? ' (invited)' : '') } </td>
                     <td>
@@ -122,12 +124,14 @@ CollaboratorIndex.propTypes = {
   project: PropTypes.object,
   collaborators: PropTypes.array,
   actions: PropTypes.object.isRequired,
+  inviteActions: PropTypes.object.isRequired,
   guestActions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired
 }
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
+  inviteActions: bindActionCreators(inviteActions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch),
   guestActions: bindActionCreators(guestActions, dispatch)
 })

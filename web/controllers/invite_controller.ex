@@ -111,6 +111,13 @@ defmodule Ask.InviteController do
     render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
 
+  def update(conn, %{"email" => email, "project_id" => project_id, "level" => new_level}) do
+    Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
+    |> Invite.changeset(%{level: new_level})
+    |> Repo.update
+    send_resp(conn, :no_content, "")
+  end
+
   defp notify_acces_to_user(_, recipient_user, current_user, email, code, project, level) do
     invite = Repo.one(from i in Invite, where: i.code == ^code)
 

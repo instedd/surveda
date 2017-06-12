@@ -1,4 +1,5 @@
 import * as api from '../api'
+import * as collaboratorsActions from './collaborators'
 
 export const RECEIVE_INVITE = 'RECEIVE_INVITE'
 
@@ -12,6 +13,13 @@ export const getInviteByEmailAndProject = (projectId, email) => dispatch => {
 
 export const inviteMail = (projectId, code, level, email) => dispatch => {
   return api.inviteMail(projectId, code, level, email)
+}
+
+export const updateLevel = (projectId, collaborator, level) => dispatch => {
+  return api.updateInviteLevel(projectId, collaborator.email, level)
+  .then(response => {
+    dispatch(collaboratorsActions.fetchCollaborators(projectId))
+  })
 }
 
 export const fetchInvite = (code) => dispatch => {
