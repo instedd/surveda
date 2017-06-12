@@ -344,6 +344,10 @@ export const fetchInvite = (code) => {
   return apiFetchJSON(`invite_show?code=${encodeURIComponent(code)}`)
 }
 
+export const updateInviteLevel = (projectId, collaboratorEmail, newLevel) => {
+  return apiPutJSON(`invite_update`, {}, { project_id: projectId, email: collaboratorEmail, level: newLevel })
+}
+
 export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }

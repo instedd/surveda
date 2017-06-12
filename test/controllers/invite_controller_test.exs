@@ -230,4 +230,24 @@ defmodule Ask.InviteControllerTest do
       }
     }
   end
+
+  test "updates invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "editor"})
+
+    updated_invite = Repo.one(from i in Invite, where: i.project_id == ^project.id and i.email == ^email)
+    assert updated_invite.level == "editor"
+  end
+
 end
