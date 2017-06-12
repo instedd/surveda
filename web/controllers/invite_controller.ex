@@ -112,9 +112,21 @@ defmodule Ask.InviteController do
   end
 
   def update(conn, %{"email" => email, "project_id" => project_id, "level" => new_level}) do
+    conn
+    |> load_project_for_change(project_id)
+
     Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
     |> Invite.changeset(%{level: new_level})
     |> Repo.update
+    send_resp(conn, :no_content, "")
+  end
+
+  def remove(conn, %{"email" => email, "project_id" => project_id}) do
+    conn
+    |> load_project_for_change(project_id)
+    
+    Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
+    |> Repo.delete!()
     send_resp(conn, :no_content, "")
   end
 

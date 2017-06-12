@@ -1,5 +1,4 @@
 defmodule Ask.InviteControllerTest do
-
   import Ecto.Query
 
   use Ask.ConnCase
@@ -250,4 +249,93 @@ defmodule Ask.InviteControllerTest do
     assert updated_invite.level == "editor"
   end
 
+  test "forbids user outside a project to update", %{conn: conn, user: user} do
+    project = insert(:project)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "editor"})
+    end
+  end
+
+  test "forbids reader to update", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "reader")
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "editor"})
+    end
+  end
+
+  test "removes invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    delete conn, invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
+
+    assert Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id) == nil
+  end
+
+  test "forbids reader to remove invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "reader")
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      delete conn, invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
+    end
+  end
+
+  test "forbids user outside a project to remove invite", %{conn: conn, user: user} do
+    project = insert(:project)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      delete conn, invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
+    end
+  end
 end

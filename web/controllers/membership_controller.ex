@@ -3,9 +3,8 @@ defmodule Ask.MembershipController do
 
   alias Ask.{Project, ProjectMembership, User}
 
-  def remove(conn, params) do
-    project_id = params["project_id"]
-    user_id = Repo.one(from u in User, where: u.email == ^params["email"], select: u.id)
+  def remove(conn, %{"project_id" => project_id, "email" => email}) do
+    user_id = Repo.one(from u in User, where: u.email == ^email, select: u.id)
 
     conn
     |> load_project_for_change(project_id)
@@ -22,11 +21,11 @@ defmodule Ask.MembershipController do
     send_resp(conn, :no_content, "")
   end
 
-  def update(conn, params) do
-    project_id = params["project_id"]
-    new_level = params["level"]
+  def update(conn, %{"project_id" => project_id, "level" => new_level, "email" => email}) do
+    conn
+    |> load_project_for_change(project_id)
 
-    user_id = Repo.one(from u in User, where: u.email == ^params["email"], select: u.id)
+    user_id = Repo.one(from u in User, where: u.email == ^email, select: u.id)
 
     Repo.one(from m in ProjectMembership, where: m.user_id == ^user_id and m.project_id == ^project_id)
     |> ProjectMembership.changeset(%{level: new_level})
