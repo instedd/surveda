@@ -14,6 +14,7 @@ defmodule Ask.MembershipController do
     |> assoc(:project_memberships)
     |> where([m], m.user_id == ^user_id)
     |> Repo.one
+    |> check_target_collaborator_is_not_owner(conn)
 
     membership
     |> Repo.delete!()
@@ -28,9 +29,11 @@ defmodule Ask.MembershipController do
     user_id = Repo.one(from u in User, where: u.email == ^email, select: u.id)
 
     Repo.one(from m in ProjectMembership, where: m.user_id == ^user_id and m.project_id == ^project_id)
+    |> check_target_collaborator_is_not_owner(conn)
     |> ProjectMembership.changeset(%{level: new_level})
     |> Repo.update
 
     send_resp(conn, :no_content, "")
   end
+
 end

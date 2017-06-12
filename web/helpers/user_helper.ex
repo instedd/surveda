@@ -85,4 +85,11 @@ defmodule User.Helper do
     end
     channel
   end
+
+  def check_target_collaborator_is_not_owner(membership, conn) do
+    case membership.level do
+      "owner" -> raise UnauthorizedError, conn: conn
+      _ -> membership
+    end
+  end
 end
