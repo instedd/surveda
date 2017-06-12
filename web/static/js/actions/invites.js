@@ -19,6 +19,7 @@ export const updateLevel = (projectId, collaborator, level) => dispatch => {
   return api.updateInviteLevel(projectId, collaborator.email, level)
   .then(response => {
     dispatch(collaboratorsActions.fetchCollaborators(projectId))
+    window.Materialize.toast(`Invite level successfully updated`, 5000)
   })
 }
 
@@ -26,6 +27,7 @@ export const removeInvite = (projectId, collaborator) => dispatch => {
   api.removeInvite(projectId, collaborator.email)
     .then(response => {
       dispatch(collaboratorsActions.fetchCollaborators(projectId))
+      window.Materialize.toast(`Invite successfully removed`, 5000)
     })
 }
 

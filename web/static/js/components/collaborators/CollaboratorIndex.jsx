@@ -10,14 +10,6 @@ import * as projectActions from '../../actions/project'
 import * as guestActions from '../../actions/guest'
 
 class CollaboratorIndex extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      displayLevelEditor: false,
-      currentCollaborator: null
-    }
-  }
-
   componentDidMount() {
     const { projectId } = this.props
     if (projectId) {
@@ -43,28 +35,32 @@ class CollaboratorIndex extends Component {
 
   levelChanged(e, collaborator) {
     const { projectId, inviteActions, actions } = this.props
-    this.setState({displayLevelEditor: false, currentCollaborator: null})
     const level = e.target.value
     const action = collaborator.invited ? inviteActions.updateLevel : actions.updateLevel
     action(projectId, collaborator, level)
   }
 
-  levelEditor(collaborator) {
-    const options = ['reader', 'editor']
+  levelEditor(collaborator, readOnly) {
+    const disabled = (readOnly || collaborator.role == 'owner')
+    const options = (collaborator.role == 'owner') ? ['owner'] : ['reader', 'editor']
     return (
-      <Input type='select'
-        onChange={e => this.levelChanged(e, collaborator)}
-      >
-        {options.map((option) =>
-          <option
-            key={option}
-            id={option}
-            name={option}
-            value={option}>
-            {option + (collaborator.invited ? ' (invited)' : '')}
-          </option>
-        )}
-      </Input>
+      <td>
+        <Input type='select'
+          onChange={e => this.levelChanged(e, collaborator)}
+          defaultValue={collaborator.role}
+          disabled={disabled}
+        >
+          {options.map((option) =>
+            <option
+              key={option}
+              id={option}
+              name={option}
+              value={option}>
+              {option + (collaborator.invited ? ' (invited)' : '')}
+            </option>
+          )}
+        </Input>
+      </td>
     )
   }
 
@@ -72,10 +68,6 @@ class CollaboratorIndex extends Component {
     const { projectId, inviteActions, actions } = this.props
     const action = collaborator.invited ? inviteActions.removeInvite : actions.removeCollaborator
     action(projectId, collaborator)
-  }
-
-  displayLevelEditor(c) {
-    this.setState({displayLevelEditor: true, currentCollaborator: c.email})
   }
 
   render() {
@@ -92,18 +84,6 @@ class CollaboratorIndex extends Component {
       addButton = (
         <AddButton text='Invite collaborator' onClick={(e) => this.inviteCollaborator(e)} />
       )
-    }
-
-    const roleSelector = (c) => {
-      if (!readOnly && this.state.displayLevelEditor && c.role != 'owner' && c.email == this.state.currentCollaborator) {
-        return (<td>
-          {this.levelEditor(c)}
-        </td>)
-      } else {
-        return (<td onClick={() => this.displayLevelEditor(c)}>
-          {c.role + (c.invited ? ' (invited)' : '') }
-        </td>)
-      }
     }
 
     const roleRemove = (c) => {
@@ -137,7 +117,7 @@ class CollaboratorIndex extends Component {
                 return (
                   <tr key={c.email}>
                     <td> {c.email} </td>
-                    {roleSelector(c)}
+                    {this.levelEditor(c, readOnly)}
                     {roleRemove(c)}
                   </tr>
                 )
