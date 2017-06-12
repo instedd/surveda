@@ -60,8 +60,9 @@ class CollaboratorIndex extends Component {
   }
 
   remove(collaborator) {
-    const { projectId } = this.props
-    this.props.actions.removeCollaborator(projectId, collaborator)
+    const { projectId, inviteActions, actions } = this.props
+    const action = collaborator.invited ? inviteActions.removeInvite : actions.removeCollaborator
+    action(projectId, collaborator)
   }
 
   render() {

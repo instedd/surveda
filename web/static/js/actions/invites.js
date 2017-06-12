@@ -22,6 +22,13 @@ export const updateLevel = (projectId, collaborator, level) => dispatch => {
   })
 }
 
+export const removeInvite = (projectId, collaborator) => dispatch => {
+  api.removeInvite(projectId, collaborator.email)
+    .then(response => {
+      dispatch(collaboratorsActions.fetchCollaborators(projectId))
+    })
+}
+
 export const fetchInvite = (code) => dispatch => {
   return api.fetchInvite(code)
     .then(invite => {

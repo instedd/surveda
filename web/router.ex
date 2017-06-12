@@ -88,6 +88,7 @@ defmodule Ask.Router do
       get "/invite", InviteController, :invite, as: :invite
       get "/send_invitation", InviteController, :send_invitation, as: :send_invitation
       put "/invite_update", InviteController, :update, as: :invite_update
+      delete "/invite_remove", InviteController, :remove, as: :invite_remove
       get "/invite_show", InviteController, :show, as: :invite_show
       get "/get_invite_by_email_and_project", InviteController, :get_by_email_and_project
       get "/settings", UserController, :settings, as: :settings
