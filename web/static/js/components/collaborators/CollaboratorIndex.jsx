@@ -106,6 +106,20 @@ class CollaboratorIndex extends Component {
       }
     }
 
+    const roleRemove = (c) => {
+      if (!readOnly && c.role != 'owner') {
+        return (<td className='action'>
+          <Tooltip text='Remove respondent'>
+            <a onClick={() => this.remove(c)}>
+              <i className='material-icons'>delete</i>
+            </a>
+          </Tooltip>
+        </td>)
+      } else {
+        return null
+      }
+    }
+
     return (
       <div>
         {addButton}
@@ -124,13 +138,7 @@ class CollaboratorIndex extends Component {
                   <tr key={c.email}>
                     <td> {c.email} </td>
                     {roleSelector(c)}
-                    <td className='action'>
-                      <Tooltip text='Delete questionnaire'>
-                        <a onClick={() => this.remove(c)}>
-                          <i className='material-icons'>delete</i>
-                        </a>
-                      </Tooltip>
-                    </td>
+                    {roleRemove(c)}
                   </tr>
                 )
               })}
