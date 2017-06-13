@@ -379,6 +379,11 @@ defmodule Ask.Runtime.Broker do
     {:end, {:reply, reply}}
   end
 
+  defp handle_session_step({:rejected, session, reply, timeout, respondent}) do
+    update_respondent(respondent, {:rejected, session, timeout})
+    {:reply, reply}
+  end
+
   defp handle_session_step({:rejected, respondent}) do
     update_respondent(respondent, :rejected)
     :end
@@ -420,14 +425,12 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :rejected) do
-    respondent
-    |> Respondent.changeset(%{
-      state: "rejected",
-      session: nil,
-      timeout_at: nil,
-      disposition: Flow.resulting_disposition(respondent.disposition, "rejected")
-    })
-    |> Repo.update!
+    session = respondent.session |> Session.load
+    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, "rejected", "rejected")
+  end
+
+  defp update_respondent(respondent, {:rejected, session, timeout}) do
+    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, next_timeout(respondent, timeout), "rejected", "rejected")
   end
 
   defp update_respondent(respondent, :failed) do

@@ -153,10 +153,12 @@ defmodule Ask.Runtime.Flow do
   def should_update_disposition("queued", "completed"), do: true
   def should_update_disposition("queued", "refused"), do: true
   def should_update_disposition("queued", "ineligible"), do: true
+  def should_update_disposition("queued", "rejected"), do: true
   def should_update_disposition("contacted", "partial"), do: true
   def should_update_disposition("contacted", "completed"), do: true
   def should_update_disposition("contacted", "ineligible"), do: true
   def should_update_disposition("contacted", "refused"), do: true
+  def should_update_disposition("contacted", "rejected"), do: true
   def should_update_disposition("started", "partial"), do: true
   def should_update_disposition("started", "refused"), do: true
   def should_update_disposition("started", "ineligible"), do: true

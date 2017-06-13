@@ -1567,7 +1567,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -1600,6 +1600,10 @@ defmodule Ask.BrokerTest do
     assert eleven.survey_id == survey.id
     assert eleven.action_data == "11"
     assert eleven.action_type == "response"
+
+    assert thank_you.survey_id == survey.id
+    assert thank_you.action_data == "Thank you"
+    assert thank_you.action_type == "prompt"
 
     :ok = broker |> GenServer.stop
   end
@@ -1646,7 +1650,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [answer, do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [answer, do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert answer.survey_id == survey.id
     assert answer.action_data == "Answer"
@@ -1683,6 +1687,10 @@ defmodule Ask.BrokerTest do
     assert eleven.survey_id == survey.id
     assert eleven.action_data == "11"
     assert eleven.action_type == "response"
+
+    assert thank_you.survey_id == survey.id
+    assert thank_you.action_data == "Thank you"
+    assert thank_you.action_type == "prompt"
 
     :ok = broker |> GenServer.stop
   end
@@ -1783,7 +1791,39 @@ defmodule Ask.BrokerTest do
     quiz = hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
     quiz
     |> Questionnaire.changeset(%{
-      quota_completed_steps: [%{
+      quota_completed_steps: [
+      %{
+        "id" => "quota-completed-prompt",
+        "type" => "multiple-choice",
+        "title" => "Satisfaction",
+        "prompt" => %{
+          "en" => %{
+            "sms" => "Did you enjoy this survey?"
+          }
+        },
+        "store" => "satisfaction",
+        "choices" => [
+          %{
+            "value" => "Yes",
+            "responses" => %{
+              "sms" => %{
+                "en" => ["Yes", "Y", "1"]
+              }
+            },
+            "skip_logic" => nil
+          },
+          %{
+            "value" => "No",
+            "responses" => %{
+              "sms" => %{
+                "en" => ["No", "N", "2"]
+              }
+            },
+            "skip_logic" => nil
+          }
+        ],
+      },
+      %{
         "id" => "quota-completed-step",
         "type" => "explanation",
         "title" => "Completed",
@@ -1826,6 +1866,12 @@ defmodule Ask.BrokerTest do
     Broker.delivery_confirm(respondent, "Do you smoke?")
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    assert {:reply, ReplyHelper.simple("Satisfaction", "Did you enjoy this survey?")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Satisfaction")
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
     assert {:end, {:reply, ReplyHelper.simple("Completed", "Quota completed")}} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1833,7 +1879,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke, satisfaction, dissatisfied, completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -1854,6 +1900,18 @@ defmodule Ask.BrokerTest do
     assert dont_smoke.survey_id == survey.id
     assert dont_smoke.action_data == "No"
     assert dont_smoke.action_type == "response"
+
+    assert satisfaction.survey_id == survey.id
+    assert satisfaction.action_data == "Satisfaction"
+    assert satisfaction.action_type == "prompt"
+
+    assert dissatisfied.survey_id == survey.id
+    assert dissatisfied.action_data == "No"
+    assert dissatisfied.action_type == "response"
+
+    assert completed.survey_id == survey.id
+    assert completed.action_data == "Completed"
+    assert completed.action_type == "prompt"
 
     :ok = broker |> GenServer.stop
   end
@@ -1930,7 +1988,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [answer, do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [answer, do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke, completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert answer.survey_id == survey.id
     assert answer.action_data == "Answer"
@@ -1955,6 +2013,10 @@ defmodule Ask.BrokerTest do
     assert dont_smoke.survey_id == survey.id
     assert dont_smoke.action_data == "9"
     assert dont_smoke.action_type == "response"
+
+    assert completed.survey_id == survey.id
+    assert completed.action_data == "Completed"
+    assert completed.action_type == "prompt"
 
     :ok = broker |> GenServer.stop
   end

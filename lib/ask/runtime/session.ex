@@ -304,7 +304,8 @@ defmodule Ask.Runtime.Session do
     session |> handle_step_answer(step_answer, respondent, responses, buckets, current_mode)
   end
 
-  defp handle_step_answer(_, {:end, _, reply}, respondent, _, _, _) do
+  defp handle_step_answer(session, {:end, _, reply}, respondent, _, _, current_mode) do
+    log_prompts(reply, current_mode.channel, session.flow.mode, respondent, true)
     {:end, reply, respondent}
   end
 
@@ -312,15 +313,17 @@ defmodule Ask.Runtime.Session do
     case falls_in_quota_already_completed?(flow, buckets, responses) do
       true ->
         if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
-          # Update here the state and disposition to rejected,
-          # and continue with the quota completed steps
-          respondent = respondent
-          |> Respondent.changeset(%{state: "rejected", disposition: "rejected"})
-          |> Repo.update!
-
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
           session = %{session | flow: flow, respondent: respondent}
-          sync_step(session, :answer, session.current_mode, false)
+          case sync_step(session, :answer, session.current_mode, false) do
+            {:ok, session, reply, timeout, respondent} ->
+              {:rejected, session, reply, timeout, respondent}
+            {:end, reply, respondent} ->
+              {:rejected, reply, respondent}
+            _ ->
+              {:rejected, respondent}
+          end
+
         else
           {:rejected, respondent}
         end
