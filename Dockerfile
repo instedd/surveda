@@ -9,6 +9,7 @@ RUN mix local.hex --force
 ENV MIX_ENV=prod
 
 ADD mix.exs mix.lock /app/
+ADD config /app/config
 WORKDIR /app
 
 RUN mix deps.get --only prod
