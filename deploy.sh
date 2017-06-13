@@ -1,4 +1,6 @@
 #!/bin/bash
+set -eo pipefail
+
 PROJECT_VERSION=`docker-compose run --rm app mix run --no-compile --no-start -e 'IO.write Mix.Project.config[:version]'`
 
 if [ "$TRAVIS_TAG" = "" ]; then
