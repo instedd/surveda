@@ -39,6 +39,7 @@ defmodule Ask.Web do
       import Ask.Gettext
 
       import User.Helper
+      import CSV.Helper
     end
   end
 

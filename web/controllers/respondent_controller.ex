@@ -296,6 +296,8 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
+    tz_offset = Survey.timezone_offset(survey)
+
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
     has_comparisons = length(survey.comparisons) > 0
 
@@ -326,7 +328,7 @@ defmodule Ask.RespondentController do
         end
 
         row = if date do
-          row ++ [date |> Timex.format!("%b %e, %Y %H:%M #{Survey.timezone_offset(survey)}", :strftime)]
+          row ++ [date |> Timex.format!("%b %e, %Y %H:%M #{tz_offset}", :strftime)]
         else
           row ++ ["-"]
         end
@@ -393,18 +395,8 @@ defmodule Ask.RespondentController do
     header = header ++ ["Disposition"]
     rows = Stream.concat([[header], csv_rows])
 
-    # # Convert to CSV string
-    csv = rows
-    |> CSV.encode
-    |> Enum.to_list
-    |> to_string
-
     filename = csv_filename(survey, "respondents")
-
-    conn
-      |> put_resp_content_type("text/csv")
-      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-      |> send_resp(200, csv)
+    conn |> csv_stream(rows, filename)
   end
 
   def disposition_history_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -416,6 +408,7 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
+    tz_offset = Survey.timezone_offset(survey)
     csv_rows = (from h in RespondentDispositionHistory,
       join: r in Respondent,
       where: h.respondent_id == r.id and r.survey_id == ^survey.id,
@@ -425,25 +418,15 @@ defmodule Ask.RespondentController do
     |> Stream.map(fn history ->
       date = history.inserted_at
       |> Survey.adjust_timezone(survey)
-      |> Timex.format!("%Y-%m-%d %H:%M:%S #{Survey.timezone_offset(survey)}", :strftime)
+      |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
       [history.respondent.hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
     header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
 
-    # Convert to CSV string
-    csv = rows
-    |> CSV.encode
-    |> Enum.to_list
-    |> to_string
-
     filename = csv_filename(survey, "respondents_disposition_history")
-
-    conn
-      |> put_resp_content_type("text/csv")
-      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-      |> send_resp(200, csv)
+    conn |> csv_stream(rows, filename)
   end
 
   def incentives_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -467,18 +450,8 @@ defmodule Ask.RespondentController do
     header = ["Telephone number", "Questionnaire-Mode"]
     rows = Stream.concat([[header], csv_rows])
 
-    # Convert to CSV string
-    csv = rows
-    |> CSV.encode
-    |> Enum.to_list
-    |> to_string
-
     filename = csv_filename(survey, "respondents_incentives")
-
-    conn
-      |> put_resp_content_type("text/csv")
-      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-      |> send_resp(200, csv)
+    conn |> csv_stream(rows, filename)
   end
 
   def interactions_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -511,6 +484,8 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
+    tz_offset = Survey.timezone_offset(survey)
+
     csv_rows = log_stream
     |> Stream.map(fn e ->
       channel_name =
@@ -525,7 +500,7 @@ defmodule Ask.RespondentController do
 
       timestamp = e.timestamp
       |> Survey.adjust_timezone(survey)
-      |> Timex.format!("%Y-%m-%d %H:%M:%S #{Survey.timezone_offset(survey)}", :strftime)
+      |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
 
       [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
     end)
@@ -533,18 +508,8 @@ defmodule Ask.RespondentController do
     header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
 
-    # Convert to CSV string
-    csv = rows
-    |> CSV.encode
-    |> Enum.to_list
-    |> to_string
-
     filename = csv_filename(survey, "respondents_interactions")
-
-    conn
-      |> put_resp_content_type("text/csv")
-      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-      |> send_resp(200, csv)
+    conn |> csv_stream(rows, filename)
   end
 
   defp mask_phone_numbers(respondents) do
