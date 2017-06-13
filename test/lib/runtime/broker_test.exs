@@ -2671,37 +2671,69 @@ defmodule Ask.BrokerTest do
   end
 
   test "marks as failed after 3 successive wrong replies if there are no more retries" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, _} = Broker.start_link
-    Broker.handle_info(:poll, nil)
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
-    (1..3) |> Enum.each(fn _ ->
-      respondent = Repo.get(Respondent, respondent.id)
-      Broker.sync_step(respondent, Flow.Message.reply("Oops"))
-    end)
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert :end = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "breakoff"
   end
 
-  # test "does not mark as failed after 3 successive wrong replies when there are retries left" do
-  #   [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
-  #   survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+  test "does not mark as failed after 3 successive wrong replies when there are retries left" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update!
 
-  #   {:ok, _} = Broker.start_link
-  #   Broker.handle_info(:poll, nil)
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
-  #   (1..3) |> Enum.each(fn _ ->
-  #     respondent = Repo.get(Respondent, respondent.id)
-  #     Broker.sync_step(respondent, Flow.Message.reply("Oops"))
-  #   end)
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
 
-  #   respondent = Repo.get(Respondent, respondent.id)
-  #   assert respondent.state == "active"
-  #   assert respondent.disposition == "started"
-  # end
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    assert :end = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "started"
+  end
 
   test "reply via another channel (sms when ivr is the current one)" do
     sms_test_channel = TestChannel.new(false, true)
