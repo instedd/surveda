@@ -231,7 +231,7 @@ class SurveyShow extends Component {
           <div className='row survey-chart'>
             <div className='col s12'>
               <label className='grey-text'>
-                { completionPercentage + '% of target completed' }
+                { this.round(completionPercentage) + '% of target completed' }
               </label>
             </div>
           </div>
