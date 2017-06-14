@@ -216,14 +216,14 @@ class SurveyShow extends Component {
       <div className='row'>
         {stopComponent}
         <ConfirmationModal modalId='survey_show_stop_modal' ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
-        <div className='col s12 m8'>
+        <div className='col s12 m9 l8'>
           <h4>
             {title}
           </h4>
           <SurveyStatus survey={survey} />
           {this.dispositions(respondentsByDisposition, reference)}
         </div>
-        <div className='col s12 m4'>
+        <div className='col s12 m3 l4'>
           <div className='row questionnaires-color-references'>
             {this.colorReferences(reference)}
           </div>
@@ -346,7 +346,7 @@ class SurveyShow extends Component {
     const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
     let referenceIds = Object.keys(reference)
     return (
-      <div className='card'>
+      <div className='card overflow'>
         <div className='card-table-title'>
           Dispositions
         </div>

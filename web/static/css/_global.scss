@@ -1129,6 +1129,9 @@ i.survey-status { // icon for survey status on index
 .link {
   cursor: pointer;
 }
+.card.overflow {
+  overflow-x: auto;
+}
 
 .empty-projects {
   @extend .grey-text;
