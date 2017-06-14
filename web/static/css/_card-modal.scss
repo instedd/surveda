@@ -150,5 +150,11 @@
     max-height: initial;
     margin-bottom: 40px;
   }
+  &.hidden-overflow {
+    overflow-y: visible;
+    .card-content {
+      overflow-y: visible;
+    }
+  }
 }
 

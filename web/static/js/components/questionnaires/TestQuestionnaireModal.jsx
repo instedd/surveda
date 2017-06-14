@@ -130,7 +130,7 @@ class TestQuestionnaireModal extends Component {
     }
 
     return (
-      <Modal card id={modalId} ref='modal'>
+      <Modal card id={modalId} ref='modal' className='hidden-overflow'>
         <div className='modal-content'>
           <div className='card-title header'>
             <h5>Test sandbox</h5>
