@@ -28,7 +28,7 @@ defmodule Ask.Runtime.Broker do
     {:ok, nil}
   end
 
-  def handle_info(:poll, state, now \\ Timex.now) do
+  def handle_info(:poll, state, now) do
     try do
       mark_stalled_for_eight_hours_respondents_as_failed()
 
@@ -43,6 +43,14 @@ defmodule Ask.Runtime.Broker do
     after
       :timer.send_after(@poll_interval, :poll)
     end
+  end
+
+  def handle_info(:poll, state) do
+    handle_info(:poll, state, Timex.now)
+  end
+
+  def handle_info(_, state) do
+    {:noreply, state}
   end
 
   def handle_call(:poll, _from, state) do
