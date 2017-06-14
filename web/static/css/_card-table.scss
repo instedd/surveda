@@ -101,6 +101,18 @@
           white-space: nowrap;
           text-overflow: ellipsis;
         }
+        &.w-select {
+          padding: 15px 25px;
+          .col.input-field {
+            padding: 0;
+            margin: 0;
+            input[type='text'] {
+              margin: 0;
+            }
+
+          }
+
+        }
       }
       &.noclick tr:hover {
         cursor: default !important;

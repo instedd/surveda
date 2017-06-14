@@ -44,7 +44,7 @@ class CollaboratorIndex extends Component {
     const disabled = (readOnly || collaborator.role == 'owner')
     const options = (collaborator.role == 'owner') ? ['owner'] : ['reader', 'editor']
     return (
-      <td>
+      <td className='w-select'>
         <Input type='select'
           onChange={e => this.levelChanged(e, collaborator)}
           defaultValue={collaborator.role}
@@ -96,7 +96,7 @@ class CollaboratorIndex extends Component {
           </Tooltip>
         </td>)
       } else {
-        return null
+        return (<td />)
       }
     }
 
@@ -110,6 +110,7 @@ class CollaboratorIndex extends Component {
               <tr>
                 <th>Email</th>
                 <th>Role</th>
+                <th />
               </tr>
             </thead>
             <tbody>
