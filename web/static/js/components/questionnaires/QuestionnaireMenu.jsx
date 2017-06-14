@@ -167,7 +167,7 @@ class QuestionnaireMenu extends Component {
     if (questionnaire == null) return null
 
     return (
-      <Dropdown className='title-options options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+      <Dropdown className='title-options options questionnaire-menu' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
         <DropdownItem className='dots'>
           <i className='material-icons'>more_vert</i>
         </DropdownItem>

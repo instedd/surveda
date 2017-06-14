@@ -1276,7 +1276,7 @@ body.bdfh {
       i.material-icons {
         @extend .black-text;
         display: inline-block;
-        line-height: 1.8;
+        line-height: 1;
         margin-right: 5px;
         vertical-align: middle;
       }
@@ -1295,6 +1295,14 @@ body.bdfh {
           line-height: 1.4;
         }
       }
+    }
+  }
+  &.questionnaire-menu {
+    > a > i.material-icons {
+      line-height: 2;
+    }
+    ul li.dots i {
+      line-height: 2;
     }
   }
 }
