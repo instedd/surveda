@@ -1587,6 +1587,17 @@ defmodule Ask.BrokerTest do
     assert_respondents_by_state(survey, 1, 9)
   end
 
+  test "continue polling respondents when one of the quotas was exceeded " do
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
+    create_several_respondents(survey, group, 10)
+    survey |> Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
+    insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 2)
+    insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 1, count: 0)
+
+    Broker.handle_info(:poll, nil)
+    assert_respondents_by_state(survey, 1, 10)
+  end
+
   test "changes running survey state to 'completed' when there are no more running respondents" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 

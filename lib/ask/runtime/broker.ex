@@ -626,7 +626,7 @@ defmodule Ask.Runtime.Broker do
   defp successful_respondents(survey, respondents_by_state) do
     quota_completed = Repo.one(
       from q in (survey |> assoc(:quota_buckets)),
-      select: sum(q.count)
+      select: fragment("sum(least(count, quota))")
     )
 
     case quota_completed do
