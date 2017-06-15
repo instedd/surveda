@@ -94,6 +94,7 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
 const dirtyPredicate = (action, oldData, newData) => {
   switch (action.type) {
     case actions.SET_ACTIVE_LANGUAGE: return false
+    case actions.SET_ACTIVE_MODE: return false
     default: return true
   }
 }
