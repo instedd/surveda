@@ -99,7 +99,7 @@ defmodule Ask.MobileSurveyControllerTest do
     json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
-      "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
+      "prompts" => ["Do you smoke?"],
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
     } = json["step"]
@@ -109,7 +109,7 @@ defmodule Ask.MobileSurveyControllerTest do
     json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
-      "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
+      "prompts" => ["Do you smoke?"],
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
     } = json["step"]
@@ -119,7 +119,7 @@ defmodule Ask.MobileSurveyControllerTest do
     json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
-      "prompts" => ["Do you smoke? Reply 1 for YES, 2 for NO"],
+      "prompts" => ["Do you smoke?"],
       "title" => "Do you smoke?",
       "type" => "multiple-choice"
     } = json["step"]
@@ -133,7 +133,7 @@ defmodule Ask.MobileSurveyControllerTest do
     json = json_response(conn, 200)
     assert %{
       "choices" => [["Yes"], ["No"]],
-      "prompts" => ["Do you exercise? Reply 1 for YES, 2 for NO"],
+      "prompts" => ["Do you exercise?"],
       "title" => "Do you exercise",
       "type" => "multiple-choice"
     } = json["step"]

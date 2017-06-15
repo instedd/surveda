@@ -756,7 +756,7 @@ defmodule Ask.DummySteps do
           id: "s2",
           title: "Do you smoke?",
           prompt: prompt(
-            mobileweb: "Do you smoke? Reply 1 for YES, 2 for NO"
+            mobileweb: "Do you smoke?"
           ),
           store: "Smokes",
           choices: [
@@ -773,7 +773,7 @@ defmodule Ask.DummySteps do
           id: "s4",
           title: "Do you exercise",
           prompt: prompt(
-            mobileweb: "Do you exercise? Reply 1 for YES, 2 for NO"
+            mobileweb: "Do you exercise?"
           ),
           store: "Exercises",
           choices: [

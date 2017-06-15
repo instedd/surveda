@@ -58,11 +58,11 @@ defmodule Ask.SessionTest do
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _, _} = Session.sync_step(session, Flow.Message.answer())
 
     step_result = Session.sync_step(session, Flow.Message.reply(""))
-    assert {:ok, session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = step_result
+    assert {:ok, session, ReplyHelper.simple("Do you smoke?", "Do you smoke?"), _, _} = step_result
 
-    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
-    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
-    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke?"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke?"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you smoke?", "Do you smoke?"), _, _} = Session.sync_step(session, Flow.Message.answer())
 
     expected_session = %Session{
       current_mode: SessionModeProvider.new("mobileweb", channel, retries),
@@ -77,11 +77,11 @@ defmodule Ask.SessionTest do
     assert session.flow.current_step == expected_session.flow.current_step
 
     step_result = Session.sync_step(session, Flow.Message.reply("No"))
-    assert {:ok, session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "No"}), _, _} = step_result
+    assert {:ok, session, ReplyHelper.simple("Do you exercise", "Do you exercise?", %{"Smokes" => "No"}), _, _} = step_result
 
-    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
-    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
-    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise?"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise?"), _, _} = Session.sync_step(session, Flow.Message.answer())
+    assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Do you exercise", "Do you exercise?"), _, _} = Session.sync_step(session, Flow.Message.answer())
 
     expected_session = %Session{
       current_mode: SessionModeProvider.new("mobileweb", channel, retries),

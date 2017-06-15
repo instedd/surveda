@@ -4,7 +4,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger}
-  alias Ask.Runtime.{Session, Reply, Flow, SessionMode}
+  alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider}
   alias Ask.QuotaBucket
 
   @poll_interval :timer.minutes(1)
@@ -286,31 +286,29 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  def sync_step(respondent, reply) do
-    session = respondent.session |> Session.load
-    sync_step_internal(session, reply, session.current_mode)
-  end
-
-  def sync_step(respondent, reply, mode) do
+  def sync_step(respondent, reply, mode \\ nil) do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
     sync_step_internal(session, reply, session_mode)
   end
 
-  defp session_mode(_respondent, session, :nil) do
+  defp session_mode(_respondent, session, nil) do
     session.current_mode
   end
 
   defp session_mode(respondent, session, mode) do
-    if mode == Ask.Runtime.SessionMode.mode(session.current_mode) do
+    if mode == session.current_mode |> SessionMode.mode do
       session.current_mode
     else
-      # We need to find which channel has this mode
       group = (respondent |> Repo.preload(:respondent_group)).respondent_group
-      channel = (group |> Repo.preload(:channels)).channels
-      |> Enum.find(fn c -> c.type == mode end)
+      channel_group = (group |> Repo.preload([respondent_group_channels: :channel])).respondent_group_channels
+      |> Enum.find(fn c -> c.mode == mode end)
 
-      Ask.Runtime.SessionModeProvider.new(mode, channel, [])
+      if channel_group do
+        SessionModeProvider.new(mode, channel_group.channel, [])
+      else
+        :invalid_mode
+      end
     end
   end
 
@@ -321,7 +319,11 @@ defmodule Ask.Runtime.Broker do
     sync_step_internal(session, reply, session.current_mode)
   end
 
-  defp sync_step_internal(session, reply, session_mode) do
+  def sync_step_internal(_, _, :invalid_mode) do
+    :end
+  end
+
+  def sync_step_internal(session, reply, session_mode) do
     transaction_result = Repo.transaction(fn ->
       try do
         session = cond do
@@ -360,7 +362,7 @@ defmodule Ask.Runtime.Broker do
       {:error, %Ecto.StaleEntryError{}} ->
         respondent = Repo.get(Respondent, session.respondent.id)
         # Maybe timeout or another action was executed while sync_step was executed, so we need to retry
-        sync_step(respondent, reply)
+        sync_step(respondent, reply, session_mode)
       value ->
         value
     end

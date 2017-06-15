@@ -1721,11 +1721,11 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply(""))
-    assert {:reply, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
+    assert {:reply, ReplyHelper.simple("Do you smoke?", "Do you smoke?")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
-    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
+    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise?")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
@@ -2624,6 +2624,52 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
+  end
+
+  test "reply via another channel (mobileweb when sms is the current one)" do
+    sms_test_channel = TestChannel.new(false, true)
+    sms_channel = insert(:channel, settings: sms_test_channel |> TestChannel.settings, type: "mobileweb")
+
+    ivr_test_channel = TestChannel.new(false, false)
+    ivr_channel = insert(:channel, settings: ivr_test_channel |> TestChannel.settings, type: "sms")
+
+    quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "mobileweb"]]}))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: "mobileweb"}) |> Repo.insert
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: ivr_channel.id, mode: "sms"}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "mobileweb")
+    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise?")} = reply
+  end
+
+  test "ignore answers from sms when mode is not one of the survey modes" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
+    survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert :end = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+
+    :ok = broker |> GenServer.stop
   end
 
   test "it doesn't crash on channel_failed when there's no session" do
