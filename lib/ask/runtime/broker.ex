@@ -373,6 +373,11 @@ defmodule Ask.Runtime.Broker do
     {:reply, reply}
   end
 
+  defp handle_session_step({:hangup, session, reply, timeout, respondent}) do
+    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
+    :end
+  end
+
   defp handle_session_step({:end, reply, respondent}) do
     update_respondent(respondent, :end, Reply.disposition(reply))
 

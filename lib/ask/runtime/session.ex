@@ -278,7 +278,7 @@ defmodule Ask.Runtime.Session do
       case step_answer do
         {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
         {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        {:failed, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
+        {:no_retries_left, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
         _ -> :ok
       end
     end
@@ -333,8 +333,13 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(_, {:failed, _, _}, respondent, _, _, _) do
-    {:failed, respondent}
+  defp handle_step_answer(session, {:no_retries_left, flow, reply}, respondent, _, _, _) do
+    case session do
+      %{current_mode: %{retries: []}, fallback_mode: nil} ->
+        {:failed, respondent}
+      _ ->
+        {:hangup, %{session | flow: flow}, reply, current_timeout(session), respondent}
+    end
   end
 
   defp handle_step_answer(session, {:stopped, _, reply}, respondent, _, _, current_mode) do
