@@ -148,7 +148,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "failed: some random reason (42)"
+      assert call_failed.action_data == "some random reason (42)"
       assert call_failed.action_type == "contact"
 
       :ok = broker |> GenServer.stop
@@ -182,7 +182,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "failed (42)"
+      assert call_failed.action_data == "(42)"
       assert call_failed.action_type == "contact"
 
       :ok = broker |> GenServer.stop
@@ -217,7 +217,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "failed: some random reason"
+      assert call_failed.action_data == "some random reason"
       assert call_failed.action_type == "contact"
 
       :ok = broker |> GenServer.stop
