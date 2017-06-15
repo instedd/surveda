@@ -2700,6 +2700,8 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "breakoff"
+
+    :ok = broker |> GenServer.stop
   end
 
   test "does not mark as failed after 3 successive wrong replies when there are retries left" do
@@ -2733,6 +2735,8 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "started"
+
+    :ok = broker |> GenServer.stop
   end
 
   test "reply via another channel (sms when ivr is the current one)" do
