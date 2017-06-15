@@ -14,7 +14,7 @@ import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
 import WebSettings from './WebSettings'
 import TestQuestionnaireModal from './TestQuestionnaireModal'
-import { Dropdown, DropdownItem, PositionFixer } from '../ui'
+import { Dropdown, DropdownItem, PositionFixer, Tooltip } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
 import classNames from 'classnames/bind'
 
@@ -254,9 +254,11 @@ class QuestionnaireEditor extends Component {
     let testControls = null
     if (!readOnly && errors.length == 0) {
       testControls = [
-        <a key='one' className='btn-floating btn-large waves-effect waves-light green right mtop' href='#' onClick={e => this.openTestQuestionnaireModal(e)}>
-          <i className='material-icons'>videogame_asset</i>
-        </a>,
+        <Tooltip text='Test Sandbox'>
+          <a key='one' className='btn-floating btn-large waves-effect waves-light green right mtop' href='#' onClick={e => this.openTestQuestionnaireModal(e)}>
+            <i className='material-icons'>videogame_asset</i>
+          </a>
+        </Tooltip>,
         <TestQuestionnaireModal key='two' modalId='test-questionnaire-modal' />
       ]
     }
