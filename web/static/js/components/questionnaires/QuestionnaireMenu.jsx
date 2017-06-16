@@ -10,6 +10,7 @@ import * as language from '../../language'
 import * as routes from '../../routes'
 import * as api from '../../api'
 import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
+import withQuestionnaire from './withQuestionnaire'
 
 class QuestionnaireMenu extends Component {
   static propTypes = {
@@ -164,7 +165,6 @@ class QuestionnaireMenu extends Component {
 
   render() {
     const { questionnaire, readOnly } = this.props
-    if (questionnaire == null) return null
 
     return (
       <Dropdown className='title-options options questionnaire-menu' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
@@ -207,16 +207,13 @@ class QuestionnaireMenu extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    questionnaire: state.questionnaire.data,
-    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+})
 
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
   uiActions: bindActionCreators(uiActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireMenu))
+export default withQuestionnaire(withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireMenu)))

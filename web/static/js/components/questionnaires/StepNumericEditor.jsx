@@ -316,10 +316,8 @@ StepNumericEditor.propTypes = {
   isNew: PropTypes.bool
 }
 
-const mapStateToProps = (state, ownProps) => ({})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(StepNumericEditor)
+export default connect(null, mapDispatchToProps)(StepNumericEditor)

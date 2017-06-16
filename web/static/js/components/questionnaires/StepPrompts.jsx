@@ -9,6 +9,7 @@ import MobileWebPrompt from './MobileWebPrompt'
 import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText, getStepPromptMobileWeb } from '../../step'
 import * as api from '../../api'
 import propsAreEqual from '../../propsAreEqual'
+import withQuestionnaire from './withQuestionnaire'
 
 type State = {
   stepPromptSms: string,
@@ -222,12 +223,8 @@ class StepPrompts extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(StepPrompts)
+export default connect(null, mapDispatchToProps)(withQuestionnaire(StepPrompts))

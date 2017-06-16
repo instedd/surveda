@@ -7,12 +7,12 @@ import iso6393 from 'iso-639-3'
 import classNames from 'classnames/bind'
 import AddLanguage from './AddLanguage'
 import { hasErrorsInLanguage } from '../../questionnaireErrors'
+import withQuestionnaire from './withQuestionnaire'
 
 type Props = {
   defaultLanguage: string,
   activeLanguage: string,
   languages: string[],
-  loading: boolean,
   errors: ValidationError[],
   onRemoveLanguage: Function,
   dispatch: Function,
@@ -73,10 +73,7 @@ class LanguagesList extends Component {
   }
 
   render() {
-    const { loading, languages, defaultLanguage, readOnly } = this.props
-    if (loading) {
-      return <div>Loading...</div>
-    }
+    const { languages, defaultLanguage, readOnly } = this.props
 
     const LanguageSection = ({title, children}) =>
       <div className='row'>
@@ -114,11 +111,10 @@ class LanguagesList extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  defaultLanguage: (state.questionnaire.data || {}).defaultLanguage,
-  activeLanguage: (state.questionnaire.data || {}).activeLanguage,
-  languages: (state.questionnaire.data || {}).languages,
-  loading: !state.questionnaire.data,
+  defaultLanguage: ownProps.questionnaire.defaultLanguage,
+  activeLanguage: ownProps.questionnaire.activeLanguage,
+  languages: ownProps.questionnaire.languages,
   errors: state.questionnaire.errors
 })
 
-export default connect(mapStateToProps)(LanguagesList)
+export default withQuestionnaire(connect(mapStateToProps)(LanguagesList))

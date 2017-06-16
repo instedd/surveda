@@ -1,0 +1,5 @@
+// @flow
+declare function withQuestionnaire<D, P, S>(x: Class<React$Component<D, P, S>>):
+  Class<React$Component<D, $Diff<P, {questionnaire: Questionnaire}>, S>>
+
+module.exports = withQuestionnaire

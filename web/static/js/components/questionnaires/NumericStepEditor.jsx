@@ -10,8 +10,8 @@ import StepNumericEditor from './StepNumericEditor'
 import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import StepStoreVariable from './StepStoreVariable'
-import { getStepPromptSms, getStepPromptIvrText } from '../../step'
 import propsAreEqual from '../../propsAreEqual'
+import withQuestionnaire from './withQuestionnaire'
 
 type Props = {
   step: NumericStep,
@@ -30,10 +30,7 @@ type Props = {
 };
 
 type State = {
-  stepTitle: string,
-  stepType: string,
-  stepPromptSms: string,
-  stepPromptIvr: string
+  stepTitle: string
 };
 
 class NumericStepEditor extends Component {
@@ -53,13 +50,9 @@ class NumericStepEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
-    const lang = props.questionnaire.activeLanguage
 
     return {
-      stepTitle: step.title,
-      stepType: step.type,
-      stepPromptSms: getStepPromptSms(step, lang),
-      stepPromptIvr: getStepPromptIvrText(step, lang)
+      stepTitle: step.title
     }
   }
 
@@ -102,12 +95,8 @@ class NumericStepEditor extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(NumericStepEditor)
+export default connect(null, mapDispatchToProps)(withQuestionnaire(NumericStepEditor))

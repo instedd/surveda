@@ -1,9 +1,9 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
 import { EditableTitleLabel } from '../ui'
 import QuestionnaireMenu from './QuestionnaireMenu'
 import * as questionnaireActions from '../../actions/questionnaire'
+import withQuestionnaire from './withQuestionnaire'
 
 class QuestionnaireTitle extends Component {
   static propTypes = {
@@ -21,17 +21,13 @@ class QuestionnaireTitle extends Component {
 
   render() {
     const { questionnaire, readOnly } = this.props
-    if (questionnaire == null) return null
 
     return <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} entityName='questionnaire' readOnly={readOnly} more={<QuestionnaireMenu />} />
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    questionnaire: state.questionnaire.data,
-    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+})
 
-export default withRouter(connect(mapStateToProps)(QuestionnaireTitle))
+export default connect(mapStateToProps)(withQuestionnaire(QuestionnaireTitle))

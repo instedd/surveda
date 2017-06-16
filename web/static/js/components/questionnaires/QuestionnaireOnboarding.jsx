@@ -1,19 +1,7 @@
 import React, { PropTypes, Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import * as userSettingsActions from '../../actions/userSettings'
-import * as questionnaireActions from '../../actions/questionnaire'
-// import * as routes from '../../routes'
 
 class QuestionnaireOnboarding extends Component {
   static propTypes = {
-    dispatch: PropTypes.func,
-    questionnaire: PropTypes.object,
-    userSettingsActions: PropTypes.object.isRequired,
-    projectId: PropTypes.any,
-    questionnaireActions: PropTypes.object.isRequired,
-    router: PropTypes.object,
     onDismiss: PropTypes.func
   }
 
@@ -62,16 +50,4 @@ class QuestionnaireOnboarding extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    questionnaire: state.questionnaire.data,
-    projectId: ownProps.params.projectId
-  }
-}
-
-const mapDispatchToProps = (dispatch) => ({
-  userSettingsActions: bindActionCreators(userSettingsActions, dispatch),
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
-})
-
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireOnboarding))
+export default QuestionnaireOnboarding

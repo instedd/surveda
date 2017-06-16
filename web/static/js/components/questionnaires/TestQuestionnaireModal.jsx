@@ -7,6 +7,7 @@ import { connect } from 'react-redux'
 import { Modal, InputWithLabel } from '../ui'
 import { Input } from 'react-materialize'
 import * as api from '../../api'
+import withQuestionnaire from './withQuestionnaire'
 
 class TestQuestionnaireModal extends Component {
   constructor(props) {
@@ -43,8 +44,6 @@ class TestQuestionnaireModal extends Component {
 
   send(e) {
     const { questionnaire, router } = this.props
-    if (!questionnaire) return
-
     e.preventDefault()
 
     this.setState({sending: true}, () => {
@@ -64,9 +63,8 @@ class TestQuestionnaireModal extends Component {
 
   modeOptions() {
     const { questionnaire } = this.props
-    if (!questionnaire) return []
-
     const options = []
+
     options.push(<option key='none' value=''>Select mode...</option>)
     if (questionnaire.modes.indexOf('sms') != -1) {
       options.push(<option key='sms' value='sms'>SMS</option>)
@@ -177,12 +175,11 @@ TestQuestionnaireModal.propTypes = {
 }
 
 const mapStateToProps = (state) => ({
-  channels: state.channels.items,
-  questionnaire: state.questionnaire.data
+  channels: state.channels.items
 })
 
 const mapDispatchToProps = (dispatch) => ({
   channelActions: bindActionCreators(channelActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(TestQuestionnaireModal))
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(withQuestionnaire(TestQuestionnaireModal)))

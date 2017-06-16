@@ -1,9 +1,9 @@
 import * as actions from '../../actions/questionnaire'
 import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
 import { Autocomplete } from '../ui'
 import iso6393 from 'iso-639-3'
 import 'materialize-autocomplete'
+import withQuestionnaire from './withQuestionnaire'
 
 class AddLanguage extends Component {
   constructor(props) {
@@ -84,8 +84,4 @@ AddLanguage.propTypes = {
   dispatch: PropTypes.func
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
-export default connect(mapStateToProps)(AddLanguage)
+export default withQuestionnaire(AddLanguage)

@@ -10,8 +10,8 @@ import StepCard from './StepCard'
 import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import StepStoreVariable from './StepStoreVariable'
-import { getStepPromptSms, getStepPromptIvrText } from '../../step'
 import propsAreEqual from '../../propsAreEqual'
+import withQuestionnaire from './withQuestionnaire'
 
 type Props = {
   step: MultipleChoiceStep,
@@ -30,10 +30,7 @@ type Props = {
 };
 
 type State = {
-  stepTitle: string,
-  stepType: string,
-  stepPromptSms: string,
-  stepPromptIvr: string
+  stepTitle: string
 };
 
 class MultipleChoiceStepEditor extends Component {
@@ -52,14 +49,10 @@ class MultipleChoiceStepEditor extends Component {
   }
 
   stateFromProps(props) {
-    const { step, questionnaire } = props
-    const lang = questionnaire.activeLanguage
+    const { step } = props
 
     return {
-      stepTitle: step.title,
-      stepType: step.type,
-      stepPromptSms: getStepPromptSms(step, lang),
-      stepPromptIvr: getStepPromptIvrText(step, lang)
+      stepTitle: step.title
     }
   }
 
@@ -104,12 +97,8 @@ class MultipleChoiceStepEditor extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(MultipleChoiceStepEditor)
+export default connect(null, mapDispatchToProps)(withQuestionnaire(MultipleChoiceStepEditor))

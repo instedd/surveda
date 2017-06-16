@@ -7,6 +7,7 @@ import classNames from 'classnames'
 import propsAreEqual from '../../propsAreEqual'
 import { getPromptMobileWeb } from '../../step'
 import * as actions from '../../actions/questionnaire'
+import withQuestionnaire from './withQuestionnaire'
 
 class WebSettings extends Component {
   constructor(props) {
@@ -319,11 +320,6 @@ class WebSettings extends Component {
   }
 
   render() {
-    const { questionnaire } = this.props
-    if (!questionnaire) {
-      return <div>Loading...</div>
-    }
-
     if (this.state.editing) {
       return this.expanded()
     } else {
@@ -347,19 +343,18 @@ WebSettings.propTypes = {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const quiz = state.questionnaire
+  const questionnaire = ownProps.questionnaire
   return {
-    questionnaire: quiz.data,
-    errorsByPath: quiz.errorsByPath,
-    errorMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : '',
-    thankYouMessage: quiz.data ? getPromptMobileWeb(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : '',
-    title: quiz.data ? (quiz.data.settings.title || {})[quiz.data.activeLanguage] || '' : '',
-    smsMessage: quiz.data ? quiz.data.settings.mobileWebSmsMessage || '' : '',
-    surveyIsOverMessage: quiz.data ? quiz.data.settings.mobileWebSurveyIsOverMessage || '' : '',
-    surveyAlreadyTakenMessage: quiz.data ? (quiz.data.settings.surveyAlreadyTakenMessage || {})[quiz.data.activeLanguage] || '' : '',
-    primaryColor: quiz.data && quiz.data.settings.mobileWebColorStyle && quiz.data.settings.mobileWebColorStyle.primaryColor ? quiz.data.settings.mobileWebColorStyle.primaryColor : '',
-    secondaryColor: quiz.data && quiz.data.settings.mobileWebColorStyle && quiz.data.settings.mobileWebColorStyle.secondaryColor ? quiz.data.settings.mobileWebColorStyle.secondaryColor : ''
+    errorsByPath: state.questionnaire.errorsByPath,
+    errorMessage: getPromptMobileWeb(questionnaire.settings.errorMessage, questionnaire.activeLanguage),
+    thankYouMessage: getPromptMobileWeb(questionnaire.settings.thankYouMessage, questionnaire.activeLanguage),
+    title: (questionnaire.settings.title || {})[questionnaire.activeLanguage] || '',
+    smsMessage: questionnaire.settings.mobileWebSmsMessage || '',
+    surveyIsOverMessage: questionnaire.settings.mobileWebSurveyIsOverMessage || '',
+    surveyAlreadyTakenMessage: (questionnaire.settings.surveyAlreadyTakenMessage || {})[questionnaire.activeLanguage] || '',
+    primaryColor: questionnaire.settings.mobileWebColorStyle && questionnaire.settings.mobileWebColorStyle.primaryColor || '',
+    secondaryColor: questionnaire.settings.mobileWebColorStyle && questionnaire.settings.mobileWebColorStyle.secondaryColor || ''
   }
 }
 
-export default connect(mapStateToProps)(WebSettings)
+export default withQuestionnaire(connect(mapStateToProps)(WebSettings))

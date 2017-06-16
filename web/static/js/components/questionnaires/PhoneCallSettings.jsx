@@ -5,9 +5,10 @@ import IvrPrompt from './IvrPrompt'
 import { createAudio } from '../../api.js'
 import classNames from 'classnames'
 import propsAreEqual from '../../propsAreEqual'
-import { getPromptIvr, getPromptIvrText, newIvrPrompt } from '../../step'
+import { getPromptIvr, getPromptIvrText } from '../../step'
 import * as actions from '../../actions/questionnaire'
 import * as api from '../../api'
+import withQuestionnaire from './withQuestionnaire'
 
 class PhoneCallSettings extends Component {
   constructor(props) {
@@ -236,11 +237,6 @@ class PhoneCallSettings extends Component {
   }
 
   render() {
-    const { questionnaire } = this.props
-    if (!questionnaire) {
-      return <div>Loading...</div>
-    }
-
     if (this.state.editing) {
       return this.expanded()
     } else {
@@ -258,14 +254,10 @@ PhoneCallSettings.propTypes = {
   readOnly: PropTypes.bool
 }
 
-const mapStateToProps = (state, ownProps) => {
-  const quiz = state.questionnaire
-  return {
-    questionnaire: quiz.data,
-    errorsByPath: quiz.errorsByPath,
-    errorMessage: quiz.data ? getPromptIvr(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : newIvrPrompt(),
-    thankYouMessage: quiz.data ? getPromptIvr(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : newIvrPrompt()
-  }
-}
+const mapStateToProps = (state, ownProps) => ({
+  errorsByPath: state.questionnaire.errorsByPath,
+  errorMessage: getPromptIvr(ownProps.questionnaire.settings.errorMessage, ownProps.questionnaire.activeLanguage),
+  thankYouMessage: getPromptIvr(ownProps.questionnaire.settings.thankYouMessage, ownProps.questionnaire.activeLanguage)
+})
 
-export default connect(mapStateToProps)(PhoneCallSettings)
+export default withQuestionnaire(connect(mapStateToProps)(PhoneCallSettings))

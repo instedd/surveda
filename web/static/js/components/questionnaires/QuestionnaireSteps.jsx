@@ -40,13 +40,12 @@ class QuestionnaireSteps extends Component {
     const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
     const current = selectedSteps.currentStepId
     const currentStepIsNew = selectedSteps.currentStepIsNew
+    const itemIndex = steps.findIndex(step => step.id == current)
 
-    if (current == null) {
+    if (current == null || itemIndex < 0) {
       // All collapsed
       return <StepsList steps={steps} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
     } else {
-      const itemIndex = steps.findIndex(step => step.id == current)
-
       // Only one expanded
       const stepsBefore = steps.slice(0, itemIndex)
       const currentStep = steps[itemIndex]

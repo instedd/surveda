@@ -17,7 +17,6 @@ type Props = {
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
-  questionnaire: Questionnaire,
   errorPath: string,
   errorsByPath: ErrorsByPath,
   readOnly: boolean,
@@ -29,9 +28,6 @@ type Props = {
 
 type State = {
   stepTitle: string,
-  stepType: string,
-  stepPromptSms: string,
-  stepPromptIvr: string,
   skipLogic: ?string
 };
 
@@ -52,13 +48,9 @@ class ExplanationStepEditor extends Component {
 
   stateFromProps(props) {
     const { step } = props
-    const lang = props.questionnaire.defaultLanguage
 
     return {
       stepTitle: step.title,
-      stepType: step.type,
-      stepPromptSms: (step.prompt[lang] || {}).sms || '',
-      stepPromptIvr: ((step.prompt[lang] || {}).ivr || {}).text || '',
       skipLogic: step.skipLogic
     }
   }
@@ -108,12 +100,8 @@ class ExplanationStepEditor extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(ExplanationStepEditor)
+export default connect(null, mapDispatchToProps)(ExplanationStepEditor)

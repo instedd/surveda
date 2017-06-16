@@ -6,6 +6,7 @@ import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
 import { hasErrorsInPrefixWithModeAndLanguage } from '../../questionnaireErrors'
+import withQuestionnaire from './withQuestionnaire'
 
 type Props = {
   step: Step,
@@ -54,8 +55,8 @@ class QuestionnaireClosedStep extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   // For a language-selection step the errors are without a language
-  let lang = (state.questionnaire.data || {}).activeLanguage
-  let mode = (state.questionnaire.data || {}).activeMode
+  let lang = ownProps.questionnaire.activeLanguage
+  let mode = ownProps.questionnaire.activeMode
   if (ownProps.step.type == 'language-selection') {
     lang = null
   }
@@ -64,4 +65,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default connect(mapStateToProps)(QuestionnaireClosedStep)
+export default withQuestionnaire(connect(mapStateToProps)(QuestionnaireClosedStep))

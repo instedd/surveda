@@ -7,6 +7,7 @@ import propsAreEqual from '../../propsAreEqual'
 import { getPromptSms } from '../../step'
 import * as actions from '../../actions/questionnaire'
 import * as api from '../../api'
+import withQuestionnaire from './withQuestionnaire'
 
 class SmsSettings extends Component {
   constructor(props) {
@@ -139,7 +140,6 @@ class SmsSettings extends Component {
 
   autocompleteGetData(value, callback, key) {
     const { questionnaire } = this.props
-    if (!questionnaire) return
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
@@ -169,7 +169,6 @@ class SmsSettings extends Component {
 
   autocompleteOnSelect(item, key) {
     const { questionnaire, dispatch } = this.props
-    if (!questionnaire) return
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
@@ -183,11 +182,6 @@ class SmsSettings extends Component {
   }
 
   render() {
-    const { questionnaire } = this.props
-    if (!questionnaire) {
-      return <div>Loading...</div>
-    }
-
     if (this.state.editing) {
       return this.expanded()
     } else {
@@ -205,15 +199,10 @@ SmsSettings.propTypes = {
   readOnly: PropTypes.bool
 }
 
-const mapStateToProps = (state, ownProps) => {
-  const quiz = state.questionnaire
-  return {
-    questionnaire: quiz.data,
-    errorsByPath: quiz.errorsByPath,
-    errorMessage: quiz.data ? getPromptSms(quiz.data.settings.errorMessage, quiz.data.activeLanguage) : '',
-    thankYouMessage: quiz.data ? getPromptSms(quiz.data.settings.thankYouMessage, quiz.data.activeLanguage) : ''
+const mapStateToProps = (state, ownProps) => ({
+  errorsByPath: state.questionnaire.errorsByPath,
+  errorMessage: getPromptSms(ownProps.questionnaire.settings.errorMessage, ownProps.questionnaire.activeLanguage),
+  thankYouMessage: getPromptSms(ownProps.questionnaire.settings.thankYouMessage, ownProps.questionnaire.activeLanguage)
+})
 
-  }
-}
-
-export default connect(mapStateToProps)(SmsSettings)
+export default withQuestionnaire(connect(mapStateToProps)(SmsSettings))

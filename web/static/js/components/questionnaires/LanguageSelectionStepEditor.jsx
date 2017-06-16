@@ -8,7 +8,6 @@ import StepCard from './StepCard'
 import StepLanguageSelection from './StepLanguageSelection'
 import DraggableStep from './DraggableStep'
 import StepStoreVariable from './StepStoreVariable'
-import { getStepPromptSms, getStepPromptIvrText } from '../../step'
 import propsAreEqual from '../../propsAreEqual'
 
 type Props = {
@@ -18,17 +17,13 @@ type Props = {
   onDelete: Function,
   onCollapse: Function,
   readOnly: boolean,
-  questionnaire: Questionnaire,
   errorPath: string,
   errorsByPath: ErrorsByPath,
   isNew: boolean
 };
 
 type State = {
-  stepTitle: string,
-  stepType: string,
-  stepPromptSms: string,
-  stepPromptIvr: string
+  stepTitle: string
 };
 
 class LanguageSelectionStepEditor extends Component {
@@ -47,13 +42,10 @@ class LanguageSelectionStepEditor extends Component {
   }
 
   stateFromProps(props) {
-    const { step, questionnaire } = props
+    const { step } = props
 
     return {
-      stepTitle: step.title,
-      stepType: step.type,
-      stepPromptSms: getStepPromptSms(step, questionnaire.activeLanguage),
-      stepPromptIvr: getStepPromptIvrText(step, questionnaire.activeLanguage)
+      stepTitle: step.title
     }
   }
 
@@ -85,12 +77,8 @@ class LanguageSelectionStepEditor extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(LanguageSelectionStepEditor)
+export default connect(null, mapDispatchToProps)(LanguageSelectionStepEditor)

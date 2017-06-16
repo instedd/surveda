@@ -16,7 +16,6 @@ type Props = {
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
-  questionnaire: Questionnaire,
   errorPath: string,
   errorsByPath: ErrorsByPath,
   readOnly: boolean,
@@ -158,12 +157,8 @@ class FlagStepEditor extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(FlagStepEditor)
+export default connect(null, mapDispatchToProps)(FlagStepEditor)
