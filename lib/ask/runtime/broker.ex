@@ -440,12 +440,15 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :rejected) do
-    session = respondent.session |> Session.load
-    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, "rejected", "rejected")
+    respondent
+    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
+    |> Repo.update!
   end
 
   defp update_respondent(respondent, {:rejected, session, timeout}) do
-    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, next_timeout(respondent, timeout), "rejected", "rejected")
+    respondent
+      |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: next_timeout(respondent, timeout)})
+      |> Repo.update!
   end
 
   defp update_respondent(respondent, :failed) do
@@ -506,7 +509,7 @@ defmodule Ask.Runtime.Broker do
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
   end
 
-  defp update_respondent_disposition(session, disposition) do
+  def update_respondent_disposition(session, disposition) do
     respondent = session.respondent
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do

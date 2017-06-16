@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.{Repo, QuotaBucket, Respondent}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode}
+  alias Ask.Runtime.{Broker, Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode}
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results]
 
   @default_fallback_delay 10
@@ -301,50 +301,52 @@ defmodule Ask.Runtime.Session do
       store_responses_and_assign_bucket(respondent, step_answer, buckets, session)
 
     session = %{session | respondent: respondent}
-    session |> handle_step_answer(step_answer, respondent, responses, buckets, current_mode)
+    session |> handle_step_answer(step_answer, responses, buckets, current_mode)
   end
 
-  defp handle_step_answer(session, {:end, _, reply}, respondent, _, _, current_mode) do
-    log_prompts(reply, current_mode.channel, session.flow.mode, respondent, true)
-    {:end, reply, respondent}
+  defp handle_step_answer(session, {:end, _, reply}, _, _, current_mode) do
+    log_prompts(reply, current_mode.channel, session.flow.mode, session.respondent, true)
+    {:end, reply, session.respondent}
   end
 
-  defp handle_step_answer(session, {:ok, flow, reply}, respondent, responses, buckets, current_mode) do
+  defp handle_step_answer(session, {:ok, flow, reply}, responses, buckets, current_mode) do
     case falls_in_quota_already_completed?(flow, buckets, responses) do
       true ->
+        session = Broker.update_respondent_disposition(session, "rejected")
+
         if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
-          session = %{session | flow: flow, respondent: respondent}
+          session = %{session | flow: flow}
           case sync_step(session, :answer, session.current_mode, false) do
             {:ok, session, reply, timeout, respondent} ->
-              {:rejected, session, reply, timeout, respondent}
+              {:rejected, %{session | respondent: respondent}, reply, timeout, respondent}
             {:end, reply, respondent} ->
               {:rejected, reply, respondent}
             _ ->
-              {:rejected, respondent}
+              {:rejected, session.respondent}
           end
 
         else
-          {:rejected, respondent}
+          {:rejected, session.respondent}
         end
       false ->
-        log_prompts(reply, current_mode.channel, flow.mode, respondent)
-        {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
+        log_prompts(reply, current_mode.channel, flow.mode, session.respondent)
+        {:ok, %{session | flow: flow}, reply, current_timeout(session), session.respondent}
     end
   end
 
-  defp handle_step_answer(session, {:no_retries_left, flow, reply}, respondent, _, _, _) do
+  defp handle_step_answer(session, {:no_retries_left, flow, reply}, _, _, _) do
     case session do
       %{current_mode: %{retries: []}, fallback_mode: nil} ->
-        {:failed, respondent}
+        {:failed, session.respondent}
       _ ->
-        {:hangup, %{session | flow: flow}, reply, current_timeout(session), respondent}
+        {:hangup, %{session | flow: flow}, reply, current_timeout(session), session.respondent}
     end
   end
 
-  defp handle_step_answer(session, {:stopped, _, reply}, respondent, _, _, current_mode) do
-    log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, respondent, reply.disposition)
-    {:stopped, reply, respondent}
+  defp handle_step_answer(session, {:stopped, _, reply}, _, _, current_mode) do
+    log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, session.respondent, reply.disposition)
+    {:stopped, reply, session.respondent}
   end
 
   def cancel(session) do
