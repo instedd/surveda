@@ -22,6 +22,6 @@ export function referenceStrokeColorClasses(totalNeeded: number) {
 export function referenceColorClassesWithPrefix(totalNeeded: number, prefix: string) {
   let nextColorIncrement = total / totalNeeded
   return range(0, totalNeeded).map((i) => {
-    return prefix + ((i * nextColorIncrement) % 16)
+    return prefix + parseInt((i * nextColorIncrement) % 16)
   })
 }
