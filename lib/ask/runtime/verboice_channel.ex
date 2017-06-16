@@ -143,12 +143,20 @@ defmodule Ask.Runtime.VerboiceChannel do
     end)
   end
 
+  defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy", "CallStatusCode" => code}) do
+    Broker.channel_failed(respondent, "User hangup (#{code})")
+  end
+
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
     Broker.channel_failed(respondent, "#{reason} (#{code})")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
     Broker.channel_failed(respondent, "#{status}: #{reason} (#{code})")
+  end
+
+  defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy"}) do
+    Broker.channel_failed(respondent, "User hangup")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => reason}) do
