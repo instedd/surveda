@@ -112,8 +112,5 @@ class SurveyWizardComparisonsStep extends Component {
     )
   }
 }
-const mapStateToProps = (state) => ({
-  questionnaires: state.questionnaires.items || {}
-})
 
-export default connect(mapStateToProps)(SurveyWizardComparisonsStep)
+export default connect()(SurveyWizardComparisonsStep)
