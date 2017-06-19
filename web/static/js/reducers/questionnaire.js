@@ -1027,6 +1027,10 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     addMessageToCsvForTranslation(questionnaire.settings.errorMessage, defaultLang, context)
   }
 
+  if (questionnaire.settings.thankYouMessage) {
+    addMessageToCsvForTranslation(questionnaire.settings.thankYouMessage, defaultLang, context)
+  }
+
   if (questionnaire.settings.title) {
     const defaultTitle = questionnaire.settings.title[defaultLang]
     if (defaultTitle && defaultTitle.trim().length != 0) {
@@ -1318,12 +1322,19 @@ const uploadCsvForTranslation = (state, action) => {
   if (state.settings.errorMessage) {
     newState.settings.errorMessage = translatePrompt(state.settings.errorMessage, defaultLanguage, lookup)
   }
+
+  if (state.settings.thankYouMessage) {
+    newState.settings.thankYouMessage = translatePrompt(state.settings.thankYouMessage, defaultLanguage, lookup)
+  }
+
   if (state.settings.title) {
     newState.settings.title = translateLanguage(state.settings.title, defaultLanguage, lookup)
   }
+
   if (state.settings.title) {
     newState.settings.surveyAlreadyTakenMessage = translateLanguage(state.settings.surveyAlreadyTakenMessage, defaultLanguage, lookup)
   }
+
   return newState
 }
 

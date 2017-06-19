@@ -1838,7 +1838,8 @@ describe('questionnaire reducer', () => {
         actions.setSmsQuestionnaireMsg('errorMessage', 'Done'),
         actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done!', audioSource: 'tts'}),
         actions.setDisplayedTitle('Some title'),
-        actions.setSurveyAlreadyTakenMessage('Taken')
+        actions.setSurveyAlreadyTakenMessage('Taken'),
+        actions.setSmsQuestionnaireMsg('thankYouMessage', 'Thank you')
       ])
 
       const csv = csvForTranslation(state.data)
@@ -1854,6 +1855,7 @@ describe('questionnaire reducer', () => {
         ['Do you exercise?', '', 'Ejercitas?'],
         ['Done', '', ''],
         ['Done!', '', ''],
+        ['Thank you', '', ''],
         ['Some title', '', ''],
         ['Taken', '', '']
       ]
@@ -1942,6 +1944,29 @@ describe('questionnaire reducer', () => {
 
       expect(state.data.settings.errorMessage.es.sms).toEqual('Listo')
       expect(state.data.settings.errorMessage.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
+    })
+
+    it('should upload csv with thank you msg', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('es'),
+        actions.setSmsQuestionnaireMsg('thankYouMessage', 'Thank you'),
+        actions.setIvrQuestionnaireMsg('thankYouMessage', {text: 'Thank you!', audioSource: 'tts'}),
+        actions.uploadCsvForTranslation(
+          [
+            ['English', 'Spanish'],
+            ['Do you smoke?', 'Cxu vi fumas?'],
+            ['Do you exercise?', 'Cxu vi ekzercas?'],
+            ['Yes, Y, 1', 'Jes, J, 1'],
+            ['Thank you', 'Listo'],
+            ['Thank you!', 'Listo!']
+          ]
+        )
+      ])
+
+      expect(state.data.settings.thankYouMessage.es.sms).toEqual('Listo')
+      expect(state.data.settings.thankYouMessage.es.ivr).toEqual({text: 'Listo!', audioSource: 'tts'})
     })
 
     it('should upload csv with error msg that lacks audioSource', () => {
