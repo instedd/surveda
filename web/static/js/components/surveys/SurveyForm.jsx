@@ -166,7 +166,7 @@ class SurveyForm extends Component {
           </div>
           {survey.comparisons.length > 0
             ? <div id='comparisons' className='row scrollspy'>
-              <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly || surveyStarted} />
+              <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly || surveyStarted} questionnaires={questionnaires} />
             </div>
           : ''}
           <ScrollToTopButton />
