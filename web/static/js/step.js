@@ -1,5 +1,5 @@
 // @flow
-export function getStepPrompt(step: Step, language: string): LanguagePrompt {
+export function getStepPrompt(step: Step, language: string): Prompt {
   let prompt = null
   if (step.type !== 'flag') {
     if (step.type === 'language-selection') {
@@ -52,19 +52,19 @@ export function getStepPromptIvrText(step: Step, language: string): string {
   return (getStepPromptIvr(step, language).text || '').trim()
 }
 
-export function getPromptSms(prompt: ?Prompt, language: string): string {
+export function getPromptSms(prompt: ?LocalizedPrompt, language: string): string {
   return (((prompt || {})[language] || {}).sms || '').trim()
 }
 
-export function getPromptMobileWeb(prompt: ?Prompt, language: string): string {
+export function getPromptMobileWeb(prompt: ?LocalizedPrompt, language: string): string {
   return (((prompt || {})[language] || {}).mobileweb || '').trim()
 }
 
-export function getPromptIvr(prompt: ?Prompt, language: string): AudioPrompt {
+export function getPromptIvr(prompt: ?LocalizedPrompt, language: string): AudioPrompt {
   return ((prompt || {})[language] || {}).ivr || {audioSource: 'tts', text: ''}
 }
 
-export function getPromptIvrText(prompt: ?Prompt, language: string): string {
+export function getPromptIvrText(prompt: ?LocalizedPrompt, language: string): string {
   return (getPromptIvr(prompt, language).text || '').trim()
 }
 

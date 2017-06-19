@@ -120,7 +120,7 @@ const validatePrompts = (step, context, path) => {
   })
 }
 
-const validatePrompt = (prompt: ?LanguagePrompt, context, lang, langPath) => {
+const validatePrompt = (prompt: ?Prompt, context, lang, langPath) => {
   prompt = prompt || newStepPrompt()
 
   if (context.sms) {
@@ -136,7 +136,7 @@ const validatePrompt = (prompt: ?LanguagePrompt, context, lang, langPath) => {
   }
 }
 
-const validateSmsLangPrompt = (prompt: LanguagePrompt, context: ValidationContext, lang: ?string, path: string) => {
+const validateSmsLangPrompt = (prompt: Prompt, context: ValidationContext, lang: ?string, path: string) => {
   if (isBlank(prompt.sms)) {
     addError(context, `${path}.sms`, 'SMS prompt must not be blank', lang, 'sms')
     return
@@ -148,7 +148,7 @@ const validateSmsLangPrompt = (prompt: LanguagePrompt, context: ValidationContex
   }
 }
 
-const validateIvrLangPrompt = (prompt: LanguagePrompt, context: ValidationContext, lang: ?string, path: string) => {
+const validateIvrLangPrompt = (prompt: Prompt, context: ValidationContext, lang: ?string, path: string) => {
   let ivr = prompt.ivr || newIvrPrompt()
   if (isBlank(ivr.text)) {
     addError(context, `${path}.ivr.text`, 'Voice prompt must not be blank', lang, 'ivr')
@@ -158,7 +158,7 @@ const validateIvrLangPrompt = (prompt: LanguagePrompt, context: ValidationContex
   }
 }
 
-const validateMobileWebLangPrompt = (prompt: LanguagePrompt, context: ValidationContext, lang: ?string, path: string) => {
+const validateMobileWebLangPrompt = (prompt: Prompt, context: ValidationContext, lang: ?string, path: string) => {
   if (isBlank(prompt.mobileweb)) {
     addError(context, `${path}.mobileweb`, 'Mobile web prompt must not be blank', lang, 'mobileweb')
   }
@@ -379,7 +379,7 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
   validateChoiceSkipLogic(choice, stepIndex, choiceIndex, steps, context, path)
 }
 
-const validateMessage = (msgKey: string, msg: ?Prompt, context: ValidationContext) => {
+const validateMessage = (msgKey: string, msg: ?LocalizedPrompt, context: ValidationContext) => {
   msg = msg || {}
 
   const path = `${msgKey}.prompt`
@@ -391,7 +391,7 @@ const validateMessage = (msgKey: string, msg: ?Prompt, context: ValidationContex
   })
 }
 
-const validateThankYouMessage = (msg: ?Prompt, context: ValidationContext) => {
+const validateThankYouMessage = (msg: ?LocalizedPrompt, context: ValidationContext) => {
   msg = msg || {}
 
   const path = 'thankYouMessage.prompt'

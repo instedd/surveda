@@ -1342,7 +1342,7 @@ const translateStep = (step, defaultLanguage, lookup): Step => {
   return ((newStep: any): Step)
 }
 
-const translatePrompt = (prompt, defaultLanguage, lookup): Prompt => {
+const translatePrompt = (prompt, defaultLanguage, lookup): LocalizedPrompt => {
   let defaultLanguagePrompt = prompt[defaultLanguage]
   if (!defaultLanguagePrompt) return prompt
 

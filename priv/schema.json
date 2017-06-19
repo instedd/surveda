@@ -17,12 +17,12 @@
     "settings": {
       "type": "object",
       "properties": {
-        "error_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]},
+        "error_message": {"oneOf": [{"$ref": "#/definitions/localized_prompt"}, {"type":"null"}]},
         "mobile_web_sms_message": {"type": ["string", "null"]},
         "mobile_web_survey_is_over_message": {"type": ["string", "null"]},
-        "title": {"oneOf": [{"$ref": "#/definitions/localized-string"}, {"type":"null"}]},
-        "survey_already_taken_message": {"oneOf": [{"$ref": "#/definitions/localized-string"}, {"type":"null"}]},
-        "thank_you_message": {"oneOf": [{"$ref": "#/definitions/prompt"}, {"type":"null"}]}
+        "title": {"oneOf": [{"$ref": "#/definitions/localized_string"}, {"type":"null"}]},
+        "survey_already_taken_message": {"oneOf": [{"$ref": "#/definitions/localized_string"}, {"type":"null"}]},
+        "thank_you_message": {"oneOf": [{"$ref": "#/definitions/localized_prompt"}, {"type":"null"}]}
       }
     },
 
@@ -49,7 +49,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["multiple-choice"]},
         "title": {"type": "string"},
-        "prompt": {"$ref": "#/definitions/prompt"},
+        "prompt": {"$ref": "#/definitions/localized_prompt"},
         "choices": {"$ref": "#/definitions/choices"},
         "store": {"type": "string"}
       },
@@ -63,7 +63,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["numeric"]},
         "title": {"type": "string"},
-        "prompt": {"$ref": "#/definitions/prompt"},
+        "prompt": {"$ref": "#/definitions/localized_prompt"},
         "min_value": {"type": ["integer", "null"]},
         "max_value": {"type": ["integer", "null"]},
         "ranges_delimiters": {"type": ["string", "null"]},
@@ -92,7 +92,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["explanation"]},
         "title": {"type": "string"},
-        "prompt": {"$ref": "#/definitions/prompt"},
+        "prompt": {"$ref": "#/definitions/localized_prompt"},
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,
@@ -105,7 +105,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["language-selection"]},
         "title": {"type": "string"},
-        "prompt": {"$ref": "#/definitions/lang_prompt"},
+        "prompt": {"$ref": "#/definitions/prompt"},
         "language_choices": {"type": "array"},
         "store": {"type": "string"}
       },
@@ -181,19 +181,19 @@
       }
     },
 
-    "localized-string": {
+    "localized_string": {
       "type": "object",
       "patternProperties": {"^[a-z]{2,3}$": {"type": "string"}},
       "additionalProperties": false
     },
 
-    "prompt": {
+    "localized_prompt": {
       "type": "object",
-      "patternProperties": {"^[a-z]{2,3}$": {"$ref": "#/definitions/lang_prompt"}},
+      "patternProperties": {"^[a-z]{2,3}$": {"$ref": "#/definitions/prompt"}},
       "additionalProperties": false
     },
 
-    "lang_prompt": {
+    "prompt": {
       "type": "object",
       "properties": {
         "sms": {"type": "string"},

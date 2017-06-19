@@ -34,11 +34,11 @@ defmodule Ask.StepsValidatorTest do
   defp valid_step(json), do: valid_thing(json, :step)
   defp invalid_step(json, case_desc), do: invalid_thing(json, :step, case_desc)
 
+  defp valid_localized_prompt(json), do: valid_thing(json, :localized_prompt)
+  defp invalid_localized_prompt(json, case_desc), do: invalid_thing(json, :localized_prompt, case_desc)
+
   defp valid_prompt(json), do: valid_thing(json, :prompt)
   defp invalid_prompt(json, case_desc), do: invalid_thing(json, :prompt, case_desc)
-
-  defp valid_lang_prompt(json), do: valid_thing(json, :lang_prompt)
-  defp invalid_lang_prompt(json, case_desc), do: invalid_thing(json, :lang_prompt, case_desc)
 
   defp valid_ivr(json), do: valid_thing(json, :ivr_prompt)
   defp invalid_ivr(json, case_desc), do: invalid_thing(json, :ivr_prompt, case_desc)
@@ -174,35 +174,35 @@ defmodule Ask.StepsValidatorTest do
     |> valid_step
   end
 
-  test "prompt" do
+  test "localized prompt" do
     ~s({
       "en": {
         "foo": "bar"
       }
-    }) |> invalid_prompt("Prompt must have a lang prompt structure")
+    }) |> invalid_localized_prompt("Localized prompt must have a lang prompt structure")
 
     ~s({
       "foobar": {}
-    }) |> invalid_prompt("Prompt keys must be language indentifiers")
+    }) |> invalid_localized_prompt("Localized prompt keys must be language indentifiers")
 
     ~s({
       "123": {}
-    }) |> invalid_prompt("Prompt keys must be language indentifiers")
+    }) |> invalid_localized_prompt("Localized prompt keys must be language indentifiers")
 
     ~s({
       "en": {},
       "fr": {}
-    }) |> valid_prompt
+    }) |> valid_localized_prompt
 
-     ~s({}) |> valid_prompt
+     ~s({}) |> valid_localized_prompt
   end
 
-  test "lang prompt" do
-    ~s("") |> invalid_lang_prompt("Prompt must be an object")
-    ~s({ "sms": {} }) |> invalid_lang_prompt("Prompt sms must be a string")
-    ~s({ "ivr": "" }) |> invalid_lang_prompt("Prompt ivr must be an object")
+  test "prompt" do
+    ~s("") |> invalid_prompt("Prompt must be an object")
+    ~s({ "sms": {} }) |> invalid_prompt("Prompt sms must be a string")
+    ~s({ "ivr": "" }) |> invalid_prompt("Prompt ivr must be an object")
 
-    ~s({ "sms": "Do you smoke? Reply YES or NO" }) |> valid_lang_prompt
+    ~s({ "sms": "Do you smoke? Reply YES or NO" }) |> valid_prompt
 
     ~s({
       "ivr": {
@@ -210,7 +210,7 @@ defmodule Ask.StepsValidatorTest do
         "audio_source": "tts"
       }
     })
-    |> valid_lang_prompt
+    |> valid_prompt
 
     ~s({
       "sms": "Do you smoke? Reply YES or NO",
@@ -219,9 +219,9 @@ defmodule Ask.StepsValidatorTest do
         "audio_source": "tts"
       }
     })
-    |> valid_lang_prompt
+    |> valid_prompt
 
-    ~s({"mobileweb": {}}) |> invalid_lang_prompt("Prompt mobile-web must be a string")
+    ~s({"mobileweb": {}}) |> invalid_prompt("Prompt mobile-web must be a string")
     ~s({
       "sms": "Do you smoke? Reply YES or NO",
       "ivr": {
@@ -230,7 +230,7 @@ defmodule Ask.StepsValidatorTest do
       },
       "mobileweb": "Do you smoke?"
     })
-    |> valid_lang_prompt
+    |> valid_prompt
   end
 
   test "ivr prompt" do

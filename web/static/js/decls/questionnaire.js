@@ -15,13 +15,13 @@ export type Questionnaire = {
 };
 
 export type Settings = {
-  errorMessage: Prompt,
+  errorMessage: LocalizedPrompt,
   mobileWebSmsMessage: ?string,
   mobileWebSurveyIsOverMessage: ?string,
   mobileWebColorStyle?: ColorStylePrompt,
   title: {[lang: string]: string},
   surveyAlreadyTakenMessage: {[lang: string]: string},
-  thankYouMessage?: Prompt,
+  thankYouMessage?: LocalizedPrompt,
 };
 
 export type ChoiceErrors = {
@@ -36,7 +36,7 @@ export type AudioPrompt = {
     audioId?: ?string
 };
 
-export type LanguagePrompt = {
+export type Prompt = {
   sms?: string,
   ivr?: AudioPrompt,
   mobileweb?: string
@@ -47,7 +47,7 @@ export type ColorStylePrompt = {
   secondaryColor?: string
 };
 
-export type Prompt = { [lang: string]: LanguagePrompt };
+export type LocalizedPrompt = { [lang: string]: Prompt };
 
 export type MultipleChoiceStep = BaseStep & StoreStep & MultilingualStep & {
   type: 'multiple-choice',
@@ -57,7 +57,7 @@ export type MultipleChoiceStep = BaseStep & StoreStep & MultilingualStep & {
 export type LanguageSelectionStep = BaseStep & StoreStep & {
   type: 'language-selection',
   languageChoices: string[],
-  prompt: LanguagePrompt
+  prompt: Prompt
 };
 
 export type ExplanationStep = BaseStep & MultilingualStep & {
@@ -125,7 +125,7 @@ export type StoreStep = {
 };
 
 export type MultilingualStep = {
-  prompt: Prompt
+  prompt: LocalizedPrompt
 };
 
 export type SkipOption = {
