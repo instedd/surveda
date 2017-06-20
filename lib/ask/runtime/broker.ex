@@ -157,6 +157,11 @@ defmodule Ask.Runtime.Broker do
       end
     rescue
       e ->
+        if Mix.env == :test do
+          IO.inspect e
+          IO.inspect System.stacktrace()
+          raise e
+        end
         Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
         Sentry.capture_exception(e, [
           stacktrace: System.stacktrace(),
@@ -341,6 +346,13 @@ defmodule Ask.Runtime.Broker do
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
         e ->
+          # If we uncomment this a test will fail (the one that cheks that nothing breaks),
+          # but this could help you find a bug in a particular test that is not working.
+          # if Mix.env == :test do
+          #   IO.inspect e
+          #   IO.inspect System.stacktrace()
+          #   raise e
+          # end
           respondent = Repo.get(Respondent, session.respondent.id)
           Logger.error "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id}): #{inspect e} #{inspect System.stacktrace}"
           Sentry.capture_exception(e, [
@@ -350,7 +362,12 @@ defmodule Ask.Runtime.Broker do
           try do
             handle_session_step({:failed, respondent})
           rescue
-            _ ->
+            e ->
+              if Mix.env == :test do
+                IO.inspect e
+                IO.inspect System.stacktrace()
+                raise e
+              end
               :end
           end
       end
@@ -570,13 +587,13 @@ defmodule Ask.Runtime.Broker do
     respondent
   end
 
-  defp should_update_quota_bucket(new_disposition, old_disposition, false) do
-    new_disposition != old_disposition && new_disposition == "completed"
-  end
-
   defp should_update_quota_bucket(new_disposition, old_disposition, true) do
     (new_disposition != old_disposition && new_disposition == "partial")
     || (new_disposition == "completed" && old_disposition != "partial" && old_disposition != "completed")
+  end
+
+  defp should_update_quota_bucket(new_disposition, old_disposition, _) do
+    new_disposition != old_disposition && new_disposition == "completed"
   end
 
   defp time_to_schedule(now) do

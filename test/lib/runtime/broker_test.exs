@@ -174,9 +174,8 @@ defmodule Ask.BrokerTest do
         }))
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
-    sms_channel_changeset = Ecto.Changeset.change(sms_channel)
-    ivr_channel_changeset = Ecto.Changeset.change(ivr_channel)
-    group = group |> Ecto.Changeset.change |> Ecto.Changeset.put_assoc(:channels, [sms_channel_changeset, ivr_channel_changeset]) |> Repo.update!
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: sms_channel.type}) |> Repo.insert
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: ivr_channel.id, mode: ivr_channel.type}) |> Repo.insert
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
