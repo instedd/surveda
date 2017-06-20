@@ -265,7 +265,7 @@ defmodule Ask.Runtime.Broker do
     {candidates, _} = comparisons
     |> Enum.map_reduce(0, fn (comparison, total_count) ->
       ratio = comparison["ratio"]
-      total_count = total_count + ratio
+      total_count = total_count + (ratio || 0)
       included = total_count >= rand
       {{comparison, included}, total_count}
     end)

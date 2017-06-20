@@ -187,6 +187,38 @@ defmodule Ask.BrokerTest do
     assert respondent.questionnaire_id == quiz1.id
   end
 
+  test "doesn't break with nil as comparison ratio" do
+    test_channel = TestChannel.new
+    sms_channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+    ivr_channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "ivr")
+
+    quiz1 = insert(:questionnaire, steps: @dummy_steps)
+    quiz2 = insert(:questionnaire, steps: @dummy_steps)
+    survey = insert(:survey, Map.merge(@always_schedule, %{
+        state: "running",
+        questionnaires: [quiz1, quiz2],
+        mode: [["sms"], ["ivr"]],
+        comparisons: [
+          %{"mode" => ["sms"], "questionnaire_id" => quiz1.id, "ratio" => nil},
+          %{"mode" => ["sms"], "questionnaire_id" => quiz2.id, "ratio" => nil},
+          %{"mode" => ["ivr"], "questionnaire_id" => quiz1.id, "ratio" => 100},
+          %{"mode" => ["ivr"], "questionnaire_id" => quiz2.id, "ratio" => nil},
+        ]
+        }))
+    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: sms_channel.type}) |> Repo.insert
+    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: ivr_channel.id, mode: ivr_channel.type}) |> Repo.insert
+
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.mode == ["ivr"]
+    assert respondent.questionnaire_id == quiz1.id
+  end
+
   test "changes the respondent state from pending to running if neccessary" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
