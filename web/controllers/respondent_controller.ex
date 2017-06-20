@@ -96,16 +96,68 @@ defmodule Ask.RespondentController do
   end
 
   defp stats(conn, survey, []) do
-    stats(
-      conn,
-      survey,
-      survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
-      respondents_by_questionnaire_and_disposition(survey),
-      respondents_by_questionnaire_and_completed_at(survey),
-      (survey |> Repo.preload(:questionnaires)).questionnaires,
-      (survey |> Repo.preload(:quota_buckets)).quota_buckets,
-      "stats.json"
-    )
+    questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+    if length(questionnaires) > 1 && length(survey.mode) > 1 do
+      reference = questionnaires
+      |> Enum.reduce([], fn(questionnaire, reference) ->
+        survey.mode
+        |> Enum.reduce(reference, fn(modes, reference) ->
+          reference ++ [%{
+            id: "#{questionnaire.id}#{modes |> Enum.join("")}",
+            name: questionnaire.name,
+            modes: modes
+          }]
+        end)
+      end)
+
+      stats(
+        conn,
+        survey,
+        survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+        respondents_by_questionnaire_mode_and_disposition(survey),
+        respondents_by_questionnaire_mode_and_completed_at(survey),
+        reference,
+        [],
+        "stats.json"
+      )
+    else
+      if length(survey.mode) > 1 do
+        reference = survey.mode
+        |> Enum.map(fn(modes) ->
+          %{
+            id: modes |> Enum.join(""),
+            modes: modes
+          }
+        end)
+
+        stats(
+          conn,
+          survey,
+          survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+          respondents_by_mode_and_disposition(survey),
+          respondents_by_mode_and_completed_at(survey),
+          reference,
+          [],
+          "stats.json"
+        )
+      else
+        reference = questionnaires
+        |> Enum.map(fn q ->
+          %{id: q.id, name: q.name}
+        end)
+
+        stats(
+          conn,
+          survey,
+          survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+          respondents_by_questionnaire_and_disposition(survey),
+          respondents_by_questionnaire_and_completed_at(survey),
+          reference,
+          [],
+          "stats.json"
+        )
+      end
+    end
   end
 
   defp stats(conn, survey, _) do
@@ -250,6 +302,29 @@ defmodule Ask.RespondentController do
       select: {r.state, r.disposition, r.questionnaire_id, count("*")})
   end
 
+  defp respondents_by_questionnaire_mode_and_disposition(survey) do
+    Repo.all(
+      from r in Respondent, where: r.survey_id == ^survey.id,
+      group_by: [:state, :disposition, :questionnaire_id, :mode],
+      select: {r.state, r.disposition, r.questionnaire_id, r.mode, count("*")})
+    |> Enum.map(fn({state, disposition, questionnaire_id, mode, count}) ->
+      reference_id = if mode && questionnaire_id do
+        "#{questionnaire_id}#{mode |> Enum.join("")}"
+      else
+        nil
+      end
+
+      {state, disposition, reference_id, count}
+    end)
+  end
+
+  defp respondents_by_mode_and_disposition(survey) do
+    Repo.all(
+      from r in Respondent, where: r.survey_id == ^survey.id,
+      group_by: [:state, :disposition, :mode],
+      select: {r.state, r.disposition, r.mode, count("*")})
+  end
+
   defp respondents_by_bucket_and_disposition(survey) do
     Repo.all(
       from r in Respondent, where: r.survey_id == ^survey.id,
@@ -263,6 +338,31 @@ defmodule Ask.RespondentController do
       group_by: fragment("questionnaire_id, DATE(completed_at)"),
       order_by: fragment("DATE(completed_at) ASC"),
       select: {r.questionnaire_id, fragment("DATE(completed_at)"), count("*")})
+  end
+
+  defp respondents_by_questionnaire_mode_and_completed_at(survey) do
+    Repo.all(
+      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
+      group_by: fragment("questionnaire_id, mode, DATE(completed_at)"),
+      order_by: fragment("DATE(completed_at) ASC"),
+      select: {r.questionnaire_id, r.mode, fragment("DATE(completed_at)"), count("*")})
+    |> Enum.map(fn({questionnaire_id, mode, completed_at, count}) ->
+      reference_id = if mode && questionnaire_id do
+        "#{questionnaire_id}#{mode |> Enum.join("")}"
+      else
+        nil
+      end
+
+      {reference_id, completed_at, count}
+    end)
+  end
+
+  defp respondents_by_mode_and_completed_at(survey) do
+    Repo.all(
+      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
+      group_by: fragment("mode, DATE(completed_at)"),
+      order_by: fragment("DATE(completed_at) ASC"),
+      select: {r.mode, fragment("DATE(completed_at)"), count("*")})
   end
 
   defp respondents_by_quota_bucket_and_completed_at(survey) do

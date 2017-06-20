@@ -116,7 +116,7 @@ class SurveyShow extends Component {
     )
   }
 
-  modesForComparisons(modes: string[], index) {
+  modesForComparisons(modes: string[]) {
     let modesForComparisons = modes.map((m, index) => {
       return this.modeForComparison(m)
     })
@@ -133,15 +133,7 @@ class SurveyShow extends Component {
       modeDescriptions = modesForComparisons
     }
 
-    const letter = this.letterForIndex(index)
-    return (
-      <div className='mode' key={letter}>
-        <label className='grey-text'>{'Mode ' + letter}</label>
-        <div>
-          {modeDescriptions}
-        </div>
-      </div>
-    )
+    return modeDescriptions
   }
 
   colorReferences(references) {
@@ -152,10 +144,13 @@ class SurveyShow extends Component {
     if (numberOfKeys > 1) {
       let i = 0
       for (var referenceId in references) {
+        const name = references[referenceId].name ? references[referenceId].name : null
+        const modes = references[referenceId].modes ? this.modesForComparisons(references[referenceId].modes) : null
+        const separator = name && modes ? (<div />) : null
         colorReferences.push((
           <div className='questionnaire-color-reference' key={referenceId}>
             <div className={`color-circle-reference ${referenceClasses[i]}`} />
-            <div className='questionnaire-name'> {references[referenceId].name} </div>
+            <div className='questionnaire-name'> {name}{separator}{modes} </div>
           </div>
         ))
         i += 1
@@ -190,11 +185,6 @@ class SurveyShow extends Component {
       modes = <div className='survey-modes'>
         {survey.mode[0].map((mode, index) => (this.modeFor(index, mode)))}
       </div>
-    } else {
-      modes = survey.mode.map((modes, index) => (<div className='survey-modes' key={String(index)}>
-        {this.modesForComparisons(modes, index)}
-      </div>)
-      )
     }
 
     const readOnly = !project || project.readOnly

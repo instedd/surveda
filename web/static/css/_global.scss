@@ -56,22 +56,24 @@
     color: gray;
   }
 
-  .mode {
-    margin-top: 15px;
+}
 
-    .name {
-      margin-left: 10px;
-      vertical-align: top;
-    }
-  }
+.mode {
+  margin-top: 15px;
 
-  .mode-inline-block {
-    display: inline-block;
-    vertical-align: text-top;
-    margin-right: 12px;
-    &:last-child{
-      margin-left: -6px;
-    }
+}
+
+.mode-label.name {
+  margin-left: 10px;
+  vertical-align: top;
+}
+
+.mode-inline-block {
+  display: inline-block;
+  vertical-align: text-top;
+  margin-right: 12px;
+  &:last-child{
+    margin-left: -6px;
   }
 }
 

@@ -177,9 +177,9 @@ defmodule Ask.RespondentControllerTest do
     cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
 
     assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
-    assert abs(Enum.at(cumulative_percentages, 0)["percent"] - 28) < 1
+    assert abs(Enum.at(cumulative_percentages, 0)["percent"] - 20) < 1
     assert Enum.at(cumulative_percentages, 1)["date"] == "2016-01-02"
-    assert abs(Enum.at(cumulative_percentages, 1)["percent"] - 71) < 1
+    assert abs(Enum.at(cumulative_percentages, 1)["percent"] - 50) < 1
     assert data["total_respondents"] == 16
   end
 
