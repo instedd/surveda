@@ -79,6 +79,10 @@ defmodule Ask.RespondentView do
     condition =
       bucket.condition
       |> Enum.reduce([], fn {store, value}, conditions ->
+        value = case value do
+          [lower, upper] -> "#{lower} - #{upper}"
+          _ -> value
+        end
         ["#{store}: #{value}" | conditions]
       end)
       |> Enum.join(" - ")
