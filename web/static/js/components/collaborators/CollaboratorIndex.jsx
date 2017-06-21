@@ -89,8 +89,8 @@ class CollaboratorIndex extends Component {
     const roleRemove = (c) => {
       if (!readOnly && c.role != 'owner') {
         return (<td className='action'>
-          <Tooltip text='Remove respondent'>
-            <a onClick={() => this.remove(c)}>
+          <Tooltip text='Remove collaborator'>
+            <a className='btn-icon-grey' onClick={() => this.remove(c)}>
               <i className='material-icons'>delete</i>
             </a>
           </Tooltip>
