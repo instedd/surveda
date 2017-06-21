@@ -19,8 +19,11 @@ export class Tooltip extends Component {
     this.updateTooltip()
   }
 
-  componentDidUpdate() {
-    this.updateTooltip()
+  componentDidUpdate(prevProps) {
+    const { position, delay, text } = this.props
+    if (position !== prevProps.position || delay !== prevProps.delay || text !== prevProps.text) {
+      this.updateTooltip()
+    }
   }
 
   updateTooltip() {
