@@ -51,13 +51,19 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args, broker) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    case state do
-      "failed" ->
-        broker.channel_failed(respondent)
-      "delivered" ->
-        broker.delivery_confirm(respondent, args["step_title"], "sms")
-      _ -> :ok
+    case Repo.get(Respondent, respondent_id) do
+      nil ->
+        # Ignore the callback if the respondent doesn't exist, otherwise Nuntium will retry forever
+        :ok
+
+      respondent ->
+        case state do
+          "failed" ->
+            broker.channel_failed(respondent)
+          "delivered" ->
+            broker.delivery_confirm(respondent, args["step_title"], "sms")
+          _ -> :ok
+        end
     end
 
     conn |> send_resp(200, "")
@@ -90,7 +96,8 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def callback(conn, _, _) do
-    conn |> send_resp(404, "not found")
+    # Ignore other callbacks, otherwise Nuntium will retry forever
+    conn |> send_resp(200, "OK")
   end
 
   def reply_to_messages(nil, _to, _respondent) do; []; end

@@ -58,4 +58,14 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"}, BrokerStub)
     assert [%{"to" => "sms://123457", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
   end
+
+  test "unknown callback is replied with OK", %{conn: conn} do
+    conn = NuntiumChannel.callback(conn, %{"channel" => "foo", "guid" => Ecto.UUID.generate, "state" => "delivered"})
+    assert response(conn, 200) == "OK"
+  end
+
+  test "status callback for unknown respondent is replied with OK", %{conn: conn} do
+    conn = NuntiumChannel.callback(conn, %{"path" => ["status"], "respondent_id" => "-1", "state" => "delivered"})
+    assert response(conn, 200) == ""
+  end
 end
