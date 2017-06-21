@@ -24,10 +24,60 @@ export class Tooltip extends Component {
   }
 
   updateTooltip() {
+    const { position } = this.props
     const node = ReactDOM.findDOMNode(this.refs.node)
-    const tooltip = $(node).tooltip()[0]
+    const origin = $(node)
+    const tooltip = origin.tooltip()[0]
     const tooltipId = tooltip.getAttribute('data-tooltip-id')
     $(`#${tooltipId}`).addClass(this.props.className)
+    const tootlipElement = $('.material-tooltip')
+    const margin = 5
+    var tooltipHeight = tootlipElement.outerHeight()
+    var tooltipWidth = tootlipElement.outerWidth()
+    var originWidth = origin.outerWidth()
+    var originHeight = origin.outerHeight()
+    var targetTop, targetLeft, newCoordinates
+
+    $(document).on('scroll', (context, args) => {
+      if (position === 'top') {
+        targetTop = origin.offset().top - tooltipHeight - margin
+        targetLeft = origin.offset().left + originWidth / 2 - tooltipWidth / 2
+        newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
+      } else if (position === 'left') {
+        targetTop = origin.offset().top + originHeight / 2 - tooltipHeight / 2
+        targetLeft = origin.offset().left - tooltipWidth - margin
+        newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
+      } else if (position === 'right') {
+        targetTop = origin.offset().top + originHeight / 2 - tooltipHeight / 2
+        targetLeft = origin.offset().left + originWidth + margin
+        newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
+      } else {
+        // Bottom Position
+        targetTop = origin.offset().top + origin.outerHeight() + margin
+        targetLeft = origin.offset().left + originWidth / 2 - tooltipWidth / 2
+        newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
+      }
+      tootlipElement.css({
+        top: newCoordinates.y,
+        left: newCoordinates.x
+      })
+    })
+  }
+
+  repositionWithinScreen(x, y, width, height) {
+    if (x < 0) {
+      x = 4
+    } else if (x + width > window.innerWidth) {
+      x -= x + width - window.innerWidth
+    }
+
+    if (y < 0) {
+      y = 4
+    } else if (y + height > window.innerHeight + $(window).scrollTop) {
+      y -= y + height - window.innerHeight
+    }
+
+    return {x: x, y: y}
   }
 
   componentWillUnmount() {
