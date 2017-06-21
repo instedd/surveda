@@ -253,14 +253,14 @@ class QuestionnaireEditor extends Component {
 
     let testControls = null
     if (!readOnly && errors.length == 0) {
-      testControls = [
+      testControls = <div>
         <Tooltip text='Test Sandbox'>
           <a key='one' className='btn-floating btn-large waves-effect waves-light green right mtop' href='#' onClick={e => this.openTestQuestionnaireModal(e)}>
             <i className='material-icons'>videogame_asset</i>
           </a>
         </Tooltip>,
         <TestQuestionnaireModal key='two' modalId='test-questionnaire-modal' />
-      ]
+      </div>
     }
 
     const sms = questionnaire.modes.indexOf('sms') != -1
