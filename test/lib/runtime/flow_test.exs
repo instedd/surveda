@@ -442,7 +442,7 @@ defmodule Ask.FlowTest do
       |> Flow.step(@sms_visitor)
     result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("skip"))
 
-    assert {:end, _, _} = result
+    assert {:end, _, %{stores: "REFUSED"}} = result
   end
 
   test "refusal is stronger than response" do
@@ -480,7 +480,7 @@ defmodule Ask.FlowTest do
     result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
 
     # No stores (because of refusal)
-    assert {:end, _, %Reply{stores: []}} = result
+    assert {:end, _, %{stores: "REFUSED"}} = result
   end
 
   describe "numeric steps" do

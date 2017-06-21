@@ -136,7 +136,7 @@ defmodule Ask.Runtime.Flow do
         flow = flow |> advance_current_step(step, reply_value, mode)
         {%{flow | retries: 0}, %Reply{}, visitor}
       {:refusal, reply_value} ->
-        advance_after_reply(flow, step, reply_value, visitor, mode, stores: [])
+        advance_after_reply(flow, step, reply_value, visitor, mode, stores: "REFUSED")
       reply_value ->
         advance_after_reply(flow, step, reply_value, visitor, mode, stores: %{step["store"] => reply_value})
     end
