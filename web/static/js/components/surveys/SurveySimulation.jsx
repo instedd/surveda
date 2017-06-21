@@ -21,7 +21,8 @@ class SurveySimulation extends Component {
       stepId: null,
       stepIndex: null,
       responses: {},
-      timer: null
+      timer: null,
+      errorCount: 0
     }
   }
 
@@ -63,8 +64,16 @@ class SurveySimulation extends Component {
         dispositionHistory: dispositionHistory,
         stepId: status.step_id,
         stepIndex: status.step_index,
-        responses: status.responses
+        responses: status.responses,
+        errorCount: 0
       })
+    }, error => {
+      if (this.state.errorCount >= 2) {
+        // Three errors occurred in a row. Raise the error here.
+        return Promise.reject(error)
+      } else {
+        this.setState(prevState => ({errorCount: prevState.errorCount + 1}))
+      }
     })
   }
 
