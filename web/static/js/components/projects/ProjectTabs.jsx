@@ -28,7 +28,11 @@ class ProjectTabs extends Component {
   }
 
   render() {
-    const { projectId, project } = this.props
+    const { projectId, project, readOnly } = this.props
+    const changeColorScheme = !readOnly
+    ? <DropdownItem>
+      <a onClick={e => this.openColorSchemePopup(e)}><i className='material-icons'>palette</i>Change color scheme</a>
+    </DropdownItem> : null
 
     let more = (
       <div className='col'>
@@ -36,9 +40,7 @@ class ProjectTabs extends Component {
           <DropdownItem className='dots'>
             <i className='material-icons'>more_vert</i>
           </DropdownItem>
-          <DropdownItem>
-            <a onClick={e => this.openColorSchemePopup(e)}><i className='material-icons'>palette</i>Change color scheme</a>
-          </DropdownItem>
+          { changeColorScheme }
           { project && !project.fetching && !project.data.owner
             ? <DropdownItem>
               <a onClick={e => this.leaveProject(e, projectId)}><i className='material-icons'>exit_to_app</i>Leave project</a>
@@ -70,12 +72,14 @@ class ProjectTabs extends Component {
 ProjectTabs.propTypes = {
   projectId: PropTypes.any.isRequired,
   router: PropTypes.object.isRequired,
-  project: PropTypes.object
+  project: PropTypes.object,
+  readOnly: PropTypes.bool
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
-  project: state.project
+  project: state.project,
+  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
 })
 
 export default withRouter(connect(mapStateToProps)(ProjectTabs))
