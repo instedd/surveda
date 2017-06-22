@@ -258,7 +258,7 @@ class QuestionnaireEditor extends Component {
           <a key='one' className='btn-floating btn-large waves-effect waves-light green right mtop' href='#' onClick={e => this.openTestQuestionnaireModal(e)}>
             <i className='material-icons'>videogame_asset</i>
           </a>
-        </Tooltip>,
+        </Tooltip>
         <TestQuestionnaireModal key='two' modalId='test-questionnaire-modal' />
       </div>
     }
