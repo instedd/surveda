@@ -19,16 +19,18 @@ export class Tooltip extends Component {
 
   constructor(props: Props) {
     super(props)
-    this.recalculate = throttle(this.recalculate.bind(this), 15)
+    this.hideTooltip = throttle(this.hideTooltip.bind(this), 225)
+    this.recalculate = this.recalculate.bind(this)
   }
 
   componentDidMount() {
     this.updateTooltip()
+    window.addEventListener('scroll', this.hideTooltip)
     window.addEventListener('scroll', this.recalculate)
-    this.recalculate()
   }
 
   componentWillUnmount() {
+    window.removeEventListener('scroll', this.hideTooltip)
     window.removeEventListener('scroll', this.recalculate)
     const node = ReactDOM.findDOMNode(this.refs.node)
     $(node).tooltip('remove')
@@ -36,7 +38,6 @@ export class Tooltip extends Component {
 
   componentDidUpdate() {
     this.updateTooltip()
-    this.recalculate()
   }
 
   updateTooltip() {
@@ -46,10 +47,26 @@ export class Tooltip extends Component {
     $(`#${tooltipId}`).addClass(this.props.className)
   }
 
+  hideTooltip() {
+    const tootlipElement = $('.material-tooltip')
+    const backdrop = $('.backdrop')
+    tootlipElement.velocity({
+      opacity: 0, translateY: 0, translateX: 0}, {duration: 225, queue: false})
+    backdrop.velocity({opacity: 0, scaleX: 1, scaleY: 1}, {
+      duration: 225,
+      queue: false,
+      complete: function() {
+        backdrop.css({ visibility: 'hidden' })
+        tootlipElement.css({ visibility: 'hidden' })
+      }
+    })
+  }
+
   recalculate() {
+    const tootlipElement = $('.material-tooltip')
     const { position } = this.props
     const origin = $(ReactDOM.findDOMNode(this.refs.node))
-    const tootlipElement = $('.material-tooltip')
+
     const margin = 5
     var tooltipHeight = tootlipElement.outerHeight()
     var tooltipWidth = tootlipElement.outerWidth()
