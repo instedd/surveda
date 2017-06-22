@@ -1,0 +1,20 @@
+defmodule Ask.BomParserTest do
+  use ExUnit.Case
+  alias Ask.BomParser
+
+  test "parse UTF-8 string without BOM" do
+    assert BomParser.parse("hello") == "hello"
+  end
+
+  test "parse UTF-8 string with BOM" do
+    assert BomParser.parse(<<0xef, 0xbb, 0xbf, 0x68, 0x65, 0x6c, 0x6c, 0x6f>>) == "hello"
+  end
+
+  test "parse UTF-16 LE string with BOM" do
+    assert BomParser.parse(<<0xff, 0xfe, 0x68, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00>>) == "hello"
+  end
+
+  test "parse UTF-16 BE string with BOM" do
+    assert BomParser.parse(<<0xfe, 0xff, 0x00, 0x68, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f>>) == "hello"
+  end
+end

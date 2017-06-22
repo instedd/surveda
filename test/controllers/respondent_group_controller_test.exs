@@ -206,6 +206,21 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Enum.at(all, 0).phone_number == "15044020205"
     end
 
+    test "upload CSV file with UTF-16 LE encoding (with BOM)", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers_utf16le.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
+      assert json_response(conn, 201)["data"]["respondents_count"] == 4
+
+      all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      assert length(all) == 4
+      assert Enum.at(all, 0).survey_id == survey.id
+      assert Enum.at(all, 0).phone_number == "15044020205"
+    end
+
     test "updates project updated_at when uploading CSV", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = insert(:project, updated_at: datetime)

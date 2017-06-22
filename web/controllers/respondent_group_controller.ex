@@ -247,6 +247,7 @@ defmodule Ask.RespondentGroupController do
       rows =
         file.path
         |> File.read!
+        |> Ask.BomParser.parse
         |> csv_rows
         |> Enum.uniq_by(&keep_digits/1)
 
