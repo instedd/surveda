@@ -171,6 +171,7 @@ class SurveySimulation extends Component {
                           type='radio'
                           name='registered'
                           value='default'
+                          readOnly
                           checked={includes(this.state.dispositionHistory, 'registered')}
                           className='with-gap'
                         />
@@ -182,6 +183,7 @@ class SurveySimulation extends Component {
                           type='radio'
                           name='queued'
                           value='default'
+                          readOnly
                           checked={includes(this.state.dispositionHistory, 'queued')}
                           className='with-gap'
                         />
@@ -193,6 +195,7 @@ class SurveySimulation extends Component {
                               type='radio'
                               name='failed'
                               value='default'
+                              readOnly
                               checked={includes(this.state.dispositionHistory, 'failed')}
                               className='with-gap'
                             />
@@ -219,6 +222,7 @@ class SurveySimulation extends Component {
                           type='radio'
                           name='contacted'
                           value='default'
+                          readOnly
                           checked={includes(this.state.dispositionHistory, 'contacted')}
                           className='with-gap'
                         />
@@ -230,6 +234,7 @@ class SurveySimulation extends Component {
                               type='radio'
                               name='unresponsive'
                               value='default'
+                              readOnly
                               checked={includes(this.state.dispositionHistory, 'unresponsive')}
                               className='with-gap'
                             />
@@ -256,6 +261,7 @@ class SurveySimulation extends Component {
                           type='radio'
                           name='started'
                           value='default'
+                          readOnly
                           checked={includes(this.state.dispositionHistory, 'started')}
                           className='with-gap'
                         />
@@ -267,6 +273,7 @@ class SurveySimulation extends Component {
                               type='radio'
                               name='refused'
                               value='default'
+                              readOnly
                               checked={includes(this.state.dispositionHistory, 'refused')}
                               className='with-gap'
                             />
@@ -278,6 +285,7 @@ class SurveySimulation extends Component {
                               type='radio'
                               name='ineligible'
                               value='default'
+                              readOnly
                               checked={includes(this.state.dispositionHistory, 'ineligible')}
                               className='with-gap'
                             />
@@ -289,6 +297,7 @@ class SurveySimulation extends Component {
                               type='radio'
                               name='rejected'
                               value='default'
+                              readOnly
                               checked={includes(this.state.dispositionHistory, 'rejected')}
                               className='with-gap'
                             />
@@ -300,6 +309,7 @@ class SurveySimulation extends Component {
                               type='radio'
                               name='breakoff'
                               value='default'
+                              readOnly
                               checked={includes(this.state.dispositionHistory, 'breakoff')}
                               className='with-gap'
                             />
@@ -313,6 +323,7 @@ class SurveySimulation extends Component {
                           type='radio'
                           name='partial'
                           value='default'
+                          readOnly
                           checked={includes(this.state.dispositionHistory, 'partial')}
                           className='with-gap'
                         />
@@ -324,6 +335,7 @@ class SurveySimulation extends Component {
                           type='radio'
                           name='completed'
                           value='default'
+                          readOnly
                           checked={includes(this.state.dispositionHistory, 'completed')}
                           className='with-gap'
                         />
