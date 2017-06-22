@@ -177,14 +177,16 @@ class QuestionnaireMenu extends Component {
             <span>Export questionnaire</span>
           </a>
         </DropdownItem>
-        <DropdownItem>
-          <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
-          <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
-          <a href='#' onClick={e => this.openImportZipDialog(e)}>
-            <i className='material-icons'>file_upload</i>
-            <span>Import questionnaire</span>
-          </a>
-        </DropdownItem>
+        { !readOnly
+          ? <DropdownItem>
+            <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
+            <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
+            <a href='#' onClick={e => this.openImportZipDialog(e)}>
+              <i className='material-icons'>file_upload</i>
+              <span>Import questionnaire</span>
+            </a>
+          </DropdownItem>
+          : ''}
         { !readOnly
           ? <DropdownItem>
             <a href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
