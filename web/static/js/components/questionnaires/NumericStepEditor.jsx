@@ -7,7 +7,6 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import StepPrompts from './StepPrompts'
 import StepCard from './StepCard'
 import StepNumericEditor from './StepNumericEditor'
-import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import StepStoreVariable from './StepStoreVariable'
 import propsAreEqual from '../../propsAreEqual'
@@ -60,37 +59,35 @@ class NumericStepEditor extends Component {
     const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, isNew } = this.props
 
     return (
-      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
-        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} stepId={step.id} />} >
-          <StepPrompts
-            step={step}
-            readOnly={readOnly}
-            stepIndex={stepIndex}
-            errorPath={errorPath}
-            errorsByPath={errorsByPath}
-            isNew={isNew}
-            />
-          <li className='collection-item' key='editor'>
-            <div className='row'>
-              <div className='col s12'>
-                <StepNumericEditor
-                  questionnaire={questionnaire}
-                  readOnly={readOnly}
-                  step={step}
-                  stepIndex={stepIndex}
-                  stepsAfter={stepsAfter}
-                  stepsBefore={stepsBefore}
-                  errorPath={errorPath}
-                  errorsByPath={errorsByPath}
-                  isNew={isNew}
-                  />
-              </div>
+      <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} stepId={step.id} />} >
+        <StepPrompts
+          step={step}
+          readOnly={readOnly}
+          stepIndex={stepIndex}
+          errorPath={errorPath}
+          errorsByPath={errorsByPath}
+          isNew={isNew}
+          />
+        <li className='collection-item' key='editor'>
+          <div className='row'>
+            <div className='col s12'>
+              <StepNumericEditor
+                questionnaire={questionnaire}
+                readOnly={readOnly}
+                step={step}
+                stepIndex={stepIndex}
+                stepsAfter={stepsAfter}
+                stepsBefore={stepsBefore}
+                errorPath={errorPath}
+                errorsByPath={errorsByPath}
+                isNew={isNew}
+                />
             </div>
-          </li>
-          <StepStoreVariable step={step} readOnly={readOnly} errorPath={errorPath} errorsByPath={errorsByPath} />
-          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
-        </StepCard>
-      </DraggableStep>
+          </div>
+        </li>
+        <StepStoreVariable step={step} readOnly={readOnly} errorPath={errorPath} errorsByPath={errorsByPath} />
+        {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
+      </StepCard>
     )
   }
 }

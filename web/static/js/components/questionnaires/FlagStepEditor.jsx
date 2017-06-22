@@ -5,7 +5,6 @@ import { connect } from 'react-redux'
 import StepTypeSelector from './StepTypeSelector'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepCard from './StepCard'
-import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import SkipLogic from './SkipLogic'
 import propsAreEqual from '../../propsAreEqual'
@@ -76,83 +75,81 @@ class FlagStepEditor extends Component {
     const { step, onCollapse, stepsAfter, stepsBefore, onDelete, readOnly } = this.props
 
     return (
-      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={false}>
-        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />} >
-          <li className='collection-item' key='dispositions'>
-            <h5>Disposition</h5>
-            <p><b>Choose the disposition you want to set at this point of the questionnaire.</b></p>
-            <div className='row'>
-              <div className='col s6'>
-                <p>
-                  <input
-                    id={`${step.id}_disposition_partial`}
-                    type='radio'
-                    name='questionnaire_disposition'
-                    className='with-gap'
-                    value='partial'
-                    checked={this.state.disposition == 'partial'}
-                    onChange={e => this.dispositionChange('partial')}
-                    disabled={readOnly}
-                  />
-                  <label htmlFor={`${step.id}_disposition_partial`}>Partial</label>
-                </p>
-                <p>
-                  <input
-                    id={`${step.id}_disposition_ineligible`}
-                    type='radio'
-                    name='questionnaire_disposition'
-                    className='with-gap'
-                    value='ineligible'
-                    checked={this.state.disposition == 'ineligible'}
-                    onChange={e => this.dispositionChange('ineligible')}
-                    disabled={readOnly}
-                  />
-                  <label htmlFor={`${step.id}_disposition_ineligible`}>Ineligible</label>
-                </p>
-                <p>
-                  <input
-                    id={`${step.id}_disposition_refused`}
-                    type='radio'
-                    name='questionnaire_disposition'
-                    className='with-gap'
-                    value='refused'
-                    checked={this.state.disposition == 'refused'}
-                    onChange={e => this.dispositionChange('refused')}
-                    disabled={readOnly}
-                  />
-                  <label htmlFor={`${step.id}_disposition_refused`}>Refused</label>
-                </p>
-                <p>
-                  <input
-                    id={`${step.id}_disposition_completed`}
-                    type='radio'
-                    name='questionnaire_disposition'
-                    className='with-gap'
-                    value='completed'
-                    checked={this.state.disposition == 'completed'}
-                    onChange={e => this.dispositionChange('completed')}
-                    disabled={readOnly}
-                  />
-                  <label htmlFor={`${step.id}_disposition_completed`}>Completed</label>
-                </p>
-              </div>
-            </div>
-            <div className='row'>
-              <div className='col s6'>
-                <SkipLogic
-                  onChange={skipOption => this.skipLogicChange(skipOption)}
-                  readOnly={readOnly}
-                  value={step.skipLogic}
-                  stepsAfter={stepsAfter}
-                  stepsBefore={stepsBefore}
-                  label='Skip logic'
+      <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />} >
+        <li className='collection-item' key='dispositions'>
+          <h5>Disposition</h5>
+          <p><b>Choose the disposition you want to set at this point of the questionnaire.</b></p>
+          <div className='row'>
+            <div className='col s6'>
+              <p>
+                <input
+                  id={`${step.id}_disposition_partial`}
+                  type='radio'
+                  name='questionnaire_disposition'
+                  className='with-gap'
+                  value='partial'
+                  checked={this.state.disposition == 'partial'}
+                  onChange={e => this.dispositionChange('partial')}
+                  disabled={readOnly}
                 />
-              </div>
+                <label htmlFor={`${step.id}_disposition_partial`}>Partial</label>
+              </p>
+              <p>
+                <input
+                  id={`${step.id}_disposition_ineligible`}
+                  type='radio'
+                  name='questionnaire_disposition'
+                  className='with-gap'
+                  value='ineligible'
+                  checked={this.state.disposition == 'ineligible'}
+                  onChange={e => this.dispositionChange('ineligible')}
+                  disabled={readOnly}
+                />
+                <label htmlFor={`${step.id}_disposition_ineligible`}>Ineligible</label>
+              </p>
+              <p>
+                <input
+                  id={`${step.id}_disposition_refused`}
+                  type='radio'
+                  name='questionnaire_disposition'
+                  className='with-gap'
+                  value='refused'
+                  checked={this.state.disposition == 'refused'}
+                  onChange={e => this.dispositionChange('refused')}
+                  disabled={readOnly}
+                />
+                <label htmlFor={`${step.id}_disposition_refused`}>Refused</label>
+              </p>
+              <p>
+                <input
+                  id={`${step.id}_disposition_completed`}
+                  type='radio'
+                  name='questionnaire_disposition'
+                  className='with-gap'
+                  value='completed'
+                  checked={this.state.disposition == 'completed'}
+                  onChange={e => this.dispositionChange('completed')}
+                  disabled={readOnly}
+                />
+                <label htmlFor={`${step.id}_disposition_completed`}>Completed</label>
+              </p>
             </div>
-          </li>
-          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
-        </StepCard>
-      </DraggableStep>
+          </div>
+          <div className='row'>
+            <div className='col s6'>
+              <SkipLogic
+                onChange={skipOption => this.skipLogicChange(skipOption)}
+                readOnly={readOnly}
+                value={step.skipLogic}
+                stepsAfter={stepsAfter}
+                stepsBefore={stepsBefore}
+                label='Skip logic'
+              />
+            </div>
+          </div>
+        </li>
+        {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
+      </StepCard>
     )
   }
 }
