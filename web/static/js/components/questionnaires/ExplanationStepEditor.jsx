@@ -6,7 +6,6 @@ import StepTypeSelector from './StepTypeSelector'
 import * as questionnaireActions from '../../actions/questionnaire'
 import StepPrompts from './StepPrompts'
 import StepCard from './StepCard'
-import DraggableStep from './DraggableStep'
 import StepDeleteButton from './StepDeleteButton'
 import SkipLogic from './SkipLogic'
 import propsAreEqual from '../../propsAreEqual'
@@ -67,35 +66,33 @@ class ExplanationStepEditor extends Component {
     const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, isNew, readOnly, quotaCompletedSteps } = this.props
 
     return (
-      <DraggableStep step={step} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
-        <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />} >
-          <StepPrompts
-            step={step}
-            readOnly={readOnly}
-            stepIndex={stepIndex}
-            errorPath={errorPath}
-            errorsByPath={errorsByPath}
-            isNew={isNew}
-            classes='no-separator'
-            title='Message'
-          />
-          <li className='collection-item' key='editor'>
-            <div className='row'>
-              <div className='col s6'>
-                <SkipLogic
-                  onChange={skipOption => this.skipLogicChange(skipOption)}
-                  readOnly={readOnly}
-                  value={step.skipLogic}
-                  stepsAfter={stepsAfter}
-                  stepsBefore={stepsBefore}
-                  label='Skip logic'
-                />
-              </div>
+      <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />} >
+        <StepPrompts
+          step={step}
+          readOnly={readOnly}
+          stepIndex={stepIndex}
+          errorPath={errorPath}
+          errorsByPath={errorsByPath}
+          isNew={isNew}
+          classes='no-separator'
+          title='Message'
+        />
+        <li className='collection-item' key='editor'>
+          <div className='row'>
+            <div className='col s6'>
+              <SkipLogic
+                onChange={skipOption => this.skipLogicChange(skipOption)}
+                readOnly={readOnly}
+                value={step.skipLogic}
+                stepsAfter={stepsAfter}
+                stepsBefore={stepsBefore}
+                label='Skip logic'
+              />
             </div>
-          </li>
-          {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
-        </StepCard>
-      </DraggableStep>
+          </div>
+        </li>
+        {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
+      </StepCard>
     )
   }
 }
