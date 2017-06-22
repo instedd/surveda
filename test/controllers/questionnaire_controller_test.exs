@@ -65,6 +65,13 @@ defmodule Ask.QuestionnaireControllerTest do
       assert length(data) == 1
       assert hd(data)["id"] == questionnaire.id
     end
+
+    test "doesn't show deleted questionnaires", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      insert(:questionnaire, project: project, deleted: true)
+      conn = get conn, project_questionnaire_path(conn, :index, project.id)
+      assert json_response(conn, 200)["data"] == []
+    end
   end
 
   describe "show:" do
@@ -117,6 +124,14 @@ defmodule Ask.QuestionnaireControllerTest do
     test "forbid access to questionnaire if the project does not belong to the current user", %{conn: conn} do
       questionnaire = insert(:questionnaire)
       assert_error_sent :forbidden, fn ->
+        get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
+      end
+    end
+
+    test "don't show deleted questionnaire", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, deleted: true)
+      assert_error_sent 404, fn ->
         get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
       end
     end
@@ -573,7 +588,9 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       conn = delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
       assert response(conn, 204)
-      refute Repo.get(Questionnaire, questionnaire.id)
+
+      questionnaire = Repo.get(Questionnaire, questionnaire.id)
+      assert questionnaire.deleted == true
     end
 
     test "rejects delete if the questionnaire doesn't belong to the current user", %{conn: conn} do
@@ -609,6 +626,18 @@ defmodule Ask.QuestionnaireControllerTest do
 
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+    end
+
+    test "remove reference from survey when questionnaire is deleted", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+
+      delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
+
+      survey = Ask.Survey |> preload(:questionnaires) |> Repo.get!(survey.id)
+      assert survey.questionnaires == []
+      assert survey.state == "not_ready"
     end
   end
 end

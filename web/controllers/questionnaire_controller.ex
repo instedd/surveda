@@ -1,7 +1,7 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Questionnaire, Project, JsonSchema, Audio, Logger}
+  alias Ask.{Questionnaire, SurveyQuestionnaire, Survey, Project, JsonSchema, Audio, Logger}
 
   plug :validate_params when action in [:create, :update]
 
@@ -10,8 +10,9 @@ defmodule Ask.QuestionnaireController do
     |> load_project(project_id)
 
     questionnaires = Repo.all(from q in Questionnaire,
-      where: q.project_id == ^project.id,
-      where: is_nil(q.snapshot_of))
+      where: q.project_id == ^project.id
+        and is_nil(q.snapshot_of)
+        and q.deleted == false)
 
     render(conn, "index.json", questionnaires: questionnaires)
   end
@@ -111,13 +112,39 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    load_questionnaire_not_snapshot(project, id)
-    # Here we use delete! (with a bang) because we expect
-    # it to always work (and if it does not, it will raise).
-    |> Repo.delete!
+    changeset = load_questionnaire_not_snapshot(project, id)
+    |> Questionnaire.changeset(%{deleted: true})
 
-    project |> Project.touch!
-    send_resp(conn, :no_content, "")
+    case Repo.update(changeset) do
+      {:ok, _} ->
+        project |> Project.touch!
+
+        surveys = (from s in Survey,
+          join: sq in SurveyQuestionnaire, on: sq.questionnaire_id == ^id)
+          |> Repo.all
+
+        (from sq in SurveyQuestionnaire, where: sq.questionnaire_id == ^id)
+          |> Repo.delete_all
+
+        surveys
+        |> Enum.each(fn survey ->
+          survey
+            |> Repo.preload([:questionnaires])
+            |> Repo.preload([:quota_buckets])
+            |> Repo.preload(respondent_groups: [:respondent_group_channels, :channels])
+            |> change
+            |> Survey.update_state
+            |> Repo.update!
+        end)
+
+        send_resp(conn, :no_content, "")
+
+      {:error, changeset} ->
+        Logger.warn "Error when deleting questionnaire: #{inspect changeset}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
   end
 
   def export_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
@@ -267,13 +294,15 @@ defmodule Ask.QuestionnaireController do
   defp load_questionnaire(project, id) do
     project
     |> assoc(:questionnaires)
+    |> where([q], q.deleted == false)
     |> Repo.get!(id)
   end
 
   defp load_questionnaire_not_snapshot(project, id) do
     Repo.one!(from q in Questionnaire,
-      where: q.project_id == ^project.id,
-      where: q.id == ^id,
-      where: is_nil(q.snapshot_of))
+      where: q.project_id == ^project.id
+        and q.id == ^id
+        and q.deleted == false
+        and is_nil(q.snapshot_of))
   end
 end
