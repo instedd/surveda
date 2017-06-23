@@ -75,9 +75,12 @@
       <div class="section main">
         <div class='row main'>
           <div class='col s12 m5'>
-            <h3>Collect opinions</h3>
-            <h5>Get better data and run larger surveys anywhere in the world</h5>
-            <p>Surveda is a free, open source tool for conducting polls using text messages, voice, web and more. Step-by-step, Surveda guides participants through polls and collects real-time results. Surveda shrinks the gap between audiences and pollers, taking the pulse of the people anytime and anywhere there's mobile phone service.</p>
+            <h3>Ask and Discover</h3>
+            <h5>Find insights in the voice of communities </h5>
+            <p>
+              What is Surveda?
+              <br>
+              Surveda is an open source survey tool that collects data from populations via mobile phone.</p>
           </div>
           <div class='col s12 m7'>
             <img class="right responsive-img" src='/images/welcome-main.png' width='581px' />
@@ -85,51 +88,96 @@
         </div>
       </div>
 
+      <div class="section right-img grey lighten-4 grey-section">
+        <div class='row'>
+          <div class='col s12 m8'>
+            <h5>What does the name “Surveda” mean?</h5>
+            <p>Surveda uses the root word “survey,” with the Latin meaning of “oversee” or “inspect”.
+            <br>Veda evokes wisdom, from the Sanskrit word for knowledge or understanding. </p>
+          </div>
+          <div class='col s12 m4'>
+            <img class="responsive-img" src='/images/surveda-name.png' width='296px' />
+          </div>
+        </div>
+      </div>
+
+
       <div class="section right-img">
         <div class='row'>
-          <div class='col s12 m5'>
-            <h3>Easy questionnaire design</h3>
-            <p>Vestibulum diam mi, malesuada imperdiet lorem eget, vehicula sagittis tellus. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra at. </p>
-          </div>
           <div class='col s12 m7'>
-            <img class="right responsive-img" src='/images/welcome-img01.png' width='646px' />
+            <div class='description'>
+              <h3><span>Ask</span> the right questions in any language</h3>
+            </div>
+          </div>
+          <div class='col s12 m5'>
+            <img class="right responsive-img" src='/images/welcome-img01.png'/>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class='row'>
+          <div class='col s12 center'>
+            <div class='description'>
+              <h3><span>Deploy</span> surveys by voice, text, mobile web and more</h3>
+              <img class="responsive-img center-align" src='/images/welcome-img04.png' />
+            </div>
           </div>
         </div>
       </div>
 
       <div class="section left-img">
         <div class='row'>
-          <div class='col s12 m7'>
-            <img class="left responsive-img" src='/images/welcome-img02.png' width='631px' />
-          </div>
           <div class='col s12 m5'>
-            <h3>Organize your surveys by projects</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra.</p>
+            <img class="left responsive-img" src='/images/welcome-img02.png' />
+          </div>
+          <div class='col s12 m7'>
+            <div class='description'>
+              <h3><span>Evaluate</span> performance of surveys and quickly test research hypotheses</h3>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="section right-img">
         <div class='row'>
-          <div class='col s12 m5'>
-            <h3>Live survey follow up</h3>
-            <p>Vestibulum diam mi, malesuada imperdiet lorem eget, vehicula sagittis tellus. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra at. </p>
-          </div>
           <div class='col s12 m7'>
-            <img class="right responsive-img" src='/images/welcome-img03.png' width='646px' />
+            <div class='description'>
+              <h3><span>Adapt</span> open source code for greater flexibility</h3>
+            </div>
+          </div>
+          <div class='col s12 m5'>
+            <img class="right responsive-img" src='/images/welcome-img03.png' />
+          </div>
+        </div>
+      </div>
+
+      <div class="section map">
+        <div class='row'>
+          <div class='col s12 center'>
+            <div class='description'>
+              <h3>A tool to combat noncommunicable diseases</h3>
+              <p>Surveda was developed as part of the Bloomberg Philanthropies Data for Health Initiative NCD Mobile Phone Survey. Surveda will be used to collect critical information about noncommunicable diseases (NCDs) in low- and middle-income countries worldwide (LMICs). It is an open source tool on a common software platform, which means that Surveda is accessible to individuals and organizations interested in creating their own surveys.</p>
+            </div>
           </div>
         </div>
       </div>
 
 
-      <div class="section left-img">
+      <div class="section grey lighten-4 columns">
         <div class='row'>
-          <div class='col s12 m7'>
-            <img class="left responsive-img" src='/images/welcome-img04.png' width='553px' />
+          <div class='col s12 m4 offset-m1'>
+            <h5>More about the Bloomberg Philanthropies Data for Health Initiative</h5>
+            <p>
+              The Bloomberg Philanthropies Data for Health Initiative aims to strengthen the collection and use of critical public health information. Working in selected low- and middle-income countries, the three components of this initiative seek to: i) strengthen the quality of birth and death registration systems and improve information on cause of death; ii) explore innovative approaches to NCD surveillance, including the use of mobile phone surveys; and iii) enhance. <a href="https://www.bloomberg.org/program/public-health/data-health/" target="_blank">Read more</a>
+            </p>
           </div>
-          <div class='col s12 m5'>
-            <h3>Effortless schedule setup</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id nibh nisi. Integer consectetur risus mi, sit amet tempus ex viverra.</p>
+          <div class='col s12 m4 offset-m1'>
+            <h5>More about the NCD Mobile Survey</h5>
+            <p>
+              The NCD mobile phone survey is a nationally-representative survey of adults 18 years of age and older using a standard protocol. Using technology platforms such as interactive voice response (IVR), short message service (SMS), computer-assisted telephone interviewing (CATI), mobile web, as well as a mix of these modes, mobile phone surveys provide timely data and allow for rapid feedback of results. It is intended to generate comparable data within and across countries. This survey supplements and supports national household face-to-face surveys. <a href="https://www.ncdmobile.org/" target="_blank">Read more</a>
+            </p>
+
           </div>
         </div>
       </div>

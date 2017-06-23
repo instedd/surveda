@@ -68,6 +68,7 @@ body.welcome {
     padding-bottom: 3rem;
     border-top: 1px solid color("grey", "lighten-3");
 
+
     p {
       @extend .grey-text, .text-darken-2;
       font-size: 125%;
@@ -81,7 +82,8 @@ body.welcome {
 
       p {
         @extend .white-text;
-        margin-top: 6rem;
+        font-weight: 300;
+        margin-top: 7rem;
       }
     }
     &.right-img {
@@ -97,6 +99,43 @@ body.welcome {
       .col.m7 {
         padding-left: 0;
       }
+    }
+    .description {
+      display: flex;
+      flex-direction: column;
+      max-width: 60%;
+      margin: 5rem auto;
+      h3 {
+        font-weight: 300;
+        span {
+          font-weight: 400;
+        }
+      }
+      img.center-align {
+        margin: 5rem auto;
+      }
+    }
+    &.grey-section {
+
+      h5 {
+        padding-top: 2.6rem;
+      }
+      img {
+        padding-top: 2rem;
+      }
+    }
+    &.map {
+      @extend .grey, .lighten-4;
+      background-image: url('/images/map.png');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: 60%;
+      border-bottom: 1px solid #cdcdcd;
+      min-height: 100vh;
+    }
+    &.columns {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
     }
   }
   &.login {
