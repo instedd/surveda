@@ -6,7 +6,7 @@ defmodule Ask.Coherence.UserEmail do
   alias Ask.Logger
   alias Coherence.Config
 
-  defp site_name, do: Config.site_name(inspect Config.module)
+  defp site_name, do: Config.email_from_name
 
   def password(user, url) do
     %Email{}
