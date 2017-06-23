@@ -1,5 +1,53 @@
 # InSTEDD Surveda Changelog
 
+## Juniper 0.10
+
+### Bugfixes
+
+* Fix styling of validation messages on sign-in/sign-up forms [#899](https://github.com/instedd/ask/issues/899)
+* Missing notification after uploading more respondents to a running survey [#1008](https://github.com/instedd/ask/issues/1008)
+* Reloading issue when resetting the password [#737](https://github.com/instedd/ask/issues/737)
+* Fix: If the range delimiters are invalid, the change is not saved [#727](https://github.com/instedd/ask/issues/727)
+* Missing validation error when the ranges are invalid [#728](https://github.com/instedd/ask/issues/728)
+* Styling issue with error messages in the questionnaire editor [#1014](https://github.com/instedd/ask/issues/1014)
+* Do not crash when a channel was deleted [#791](https://github.com/instedd/ask/issues/791), [#549](https://github.com/instedd/ask/issues/549)
+* Cannot select text within the questionnaire steps without dragging [#663](https://github.com/instedd/ask/issues/663)
+* Missing texts (title, survey already taken, thank you) in the translation CSV files [#1021](https://github.com/instedd/ask/issues/1021), [#1038](https://github.com/instedd/ask/issues/1038)
+* Faster CSV downloads to avoid timeouts [#1081](https://github.com/instedd/ask/issues/1081)
+* Fixed: respondents were being marked as "breakoff" even when there are more retries available [#1031](https://github.com/instedd/ask/issues/1031)
+* Survey would get stuck if the last step is used for quota definition [#1059](https://github.com/instedd/ask/issues/1059)
+* Fix: readers cannot switch modes in the questionnaire editor [#1091](https://github.com/instedd/ask/issues/1091)
+* Fix: runtime error when an experiment case was set with 0%  [#1094](https://github.com/instedd/ask/issues/1094)
+* Step disappears while dragging [#1024](https://github.com/instedd/ask/issues/1024)
+* Could not import respondents file with UTF-16 encoding [#1100](https://github.com/instedd/ask/issues/1100)
+* Fix aspect ratio of Surveda logo in emails [#1082](https://github.com/instedd/ask/issues/1082)
+
+### Features
+
+* New design of survey overview page [#975](https://github.com/instedd/ask/issues/975), [#1001](https://github.com/instedd/ask/issues/1001)
+* Shortcut buttons to apply style on mobile web prompts [#973](https://github.com/instedd/ask/issues/973)
+* Repace "quota completed" message with customizable steps [#822](https://github.com/instedd/ask/issues/822)
+* New design of questionnaire editor that displays one mode at a time [#992](https://github.com/instedd/ask/issues/992), [#996](https://github.com/instedd/ask/issues/996), [#1003](https://github.com/instedd/ask/issues/1003), [#1007](https://github.com/instedd/ask/issues/1007), [#998](https://github.com/instedd/ask/issues/998), [#1025](https://github.com/instedd/ask/issues/1025)
+* Autocomplete for mobile web prompts [#997](https://github.com/instedd/ask/issues/997)
+* Multiline prompts for IVR and SMS [#898](https://github.com/instedd/ask/issues/898)
+* Display hint about surveys currently running but outside the schedule window [#1004](https://github.com/instedd/ask/issues/1004)
+* Questionnaire preview [#999](https://github.com/instedd/ask/issues/999)
+* Show validation error for duplicate variable names [#616](https://github.com/instedd/ask/issues/616)
+* Link to questionnaires index [#773](https://github.com/instedd/ask/issues/773)
+* Use questionnaire title for mobile web SMS [#903](https://github.com/instedd/ask/issues/903)
+* Link the "about" to InSTEDD platform page [#267](https://github.com/instedd/ask/issues/267)
+* Show language names in the responses CSV file [#787](https://github.com/instedd/ask/issues/787)
+* Export timestamps in the timezone of the survey [#784](https://github.com/instedd/ask/issues/784)
+* Include all used modes in the results CSV file [#572](https://github.com/instedd/ask/issues/572)
+* Sort surveys by last update time (newest goes first) [#1015](https://github.com/instedd/ask/issues/1015)
+* Performance improvements to import respondent files (allows bigger files to be loaded) [#704](https://github.com/instedd/ask/issues/704)
+* Questionnaires can be deleted [#1018](https://github.com/instedd/ask/issues/1018)
+* Sharing a project with an existing user doesn't send an invite anymore [#782](https://github.com/instedd/ask/issues/782)
+* Pagination in the survey index [#990](https://github.com/instedd/ask/issues/990)
+* Better error messages with error ID and details [#1019](https://github.com/instedd/ask/issues/1019)
+* Collaborators can be removed or edited [#808](https://github.com/instedd/ask/issues/808)
+* Store 'REFUSED' for refused questions as the answer instead of the key pressed by the respondent [#1077](https://github.com/instedd/ask/issues/1077)
+
 ## Ironwood 0.9.3
 
 This release will convert all stored WAV audios to MP3 to improve the overall performance and reduce the time required to export a questionnaire ([#1029](https://github.com/instedd/ask/issues/1029))
