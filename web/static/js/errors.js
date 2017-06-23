@@ -6,8 +6,10 @@ import React from 'react'
 import { render } from 'react-dom'
 import { showError } from 'components/ui/ErrorModal'
 
-Raven.config(config.sentryDsn, {release: config.version}).install()
-Raven.setUserContext({email: config.user})
+if (typeof config != 'undefined') {
+  Raven.config(config.sentryDsn, {release: config.version}).install()
+  Raven.setUserContext({email: config.user})
+}
 
 window.addEventListener('unhandledrejection', (e) => {
   e.preventDefault()
