@@ -91,7 +91,7 @@ export default class SurveyStatus extends PureComponent {
     }
 
     let component = (
-      <span>
+      <span className='truncate'>
         <i className='material-icons survey-status'>{icon}</i>
         { text }
       </span>
