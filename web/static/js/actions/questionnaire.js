@@ -53,6 +53,7 @@ export const SET_SECONDARY_COLOR = 'QUESTIONNAIRE_SET_SECONDARY_COLOR'
 export const SET_DISPLAYED_TITLE = 'QUESTIONNAIRE_SET_DISPLAYED_TITLE'
 export const SET_SURVEY_ALREADY_TAKEN_MESSAGE = 'QUESTIONNAIRE_SET_SURVEY_ALREADY_TAKEN_MESSAGE'
 export const TOGGLE_QUOTA_COMPLETED_STEPS = 'QUESTIONNAIRE_TOGGLE_QUOTA_COMPLETED_STEPS'
+export const SET_DIRTY = 'QUESTIONNAIRE_SET_DIRTY'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -100,6 +101,10 @@ export const receive = (questionnaire: Questionnaire): ReceiveDataAction => {
 export const shouldFetch = (state, projectId, id) => {
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
+
+export const setDirty = () => ({
+  type: SET_DIRTY
+})
 
 export const addChoice = (stepId) => ({
   type: ADD_CHOICE,
