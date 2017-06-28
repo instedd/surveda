@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import TimeAgo from 'react-timeago'
 import { Tooltip } from '../ui'
 import { formatTimezone } from '../timezones/util'
+import classNames from 'classnames/bind'
 
 export default class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -91,7 +92,7 @@ export default class SurveyStatus extends PureComponent {
     }
 
     let component = (
-      <span className='truncate'>
+      <span>
         <i className='material-icons survey-status'>{icon}</i>
         { text }
       </span>
@@ -106,7 +107,7 @@ export default class SurveyStatus extends PureComponent {
     }
 
     return (
-      <p className={color}>
+      <p className={classNames(color, 'truncate')}>
         {component}
       </p>
     )
