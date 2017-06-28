@@ -63,6 +63,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.CHANGE_DISPOSITION: return changeDisposition(state, action)
     case actions.TOGGLE_ACCEPT_REFUSALS: return toggleAcceptsRefusals(state, action)
     case actions.CHANGE_REFUSAL: return changeRefusal(state, action)
+    case actions.SET_DIRTY: return setDirty(state)
     default: return state
   }
 }
@@ -1549,3 +1550,5 @@ const setSecondaryColor = (state, action) => {
     }
   }
 }
+
+const setDirty = (state) => ({...state})

@@ -136,6 +136,7 @@ class QuestionnaireMenu extends Component {
       this.props.uiActions.deselectStep()
       this.props.uiActions.deselectQuotaCompletedStep()
       this.props.questionnaireActions.receive(questionnaire)
+      this.props.questionnaireActions.setDirty()
       importModal.close()
     })
 
