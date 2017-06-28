@@ -3,7 +3,7 @@ defmodule Ask.Mixfile do
 
   def project do
     [app: :ask,
-     version: "0.10.0",
+     version: "0.10.1",
      elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
