@@ -1,5 +1,19 @@
 # InSTEDD Surveda Changelog
 
+## Juniper 0.10.2
+
+### Features
+
+* The number of respondents enqueued by minute is now configurable with an environment variable (BROKER_BATCH_LIMIT_PER_MINUTE)
+
+## Juniper 0.10.1
+
+### Bugfixes
+
+* Fix error when refusing a question [#1110](https://github.com/instedd/ask/issues/1110)
+* Adjust position of tooltip over survey status [#1111](https://github.com/instedd/ask/issues/1111)
+* Questionnaires were being set as invalid after importing [#1109](https://github.com/instedd/ask/issues/1109)
+
 ## Juniper 0.10
 
 ### Bugfixes
