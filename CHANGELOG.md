@@ -62,6 +62,18 @@
 * Collaborators can be removed or edited [#808](https://github.com/instedd/ask/issues/808)
 * Store 'REFUSED' for refused questions as the answer instead of the key pressed by the respondent [#1077](https://github.com/instedd/ask/issues/1077)
 
+## Ironwood 0.9.5
+
+### Bugfixes
+
+* Fix parsing of success rates environment variables so they can be expressed in %
+
+## Ironwood 0.9.4
+
+### Bugfixes
+
+* Ignore channel callbacks for sessions already ended [#1023](https://github.com/instedd/ask/issues/1023)
+
 ## Ironwood 0.9.3
 
 This release will convert all stored WAV audios to MP3 to improve the overall performance and reduce the time required to export a questionnaire ([#1029](https://github.com/instedd/ask/issues/1029))
