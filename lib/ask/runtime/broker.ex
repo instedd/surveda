@@ -9,7 +9,6 @@ defmodule Ask.Runtime.Broker do
 
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
-  @batch_limit 100
 
   def server_ref, do: @server_ref
 
@@ -25,6 +24,7 @@ defmodule Ask.Runtime.Broker do
 
   def init(_args) do
     :timer.send_after(1000, :poll)
+    Logger.info "Broker started. Default batch size=#{default_batch_size}. Limit per minute=#{batch_limit_per_minute}."
     {:ok, nil}
   end
 
@@ -32,7 +32,7 @@ defmodule Ask.Runtime.Broker do
     try do
       mark_stalled_for_eight_hours_respondents_as_failed()
 
-      Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: @batch_limit)
+      Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute)
       |> Enum.each(&retry_respondent(&1))
 
       all_running_surveys
@@ -192,7 +192,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp start_some(survey, count) do
-    count = Enum.min([@batch_limit, count])
+    count = Enum.min([batch_limit_per_minute, count])
 
     (from r in assoc(survey, :respondents),
       where: r.state == "pending",
@@ -614,7 +614,7 @@ defmodule Ask.Runtime.Broker do
   defp batch_size(survey, respondents_by_state) do
     case completed_respondents_needed_by(survey) do
       :all ->
-        Survey.environment_variable_named(:batch_size)
+        default_batch_size
 
       respondents_target when is_integer(respondents_target) ->
         successful = successful_respondents(survey, respondents_by_state)
@@ -622,6 +622,14 @@ defmodule Ask.Runtime.Broker do
         (respondents_target - successful) / estimated_success_rate
         |> trunc
     end
+  end
+
+  defp default_batch_size do
+    Survey.environment_variable_named(:batch_size)
+  end
+
+  defp batch_limit_per_minute do
+    Survey.environment_variable_named(:batch_limit_per_minute)
   end
 
   defp estimated_success_rate(successful, respondents_by_state, respondents_target) do
