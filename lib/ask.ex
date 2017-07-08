@@ -6,6 +6,9 @@ defmodule Ask do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    Ask.PhoenixInstrumenter.setup()
+    Ask.PrometheusExporter.setup()
+
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository

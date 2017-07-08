@@ -33,5 +33,6 @@ defmodule Ask.Endpoint do
     key: "_ask_key",
     signing_salt: "/wP7KV3P"
 
+  plug Ask.PrometheusExporter
   plug Ask.Router
 end

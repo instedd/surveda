@@ -20,7 +20,7 @@ defmodule Ask.Mixfile do
   def application do
     [mod: {Ask, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :coherence]]
+                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :coherence, :prometheus_phoenix, :prometheus_plugs]]
   end
 
   # Specifies which paths to compile per environment.
@@ -56,6 +56,8 @@ defmodule Ask.Mixfile do
       {:gen_smtp, "~> 0.11"},
       {:xml_builder, "~> 0.0.9"},
       {:language_names, "~> 0.1.0"},
+      {:prometheus_phoenix, "~> 1.0"},
+      {:prometheus_plugs, "~> 1.1"}
    ]
   end
 
