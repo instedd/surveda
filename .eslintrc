@@ -3,8 +3,7 @@
   "parser": "babel-eslint",
   "plugins": ["flowtype"],
   "globals": {
-    "$": true,
-    "d3": false
+    "$": true
   },
   "rules": {
     "space-before-function-paren": [2, "never"],
