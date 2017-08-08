@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.AddTimeoutAtToRespondent do
 
   def change do
     alter table(:respondents) do
-      add :timeout_at, :datetime
+      add :timeout_at, :naive_datetime
     end
   end
 end

@@ -94,6 +94,6 @@ config :coherence, Ask.Coherence.Mailer,
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
 
-if File.exists?("#{__DIR__}/local.exs") && Mix.env != :test do
-  import_config "#{__DIR__}/local.exs"
+if File.exists?("#{__DIR__}/../local.exs") && Mix.env != :test do
+  import_config "#{__DIR__}/../local.exs"
 end
