@@ -1,4 +1,4 @@
-FROM elixir:1.5.0
+FROM elixir:1.3.2
 
 RUN \
   apt-get update && \

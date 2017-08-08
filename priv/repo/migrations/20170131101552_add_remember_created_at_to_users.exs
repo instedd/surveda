@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.AddRememberCreatedAtToUsers do
 
   def change do
     alter table(:users) do
-      add :remember_created_at, :naive_datetime
+      add :remember_created_at, :datetime
     end
   end
 

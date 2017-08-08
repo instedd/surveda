@@ -11,7 +11,7 @@ defmodule Ask.Repo.Migrations.CreateSurveyLogEntry do
       add :disposition, :string
       add :action_type, :string
       add :action_data, :string
-      add :timestamp, :naive_datetime
+      add :timestamp, :datetime
 
       timestamps()
     end

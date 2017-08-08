@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.AddLaunchedAtToSurveys do
 
   def change do
     alter table(:surveys) do
-      add :started_at, :naive_datetime
+      add :started_at, :datetime
     end
   end
 end

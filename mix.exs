@@ -4,7 +4,7 @@ defmodule Ask.Mixfile do
   def project do
     [app: :ask,
      version: "0.11.0",
-     elixir: "~> 1.5",
+     elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      consolidate_protocols: Mix.env != :test,
@@ -32,14 +32,14 @@ defmodule Ask.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.3.0"},
+      {:phoenix, "~> 1.2.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_ecto, "~> 3.0"},
       {:mariaex, ">= 0.0.0"},
-      {:phoenix_html, "~> 2.10.3"},
+      {:phoenix_html, "~> 2.6"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:gettext, "~> 0.13.1"},
-      {:cowboy, "~> 1.1.2"},
+      {:gettext, "~> 0.11.0"},
+      {:cowboy, "~> 1.0"},
       {:ex_machina, "~> 1.0", only: :test},
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
@@ -48,6 +48,7 @@ defmodule Ask.Mixfile do
       {:timex_ecto, "~> 3.0", override: true},
       {:sentry, "~> 4.0"},
       {:hackney, "~> 1.0"},
+      {:tributary, "~> 0.2.1"},
       {:ex_json_schema, "~> 0.5.2"},
       {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
       {:deep_merge, "~> 0.1.0"},

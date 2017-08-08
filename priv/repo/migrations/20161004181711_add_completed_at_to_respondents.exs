@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.AddCompletedAtToRespondents do
 
   def change do
     alter table(:respondents) do
-      add :completed_at, :utc_datetime
+      add :completed_at, :datetime
     end
   end
 end

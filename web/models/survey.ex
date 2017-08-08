@@ -328,27 +328,6 @@ defmodule Ask.Survey do
   def adjust_timezone(date = %Ecto.DateTime{}, survey) do
     date
     |> Ecto.DateTime.to_erl
-    adjust_timezone_to_survey(date, survey)
-  end
-
-  def adjust_timezone(date = %NaiveDateTime{}, survey) do
-    # Ecto.DateTime.utc
-    # |> Ecto.DateTime.to_erl
-    # |> NaiveDateTime.from_erl!
-    # |> DateTime.from_naive!("Etc/UTC")
-
-    # DateTime.utc_now
-    # |> DateTime.to_naive
-    # |> NaiveDateTime.to_erl
-    # |> Ecto.DateTime.from_erl
-
-    date
-    |> NaiveDateTime.to_erl
-    adjust_timezone_to_survey(date, survey)
-  end
-
-  defp adjust_timezone_to_survey(date, survey) do
-    date
     |> Timex.Ecto.DateTime.cast!
     |> Timex.Timezone.convert(survey.timezone)
   end
