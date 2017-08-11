@@ -199,7 +199,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
     response_content = case respondent do
       nil ->
-        hangup
+        hangup()
 
       _ ->
         response = case params["Digits"] do
@@ -215,9 +215,9 @@ defmodule Ask.Runtime.VerboiceChannel do
             gather(respondent, prompts, num_digits)
           {:end, {:reply, reply}} ->
             prompts = Reply.prompts(reply)
-            say_or_play(prompts) ++ [hangup]
+            say_or_play(prompts) ++ [hangup()]
           :end ->
-            hangup
+            hangup()
         end
     end
 
@@ -231,7 +231,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, _, _) do
     conn
     |> put_resp_content_type("text/xml")
-    |> send_resp(200, response(hangup) |> generate)
+    |> send_resp(200, response(hangup()) |> generate)
   end
 
   def callback_url(respondent) do

@@ -78,6 +78,7 @@ defmodule Ask.QuestionnaireControllerTest do
     test "renders chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
+      questionnaire = Questionnaire |> Repo.get(questionnaire.id) |> Repo.preload(:project)
       conn = get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
       assert json_response(conn, 200)["data"] == %{"id" => questionnaire.id,
         "name" => questionnaire.name,
@@ -87,7 +88,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "quota_completed_steps" => [%{"id" => "quota-completed-step", "prompt" => %{"en" => %{"ivr" => %{"audio_source" => "tts", "text" => "Quota completed (ivr)"}, "sms" => "Quota completed"}}, "skip_logic" => nil, "title" => "Completed", "type" => "explanation"}],
         "default_language" => "en",
         "languages" => [],
-        "updated_at" => Ecto.DateTime.to_iso8601(questionnaire.updated_at),
+        "updated_at" => NaiveDateTime.to_iso8601(questionnaire.updated_at),
         "valid" => true,
         "settings" => %{
           "error_message" => %{
@@ -216,7 +217,7 @@ defmodule Ask.QuestionnaireControllerTest do
       post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
 
     test "creates and recreates variables", %{conn: conn, user: user} do
@@ -297,7 +298,7 @@ defmodule Ask.QuestionnaireControllerTest do
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @valid_attrs
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
 
     test "updates and creates variables", %{conn: conn, user: user} do
@@ -625,7 +626,7 @@ defmodule Ask.QuestionnaireControllerTest do
       delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
 
     test "remove reference from survey when questionnaire is deleted", %{conn: conn, user: user} do

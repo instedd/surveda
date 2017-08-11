@@ -250,7 +250,7 @@ defmodule Ask.SurveyController do
     session = respondent.session
     session =
       if session do
-        session = Session.load(session)
+        Session.load(session)
       else
         nil
       end

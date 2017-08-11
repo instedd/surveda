@@ -231,7 +231,7 @@ defmodule Ask.RespondentGroupControllerTest do
       post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
 
     test "forbids upload for project reader", %{conn: conn, user: user}  do
@@ -251,7 +251,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "update group channels", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
       channel = insert(:channel, name: "test")
 
@@ -314,7 +314,7 @@ defmodule Ask.RespondentGroupControllerTest do
       delete conn, project_survey_respondent_group_path(conn, :delete, survey.project.id, survey.id, group.id)
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare(project.updated_at, datetime) == :gt
+      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
 
     test "forbids the deleteion of a group if the project is from another user", %{conn: conn} do
@@ -341,7 +341,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "updates survey state if all the respondents are deleted from a 'ready' survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
 
       channel = insert(:channel, name: "test")
@@ -440,7 +440,7 @@ defmodule Ask.RespondentGroupControllerTest do
     end
   end
 
-  defp completed_schedule do
+  defp completed_schedule() do
     %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
   end
 

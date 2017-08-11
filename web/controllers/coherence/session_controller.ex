@@ -47,7 +47,7 @@ defmodule Ask.Coherence.SessionController do
     conn
     |> assign(:redirect, params["redirect"])
     |> put_view(Coherence.SessionView)
-    |> render(:new, [{login_field, ""}, remember: rememberable_enabled?])
+    |> render(:new, [{login_field, ""}, remember: rememberable_enabled?()])
   end
 
   @doc """
@@ -92,7 +92,7 @@ defmodule Ask.Coherence.SessionController do
           |> put_flash(:error, "Too many failed login attempts. Account has been locked.")
           |> assign(:locked, true)
           |> put_status(423)
-          |> render("new.html", [{login_field, ""}, remember: rememberable_enabled?])
+          |> render("new.html", [{login_field, ""}, remember: rememberable_enabled?()])
         end
       else
         conn
@@ -104,7 +104,7 @@ defmodule Ask.Coherence.SessionController do
       |> failed_login(user, lockable?)
       |> put_view(Coherence.SessionView)
       |> put_status(401)
-      |> render(:new, [{login_field, login}, remember: rememberable_enabled?])
+      |> render(:new, [{login_field, login}, remember: rememberable_enabled?()])
     end
   end
 

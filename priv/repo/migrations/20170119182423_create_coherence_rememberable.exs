@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.CreateCoherenceRememberable do
     create table(:rememberables) do
       add :series_hash, :string
       add :token_hash, :string
-      add :token_created_at, :datetime
+      add :token_created_at, :naive_datetime
       add :user_id, references(:users, on_delete: :delete_all)
 
       timestamps

@@ -148,7 +148,6 @@ defmodule Ask.MobileSurveyController do
     if Respondent.token(respondent_id) == token do
       success_fn.()
     else
-      respondent = Respondent |> Repo.get(respondent_id)
       color_style = color_style_for(respondent_id)
 
       primary_color = primary_color_for(color_style)

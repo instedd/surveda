@@ -29,11 +29,11 @@ defmodule Ask.TestChannel do
   end
 
   def oauth2_authorize(_code, _redirect_uri, _base_url) do
-    random_access_token
+    random_access_token()
   end
 
   def oauth2_refresh(%OAuth2.AccessToken{}, _base_url) do
-    random_access_token
+    random_access_token()
   end
 
   def sync_channels(user_id, base_url) do

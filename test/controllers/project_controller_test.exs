@@ -23,9 +23,12 @@ defmodule Ask.ProjectControllerTest do
 
     test "list only entries of the current user on index", %{conn: conn, user: user} do
       user_project = create_project_for_user(user)
+      user_project = Project |> Repo.get(user_project.id)
       insert(:project)
 
+
       project2 = insert(:project)
+      project2 = Project |> Repo.get(project2.id)
       insert(:project_membership, user_id: user.id, project_id: project2.id, level: "reader")
 
       conn = get conn, project_path(conn, :index)
@@ -34,7 +37,7 @@ defmodule Ask.ProjectControllerTest do
           "id"      => user_project.id,
           "name"    => user_project.name,
           "running_surveys" => 0,
-          "updated_at" => Ecto.DateTime.to_iso8601(user_project.updated_at),
+          "updated_at" => NaiveDateTime.to_iso8601(user_project.updated_at),
           "read_only" => false,
           "colour_scheme" => "default",
           "owner" => true,
@@ -43,7 +46,7 @@ defmodule Ask.ProjectControllerTest do
           "id"      => project2.id,
           "name"    => project2.name,
           "running_surveys" => 0,
-          "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
+          "updated_at" => NaiveDateTime.to_iso8601(project2.updated_at),
           "read_only" => true,
           "colour_scheme" => "default",
           "owner" => false,
@@ -53,35 +56,38 @@ defmodule Ask.ProjectControllerTest do
 
     test "shows running survey count", %{conn: conn, user: user} do
       project1 = create_project_for_user(user)
+      project1 = Project |> Repo.get(project1.id)
       insert(:survey, project: project1, state: "running")
       insert(:survey, project: project1, state: "running")
       insert(:survey, project: project1, state: "pending")
 
       project2 = create_project_for_user(user)
+      project2 = Project |> Repo.get(project2.id)
       insert(:survey, project: project2, state: "running")
       insert(:survey, project: project2, state: "pending")
 
       project3 = create_project_for_user(user)
+      project3 = Project |> Repo.get(project3.id)
 
       conn = get conn, project_path(conn, :index)
       project_map_1 = %{"id"      => project1.id,
                           "name"    => project1.name,
                           "running_surveys" => 2,
-                          "updated_at" => Ecto.DateTime.to_iso8601(project1.updated_at),
+                          "updated_at" => NaiveDateTime.to_iso8601(project1.updated_at),
                           "read_only" => false,
                           "colour_scheme" => "default",
                           "owner" => true}
       project_map_2 = %{"id"      => project2.id,
                           "name"    => project2.name,
                           "running_surveys" => 1,
-                          "updated_at" => Ecto.DateTime.to_iso8601(project2.updated_at),
+                          "updated_at" => NaiveDateTime.to_iso8601(project2.updated_at),
                           "read_only" => false,
                           "colour_scheme" => "default",
                           "owner" => true}
       project_map_3 = %{"id"      => project3.id,
                           "name"    => project3.name,
                           "running_surveys" => 0,
-                          "updated_at" => Ecto.DateTime.to_iso8601(project3.updated_at),
+                          "updated_at" => NaiveDateTime.to_iso8601(project3.updated_at),
                           "read_only" => false,
                           "colour_scheme" => "default",
                           "owner" => true}
@@ -94,10 +100,11 @@ defmodule Ask.ProjectControllerTest do
 
     test "shows chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
+      project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
-        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
+        "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => false,
         "colour_scheme" => "default",
         "owner" => true}
@@ -105,10 +112,11 @@ defmodule Ask.ProjectControllerTest do
 
     test "shows chosen resource as read_only", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
+      project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
-        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
+        "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => true,
         "colour_scheme" => "default",
         "owner" => false}
@@ -129,10 +137,11 @@ defmodule Ask.ProjectControllerTest do
 
     test "shows chosen resource as project reader", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
+      project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
         "name" => project.name,
-        "updated_at" => Ecto.DateTime.to_iso8601(project.updated_at),
+        "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => true,
         "colour_scheme" => "default",
         "owner" => false}

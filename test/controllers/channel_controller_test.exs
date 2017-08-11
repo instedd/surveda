@@ -1,9 +1,6 @@
 defmodule Ask.ChannelControllerTest do
   use Ask.ConnCase
 
-  @valid_attrs %{name: "some content", provider: "some content", settings: %{}, type: "some content"}
-  @invalid_attrs %{name: ""}
-
   setup %{conn: conn} do
     user = insert(:user)
     conn = conn

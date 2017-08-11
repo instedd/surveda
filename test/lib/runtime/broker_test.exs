@@ -472,7 +472,7 @@ defmodule Ask.BrokerTest do
     now = Timex.now
 
     # After seven hours it's still stalled
-    seven_hours_ago = now |> Timex.shift(hours: -7) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    seven_hours_ago = now |> Timex.shift(hours: -7) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: seven_hours_ago])
 
     Broker.handle_info(:poll, nil)
@@ -482,7 +482,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "queued"
 
     # After eight hours it should be marked as failed
-    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
     Broker.handle_info(:poll, nil)
@@ -676,7 +676,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "contacted"
 
     # After eight hours it should be marked as failed
-    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
     Broker.handle_info(:poll, nil)
@@ -714,7 +714,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "queued"
 
     # After eight hours it should be marked as failed
-    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
     Broker.handle_info(:poll, nil)
@@ -869,7 +869,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "started"
 
     # After eight hours it should be marked as failed
-    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> Ecto.DateTime.from_erl
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
     Broker.handle_info(:poll, nil)

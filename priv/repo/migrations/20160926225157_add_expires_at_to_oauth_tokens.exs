@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.AddExpiresAtToOauthTokens do
 
   def change do
     alter table(:oauth_tokens) do
-      add :expires_at, :datetime
+      add :expires_at, :naive_datetime
     end
   end
 end
