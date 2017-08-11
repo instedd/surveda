@@ -563,47 +563,30 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
-    log_stream = Stream.resource(fn -> {"", 0} end,
-      fn {last_seen_respondent_hashed_number, last_seen_id} ->
-        results =
-          (from e in SurveyLogEntry,
-          where: e.survey_id == ^survey.id and (
-            (e.respondent_hashed_number == ^last_seen_respondent_hashed_number and e.id > ^last_seen_id) or
-            (e.respondent_hashed_number > ^last_seen_respondent_hashed_number)),
-          order_by: [e.respondent_hashed_number, e.id])
-          |> preload(:channel)
-          |> limit(500)
-          |> Repo.all
-
-        case List.last(results) do
-          %{respondent_hashed_number: last_respondent_hashed_number, id: last_id} ->
-            {results, {last_respondent_hashed_number, last_id}}
-          nil ->
-            {:halt, nil}
-        end
-      end,
-      fn _ -> [] end)
-
     tz_offset = Survey.timezone_offset(survey)
 
-    csv_rows = log_stream
-    |> Stream.map(fn e ->
-      channel_name =
-        if e.channel do
-          e.channel.name
-        else
-          ""
-        end
+    csv_rows = (from e in SurveyLogEntry,
+      where: e.survey_id == ^survey.id,
+      order_by: [e.respondent_hashed_number, e.id])
+      |> preload(:channel)
+      |> Repo.stream
+      |> Stream.map(fn e ->
+        channel_name =
+          if e.channel do
+            e.channel.name
+          else
+            ""
+          end
 
-      disposition = disposition_label(e.disposition)
-      action_type = action_type_label(e.action_type)
+        disposition = disposition_label(e.disposition)
+        action_type = action_type_label(e.action_type)
 
-      timestamp = e.timestamp
-      |> Survey.adjust_timezone(survey)
-      |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
+        timestamp = e.timestamp
+        |> Survey.adjust_timezone(survey)
+        |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
 
-      [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
-    end)
+        [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
+      end)
 
     header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
