@@ -387,7 +387,7 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  def csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def results(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
     |> load_project(project_id)
 
@@ -408,12 +408,46 @@ defmodule Ask.RespondentController do
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
-    # Now traverse each respondent and create a row for it
-    csv_rows = from(
-      r in Respondent,
-      where: r.survey_id == ^survey_id,
-      order_by: r.id)
+    respondents = Respondent
+    |> where(survey_id: ^survey.id)
+    |> order_by(:id)
     |> preload(:responses)
+
+    render_results(conn, get_format(conn), survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
+  end
+
+  defp render_results(conn, "json", _survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
+    respondents_count = respondents |> Repo.aggregate(:count, :id)
+    respondents = respondents
+    |> Repo.stream
+    respondents = if has_comparisons do
+      respondents
+      |> Stream.map(fn respondent ->
+        experiment_name = if respondent.questionnaire_id && respondent.mode do
+          questionnaire = questionnaires |> Enum.find(fn q -> q.id == respondent.questionnaire_id end)
+          if questionnaire do
+            experiment_name(questionnaire, respondent.mode)
+          else
+            "-"
+          end
+        else
+          "-"
+        end
+        %{respondent | experiment_name: experiment_name}
+      end)
+    else
+      respondents
+    end
+
+    {:ok, conn} = Repo.transaction(fn() ->
+      render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+    end)
+    conn
+  end
+
+  defp render_results(conn, "csv", survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
+    # Now traverse each respondent and create a row for it
+    csv_rows = respondents
     |> Repo.stream
     |> Stream.map(fn respondent ->
         row = [respondent.hashed_number]
@@ -499,7 +533,7 @@ defmodule Ask.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  def disposition_history_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
     |> load_project(project_id)
 
@@ -529,7 +563,7 @@ defmodule Ask.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  def incentives_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
     |> load_project_for_owner(project_id)
 
@@ -554,7 +588,7 @@ defmodule Ask.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  def interactions_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
     |> load_project_for_owner(project_id)
 

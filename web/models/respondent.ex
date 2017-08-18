@@ -45,8 +45,9 @@ defmodule Ask.Respondent do
     belongs_to :quota_bucket, Ask.QuotaBucket
     has_many :responses, Ask.Response
     has_many :survey_log_entries, Ask.SurveyLogEntry
-
     field :lock_version, :integer, default: 1
+
+    field :experiment_name, :string, virtual: true
 
     timestamps()
   end

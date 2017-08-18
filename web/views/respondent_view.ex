@@ -14,20 +14,38 @@ defmodule Ask.RespondentView do
   end
 
   def render("respondent.json", %{respondent: respondent}) do
-    responses = respondent.responses
-    %{
-      id: respondent.id,
-      phone_number: respondent.hashed_number,
-      survey_id: respondent.survey_id,
-      mode: respondent.mode,
-      questionnaire_id: respondent.questionnaire_id,
-      responses: render_many(responses, Ask.RespondentView, "response.json", as: :response),
-      disposition: respondent.disposition,
-      date: case responses do
-        [] -> nil
-        _ -> responses |>  Enum.map(fn r -> r.updated_at end) |> Enum.max
-      end
-    }
+    date = case respondent.responses do
+      [] -> nil
+      _ -> respondent.responses |>  Enum.map(fn r -> r.updated_at end) |> Enum.max
+    end
+    responses = render_many(respondent.responses, Ask.RespondentView, "response.json", as: :response)
+
+    if respondent.experiment_name do
+      %{
+        id: respondent.id,
+        phone_number: respondent.hashed_number,
+        survey_id: respondent.survey_id,
+        mode: respondent.mode,
+        effective_modes: respondent.effective_modes,
+        questionnaire_id: respondent.questionnaire_id,
+        responses: responses,
+        disposition: respondent.disposition,
+        date: date,
+        experiment_name: respondent.experiment_name
+      }
+    else
+      %{
+        id: respondent.id,
+        phone_number: respondent.hashed_number,
+        survey_id: respondent.survey_id,
+        effective_modes: respondent.effective_modes,
+        mode: respondent.mode,
+        questionnaire_id: respondent.questionnaire_id,
+        responses: responses,
+        disposition: respondent.disposition,
+        date: date
+      }
+    end
   end
 
   def render("response.json", %{response: response}) do

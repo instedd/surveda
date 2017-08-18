@@ -37,9 +37,10 @@ defmodule Ask.RespondentControllerTest do
                                                      "phone_number" => respondent.hashed_number,
                                                      "survey_id" => survey.id,
                                                      "mode" => ["sms"],
+                                                     "effective_modes" => nil,
                                                      "questionnaire_id" => questionnaire.id,
                                                      "disposition" => "completed",
-                                                     "date" => NaiveDateTime.to_iso8601(response.updated_at),
+                                                     "date" => DateTime.to_iso8601(response.updated_at),
                                                      "responses" => [
                                                        %{
                                                          "value" => response.value,
@@ -308,7 +309,7 @@ defmodule Ask.RespondentControllerTest do
     }
   end
 
-  test "download csv", %{conn: conn, user: user} do
+  test "download results csv", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
@@ -318,7 +319,7 @@ defmodule Ask.RespondentControllerTest do
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"])
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
-    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
@@ -340,7 +341,60 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_disp == "Registered"
   end
 
-  test "download csv with comparisons", %{conn: conn, user: user} do
+  test "download results json", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    response_1 = insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    response_1 = Repo.get(Response, response_1.id)
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id)
+    response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+    response_2 = Repo.get(Response, response_2.id)
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "json"})
+    assert json_response(conn, 200)["data"]["respondents"] == [
+      %{
+         "id" => respondent_1.id,
+         "phone_number" => respondent_1.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => nil,
+         "effective_modes" => ["sms", "ivr"],
+         "questionnaire_id" => questionnaire.id,
+         "disposition" => "partial",
+         "date" => DateTime.to_iso8601(response_1.updated_at),
+         "responses" => [
+           %{
+             "value" => "Yes",
+             "name" => "Smokes"
+           },
+           %{
+             "value" => "No",
+             "name" => "Exercises"
+           }
+         ]
+      },
+      %{
+         "id" => respondent_2.id,
+         "phone_number" => respondent_2.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => nil,
+         "effective_modes" => ["mobileweb"],
+         "questionnaire_id" => questionnaire.id,
+         "disposition" => "registered",
+         "date" => DateTime.to_iso8601(response_2.updated_at),
+         "responses" => [
+           %{
+             "value" => "No",
+             "name" => "Smokes"
+           }
+         ]
+      }
+    ]
+  end
+
+  test "download results csv with comparisons", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     questionnaire2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
@@ -356,7 +410,7 @@ defmodule Ask.RespondentControllerTest do
     respondent_2 = insert(:respondent, survey: survey, questionnaire_id: questionnaire2.id, mode: ["sms", "ivr"], disposition: "completed")
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
-    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
     csv = response(conn, 200)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
@@ -375,6 +429,69 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_number == ""
     assert line_3_variant == "test 2 - SMS with phone call fallback"
     assert line_3_disp == "Completed"
+  end
+
+  test "download results json with comparisons", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    questionnaire2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire, questionnaire2], state: "ready", schedule_day_of_week: completed_schedule(),
+      comparisons: [
+        %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "ratio" => 50},
+        %{"mode" => ["sms"], "questionnaire_id" => questionnaire2.id, "ratio" => 50},
+      ]
+    )
+
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], mode: ["sms"], questionnaire_id: questionnaire.id)
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    response_1 = insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "No")
+    response_1 = Repo.get(Response, response_1.id)
+
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], mode: ["sms", "ivr"], questionnaire_id: questionnaire2.id, disposition: "completed")
+    response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+    response_2 = Repo.get(Response, response_2.id)
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "json"})
+    assert json_response(conn, 200)["data"]["respondents"] == [
+      %{
+         "id" => respondent_1.id,
+         "phone_number" => respondent_1.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => ["sms"],
+         "effective_modes" =>["sms", "ivr"],
+         "questionnaire_id" => questionnaire.id,
+         "disposition" => "partial",
+         "date" => DateTime.to_iso8601(response_1.updated_at),
+         "experiment_name" => "test - SMS",
+         "responses" => [
+           %{
+             "value" => "Yes",
+             "name" => "Smokes"
+           },
+           %{
+             "value" => "No",
+             "name" => "Perfect Number"
+           }
+         ]
+      },
+      %{
+         "id" => respondent_2.id,
+         "phone_number" => respondent_2.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => ["sms", "ivr"],
+         "effective_modes" =>["mobileweb"],
+         "questionnaire_id" => questionnaire2.id,
+         "experiment_name" => "test 2 - SMS with phone call fallback",
+         "disposition" => "completed",
+         "date" => DateTime.to_iso8601(response_2.updated_at),
+         "responses" => [
+           %{
+             "value" => "No",
+             "name" => "Smokes"
+           }
+         ]
+      }
+    ]
   end
 
   test "download csv with language", %{conn: conn, user: user} do
@@ -400,7 +517,7 @@ defmodule Ask.RespondentControllerTest do
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     insert(:response, respondent: respondent_1, field_name: "language", value: "es")
 
-    conn = get conn, project_survey_respondents_csv_path(conn, :csv, survey.project.id, survey.id, %{"offset" => "0"})
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
     csv = response(conn, 200)
 
     [line1, line2, _] = csv |> String.split("\r\n")
@@ -424,7 +541,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
     insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
 
-    conn = get conn, project_survey_respondents_disposition_history_csv_path(conn, :disposition_history_csv, survey.project.id, survey.id)
+    conn = get conn, project_survey_respondents_disposition_history_path(conn, :disposition_history, survey.project.id, survey.id, %{"_format" => "csv"})
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
@@ -435,7 +552,7 @@ defmodule Ask.RespondentControllerTest do
      "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06 UTC"]
   end
 
-  test "download incentives_csv", %{conn: conn, user: user} do
+  test "download incentives", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
@@ -443,7 +560,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
     insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
-    conn = get conn, project_survey_respondents_incentives_csv_path(conn, :incentives_csv, survey.project.id, survey.id)
+    conn = get conn, project_survey_respondents_incentives_path(conn, :incentives, survey.project.id, survey.id, %{"_format" => "csv"})
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
@@ -453,7 +570,7 @@ defmodule Ask.RespondentControllerTest do
     ]
   end
 
-  test "download interactions_csv", %{conn: conn, user: user} do
+  test "download interactions", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
@@ -466,7 +583,7 @@ defmodule Ask.RespondentControllerTest do
       insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
     end
 
-    conn = get conn, project_survey_respondents_interactions_csv_path(conn, :interactions_csv, survey.project.id, survey.id)
+    conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
     csv = response(conn, 200)
 
     expected_list = List.flatten(

@@ -74,7 +74,7 @@ class RespondentIndex extends Component {
 
   downloadCSV() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsCSV(projectId, surveyId)
+    window.location = routes.respondentsResultsCSV(projectId, surveyId)
   }
 
   downloadDispositionHistoryCSV() {

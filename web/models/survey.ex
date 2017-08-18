@@ -347,6 +347,13 @@ defmodule Ask.Survey do
     adjust_timezone_to_survey(date, survey)
   end
 
+  def adjust_timezone(date = %DateTime{}, survey) do
+    date
+    |> DateTime.to_naive
+    |> NaiveDateTime.to_erl
+    adjust_timezone_to_survey(date, survey)
+  end
+
   defp adjust_timezone_to_survey(date, survey) do
     date
     |> Timex.Ecto.DateTime.cast!
