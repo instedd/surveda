@@ -53,7 +53,6 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:quota_buckets])
-    |> with_respondents_count
 
     render(conn, "show.json", survey: survey)
   end
@@ -67,7 +66,6 @@ defmodule Ask.SurveyController do
     |> Repo.get!(id)
     |> Repo.preload([:questionnaires])
     |> Repo.preload([:quota_buckets])
-    |> with_respondents_count
     |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> Survey.changeset(survey_params)
     |> update_questionnaires(survey_params)
@@ -96,11 +94,6 @@ defmodule Ask.SurveyController do
 
   defp update_questionnaires(changeset, _) do
     changeset
-  end
-
-  defp with_respondents_count(survey) do
-    respondents_count = survey |> assoc(:respondents) |> select(count("*")) |> Repo.one
-    %{survey | respondents_count: respondents_count}
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
