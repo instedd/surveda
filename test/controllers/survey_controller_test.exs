@@ -65,7 +65,6 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "exit_code" => nil,
         "exit_message" => nil,
-        "respondents_count" => 0,
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
@@ -106,7 +105,6 @@ defmodule Ask.SurveyControllerTest do
         "state" => "not_ready",
         "exit_code" => nil,
         "exit_message" => nil,
-        "respondents_count" => 0,
         "schedule_day_of_week" => %{
           "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
         },
