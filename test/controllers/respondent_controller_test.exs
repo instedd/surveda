@@ -341,6 +341,81 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_disp == "Registered"
   end
 
+  test "download results csv with filter by disposition", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"])
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"])
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv", "disposition" => "registered"})
+    csv = response(conn, 200)
+
+    [line1, line2, _] = csv |> String.split("\r\n")
+    assert line1 == "Respondent ID,Date,Modes,Smokes,Exercises,Perfect Number,Question,Disposition"
+
+    [line_2_hashed_number, _, line_2_modes, line_2_smoke, line_2_exercises, _, _, line_2_disp] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+    assert line_2_hashed_number == respondent_2.hashed_number
+    assert line_2_modes == "Mobile Web"
+    assert line_2_smoke == "No"
+    assert line_2_exercises == ""
+    assert line_2_disp == "Registered"
+  end
+
+  test "download results csv with filter by update timestamp", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"])
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], updated_at: Timex.shift(Timex.now, hours: 2, minutes: 3))
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv", "since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
+    csv = response(conn, 200)
+
+    [line1, line2, _] = csv |> String.split("\r\n")
+    assert line1 == "Respondent ID,Date,Modes,Smokes,Exercises,Perfect Number,Question,Disposition"
+
+    [line_2_hashed_number, _, line_2_modes, line_2_smoke, line_2_exercises, _, _, line_2_disp] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+    assert line_2_hashed_number == respondent_2.hashed_number
+    assert line_2_modes == "Mobile Web"
+    assert line_2_smoke == "No"
+    assert line_2_exercises == ""
+    assert line_2_disp == "Registered"
+  end
+
+  test "download results csv with filter by final state", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], state: "completed")
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"])
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv", "final" => true})
+    csv = response(conn, 200)
+
+    [line1, line2, _] = csv |> String.split("\r\n")
+    assert line1 == "Respondent ID,Date,Modes,Smokes,Exercises,Perfect Number,Question,Disposition"
+
+    [line_2_hashed_number, _, line_2_modes, line_2_smoke, line_2_exercises, _, _, line_2_disp] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+    assert line_2_hashed_number == respondent_1.hashed_number
+    assert line_2_modes == "SMS, Phone call"
+    assert line_2_smoke == "Yes"
+    assert line_2_exercises == "No"
+    assert line_2_disp == "Partial"
+  end
+
   test "download results json", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
@@ -375,6 +450,106 @@ defmodule Ask.RespondentControllerTest do
            }
          ]
       },
+      %{
+         "id" => respondent_2.id,
+         "phone_number" => respondent_2.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => nil,
+         "effective_modes" => ["mobileweb"],
+         "questionnaire_id" => questionnaire.id,
+         "disposition" => "registered",
+         "date" => DateTime.to_iso8601(response_2.updated_at),
+         "responses" => [
+           %{
+             "value" => "No",
+             "name" => "Smokes"
+           }
+         ]
+      }
+    ]
+  end
+
+  test "download results json with filter by disposition", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    response_1 = insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    response_1 = Repo.get(Response, response_1.id)
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id)
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "json", "disposition" => "partial"})
+    assert json_response(conn, 200)["data"]["respondents"] == [
+      %{
+         "id" => respondent_1.id,
+         "phone_number" => respondent_1.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => nil,
+         "effective_modes" => ["sms", "ivr"],
+         "questionnaire_id" => questionnaire.id,
+         "disposition" => "partial",
+         "date" => DateTime.to_iso8601(response_1.updated_at),
+         "responses" => [
+           %{
+             "value" => "Yes",
+             "name" => "Smokes"
+           },
+           %{
+             "value" => "No",
+             "name" => "Exercises"
+           }
+         ]
+      }
+    ]
+  end
+
+  test "download results json with filter by update timestamp", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id, updated_at: Timex.shift(Timex.now, hours: 2, minutes: 3))
+    response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+    response_2 = Repo.get(Response, response_2.id)
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "json", "since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
+    assert json_response(conn, 200)["data"]["respondents"] == [
+      %{
+         "id" => respondent_2.id,
+         "phone_number" => respondent_2.hashed_number,
+         "survey_id" => survey.id,
+         "mode" => nil,
+         "effective_modes" => ["mobileweb"],
+         "questionnaire_id" => questionnaire.id,
+         "disposition" => "registered",
+         "date" => DateTime.to_iso8601(response_2.updated_at),
+         "responses" => [
+           %{
+             "value" => "No",
+             "name" => "Smokes"
+           }
+         ]
+      }
+    ]
+  end
+
+  test "download results json with filter by final state", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id, state: "completed")
+    response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+    response_2 = Repo.get(Response, response_2.id)
+
+    conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "json", "final" => true})
+    assert json_response(conn, 200)["data"]["respondents"] == [
       %{
          "id" => respondent_2.id,
          "phone_number" => respondent_2.hashed_number,

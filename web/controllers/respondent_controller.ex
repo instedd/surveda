@@ -387,7 +387,7 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  def results(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = conn
     |> load_project(project_id)
 
@@ -408,8 +408,31 @@ defmodule Ask.RespondentController do
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
+    dynamic = dynamic([r], r.survey_id == ^survey.id)
+
+    dynamic =
+      if params["since"] do
+        dynamic([r], r.updated_at > ^params["since"] and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if params["disposition"] do
+        dynamic([r], r.disposition == ^params["disposition"] and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if params["final"] do
+        dynamic([r], r.state == "completed" and ^dynamic)
+      else
+        dynamic
+      end
+
     respondents = Respondent
-    |> where(survey_id: ^survey.id)
+    |> where(^dynamic)
     |> order_by(:id)
     |> preload(:responses)
 
