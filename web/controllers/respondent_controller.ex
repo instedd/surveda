@@ -191,10 +191,10 @@ defmodule Ask.RespondentController do
       end
 
     # Completion percentage
-    pending_respondents =
+    contacted_respondents =
       Repo.one(
-        from r in Respondent,
-        where: r.survey_id == ^survey.id and r.state == "pending",
+        from r in (survey |> assoc(:respondents)),
+        where: not r.disposition in ["queued", "registered"],
         select: count("*")
       )
     completed_or_partial =
@@ -212,7 +212,7 @@ defmodule Ask.RespondentController do
       cumulative_percentages: cumulative_percentages(respondents_by_completed_at, survey, target),
       completion_percentage: completion_percentage,
       total_respondents: total_respondents,
-      contacted_respondents: total_respondents - pending_respondents
+      contacted_respondents: contacted_respondents
     }
 
     render(conn, layout, stats: stats)

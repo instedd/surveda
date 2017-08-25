@@ -808,6 +808,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb1.id, completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
     insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
     insert(:respondent, survey: survey, state: "active", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "active", disposition: "queued")
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     assert json_response(conn, 200) == %{ "data" => %{
@@ -816,7 +817,7 @@ defmodule Ask.RespondentControllerTest do
         %{"name" => "Smokes: No - Exercises: Yes", "id" => qb4.id}
       ],
       "completion_percentage" => 0.0,
-      "contacted_respondents" => 3,
+      "contacted_respondents" => 0,
       "cumulative_percentages" => %{},
       "id" => survey.id,
       "respondents_by_disposition" => %{
@@ -842,16 +843,16 @@ defmodule Ask.RespondentControllerTest do
           "percent" => 0.0
         },
         "uncontacted" => %{
-          "count" => 3,
+          "count" => 4,
           "detail" => %{
             "failed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-            "queued" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-            "registered" => %{"by_reference" => %{"#{qb1.id}" => 1, "#{qb4.id}" => 2}, "count" => 3, "percent" => 100.0}
+            "queued" => %{"by_reference" => %{"" => 1}, "count" => 1, "percent" => 25.0},
+            "registered" => %{"by_reference" => %{"#{qb1.id}" => 1, "#{qb4.id}" => 2}, "count" => 3, "percent" => 75.0}
           },
           "percent" => 100.0
         }
       },
-      "total_respondents" => 3
+      "total_respondents" => 4
     }}
   end
 
