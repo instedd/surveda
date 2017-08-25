@@ -6,8 +6,8 @@ defmodule Ask.UrlShortener do
   def shorten(url) do
     api_key = get_api_key()
     if api_key do
-      body = String.to_char_list("{\"longUrl\": \"#{url}\"}")
-      url = String.to_char_list("https://www.googleapis.com/urlshortener/v1/url?key=#{api_key}")
+      body = String.to_charlist("{\"longUrl\": \"#{url}\"}")
+      url = String.to_charlist("https://www.googleapis.com/urlshortener/v1/url?key=#{api_key}")
 
       case :httpc.request(:post, { url, [], 'application/json', body },[], []) do
         { :ok, {{ _, 200, _}, _, body }} ->

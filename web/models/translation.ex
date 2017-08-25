@@ -183,7 +183,7 @@ defmodule Ask.Translation do
             if other_lang != lang do
               case other_prompt do
                 %{"sms" => other_text} ->
-                  if other_text |> String.strip |> String.length == 0 do
+                  if other_text |> String.trim |> String.length == 0 do
                     translations
                   else
                     [{"sms", scope, lang, text, other_lang, other_text} | translations]
@@ -370,6 +370,6 @@ defmodule Ask.Translation do
   # ----- #
 
   defp present?(string) do
-    (string |> String.strip |> String.length) > 0
+    (string |> String.trim |> String.length) > 0
   end
 end
