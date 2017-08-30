@@ -1007,7 +1007,7 @@ defmodule Ask.BrokerTest do
     Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
 
     [{"contact", nc}, {"prompt", np}] = Repo.all(from s in SurveyLogEntry, select: {s.action_type, count("*")}, group_by: s.action_type)
-    assert nc == 4
+    assert nc == 5
     assert np == 3
 
     :ok = broker |> GenServer.stop
@@ -1776,7 +1776,11 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [answer, do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [enqueueing, answer, do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert enqueueing.survey_id == survey.id
+    assert enqueueing.action_data == "Enqueueing call"
+    assert enqueueing.action_type == "contact"
 
     assert answer.survey_id == survey.id
     assert answer.action_data == "Answer"
@@ -2114,7 +2118,11 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [answer, do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke, completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [enqueueing, answer, do_you_smoke, foo, wrong_answer, do_you_smoke_again, dont_smoke, completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert enqueueing.survey_id == survey.id
+    assert enqueueing.action_data == "Enqueueing call"
+    assert enqueueing.action_type == "contact"
 
     assert answer.survey_id == survey.id
     assert answer.action_data == "Answer"

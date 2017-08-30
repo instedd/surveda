@@ -145,7 +145,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "some random reason (42)"
@@ -179,7 +183,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "(42)"
@@ -214,7 +222,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "some random reason"
@@ -249,7 +261,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "failed"
@@ -284,7 +300,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "no-answer: another reason (foo)"
@@ -319,7 +339,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "busy: yet another reason (bar)"

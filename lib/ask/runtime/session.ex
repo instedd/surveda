@@ -45,11 +45,12 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp mode_start(%Session{current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token} = session) do
+  defp mode_start(%Session{flow: flow, current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token} = session) do
     channel_state = channel
     |> Ask.Channel.runtime_channel
     |> Channel.setup(respondent, token)
     |> handle_setup_response
+    log_contact("Enqueueing call", channel, flow.mode, respondent)
 
     session = %{session| channel_state: channel_state}
     {:ok, session, %Reply{}, current_timeout(session), respondent}
@@ -210,6 +211,7 @@ defmodule Ask.Runtime.Session do
             channel_state
 
           %IVRMode{} ->
+            log_contact("Timeout. Call failed.", session.current_mode.channel, session.flow.mode, respondent)
             setup_response = runtime_channel |> Channel.setup(session.respondent, token)
             handle_setup_response(setup_response)
 
@@ -219,7 +221,6 @@ defmodule Ask.Runtime.Session do
             runtime_channel |> Channel.ask(session.respondent, token, reply)
             channel_state
         end
-
       # The new session will timeout as defined by hd(retries)
       session = %{session | current_mode: %{session.current_mode | retries: retries}, token: token, channel_state: channel_state}
       {:ok, session, %Reply{}, current_timeout(session), respondent}
