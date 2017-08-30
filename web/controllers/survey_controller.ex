@@ -15,7 +15,11 @@ defmodule Ask.SurveyController do
 
     dynamic =
       if params["state"] do
-        dynamic([s], s.state == ^params["state"] and ^dynamic)
+        if params["state"] == "completed" do
+          dynamic([s], s.state == "terminated" and s.exit_code == 0 and ^dynamic)
+        else
+          dynamic([s], s.state == ^params["state"] and ^dynamic)
+        end
       else
         dynamic
       end
