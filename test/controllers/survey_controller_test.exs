@@ -35,6 +35,17 @@ defmodule Ask.SurveyControllerTest do
       ]
     end
 
+    test "list only running surveys", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      insert(:survey, project: project, state: "terminated", exit_code: 0)
+      survey = insert(:survey, project: project, state: "running")
+      survey = Survey |> Repo.get(survey.id)
+      conn = get conn, project_survey_path(conn, :index, project.id, state: "running")
+      assert json_response(conn, 200)["data"] == [
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "timezone" => "UTC", "next_schedule_time" => nil, "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at)}
+      ]
+    end
+
     test "returns 404 when the project does not exist", %{conn: conn} do
       assert_error_sent 404, fn ->
         get conn, project_survey_path(conn, :index, -1)

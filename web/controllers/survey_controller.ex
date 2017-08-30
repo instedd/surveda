@@ -4,14 +4,24 @@ defmodule Ask.SurveyController do
   alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel}
   alias Ask.Runtime.Session
 
-  def index(conn, %{"project_id" => project_id}) do
+  def index(conn, %{"project_id" => project_id} = params) do
     project = conn
     |> load_project(project_id)
 
+    dynamic = dynamic([s], s.project_id == ^project.id)
+
     # Hide simulations from the index
+    dynamic = dynamic([s], s.simulation == false and ^dynamic)
+
+    dynamic =
+      if params["state"] do
+        dynamic([s], s.state == ^params["state"] and ^dynamic)
+      else
+        dynamic
+      end
+
     surveys = Repo.all(from s in Survey,
-      where: s.project_id == ^project.id,
-      where: s.simulation == false)
+      where: ^dynamic)
 
     render(conn, "index.json", surveys: surveys)
   end
