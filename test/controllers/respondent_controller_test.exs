@@ -1,5 +1,4 @@
 defmodule Ask.RespondentControllerTest do
-
   use Ask.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps

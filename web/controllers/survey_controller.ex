@@ -24,6 +24,13 @@ defmodule Ask.SurveyController do
         dynamic
       end
 
+    dynamic =
+      if params["since"] do
+        dynamic([s], s.updated_at > ^params["since"] and ^dynamic)
+      else
+        dynamic
+      end
+
     surveys = Repo.all(from s in Survey,
       where: ^dynamic)
 
