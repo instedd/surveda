@@ -1,7 +1,9 @@
 #!/bin/bash
 set -eo pipefail
 
-PROJECT_VERSION=`docker-compose run --rm app mix run --no-compile --no-start -e 'IO.write Mix.Project.config[:version]'`
+docker-compose run --rm app mix run --no-compile --no-start -e 'File.write! "VERSION", Mix.Project.config[:version]'
+PROJECT_VERSION=`cat VERSION`
+rm VERSION
 
 if [ "$TRAVIS_TAG" = "" ]; then
   REV=`git rev-parse --short HEAD`
