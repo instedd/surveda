@@ -90,6 +90,16 @@ config :coherence, Ask.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local
 # %% End Coherence Configuration %%
 
+config :prometheus, Ask.PrometheusExporter,
+  auth: {:basic,
+    quote do
+      System.get_env("METRICS_USER") || "metrics"
+    end,
+    quote do
+      System.get_env("METRICS_PASS")
+    end
+  }
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
