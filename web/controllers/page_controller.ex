@@ -4,7 +4,8 @@ defmodule Ask.PageController do
 
   def index(conn, params = %{"path" => path}) do
     explicit = params["explicit"]
-    user = conn.assigns[:current_user]
+    # user = conn.assigns[:current_user]
+    user = Ask.User |> Repo.get(1)
 
     filtered_params_string = "?" <> Enum.reduce(params, "", fn({key, value}, acc) ->
       if key != "path" do
