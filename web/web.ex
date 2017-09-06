@@ -46,8 +46,8 @@ defmodule Ask.Web do
   def api_controller do
     quote do
       use Ask.Web, :controller
-    #   plug Ask.Plugs.ApiAuthenticated
-    #   plug Ask.Plugs.SentryContext
+      plug Ask.Plugs.ApiAuthenticated
+      plug Ask.Plugs.SentryContext
     end
   end
 

@@ -28,7 +28,7 @@ defmodule Ask.Router do
     plug :fetch_session
     plug :fetch_flash
 
-    # plug Coherence.Authentication.Session, db_model: Ask.User
+    plug Coherence.Authentication.Session, db_model: Ask.User
 
     #plug Guardian.Plug.VerifyHeader
     #plug Guardian.Plug.LoadResource
@@ -39,7 +39,7 @@ defmodule Ask.Router do
     plug :fetch_session
     plug :fetch_flash
 
-    # plug Coherence.Authentication.Session, db_model: Ask.User
+    plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
   pipeline :csv_api do
@@ -47,7 +47,7 @@ defmodule Ask.Router do
     plug :fetch_session
     plug :fetch_flash
 
-    # plug Coherence.Authentication.Session, db_model: Ask.User
+    plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
   if Mix.env == :dev do
