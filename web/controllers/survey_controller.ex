@@ -174,8 +174,8 @@ defmodule Ask.SurveyController do
               |> render(Ask.ChangesetView, "error.json", changeset: changeset)
           end
 
-        {:error, _reason} ->
-          Logger.warn "Error when preparing channels for launching survey #{id}"
+        {:error, reason} ->
+          Logger.warn "Error when preparing channels for launching survey #{id} (#{reason})"
           conn
           |> put_status(:unprocessable_entity)
           |> render("show.json", survey: survey)
