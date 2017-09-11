@@ -6,9 +6,9 @@ defmodule Ask.Repo.Migrations.SynchronizeRespondentStats do
     Repo.transaction(fn ->
       Repo.query!("""
         INSERT INTO respondent_stats
-        SELECT survey_id, IFNULL(questionnaire_id, 0), state, disposition, count(*)
+        SELECT survey_id, IFNULL(questionnaire_id, 0), state, disposition, IFNULL(quota_bucket_id, 0), IFNULL(mode, ""), count(*)
         FROM respondents
-        GROUP BY survey_id, questionnaire_id, state, disposition
+        GROUP BY survey_id, questionnaire_id, state, disposition, quota_bucket_id, mode
         """, [])
 
       Repo.query!("""
@@ -17,8 +17,8 @@ defmodule Ask.Repo.Migrations.SynchronizeRespondentStats do
         FOR EACH ROW
         BEGIN
 
-          INSERT INTO respondent_stats(survey_id, questionnaire_id, state, disposition, `count`)
-          VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, 1)
+          INSERT INTO respondent_stats(survey_id, questionnaire_id, state, disposition, quota_bucket_id, mode, `count`)
+          VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ""), 1)
           ON DUPLICATE KEY UPDATE `count` = `count` + 1
           ;
 
@@ -37,6 +37,8 @@ defmodule Ask.Repo.Migrations.SynchronizeRespondentStats do
              AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
              AND state = OLD.state
              AND disposition = OLD.disposition
+             AND quota_bucket_id = IFNULL(OLD.quota_bucket_id, 0)
+             AND mode = IFNULL(OLD.mode,"")
           ;
 
         END;
@@ -54,10 +56,12 @@ defmodule Ask.Repo.Migrations.SynchronizeRespondentStats do
              AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
              AND state = OLD.state
              AND disposition = OLD.disposition
+             AND quota_bucket_id = IFNULL(LD.quota_bucket_id, 0)
+             AND mode = IFNULL(OLD.mode, "")
           ;
 
           INSERT INTO respondent_stats(survey_id, questionnaire_id, state, disposition, `count`)
-          VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, 1)
+          VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ""), 1)
           ON DUPLICATE KEY UPDATE `count` = `count` + 1
           ;
 

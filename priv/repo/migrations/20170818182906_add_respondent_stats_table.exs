@@ -7,6 +7,8 @@ defmodule Ask.Repo.Migrations.AddRespondentStatsTable do
       add :questionnaire_id, :integer, primary_key: true
       add :state, :string, primary_key: true
       add :disposition, :string, primary_key: true
+      add :quota_bucket_id, :integer, primary_key: true
+      add :mode, :string, primary_key: true
       add :count, :integer, default: 0
     end
   end
