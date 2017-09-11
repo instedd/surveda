@@ -6,6 +6,8 @@ defmodule Ask.RespondentStats do
     field :questionnaire_id, :integer
     field :state, :string
     field :disposition, :string
+    field :quota_bucket_id, :integer
+    field :mode, :string
     field :count, :integer
   end
 end
