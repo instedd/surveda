@@ -101,7 +101,7 @@ config :prometheus, Ask.PrometheusExporter,
   }
 
 config :alto_guisso,
-  enabled: System.get_env("GUISSO_ENABLED") == true,
+  enabled: System.get_env("GUISSO_ENABLED") == "true",
   base_url: System.get_env("GUISSO_BASE_URL"),
   redirect_uri: System.get_env("GUISSO_REDIRECT_URI"),
   client_id: System.get_env("GUISSO_CLIENT_ID"),
