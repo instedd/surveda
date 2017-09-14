@@ -6,7 +6,9 @@ defmodule Ask.Coherence.SessionController do
   use Coherence.Web, :controller
   use Timex
   alias Ask.Logger
-  alias Coherence.{Rememberable}
+  alias Ask.User
+  alias Ask.Repo
+  alias Coherence.Rememberable
   use Coherence.Config
   import Ecto.Query
   import Rememberable, only: [hash: 1, gen_cookie: 3]
@@ -43,11 +45,36 @@ defmodule Ask.Coherence.SessionController do
   Render the login form.
   """
   def new(conn, params) do
-    login_field = Config.login_field
-    conn
-    |> assign(:redirect, params["redirect"])
-    |> put_view(Coherence.SessionView)
-    |> render(:new, [{login_field, ""}, remember: rememberable_enabled?()])
+    if Guisso.enabled? do
+      Guisso.request_auth_code(conn, params["redirect"])
+    else
+      login_field = Config.login_field
+      conn
+        |> assign(:redirect, params["redirect"])
+        |> put_view(Coherence.SessionView)
+        |> render(:new, [{login_field, ""}, remember: rememberable_enabled?()])
+    end
+  end
+
+  def oauth_callback(conn, params) do
+    {:ok, email, redirect} = Guisso.request_auth_token(conn, params)
+    user = find_or_create_user(email)
+
+    Coherence.Authentication.Session.create_login(conn, user, [id_key: Config.schema_key])
+    |> put_flash(:notice, "Signed in successfully.")
+    |> redirect(to: redirect || "/")
+  end
+
+  defp find_or_create_user(email) do
+    case Repo.one(from u in User, where: field(u, :email) == ^email) do
+      nil ->
+        %User{}
+        |> User.changeset(%{email: email, password: UUID.uuid4()})
+        |> Repo.insert!
+
+      user ->
+        user
+    end
   end
 
   @doc """

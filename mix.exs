@@ -56,7 +56,8 @@ defmodule Ask.Mixfile do
       {:xml_builder, "~> 0.0.9"},
       {:language_names, "~> 0.1.0"},
       {:prometheus_phoenix, "~> 1.0"},
-      {:prometheus_plugs, "~> 1.1"}
+      {:prometheus_plugs, "~> 1.1"},
+      {:alto_guisso, git: "https://github.com/instedd/alto_guisso_ex.git"}
    ]
   end
 

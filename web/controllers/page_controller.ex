@@ -1,6 +1,7 @@
 defmodule Ask.PageController do
   use Ask.Web, :controller
   import Ask.Router.Helpers
+  plug Guisso.SSO, session_controller: Ask.Coherence.SessionController
 
   def index(conn, params = %{"path" => path}) do
     explicit = params["explicit"]
