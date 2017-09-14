@@ -1,5 +1,5 @@
 %{"accept": {:hex, :accept, "0.3.3", "548ebb6fb2e8b0d170e75bb6123aea6ceecb0189bb1231eeadf52eac08384a97", [:rebar3], [], "hexpm"},
-  "alto_guisso": {:git, "https://github.com/instedd/alto_guisso_ex.git", "2db45cd50fea716a18402fed24da5ab9a3b95cf2", []},
+  "alto_guisso": {:git, "https://github.com/instedd/alto_guisso_ex.git", "a3d0ba599768c69655a386b07686100b06a243c8", []},
   "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [], [], "hexpm"},
   "certifi": {:hex, :certifi, "1.0.0", "1c787a85b1855ba354f0b8920392c19aa1d06b0ee1362f9141279620a5be2039", [:rebar3], [], "hexpm"},
   "coherence": {:git, "https://github.com/manastech/coherence.git", "66e61c7c2d960f729a6e89dfe594d1c0e9b3766a", [branch: "v0.3.2"]},
