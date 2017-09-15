@@ -12,6 +12,7 @@ defmodule Ask.LayoutView do
 
     client_config = %{
       version: version,
+      csrf_token: get_csrf_token(),
       user: user_email,
       sentryDsn: sentry_dsn,
       nuntium: Config.provider_config(Nuntium) |> guisso_configs,

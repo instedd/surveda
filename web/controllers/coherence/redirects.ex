@@ -45,10 +45,19 @@ defmodule Coherence.Redirects do
   end
   def session_create(conn, _), do: redirect(conn, to: "/")
 
+  def session_delete(conn, params) do
+    if Guisso.enabled? do
+      redirect_url = "#{url(conn)}#{logged_out_url(conn)}"
+      conn |> Guisso.sign_out(redirect_url)
+    else
+      super(conn, params)
+    end
+  end
+
   def registration_create(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_sent))
   def confirmation_create(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_sent))
   def confirmation_edit(conn, _), do: redirect(conn, to: session_path(conn, :new))
-  def confirmation_edit_expired(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_expired)) 
+  def confirmation_edit_expired(conn, _), do: redirect(conn, to: registration_path(conn, :confirmation_expired))
   def password_create(conn, _), do: redirect(conn, to: password_path(conn, :password_recovery_sent))
   def password_update(conn, _), do: redirect(conn, to: session_path(conn, :new))
 end
