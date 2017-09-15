@@ -103,11 +103,8 @@ config :prometheus, Ask.PrometheusExporter,
 config :alto_guisso,
   enabled: System.get_env("GUISSO_ENABLED") == "true",
   base_url: System.get_env("GUISSO_BASE_URL"),
-  redirect_uri: System.get_env("GUISSO_REDIRECT_URI"),
   client_id: System.get_env("GUISSO_CLIENT_ID"),
-  client_secret: System.get_env("GUISSO_CLIENT_SECRET"),
-  secret_key_base: System.get_env("SECRET_KEY_BASE")
-
+  client_secret: System.get_env("GUISSO_CLIENT_SECRET")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
