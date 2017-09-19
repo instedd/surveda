@@ -57,19 +57,19 @@ defmodule Ask.Coherence.SessionController do
   end
 
   def oauth_callback(conn, params) do
-    {:ok, email, redirect} = Guisso.request_auth_token(conn, params)
-    user = find_or_create_user(email)
+    {:ok, email, name, redirect} = Guisso.request_auth_token(conn, params)
+    user = find_or_create_user(email, name)
 
     Coherence.Authentication.Session.create_login(conn, user, [id_key: Config.schema_key])
     |> put_flash(:notice, "Signed in successfully.")
     |> redirect(to: redirect || "/")
   end
 
-  defp find_or_create_user(email) do
+  defp find_or_create_user(email, name) do
     case Repo.one(from u in User, where: field(u, :email) == ^email) do
       nil ->
         %User{}
-        |> User.changeset(%{email: email, password: UUID.uuid4()})
+        |> User.changeset(%{email: email, name: name, password: UUID.uuid4()})
         |> Repo.insert!
 
       user ->

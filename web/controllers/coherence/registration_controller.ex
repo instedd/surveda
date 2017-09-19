@@ -31,10 +31,14 @@ defmodule Ask.Coherence.RegistrationController do
   Render the new user form.
   """
   def new(conn, _params) do
-    user_schema = Config.user_schema
-    cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
-    conn
-    |> render(:new, email: "", changeset: cs)
+    if Guisso.enabled? do
+      Guisso.sign_up(conn, "/")
+    else
+      user_schema = Config.user_schema
+      cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
+      conn
+      |> render(:new, email: "", changeset: cs)
+    end
   end
 
   @doc """
