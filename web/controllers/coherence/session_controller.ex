@@ -73,7 +73,13 @@ defmodule Ask.Coherence.SessionController do
         |> Repo.insert!
 
       user ->
-        user
+        if user.name != name && name != nil && name != "" do
+          user
+          |> User.changeset(%{name: name})
+          |> Repo.update!
+        else
+          user
+        end
     end
   end
 
