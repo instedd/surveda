@@ -139,13 +139,14 @@ defmodule Ask.Router do
 
   scope "/", Ask do
     pipe_through :browser
-    coherence_routes :public
+    coherence_routes :all
 
     # add public resources below
     get "/oauth_client/callback", OAuthClientController, :callback
     get "/registrations/confirmation_sent", Coherence.RegistrationController, :confirmation_sent
     get "/registrations/confirmation_expired", Coherence.RegistrationController, :confirmation_expired
     get "/passwords/password_recovery_sent", Coherence.PasswordController, :password_recovery_sent
+    get "/session/oauth_callback", Coherence.SessionController, :oauth_callback
     get "/*path", PageController, :index
   end
 end

@@ -269,10 +269,6 @@ export const stopSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop`, surveySchema)
 }
 
-export const logout = () => {
-  apiDelete('sessions').then(() => { window.location.href = '/' })
-}
-
 export const fetchTimezones = () => {
   return apiFetchJSONWithCallback(`timezones`, null, {}, (json, schema) => {
     return () => {
