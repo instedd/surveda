@@ -18,9 +18,9 @@ RUN mix deps.compile
 
 ADD . /app
 RUN mix compile
-RUN mix phoenix.digest
+RUN mix phx.digest
 
 ENV PORT=80
 EXPOSE 80
 
-CMD mix phoenix.server
+CMD mix phx.server
