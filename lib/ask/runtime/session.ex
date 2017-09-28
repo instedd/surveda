@@ -95,7 +95,11 @@ defmodule Ask.Runtime.Session do
   end
 
   defp url(respondent_id) do
-    shorten("#{Ask.Endpoint.url}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
+    shorten("#{mobile_base_url()}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
+  end
+
+  defp mobile_base_url() do
+    System.get_env("MOBILE_WEB_BASE_URL") || Ask.Endpoint.url
   end
 
   defp shorten(url) do
