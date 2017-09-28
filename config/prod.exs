@@ -14,7 +14,7 @@ use Mix.Config
 config :ask, Ask.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: {:system, "HOST"}, scheme: "https", port: 443],
-  cache_static_manifest: "priv/static/manifest.json",
+  cache_static_manifest: "priv/static/cache_manifest.json",
   force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
 
 # Do not print debug messages in production
