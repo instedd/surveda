@@ -4,14 +4,35 @@ defmodule Ask.SurveyController do
   alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel}
   alias Ask.Runtime.Session
 
-  def index(conn, %{"project_id" => project_id}) do
+  def index(conn, %{"project_id" => project_id} = params) do
     project = conn
     |> load_project(project_id)
 
+    dynamic = dynamic([s], s.project_id == ^project.id)
+
     # Hide simulations from the index
+    dynamic = dynamic([s], s.simulation == false and ^dynamic)
+
+    dynamic =
+      if params["state"] do
+        if params["state"] == "completed" do
+          dynamic([s], s.state == "terminated" and s.exit_code == 0 and ^dynamic)
+        else
+          dynamic([s], s.state == ^params["state"] and ^dynamic)
+        end
+      else
+        dynamic
+      end
+
+    dynamic =
+      if params["since"] do
+        dynamic([s], s.updated_at > ^params["since"] and ^dynamic)
+      else
+        dynamic
+      end
+
     surveys = Repo.all(from s in Survey,
-      where: s.project_id == ^project.id,
-      where: s.simulation == false)
+      where: ^dynamic)
 
     render(conn, "index.json", surveys: surveys)
   end
@@ -153,8 +174,8 @@ defmodule Ask.SurveyController do
               |> render(Ask.ChangesetView, "error.json", changeset: changeset)
           end
 
-        {:error, _reason} ->
-          Logger.warn "Error when preparing channels for launching survey #{id}"
+        {:error, reason} ->
+          Logger.warn "Error when preparing channels for launching survey #{id} (#{reason})"
           conn
           |> put_status(:unprocessable_entity)
           |> render("show.json", survey: survey)
