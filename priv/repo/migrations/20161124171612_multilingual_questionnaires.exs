@@ -86,7 +86,7 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
     case Kernel.get_in(choice, ["errors"]) do
       nil -> choice
       _errors ->
-        {errors, new_choice} = Kernel.pop_in(choice, ["errors"])
+        {_errors, new_choice} = Kernel.pop_in(choice, ["errors"])
         new_choice
     end
   end

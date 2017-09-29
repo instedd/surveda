@@ -7,7 +7,7 @@ defmodule Ask.Repo.Migrations.AddExitMessageAndExitCodeToSurveys do
       add :exit_code, :integer
       add :exit_message, :string
     end
-    flush
+    flush()
 
     from(s in "surveys", where: s.state == "completed")
     |> Ask.Repo.update_all(set: [state: "terminated", exit_code: 0, exit_message: "Successfully completed"])

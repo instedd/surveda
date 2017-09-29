@@ -6,7 +6,7 @@ defmodule Ask.Repo.Migrations.SetDefaultStateForSurveys do
     alter table(:surveys) do
       modify :state, :string, default: "pending"
     end
-    flush
+    flush()
 
     from(s in Ask.Survey, where: is_nil(s.state))
     |> Ask.Repo.update_all(set: [state: "pending"])
