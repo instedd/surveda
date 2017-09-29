@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Juniper 0.10.3
+
+### Features
+
+* Customizable base url for the link sent to mobile web respondents (MOBILE_WEB_BASE_URL environment variable)
+
 ## Juniper 0.10.2
 
 ### Features
