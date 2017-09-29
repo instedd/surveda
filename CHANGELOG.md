@@ -1,5 +1,25 @@
 # InSTEDD Surveda Changelog
 
+## Katsura 0.11
+
+In this release the development platform was updated (Elixir 1.5, Phoenix 1.3, Ecto 2.1.6)
+
+### Features
+
+* Register in the interactions log whenever a respondent is enqueued in Verboice and also when a callback from Verboice was not received and the respondent timed out [#1127](https://github.com/instedd/ask/issues/1127)
+* Results endpoint can filter by disposition, update timestamp and final state [#1143](https://github.com/instedd/ask/issues/1143)
+* Results endpoint can return JSON [#1142](https://github.com/instedd/ask/issues/1142)
+
+### Bugfixes
+
+* Fixed inconsistent number of contacted respondents [#1128](https://github.com/instedd/ask/issues/1128)
+
+## Juniper 0.10.3
+
+### Features
+
+* Customizable base url for the link sent to mobile web respondents (MOBILE_WEB_BASE_URL environment variable)
+
 ## Juniper 0.10.2
 
 ### Features
