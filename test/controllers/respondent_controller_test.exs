@@ -3,7 +3,7 @@ defmodule Ask.RespondentControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{QuotaBucket, Survey, Response}
+  alias Ask.{QuotaBucket, Survey, Response, Respondent}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -30,6 +30,7 @@ defmodule Ask.RespondentControllerTest do
       respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id, disposition: "completed")
       response = insert(:response, respondent: respondent, value: "Yes")
       response = Response |> Repo.get(response.id)
+      respondent = Respondent |> Repo.get(respondent.id)
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       assert json_response(conn, 200)["data"]["respondents"] == [%{
                                                      "id" => respondent.id,
@@ -40,6 +41,7 @@ defmodule Ask.RespondentControllerTest do
                                                      "questionnaire_id" => questionnaire.id,
                                                      "disposition" => "completed",
                                                      "date" => DateTime.to_iso8601(response.updated_at),
+                                                     "updated_at" => NaiveDateTime.to_iso8601(respondent.updated_at),
                                                      "responses" => [
                                                        %{
                                                          "value" => response.value,
@@ -420,10 +422,12 @@ defmodule Ask.RespondentControllerTest do
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
+    respondent_1 = Repo.get(Respondent, respondent_1.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     response_1 = insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
     response_1 = Repo.get(Response, response_1.id)
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id)
+    respondent_2 = Repo.get(Respondent, respondent_2.id)
     response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
     response_2 = Repo.get(Response, response_2.id)
 
@@ -438,6 +442,7 @@ defmodule Ask.RespondentControllerTest do
          "questionnaire_id" => questionnaire.id,
          "disposition" => "partial",
          "date" => DateTime.to_iso8601(response_1.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_1.updated_at),
          "responses" => [
            %{
              "value" => "Yes",
@@ -458,6 +463,7 @@ defmodule Ask.RespondentControllerTest do
          "questionnaire_id" => questionnaire.id,
          "disposition" => "registered",
          "date" => DateTime.to_iso8601(response_2.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
          "responses" => [
            %{
              "value" => "No",
@@ -473,10 +479,12 @@ defmodule Ask.RespondentControllerTest do
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
+    respondent_1 = Repo.get(Respondent, respondent_1.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     response_1 = insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
     response_1 = Repo.get(Response, response_1.id)
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id)
+    respondent_2 = Repo.get(Respondent, respondent_2.id)
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
     conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "json", "disposition" => "partial"})
@@ -490,6 +498,7 @@ defmodule Ask.RespondentControllerTest do
          "questionnaire_id" => questionnaire.id,
          "disposition" => "partial",
          "date" => DateTime.to_iso8601(response_1.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_1.updated_at),
          "responses" => [
            %{
              "value" => "Yes",
@@ -512,6 +521,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id, updated_at: Timex.shift(Timex.now, hours: 2, minutes: 3))
+    respondent_2 = Repo.get(Respondent, respondent_2.id)
     response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
     response_2 = Repo.get(Response, response_2.id)
 
@@ -526,6 +536,7 @@ defmodule Ask.RespondentControllerTest do
          "questionnaire_id" => questionnaire.id,
          "disposition" => "registered",
          "date" => DateTime.to_iso8601(response_2.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
          "responses" => [
            %{
              "value" => "No",
@@ -544,6 +555,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], questionnaire_id: questionnaire.id, state: "completed")
+    respondent_2 = Repo.get(Respondent, respondent_2.id)
     response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
     response_2 = Repo.get(Response, response_2.id)
 
@@ -558,6 +570,7 @@ defmodule Ask.RespondentControllerTest do
          "questionnaire_id" => questionnaire.id,
          "disposition" => "registered",
          "date" => DateTime.to_iso8601(response_2.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
          "responses" => [
            %{
              "value" => "No",
@@ -617,11 +630,13 @@ defmodule Ask.RespondentControllerTest do
     )
 
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], mode: ["sms"], questionnaire_id: questionnaire.id)
+    respondent_1 = Repo.get(Respondent, respondent_1.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     response_1 = insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "No")
     response_1 = Repo.get(Response, response_1.id)
 
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], mode: ["sms", "ivr"], questionnaire_id: questionnaire2.id, disposition: "completed")
+    respondent_2 = Repo.get(Respondent, respondent_2.id)
     response_2 = insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
     response_2 = Repo.get(Response, response_2.id)
 
@@ -636,6 +651,7 @@ defmodule Ask.RespondentControllerTest do
          "questionnaire_id" => questionnaire.id,
          "disposition" => "partial",
          "date" => DateTime.to_iso8601(response_1.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_1.updated_at),
          "experiment_name" => "test - SMS",
          "responses" => [
            %{
@@ -658,6 +674,7 @@ defmodule Ask.RespondentControllerTest do
          "experiment_name" => "test 2 - SMS with phone call fallback",
          "disposition" => "completed",
          "date" => DateTime.to_iso8601(response_2.updated_at),
+         "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
          "responses" => [
            %{
              "value" => "No",

@@ -31,6 +31,7 @@ defmodule Ask.RespondentView do
         responses: responses,
         disposition: respondent.disposition,
         date: date,
+        updated_at: respondent.updated_at,
         experiment_name: respondent.experiment_name
       }
     else
@@ -43,7 +44,8 @@ defmodule Ask.RespondentView do
         questionnaire_id: respondent.questionnaire_id,
         responses: responses,
         disposition: respondent.disposition,
-        date: date
+        date: date,
+        updated_at: respondent.updated_at
       }
     end
   end
