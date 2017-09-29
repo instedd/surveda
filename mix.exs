@@ -19,7 +19,7 @@ defmodule Ask.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Ask, []},
-     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
+     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext, :alto_guisso,
                     :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :coherence, :prometheus_phoenix, :prometheus_plugs]]
   end
 

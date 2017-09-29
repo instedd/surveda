@@ -25,7 +25,7 @@ defmodule Ask.Plugs.ApiAuthenticated do
       user ->
         case Repo.get(User, user.id) do
           nil ->
-            conn 
+            conn
             |> assign(:current_user, nil)
             |> put_status(:unauthorized)
             |> json(%{error: "Unauthorized"})
