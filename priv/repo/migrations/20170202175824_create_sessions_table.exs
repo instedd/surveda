@@ -7,7 +7,7 @@ defmodule Ask.Repo.Migrations.CreateSessionsTable do
       add :user_type, :string
       add :user_id, :string
 
-      timestamps
+      timestamps()
     end
 
     create unique_index(:sessions, [:token])

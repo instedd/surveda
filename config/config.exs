@@ -90,6 +90,22 @@ config :coherence, Ask.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local
 # %% End Coherence Configuration %%
 
+config :prometheus, Ask.PrometheusExporter,
+  auth: {:basic,
+    quote do
+      System.get_env("METRICS_USER") || "metrics"
+    end,
+    quote do
+      System.get_env("METRICS_PASS")
+    end
+  }
+
+config :alto_guisso,
+  enabled: System.get_env("GUISSO_ENABLED") == "true",
+  base_url: System.get_env("GUISSO_BASE_URL"),
+  client_id: System.get_env("GUISSO_CLIENT_ID"),
+  client_secret: System.get_env("GUISSO_CLIENT_SECRET")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

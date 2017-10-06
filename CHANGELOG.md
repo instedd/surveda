@@ -1,5 +1,40 @@
 # InSTEDD Surveda Changelog
 
+## Larch 0.12
+
+There is a new endpoint to collect metrics by Prometheus. This endpoint can be protected with username and password using the environment variables METRICS_USER (defaults to "metrics") and METRICS_PASS.
+
+In order to use Guisso for authentication and SSO, some new environment variables must be set:
+  * GUISSO_ENABLED: boolean, defaults to `false`
+  * GUISSO_BASE_URL: the base url of the Guisso server (ie: `https://login.instedd.org`)
+  * GUISSO_CLIENT_ID and GUISSO_CLIENT_SECRET: credentials generated in Guisso for the Surveda application
+
+### Features
+
+* Integrated Prometheus endpoint to export HTTP metrics [#1115](https://github.com/instedd/ask/issues/1115)
+* Single sign-on using Guisso [#1144](https://github.com/instedd/ask/issues/1144)
+* OAuth2 authentication for APIs [#1145](https://github.com/instedd/ask/issues/1145)
+
+## Katsura 0.11
+
+In this release the development platform was updated (Elixir 1.5, Phoenix 1.3, Ecto 2.1.6)
+
+### Features
+
+* Register in the interactions log whenever a respondent is enqueued in Verboice and also when a callback from Verboice was not received and the respondent timed out [#1127](https://github.com/instedd/ask/issues/1127)
+* Results endpoint can filter by disposition, update timestamp and final state [#1143](https://github.com/instedd/ask/issues/1143)
+* Results endpoint can return JSON [#1142](https://github.com/instedd/ask/issues/1142)
+
+### Bugfixes
+
+* Fixed inconsistent number of contacted respondents [#1128](https://github.com/instedd/ask/issues/1128)
+
+## Juniper 0.10.3
+
+### Features
+
+* Customizable base url for the link sent to mobile web respondents (MOBILE_WEB_BASE_URL environment variable)
+
 ## Juniper 0.10.2
 
 ### Features

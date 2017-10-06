@@ -191,10 +191,10 @@ defmodule Ask.RespondentController do
       end
 
     # Completion percentage
-    pending_respondents =
+    contacted_respondents =
       Repo.one(
-        from r in Respondent,
-        where: r.survey_id == ^survey.id and r.state == "pending",
+        from r in (survey |> assoc(:respondents)),
+        where: not r.disposition in ["queued", "registered"],
         select: count("*")
       )
     completed_or_partial =
@@ -212,7 +212,7 @@ defmodule Ask.RespondentController do
       cumulative_percentages: cumulative_percentages(respondents_by_completed_at, survey, target),
       completion_percentage: completion_percentage,
       total_respondents: total_respondents,
-      contacted_respondents: total_respondents - pending_respondents
+      contacted_respondents: contacted_respondents
     }
 
     render(conn, layout, stats: stats)
@@ -387,7 +387,7 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  def results(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = conn
     |> load_project(project_id)
 
@@ -408,8 +408,31 @@ defmodule Ask.RespondentController do
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
+    dynamic = dynamic([r], r.survey_id == ^survey.id)
+
+    dynamic =
+      if params["since"] do
+        dynamic([r], r.updated_at > ^params["since"] and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if params["disposition"] do
+        dynamic([r], r.disposition == ^params["disposition"] and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if params["final"] do
+        dynamic([r], r.state == "completed" and ^dynamic)
+      else
+        dynamic
+      end
+
     respondents = Respondent
-    |> where(survey_id: ^survey.id)
+    |> where(^dynamic)
     |> order_by(:id)
     |> preload(:responses)
 

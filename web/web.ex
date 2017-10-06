@@ -46,6 +46,7 @@ defmodule Ask.Web do
   def api_controller do
     quote do
       use Ask.Web, :controller
+      plug Guisso.OAuth
       plug Ask.Plugs.ApiAuthenticated
       plug Ask.Plugs.SentryContext
     end

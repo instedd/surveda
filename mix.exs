@@ -3,7 +3,7 @@ defmodule Ask.Mixfile do
 
   def project do
     [app: :ask,
-     version: "0.11.0",
+     version: "0.13.0",
      elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -19,7 +19,7 @@ defmodule Ask.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Ask, []},
-     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
+     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext, :alto_guisso,
                     :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :coherence, :prometheus_phoenix, :prometheus_plugs]]
   end
 
@@ -46,17 +46,17 @@ defmodule Ask.Mixfile do
       {:mock, "~> 0.1.1", only: :test},
       {:timex, "~> 3.0", override: true},
       {:timex_ecto, "~> 3.0", override: true},
-      {:sentry, "~> 4.0"},
+      {:sentry, "~> 5.0"},
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},
-      {:mailgun, git: "https://github.com/chrismccord/mailgun.git", override: true},
       {:deep_merge, "~> 0.1.0"},
       {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"},
       {:gen_smtp, "~> 0.11"},
       {:xml_builder, "~> 0.0.9"},
       {:language_names, "~> 0.1.0"},
       {:prometheus_phoenix, "~> 1.0"},
-      {:prometheus_plugs, "~> 1.1"}
+      {:prometheus_plugs, "~> 1.1"},
+      {:alto_guisso, git: "https://github.com/instedd/alto_guisso_ex.git"}
    ]
   end
 
