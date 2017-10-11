@@ -24,7 +24,7 @@ defmodule Ask.SurveyView do
       exit_code: survey.exit_code,
       exit_message: survey.exit_message,
       cutoff: survey.cutoff,
-      timezone: survey.timezone,
+      timezone: survey.schedule.timezone,
       next_schedule_time: next_schedule_time(survey),
       updated_at: survey.updated_at,
     }
@@ -44,10 +44,7 @@ defmodule Ask.SurveyView do
       questionnaire_ids: questionnaire_ids(survey),
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
-      schedule_day_of_week: survey.schedule_day_of_week,
-      schedule_start_time: survey.schedule_start_time,
-      schedule_end_time: survey.schedule_end_time,
-      timezone: survey.timezone,
+      schedule: survey.schedule,
       started_at: started_at,
       updated_at: survey.updated_at,
       sms_retry_configuration: survey.sms_retry_configuration,
@@ -94,15 +91,13 @@ defmodule Ask.SurveyView do
   end
 
   defp next_schedule_time(survey) do
-    now = Timex.now
-    now_date_time = now |> Timex.to_erl |> Ecto.DateTime.from_erl
+    now = DateTime.utc_now
     next_schedule_time = Survey.next_available_date_time(survey, now)
-    if next_schedule_time == now_date_time  do
+    if next_schedule_time == now  do
       nil
     else
       next_schedule_time
-      |> Ecto.DateTime.to_erl
-      |> Timex.Timezone.convert(survey.timezone)
+      |> Timex.Timezone.convert(survey.schedule.timezone)
     end
   end
 end

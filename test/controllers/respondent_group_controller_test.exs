@@ -251,7 +251,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "update group channels", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
       channel = insert(:channel, name: "test")
 
@@ -341,7 +341,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "updates survey state if all the respondents are deleted from a 'ready' survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
 
       channel = insert(:channel, name: "test")
@@ -441,7 +441,7 @@ defmodule Ask.RespondentGroupControllerTest do
   end
 
   defp completed_schedule() do
-    %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
+    Ask.Schedule.always()
   end
 
   defp add_channel_to(group = %RespondentGroup{}, channel = %Channel{}) do

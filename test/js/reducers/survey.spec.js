@@ -153,7 +153,7 @@ describe('survey reducer', () => {
       saving: false,
       dirty: false
     })
-    expect(state.data.scheduleDayOfWeek)
+    expect(state.data.schedule.dayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
@@ -205,7 +205,7 @@ describe('survey reducer', () => {
       actions.receive(survey),
       actions.toggleDay('wed')
     ])
-    expect(state.data.scheduleDayOfWeek)
+    expect(state.data.schedule.dayOfWeek)
     .toEqual({'sun': true, 'mon': true, 'tue': true, 'wed': false, 'thu': true, 'fri': true, 'sat': true})
   })
 
@@ -215,7 +215,7 @@ describe('survey reducer', () => {
       actions.receive(survey),
       actions.setTimezone('America/Cayenne')
     ])
-    expect(result.data.timezone).toEqual('America/Cayenne')
+    expect(result.data.schedule.timezone).toEqual('America/Cayenne')
   })
 
   it('should change sms retry configuration property', () => {

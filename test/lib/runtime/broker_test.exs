@@ -3,16 +3,11 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper}
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule}
   require Ask.Runtime.ReplyHelper
 
-  @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
-  @always_schedule %{schedule_day_of_week: @everyday_schedule,
-                     schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
-                     schedule_end_time: elem(Ecto.Time.cast("23:59:59"), 1)}
-
   test "does nothing with 'not_ready' survey" do
-    survey = insert(:survey, @always_schedule)
+    survey = insert(:survey, %{schedule: Schedule.always()})
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
@@ -20,7 +15,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "set as 'completed' when there are no respondents" do
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running"}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Survey, survey.id)
@@ -28,7 +23,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "does nothing when there are no pending respondents" do
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running"}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
     insert(:respondent, survey: survey, state: "active")
 
     Broker.handle_info(:poll, nil)
@@ -161,7 +156,7 @@ defmodule Ask.BrokerTest do
 
     quiz1 = insert(:questionnaire, steps: @dummy_steps)
     quiz2 = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{
+    survey = insert(:survey, %{schedule: Schedule.always(),
         state: "running",
         questionnaires: [quiz1, quiz2],
         mode: [["sms"], ["ivr"]],
@@ -171,7 +166,7 @@ defmodule Ask.BrokerTest do
           %{"mode" => ["ivr"], "questionnaire_id" => quiz1.id, "ratio" => 100},
           %{"mode" => ["ivr"], "questionnaire_id" => quiz2.id, "ratio" => 0},
         ]
-        }))
+        })
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: sms_channel.type}) |> Repo.insert
@@ -193,7 +188,7 @@ defmodule Ask.BrokerTest do
 
     quiz1 = insert(:questionnaire, steps: @dummy_steps)
     quiz2 = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{
+    survey = insert(:survey, %{schedule: Schedule.always(),
         state: "running",
         questionnaires: [quiz1, quiz2],
         mode: [["sms"], ["ivr"]],
@@ -203,7 +198,7 @@ defmodule Ask.BrokerTest do
           %{"mode" => ["ivr"], "questionnaire_id" => quiz1.id, "ratio" => 100},
           %{"mode" => ["ivr"], "questionnaire_id" => quiz2.id, "ratio" => nil},
         ]
-        }))
+        })
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: sms_channel.type}) |> Repo.insert
@@ -333,7 +328,7 @@ defmodule Ask.BrokerTest do
     {:ok, _} = Broker.start_link
     Broker.handle_info(:poll, nil)
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "1d", schedule_day_of_week: tomorrow_schedule_day_of_week()}) |> Repo.update!
+    survey |> Survey.changeset(%{sms_retry_configuration: "1d", schedule: Map.merge(Schedule.always(), %{day_of_week: tomorrow_schedule_day_of_week()})}) |> Repo.update!
 
     respondent = Repo.get(Respondent, respondent.id)
     Broker.sync_step(respondent, Flow.Message.reply("Yes"))
@@ -1095,7 +1090,7 @@ defmodule Ask.BrokerTest do
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "ivr")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "ivr"]]}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["sms", "ivr"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
@@ -1147,7 +1142,7 @@ defmodule Ask.BrokerTest do
     fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "sms")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
@@ -2173,8 +2168,8 @@ defmodule Ask.BrokerTest do
       fri: week_day != 5,
       sat: week_day != 6,
       sun: week_day != 7}
-    survey1 = insert(:survey, Map.merge(@always_schedule, %{schedule_day_of_week: schedule1, state: "running"}))
-    survey2 = insert(:survey, Map.merge(@always_schedule, %{schedule_day_of_week: schedule2, state: "running"}))
+    survey1 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{day_of_week: schedule1}), state: "running"})
+    survey2 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{day_of_week: schedule2}), state: "running"})
 
     Broker.handle_info(:poll, nil)
 
@@ -2191,8 +2186,7 @@ defmodule Ask.BrokerTest do
     twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
     {:ok, start_time} = Ecto.Time.cast(eleven_oclock)
     {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
-    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
-    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+    survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
     Broker.handle_info(:poll, nil, ten_oclock)
 
@@ -2207,8 +2201,7 @@ defmodule Ask.BrokerTest do
     twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
     {:ok, start_time} = Ecto.Time.cast(ten_oclock)
     {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
-    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running"}
-    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+    survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
     Broker.handle_info(:poll, nil, twelve_oclock)
 
@@ -2217,32 +2210,18 @@ defmodule Ask.BrokerTest do
   end
 
   test "doesn't poll surveys with an end time schedule smaller than the current hour considering timezone" do
-    ten_oclock = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    eleven_oclock = Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}")
-    twelve_oclock = Timex.parse!("2016-01-01T12:00:00Z", "{ISO:Extended}")
-    {:ok, start_time} = Ecto.Time.cast(ten_oclock)
-    mock_now = eleven_oclock
-    {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
-    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running", timezone: "Asia/Shanghai"}
-    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+    survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: ~T[10:00:00], end_time: ~T[12:00:00], timezone: "Asia/Shanghai"}), state: "running"})
 
-    Broker.handle_info(:poll, nil, mock_now)
+    Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
   end
 
   test "does poll surveys with an end time schedule higher than the current hour considering timezone" do
-    ten_oclock = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-    twelve_oclock = Timex.parse!("2016-01-01T12:00:00Z", "{ISO:Extended}")
-    two_oclock_pm = Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}")
-    {:ok, start_time} = Ecto.Time.cast(ten_oclock)
-    mock_now = two_oclock_pm
-    {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
-    attrs = %{schedule_start_time: start_time, schedule_end_time: end_time, state: "running", timezone: "America/Buenos_Aires"}
-    survey = insert(:survey, Map.merge(@always_schedule, attrs))
+    survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: ~T[10:00:00], end_time: ~T[12:00:00], timezone: "America/Buenos_Aires"}), state: "running"})
 
-    Broker.handle_info(:poll, nil, mock_now)
+    Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
 
     survey = Repo.get(Survey, survey.id)
     assert Survey.completed?(survey)
@@ -2251,11 +2230,13 @@ defmodule Ask.BrokerTest do
   test "does poll surveys considering day of week according to timezone" do
     # Survey runs on Wednesday on every hour, Mexico time (GMT-5)
     attrs = %{
-      schedule_day_of_week: %Ask.DayOfWeek{wed: true},
-      schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
-      schedule_end_time: elem(Ecto.Time.cast("23:59:00"), 1),
+      schedule: %Schedule{
+        day_of_week: %Ask.DayOfWeek{wed: true},
+        start_time: ~T[00:00:00],
+        end_time: ~T[23:59:00],
+        timezone: "America/Mexico_City"
+      },
       state: "running",
-      timezone: "America/Mexico_City",
     }
     survey = insert(:survey, attrs)
 
@@ -2272,11 +2253,13 @@ defmodule Ask.BrokerTest do
   test "doesn't poll surveys considering day of week according to timezone" do
     # Survey runs on Wednesday on every hour, Mexico time (GMT-5)
     attrs = %{
-      schedule_day_of_week: %Ask.DayOfWeek{wed: true},
-      schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
-      schedule_end_time: elem(Ecto.Time.cast("23:59:00"), 1),
+      schedule: %Schedule{
+        day_of_week: %Ask.DayOfWeek{wed: true},
+        start_time: ~T[00:00:00],
+        end_time: ~T[23:59:00],
+        timezone: "America/Mexico_City"
+      },
       state: "running",
-      timezone: "America/Mexico_City",
     }
     survey = insert(:survey, attrs)
 
@@ -2517,7 +2500,7 @@ defmodule Ask.BrokerTest do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @dummy_steps_with_flag)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
@@ -2592,7 +2575,7 @@ defmodule Ask.BrokerTest do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @dummy_steps_with_flag)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["sms"]], count_partial_results: true})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
@@ -2797,7 +2780,7 @@ defmodule Ask.BrokerTest do
     ivr_channel = insert(:channel, settings: ivr_test_channel |> TestChannel.settings, type: "ivr")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["ivr", "sms"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: "sms"}) |> Repo.insert
@@ -2821,7 +2804,7 @@ defmodule Ask.BrokerTest do
     ivr_channel = insert(:channel, settings: ivr_test_channel |> TestChannel.settings, type: "sms")
 
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["sms", "mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["sms", "mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: sms_channel.id, mode: "mobileweb"}) |> Repo.insert
@@ -2894,7 +2877,7 @@ defmodule Ask.BrokerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: channel_type)
     quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [[mode]]}))
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [[mode]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Repo.insert

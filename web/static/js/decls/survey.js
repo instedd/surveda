@@ -18,18 +18,22 @@ export type Survey = {
   smsRetryConfiguration: string,
   mobilewebRetryConfiguration: string,
   fallbackDelay: string,
-  scheduleDayOfWeek: DayOfWeek,
-  scheduleStartTime: string,
-  scheduleEndTime: string,
+  schedule: Schedule,
   respondentsCount: number,
   quotas: {
     vars: string[],
     buckets: Bucket[]
   },
   comparisons: Comparison[],
-  timezone: string,
   nextScheduleTime: ?string
 };
+
+export type Schedule = {
+  dayOfWeek: DayOfWeek,
+  startTime: string,
+  endTime: string,
+  timezone: string
+}
 
 export type DayOfWeek = {
   [weekday: string]: boolean

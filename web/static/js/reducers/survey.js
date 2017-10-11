@@ -356,34 +356,43 @@ const questionnairesMatchModes = (modes, ids, questionnaires) => {
 const toggleDay = (state, action) => {
   return {
     ...state,
-    scheduleDayOfWeek: {
-      ...state.scheduleDayOfWeek,
-      [action.day]: !state.scheduleDayOfWeek[action.day]
+    schedule: {
+      ...state.schedule,
+      dayOfWeek: {
+        ...state.schedule.dayOfWeek,
+        [action.day]: !state.schedule.dayOfWeek[action.day]
+      }
     }
   }
 }
 
 const setScheduleFrom = (state, action) => {
-  let endTime = state.scheduleEndTime
+  let endTime = state.schedule.endTime
   if (action.hour >= endTime) {
     endTime = action.nextHour
   }
   return {
     ...state,
-    scheduleEndTime: endTime,
-    scheduleStartTime: action.hour
+    schedule: {
+      ...state.schedule,
+      endTime: endTime,
+      startTime: action.hour
+    }
   }
 }
 
 const setScheduleTo = (state, action) => {
-  let startTime = state.scheduleStartTime
+  let startTime = state.schedule.startTime
   if (action.hour <= startTime) {
     startTime = action.previousHour
   }
   return {
     ...state,
-    scheduleStartTime: startTime,
-    scheduleEndTime: action.hour
+    schedule: {
+      ...state.schedule,
+      startTime: startTime,
+      endTime: action.hour
+    }
   }
 }
 
@@ -472,7 +481,10 @@ const buildComparisons = (modeComparison, questionnaireComparison, modes, questi
 const setTimezone = (state, action) => {
   return {
     ...state,
-    timezone: action.timezone
+    schedule: {
+      ...state.schedule,
+      timezone: action.timezone
+    }
   }
 }
 

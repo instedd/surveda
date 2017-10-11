@@ -63,13 +63,10 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp survey_matches_schedule?(survey, now) do
-    now_timex = Timex.Timezone.convert(now, survey.timezone)
-    now_ecto = Ecto.Time.cast!(now_timex)
-    now_schedule = time_to_schedule(now_timex)
+    now = now
+    |> Timex.to_datetime(survey.schedule.timezone)
 
-    Ask.DayOfWeek.intersect?(now_schedule, survey.schedule_day_of_week) &&
-      survey.schedule_start_time <= now_ecto &&
-      survey.schedule_end_time >= now_ecto
+    Ask.Schedule.intersect?(survey.schedule, now)
   end
 
   defp mark_stalled_for_eight_hours_respondents_as_failed do
@@ -556,11 +553,8 @@ defmodule Ask.Runtime.Broker do
 
   defp next_timeout(respondent, timeout) do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
-    survey = (respondent |> Repo.preload(:survey)).survey
-    date_time = survey
+    (respondent |> Repo.preload(:survey)).survey
     |> Survey.next_available_date_time(timeout_at)
-    |> Ecto.DateTime.to_erl
-    Timex.Timezone.resolve("UTC", date_time)
   end
 
   defp create_disposition_history(respondent, old_disposition, mode) do
@@ -594,19 +588,6 @@ defmodule Ask.Runtime.Broker do
 
   defp should_update_quota_bucket(new_disposition, old_disposition, _) do
     new_disposition != old_disposition && new_disposition == "completed"
-  end
-
-  defp time_to_schedule(now) do
-    week_day = Timex.weekday(now)
-    %Ask.DayOfWeek{
-      mon: week_day == 1,
-      tue: week_day == 2,
-      wed: week_day == 3,
-      thu: week_day == 4,
-      fri: week_day == 5,
-      sat: week_day == 6,
-      sun: week_day == 7,
-    }
   end
 
   # Estimates the amount of respondents the broker will have to initiate contact with

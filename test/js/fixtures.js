@@ -163,9 +163,12 @@ const bareSurvey: Survey = {
   exitCode: 0,
   exitMessage: null,
   questionnaireIds: [1],
-  scheduleDayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
-  scheduleStartTime: '02:00:00',
-  scheduleEndTime: '06:00:00',
+  schedule: {
+    dayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
+    startTime: '02:00:00',
+    endTime: '06:00:00',
+    timezone: 'Etc/UTC'
+  },
   channels: [1],
   respondentsCount: 2,
   comparisons: [],
@@ -180,8 +183,7 @@ const bareSurvey: Survey = {
     buckets: []
   },
   mode: [['sms']],
-  nextScheduleTime: null,
-  timezone: 'UTC'
+  nextScheduleTime: null
 }
 
 export const survey: Survey = deepFreeze(bareSurvey)

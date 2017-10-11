@@ -313,7 +313,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results csv", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"])
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
@@ -345,7 +345,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results csv with filter by disposition", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"])
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
@@ -370,7 +370,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results csv with filter by update timestamp", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"])
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
@@ -395,7 +395,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results csv with filter by final state", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], state: "completed")
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
@@ -420,7 +420,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results json", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
     respondent_1 = Repo.get(Respondent, respondent_1.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
@@ -477,7 +477,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results json with filter by disposition", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
     respondent_1 = Repo.get(Respondent, respondent_1.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
@@ -516,7 +516,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results json with filter by update timestamp", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
@@ -550,7 +550,7 @@ defmodule Ask.RespondentControllerTest do
   test "download results json with filter by final state", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], questionnaire_id: questionnaire.id)
     insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
     insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
@@ -585,7 +585,7 @@ defmodule Ask.RespondentControllerTest do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     questionnaire2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire, questionnaire2], state: "ready", schedule_day_of_week: completed_schedule(),
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire, questionnaire2], state: "ready", schedule: completed_schedule(),
       comparisons: [
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "ratio" => 50},
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire2.id, "ratio" => 50},
@@ -622,7 +622,7 @@ defmodule Ask.RespondentControllerTest do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     questionnaire2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire, questionnaire2], state: "ready", schedule_day_of_week: completed_schedule(),
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire, questionnaire2], state: "ready", schedule: completed_schedule(),
       comparisons: [
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "ratio" => 50},
         %{"mode" => ["sms"], "questionnaire_id" => questionnaire2.id, "ratio" => 50},
@@ -704,7 +704,7 @@ defmodule Ask.RespondentControllerTest do
 
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: steps)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     insert(:response, respondent: respondent_1, field_name: "language", value: "es")
 
@@ -722,7 +722,7 @@ defmodule Ask.RespondentControllerTest do
   test "download disposition history csv", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
@@ -746,7 +746,7 @@ defmodule Ask.RespondentControllerTest do
   test "download incentives", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
     insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
     insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
@@ -764,7 +764,7 @@ defmodule Ask.RespondentControllerTest do
   test "download interactions", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule_day_of_week: completed_schedule())
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
     respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
     channel = insert(:channel, name: "test_channel")
@@ -873,6 +873,6 @@ defmodule Ask.RespondentControllerTest do
   end
 
   def completed_schedule() do
-    %Ask.DayOfWeek{sun: false, mon: true, tue: true, wed: false, thu: false, fri: false, sat: false}
+    Ask.Schedule.always()
   end
 end

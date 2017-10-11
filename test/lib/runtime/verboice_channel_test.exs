@@ -8,10 +8,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   require Ask.Runtime.ReplyHelper
 
-  @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
-  @always_schedule %{schedule_day_of_week: @everyday_schedule,
-                   schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
-                   schedule_end_time: elem(Ecto.Time.cast("23:59:59"), 1)}
+  @survey %{schedule: Ask.Schedule.always()}
 
   defp trim_xml(xml) do
     xml |> String.replace("\t", "") |> String.replace("\n", "")
@@ -124,7 +121,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
       quiz = insert(:questionnaire, steps: @dummy_steps)
-      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
@@ -162,7 +159,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
       channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
       quiz = insert(:questionnaire, steps: @dummy_steps)
-      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
@@ -201,7 +198,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
       quiz = insert(:questionnaire, steps: @dummy_steps)
-      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
@@ -240,7 +237,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
       quiz = insert(:questionnaire, steps: @dummy_steps)
-      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
@@ -279,7 +276,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
       quiz = insert(:questionnaire, steps: @dummy_steps)
-      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
@@ -318,7 +315,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
       quiz = insert(:questionnaire, steps: @dummy_steps)
-      survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert

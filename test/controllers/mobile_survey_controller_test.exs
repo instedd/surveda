@@ -7,11 +7,6 @@ defmodule Ask.MobileSurveyControllerTest do
   alias Ask.{Repo, Survey, Respondent, TestChannel, RespondentGroupChannel}
   require Ask.Runtime.ReplyHelper
 
-  @everyday_schedule %Ask.DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true}
-  @always_schedule %{schedule_day_of_week: @everyday_schedule,
-                     schedule_start_time: elem(Ecto.Time.cast("00:00:00"), 1),
-                     schedule_end_time: elem(Ecto.Time.cast("23:59:59"), 1)}
-
   setup %{conn: conn} do
     conn = conn
       |> put_req_header("accept", "application/json")
@@ -24,7 +19,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}})
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
@@ -199,7 +194,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
@@ -229,7 +224,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"survey_already_taken_message" => %{"en" => "Already took this"}})
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
@@ -256,7 +251,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"mobile_web_survey_is_over_message" => "Bye"})
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
@@ -282,7 +277,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_refusal_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}})
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
@@ -328,7 +323,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
-    survey = insert(:survey, Map.merge(@always_schedule, %{state: "running", questionnaires: [quiz], mode: [["mobileweb"]]}))
+    survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
