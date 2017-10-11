@@ -16,7 +16,7 @@ defmodule Ask.Repo.Migrations.SetDefaultScheduleDayOfWeekForSurveys do
   end
 
   def change do
-    from(s in Ask.Survey, where: is_nil(s.schedule_day_of_week))
+    from(s in Survey, where: is_nil(s.schedule_day_of_week))
     |> Ask.Repo.update_all(set: [schedule_day_of_week: 127]) # 127 was every_day in the old ecto type
   end
 end
