@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider}
   alias Ask.QuotaBucket
 
@@ -36,7 +36,7 @@ defmodule Ask.Runtime.Broker do
       |> Enum.each(&retry_respondent(&1))
 
       all_running_surveys()
-      |> Enum.filter(&survey_matches_schedule?(&1, now))
+      |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
       |> Enum.each(&poll_survey/1)
 
       {:noreply, state}
@@ -60,13 +60,6 @@ defmodule Ask.Runtime.Broker do
 
   defp all_running_surveys do
     Repo.all(from s in Survey, where: s.state == "running")
-  end
-
-  defp survey_matches_schedule?(survey, now) do
-    now = now
-    |> Timex.to_datetime(survey.schedule.timezone)
-
-    Ask.Schedule.intersect?(survey.schedule, now)
   end
 
   defp mark_stalled_for_eight_hours_respondents_as_failed do
