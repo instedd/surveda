@@ -35,7 +35,8 @@ defmodule Ask.RespondentStats do
   end
 
   defp query([], quoted, group) do
-    fields = group ++ quote do [fragment("CAST(? AS UNSIGNED)", sum(s.count))] end
+    fields = group ++ quote(do: [fragment("CAST(? AS UNSIGNED)", sum(s.count))])
+    fields = {:{}, [], fields}
 
     quote do
       unquote(quoted)
