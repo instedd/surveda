@@ -75,7 +75,7 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} readOnly={readOnly} />
+          <TimezoneDropdown selectedTz={survey.schedule.timezone} onChange={this.updateTimezone} readOnly={readOnly} />
         </div>
         <div className='row'>
           <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />
