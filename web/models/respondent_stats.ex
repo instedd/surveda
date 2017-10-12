@@ -35,6 +35,14 @@ defmodule Ask.RespondentStats do
   end
 
   defp query([], quoted, group) do
+    group = group
+      |> Enum.map(fn field ->
+          case @nilable_fields[field] do
+            nil -> quote(do: field(s, unquote(field)))
+            nil_value -> quote(do: fragment("NULLIF(?, ?)", field(s, unquote(field)), unquote(nil_value)))
+          end
+        end)
+
     fields = group ++ quote(do: [fragment("CAST(? AS UNSIGNED)", sum(s.count))])
     fields = {:{}, [], fields}
 
@@ -57,10 +65,7 @@ defmodule Ask.RespondentStats do
       |> group_by([s], unquote(fields))
     end
 
-    group = fields
-      |> Enum.map(fn g -> quote do field(s, unquote(g)) end end)
-
-    query(t, quoted, group)
+    query(t, quoted, fields)
   end
 
   defp query([{:by, fields} | _], _, _) do
