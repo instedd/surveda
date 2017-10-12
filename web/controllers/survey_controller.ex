@@ -43,9 +43,7 @@ defmodule Ask.SurveyController do
 
     props = %{"project_id" => project_id,
               "name" => "",
-              "schedule_start_time" => Ecto.Time.cast!("09:00:00"),
-              "schedule_end_time" => Ecto.Time.cast!("18:00:00"),
-              "timezone" => "UTC"}
+              "schedule" => Ask.Schedule.default()}
     survey_params = Map.get(params, "survey", %{})
     props = Map.merge(props, survey_params)
 
@@ -200,10 +198,7 @@ defmodule Ask.SurveyController do
       mode: [[mode]],
       state: "ready",
       cutoff: 1,
-      schedule_day_of_week: Ask.DayOfWeek.every_day,
-      schedule_start_time: Ecto.Time.cast!("00:00:00"),
-      schedule_end_time: Ecto.Time.cast!("23:59:59"),
-      timezone: "UTC"}
+      schedule: Ask.Schedule.always()}
     |> Ecto.Changeset.change
     |> Repo.insert!
 

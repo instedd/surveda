@@ -2,6 +2,7 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
+  alias Ask.Schedule
 
   @max_int 2147483647
 
@@ -13,10 +14,7 @@ defmodule Ask.Survey do
     field :exit_message, :string
     field :cutoff, :integer
     field :count_partial_results, :boolean, default: false
-    field :schedule_day_of_week, Ask.DayOfWeek, default: Ask.DayOfWeek.never
-    field :schedule_start_time, Ecto.Time
-    field :schedule_end_time, Ecto.Time
-    field :timezone, :string
+    field :schedule, Schedule, default: Ask.Schedule.default()
     field :started_at, Timex.Ecto.DateTime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
@@ -42,8 +40,8 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :project_id, :mode, :state, :exit_code, :exit_message, :cutoff, :schedule_day_of_week, :schedule_start_time, :schedule_end_time, :timezone, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation])
-    |> validate_required([:project_id, :state, :schedule_start_time, :schedule_end_time, :timezone])
+    |> cast(params, [:name, :project_id, :mode, :state, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation])
+    |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
     |> validate_number(:cutoff, greater_than: 0, less_than: @max_int)
@@ -85,13 +83,10 @@ defmodule Ask.Survey do
   end
 
   def validate_from_less_than_to(changeset) do
-    from = get_field(changeset, :schedule_start_time)
-    to = get_field(changeset, :schedule_end_time)
-
-    cond do
-      from && to && from >= to ->
+    case Schedule.validate(get_field(changeset, :schedule)) do
+      :error ->
         add_error(changeset, :from, "has to be less than the To")
-      true ->
+      :ok ->
         changeset
     end
   end
@@ -102,10 +97,8 @@ defmodule Ask.Survey do
   end
 
   defp schedule_ready?(changeset) do
-    schedule = get_field(changeset, :schedule_day_of_week)
-
-    [ _ | values ] = Map.values(schedule)
-    Enum.reduce(values, fn (x, acc) -> acc || x end)
+    get_field(changeset, :schedule)
+    |> Schedule.any_day_selected?
   end
 
   defp mode_ready?(changeset) do
@@ -215,33 +208,8 @@ defmodule Ask.Survey do
     end
   end
 
-  def next_available_date_time(survey, date_time = %DateTime{}) do
-    survey |>
-    next_available_date_time(date_time |> Timex.to_erl |> Ecto.DateTime.from_erl)
-  end
-
-  def next_available_date_time(survey, date_time = %Ecto.DateTime{}) do
-    {erl_date, erl_time} = date_time |> Ecto.DateTime.to_erl |> Timex.Timezone.convert(survey.timezone) |> Timex.to_erl
-    adjusted_date_time = {erl_date, erl_time} |> Ecto.DateTime.from_erl
-
-    # If this day is enabled in the survey
-    if day_of_week_available?(survey, erl_date) do
-      # Check if the time is inside the survey time range
-      case compare_date_time(survey, adjusted_date_time) do
-        :before ->
-          # If it's before the time range, move it to the beginning of the range
-          at_schedule_start_time(survey, erl_date)
-        :inside ->
-          # If it's inside there's nothing to do
-          date_time
-        :after ->
-          # If it's after the time range, find the next day
-          next_available_date_time_internal(survey, erl_date)
-      end
-    else
-      # If the day is not enabled, find the next day
-      next_available_date_time_internal(survey, erl_date)
-    end
+  def next_available_date_time(%Survey{} = survey, %DateTime{} = date_time) do
+    Schedule.next_available_date_time(survey.schedule, date_time)
   end
 
   def config_rates() do
@@ -264,59 +232,6 @@ defmodule Ask.Survey do
           default
         end
       value -> value
-    end
-  end
-
-  defp day_of_week_available?(survey, erl_date) do
-    if survey.schedule_day_of_week == Ask.DayOfWeek.never do
-      # Just in case a schedule remains empty (can happen in a test)
-      true
-    else
-      case :calendar.day_of_the_week(erl_date) do
-        1 -> survey.schedule_day_of_week.mon
-        2 -> survey.schedule_day_of_week.tue
-        3 -> survey.schedule_day_of_week.wed
-        4 -> survey.schedule_day_of_week.thu
-        5 -> survey.schedule_day_of_week.fri
-        6 -> survey.schedule_day_of_week.sat
-        7 -> survey.schedule_day_of_week.sun
-      end
-    end
-  end
-
-  defp compare_date_time(%Survey{schedule_start_time: start_time, schedule_end_time: end_time}, date_time) do
-    time = Ecto.DateTime.to_time(date_time)
-    case Ecto.Time.compare(time, start_time) do
-      :lt -> :before
-      :eq -> :inside
-      :gt ->
-        case Ecto.Time.compare(time, end_time) do
-          :lt -> :inside
-          :eq -> :inside
-          :gt -> :after
-        end
-    end
-  end
-
-  defp at_schedule_start_time(survey, erl_date) do
-    erl_time = survey.schedule_start_time |> Ecto.Time.to_erl
-    Timex.Timezone.resolve(survey.timezone, {erl_date, erl_time})
-    |> Timex.Timezone.convert("UTC")
-    |> Timex.to_erl
-    |> Ecto.DateTime.from_erl
-  end
-
-  defp next_available_date_time_internal(survey, erl_date) do
-    erl_date = next_available_date(survey, erl_date)
-    at_schedule_start_time(survey, erl_date)
-  end
-
-  defp next_available_date(survey, erl_date) do
-    erl_date = Timex.shift(erl_date, days: 1)
-    if day_of_week_available?(survey, erl_date) do
-      erl_date
-    else
-      next_available_date(survey, erl_date)
     end
   end
 
@@ -356,11 +271,11 @@ defmodule Ask.Survey do
   defp adjust_timezone_to_survey(date, survey) do
     date
     |> Timex.Ecto.DateTime.cast!
-    |> Timex.Timezone.convert(survey.timezone)
+    |> Timex.Timezone.convert(survey.schedule.timezone)
   end
 
   def timezone_offset(survey) do
-    offset = survey.timezone
+    offset = survey.schedule.timezone
     |> Timex.Timezone.get
     |> Timex.Timezone.total_offset
 

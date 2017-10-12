@@ -46,10 +46,10 @@ class SurveyWizardScheduleStep extends Component {
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
     // Survey might be loaded without details
-    let defaultFrom = (survey && survey.scheduleStartTime) ? survey.scheduleStartTime : '09:00:00'
-    let defaultTo = (survey && survey.scheduleEndTime) ? survey.scheduleEndTime : '18:00:00'
+    let defaultFrom = (survey && survey.schedule && survey.schedule.startTime) ? survey.schedule.startTime : '09:00:00'
+    let defaultTo = (survey && survey.schedule && survey.schedule.endTime) ? survey.schedule.endTime : '18:00:00'
 
-    if (!survey || !survey.scheduleDayOfWeek) {
+    if (!survey || !survey.schedule || !survey.schedule.dayOfWeek) {
       return <div>Loading...</div>
     }
 
@@ -67,7 +67,7 @@ class SurveyWizardScheduleStep extends Component {
           {days.map((day) => (
             <div className='col' key={day}>
               <button type='button'
-                className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.scheduleDayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
+                className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.schedule.dayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
                 onClick={() => readOnly ? null : this.toggleDay(day)}>
                 {day}
               </button>
@@ -75,7 +75,7 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey && survey.timezone} onChange={this.updateTimezone} readOnly={readOnly} />
+          <TimezoneDropdown selectedTz={survey.schedule.timezone} onChange={this.updateTimezone} readOnly={readOnly} />
         </div>
         <div className='row'>
           <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />

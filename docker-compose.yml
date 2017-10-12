@@ -22,7 +22,7 @@ services:
     depends_on:
       - db
     volumes:
-      - './:/app'
+      - './:/app:cached'
       - 'deps:/app/deps'
       - 'build:/app/_build'
     environment:
@@ -41,7 +41,7 @@ services:
     working_dir: /app
     stop_signal: SIGKILL
     volumes:
-      - './:/app'
+      - './:/app:cached'
       - 'deps:/app/deps'
       - 'node_modules:/app/node_modules'
 

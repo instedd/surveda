@@ -74,14 +74,15 @@ class SurveyForm extends Component {
     const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
-      survey.scheduleDayOfWeek != null && (
-        survey.scheduleDayOfWeek.sun ||
-        survey.scheduleDayOfWeek.mon ||
-        survey.scheduleDayOfWeek.tue ||
-        survey.scheduleDayOfWeek.wed ||
-        survey.scheduleDayOfWeek.thu ||
-        survey.scheduleDayOfWeek.fri ||
-        survey.scheduleDayOfWeek.sat
+      survey.schedule != null &&
+      survey.schedule.dayOfWeek != null && (
+        survey.schedule.dayOfWeek.sun ||
+        survey.schedule.dayOfWeek.mon ||
+        survey.schedule.dayOfWeek.tue ||
+        survey.schedule.dayOfWeek.wed ||
+        survey.schedule.dayOfWeek.thu ||
+        survey.schedule.dayOfWeek.fri ||
+        survey.schedule.dayOfWeek.sat
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
 
