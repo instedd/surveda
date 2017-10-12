@@ -1,5 +1,6 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
+  require Ask.RespondentStats
 
   alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry}
 
@@ -97,6 +98,7 @@ defmodule Ask.RespondentController do
 
   defp stats(conn, survey, []) do
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+    respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     if length(questionnaires) > 1 && length(survey.mode) > 1 do
       reference = questionnaires
       |> Enum.reduce([], fn(questionnaire, reference) ->
@@ -113,7 +115,7 @@ defmodule Ask.RespondentController do
       stats(
         conn,
         survey,
-        survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+        respondent_count,
         respondents_by_questionnaire_mode_and_disposition(survey),
         respondents_by_questionnaire_mode_and_completed_at(survey),
         reference,
@@ -133,7 +135,7 @@ defmodule Ask.RespondentController do
         stats(
           conn,
           survey,
-          survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+          respondent_count,
           respondents_by_mode_and_disposition(survey),
           respondents_by_mode_and_completed_at(survey),
           reference,
@@ -149,7 +151,7 @@ defmodule Ask.RespondentController do
         stats(
           conn,
           survey,
-          survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+          respondent_count,
           respondents_by_questionnaire_and_disposition(survey),
           respondents_by_questionnaire_and_completed_at(survey),
           reference,
@@ -162,11 +164,12 @@ defmodule Ask.RespondentController do
 
   defp stats(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
+    respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
 
     stats(
       conn,
       survey,
-      survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+      respondent_count,
       respondents_by_bucket_and_disposition(survey),
       respondents_by_quota_bucket_and_completed_at(survey),
       buckets,
@@ -190,19 +193,20 @@ defmodule Ask.RespondentController do
         true -> total_respondents
       end
 
+    total_respondents_by_disposition =
+      Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
+
     # Completion percentage
-    contacted_respondents =
-      Repo.one(
-        from r in (survey |> assoc(:respondents)),
-        where: not r.disposition in ["queued", "registered"],
-        select: count("*")
-      )
-    completed_or_partial =
-      Repo.one(
-        from r in Respondent,
-        where: r.survey_id == ^survey.id and r.disposition in ["completed", "partial"],
-        select: count("*")
-      )
+    contacted_respondents = total_respondents_by_disposition
+      |> Enum.filter(fn {d, _} -> d not in ["queued", "registered"] end)
+      |> Enum.map(fn {_, c} -> c end)
+      |> Enum.sum
+
+    completed_or_partial = total_respondents_by_disposition
+      |> Enum.filter(fn {d, _} -> d in ["completed", "partial"] end)
+      |> Enum.map(fn {_, c} -> c end)
+      |> Enum.sum
+
     completion_percentage = (completed_or_partial / target) * 100
 
     stats = %{
@@ -296,17 +300,11 @@ defmodule Ask.RespondentController do
   end
 
   defp respondents_by_questionnaire_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :questionnaire_id],
-      select: {r.state, r.disposition, r.questionnaire_id, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :questionnaire_id])
   end
 
   defp respondents_by_questionnaire_mode_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :questionnaire_id, :mode],
-      select: {r.state, r.disposition, r.questionnaire_id, r.mode, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :questionnaire_id, :mode])
     |> Enum.map(fn({state, disposition, questionnaire_id, mode, count}) ->
       reference_id = if mode && questionnaire_id do
         "#{questionnaire_id}#{mode |> Enum.join("")}"
@@ -319,17 +317,11 @@ defmodule Ask.RespondentController do
   end
 
   defp respondents_by_mode_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :mode],
-      select: {r.state, r.disposition, r.mode, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :mode])
   end
 
   defp respondents_by_bucket_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :quota_bucket_id],
-      select: {r.state, r.disposition, r.quota_bucket_id, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :quota_bucket_id])
   end
 
   defp respondents_by_questionnaire_and_completed_at(survey) do

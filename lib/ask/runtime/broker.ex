@@ -3,6 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
+  require Ask.RespondentStats
   alias Ask.{Repo, Survey, Respondent, RespondentStats, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider}
   alias Ask.QuotaBucket
@@ -120,14 +121,9 @@ defmodule Ask.Runtime.Broker do
       "rejected" => 0,
       "failed" => 0,
     }
-    Repo.all(
-      from r in RespondentStats,
-      group_by: :state,
-      select: {r.state, fragment("CAST(? AS UNSIGNED)", sum(r.count))},
-      where: r.survey_id == ^survey.id
-      )
-      |> Enum.into(%{})
-      |> (&Map.merge(by_state_defaults, &1)).()
+
+    RespondentStats.respondent_count(survey_id: ^survey.id, by: :state)
+      |> Enum.into(by_state_defaults)
   end
 
   defp poll_survey(survey) do
