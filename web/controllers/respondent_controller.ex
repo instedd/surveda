@@ -16,15 +16,13 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
     |> assoc(:respondents)
     |> preload(:responses)
-
-    respondents_count = respondents |> Repo.aggregate(:count, :id)
-
-    respondents = respondents
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_respondents(sort_by, sort_asc)
     |> Repo.all
     |> mask_phone_numbers
+
+    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey_id)
 
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
@@ -431,8 +429,8 @@ defmodule Ask.RespondentController do
     render_results(conn, get_format(conn), survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
   end
 
-  defp render_results(conn, "json", _survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
-    respondents_count = respondents |> Repo.aggregate(:count, :id)
+  defp render_results(conn, "json", survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
+    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     respondents = respondents
     |> Repo.stream
     respondents = if has_comparisons do
