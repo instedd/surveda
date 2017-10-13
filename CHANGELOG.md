@@ -14,6 +14,12 @@ In this release the development platform was updated (Elixir 1.5, Phoenix 1.3, E
 
 * Fixed inconsistent number of contacted respondents [#1128](https://github.com/instedd/ask/issues/1128)
 
+## Juniper 0.10.4
+
+### Bugfixes
+
+* Fix respondent stats that were breaking sometimes when a respondent is in "completed" disposition but still active
+
 ## Juniper 0.10.3
 
 ### Features

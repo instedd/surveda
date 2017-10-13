@@ -67,9 +67,9 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
-    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-    insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
+    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
+    insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
@@ -120,6 +120,21 @@ defmodule Ask.RespondentControllerTest do
     assert data["total_respondents"] == 15
   end
 
+  test "stats do not crash when a respondent has 'completed' disposition but no 'completed_at'", %{conn: conn, user: user} do
+    t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, cutoff: 1, started_at: t)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: t |> Timex.to_erl |> Ecto.DateTime.from_erl)
+
+    conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+    data = json_response(conn, 200)["data"]
+
+    cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
+    assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
+    assert Enum.at(cumulative_percentages, 0)["percent"] == 100
+  end
+
   test "lists stats for a given survey with quotas", %{conn: conn, user: user} do
     t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
     project = create_project_for_user(user)
@@ -128,10 +143,10 @@ defmodule Ask.RespondentControllerTest do
     bucket_2 = insert(:quota_bucket, survey: survey, quota: 3, count: 3)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
-    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
-    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_1)
-    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
-    insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"), quota_bucket: bucket_2)
+    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
+    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
+    insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
+    insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
@@ -187,9 +202,9 @@ defmodule Ask.RespondentControllerTest do
     survey = insert(:survey, project: project, cutoff: 10, started_at: t)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
     insert_list(10, :respondent, survey: survey, state: "pending", disposition: "registered")
-    insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-    insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-    insert_list(3, :respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "ineligible", completed_at: Timex.parse!("2016-01-02T10:00:00Z", "{ISO:Extended}"))
+    insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
+    insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
+    insert_list(3, :respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "ineligible", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
 
     conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
     data = json_response(conn, 200)["data"]
