@@ -1,5 +1,9 @@
 # InSTEDD Surveda Changelog
 
+## Larch 0.12.1
+
+Port fixes from 0.10.4
+
 ## Larch 0.12
 
 There is a new endpoint to collect metrics by Prometheus. This endpoint can be protected with username and password using the environment variables METRICS_USER (defaults to "metrics") and METRICS_PASS.
