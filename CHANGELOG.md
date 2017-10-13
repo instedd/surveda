@@ -1,5 +1,9 @@
 # InSTEDD Surveda Changelog
 
+## Katsura 0.11.1
+
+Port fixes from 0.10.4
+
 ## Katsura 0.11
 
 In this release the development platform was updated (Elixir 1.5, Phoenix 1.3, Ecto 2.1.6)
