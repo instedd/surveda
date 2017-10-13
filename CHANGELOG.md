@@ -1,5 +1,9 @@
 # InSTEDD Surveda Changelog
 
+## Larch 0.12.1
+
+Port fixes from 0.10.4
+
 ## Larch 0.12
 
 There is a new endpoint to collect metrics by Prometheus. This endpoint can be protected with username and password using the environment variables METRICS_USER (defaults to "metrics") and METRICS_PASS.
@@ -15,6 +19,10 @@ In order to use Guisso for authentication and SSO, some new environment variable
 * Single sign-on using Guisso [#1144](https://github.com/instedd/ask/issues/1144)
 * OAuth2 authentication for APIs [#1145](https://github.com/instedd/ask/issues/1145)
 
+## Katsura 0.11.1
+
+Port fixes from 0.10.4
+
 ## Katsura 0.11
 
 In this release the development platform was updated (Elixir 1.5, Phoenix 1.3, Ecto 2.1.6)
@@ -28,6 +36,12 @@ In this release the development platform was updated (Elixir 1.5, Phoenix 1.3, E
 ### Bugfixes
 
 * Fixed inconsistent number of contacted respondents [#1128](https://github.com/instedd/ask/issues/1128)
+
+## Juniper 0.10.4
+
+### Bugfixes
+
+* Fix respondent stats that were breaking sometimes when a respondent is in "completed" disposition but still active
 
 ## Juniper 0.10.3
 
