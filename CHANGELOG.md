@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Juniper 0.10.4
+
+### Bugfixes
+
+* Fix respondent stats that were breaking sometimes when a respondent is in "completed" disposition but still active
+
 ## Juniper 0.10.3
 
 ### Features
