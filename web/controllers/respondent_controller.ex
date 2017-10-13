@@ -325,17 +325,17 @@ defmodule Ask.RespondentController do
   defp respondents_by_questionnaire_and_completed_at(survey) do
     Repo.all(
       from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("questionnaire_id, DATE(completed_at)"),
-      order_by: fragment("DATE(completed_at) ASC"),
-      select: {r.questionnaire_id, fragment("DATE(completed_at)"), count("*")})
+      group_by: fragment("questionnaire_id, DATE(updated_at)"),
+      order_by: fragment("DATE(updated_at) ASC"),
+      select: {r.questionnaire_id, fragment("DATE(updated_at)"), count("*")})
   end
 
   defp respondents_by_questionnaire_mode_and_completed_at(survey) do
     Repo.all(
       from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("questionnaire_id, mode, DATE(completed_at)"),
-      order_by: fragment("DATE(completed_at) ASC"),
-      select: {r.questionnaire_id, r.mode, fragment("DATE(completed_at)"), count("*")})
+      group_by: fragment("questionnaire_id, mode, DATE(updated_at)"),
+      order_by: fragment("DATE(updated_at) ASC"),
+      select: {r.questionnaire_id, r.mode, fragment("DATE(updated_at)"), count("*")})
     |> Enum.map(fn({questionnaire_id, mode, completed_at, count}) ->
       reference_id = if mode && questionnaire_id do
         "#{questionnaire_id}#{mode |> Enum.join("")}"
@@ -350,17 +350,17 @@ defmodule Ask.RespondentController do
   defp respondents_by_mode_and_completed_at(survey) do
     Repo.all(
       from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("mode, DATE(completed_at)"),
-      order_by: fragment("DATE(completed_at) ASC"),
-      select: {r.mode, fragment("DATE(completed_at)"), count("*")})
+      group_by: fragment("mode, DATE(updated_at)"),
+      order_by: fragment("DATE(updated_at) ASC"),
+      select: {r.mode, fragment("DATE(updated_at)"), count("*")})
   end
 
   defp respondents_by_quota_bucket_and_completed_at(survey) do
     Repo.all(
       from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("quota_bucket_id, DATE(completed_at)"),
-      order_by: fragment("DATE(completed_at) ASC"),
-      select: {r.quota_bucket_id, fragment("DATE(completed_at)"), count("*")})
+      group_by: fragment("quota_bucket_id, DATE(updated_at)"),
+      order_by: fragment("DATE(updated_at) ASC"),
+      select: {r.quota_bucket_id, fragment("DATE(updated_at)"), count("*")})
   end
 
   defp add_disposition_percent(respondents_count_by_disposition_and_questionnaire, total_respondents) do
