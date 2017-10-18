@@ -1,5 +1,5 @@
 export const formatTimezone = (tz) => {
-  const split = tz.replace('_', ' ').split('/')
+  const split = (tz || 'UTC').replace('_', ' ').split('/')
   switch (split.length) {
     case 2:
       return `${split[0]} - ${split[1]}`

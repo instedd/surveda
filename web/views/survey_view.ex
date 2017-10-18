@@ -24,7 +24,7 @@ defmodule Ask.SurveyView do
       exit_code: survey.exit_code,
       exit_message: survey.exit_message,
       cutoff: survey.cutoff,
-      timezone: survey.schedule.timezone,
+      schedule: survey.schedule,
       next_schedule_time: next_schedule_time(survey),
       updated_at: survey.updated_at,
     }

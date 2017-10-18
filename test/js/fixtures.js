@@ -167,7 +167,8 @@ const bareSurvey: Survey = {
     dayOfWeek: {'sun': true, 'mon': true, 'tue': true, 'wed': true, 'thu': true, 'fri': true, 'sat': true},
     startTime: '02:00:00',
     endTime: '06:00:00',
-    timezone: 'Etc/UTC'
+    timezone: 'Etc/UTC',
+    blockedDays: []
   },
   channels: [1],
   respondentsCount: 2,

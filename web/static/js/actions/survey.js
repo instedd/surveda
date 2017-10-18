@@ -12,6 +12,9 @@ export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
+export const ADD_SCHEDULE_BLOCKED_DAY = 'SURVEY_ADD_SCHEDULE_BLOCKED_DAY'
+export const REMOVE_SCHEDULE_BLOCKED_DAY = 'SURVEY_REMOVE_SCHEDULE_BLOCKED_DAY'
+export const CLEAR_SCHEDULE_BLOCKED_DAYS = 'SURVEY_CLEAR_SCHEDULE_BLOCKED_DAYS'
 export const SELECT_MODE = 'SURVEY_SELECT_MODE'
 export const CHANGE_MODE_COMPARISON = 'SURVEY_CHANGE_MODE_COMPARISON'
 export const CHANGE_QUESTIONNAIRE_COMPARISON = 'SURVEY_CHANGE_QUESTIONNAIRE_COMPARISON'
@@ -130,6 +133,20 @@ export const setScheduleTo = (hour: string, previousHour: string) => ({
   type: SET_SCHEDULE_TO,
   hour,
   previousHour
+})
+
+export const clearBlockedDays = () => ({
+  type: CLEAR_SCHEDULE_BLOCKED_DAYS
+})
+
+export const addScheduleBlockedDay = (day: string) => ({
+  type: ADD_SCHEDULE_BLOCKED_DAY,
+  day
+})
+
+export const removeScheduleBlockedDay = (day: string) => ({
+  type: REMOVE_SCHEDULE_BLOCKED_DAY,
+  day
 })
 
 export const selectMode = (mode: string[]) => ({

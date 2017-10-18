@@ -1345,3 +1345,22 @@ a.disabled {
     }
   }
 }
+
+// -------------- DatePicker -------------
+
+// This is a duplicate of .chip .close, it's needed to avoid materialize messing up with the pills and deleting more than one pill at a time
+.chip .cross {
+  cursor: pointer;
+  float: right;
+  font-size: 16px;
+  line-height: 32px;
+  padding-left: 8px;
+}
+
+.datepicker {
+  position: absolute;
+  .datepicker-card {
+    left: 50%;
+    width: 400px;
+  }
+}

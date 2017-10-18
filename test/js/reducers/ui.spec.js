@@ -24,7 +24,8 @@ describe('ui reducer', () => {
         },
         surveyWizard: {
           primaryModeSelected: null,
-          fallbackModeSelected: null
+          fallbackModeSelected: null,
+          allowBlockedDays: false
         }
       },
       errors: {}

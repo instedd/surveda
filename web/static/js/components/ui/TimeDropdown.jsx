@@ -1,7 +1,7 @@
 import React, { PropTypes, PureComponent } from 'react'
 import { Input } from 'react-materialize'
 
-class TimeDropdown extends PureComponent {
+export class TimeDropdown extends PureComponent {
   static propTypes = {
     defaultValue: PropTypes.any,
     onChange: PropTypes.func,
@@ -40,5 +40,3 @@ class TimeDropdown extends PureComponent {
     )
   }
 }
-
-export default TimeDropdown
