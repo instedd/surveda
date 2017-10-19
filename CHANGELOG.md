@@ -19,6 +19,12 @@ In order to use Guisso for authentication and SSO, some new environment variable
 * Single sign-on using Guisso [#1144](https://github.com/instedd/ask/issues/1144)
 * OAuth2 authentication for APIs [#1145](https://github.com/instedd/ask/issues/1145)
 
+## Katsura 0.11.2
+
+### Bugfixes
+
+* Fixed issue with new Chrome versions [#1174](https://github.com/instedd/ask/issues/1174)
+
 ## Katsura 0.11.1
 
 Port fixes from 0.10.4
