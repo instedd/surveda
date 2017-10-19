@@ -77,48 +77,50 @@ export class DatePicker extends Component {
           }
           {
             !readOnly
-            ? <a className='black-text right' href='#' onClick={this.toggleDatePicker}><i className='material-icons'>today</i></a>
+            ? <a className='black-text right' href='#' onClick={this.toggleDatePicker}>
+              <i className='material-icons'>today</i>
+              { this.state.showDatePicker
+                ? <div className='datepicker'>
+                  <Card className='datepicker-card'>
+                    <InfiniteCalendar
+                      Component={MultipleDatesCalendar}
+                      theme={{
+                        accentColor: '#4CAF50',
+                        floatingNav: {
+                          background: 'rgba(245, 245, 245, 0.94)',
+                          chevron: '#000',
+                          color: '#000'
+                        },
+                        headerColor: '#4CAF50',
+                        selectionColor: '#4CAF50',
+                        textColor: {
+                          active: '#FFF',
+                          default: '#333'
+                        },
+                        todayColor: '#4CAF50',
+                        weekdayColor: '#4CAF50'
+                      }}
+                      displayOptions={{
+                        layout: 'landscape',
+                        showOverlay: false,
+                        shouldHeaderAnimate: false,
+                        showHeader: false,
+                        showWeekdays: false
+                      }}
+                      width='100%'
+                      height={300}
+                      interpolateSelection={defaultMultipleDateInterpolation}
+                      selected={dates}
+                      onSelect={this.addDate}
+                    />
+                  </Card>
+                </div>
+                : ''
+              }
+            </a>
             : ''
           }
         </div>
-        { this.state.showDatePicker
-          ? <div className='datepicker'>
-            <Card className='datepicker-card'>
-              <InfiniteCalendar
-                Component={MultipleDatesCalendar}
-                theme={{
-                  accentColor: '#4CAF50',
-                  floatingNav: {
-                    background: 'rgba(245, 245, 245, 0.94)',
-                    chevron: '#000',
-                    color: '#000'
-                  },
-                  headerColor: '#4CAF50',
-                  selectionColor: '#4CAF50',
-                  textColor: {
-                    active: '#FFF',
-                    default: '#333'
-                  },
-                  todayColor: '#4CAF50',
-                  weekdayColor: '#4CAF50'
-                }}
-                displayOptions={{
-                  layout: 'landscape',
-                  showOverlay: false,
-                  shouldHeaderAnimate: false,
-                  showHeader: false,
-                  showWeekdays: false
-                }}
-                width='100%'
-                height={300}
-                interpolateSelection={defaultMultipleDateInterpolation}
-                selected={dates}
-                onSelect={this.addDate}
-              />
-            </Card>
-          </div>
-          : ''
-        }
       </div>
     )
   }
