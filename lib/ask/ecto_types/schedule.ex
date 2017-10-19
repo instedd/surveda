@@ -194,4 +194,22 @@ defmodule Ask.Schedule do
   def any_day_selected?(%Schedule{day_of_week: day_of_week}) do
     DayOfWeek.any_day_selected?(day_of_week)
   end
+
+  def adjust_date_to_timezone(%Schedule{} = schedule, date) do
+    date
+    |> Timex.Timezone.convert(schedule.timezone)
+  end
+
+  def timezone_offset(%Schedule{} = schedule) do
+    offset = schedule.timezone
+    |> Timex.Timezone.get
+    |> Timex.Timezone.total_offset
+
+    hours = round(offset / 60 / 60)
+    cond do
+      hours == 0 -> "UTC"
+      hours < 0 -> "GMT#{hours}"
+      hours > 0 -> "GMT+#{hours}"
+    end
+  end
 end
