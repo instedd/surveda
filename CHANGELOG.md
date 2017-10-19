@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Katsura 0.11.2
+
+### Bugfixes
+
+* Fixed issue with new Chrome versions [#1174](https://github.com/instedd/ask/issues/1174)
+
 ## Katsura 0.11.1
 
 Port fixes from 0.10.4
