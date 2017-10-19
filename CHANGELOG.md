@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Larch 0.12.2
+
+### Bugfixes
+
+* Fixed issue with new Chrome versions [#1174](https://github.com/instedd/ask/issues/1174)
+
 ## Larch 0.12.1
 
 Port fixes from 0.10.4
