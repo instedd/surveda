@@ -957,6 +957,74 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "partial respondents are kept as partial after all retries are met (IVR)" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "queued"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "partial"
+
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "partial"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "completed respondents are kept as completed after all retries are met (IVR)" do
+    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
+
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "queued"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "partial"
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "completed"
+
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "completed"
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "contacted respondents are marked as unresponsive after all retries are met (IVR)" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 

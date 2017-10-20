@@ -239,52 +239,12 @@ defmodule Ask.Survey do
     survey.state in ["running", "terminated"]
   end
 
-  def adjust_timezone(date = %Ecto.DateTime{}, survey) do
-    date
-    |> Ecto.DateTime.to_erl
-    adjust_timezone_to_survey(date, survey)
+  def adjust_timezone(date_time, %Survey{} = survey) do
+    Schedule.adjust_date_to_timezone(survey.schedule, date_time)
   end
 
-  def adjust_timezone(date = %NaiveDateTime{}, survey) do
-    # Ecto.DateTime.utc
-    # |> Ecto.DateTime.to_erl
-    # |> NaiveDateTime.from_erl!
-    # |> DateTime.from_naive!("Etc/UTC")
-
-    # DateTime.utc_now
-    # |> DateTime.to_naive
-    # |> NaiveDateTime.to_erl
-    # |> Ecto.DateTime.from_erl
-
-    date
-    |> NaiveDateTime.to_erl
-    adjust_timezone_to_survey(date, survey)
-  end
-
-  def adjust_timezone(date = %DateTime{}, survey) do
-    date
-    |> DateTime.to_naive
-    |> NaiveDateTime.to_erl
-    adjust_timezone_to_survey(date, survey)
-  end
-
-  defp adjust_timezone_to_survey(date, survey) do
-    date
-    |> Timex.Ecto.DateTime.cast!
-    |> Timex.Timezone.convert(survey.schedule.timezone)
-  end
-
-  def timezone_offset(survey) do
-    offset = survey.schedule.timezone
-    |> Timex.Timezone.get
-    |> Timex.Timezone.total_offset
-
-    hours = round(offset / 60 / 60)
-    cond do
-      hours == 0 -> "UTC"
-      hours < 0 -> "GMT#{hours}"
-      hours > 0 -> "GMT+#{hours}"
-    end
+  def timezone_offset(%Survey{} = survey) do
+    Schedule.timezone_offset(survey.schedule)
   end
 
   def completed?(survey) do

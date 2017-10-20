@@ -32,7 +32,8 @@ export type Schedule = {
   dayOfWeek: DayOfWeek,
   startTime: string,
   endTime: string,
-  timezone: string
+  timezone: string,
+  blockedDays: string[]
 }
 
 export type DayOfWeek = {

@@ -25,7 +25,7 @@ export default class SurveyStatus extends PureComponent {
       amOrPm = 'pm'
       hours -= 12
     }
-    return `${hours}${amOrPm} (${formatTimezone(survey.timezone)})`
+    return `${hours}${amOrPm} (${formatTimezone(survey.schedule.timezone)})`
   }
 
   render() {

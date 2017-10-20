@@ -182,6 +182,7 @@ defmodule Ask.Runtime.Flow do
       "contacted" -> "unresponsive"
       "started" -> "breakoff"
       "partial" -> old_disposition
+      "completed" -> old_disposition
       "ineligible" -> old_disposition
       "rejected" -> old_disposition
       "refused" -> old_disposition

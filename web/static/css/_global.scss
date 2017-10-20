@@ -1345,3 +1345,50 @@ a.disabled {
     }
   }
 }
+
+// -------------- DatePicker -------------
+
+// This is a duplicate of .chip .close, it's needed to avoid materialize messing up with the pills and deleting more than one pill at a time
+.chip .cross {
+  cursor: pointer;
+  float: right;
+  font-size: 16px;
+  line-height: 32px;
+  padding-left: 8px;
+}
+
+.datepicker {
+  position: relative;
+  .datepicker-card {
+    position: absolute;
+    right: 0;
+    width: 400px;
+  }
+}
+
+.Cal__Header__root {
+  display:none;
+}
+
+.Cal__Day__selection:before {
+  content: 'block';
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  color: #ff551b;
+  font-size: 62px;
+  line-height: 52px;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+  position: absolute;
+  top: 0px;
+  right: -5px;
+  opacity: 0.9;
+}
+.Cal__Day__selection {
+  color: #ff551b !important;
+}
+
+.Cal__Month__rows {
+  background: none;
+}

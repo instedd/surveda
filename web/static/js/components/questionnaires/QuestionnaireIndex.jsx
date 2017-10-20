@@ -4,6 +4,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import range from 'lodash/range'
+import dateformat from 'dateformat'
 import { orderedItems } from '../../reducers/collection'
 import * as actions from '../../actions/questionnaires'
 import * as questionnaireActions from '../../actions/questionnaire'
@@ -141,6 +142,7 @@ class QuestionnaireIndex extends Component {
           <thead>
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+              <SortableHeader text='Last Modified' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(propertyName) => this.sortBy(propertyName)} />
               <th>Modes</th>
               {readOnly ? null : <th className='action' />}
               {readOnly ? null : <th className='action' />}
@@ -156,6 +158,9 @@ class QuestionnaireIndex extends Component {
                 <tr key={questionnaire.id}>
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
+                  </td>
+                  <td onClick={() => this.goTo(questionnaire.id)}>
+                    {questionnaire.updatedAt ? dateformat(new Date(questionnaire.updatedAt), 'mmm d, yyyy HH:MM') : '-'}
                   </td>
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     { (questionnaire.modes || []).sort((x, y) => modeOrder(x) - modeOrder(y)).map(x => modeLabel(x)).join(', ') }
