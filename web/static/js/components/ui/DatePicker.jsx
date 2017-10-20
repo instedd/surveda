@@ -83,42 +83,40 @@ export class DatePicker extends Component {
           }
           {
             !readOnly
-            ? <span className='right'>
+            ? <span className='right datepicker'>
               <a className='black-text' href='#' onClick={this.toggleDatePicker}><i className='material-icons'>today</i></a>
               { this.state.showDatePicker
-                ? <div className='datepicker'>
-                  <Card className='datepicker-card'>
-                    <InfiniteCalendar
-                      Component={MultipleDatesCalendar}
-                      theme={{
-                        accentColor: '#4CAF50',
-                        floatingNav: {
-                          background: 'rgba(245, 245, 245, 0.94)',
-                          chevron: '#000',
-                          color: '#000'
-                        },
-                        headerColor: '#FFF',
-                        selectionColor: '#e0e0e0',
-                        textColor: {
-                          active: '#000',
-                          default: '#333'
-                        },
-                        todayColor: '#e0e0e0',
-                        weekdayColor: '#FFF'
-                      }}
-                      displayOptions={{
-                        showHeader: true,
-                        showWeekdays: true
-                      }}
-                      width='100%'
-                      displayDate={false}
-                      height={300}
-                      interpolateSelection={defaultMultipleDateInterpolation}
-                      selected={dates}
-                      onSelect={this.addDate}
-                    />
-                  </Card>
-                </div>
+                ? <Card className='datepicker-card'>
+                  <InfiniteCalendar
+                    Component={MultipleDatesCalendar}
+                    theme={{
+                      accentColor: '#4CAF50',
+                      floatingNav: {
+                        background: 'rgba(245, 245, 245, 0.94)',
+                        chevron: '#9a9a9a',
+                        color: '#9a9a9a'
+                      },
+                      headerColor: '#FFF',
+                      selectionColor: '#FFF',
+                      textColor: {
+                        active: '#9a9a9a',
+                        default: '#333'
+                      },
+                      todayColor: '#e0e0e0',
+                      weekdayColor: '#FFF'
+                    }}
+                    displayOptions={{
+                      showHeader: true,
+                      showWeekdays: true
+                    }}
+                    width='100%'
+                    displayDate={false}
+                    height={300}
+                    interpolateSelection={defaultMultipleDateInterpolation}
+                    selected={dates}
+                    onSelect={this.addDate}
+                  />
+                </Card>
                 : ''
               }
             </span>
