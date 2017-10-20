@@ -56,7 +56,7 @@ export class DatePicker extends Component {
 
   dateFromString(date: string) {
     const splitted = date.split('-')
-    return new Date(splitted[0], splitted[1] - 1, parseInt(splitted[2]))
+    return new Date(splitted[0], parseInt(splitted[1]) - 1, parseInt(splitted[2]))
   }
 
   formatDate(date: string) {
