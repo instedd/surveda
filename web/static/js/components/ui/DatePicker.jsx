@@ -54,6 +54,15 @@ export class DatePicker extends Component {
     e.preventDefault()
   }
 
+  dateFromString(date: string) {
+    const splitted = date.split('-')
+    return new Date(splitted[0], splitted[1] - 1, parseInt(splitted[2]))
+  }
+
+  formatDate(date: string) {
+    return dateformat(this.dateFromString(date), 'mmm dd, yyyy')
+  }
+
   render() {
     const { className, style, dates, readOnly } = this.props
     return (
@@ -62,10 +71,7 @@ export class DatePicker extends Component {
           { dates
             ? dates.map((date, index) =>
               <div className='chip' key={index}>
-                {
-                  dateformat(new Date(date), 'mmm dd, yyyy       ')
-                }
-                {date}
+                { this.formatDate(date) }
                 {
                   !readOnly
                   ? <i className='cross material-icons' onClick={this.removeDate(date)}>close</i>
@@ -77,8 +83,8 @@ export class DatePicker extends Component {
           }
           {
             !readOnly
-            ? <a className='black-text right' href='#' onClick={this.toggleDatePicker}>
-              <i className='material-icons'>today</i>
+            ? <span className='right'>
+              <a className='black-text' href='#' onClick={this.toggleDatePicker}><i className='material-icons'>today</i></a>
               { this.state.showDatePicker
                 ? <div className='datepicker'>
                   <Card className='datepicker-card'>
@@ -91,23 +97,21 @@ export class DatePicker extends Component {
                           chevron: '#000',
                           color: '#000'
                         },
-                        headerColor: '#4CAF50',
-                        selectionColor: '#4CAF50',
+                        headerColor: '#FFF',
+                        selectionColor: '#e0e0e0',
                         textColor: {
-                          active: '#FFF',
+                          active: '#000',
                           default: '#333'
                         },
-                        todayColor: '#4CAF50',
-                        weekdayColor: '#4CAF50'
+                        todayColor: '#e0e0e0',
+                        weekdayColor: '#FFF'
                       }}
                       displayOptions={{
-                        layout: 'landscape',
-                        showOverlay: false,
-                        shouldHeaderAnimate: false,
-                        showHeader: false,
-                        showWeekdays: false
+                        showHeader: true,
+                        showWeekdays: true
                       }}
                       width='100%'
+                      displayDate={false}
                       height={300}
                       interpolateSelection={defaultMultipleDateInterpolation}
                       selected={dates}
@@ -117,7 +121,7 @@ export class DatePicker extends Component {
                 </div>
                 : ''
               }
-            </a>
+            </span>
             : ''
           }
         </div>
