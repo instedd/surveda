@@ -233,7 +233,7 @@ class SurveyWizardCutoffStep extends Component {
 
   render() {
     const { questionnaire, survey } = this.props
-    const hasQuotas = (questionnaire && Object.keys(stepStoreValues(questionnaire)).length) || survey.quotas.vars.length > 0
+    const hasQuotas = questionnaire && (Object.keys(stepStoreValues(questionnaire)).length || survey.quotas.vars.length > 0)
     if (hasQuotas) {
       return this.renderWithQuotas()
     } else {
