@@ -50,6 +50,6 @@ const toggleBlockedDays = (state, action) => {
 const setBlockedDays = (state, action) => {
   return {
     ...state,
-    allowBlockedDays: action.data.schedule.blockedDays.length != 0
+    allowBlockedDays: action.data.schedule && action.data.schedule.blockedDays.length != 0
   }
 }
