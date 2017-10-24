@@ -9,6 +9,10 @@ use Mix.Config
 config :ask,
   ecto_repos: [Ask.Repo]
 
+if System.get_env("DISABLE_REPO_TIMEOUT") == "true" do
+  config :ask, Ask.Repo, timeout: :infinity
+end
+
 # Configures the endpoint
 config :ask, Ask.Endpoint,
   url: [host: "localhost"],

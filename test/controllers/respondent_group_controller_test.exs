@@ -286,7 +286,7 @@ defmodule Ask.RespondentGroupControllerTest do
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
       CSV.decode(separator: ?\t) |>
       Enum.map(fn row ->
-        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time}
+        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: "registered"}
       end)
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)

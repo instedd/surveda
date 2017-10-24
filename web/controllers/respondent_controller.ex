@@ -1,7 +1,8 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
+  require Ask.RespondentStats
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -15,15 +16,13 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
     |> assoc(:respondents)
     |> preload(:responses)
-
-    respondents_count = respondents |> Repo.aggregate(:count, :id)
-
-    respondents = respondents
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_respondents(sort_by, sort_asc)
     |> Repo.all
     |> mask_phone_numbers
+
+    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey_id)
 
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
@@ -75,11 +74,13 @@ defmodule Ask.RespondentController do
         [] ->
           {[], cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
         [{next_date, next_percent} | rest_percents_by_date] ->
-          cond do
-            date < next_date ->
+          case Timex.compare(date, next_date) do
+            -1 -> # date < next_date
               {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
-            date == next_date ->
+            0 -> # date == next_date
               {rest_percents_by_date, cumulative_percent + next_percent, cumulative_percent_by_date ++ [{date, cumulative_percent + next_percent}]}
+            1 -> # date > next_date, should not happen, but just in case
+              acc
           end
       end
     end)
@@ -97,6 +98,7 @@ defmodule Ask.RespondentController do
 
   defp stats(conn, survey, []) do
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+    respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     if length(questionnaires) > 1 && length(survey.mode) > 1 do
       reference = questionnaires
       |> Enum.reduce([], fn(questionnaire, reference) ->
@@ -113,7 +115,7 @@ defmodule Ask.RespondentController do
       stats(
         conn,
         survey,
-        survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+        respondent_count,
         respondents_by_questionnaire_mode_and_disposition(survey),
         respondents_by_questionnaire_mode_and_completed_at(survey),
         reference,
@@ -133,7 +135,7 @@ defmodule Ask.RespondentController do
         stats(
           conn,
           survey,
-          survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+          respondent_count,
           respondents_by_mode_and_disposition(survey),
           respondents_by_mode_and_completed_at(survey),
           reference,
@@ -149,7 +151,7 @@ defmodule Ask.RespondentController do
         stats(
           conn,
           survey,
-          survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+          respondent_count,
           respondents_by_questionnaire_and_disposition(survey),
           respondents_by_questionnaire_and_completed_at(survey),
           reference,
@@ -162,11 +164,12 @@ defmodule Ask.RespondentController do
 
   defp stats(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
+    respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
 
     stats(
       conn,
       survey,
-      survey |> assoc(:respondents) |> Repo.aggregate(:count, :id),
+      respondent_count,
       respondents_by_bucket_and_disposition(survey),
       respondents_by_quota_bucket_and_completed_at(survey),
       buckets,
@@ -190,19 +193,20 @@ defmodule Ask.RespondentController do
         true -> total_respondents
       end
 
+    total_respondents_by_disposition =
+      Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
+
     # Completion percentage
-    contacted_respondents =
-      Repo.one(
-        from r in (survey |> assoc(:respondents)),
-        where: not r.disposition in ["queued", "registered"],
-        select: count("*")
-      )
-    completed_or_partial =
-      Repo.one(
-        from r in Respondent,
-        where: r.survey_id == ^survey.id and r.disposition in ["completed", "partial"],
-        select: count("*")
-      )
+    contacted_respondents = total_respondents_by_disposition
+      |> Enum.filter(fn {d, _} -> d not in ["queued", "registered"] end)
+      |> Enum.map(fn {_, c} -> c end)
+      |> Enum.sum
+
+    completed_or_partial = total_respondents_by_disposition
+      |> Enum.filter(fn {d, _} -> d in ["completed", "partial"] end)
+      |> Enum.map(fn {_, c} -> c end)
+      |> Enum.sum
+
     completion_percentage = (completed_or_partial / target) * 100
 
     stats = %{
@@ -274,10 +278,7 @@ defmodule Ask.RespondentController do
 
     range =
       Timex.Interval.new(from: survey.started_at, until: Timex.now)
-      |> Enum.map(fn datetime ->
-        { date, _ } = Timex.to_erl(datetime)
-        date
-      end)
+      |> Enum.map(&Timex.to_date/1)
 
     grouped_respondents
       |> Enum.reduce(%{}, fn {group_id, date, count}, acc ->
@@ -296,20 +297,14 @@ defmodule Ask.RespondentController do
   end
 
   defp respondents_by_questionnaire_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :questionnaire_id],
-      select: {r.state, r.disposition, r.questionnaire_id, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :questionnaire_id])
   end
 
   defp respondents_by_questionnaire_mode_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :questionnaire_id, :mode],
-      select: {r.state, r.disposition, r.questionnaire_id, r.mode, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :questionnaire_id, :mode])
     |> Enum.map(fn({state, disposition, questionnaire_id, mode, count}) ->
       reference_id = if mode && questionnaire_id do
-        "#{questionnaire_id}#{mode |> Enum.join("")}"
+        "#{questionnaire_id}#{mode |> Poison.decode! |> Enum.join("")}"
       else
         nil
       end
@@ -319,36 +314,32 @@ defmodule Ask.RespondentController do
   end
 
   defp respondents_by_mode_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :mode],
-      select: {r.state, r.disposition, r.mode, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :mode])
   end
 
   defp respondents_by_bucket_and_disposition(survey) do
-    Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id,
-      group_by: [:state, :disposition, :quota_bucket_id],
-      select: {r.state, r.disposition, r.quota_bucket_id, count("*")})
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :quota_bucket_id])
   end
 
   defp respondents_by_questionnaire_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("questionnaire_id, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.questionnaire_id, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.questionnaire_id, r.date],
+      order_by: r.date,
+      select: {r.questionnaire_id, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
   end
 
   defp respondents_by_questionnaire_mode_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("questionnaire_id, mode, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.questionnaire_id, r.mode, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.questionnaire_id, r.mode, r.date],
+      order_by: r.date,
+      select: {r.questionnaire_id, r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
     |> Enum.map(fn({questionnaire_id, mode, completed_at, count}) ->
-      reference_id = if mode && questionnaire_id do
-        "#{questionnaire_id}#{mode |> Enum.join("")}"
+      reference_id = if mode != "" && questionnaire_id != 0 do
+        "#{questionnaire_id}#{mode |> Poison.decode! |> Enum.join("")}"
       else
         nil
       end
@@ -359,18 +350,21 @@ defmodule Ask.RespondentController do
 
   defp respondents_by_mode_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("mode, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.mode, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.mode, r.date],
+      order_by: r.date,
+      select: {r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
+    |> Enum.map(fn({mode, completed_at, count}) -> {mode |> Poison.decode!, completed_at, count} end)
   end
 
   defp respondents_by_quota_bucket_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("quota_bucket_id, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.quota_bucket_id, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.quota_bucket_id, r.date],
+      order_by: r.date,
+      select: {r.quota_bucket_id, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
   end
 
   defp add_disposition_percent(respondents_count_by_disposition_and_questionnaire, total_respondents) do
@@ -439,8 +433,8 @@ defmodule Ask.RespondentController do
     render_results(conn, get_format(conn), survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
   end
 
-  defp render_results(conn, "json", _survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
-    respondents_count = respondents |> Repo.aggregate(:count, :id)
+  defp render_results(conn, "json", survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
+    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     respondents = respondents
     |> Repo.stream
     respondents = if has_comparisons do
