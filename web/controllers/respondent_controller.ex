@@ -2,7 +2,7 @@ defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
   require Ask.RespondentStats
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -74,11 +74,13 @@ defmodule Ask.RespondentController do
         [] ->
           {[], cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
         [{next_date, next_percent} | rest_percents_by_date] ->
-          cond do
-            date < next_date ->
+          case Timex.compare(date, next_date) do
+            -1 -> # date < next_date
               {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
-            date == next_date ->
+            0 -> # date == next_date
               {rest_percents_by_date, cumulative_percent + next_percent, cumulative_percent_by_date ++ [{date, cumulative_percent + next_percent}]}
+            1 -> # date > next_date, should not happen, but just in case
+              acc
           end
       end
     end)
@@ -276,10 +278,7 @@ defmodule Ask.RespondentController do
 
     range =
       Timex.Interval.new(from: survey.started_at, until: Timex.now)
-      |> Enum.map(fn datetime ->
-        { date, _ } = Timex.to_erl(datetime)
-        date
-      end)
+      |> Enum.map(&Timex.to_date/1)
 
     grouped_respondents
       |> Enum.reduce(%{}, fn {group_id, date, count}, acc ->
@@ -305,7 +304,7 @@ defmodule Ask.RespondentController do
     Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :questionnaire_id, :mode])
     |> Enum.map(fn({state, disposition, questionnaire_id, mode, count}) ->
       reference_id = if mode && questionnaire_id do
-        "#{questionnaire_id}#{mode |> Enum.join("")}"
+        "#{questionnaire_id}#{mode |> Poison.decode! |> Enum.join("")}"
       else
         nil
       end
@@ -324,21 +323,23 @@ defmodule Ask.RespondentController do
 
   defp respondents_by_questionnaire_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("questionnaire_id, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.questionnaire_id, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.questionnaire_id, r.date],
+      order_by: r.date,
+      select: {r.questionnaire_id, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
   end
 
   defp respondents_by_questionnaire_mode_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("questionnaire_id, mode, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.questionnaire_id, r.mode, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.questionnaire_id, r.mode, r.date],
+      order_by: r.date,
+      select: {r.questionnaire_id, r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
     |> Enum.map(fn({questionnaire_id, mode, completed_at, count}) ->
-      reference_id = if mode && questionnaire_id do
-        "#{questionnaire_id}#{mode |> Enum.join("")}"
+      reference_id = if mode != "" && questionnaire_id != 0 do
+        "#{questionnaire_id}#{mode |> Poison.decode! |> Enum.join("")}"
       else
         nil
       end
@@ -349,18 +350,21 @@ defmodule Ask.RespondentController do
 
   defp respondents_by_mode_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("mode, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.mode, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.mode, r.date],
+      order_by: r.date,
+      select: {r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
+    |> Enum.map(fn({mode, completed_at, count}) -> {mode |> Poison.decode!, completed_at, count} end)
   end
 
   defp respondents_by_quota_bucket_and_completed_at(survey) do
     Repo.all(
-      from r in Respondent, where: r.survey_id == ^survey.id and r.disposition == "completed",
-      group_by: fragment("quota_bucket_id, DATE(updated_at)"),
-      order_by: fragment("DATE(updated_at) ASC"),
-      select: {r.quota_bucket_id, fragment("DATE(updated_at)"), count("*")})
+      from r in CompletedRespondents,
+      where: r.survey_id == ^survey.id,
+      group_by: [r.quota_bucket_id, r.date],
+      order_by: r.date,
+      select: {r.quota_bucket_id, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
   end
 
   defp add_disposition_percent(respondents_count_by_disposition_and_questionnaire, total_respondents) do
