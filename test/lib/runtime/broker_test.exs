@@ -1009,7 +1009,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "partial"
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+    _reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
