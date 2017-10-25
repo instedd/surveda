@@ -6,7 +6,7 @@ defmodule Ask.Repo.Migrations.SynchronizeCompletedRespondents do
     Repo.transaction(fn ->
       Repo.query!("""
         INSERT INTO completed_respondents(survey_id, questionnaire_id, quota_bucket_id, mode, date, count)
-        SELECT survey_id, IFNULL(questionnaire_id, 0), IFNULL(quota_bucket_id, 0), IFNULL(mode, ""), DATE(updated_at), count(*)
+        SELECT survey_id, IFNULL(questionnaire_id, 0), IFNULL(quota_bucket_id, 0), IFNULL(mode, ''), DATE(updated_at), count(*)
         FROM respondents
         WHERE disposition = 'completed'
         GROUP BY survey_id, questionnaire_id, quota_bucket_id, mode, DATE(updated_at)
@@ -20,7 +20,7 @@ defmodule Ask.Repo.Migrations.SynchronizeCompletedRespondents do
 
           IF NEW.disposition = 'completed' THEN
             INSERT INTO completed_respondents(survey_id, questionnaire_id, quota_bucket_id, mode, date, count)
-            VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ""), DATE(NEW.updated_at), 1)
+            VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ''), DATE(NEW.updated_at), 1)
             ON DUPLICATE KEY UPDATE `count` = `count` + 1;
           END IF;
 
@@ -35,7 +35,7 @@ defmodule Ask.Repo.Migrations.SynchronizeCompletedRespondents do
 
           IF NEW.disposition = 'completed' AND OLD.disposition <> 'completed' THEN
             INSERT INTO completed_respondents(survey_id, questionnaire_id, quota_bucket_id, mode, date, count)
-            VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ""), DATE(NEW.updated_at), 1)
+            VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ''), DATE(NEW.updated_at), 1)
             ON DUPLICATE KEY UPDATE `count` = `count` + 1;
           ELSEIF NEW.disposition <> 'completed' AND OLD.disposition = 'completed' THEN
             UPDATE completed_respondents
@@ -43,7 +43,7 @@ defmodule Ask.Repo.Migrations.SynchronizeCompletedRespondents do
              WHERE survey_id = OLD.survey_id
                AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
                AND quota_bucket_id = IFNULL(OLD.quota_bucket_id, 0)
-               AND mode = IFNULL(OLD.mode, "")
+               AND mode = IFNULL(OLD.mode, '')
                AND date = DATE(OLD.updated_at);
           END IF;
 
@@ -62,7 +62,7 @@ defmodule Ask.Repo.Migrations.SynchronizeCompletedRespondents do
              WHERE survey_id = OLD.survey_id
                AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
                AND quota_bucket_id = IFNULL(OLD.quota_bucket_id, 0)
-               AND mode = IFNULL(OLD.mode, "")
+               AND mode = IFNULL(OLD.mode, '')
                AND date = DATE(OLD.updated_at);
           END IF;
 
