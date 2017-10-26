@@ -17,7 +17,7 @@ defmodule Ask.Coherence.PasswordController do
   alias Coherence.ControllerHelpers, as: Helpers
   alias Ask.Coherence.Helper
 
-  plug :layout_view when action in [:new, :create, :update, :password_recovery_sent]
+  plug :layout_view
   plug :redirect_logged_in when action in [:new, :create, :edit, :update]
 
   @doc false
@@ -93,8 +93,6 @@ defmodule Ask.Coherence.PasswordController do
           |> redirect(to: logged_out_url(conn))
         else
           conn
-          |> put_layout({Ask.LayoutView, "app.html"})
-          |> put_view(Coherence.PasswordView)
           |> render("edit.html", changeset: Ask.User.changeset(user))
         end
     end
@@ -126,8 +124,6 @@ defmodule Ask.Coherence.PasswordController do
             |> redirect_to(:password_update, params)
           {:error, changeset} ->
             conn
-            |> put_layout({Ask.LayoutView, "app.html"})
-            |> put_view(Coherence.PasswordView)
             |> render("edit.html", changeset: changeset)
         end
     end
