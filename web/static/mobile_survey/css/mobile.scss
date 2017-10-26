@@ -130,7 +130,7 @@ input[type=text] {
 input[type=number] {
   font-size: 2rem;
   &.error {
-    border-bottom: 1px solid #ff5722;
+    border-bottom-color: #ff5722;
   }
 }
 select {
