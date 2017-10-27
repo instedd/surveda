@@ -221,7 +221,7 @@ class SurveyShow extends Component {
             <div className='card-content'>
               <div className='row'>
                 <div className='col s12'>
-                  <p className='red-text'>
+                  <p className='red-text alert-left-icon'>
                     <i className='material-icons'>warning</i>
                     Stopped surveys cannot be restarted
                   </p>
@@ -249,16 +249,14 @@ class SurveyShow extends Component {
                   <label htmlFor='stop_understood'>Understood</label>
                 </div>
               </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <a
-                    className={classNames('btn-large red', { disabled: !stopUnderstood })}
-                    onClick={() => this.confirmStopSurvey()}>
-                    Stop
-                  </a>
-                  <a className='btn-flat' onClick={() => this.stopCancel()}>Cancel</a>
-                </div>
-              </div>
+            </div>
+            <div className='card-action'>
+              <a
+                className={classNames('btn-large red', { disabled: !stopUnderstood })}
+                onClick={() => this.confirmStopSurvey()}>
+                Stop
+              </a>
+              <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
             </div>
           </div>
         </Modal>
