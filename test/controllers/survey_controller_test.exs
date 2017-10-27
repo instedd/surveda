@@ -3,7 +3,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel, ShortLink}
   alias Ask.Runtime.{Flow, Session}
   alias Ask.Runtime.SessionModeProvider
 
@@ -130,6 +130,7 @@ defmodule Ask.SurveyControllerTest do
           "vars" => [],
           "buckets" => []
         },
+        "links" => [],
         "comparisons" => [],
         "next_schedule_time" => nil,
       }
@@ -196,8 +197,76 @@ defmodule Ask.SurveyControllerTest do
             },
           ]
         },
+        "links" => [],
         "comparisons" => [],
         "next_schedule_time" => nil
+      }
+    end
+
+    test "shows chosen resource with download links", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+      {:ok, result_link} = ShortLink.generate_link(Survey.link_name(survey, :results), "foo")
+      {:ok, incentives_link} = ShortLink.generate_link(Survey.link_name(survey, :incentives), "bar")
+      {:ok, interactions_link} = ShortLink.generate_link(Survey.link_name(survey, :interactions), "baz")
+      {:ok, disposition_history_link} = ShortLink.generate_link(Survey.link_name(survey, :disposition_history), "bae")
+
+      conn = get conn, project_survey_path(conn, :show, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{"id" => survey.id,
+        "name" => survey.name,
+        "mode" => survey.mode,
+        "project_id" => survey.project_id,
+        "questionnaire_ids" => [],
+        "cutoff" => nil,
+        "count_partial_results" => false,
+        "state" => "not_ready",
+        "exit_code" => nil,
+        "exit_message" => nil,
+        "schedule" => %{
+          "day_of_week" => %{
+            "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
+          },
+          "start_time" => "00:00:00",
+          "end_time" => "23:59:59",
+          "timezone" => "Etc/UTC",
+          "blocked_days" => []
+        },
+        "started_at" => "",
+        "ivr_retry_configuration" => nil,
+        "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
+        "fallback_delay" => nil,
+        "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at),
+        "quotas" => %{
+          "vars" => [],
+          "buckets" => []
+        },
+        "links" => [
+          %{
+            "name" => "survey/#{survey.id}/results",
+            "hash" => result_link.hash,
+            "target" => "foo"
+          },
+          %{
+            "name" => "survey/#{survey.id}/incentives",
+            "hash" => incentives_link.hash,
+            "target" => "bar"
+          },
+          %{
+            "name" => "survey/#{survey.id}/interactions",
+            "hash" => interactions_link.hash,
+            "target" => "baz"
+          },
+          %{
+            "name" => "survey/#{survey.id}/disposition_history",
+            "hash" => disposition_history_link.hash,
+            "target" => "bae"
+          },
+        ],
+        "comparisons" => [],
+        "next_schedule_time" => nil,
       }
     end
 
@@ -997,11 +1066,145 @@ defmodule Ask.SurveyControllerTest do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+    conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
 
     assert json_response(conn, 200)
     survey = Repo.get(Survey, survey.id)
     assert Survey.cancelled?(survey)
+  end
+
+  describe "download links" do
+    test "results link generation", %{conn: conn, user: user}do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      response = get conn, project_survey_results_link_path(conn, :results_link, project, survey)
+
+      link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/results",
+        "hash" => link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
+      }
+
+      response = put conn, project_survey_results_link_path(conn, :regenerate_results_link, project, survey)
+
+      new_link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/results",
+        "hash" => new_link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
+      }
+
+      assert link.hash != new_link.hash
+
+      response = delete conn, project_survey_results_link_path(conn, :delete_results_link, project, survey)
+
+      assert [] == ShortLink |> Repo.all()
+
+      assert response(response, 204)
+    end
+
+    test "incentives link generation", %{conn: conn, user: user}do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      response = get conn, project_survey_incentives_link_path(conn, :incentives_link, project, survey)
+
+      link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/incentives",
+        "hash" => link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
+      }
+
+      response = put conn, project_survey_incentives_link_path(conn, :regenerate_incentives_link, project, survey)
+
+      new_link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/incentives",
+        "hash" => new_link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
+      }
+
+      assert link.hash != new_link.hash
+
+      response = delete conn, project_survey_incentives_link_path(conn, :delete_incentives_link, project, survey)
+
+      assert [] == ShortLink |> Repo.all()
+
+      assert response(response, 204)
+    end
+
+    test "interactions link generation", %{conn: conn, user: user}do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      response = get conn, project_survey_interactions_link_path(conn, :interactions_link, project, survey)
+
+      link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/interactions",
+        "hash" => link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
+      }
+
+      response = put conn, project_survey_interactions_link_path(conn, :regenerate_interactions_link, project, survey)
+
+      new_link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/interactions",
+        "hash" => new_link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
+      }
+
+      assert link.hash != new_link.hash
+
+      response = delete conn, project_survey_interactions_link_path(conn, :delete_interactions_link, project, survey)
+
+      assert [] == ShortLink |> Repo.all()
+
+      assert response(response, 204)
+    end
+
+    test "disposition_history link generation", %{conn: conn, user: user}do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      response = get conn, project_survey_disposition_history_link_path(conn, :disposition_history_link, project, survey)
+
+      link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/disposition_history",
+        "hash" => link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
+      }
+
+      response = put conn, project_survey_disposition_history_link_path(conn, :regenerate_disposition_history_link, project, survey)
+
+      new_link = ShortLink |> Repo.one
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/disposition_history",
+        "hash" => new_link.hash,
+        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
+      }
+
+      assert link.hash != new_link.hash
+
+      response = delete conn, project_survey_disposition_history_link_path(conn, :delete_disposition_history_link, project, survey)
+
+      assert [] == ShortLink |> Repo.all()
+
+      assert response(response, 204)
+    end
   end
 
   def prepare_for_state_update(user) do

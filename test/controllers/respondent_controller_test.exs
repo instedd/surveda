@@ -402,6 +402,43 @@ defmodule Ask.RespondentControllerTest do
     assert line_3_disp == "Registered"
   end
 
+  test "download results csv using a download link", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"])
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"])
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+    conn = get conn, project_survey_results_link_path(conn, :results_link, project, survey)
+
+    link = Ask.ShortLink |> Repo.one
+
+    conn = get conn, short_link_path(conn, :access, link.hash)
+    # conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
+    csv = response(conn, 200)
+
+    [line1, line2, line3, _] = csv |> String.split("\r\n")
+    assert line1 == "Respondent ID,Date,Modes,Smokes,Exercises,Perfect Number,Question,Disposition"
+
+    [line_2_hashed_number, _, line_2_modes, line_2_smoke, line_2_exercises, _, _, line_2_disp] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+    assert line_2_hashed_number == respondent_1.hashed_number
+    assert line_2_modes == "SMS, Phone call"
+    assert line_2_smoke == "Yes"
+    assert line_2_exercises == "No"
+    assert line_2_disp == "Partial"
+
+    [line_3_hashed_number, _, line_3_modes, line_3_smoke, line_3_exercises, _, _, line_3_disp] = [line3]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+    assert line_3_hashed_number == respondent_2.hashed_number
+    assert line_3_modes == "Mobile Web"
+    assert line_3_smoke == "No"
+    assert line_3_exercises == ""
+    assert line_3_disp == "Registered"
+  end
+
   test "download results csv with filter by disposition", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
@@ -803,6 +840,35 @@ defmodule Ask.RespondentControllerTest do
      "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06 UTC"]
   end
 
+  test "download disposition history using download link", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
+
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+    insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+    insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
+
+    conn = get conn, project_survey_disposition_history_link_path(conn, :disposition_history_link, project, survey)
+
+    link = Ask.ShortLink |> Repo.one
+
+    conn = get conn, short_link_path(conn, :access, link.hash)
+    # conn = get conn, project_survey_respondents_disposition_history_path(conn, :disposition_history, survey.project.id, survey.id, %{"_format" => "csv"})
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == ["Respondent ID,Disposition,Mode,Timestamp",
+     "1asd12451eds,partial,SMS,2000-01-01 01:02:03 UTC",
+     "1asd12451eds,completed,SMS,2000-01-01 02:03:04 UTC",
+     "34y5345tjyet,partial,Phone call,2000-01-01 03:04:05 UTC",
+     "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06 UTC"]
+  end
+
   test "download incentives", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
@@ -812,6 +878,29 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
     conn = get conn, project_survey_respondents_incentives_path(conn, :incentives, survey.project.id, survey.id, %{"_format" => "csv"})
+    csv = response(conn, 200)
+
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert lines == [
+      "Telephone number,Questionnaire-Mode",
+      "5678,test - SMS with phone call fallback"
+    ]
+  end
+
+  test "download incentives using download link", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+    insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
+    insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+    insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
+
+    conn = get conn, project_survey_incentives_link_path(conn, :incentives_link, project, survey)
+
+    link = Ask.ShortLink |> Repo.one
+
+    conn = get conn, short_link_path(conn, :access, link.hash)
+    # conn = get conn, project_survey_respondents_incentives_path(conn, :incentives, survey.project.id, survey.id, %{"_format" => "csv"})
     csv = response(conn, 200)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
@@ -835,6 +924,42 @@ defmodule Ask.RespondentControllerTest do
     end
 
     conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
+    csv = response(conn, 200)
+
+    expected_list = List.flatten(
+      ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
+      for _ <- 1..200 do
+        "1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
+      end,
+      for _ <- 1..200 do
+        ["5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+        "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"]
+      end,
+    ])
+    lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+    assert length(lines) == length(expected_list)
+    assert lines == expected_list
+  end
+
+  test "download interactions using download link", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, name: "test", project: project)
+    survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+    respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
+    respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
+    channel = insert(:channel, name: "test_channel")
+    for _ <- 1..200 do
+      insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+      insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+    end
+
+    conn = get conn, project_survey_interactions_link_path(conn, :interactions_link, project, survey)
+
+    link = Ask.ShortLink |> Repo.one
+
+    conn = get conn, short_link_path(conn, :access, link.hash)
+    # conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
     csv = response(conn, 200)
 
     expected_list = List.flatten(

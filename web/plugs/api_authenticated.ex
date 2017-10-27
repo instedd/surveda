@@ -7,6 +7,10 @@ defmodule Ask.Plugs.ApiAuthenticated do
 
   def init(default), do: default
 
+  def call(%{assigns: %{skip_auth: true}} = conn, _) do
+    conn
+  end
+
   def call(conn, _) do
     conn = case Mix.env do
       :test ->

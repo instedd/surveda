@@ -80,6 +80,20 @@ defmodule Ask.Router do
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/simulation_status", SurveyController, :simulation_status
           post "/stop_simulation", SurveyController, :stop_simulation
+          scope "/links" do
+            get "/results", SurveyController, :results_link, as: :results_link
+            put "/results", SurveyController, :regenerate_results_link, as: :results_link
+            delete "/results", SurveyController, :delete_results_link, as: :results_link
+            get "/interactions", SurveyController, :interactions_link, as: :interactions_link
+            put "/interactions", SurveyController, :regenerate_interactions_link, as: :interactions_link
+            delete "/interactions", SurveyController, :delete_interactions_link, as: :interactions_link
+            get "/disposition_history", SurveyController, :disposition_history_link, as: :disposition_history_link
+            put "/disposition_history", SurveyController, :regenerate_disposition_history_link, as: :disposition_history_link
+            delete "/disposition_history", SurveyController, :delete_disposition_history_link, as: :disposition_history_link
+            get "/incentives", SurveyController, :incentives_link, as: :incentives_link
+            put "/incentives", SurveyController, :regenerate_incentives_link, as: :incentives_link
+            delete "/incentives", SurveyController, :delete_incentives_link, as: :incentives_link
+          end
         end
         post "/surveys/simulate_questionanire", SurveyController, :simulate_questionanire
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
@@ -136,6 +150,7 @@ defmodule Ask.Router do
   get "/mobile_survey/get_step/:respondent_id", Ask.MobileSurveyController, :get_step
   post "/mobile_survey/send_reply/:respondent_id", Ask.MobileSurveyController, :send_reply
   get "/mobile_survey/errors/unauthorized", Ask.MobileSurveyController, :unauthorized_error
+  get "/link/:hash", Ask.ShortLinkController, :access
 
   scope "/", Ask do
     pipe_through :browser
