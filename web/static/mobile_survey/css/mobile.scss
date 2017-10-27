@@ -142,10 +142,16 @@ select {
 }
 .input-button-inline {
   display: flex;
-  input {
+  .input-with-error {
+    position: relative;
     flex: 1;
     margin-right: 15px;
-    // width: 46%;
+    input {
+      width: 100%;
+    }
+    .error-message p {
+      margin-top: 2px;
+    }
   }
   .btn {
     float: right;
