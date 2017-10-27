@@ -246,23 +246,19 @@ defmodule Ask.SurveyControllerTest do
         "links" => [
           %{
             "name" => "survey/#{survey.id}/results",
-            "hash" => result_link.hash,
-            "target" => "foo"
+            "url" => "http://app.ask.dev/#{result_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/incentives",
-            "hash" => incentives_link.hash,
-            "target" => "bar"
+            "url" => "http://app.ask.dev/#{incentives_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/interactions",
-            "hash" => interactions_link.hash,
-            "target" => "baz"
+            "url" => "http://app.ask.dev/#{interactions_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/disposition_history",
-            "hash" => disposition_history_link.hash,
-            "target" => "bae"
+            "url" => "http://app.ask.dev/#{disposition_history_link.hash}"
           },
         ],
         "comparisons" => [],
@@ -1084,9 +1080,10 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "hash" => link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
+        "url" => "http://app.ask.dev/#{link.hash}"
       }
+
+      assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
 
       response = put conn, project_survey_results_link_path(conn, :regenerate_results_link, project, survey)
 
@@ -1094,11 +1091,11 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "hash" => new_link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
+        "url" => "http://app.ask.dev/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
+      assert link.target == new_link.target
 
       response = delete conn, project_survey_results_link_path(conn, :delete_results_link, project, survey)
 
@@ -1117,9 +1114,10 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "hash" => link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
+        "url" => "http://app.ask.dev/#{link.hash}"
       }
+
+      assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
 
       response = put conn, project_survey_incentives_link_path(conn, :regenerate_incentives_link, project, survey)
 
@@ -1127,11 +1125,11 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "hash" => new_link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
+        "url" => "http://app.ask.dev/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
+      assert link.target == new_link.target
 
       response = delete conn, project_survey_incentives_link_path(conn, :delete_incentives_link, project, survey)
 
@@ -1150,9 +1148,10 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "hash" => link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
+        "url" => "http://app.ask.dev/#{link.hash}"
       }
+
+      assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
 
       response = put conn, project_survey_interactions_link_path(conn, :regenerate_interactions_link, project, survey)
 
@@ -1160,11 +1159,11 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "hash" => new_link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
+        "url" => "http://app.ask.dev/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
+      assert link.target == new_link.target
 
       response = delete conn, project_survey_interactions_link_path(conn, :delete_interactions_link, project, survey)
 
@@ -1183,9 +1182,9 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "hash" => link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
+        "url" => "http://app.ask.dev/#{link.hash}"
       }
+      assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
 
       response = put conn, project_survey_disposition_history_link_path(conn, :regenerate_disposition_history_link, project, survey)
 
@@ -1193,11 +1192,11 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "hash" => new_link.hash,
-        "target" => "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
+        "url" => "http://app.ask.dev/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
+      assert link.target == new_link.target
 
       response = delete conn, project_survey_disposition_history_link_path(conn, :delete_disposition_history_link, project, survey)
 

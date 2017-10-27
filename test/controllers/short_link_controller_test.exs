@@ -1,4 +1,4 @@
-defmodule Ask.SurveyControllerTest do
+defmodule Ask.ShortLinkControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 

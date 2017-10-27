@@ -11,7 +11,10 @@ defmodule Ask.ShortLinkController do
     conn = conn
     |> assign(:skip_auth, true)
 
-    [path, query_string] = :binary.split(link.target, "?", [:global])
+    {path, query_string} = case :binary.split(link.target, "?", [:global]) do
+      [path, query_string] -> {path, query_string}
+      [path] -> {path, ""}
+    end
 
     conn = %{conn |
       request_path: path,
