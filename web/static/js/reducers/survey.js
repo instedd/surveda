@@ -39,6 +39,9 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
     case actions.CHANGE_MOBILEWEB_RETRY_CONFIGURATION: return changeMobileWebRetryConfiguration(state, action)
     case actions.CHANGE_FALLBACK_DELAY: return changeFallbackDelay(state, action)
+    case actions.RECEIVE_LINK: return receiveLink(state, action)
+    case actions.REFRESH_LINK: return refreshLink(state, action)
+    case actions.DELETE_LINK: return deleteLink(state, action)
     case actions.SAVED: return saved(state, action)
     default: return state
   }
@@ -51,8 +54,18 @@ const validateReducer = (reducer: StoreReducer<Survey>): StoreReducer<Survey> =>
     return newState
   }
 }
+// We don't want changing the active language to mark the questionnaire
+// as dirty, which will eventually autosave it.
+const dirtyPredicate = (action, oldData, newData) => {
+  switch (action.type) {
+    case actions.RECEIVE_LINK: return false
+    case actions.REFRESH_LINK: return false
+    case actions.DELETE_LINK: return false
+    default: return true
+  }
+}
 
-export default validateReducer(fetchReducer(actions, dataReducer))
+export default validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))
 
 const validate = (state) => {
   state.errorsByPath = {}
@@ -556,5 +569,33 @@ const changeFallbackDelay = (state, action) => {
   return {
     ...state,
     fallbackDelay: action.fallbackDelay
+  }
+}
+
+const receiveLink = (state, action) => {
+  return {
+    ...state,
+    links: [
+      ...state.links,
+      action.link
+    ]
+  }
+}
+
+// TODO: Maybe this is not necessary (delete then receive)
+const refreshLink = (state, action) => {
+  return {
+    ...state,
+    links: [
+      ...without(state.links, action.originalLink),
+      action.newLink
+    ]
+  }
+}
+
+const deleteLink = (state, action) => {
+  return {
+    ...state,
+    links: without(state.links, action.link)
   }
 }

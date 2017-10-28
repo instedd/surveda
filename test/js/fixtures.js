@@ -179,6 +179,7 @@ const bareSurvey: Survey = {
   fallbackDelay: '',
   modeComparison: false,
   questionnaireComparison: false,
+  links: [],
   quotas: {
     vars: [],
     buckets: []

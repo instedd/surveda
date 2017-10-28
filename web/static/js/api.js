@@ -87,6 +87,10 @@ const handleResponse = (response, callback) => {
 }
 
 const apiPutOrPostJSON = (url, schema, verb, body) => {
+  return apiPutOrPostJSONWithCallback(url, schema, verb, body, commonCallback)
+}
+
+const apiPutOrPostJSONWithCallback = (url, schema, verb, body, callback) => {
   const options = {
     method: verb,
     headers: {
@@ -97,7 +101,7 @@ const apiPutOrPostJSON = (url, schema, verb, body) => {
   if (body) {
     options.body = JSON.stringify(decamelizeKeys(body, { separator: '_' }))
   }
-  return apiFetchJSON(url, schema, options)
+  return apiFetchJSONWithCallback(url, schema, options, callback)
 }
 
 const apiPostJSON = (url, schema, body) => {
@@ -368,4 +372,62 @@ export const fetchSurveySimulationStatus = (projectId, surveyId) => {
 
 export const stopSurveySimulation = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop_simulation`, null, {})
+}
+
+const passthroughCallback = (json, _schema) => {
+  return () => {
+    if (!json) { return null }
+    if (json.errors) {
+      console.log(json.errors)
+    }
+    return camelizeKeys(json)
+  }
+}
+
+export const createResultsLink = (projectId, surveyId) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/results`, arrayOf(referenceSchema), {}, passthroughCallback)
+}
+
+export const createIncentivesLink = (projectId, surveyId) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/incentives`, arrayOf(referenceSchema), {}, passthroughCallback)
+}
+
+export const createInteractionsLink = (projectId, surveyId) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/interactions`, arrayOf(referenceSchema), {}, passthroughCallback)
+}
+
+export const createDispositionHistoryLink = (projectId, surveyId) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`, arrayOf(referenceSchema), {}, passthroughCallback)
+}
+
+export const refreshResultsLink = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/results`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+}
+
+export const refreshIncentivesLink = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/incentives`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+}
+
+export const refreshInteractionsLink = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/interactions`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+}
+
+export const refreshDispositionHistoryLink = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+}
+
+export const deleteResultsLink = (projectId, surveyId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/results`)
+}
+
+export const deleteIncentivesLink = (projectId, surveyId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/incentives`)
+}
+
+export const deleteInteractionsLink = (projectId, surveyId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/interactions`)
+}
+
+export const deleteDispositionHistoryLink = (projectId, surveyId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`)
 }
