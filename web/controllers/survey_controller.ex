@@ -495,7 +495,9 @@ defmodule Ask.SurveyController do
     link = ShortLink
     |> Repo.get_by(name: Survey.link_name(survey, target_name))
 
-    Repo.delete!(link)
+    if link do
+      Repo.delete!(link)
+    end
 
     send_resp(conn, :no_content, "")
   end
