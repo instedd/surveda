@@ -12,6 +12,7 @@ import uniqWith from 'lodash/uniqWith'
 import every from 'lodash/every'
 import some from 'lodash/some'
 import without from 'lodash/without'
+import filter from 'lodash/filter'
 import React from 'react'
 
 export const dataReducer = (state: Survey, action: any): Survey => {
@@ -54,8 +55,7 @@ const validateReducer = (reducer: StoreReducer<Survey>): StoreReducer<Survey> =>
     return newState
   }
 }
-// We don't want changing the active language to mark the questionnaire
-// as dirty, which will eventually autosave it.
+
 const dirtyPredicate = (action, oldData, newData) => {
   switch (action.type) {
     case actions.RECEIVE_LINK: return false
@@ -582,13 +582,12 @@ const receiveLink = (state, action) => {
   }
 }
 
-// TODO: Maybe this is not necessary (delete then receive)
 const refreshLink = (state, action) => {
   return {
     ...state,
     links: [
-      ...without(state.links, action.originalLink),
-      action.newLink
+      ...filter(state.links, (link) => link.name != action.link.name),
+      action.link
     ]
   }
 }

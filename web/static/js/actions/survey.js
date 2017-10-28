@@ -236,10 +236,9 @@ export const receiveLink = (link: Link) => ({
   link
 })
 
-export const refreshLink = (originalLink: Link, newLink: Link) => ({
+export const refreshLink = (link: Link) => ({
   type: REFRESH_LINK,
-  originalLink,
-  newLink
+  link
 })
 
 export const deleteLink = (link: Link) => ({
@@ -278,28 +277,28 @@ export const createDispositionHistoryLink = (projectId: number, surveyId: number
 export const refreshResultsLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
   api.refreshResultsLink(projectId, surveyId)
     .then(response => {
-      return dispatch(refreshLink(link, response))
+      return dispatch(refreshLink(response))
     })
 }
 
 export const refreshIncentivesLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
   api.refreshIncentivesLink(projectId, surveyId)
     .then(response => {
-      return dispatch(refreshLink(link, response))
+      return dispatch(refreshLink(response))
     })
 }
 
 export const refreshInteractionsLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
   api.refreshInteractionsLink(projectId, surveyId)
     .then(response => {
-      return dispatch(refreshLink(link, response))
+      return dispatch(refreshLink(response))
     })
 }
 
 export const refreshDispositionHistoryLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
   api.refreshDispositionHistoryLink(projectId, surveyId)
     .then(response => {
-      return dispatch(refreshLink(link, response))
+      return dispatch(refreshLink(response))
     })
 }
 
