@@ -74,13 +74,15 @@ class NumericStep extends Component {
           <Prompt key={prompt} text={prompt} />
         )}
         <div className='input-button-inline'>
-          <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} className={inputClassName} />
+          <div className='input-with-error'>
+            <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} className={inputClassName} />
+            {errorDiv}
+          </div>
           <button className='btn square' style={{borderColor: fillColor}} disabled={disabled} >
             <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
               <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' fill={fillColor} />
             </svg>
           </button>
-          {errorDiv}
         </div>
         {refusalComponent}
       </div>

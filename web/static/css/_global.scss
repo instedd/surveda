@@ -1067,7 +1067,7 @@ i.survey-status { // icon for survey status on index
   }
 }
 
-.modal.card.invite-collaborator {
+.modal.card {
   .card-content {
     padding: 1.5rem 2rem;
   }
@@ -1181,7 +1181,13 @@ i.survey-status { // icon for survey status on index
   .text-error {
     color: #ff5722 !important;
   }
-
+.alert-left-icon {
+  text-transform: uppercase;
+  i {
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+}
 
 
 

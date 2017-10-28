@@ -4,6 +4,6 @@
   <h2  style="font-weight: 300;line-height: 2">
     Your new Surveda account is almost ready, click the link below to confirm and activate it.
   </h2>
-  <a href="<%= @url %>" style="background: rgba(3, 169, 244, 1);color: rgba(255, 255, 255, 1);text-transform: uppercase;padding: 10px 20px;margin-top: 30px;text-decoration: none;display: inline-block">Confirm my Ask Account</a>
+  <a href="<%= @url %>" style="background: rgba(3, 169, 244, 1);color: rgba(255, 255, 255, 1);text-transform: uppercase;padding: 10px 20px;margin-top: 30px;text-decoration: none;display: inline-block">Confirm my Surveda Account</a>
   <p>Thank you!</p>
 </div>

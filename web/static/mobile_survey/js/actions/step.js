@@ -25,8 +25,8 @@ export const sendReply = (dispatch: (action: any) => any, respondentId: any, tok
 
 const receiveStep = (json) => ({
   type: RECEIVE,
-  step: json.step,
-  progress: json.progress,
-  errorMessage: json.errorMessage,
-  title: json.title
+  step: json['step'],
+  progress: json['progress'],
+  errorMessage: json['error_message'],
+  title: json['title']
 })

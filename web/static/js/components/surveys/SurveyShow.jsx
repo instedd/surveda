@@ -7,7 +7,7 @@ import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
-import { Tooltip, ConfirmationModal, UntitledIfEmpty } from '../ui'
+import { Tooltip, Modal } from '../ui'
 import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import sum from 'lodash/sum'
@@ -36,13 +36,14 @@ class SurveyShow extends Component {
   state: {
     responsive: boolean,
     contacted: boolean,
-    uncontacted: boolean
+    uncontacted: boolean,
+    stopUnderstood: boolean
   }
 
   constructor(props) {
     super(props)
     this.state = {
-      responsive: false, contacted: false, uncontacted: false
+      responsive: false, contacted: false, uncontacted: false, stopUnderstood: false
     }
   }
 
@@ -60,17 +61,22 @@ class SurveyShow extends Component {
   }
 
   stopSurvey() {
-    const { projectId, surveyId, survey, router } = this.props
-    const stopConfirmationModal = this.refs.stopConfirmationModal
-    stopConfirmationModal.open({
-      modalText: <span>
-        <p>Are you sure you want to stop the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
-      </span>,
-      onConfirm: () => {
-        stopSurvey(projectId, surveyId)
-          .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
-      }
-    })
+    this.setState({stopUnderstood: false})
+    this.refs.stopModal.open()
+  }
+
+  toggleStopUnderstood() {
+    this.setState((state) => ({ stopUnderstood: !state.stopUnderstood }))
+  }
+
+  stopCancel() {
+    this.refs.stopModal.close()
+  }
+
+  confirmStopSurvey() {
+    const { projectId, surveyId, router } = this.props
+    stopSurvey(projectId, surveyId)
+      .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
   }
 
   iconForMode(mode: string) {
@@ -175,6 +181,7 @@ class SurveyShow extends Component {
 
   render() {
     const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
+    const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
       return <p>Loading...</p>
@@ -205,7 +212,54 @@ class SurveyShow extends Component {
     return (
       <div className='row'>
         {stopComponent}
-        <ConfirmationModal modalId='survey_show_stop_modal' ref='stopConfirmationModal' confirmationText='STOP' header='Stop survey' showCancel />
+        <Modal card ref='stopModal' id='stop_survey_modal'>
+          <div className='modal-content'>
+            <div className='card-title header'>
+              <h5>Stop survey</h5>
+              <p>This will finalize the survey execution</p>
+            </div>
+            <div className='card-content'>
+              <div className='row'>
+                <div className='col s12'>
+                  <p className='red-text alert-left-icon'>
+                    <i className='material-icons'>warning</i>
+                    Stopped surveys cannot be restarted
+                  </p>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='col s12'>
+                  <p>
+                    Once you stop the survey, all invitations will be halted immediately.
+                  </p>
+                  <p>
+                    Respondents who are currently answering the survey will be cut off. Once
+                    you stop, you cannot restart.
+                  </p>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='col s12'>
+                  <input
+                    id='stop_understood'
+                    type='checkbox'
+                    checked={stopUnderstood}
+                    onChange={() => this.toggleStopUnderstood()}
+                    className='filled-in' />
+                  <label htmlFor='stop_understood'>Understood</label>
+                </div>
+              </div>
+            </div>
+            <div className='card-action'>
+              <a
+                className={classNames('btn-large red', { disabled: !stopUnderstood })}
+                onClick={() => this.confirmStopSurvey()}>
+                Stop
+              </a>
+              <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
+            </div>
+          </div>
+        </Modal>
         <div className='col s12 m9 l8'>
           <h4>
             {title}

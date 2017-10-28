@@ -159,7 +159,6 @@
     padding: .8rem 1rem 0;
 
     .row {
-      margin: 0;
       .col {
         padding: 0;
       }
@@ -168,16 +167,7 @@
       left: 0;
     }
   }
-  .card-action {
-    border-top: none;
 
-    .btn-large {
-      border-radius: 3px;
-      line-height: 50px;
-      height: 50px;
-      padding: 0 1.3rem;
-    }
-  }
   &#setupQuotas {
     .row {
       height: 56px;
@@ -194,6 +184,16 @@
     overflow-y: visible;
     .card-content {
       overflow-y: visible;
+    }
+  }
+  .card-action {
+    border-top: none !important;
+
+    .btn-large {
+      border-radius: 3px;
+      line-height: 50px;
+      height: 50px;
+      padding: 0 1.3rem;
     }
   }
 }
