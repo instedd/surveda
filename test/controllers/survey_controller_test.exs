@@ -1085,6 +1085,14 @@ defmodule Ask.SurveyControllerTest do
 
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
 
+      response = get conn, project_survey_results_link_path(conn, :results_link, project, survey)
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/results",
+        "url" => "http://app.ask.dev/#{link.hash}"
+      }
+      assert ShortLink |> Repo.all |> length == 1
+
       response = put conn, project_survey_results_link_path(conn, :regenerate_results_link, project, survey)
 
       new_link = ShortLink |> Repo.one
@@ -1116,6 +1124,14 @@ defmodule Ask.SurveyControllerTest do
         "name" => "survey/#{survey.id}/incentives",
         "url" => "http://app.ask.dev/#{link.hash}"
       }
+
+      response = get conn, project_survey_incentives_link_path(conn, :incentives_link, project, survey)
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/incentives",
+        "url" => "http://app.ask.dev/#{link.hash}"
+      }
+      assert ShortLink |> Repo.all |> length == 1
 
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
 
@@ -1151,6 +1167,14 @@ defmodule Ask.SurveyControllerTest do
         "url" => "http://app.ask.dev/#{link.hash}"
       }
 
+      response = get conn, project_survey_interactions_link_path(conn, :interactions_link, project, survey)
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/interactions",
+        "url" => "http://app.ask.dev/#{link.hash}"
+      }
+      assert ShortLink |> Repo.all |> length == 1
+
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
 
       response = put conn, project_survey_interactions_link_path(conn, :regenerate_interactions_link, project, survey)
@@ -1185,6 +1209,14 @@ defmodule Ask.SurveyControllerTest do
         "url" => "http://app.ask.dev/#{link.hash}"
       }
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
+
+      response = get conn, project_survey_disposition_history_link_path(conn, :disposition_history_link, project, survey)
+
+      assert json_response(response, 200) == %{
+        "name" => "survey/#{survey.id}/disposition_history",
+        "url" => "http://app.ask.dev/#{link.hash}"
+      }
+      assert ShortLink |> Repo.all |> length == 1
 
       response = put conn, project_survey_disposition_history_link_path(conn, :regenerate_disposition_history_link, project, survey)
 

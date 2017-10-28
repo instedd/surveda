@@ -18,12 +18,16 @@ defmodule Ask.ShortLink do
   end
 
   def generate_link(name, target) do
-    %ShortLink{
-      name: name,
-      target: target,
-      hash: random_hash()
-    }
-    |> Repo.insert
+    case Repo.get_by(ShortLink, name: name) do
+      nil ->
+        %ShortLink{
+          name: name,
+          target: target,
+          hash: random_hash()
+        }
+        |> Repo.insert
+      link -> {:ok, link}
+    end
   end
 
   def regenerate(%ShortLink{} = link) do
