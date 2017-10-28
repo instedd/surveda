@@ -263,7 +263,12 @@ defmodule Ask.Survey do
   end
 
   def links(%Survey{} = survey) do
-    names = [link_name(survey, :results), link_name(survey, :incentives), link_name(survey, :disposition_history), link_name(survey, :interactions)]
+    names = [
+      link_name(survey, :results),
+      link_name(survey, :incentives),
+      link_name(survey, :disposition_history),
+      link_name(survey, :interactions)
+    ]
     ShortLink |> where([l], l.name in ^names) |> Repo.all
   end
 
