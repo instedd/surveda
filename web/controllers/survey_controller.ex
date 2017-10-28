@@ -342,7 +342,8 @@ defmodule Ask.SurveyController do
     render(conn, "config.json", config: Survey.config_rates())
   end
 
-  def results_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def create_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
+
     project = conn
     |> load_project(project_id)
 
@@ -350,103 +351,46 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
-    name = Survey.link_name(survey, :results)
-    target = project_survey_respondents_results_path(conn, :results, project, survey, %{"_format" => "csv"})
+    {name, target} = case target_name do
+      "results" ->
+        {
+          Survey.link_name(survey, :results),
+          project_survey_respondents_results_path(conn, :results, project, survey, %{"_format" => "csv"})
+        }
+      "incentives" ->
+        {
+          Survey.link_name(survey, :incentives),
+          project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"})
+        }
+      "interactions" ->
+        {
+          Survey.link_name(survey, :interactions),
+          project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"})
+        }
+      "disposition_history" ->
+        {
+          Survey.link_name(survey, :disposition_history),
+          project_survey_respondents_disposition_history_path(conn, :disposition_history, project, survey, %{"_format" => "csv"})
+        }
+      _ ->
+        Logger.warn "Error when creating link #{target_name}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> send_resp(:no_content, target_name)
+    end
 
     case ShortLink.generate_link(name, target) do
       {:ok, link} ->
         render(conn, "link.json", link: link)
       {:error, changeset} ->
-        Logger.warn "Error when creating link #{inspect name}"
+        Logger.warn "Error when creating link #{name}"
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
 
-  def incentives_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    name = Survey.link_name(survey, :incentives)
-    target = project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"})
-
-    case ShortLink.generate_link(name, target) do
-      {:ok, link} ->
-        render(conn, "link.json", link: link)
-      {:error, changeset} ->
-        Logger.warn "Error when creating link #{inspect name}"
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
-  end
-
-  def interactions_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    name = Survey.link_name(survey, :interactions)
-    target = project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"})
-
-    case ShortLink.generate_link(name, target) do
-      {:ok, link} ->
-        render(conn, "link.json", link: link)
-      {:error, changeset} ->
-        Logger.warn "Error when creating link #{inspect name}"
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
-  end
-
-  def disposition_history_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    name = Survey.link_name(survey, :disposition_history)
-    target = project_survey_respondents_disposition_history_path(conn, :disposition_history, project, survey, %{"_format" => "csv"})
-
-    case ShortLink.generate_link(name, target) do
-      {:ok, link} ->
-        render(conn, "link.json", link: link)
-      {:error, changeset} ->
-        Logger.warn "Error when creating link #{inspect name}"
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-    end
-  end
-
-  def regenerate_results_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    regenerate_link(conn, project_id, survey_id, :results)
-  end
-
-  def regenerate_incentives_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    regenerate_link(conn, project_id, survey_id, :incentives)
-  end
-
-  def regenerate_interactions_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    regenerate_link(conn, project_id, survey_id, :interactions)
-  end
-
-  def regenerate_disposition_history_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    regenerate_link(conn, project_id, survey_id, :disposition_history)
-  end
-
-  defp regenerate_link(conn, project_id, survey_id, target_name) do
+  def refresh_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
     project = conn
     |> load_project(project_id)
 
@@ -455,36 +399,27 @@ defmodule Ask.SurveyController do
     |> Repo.get!(survey_id)
 
     link = ShortLink
-    |> Repo.get_by(name: Survey.link_name(survey, target_name))
+    |> Repo.get_by(name: Survey.link_name(survey, String.to_atom(target_name)))
 
-    case ShortLink.regenerate(link) do
-      {:ok, new_link} ->
-        render(conn, "link.json", link: new_link)
-      {:error, changeset} ->
-        Logger.warn "Error when regenerating results link #{inspect link}"
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    if link do
+      case ShortLink.regenerate(link) do
+        {:ok, new_link} ->
+          render(conn, "link.json", link: new_link)
+        {:error, changeset} ->
+          Logger.warn "Error when regenerating results link #{inspect link}"
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+      end
+    else
+      Logger.warn "Error when regenerating results link #{target_name}"
+      conn
+      |> put_status(:unprocessable_entity)
+      |> send_resp(:no_content, target_name)
     end
   end
 
-  def delete_results_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    delete_link(conn, project_id, survey_id, :results)
-  end
-
-  def delete_incentives_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    delete_link(conn, project_id, survey_id, :incentives)
-  end
-
-  def delete_interactions_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    delete_link(conn, project_id, survey_id, :interactions)
-  end
-
-  def delete_disposition_history_link(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    delete_link(conn, project_id, survey_id, :disposition_history)
-  end
-
-  defp delete_link(conn, project_id, survey_id, target_name) do
+  def delete_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
     project = conn
     |> load_project(project_id)
 
@@ -493,7 +428,7 @@ defmodule Ask.SurveyController do
     |> Repo.get!(survey_id)
 
     link = ShortLink
-    |> Repo.get_by(name: Survey.link_name(survey, target_name))
+    |> Repo.get_by(name: Survey.link_name(survey, String.to_atom(target_name)))
 
     if link do
       Repo.delete!(link)

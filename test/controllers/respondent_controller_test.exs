@@ -412,7 +412,7 @@ defmodule Ask.RespondentControllerTest do
     respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"])
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
-    conn = get conn, project_survey_results_link_path(conn, :results_link, project, survey)
+    conn = get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
 
     link = Ask.ShortLink |> Repo.one
 
@@ -853,7 +853,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
     insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
 
-    conn = get conn, project_survey_disposition_history_link_path(conn, :disposition_history_link, project, survey)
+    conn = get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
 
     link = Ask.ShortLink |> Repo.one
 
@@ -895,7 +895,7 @@ defmodule Ask.RespondentControllerTest do
     insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
     insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
-    conn = get conn, project_survey_incentives_link_path(conn, :incentives_link, project, survey)
+    conn = get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
 
     link = Ask.ShortLink |> Repo.one
 
@@ -954,7 +954,7 @@ defmodule Ask.RespondentControllerTest do
       insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
     end
 
-    conn = get conn, project_survey_interactions_link_path(conn, :interactions_link, project, survey)
+    conn = get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
 
     link = Ask.ShortLink |> Repo.one
 
