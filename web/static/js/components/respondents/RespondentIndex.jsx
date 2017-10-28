@@ -190,7 +190,19 @@ class RespondentIndex extends Component {
     surveyActions.refreshDispositionHistoryLink(projectId, surveyId, link)
   }
 
-  downloadLink(link, onChange, refresh) {
+  copyLink(link) {
+    try {
+      window.getSelection().selectAllChildren(link)
+      document.execCommand('copy')
+      window.getSelection().collapse(document.getElementsByTagName('body')[0], 0)
+
+      window.Materialize.toast('Copied!', 3000)
+    } catch (err) {
+      window.Materialize.toast('Oops, unable to copy!', 3000)
+    }
+  }
+
+  downloadLink(link, onChange, refresh, name) {
     return <div className='access-link'>
       <span className='switch'>
         <label>
@@ -202,9 +214,9 @@ class RespondentIndex extends Component {
       {
         link != null
         ? <span className='link'>
-          <span>{link.url}</span>
-          <Tooltip text='Copy'>
-            <a className='btn-icon-grey right' onClick={() => ''}>
+          <span ref={name}>{link.url}</span>
+          <Tooltip text='Copy to clipboard'>
+            <a className='btn-icon-grey right' onClick={() => this.copyLink(this.refs[name])}>
               <i className='material-icons'>content_copy</i>
             </a>
           </Tooltip>
@@ -306,7 +318,7 @@ class RespondentIndex extends Component {
               <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
             </div>
           </a>
-          {this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink)}
+          {this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink')}
         </li>
       )
     }
@@ -324,7 +336,7 @@ class RespondentIndex extends Component {
               <p>One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp</p>
             </div>
           </a>
-          {this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink)}
+          {this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink')}
         </li>
       )
     }
@@ -354,7 +366,7 @@ class RespondentIndex extends Component {
                   <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
                 </div>
               </a>
-              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink)}
+              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
             </li>
             <li className='collection-item'>
               <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
@@ -366,7 +378,7 @@ class RespondentIndex extends Component {
                   <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
                 </div>
               </a>
-              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink)}
+              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
             </li>
             {incentivesCsvLink}
             {interactionsCsvLink}
