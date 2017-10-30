@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { UntitledIfEmpty } from '.'
+import classNames from 'classnames/bind'
 
 export class EditableTitleLabel extends Component {
   static propTypes = {
@@ -48,14 +49,14 @@ export class EditableTitleLabel extends Component {
     const { title, emptyText, entityName, more } = this.props
 
     let icon = null
-    if (!title || title.trim() == '') {
+    if ((!title || title.trim() == '') && !this.props.readOnly) {
       icon = <i className='material-icons'>mode_edit</i>
     }
 
     if (!this.state.editing) {
       return (
         <div className='title'>
-          <a className='page-title truncate' onClick={e => this.handleClick(e)}>
+          <a className={classNames({'page-title': true, 'truncate': (title && title.trim() != '')})} onClick={e => this.handleClick(e)}>
             <UntitledIfEmpty text={title} emptyText={emptyText} entityName={entityName} />
             {icon}
           </a>
