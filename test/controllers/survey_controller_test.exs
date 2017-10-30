@@ -246,19 +246,19 @@ defmodule Ask.SurveyControllerTest do
         "links" => [
           %{
             "name" => "survey/#{survey.id}/results",
-            "url" => "http://app.ask.dev/#{result_link.hash}"
+            "url" => "http://app.ask.dev/link/#{result_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/incentives",
-            "url" => "http://app.ask.dev/#{incentives_link.hash}"
+            "url" => "http://app.ask.dev/link/#{incentives_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/interactions",
-            "url" => "http://app.ask.dev/#{interactions_link.hash}"
+            "url" => "http://app.ask.dev/link/#{interactions_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/disposition_history",
-            "url" => "http://app.ask.dev/#{disposition_history_link.hash}"
+            "url" => "http://app.ask.dev/link/#{disposition_history_link.hash}"
           },
         ],
         "comparisons" => [],
@@ -1080,7 +1080,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
 
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
@@ -1089,7 +1089,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1099,7 +1099,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "url" => "http://app.ask.dev/#{new_link.hash}"
+        "url" => "http://app.ask.dev/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
@@ -1121,14 +1121,14 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
 
       response = get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1140,7 +1140,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "url" => "http://app.ask.dev/#{new_link.hash}"
+        "url" => "http://app.ask.dev/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
@@ -1162,14 +1162,14 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
 
       response = get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1181,7 +1181,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "url" => "http://app.ask.dev/#{new_link.hash}"
+        "url" => "http://app.ask.dev/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
@@ -1203,7 +1203,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
 
@@ -1211,7 +1211,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "url" => "http://app.ask.dev/#{link.hash}"
+        "url" => "http://app.ask.dev/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1221,7 +1221,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "url" => "http://app.ask.dev/#{new_link.hash}"
+        "url" => "http://app.ask.dev/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash

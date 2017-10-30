@@ -82,7 +82,7 @@ defmodule Ask.SurveyView do
   def render("link.json", %{link: link}) do
     %{
       "name" => link.name,
-      "url" => "#{Ask.Endpoint.url}/#{link.hash}"
+      "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
     }
   end
 
