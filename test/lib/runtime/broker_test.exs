@@ -2247,6 +2247,18 @@ defmodule Ask.BrokerTest do
     assert survey2.state == "running"
   end
 
+  test "only polls surveys if today is not blocked" do
+    survey1 = insert(:survey, %{schedule: Schedule.always(), state: "running"})
+    survey2 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{blocked_days: [Date.utc_today()]}), state: "running"})
+
+    Broker.handle_info(:poll, nil)
+
+    survey1 = Repo.get(Survey, survey1.id)
+    survey2 = Repo.get(Survey, survey2.id)
+    assert Survey.completed?(survey1)
+    assert survey2.state == "running"
+  end
+
   test "doesn't poll surveys with a start time schedule greater than the current hour" do
     now = Timex.now
     ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)

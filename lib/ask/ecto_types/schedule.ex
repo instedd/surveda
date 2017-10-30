@@ -74,13 +74,13 @@ defmodule Ask.Schedule do
     end
   end
 
-  def intersect?(%Schedule{day_of_week: days, start_time: start_time, end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
+  def intersect?(%Schedule{day_of_week: days, start_time: start_time, end_time: end_time, timezone: timezone, blocked_days: blocked_days}, %DateTime{} = date_time) do
     date_time = date_time
     |> Timex.to_datetime(timezone)
 
     time = DateTime.to_time(date_time)
 
-    DayOfWeek.intersect?(days, DayOfWeek.from(date_time))
+    DayOfWeek.intersect?(days, DayOfWeek.from(date_time)) && !Enum.member?(blocked_days, date_time |> Timex.to_date)
       && start_time <= time
       && end_time >= time
   end
