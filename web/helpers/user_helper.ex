@@ -15,6 +15,9 @@ defmodule User.Helper do
   # with any level of membership.
   #
   # Use this method on any read-only controller action.
+  def authorize(project, %{assigns: %{skip_auth: true}}) do
+    project
+  end
   def authorize(project, conn) do
     user_id = current_user(conn).id
     memberships = project
@@ -44,6 +47,9 @@ defmodule User.Helper do
     end
   end
 
+  def authorize_owner(project, %{assigns: %{skip_auth: true}}) do
+    project
+  end
   def authorize_owner(project, conn) do
     user_id = current_user(conn).id
     memberships = project

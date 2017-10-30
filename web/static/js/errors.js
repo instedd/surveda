@@ -60,4 +60,3 @@ const onError = (error) => {
   render(message, messageDom)
   window.Materialize.toast(messageDom, null, 'error-toast')
 }
-

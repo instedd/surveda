@@ -80,6 +80,9 @@ defmodule Ask.Router do
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/simulation_status", SurveyController, :simulation_status
           post "/stop_simulation", SurveyController, :stop_simulation
+          get "/links/:name", SurveyController, :create_link, as: :links
+          put "/links/:name", SurveyController, :refresh_link, as: :links
+          delete "/links/:name", SurveyController, :delete_link, as: :links
         end
         post "/surveys/simulate_questionanire", SurveyController, :simulate_questionanire
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
@@ -136,6 +139,7 @@ defmodule Ask.Router do
   get "/mobile_survey/get_step/:respondent_id", Ask.MobileSurveyController, :get_step
   post "/mobile_survey/send_reply/:respondent_id", Ask.MobileSurveyController, :send_reply
   get "/mobile_survey/errors/unauthorized", Ask.MobileSurveyController, :unauthorized_error
+  get "/link/:hash", Ask.ShortLinkController, :access
 
   scope "/", Ask do
     pipe_through :browser

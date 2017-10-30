@@ -64,7 +64,47 @@
         min-height: 6rem;
         margin: 1.5rem 0;
       }
-      a {
+      .access-link {
+        padding-left: 70px;
+        padding-top: 0.5rem;
+        max-width: 85%;
+        .switch {
+          .lever {
+            margin-left: 0;
+          }
+          .label {
+            @extend .grey-text;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+          }
+        }
+        .link {
+          background-color: #e6e6e6;
+          padding: 0.5rem;
+          display: inline-block;
+          min-height: 43px;
+          width: 75%;
+          span {
+            @extend .grey-text;
+            margin: 0.2rem 0.2rem;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+          }
+          .btn-icon-grey {
+            display: none;
+          }
+        }
+        .link:hover {
+          span {
+            width: 80%;
+          }
+          .btn-icon-grey {
+            display: inline;
+          }
+        }
+      }
+      a.download {
         @extend .grey-text;
         position: relative;
         > div {

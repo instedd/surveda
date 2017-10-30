@@ -31,6 +31,9 @@ export const CHANGE_IVR_RETRY_CONFIGURATION = 'SURVEY_CHANGE_IVR_RETRY_CONFIGURA
 export const CHANGE_MOBILEWEB_RETRY_CONFIGURATION = 'SURVEY_CHANGE_MOBILEWEB_RETRY_CONFIGURATION'
 export const CHANGE_FALLBACK_DELAY = 'SURVEY_CHANGE_FALLBACK_DELAY'
 export const TOGGLE_COUNT_PARTIAL_RESULTS = 'SURVEY_TOGGLE_COUNT_PARTIAL_RESULTS'
+export const RECEIVE_LINK = 'SURVEY_RECEIVE_LINK'
+export const REFRESH_LINK = 'SURVEY_REFRESH_LINK'
+export const DELETE_LINK = 'SURVEY_DELETE_LINK'
 
 export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId).then(response => {
@@ -225,5 +228,104 @@ export const save = () => (dispatch: Function, getState: () => Store) => {
   api.updateSurvey(survey.projectId, survey)
     .then(response => {
       return dispatch(saved(response.entities.surveys[response.result]))
+    })
+}
+
+export const receiveLink = (link: Link) => ({
+  type: RECEIVE_LINK,
+  link
+})
+
+export const refreshLink = (link: Link) => ({
+  type: REFRESH_LINK,
+  link
+})
+
+export const deleteLink = (link: Link) => ({
+  type: DELETE_LINK,
+  link
+})
+
+export const createResultsLink = (projectId: number, surveyId: number) => (dispatch: Function) => {
+  api.createResultsLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(receiveLink(response))
+    })
+}
+
+export const createIncentivesLink = (projectId: number, surveyId: number) => (dispatch: Function) => {
+  api.createIncentivesLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(receiveLink(response))
+    })
+}
+
+export const createInteractionsLink = (projectId: number, surveyId: number) => (dispatch: Function) => {
+  api.createInteractionsLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(receiveLink(response))
+    })
+}
+
+export const createDispositionHistoryLink = (projectId: number, surveyId: number) => (dispatch: Function) => {
+  api.createDispositionHistoryLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(receiveLink(response))
+    })
+}
+
+export const refreshResultsLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.refreshResultsLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(refreshLink(response))
+    })
+}
+
+export const refreshIncentivesLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.refreshIncentivesLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(refreshLink(response))
+    })
+}
+
+export const refreshInteractionsLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.refreshInteractionsLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(refreshLink(response))
+    })
+}
+
+export const refreshDispositionHistoryLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.refreshDispositionHistoryLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(refreshLink(response))
+    })
+}
+
+export const deleteResultsLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.deleteResultsLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(deleteLink(link))
+    })
+}
+
+export const deleteIncentivesLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.deleteIncentivesLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(deleteLink(link))
+    })
+}
+
+export const deleteInteractionsLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.deleteInteractionsLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(deleteLink(link))
+    })
+}
+
+export const deleteDispositionHistoryLink = (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+  api.deleteDispositionHistoryLink(projectId, surveyId)
+    .then(response => {
+      return dispatch(deleteLink(link))
     })
 }

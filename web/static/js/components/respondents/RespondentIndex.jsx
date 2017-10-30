@@ -7,10 +7,11 @@ import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
 import values from 'lodash/values'
-import { CardTable, UntitledIfEmpty, Modal, SortableHeader } from '../ui'
+import { CardTable, UntitledIfEmpty, Modal, SortableHeader, Tooltip } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../questionnaire.mode'
+import find from 'lodash/find'
 
 type Props = {
   projectId: number,
@@ -42,10 +43,26 @@ type State = {
 class RespondentIndex extends Component {
   props: Props
   state: State
+  toggleResultsLink: Function
+  toggleIncentivesLink: Function
+  toggleInteractionsLink: Function
+  toggleDispositionHistoryLink: Function
+  refreshResultsLink: Function
+  refreshIncentivesLink: Function
+  refreshInteractionsLink: Function
+  refreshDispositionHistoryLink: Function
 
   constructor(props) {
     super(props)
     this.state = {csvType: ''}
+    this.toggleResultsLink = this.toggleResultsLink.bind(this)
+    this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
+    this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
+    this.toggleDispositionHistoryLink = this.toggleDispositionHistoryLink.bind(this)
+    this.refreshResultsLink = this.refreshResultsLink.bind(this)
+    this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
+    this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
+    this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
   }
 
   componentDidMount() {
@@ -95,6 +112,123 @@ class RespondentIndex extends Component {
   sortBy(name) {
     const { projectId, surveyId } = this.props
     this.props.actions.sortRespondentsBy(projectId, surveyId, name)
+  }
+
+  resultsAccessLink() {
+    const {survey} = this.props
+    return find(survey.links, (link) => link.name == `survey/${survey.id}/results`)
+  }
+
+  incentivesAccessLink() {
+    const {survey} = this.props
+    return find(survey.links, (link) => link.name == `survey/${survey.id}/incentives`)
+  }
+
+  interactionsAccessLink() {
+    const {survey} = this.props
+    return find(survey.links, (link) => link.name == `survey/${survey.id}/interactions`)
+  }
+
+  dispositionHistoryAccessLink() {
+    const {survey} = this.props
+    return find(survey.links, (link) => link.name == `survey/${survey.id}/disposition_history`)
+  }
+
+  toggleResultsLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    if (link) {
+      surveyActions.deleteResultsLink(projectId, surveyId, link)
+    } else {
+      surveyActions.createResultsLink(projectId, surveyId)
+    }
+  }
+
+  toggleIncentivesLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    if (link) {
+      surveyActions.deleteIncentivesLink(projectId, surveyId, link)
+    } else {
+      surveyActions.createIncentivesLink(projectId, surveyId)
+    }
+  }
+
+  toggleInteractionsLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    if (link) {
+      surveyActions.deleteInteractionsLink(projectId, surveyId, link)
+    } else {
+      surveyActions.createInteractionsLink(projectId, surveyId)
+    }
+  }
+
+  toggleDispositionHistoryLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    if (link) {
+      surveyActions.deleteDispositionHistoryLink(projectId, surveyId, link)
+    } else {
+      surveyActions.createDispositionHistoryLink(projectId, surveyId)
+    }
+  }
+
+  refreshResultsLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.refreshResultsLink(projectId, surveyId, link)
+  }
+
+  refreshIncentivesLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.refreshIncentivesLink(projectId, surveyId, link)
+  }
+
+  refreshInteractionsLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.refreshInteractionsLink(projectId, surveyId, link)
+  }
+
+  refreshDispositionHistoryLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.refreshDispositionHistoryLink(projectId, surveyId, link)
+  }
+
+  copyLink(link) {
+    try {
+      window.getSelection().selectAllChildren(link)
+      document.execCommand('copy')
+      window.getSelection().collapse(document.getElementsByTagName('body')[0], 0)
+
+      window.Materialize.toast('Copied!', 3000)
+    } catch (err) {
+      window.Materialize.toast('Oops, unable to copy!', 3000)
+    }
+  }
+
+  downloadLink(link, onChange, refresh, name) {
+    return <div className='access-link'>
+      <span className='switch'>
+        <label>
+          <input type='checkbox' checked={link != null} onChange={() => onChange(link)} />
+          <span className='lever' />
+          <span className='label' >Public link:</span>
+        </label>
+      </span>
+      {
+        link != null
+        ? <span className='link'>
+          <span ref={name}>{link.url}</span>
+          <Tooltip text='Copy to clipboard'>
+            <a className='btn-icon-grey right' onClick={() => this.copyLink(this.refs[name])}>
+              <i className='material-icons'>content_copy</i>
+            </a>
+          </Tooltip>
+          <Tooltip text='Refresh'>
+            <a className='btn-icon-grey right' onClick={refresh}>
+              <i className='material-icons'>refresh</i>
+            </a>
+          </Tooltip>
+        </span>
+        : ''
+      }
+    </div>
   }
 
   render() {
@@ -175,7 +309,7 @@ class RespondentIndex extends Component {
     if (project.owner) {
       incentivesCsvLink = (
         <li className='collection-item'>
-          <a href='#' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
+          <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
             <div>
               <i className='material-icons'>get_app</i>
             </div>
@@ -184,6 +318,7 @@ class RespondentIndex extends Component {
               <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
             </div>
           </a>
+          {this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink')}
         </li>
       )
     }
@@ -192,7 +327,7 @@ class RespondentIndex extends Component {
     if (project.owner) {
       interactionsCsvLink = (
         <li className='collection-item'>
-          <a href='#' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
+          <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
             <div>
               <i className='material-icons'>get_app</i>
             </div>
@@ -201,6 +336,7 @@ class RespondentIndex extends Component {
               <p>One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp</p>
             </div>
           </a>
+          {this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink')}
         </li>
       )
     }
@@ -221,7 +357,7 @@ class RespondentIndex extends Component {
           </div>
           <ul className='collection download-csv'>
             <li className='collection-item'>
-              <a href='#' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
+              <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
                 <div>
                   <i className='material-icons'>get_app</i>
                 </div>
@@ -230,9 +366,10 @@ class RespondentIndex extends Component {
                   <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
                 </div>
               </a>
+              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
             </li>
             <li className='collection-item'>
-              <a href='#' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
+              <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
                 <div>
                   <i className='material-icons'>get_app</i>
                 </div>
@@ -241,6 +378,7 @@ class RespondentIndex extends Component {
                   <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
                 </div>
               </a>
+              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
             </li>
             {incentivesCsvLink}
             {interactionsCsvLink}

@@ -24,9 +24,15 @@ export type Survey = {
     vars: string[],
     buckets: Bucket[]
   },
+  links: Link[],
   comparisons: Comparison[],
   nextScheduleTime: ?string
 };
+
+export type Link = {
+  name: string,
+  url: string
+}
 
 export type Schedule = {
   dayOfWeek: DayOfWeek,
