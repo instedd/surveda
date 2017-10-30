@@ -80,7 +80,8 @@ defmodule Ask.Schedule do
 
     time = DateTime.to_time(date_time)
 
-    DayOfWeek.intersect?(days, DayOfWeek.from(date_time)) && !Enum.member?(blocked_days, date_time |> Timex.to_date)
+    DayOfWeek.intersect?(days, DayOfWeek.from(date_time))
+      && !Enum.member?(blocked_days, date_time |> Timex.to_date)
       && start_time <= time
       && end_time >= time
   end
