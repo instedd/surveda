@@ -75,6 +75,7 @@ class SurveyShow extends Component {
 
   confirmStopSurvey() {
     const { projectId, surveyId, router } = this.props
+    this.refs.stopModal.close()
     stopSurvey(projectId, surveyId)
       .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
   }
