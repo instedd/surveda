@@ -366,7 +366,9 @@ class RespondentIndex extends Component {
                   <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
                 </div>
               </a>
-              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
+              { !project.readOnly
+              ? this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')
+              : ''}
             </li>
             <li className='collection-item'>
               <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
@@ -378,7 +380,9 @@ class RespondentIndex extends Component {
                   <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
                 </div>
               </a>
-              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
+              { !project.readOnly
+              ? this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')
+              : ''}
             </li>
             {incentivesCsvLink}
             {interactionsCsvLink}

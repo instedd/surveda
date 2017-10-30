@@ -26,6 +26,7 @@ defmodule Ask.Survey do
     field :quotas, JSON, virtual: true
     field :comparisons, JSON, default: []
     field :simulation, :boolean, default: false
+    field :links, :any, virtual: true
 
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
@@ -260,6 +261,10 @@ defmodule Ask.Survey do
   def cancel_respondents(survey) do
     from(r in Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
     |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
+  end
+
+  def with_links(%Survey{} = survey) do
+    %{survey | links: links(survey)}
   end
 
   def links(%Survey{} = survey) do

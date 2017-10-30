@@ -58,7 +58,7 @@ defmodule Ask.SurveyController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]))
+        |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]) |> Survey.with_links())
       {:error, changeset} ->
         Logger.warn "Error when creating a survey: #{inspect changeset}"
         conn
@@ -73,6 +73,7 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:quota_buckets])
+    |> Survey.with_links()
 
     render(conn, "show.json", survey: survey)
   end
@@ -94,7 +95,7 @@ defmodule Ask.SurveyController do
     case Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires)) do
       {:ok, survey} ->
         project |> Project.touch!
-        render(conn, "show.json", survey: survey)
+        render(conn, "show.json", survey: survey |> Survey.with_links())
       {:error, changeset} ->
         Logger.warn "Error when updating survey: #{inspect changeset}"
         conn
@@ -149,7 +150,7 @@ defmodule Ask.SurveyController do
       Logger.warn "Error when launching survey #{id}. State is not ready "
       conn
         |> put_status(:unprocessable_entity)
-        |> render("show.json", survey: survey)
+        |> render("show.json", survey: survey |> Survey.with_links())
     else
       project = conn
       |> load_project_for_change(survey.project_id)
@@ -164,6 +165,7 @@ defmodule Ask.SurveyController do
           case Repo.update(changeset) do
             {:ok, survey} ->
               survey = create_survey_questionnaires_snapshot(survey)
+              |> Survey.with_links()
               project |> Project.touch!
               render(conn, "show.json", survey: survey)
             {:error, changeset} ->
@@ -177,7 +179,7 @@ defmodule Ask.SurveyController do
           Logger.warn "Error when preparing channels for launching survey #{id} (#{reason})"
           conn
           |> put_status(:unprocessable_entity)
-          |> render("show.json", survey: survey)
+          |> render("show.json", survey: survey |> Survey.with_links())
       end
     end
   end
@@ -345,7 +347,7 @@ defmodule Ask.SurveyController do
   def create_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
 
     project = conn
-    |> load_project(project_id)
+    |> load_project_for_change(project_id)
 
     survey = project
     |> assoc(:surveys)
@@ -358,11 +360,13 @@ defmodule Ask.SurveyController do
           project_survey_respondents_results_path(conn, :results, project, survey, %{"_format" => "csv"})
         }
       "incentives" ->
+        authorize_owner(project, conn)
         {
           Survey.link_name(survey, :incentives),
           project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"})
         }
       "interactions" ->
+        authorize_owner(project, conn)
         {
           Survey.link_name(survey, :interactions),
           project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"})
@@ -392,7 +396,11 @@ defmodule Ask.SurveyController do
 
   def refresh_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
     project = conn
-    |> load_project(project_id)
+    |> load_project_for_change(project_id)
+
+    if target_name == "interactions" || target_name == "incentives" do
+      authorize_owner(project, conn)
+    end
 
     survey = project
     |> assoc(:surveys)
@@ -421,7 +429,11 @@ defmodule Ask.SurveyController do
 
   def delete_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
     project = conn
-    |> load_project(project_id)
+    |> load_project_for_change(project_id)
+
+    if target_name == "interactions" || target_name == "incentives" do
+      authorize_owner(project, conn)
+    end
 
     survey = project
     |> assoc(:surveys)
@@ -451,7 +463,7 @@ defmodule Ask.SurveyController do
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey finished
         conn
-          |> render("show.json", survey: survey)
+          |> render("show.json", survey: survey |> Survey.with_links())
       "running" ->
         project = conn
           |> load_project_for_change(survey.project_id)
@@ -463,7 +475,7 @@ defmodule Ask.SurveyController do
         case Repo.update(changeset) do
           {:ok, survey} ->
             project |> Project.touch!
-            render(conn, "show.json", survey: survey)
+            render(conn, "show.json", survey: survey |> Survey.with_links())
           {:error, changeset} ->
             Logger.warn "Error when stopping survey #{inspect survey}"
             conn
@@ -476,7 +488,7 @@ defmodule Ask.SurveyController do
         Logger.warn "Error when stopping survey #{inspect survey}: Wrong state"
         conn
           |> put_status(:unprocessable_entity)
-          |> render("show.json", survey: survey)
+          |> render("show.json", survey: survey |> Survey.with_links())
       end
   end
 

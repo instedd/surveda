@@ -51,7 +51,7 @@ defmodule Ask.SurveyView do
         buckets: render_many(survey.quota_buckets, Ask.SurveyView, "survey_bucket.json", as: :bucket),
         vars: survey.quota_vars || []
       },
-      links: render_many(Survey.links(survey), Ask.SurveyView, "link.json", as: :link),
+      links: render_many(survey.links, Ask.SurveyView, "link.json", as: :link),
       comparisons: survey.comparisons || [],
       next_schedule_time: next_schedule_time(survey),
     }

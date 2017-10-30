@@ -1070,7 +1070,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   describe "download links" do
-    test "results link generation", %{conn: conn, user: user}do
+    test "results link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
 
@@ -1107,12 +1107,11 @@ defmodule Ask.SurveyControllerTest do
 
       response = delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
 
-      assert [] == ShortLink |> Repo.all()
-
       assert response(response, 204)
+      assert [] == ShortLink |> Repo.all()
     end
 
-    test "incentives link generation", %{conn: conn, user: user}do
+    test "incentives link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
 
@@ -1149,12 +1148,11 @@ defmodule Ask.SurveyControllerTest do
 
       response = delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
 
-      assert [] == ShortLink |> Repo.all()
-
       assert response(response, 204)
+      assert [] == ShortLink |> Repo.all()
     end
 
-    test "interactions link generation", %{conn: conn, user: user}do
+    test "interactions link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
 
@@ -1191,12 +1189,11 @@ defmodule Ask.SurveyControllerTest do
 
       response = delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
 
-      assert [] == ShortLink |> Repo.all()
-
       assert response(response, 204)
+      assert [] == ShortLink |> Repo.all()
     end
 
-    test "disposition_history link generation", %{conn: conn, user: user}do
+    test "disposition_history link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
 
@@ -1232,9 +1229,119 @@ defmodule Ask.SurveyControllerTest do
 
       response = delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
 
-      assert [] == ShortLink |> Repo.all()
-
       assert response(response, 204)
+      assert [] == ShortLink |> Repo.all()
+    end
+
+    test "forbids readers to create links", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      end
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
+      end
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+      end
+    end
+
+    test "forbids readers to refresh links", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "interactions")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "disposition_history")
+      end
+    end
+
+    test "forbids readers to delete links", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
+      end
+    end
+
+    test "allows editors to create some links", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "editor")
+      survey = insert(:survey, project: project)
+
+      response = get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      assert response(response, 200)
+
+      response = get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+      assert response(response, 200)
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
+      end
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
+      end
+    end
+
+    test "allows editors to refresh some links", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "editor")
+      survey = insert(:survey, project: project)
+      response = get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      response = get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+
+      response = put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
+      assert response(response, 200)
+
+      response = put conn, project_survey_links_path(conn, :refresh_link, project, survey, "disposition_history")
+      assert response(response, 200)
+
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "interactions")
+      end
+    end
+
+    test "forbids editor to delete some links", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "editor")
+      survey = insert(:survey, project: project)
+
+      response = delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
+      assert response(response, 204)
+
+      response = delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
+      assert response(response, 204)
+
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
+      end
     end
   end
 
