@@ -21,6 +21,7 @@ This version has some performance improvements to avoid runtime and UI errors wh
 * Error messages were not being displayed in mobile web [#1179](https://github.com/instedd/ask/issues/1179)
 * Show time of the next execution of the survey in the timezone defined in the schedule [#1175](https://github.com/instedd/ask/issues/1175)
 * Could not download CSV results for huge surveys [#1199](https://github.com/instedd/ask/issues/1199)
+* Fix validation of refusal messages [#1120](https://github.com/instedd/ask/issues/1120)
 
 ## Larch 0.12.2
 

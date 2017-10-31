@@ -80,28 +80,13 @@ export type NumericStep = BaseStep & StoreStep & MultilingualStep & {
   refusal: ?Refusal
 };
 
-export type Refusal = {
-  enabled: boolean,
-  responses: {
-    ivr?: string[],
-    sms?: {
-      [lang: string]: string[]
-    },
-    mobileweb?: {
-      [lang: string]: string[]
-    }
-  },
-  skipLogic: ?string
-}
-
 export type Range = {
   from: ?number,
   to: ?number,
   skipLogic: ?string
 };
 
-export type Choice = {
-  value: string,
+export type BaseChoice = {
   skipLogic: ?string,
   responses: {
     ivr?: string[],
@@ -112,6 +97,14 @@ export type Choice = {
       [lang: string]: ?string
     }
   }
+};
+
+export type Choice = BaseChoice & {
+  value: string
+};
+
+export type Refusal = BaseChoice & {
+  enabled: boolean
 };
 
 export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep | FlagStep;
