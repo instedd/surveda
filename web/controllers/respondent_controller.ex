@@ -402,41 +402,56 @@ defmodule Ask.RespondentController do
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
-    dynamic = dynamic([r], r.survey_id == ^survey.id)
+    dynamic = true
 
     dynamic =
       if params["since"] do
-        dynamic([r], r.updated_at > ^params["since"] and ^dynamic)
+        dynamic([r1, r2], r2.updated_at > ^params["since"] and ^dynamic)
       else
         dynamic
       end
 
     dynamic =
       if params["disposition"] do
-        dynamic([r], r.disposition == ^params["disposition"] and ^dynamic)
+        dynamic([r1, r2], r2.disposition == ^params["disposition"] and ^dynamic)
       else
         dynamic
       end
 
     dynamic =
       if params["final"] do
-        dynamic([r], r.state == "completed" and ^dynamic)
+        dynamic([r1, r2], r2.state == "completed" and ^dynamic)
       else
         dynamic
       end
 
-    respondents = Respondent
-    |> where(^dynamic)
-    |> order_by(:id)
-    |> preload(:responses)
+    respondents = Stream.resource(
+      fn -> 0 end,
+      fn last_seen_id ->
+        results = (
+          from r1 in Respondent,
+          join: r2 in Respondent, on: r1.id == r2.id,
+          where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
+          where: ^dynamic,
+          order_by: r2.id,
+          limit: 1000,
+          preload: :responses,
+          select: r1
+        ) |> Repo.all;
+
+        case List.last(results) do
+          %{id: last_id} -> {results, last_id}
+          nil -> {:halt, last_seen_id}
+        end
+      end,
+      fn _ -> [] end)
+
 
     render_results(conn, get_format(conn), survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
   end
 
   defp render_results(conn, "json", survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
     respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
-    respondents = respondents
-    |> Repo.stream
     respondents = if has_comparisons do
       respondents
       |> Stream.map(fn respondent ->
@@ -465,7 +480,6 @@ defmodule Ask.RespondentController do
   defp render_results(conn, "csv", survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
     # Now traverse each respondent and create a row for it
     csv_rows = respondents
-    |> Repo.stream
     |> Stream.map(fn respondent ->
         row = [respondent.hashed_number]
         responses = respondent.responses
@@ -577,7 +591,8 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_disposition_history")
-    conn |> csv_stream(rows, filename)
+    {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
+    conn
   end
 
   def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -602,7 +617,8 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_incentives")
-    conn |> csv_stream(rows, filename)
+    {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
+    conn
   end
 
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -643,7 +659,8 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_interactions")
-    conn |> csv_stream(rows, filename)
+    {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
+    conn
   end
 
   defp mask_phone_numbers(respondents) do

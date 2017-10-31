@@ -1,5 +1,27 @@
 # InSTEDD Surveda Changelog
 
+## Maple 0.13
+
+In this release the default batch size, applied to surveys with no cutoff rules, is raised to 10k. However this value can be customized on each deploy.
+
+This version has some performance improvements to avoid runtime and UI errors when running with surveys with millions of respondents [#1154](https://github.com/instedd/ask/issues/1154), [#1186](https://github.com/instedd/ask/issues/1186)
+
+### Features
+
+* Added "last modified" column to questionnaires and allow sorting by this value [#1177](https://github.com/instedd/ask/issues/1177)
+* Better warning message and UI before stopping a survey [#1157](https://github.com/instedd/ask/issues/1157)
+* Shortlinks to access CSV downloads without authentication [#1184](https://github.com/instedd/ask/issues/1184)
+* Block dates to skip survey scheduling [#1176](https://github.com/instedd/ask/issues/1176)
+
+### Bugfixes
+
+* Fix cases were respondents would be marked as "failed" when stopping responding after being in "completed" disposition [#1181](https://github.com/instedd/ask/issues/1181)
+* Fix UI crash while selecting quotas [#1183](https://github.com/instedd/ask/issues/1183)
+* Fix JS error in password reset form [#1124](https://github.com/instedd/ask/issues/1124)
+* Error messages were not being displayed in mobile web [#1179](https://github.com/instedd/ask/issues/1179)
+* Show time of the next execution of the survey in the timezone defined in the schedule [#1175](https://github.com/instedd/ask/issues/1175)
+* Could not download CSV results for huge surveys [#1199](https://github.com/instedd/ask/issues/1199)
+
 ## Larch 0.12.2
 
 ### Bugfixes
