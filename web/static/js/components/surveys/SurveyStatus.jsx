@@ -19,13 +19,14 @@ export default class SurveyStatus extends PureComponent {
   }
 
   hourDescription(survey, date) {
-    let hours = date.getHours()
-    let amOrPm = 'am'
-    if (hours >= 12) {
-      amOrPm = 'pm'
-      hours -= 12
+    let locale = Intl.DateTimeFormat().resolvedOptions().locale || 'en-US'
+    let options = {
+      timeZone: survey.schedule.timezone,
+      hour12: true,
+      hour: 'numeric'
     }
-    return `${hours}${amOrPm} (${formatTimezone(survey.schedule.timezone)})`
+    let time = date.toLocaleTimeString(locale, options)
+    return `${time} (${formatTimezone(survey.schedule.timezone)})`
   }
 
   render() {
