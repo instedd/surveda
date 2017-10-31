@@ -20,6 +20,7 @@ This version has some performance improvements to avoid runtime and UI errors wh
 * Fix JS error in password reset form [#1124](https://github.com/instedd/ask/issues/1124)
 * Error messages were not being displayed in mobile web [#1179](https://github.com/instedd/ask/issues/1179)
 * Show time of the next execution of the survey in the timezone defined in the schedule [#1175](https://github.com/instedd/ask/issues/1175)
+* Could not download CSV results for huge surveys [#1199](https://github.com/instedd/ask/issues/1199)
 
 ## Larch 0.12.2
 
