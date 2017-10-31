@@ -2947,6 +2947,84 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "respondent phone number is masked in logs" do
+    [survey, group, test_channel, _, _] = create_running_survey_with_channel_and_respondent()
+
+    phone_number = "1-734-555-1212"
+    respondent = insert(:respondent, survey: survey, respondent_group: group, phone_number: phone_number, sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number))
+
+    {:ok, logger} = SurveyLogger.start_link
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    Broker.delivery_confirm(Repo.get(Respondent, respondent.id), "Do you smoke?")
+
+    reply = Broker.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("1-734-555-1212"))
+    assert {:reply, ReplyHelper.error("You have entered an invalid answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
+    reply = Broker.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1-734) 555 1212 bar"))
+    assert {:reply, ReplyHelper.error("You have entered an invalid answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
+    reply = Broker.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1734) 555.1212 bar"))
+    assert :end = reply
+
+    :ok = logger |> GenServer.stop
+
+    assert [do_you_smoke, response1, response2, response3] = (Repo.get(Respondent, respondent.id) |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert do_you_smoke.survey_id == survey.id
+    assert do_you_smoke.action_data == "Do you smoke?"
+    assert do_you_smoke.action_type == "prompt"
+
+    assert response1.survey_id == survey.id
+    assert response1.action_data == "1-734-5##-####"
+    assert response1.action_type == "response"
+
+    assert response2.survey_id == survey.id
+    assert response2.action_data == "fooo (1-734) 5## #### bar"
+    assert response2.action_type == "response"
+
+    assert response3.survey_id == survey.id
+    assert response3.action_data == "fooo (1734) 5##.#### bar"
+    assert response3.action_type == "response"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "respondent phone number is masked if it's part of a response" do
+    phone_number = "1-734-555-1212"
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number))
+
+    [
+      {"1-734-5##-####", "1-734-555-1212"},
+      {"fooo (1-734) 5## #### bar", "fooo (1-734) 555 1212 bar"},
+      {"fooo (1734) 5##.#### bar", "fooo (1734) 555.1212 bar"},
+      {"fooo (1 734) 5##-#### bar", "fooo (1 734) 555-1212 bar"},
+      {"fooo (1)(734) 5###### bar", "fooo (1)(734) 5551212 bar"},
+      {"fooo (1)(734)5###### bar", "fooo (1)(734)5551212 bar"},
+      {"fooo 1 734 5## #### bar", "fooo 1 734 555 1212 bar"},
+      {"fooo 1.734.5##.#### bar", "fooo 1.734.555.1212 bar"},
+      {"fooo 1-734-5##-#### bar", "fooo 1-734-555-1212 bar"},
+      {"fooo 17345###### bar", "fooo 17345551212 bar"},
+      {"fooo (734) 5## #### bar", "fooo (734) 555 1212 bar"},
+      {"fooo (734) 5##.#### bar", "fooo (734) 555.1212 bar"},
+      {"fooo (734) 5##-#### bar", "fooo (734) 555-1212 bar"},
+      {"fooo (734) 5###### bar", "fooo (734) 5551212 bar"},
+      {"fooo (734)5###### bar", "fooo (734)5551212 bar"},
+      {"fooo 734 5## #### bar", "fooo 734 555 1212 bar"},
+      {"fooo 734.5##.#### bar", "fooo 734.555.1212 bar"},
+      {"fooo 734-5##-#### bar", "fooo 734-555-1212 bar"},
+      {"fooo 7345###### bar", "fooo 7345551212 bar"},
+      {"fooo 5## #### bar", "fooo 555 1212 bar"},
+      {"fooo 5##.#### bar", "fooo 555.1212 bar"},
+      {"fooo 5##-#### bar", "fooo 555-1212 bar"},
+      {"fooo 5###### bar", "fooo 5551212 bar"},
+      {"fooo 7.3|4:5;#-#*#-#/### bar", "fooo 7.3|4:5;5-5*1-2/1#2 bar"}
+    ]
+    |> Enum.each(fn {masked_response, response} ->
+      assert Flow.Message.reply(masked_response)
+        == Broker.mask_possible_phone_number(respondent, Flow.Message.reply(response))
+    end)
+  end
+
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
     test_channel = TestChannel.new(false, mode == "sms")
 
