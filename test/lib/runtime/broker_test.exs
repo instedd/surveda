@@ -2948,7 +2948,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "respondent phone number is masked in logs" do
-    [survey, group, test_channel, _, _] = create_running_survey_with_channel_and_respondent()
+    [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
 
     phone_number = "1-734-555-1212"
     respondent = insert(:respondent, survey: survey, respondent_group: group, phone_number: phone_number, sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number))
@@ -3017,11 +3017,13 @@ defmodule Ask.BrokerTest do
       {"fooo 5##.#### bar", "fooo 555.1212 bar"},
       {"fooo 5##-#### bar", "fooo 555-1212 bar"},
       {"fooo 5###### bar", "fooo 5551212 bar"},
+      {"1-734-5##-#### 1-734-5##-####", "1-734-555-1212 1-734-555-1212"},
+      {"fooo 5## #### bar 5## #### bar fooo 5## #### x", "fooo 555 1212 bar 555 1212 bar fooo 555 1212 x"},
       {"fooo 7.3|4:5;#-#*#-#/### bar", "fooo 7.3|4:5;5-5*1-2/1#2 bar"}
     ]
     |> Enum.each(fn {masked_response, response} ->
       assert Flow.Message.reply(masked_response)
-        == Broker.mask_possible_phone_number(respondent, Flow.Message.reply(response))
+        == Broker.mask_phone_number(respondent, Flow.Message.reply(response))
     end)
   end
 

@@ -329,7 +329,7 @@ defmodule Ask.Runtime.Broker do
             update_respondent_disposition(session, "started")
         end
 
-        reply = mask_possible_phone_number(session.respondent, reply)
+        reply = mask_phone_number(session.respondent, reply)
         handle_session_step(Session.sync_step(session, reply, session_mode))
       rescue
         e in Ecto.StaleEntryError ->
@@ -374,27 +374,41 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  def mask_possible_phone_number(respondent, {:reply, response} = reply) do
-    sanitized_response = Respondent.sanitize_phone_number(response)
+  def mask_phone_number(%Respondent{} = respondent, {:reply, response} = reply) do
     pii = respondent.sanitized_phone_number |> String.slice(-6..-1)
     # pii can be empty if the sanitized_phone_number has less than 5 digits,
     # that could be mostly to the case of a randomly generated phone number form a test
     # String.contains? returns true for empty strings
-    masked_response = if String.length(pii) != 0 && String.contains?(sanitized_response, pii) do
-      regex = String.graphemes(pii)
-      |> Enum.reduce("(.*)", fn(digit, regex) ->
-        "#{regex}(#{digit})(.*)"
-      end)
-      |> Regex.compile!
-
-      response |> String.replace(regex, "\\1#\\3#\\5#\\7#\\9#\\11#\\13")
+    masked_response = if String.length(pii) != 0 && contains_phone_number(response, pii) do
+      mask_phone_number(response, phone_number_matcher(pii), pii)
     else
       response
     end
 
     Flow.Message.reply(masked_response)
   end
-  def mask_possible_phone_number(_respondent, reply), do: reply
+  def mask_phone_number(response, regex, pii) do
+    masked_response = response |> String.replace(regex, "\\1#\\3#\\5#\\7#\\9#\\11#\\13")
+
+    if contains_phone_number(masked_response, pii) do
+      mask_phone_number(masked_response, regex, pii)
+    else
+      masked_response
+    end
+  end
+  def mask_phone_number(_, reply), do: reply
+
+  defp contains_phone_number(response, pii) do
+    String.contains?(Respondent.sanitize_phone_number(response), pii)
+  end
+
+  defp phone_number_matcher(pii) do
+    String.graphemes(pii)
+      |> Enum.reduce("(.*)", fn(digit, regex) ->
+        "#{regex}(#{digit})(.*)"
+      end)
+      |> Regex.compile!
+  end
 
   defp handle_session_step({:ok, session, reply, timeout, respondent}) do
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
