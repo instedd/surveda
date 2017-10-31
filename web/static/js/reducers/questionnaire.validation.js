@@ -103,6 +103,13 @@ const validateNumericStep = (step, stepIndex, context, steps, path) => {
   validatePrompts(step, context, path)
   validateRangeDelimiters(step, context, path)
   validateRanges(step.ranges, stepIndex, context, steps, path)
+  validateRefusal(step, stepIndex, context, steps, path)
+}
+
+const validateRefusal = (step: NumericStep, stepIndex, context, steps, path) => {
+  if (step.refusal && step.refusal.enabled) {
+    validateChoiceOrRefusal(step.refusal, context, stepIndex, stepIndex, steps, `${path}.refusal[refusal]`)
+  }
 }
 
 const validateExplanationStep = (step, stepIndex, context, steps, path) => {
@@ -359,7 +366,10 @@ const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: n
   if (isBlank(choice.value)) {
     addError(context, `${path}.value`, 'Response must not be blank')
   }
+  validateChoiceOrRefusal(choice, context, stepIndex, choiceIndex, steps, path)
+}
 
+const validateChoiceOrRefusal = (choice: Choice | Refusal, context: ValidationContext, stepIndex: number, choiceIndex: number, steps, path) => {
   context.languages.forEach(lang => {
     const langPath = `${path}['${lang}']`
 
