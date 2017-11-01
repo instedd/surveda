@@ -1943,6 +1943,228 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "respondent flow via sms with an empty thank you message" do
+    [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps)
+
+    hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
+    |> Questionnaire.changeset(%{
+      settings: %{
+        "error_message" => %{
+          "en" => %{
+            "sms" => "You have entered an invalid answer",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "You have entered an invalid answer (ivr)"
+            }
+          }
+        },
+        "thank_you_message" => %{
+          "en" => %{
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => ""
+            },
+            "sms" => ""
+          }
+        }
+      }
+    })
+    |> Repo.update!
+
+    {:ok, logger} = SurveyLogger.start_link
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Do you exercise")
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Which is the second perfect number?")
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "What's the number of this question?")
+
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    assert :end = reply
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "completed"
+    assert respondent.session == nil
+    assert respondent.completed_at in interval
+
+    :ok = logger |> GenServer.stop
+
+    assert [do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert do_you_smoke.survey_id == survey.id
+    assert do_you_smoke.action_data == "Do you smoke?"
+    assert do_you_smoke.action_type == "prompt"
+
+    assert do_smoke.survey_id == survey.id
+    assert do_smoke.action_data == "Yes"
+    assert do_smoke.action_type == "response"
+
+    assert do_you_exercise.survey_id == survey.id
+    assert do_you_exercise.action_data == "Do you exercise"
+    assert do_you_exercise.action_type == "prompt"
+
+    assert do_exercise.survey_id == survey.id
+    assert do_exercise.action_data == "Yes"
+    assert do_exercise.action_type == "response"
+
+    assert second_perfect_number.survey_id == survey.id
+    assert second_perfect_number.action_data == "Which is the second perfect number?"
+    assert second_perfect_number.action_type == "prompt"
+
+    assert ninety_nine.survey_id == survey.id
+    assert ninety_nine.action_data == "99"
+    assert ninety_nine.action_type == "response"
+
+    assert question_number.survey_id == survey.id
+    assert question_number.action_data == "What's the number of this question?"
+    assert question_number.action_type == "prompt"
+
+    assert eleven.survey_id == survey.id
+    assert eleven.action_data == "11"
+    assert eleven.action_type == "response"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "respondent flow via ivr with an empty thank you message" do
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+
+    hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
+    |> Questionnaire.changeset(%{
+      settings: %{
+        "error_message" => %{
+          "en" => %{
+            "sms" => "You have entered an invalid answer",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "You have entered an invalid answer (ivr)"
+            }
+          }
+        },
+        "thank_you_message" => %{
+          "en" => %{
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => ""
+            },
+            "sms" => ""
+          }
+        }
+      }
+    })
+    |> Repo.update!
+
+    {:ok, logger} = SurveyLogger.start_link
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+    assert {:reply, ReplyHelper.ivr("Which is the second perfect number?", "Which is the second perfect number")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    assert {:reply, ReplyHelper.ivr("What's the number of this question?", "What's the number of this question")} = reply
+
+    respondent = Repo.get(Respondent, respondent.id)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    assert :end = reply
+
+    now = Timex.now
+    interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "completed"
+    assert respondent.session == nil
+    assert respondent.completed_at in interval
+
+    :ok = logger |> GenServer.stop
+
+    assert [enqueueing, answer, do_you_smoke, do_smoke, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert enqueueing.survey_id == survey.id
+    assert enqueueing.action_data == "Enqueueing call"
+    assert enqueueing.action_type == "contact"
+
+    assert answer.survey_id == survey.id
+    assert answer.action_data == "Answer"
+    assert answer.action_type == "contact"
+
+    assert do_you_smoke.survey_id == survey.id
+    assert do_you_smoke.action_data == "Do you smoke?"
+    assert do_you_smoke.action_type == "prompt"
+
+    assert do_smoke.survey_id == survey.id
+    assert do_smoke.action_data == "9"
+    assert do_smoke.action_type == "response"
+
+    assert do_you_exercise.survey_id == survey.id
+    assert do_you_exercise.action_data == "Do you exercise"
+    assert do_you_exercise.action_type == "prompt"
+
+    assert do_exercise.survey_id == survey.id
+    assert do_exercise.action_data == "1"
+    assert do_exercise.action_type == "response"
+
+    assert second_perfect_number.survey_id == survey.id
+    assert second_perfect_number.action_data == "Which is the second perfect number?"
+    assert second_perfect_number.action_type == "prompt"
+
+    assert ninety_nine.survey_id == survey.id
+    assert ninety_nine.action_data == "99"
+    assert ninety_nine.action_type == "response"
+
+    assert question_number.survey_id == survey.id
+    assert question_number.action_data == "What's the number of this question?"
+    assert question_number.action_type == "prompt"
+
+    assert eleven.survey_id == survey.id
+    assert eleven.action_data == "11"
+    assert eleven.action_type == "response"
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "respondent flow via mobileweb with splitted message" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 

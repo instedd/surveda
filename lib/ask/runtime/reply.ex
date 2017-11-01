@@ -36,11 +36,9 @@ defmodule Ask.Runtime.ReplyStep do
   alias __MODULE__
 
   def new(prompts, title, type \\ "explanation", id \\ nil, choices \\ [], min \\ nil, max \\ nil, refusal \\ nil, num_digits \\ nil)
-
-  def new([nil], _, _, _, _, _, _, _, _) do
-    nil
-  end
-
+  def new([nil], _, _, _, _, _, _, _, _), do: nil
+  def new([""], _, _, _, _, _, _, _, _), do: nil
+  def new([%{"audio_source" => "tts", "text" => ""}], _, _, _, _, _, _, _, _), do: nil
   def new(prompts, title, type, id, choices, min, max, refusal, num_digits) do
     %ReplyStep{prompts: prompts, id: id, title: title, type: type, choices: choices, min: min, max: max, refusal: refusal, num_digits: num_digits}
   end
