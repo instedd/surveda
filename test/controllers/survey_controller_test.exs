@@ -266,6 +266,61 @@ defmodule Ask.SurveyControllerTest do
       }
     end
 
+    test "shows chosen resource with available links if reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+      {:ok, result_link} = ShortLink.generate_link(Survey.link_name(survey, :results), "foo")
+      {:ok, _incentives_link} = ShortLink.generate_link(Survey.link_name(survey, :incentives), "bar")
+      {:ok, _interactions_link} = ShortLink.generate_link(Survey.link_name(survey, :interactions), "baz")
+      {:ok, disposition_history_link} = ShortLink.generate_link(Survey.link_name(survey, :disposition_history), "bae")
+
+      conn = get conn, project_survey_path(conn, :show, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{"id" => survey.id,
+        "name" => survey.name,
+        "mode" => survey.mode,
+        "project_id" => survey.project_id,
+        "questionnaire_ids" => [],
+        "cutoff" => nil,
+        "count_partial_results" => false,
+        "state" => "not_ready",
+        "exit_code" => nil,
+        "exit_message" => nil,
+        "schedule" => %{
+          "day_of_week" => %{
+            "fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true
+          },
+          "start_time" => "00:00:00",
+          "end_time" => "23:59:59",
+          "timezone" => "Etc/UTC",
+          "blocked_days" => []
+        },
+        "started_at" => "",
+        "ivr_retry_configuration" => nil,
+        "sms_retry_configuration" => nil,
+        "mobileweb_retry_configuration" => nil,
+        "fallback_delay" => nil,
+        "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at),
+        "quotas" => %{
+          "vars" => [],
+          "buckets" => []
+        },
+        "links" => [
+          %{
+            "name" => "survey/#{survey.id}/results",
+            "url" => "http://app.ask.dev/link/#{result_link.hash}"
+          },
+          %{
+            "name" => "survey/#{survey.id}/disposition_history",
+            "url" => "http://app.ask.dev/link/#{disposition_history_link.hash}"
+          },
+        ],
+        "comparisons" => [],
+        "next_schedule_time" => nil,
+      }
+    end
+
     test "renders page not found when id is nonexistent", %{conn: conn} do
       assert_error_sent 404, fn ->
         get conn, project_survey_path(conn, :show, -1, -1)

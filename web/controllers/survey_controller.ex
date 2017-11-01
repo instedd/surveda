@@ -73,7 +73,7 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
     |> Repo.preload([:quota_buckets])
-    |> Survey.with_links()
+    |> Survey.with_links(user_level(project_id, current_user(conn).id))
 
     render(conn, "show.json", survey: survey)
   end

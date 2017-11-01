@@ -1,7 +1,7 @@
 defmodule User.Helper do
   import Ecto
   import Ecto.Query
-  alias Ask.{Repo, Project}
+  alias Ask.{Repo, Project, ProjectMembership}
   alias Ask.UnauthorizedError
 
   def current_user(conn) do
@@ -96,6 +96,18 @@ defmodule User.Helper do
     case membership.level do
       "owner" -> raise UnauthorizedError, conn: conn
       _ -> membership
+    end
+  end
+
+  def user_level(project_id, user_id) do
+    memberships = ProjectMembership
+    |> where([m], m.user_id == ^user_id and  m.project_id == ^project_id)
+    |> Repo.all
+
+    cond do
+      Enum.any?(memberships, &(&1.level == "owner")) -> "owner"
+      Enum.any?(memberships, &(&1.level == "editor")) -> "editor"
+      true -> "reader"
     end
   end
 end
