@@ -1309,8 +1309,8 @@ defmodule Ask.SurveyControllerTest do
     test "allows editors to refresh some links", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "editor")
       survey = insert(:survey, project: project)
-      response = get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
-      response = get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
 
       response = put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
       assert response(response, 200)
