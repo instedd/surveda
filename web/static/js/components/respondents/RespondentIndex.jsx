@@ -208,34 +208,36 @@ class RespondentIndex extends Component {
     return <div className='access-link'>
       {
         !project.readOnly
-        ? <span className='switch'>
+        ? <div className='switch'>
           <label>
             <input type='checkbox' checked={link != null} onChange={() => onChange(link)} />
             <span className='lever' />
             <span className='label' >Public link:</span>
           </label>
-        </span>
+        </div>
         : ''
       }
       {
         link != null
-        ? <span className='link'>
+        ? <div className='link truncate'>
           <span ref={name}>{link.url}</span>
-          <Tooltip text='Copy to clipboard'>
-            <a className='btn-icon-grey right' onClick={() => this.copyLink(this.refs[name])}>
-              <i className='material-icons'>content_copy</i>
-            </a>
-          </Tooltip>
-          {
-            !project.readOnly
-            ? <Tooltip text='Refresh'>
-              <a className='btn-icon-grey right' onClick={refresh}>
-                <i className='material-icons'>refresh</i>
+          <div className='buttons'>
+            {
+              !project.readOnly
+              ? <Tooltip text='Refresh'>
+                <a className='btn-icon-grey' onClick={refresh}>
+                  <i className='material-icons'>refresh</i>
+                </a>
+              </Tooltip>
+              : ''
+            }
+            <Tooltip text='Copy to clipboard'>
+              <a className='btn-icon-grey' onClick={() => this.copyLink(this.refs[name])}>
+                <i className='material-icons'>content_copy</i>
               </a>
             </Tooltip>
-            : ''
-          }
-        </span>
+          </div>
+        </div>
         : ''
       }
     </div>
