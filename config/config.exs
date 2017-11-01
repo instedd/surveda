@@ -71,11 +71,13 @@ end
 
 config :ask, version: version
 
+sentry_enabled = String.length(System.get_env("SENTRY_DSN") || "") > 0
+
 config :sentry,
   dsn: System.get_env("SENTRY_DSN"),
   public_dsn: System.get_env("SENTRY_PUBLIC_DSN"),
   environment_name: Mix.env || :dev,
-  included_environments: ~w(prod)a,
+  included_environments: (if sentry_enabled, do: ~w(prod)a, else: []),
   use_error_logger: true,
   enable_source_code_context: false,
   release: version
