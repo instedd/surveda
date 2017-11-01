@@ -374,7 +374,7 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  def mask_phone_number(%Respondent{} = respondent, {:reply, response} = reply) do
+  def mask_phone_number(%Respondent{} = respondent, {:reply, response}) do
     pii = respondent.sanitized_phone_number |> String.slice(-6..-1)
     # pii can be empty if the sanitized_phone_number has less than 5 digits,
     # that could be mostly to the case of a randomly generated phone number form a test
@@ -387,6 +387,7 @@ defmodule Ask.Runtime.Broker do
 
     Flow.Message.reply(masked_response)
   end
+  def mask_phone_number(_, reply), do: reply
   def mask_phone_number(response, regex, pii) do
     masked_response = response |> String.replace(regex, "\\1#\\3#\\5#\\7#\\9#\\11#\\13")
 
@@ -396,7 +397,6 @@ defmodule Ask.Runtime.Broker do
       masked_response
     end
   end
-  def mask_phone_number(_, reply), do: reply
 
   defp contains_phone_number(response, pii) do
     String.contains?(Respondent.sanitize_phone_number(response), pii)
