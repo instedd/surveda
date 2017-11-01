@@ -1,4 +1,6 @@
 defmodule Ask.SurveyView do
+  import Ask.Router.Helpers
+  alias Ask.Endpoint
   use Ask.Web, :view
 
   alias Ask.Survey
@@ -82,7 +84,7 @@ defmodule Ask.SurveyView do
   def render("link.json", %{link: link}) do
     %{
       "name" => link.name,
-      "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
+      "url" => short_link_url(Endpoint, :access, link.hash)
     }
   end
 
