@@ -69,6 +69,8 @@
         padding-top: 0.5rem;
         max-width: 85%;
         .switch {
+          display: inline-block;
+          vertical-align: middle;
           .lever {
             margin-left: 0;
           }
@@ -79,27 +81,32 @@
           }
         }
         .link {
-          background-color: #e6e6e6;
           padding: 0.5rem;
           display: inline-block;
+          position: relative;
           min-height: 43px;
           width: 75%;
+          vertical-align: middle;
           span {
             @extend .grey-text;
             margin: 0.2rem 0.2rem;
+            vertical-align: middle;
             width: 98%;
             overflow: hidden;
             display: inline-block;
-            vertical-align: middle;
+          }
+          .buttons {
+            position: absolute;
+            right: 0.5rem;
+            top: 0.5rem;
           }
           .btn-icon-grey {
             display: none;
           }
         }
         .link:hover {
-          span {
-            width: 80%;
-          }
+          background-color: #e6e6e6;
+          padding-right: 74px;
           .btn-icon-grey {
             display: inline;
           }

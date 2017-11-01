@@ -263,17 +263,27 @@ defmodule Ask.Survey do
     |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
   end
 
-  def with_links(%Survey{} = survey) do
-    %{survey | links: links(survey)}
+  def with_links(%Survey{} = survey, level \\ "owner") do
+    %{survey | links: links(survey, level)}
   end
 
-  def links(%Survey{} = survey) do
-    names = [
+  def links(%Survey{} = survey, "owner") do
+    links([
       link_name(survey, :results),
       link_name(survey, :incentives),
       link_name(survey, :disposition_history),
       link_name(survey, :interactions)
-    ]
+    ])
+  end
+
+  def links(%Survey{} = survey, _) do
+    links([
+      link_name(survey, :results),
+      link_name(survey, :disposition_history)
+    ])
+  end
+
+  def links(names) do
     ShortLink |> where([l], l.name in ^names) |> Repo.all
   end
 

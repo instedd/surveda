@@ -203,29 +203,41 @@ class RespondentIndex extends Component {
   }
 
   downloadLink(link, onChange, refresh, name) {
+    const { project } = this.props
+
     return <div className='access-link'>
-      <span className='switch'>
-        <label>
-          <input type='checkbox' checked={link != null} onChange={() => onChange(link)} />
-          <span className='lever' />
-          <span className='label' >Public link:</span>
-        </label>
-      </span>
+      {
+        !project.readOnly
+        ? <div className='switch'>
+          <label>
+            <input type='checkbox' checked={link != null} onChange={() => onChange(link)} />
+            <span className='lever' />
+            <span className='label' >Public link:</span>
+          </label>
+        </div>
+        : ''
+      }
       {
         link != null
-        ? <span className='link'>
+        ? <div className='link truncate'>
           <span ref={name}>{link.url}</span>
-          <Tooltip text='Copy to clipboard'>
-            <a className='btn-icon-grey right' onClick={() => this.copyLink(this.refs[name])}>
-              <i className='material-icons'>content_copy</i>
-            </a>
-          </Tooltip>
-          <Tooltip text='Refresh'>
-            <a className='btn-icon-grey right' onClick={refresh}>
-              <i className='material-icons'>refresh</i>
-            </a>
-          </Tooltip>
-        </span>
+          <div className='buttons'>
+            {
+              !project.readOnly
+              ? <Tooltip text='Refresh'>
+                <a className='btn-icon-grey' onClick={refresh}>
+                  <i className='material-icons'>refresh</i>
+                </a>
+              </Tooltip>
+              : ''
+            }
+            <Tooltip text='Copy to clipboard'>
+              <a className='btn-icon-grey' onClick={() => this.copyLink(this.refs[name])}>
+                <i className='material-icons'>content_copy</i>
+              </a>
+            </Tooltip>
+          </div>
+        </div>
         : ''
       }
     </div>
@@ -366,9 +378,7 @@ class RespondentIndex extends Component {
                   <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
                 </div>
               </a>
-              { !project.readOnly
-              ? this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')
-              : ''}
+              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
             </li>
             <li className='collection-item'>
               <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
@@ -380,9 +390,7 @@ class RespondentIndex extends Component {
                   <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
                 </div>
               </a>
-              { !project.readOnly
-              ? this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')
-              : ''}
+              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
             </li>
             {incentivesCsvLink}
             {interactionsCsvLink}
