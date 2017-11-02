@@ -23,7 +23,8 @@ defmodule Ask.ChannelControllerTest do
                       "provider" => channel.provider,
                       "settings" => channel.settings,
                       "type"     => channel.type,
-                      "user_id"  => channel.user_id}
+                      "user_id"  => channel.user_id,
+                      "channelBaseUrl" => channel.base_url}
       insert(:channel)
       conn = get conn, channel_path(conn, :index)
       assert json_response(conn, 200)["data"] == [channel_map]
@@ -41,7 +42,8 @@ defmodule Ask.ChannelControllerTest do
                                                    "name" => channel.name,
                                                    "type" => channel.type,
                                                    "provider" => channel.provider,
-                                                   "settings" => channel.settings}
+                                                   "settings" => channel.settings,
+                                                   "channelBaseUrl" => channel.base_url}
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
