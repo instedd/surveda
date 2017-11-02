@@ -121,6 +121,11 @@ class ChannelIndex extends Component {
     const multipleNuntium = config.nuntium.length > 1
     const multipleVerboice = config.verboice.length > 1
 
+    const friendlyNamesByUrl = new Map()
+
+    friendlyNamesByUrl.set('nuntium', (multipleNuntium ? new Map(config.nuntium.map((i) => [i.baseUrl, i.friendlyName])) : new Map()))
+    friendlyNamesByUrl.set('verboice', (multipleVerboice ? new Map(config.verboice.map((i) => [i.baseUrl, i.friendlyName])) : new Map()))
+
     let providerModals = []
     for (let index in config.verboice) {
       providerModals.push(providerModal('verboice', index, config.verboice[index].friendlyName, multipleVerboice))
@@ -210,13 +215,24 @@ class ChannelIndex extends Component {
             <tbody>
               { range(0, pageSize).map(index => {
                 const channel = channels[index]
+
+                var friendlyName = ''
+                if (channel) {
+                  var friendlyNamesByProvider = friendlyNamesByUrl.get(`${channel.provider}`)
+
+                  if (friendlyNamesByProvider) {
+                    var name = friendlyNamesByProvider.get(channel.channelBaseUrl)
+                    friendlyName = name ? ` (${name})` : ''
+                  }
+                }
+
                 if (!channel) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
                 return (<tr key={channel.id}>
                   <td>
                     <UntitledIfEmpty text={channel.name} entityName='channel' />
                   </td>
-                  <td>{channel.provider}</td>
+                  <td>{`${channel.provider}${friendlyName}`}</td>
                 </tr>)
               }) }
             </tbody>
