@@ -58,7 +58,7 @@ defmodule Ask.SurveyController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]) |> Survey.with_links())
+        |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]) |> Survey.with_links(user_level(project_id, current_user(conn).id)))
       {:error, changeset} ->
         Logger.warn "Error when creating a survey: #{inspect changeset}"
         conn
@@ -95,7 +95,7 @@ defmodule Ask.SurveyController do
     case Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires)) do
       {:ok, survey} ->
         project |> Project.touch!
-        render(conn, "show.json", survey: survey |> Survey.with_links())
+        render(conn, "show.json", survey: survey |> Survey.with_links(user_level(project_id, current_user(conn).id)))
       {:error, changeset} ->
         Logger.warn "Error when updating survey: #{inspect changeset}"
         conn
@@ -150,7 +150,7 @@ defmodule Ask.SurveyController do
       Logger.warn "Error when launching survey #{id}. State is not ready "
       conn
         |> put_status(:unprocessable_entity)
-        |> render("show.json", survey: survey |> Survey.with_links())
+        |> render("show.json", survey: survey |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
     else
       project = conn
       |> load_project_for_change(survey.project_id)
@@ -165,7 +165,7 @@ defmodule Ask.SurveyController do
           case Repo.update(changeset) do
             {:ok, survey} ->
               survey = create_survey_questionnaires_snapshot(survey)
-              |> Survey.with_links()
+              |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
               project |> Project.touch!
               render(conn, "show.json", survey: survey)
             {:error, changeset} ->
@@ -179,7 +179,7 @@ defmodule Ask.SurveyController do
           Logger.warn "Error when preparing channels for launching survey #{id} (#{reason})"
           conn
           |> put_status(:unprocessable_entity)
-          |> render("show.json", survey: survey |> Survey.with_links())
+          |> render("show.json", survey: survey |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
       end
     end
   end
@@ -463,7 +463,7 @@ defmodule Ask.SurveyController do
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey finished
         conn
-          |> render("show.json", survey: survey |> Survey.with_links())
+          |> render("show.json", survey: survey |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
       "running" ->
         project = conn
           |> load_project_for_change(survey.project_id)
@@ -475,7 +475,7 @@ defmodule Ask.SurveyController do
         case Repo.update(changeset) do
           {:ok, survey} ->
             project |> Project.touch!
-            render(conn, "show.json", survey: survey |> Survey.with_links())
+            render(conn, "show.json", survey: survey |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
           {:error, changeset} ->
             Logger.warn "Error when stopping survey #{inspect survey}"
             conn
@@ -488,7 +488,7 @@ defmodule Ask.SurveyController do
         Logger.warn "Error when stopping survey #{inspect survey}: Wrong state"
         conn
           |> put_status(:unprocessable_entity)
-          |> render("show.json", survey: survey |> Survey.with_links())
+          |> render("show.json", survey: survey |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
       end
   end
 
