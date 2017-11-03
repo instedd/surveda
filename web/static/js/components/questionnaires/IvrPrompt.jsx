@@ -132,7 +132,7 @@ class IvrPrompt extends Component {
           </div>
           {(this.state.audioSource == 'upload')
             ? <div className='upload-audio'>
-              <audio controls>
+              <audio controls key={this.state.audioId}>
                 <source src={this.state.audioUri} type='audio/mpeg' />
               </audio>
               {readOnly ? null
