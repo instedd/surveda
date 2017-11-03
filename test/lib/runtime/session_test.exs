@@ -460,7 +460,7 @@ defmodule Ask.SessionTest do
     assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} = Session.sync_step(session, Flow.Message.reply("25"))
   end
 
-  test "ends when quota is reached at node", %{quiz: quiz, respondent: respondent, channel: channel} do
+  test "ends only after completing the quota questions", %{quiz: quiz, respondent: respondent, channel: channel} do
     survey = respondent.survey
 
     quotas = %{
@@ -501,7 +501,17 @@ defmodule Ask.SessionTest do
     respondent = Respondent |> Repo.get(respondent.id)
 
     {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms")
-    assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} = Session.sync_step(session, Flow.Message.reply("N"))
+
+    {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    # Session.sync_step(session, Flow.Message.reply("Y"))
+    assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} = Session.sync_step(session, Flow.Message.reply("Y"))
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    assert respondent.quota_bucket_id == qb2.id
   end
 
   test "assigns respondent to its bucket", %{quiz: quiz, respondent: respondent, channel: channel} do

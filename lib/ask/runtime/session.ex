@@ -279,7 +279,6 @@ defmodule Ask.Runtime.Session do
     respondent = session.respondent
 
     if want_log_response do
-      # Log raw response from user including new disposition
       case step_answer do
         {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
         {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
@@ -288,34 +287,19 @@ defmodule Ask.Runtime.Session do
       end
     end
 
-    survey = (respondent |> Repo.preload(:survey)).survey
-
-    # Get all quota buckets, if any
-    buckets =
-      case survey.quota_vars do
-        [] -> []
-        _ -> Repo.all(from q in QuotaBucket,
-               where: q.survey_id == ^survey.id)
-      end
-
-    # Store responses, assign respondent to bucket (if any, if there's a match)
-    # Since to determine the assigned bucket we need to get all responses,
-    # we return them here and reuse them in `falls_in_quota_already_completed`
-    # to avoid executing this query twice.
-    {respondent, responses} =
-      store_responses_and_assign_bucket(respondent, step_answer, buckets, session)
+    respondent = store_responses_and_assign_bucket(respondent, step_answer, session)
 
     session = %{session | respondent: respondent}
-    session |> handle_step_answer(step_answer, responses, buckets, current_mode)
+    session |> handle_step_answer(step_answer, current_mode)
   end
 
-  defp handle_step_answer(session, {:end, _, reply}, _, _, current_mode) do
+  defp handle_step_answer(session, {:end, _, reply}, current_mode) do
     log_prompts(reply, current_mode.channel, session.flow.mode, session.respondent, true)
     {:end, reply, session.respondent}
   end
 
-  defp handle_step_answer(session, {:ok, flow, reply}, responses, buckets, current_mode) do
-    case falls_in_quota_already_completed?(flow, buckets, responses) do
+  defp handle_step_answer(session, {:ok, flow, reply}, current_mode) do
+    case falls_in_quota_already_completed?(session.respondent, flow) do
       true ->
         session = Broker.update_respondent_disposition(session, "rejected")
 
@@ -330,7 +314,6 @@ defmodule Ask.Runtime.Session do
             _ ->
               {:rejected, session.respondent}
           end
-
         else
           {:rejected, session.respondent}
         end
@@ -340,7 +323,7 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(session, {:no_retries_left, flow, reply}, _, _, _) do
+  defp handle_step_answer(session, {:no_retries_left, flow, reply}, _) do
     case session do
       %{current_mode: %{retries: []}, fallback_mode: nil} ->
         {:failed, session.respondent}
@@ -349,7 +332,7 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(session, {:stopped, _, reply}, _, _, current_mode) do
+  defp handle_step_answer(session, {:stopped, _, reply}, current_mode) do
     log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, session.respondent, reply.disposition)
     {:stopped, reply, session.respondent}
   end
@@ -398,7 +381,16 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp store_responses_and_assign_bucket(respondent, {_, _, reply}, buckets, session) do
+  defp store_responses_and_assign_bucket(respondent, {_, _, reply}, session) do
+    survey = (respondent |> Repo.preload(:survey)).survey
+
+    buckets =
+      case survey.quota_vars do
+        [] -> []
+        _ -> Repo.all(from q in QuotaBucket,
+               where: q.survey_id == ^survey.id)
+      end
+
     # Add response to responses
     Reply.stores(reply) |> Enum.each(fn {field_name, value} ->
       existing_responses = respondent
@@ -418,13 +410,13 @@ defmodule Ask.Runtime.Session do
   end
 
   defp assign_bucket(respondent, [], _session) do
-    {respondent, nil}
+    respondent
   end
 
   defp assign_bucket(respondent, buckets, session) do
     # Nothing to do if the respondent already has a bucket
     if respondent.quota_bucket_id do
-      {respondent, []}
+      respondent
     else
       # Get respondent responses
       responses = (respondent |> Repo.preload(:responses)).responses
@@ -457,40 +449,17 @@ defmodule Ask.Runtime.Session do
             respondent
         end
 
-      {respondent, responses}
+      respondent
     end
   end
 
-  defp falls_in_quota_already_completed?(flow, buckets, responses) do
-    if flow.in_quota_completed_steps do
-      false
-    else
-      case buckets do
-        # No quotas: not completed
-        [] -> false
-        _ ->
-          # Filter buckets that contain each of the responses
-          buckets = responses |> Enum.reduce(buckets, fn(response, buckets) ->
-            {response_key, response_value} = response
-            buckets |> Enum.filter(fn bucket ->
-              # The response must be in the bucket, otherwise we keep the bucket
-              if bucket.condition |> Map.keys |> Enum.member?(response_key) do
-                bucket.condition |> Map.to_list |> Enum.any?(fn {key, value} ->
-                  key == response_key && (response_value |> QuotaBucket.matches_condition?(value))
-                end)
-              else
-                true
-              end
-            end)
-          end)
-
-          # The answer is: there it at least one bucket, and all of the buckets are full
-          case buckets do
-            [] -> false
-            _ ->
-              buckets |> Enum.all?(fn bucket -> bucket.count >= bucket.quota end)
-          end
-      end
+  defp falls_in_quota_already_completed?(respondent, flow) do
+    cond do
+      flow.in_quota_completed_steps -> false
+      respondent.quota_bucket_id == nil -> false
+      true ->
+        bucket = (respondent |> Repo.preload(:quota_bucket)).quota_bucket
+        bucket.count >= bucket.quota
     end
   end
 end
