@@ -155,7 +155,7 @@ class SurveySimulation extends Component {
             <p> {
               // this.state.disposition
             } </p>
-            <ul className='disposition'>
+            <ul className='disposition radio-no-pointer'>
               <li>
                 <div className='row'>
                   <div className='col s3'>
