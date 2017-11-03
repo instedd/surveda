@@ -8,6 +8,7 @@ import * as actions from '../../actions/respondentGroups'
 import values from 'lodash/values'
 import uniq from 'lodash/uniq'
 import flatMap from 'lodash/flatMap'
+import { channelFriendlyName } from '../../channelFriendlyName'
 
 class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
@@ -330,9 +331,9 @@ const newChannelComponent = (mode, allChannels, currentChannels, onChange, readO
           </option>
           { channels.map((channel) =>
             <option key={channel.id} value={channel.id}>
-              {channel.name}
+              {channel.name + channelFriendlyName(channel)}
             </option>
-              )}
+          )}
         </Input>
       </div>
     </div>

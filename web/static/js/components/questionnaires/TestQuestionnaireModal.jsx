@@ -8,6 +8,7 @@ import { Modal, InputWithLabel } from '../ui'
 import { Input } from 'react-materialize'
 import * as api from '../../api'
 import withQuestionnaire from './withQuestionnaire'
+import { channelFriendlyName } from '../../channelFriendlyName'
 
 class TestQuestionnaireModal extends Component {
   constructor(props) {
@@ -91,7 +92,7 @@ class TestQuestionnaireModal extends Component {
     for (const channelId in channels) {
       const channel = channels[channelId]
       if (channel.type == type) {
-        channelOptions.push(<option key={channel.id} value={channel.id}>{channel.name}</option>)
+        channelOptions.push(<option key={channel.id} value={channel.id}>{channel.name + channelFriendlyName(channel)}</option>)
       }
     }
 
