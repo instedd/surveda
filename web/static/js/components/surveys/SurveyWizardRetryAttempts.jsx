@@ -2,7 +2,7 @@ import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import * as actions from '../../actions/survey'
 import { InputWithLabel } from '../ui'
-import flatMap from 'lodash/flatMap'
+import flatten from 'lodash/flatten'
 import uniq from 'lodash/uniq'
 import some from 'lodash/some'
 
@@ -176,7 +176,7 @@ class SurveyWizardRetryAttempts extends Component {
 
       // modes will be something like [['sms'], ['sms', 'ivr']]
       // so we convert it to ['sms', 'ivr']
-      modes = uniq(flatMap(modes, x => x))
+      modes = uniq(flatten(modes))
 
       let fallbackDelayComponent = null
       if (hasFallbackMode) {

@@ -97,9 +97,17 @@ class SurveyWizardModeStep extends Component {
     return this.modeIncludes(survey.mode, mode)
   }
 
-  modeFromPrimaryAndFallback = (primary, fallback) => (
-    primary && !fallback ? [primary] : [primary, fallback]
-  )
+  modeFromPrimaryAndFallback = (primary, fallback) => {
+    if (primary && fallback) {
+      return [primary, fallback]
+    }
+
+    if (primary) {
+      return [primary]
+    }
+
+    return []
+  }
 
   selectPrimaryModeForComparison = (event) => {
     const { dispatch } = this.props

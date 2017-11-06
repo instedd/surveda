@@ -590,6 +590,16 @@ describe('survey reducer', () => {
     expect(state.data.mode).toEqual([['ivr']])
   })
 
+  it('selects empty mode, no comparison', () => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.selectMode(['ivr']),
+      actions.selectMode([])
+    ])
+    expect(state.data.mode).toEqual([])
+  })
+
   it('selects mode, comparison', () => {
     const state = playActions([
       actions.fetch(1, 1),

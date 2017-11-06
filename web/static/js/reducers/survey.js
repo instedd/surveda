@@ -451,6 +451,10 @@ const selectMode = (state, action) => {
   let stateMode = state.mode || []
   let modeComparison = stateMode.length > 1 || state.modeComparison
 
+  if (isEqual(action.mode, state.mode)) {
+    return state
+  }
+
   if (modeComparison) {
     let mode = state.mode || []
     if (some(mode, m => isEqual(m, action.mode))) {
@@ -460,7 +464,11 @@ const selectMode = (state, action) => {
       newMode.push(action.mode)
     }
   } else {
-    newMode = [action.mode]
+    if (action.mode.length > 0) {
+      newMode = [action.mode]
+    } else {
+      newMode = []
+    }
   }
 
   return {

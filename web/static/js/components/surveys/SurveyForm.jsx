@@ -8,7 +8,7 @@ import SurveyWizardModeStep from './SurveyWizardModeStep'
 import SurveyWizardScheduleStep from './SurveyWizardScheduleStep'
 import SurveyWizardCutoffStep from './SurveyWizardCutoffStep'
 import SurveyWizardComparisonsStep from './SurveyWizardComparisonsStep'
-import flatMap from 'lodash/flatMap'
+import flatten from 'lodash/flatten'
 import uniq from 'lodash/uniq'
 import sumBy from 'lodash/sumBy'
 import values from 'lodash/values'
@@ -41,7 +41,7 @@ class SurveyForm extends Component {
 
   allModesHaveAChannel(modes, channels) {
     const selectedTypes = channels.map(channel => channel.mode)
-    modes = uniq(flatMap(modes))
+    modes = uniq(flatten(modes))
     return modes.filter(mode => selectedTypes.indexOf(mode) != -1).length == modes.length
   }
 

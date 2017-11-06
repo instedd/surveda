@@ -7,7 +7,7 @@ import { ConfirmationModal, Card } from '../ui'
 import * as actions from '../../actions/respondentGroups'
 import values from 'lodash/values'
 import uniq from 'lodash/uniq'
-import flatMap from 'lodash/flatMap'
+import flatten from 'lodash/flatten'
 import { channelFriendlyName } from '../../channelFriendlyName'
 
 class SurveyWizardRespondentsStep extends Component {
@@ -235,7 +235,7 @@ class SurveyWizardRespondentsStep extends Component {
     }
 
     const mode = survey.mode || []
-    const allModes = uniq(flatMap(mode))
+    const allModes = uniq(flatten(mode))
 
     let respondentsDropzone = null
     if (!readOnly && !surveyStarted) {
