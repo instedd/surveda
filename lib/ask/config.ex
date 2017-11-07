@@ -41,10 +41,11 @@ defmodule Ask.Config do
   defp read_config(module_name, env_var_name) do
     config = read_config_env_var(env_var_name) ||
       read_config_traditional(module_name)
-    if Keyword.keyword?(config) do
-      [config]
-    else
-      config
+
+    cond do
+      Keyword.keyword?(config) -> [config]
+      config == nil -> []
+      true -> config
     end
   end
 

@@ -22,24 +22,6 @@ config :ask, Ask.Endpoint,
   pubsub: [name: Ask.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
-config :ask, Nuntium,
-  base_url: System.get_env("NUNTIUM_BASE_URL") || "",
-  guisso: [
-    base_url: System.get_env("NUNTIUM_GUISSO_BASE_URL") || "",
-    client_id: System.get_env("NUNTIUM_CLIENT_ID") || "",
-    client_secret: System.get_env("NUNTIUM_CLIENT_SECRET") || "",
-    app_id: System.get_env("NUNTIUM_APP_ID") || ""
-  ]
-
-config :ask, Verboice,
-  base_url: System.get_env("VERBOICE_BASE_URL") || "",
-  guisso: [
-    base_url: System.get_env("VERBOICE_GUISSO_BASE_URL") || "",
-    client_id: System.get_env("VERBOICE_CLIENT_ID") || "",
-    client_secret: System.get_env("VERBOICE_CLIENT_SECRET") || "",
-    app_id: System.get_env("VERBOICE_APP_ID") || ""
-  ]
-
 config :ask, :channel,
   providers: %{
     "nuntium" => Ask.Runtime.NuntiumChannel,
