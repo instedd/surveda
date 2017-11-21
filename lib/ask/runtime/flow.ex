@@ -149,17 +149,17 @@ defmodule Ask.Runtime.Flow do
 
   def should_update_disposition(old_disposition, new_disposition)
   # This transitions are forced through flag steps and should always be allowed
-  def should_update_disposition("queued", "partial"), do: true
+  def should_update_disposition("queued", "interim partial"), do: true
   def should_update_disposition("queued", "completed"), do: true
   def should_update_disposition("queued", "refused"), do: true
   def should_update_disposition("queued", "ineligible"), do: true
   def should_update_disposition("queued", "rejected"), do: true
-  def should_update_disposition("contacted", "partial"), do: true
+  def should_update_disposition("contacted", "interim partial"), do: true
   def should_update_disposition("contacted", "completed"), do: true
   def should_update_disposition("contacted", "ineligible"), do: true
   def should_update_disposition("contacted", "refused"), do: true
   def should_update_disposition("contacted", "rejected"), do: true
-  def should_update_disposition("started", "partial"), do: true
+  def should_update_disposition("started", "interim partial"), do: true
   def should_update_disposition("started", "refused"), do: true
   def should_update_disposition("started", "ineligible"), do: true
 
@@ -172,7 +172,7 @@ defmodule Ask.Runtime.Flow do
   def should_update_disposition("started", "rejected"), do: true
   def should_update_disposition("started", "breakoff"), do: true
   def should_update_disposition("started", "completed"), do: true
-  def should_update_disposition("partial", "completed"), do: true
+  def should_update_disposition("interim partial", "completed"), do: true
   def should_update_disposition(nil, _), do: true
   def should_update_disposition(_, _), do: false
 
@@ -181,7 +181,7 @@ defmodule Ask.Runtime.Flow do
       "queued" -> "failed"
       "contacted" -> "unresponsive"
       "started" -> "breakoff"
-      "partial" -> old_disposition
+      "interim partial" -> "partial"
       "completed" -> old_disposition
       "ineligible" -> old_disposition
       "rejected" -> old_disposition

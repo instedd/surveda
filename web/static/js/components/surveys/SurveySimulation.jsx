@@ -317,17 +317,31 @@ class SurveySimulation extends Component {
                           </li>
                         </ul>
                       </li>
-                      <li className={classNames({'active': this.state.disposition == 'partial'})}>
+                      <li className={classNames({'active': this.state.disposition == 'interim partial'})}>
                         <input
-                          id='partial'
+                          id='interim partial'
                           type='radio'
-                          name='partial'
+                          name='interim partial'
                           value='default'
                           readOnly
-                          checked={includes(this.state.dispositionHistory, 'partial')}
+                          checked={includes(this.state.dispositionHistory, 'interim partial')}
                           className='with-gap'
                         />
-                        <label htmlFor='partial'>Partial</label>
+                        <label htmlFor='partial'>Interim Partial</label>
+                        <ul>
+                          <li className={classNames({'active': this.state.disposition == 'partial'})}>
+                            <input
+                              id='partial'
+                              type='radio'
+                              name='partial'
+                              value='default'
+                              readOnly
+                              checked={includes(this.state.dispositionHistory, 'partial')}
+                              className='with-gap'
+                            />
+                            <label htmlFor='partial'>Partial</label>
+                          </li>
+                        </ul>
                       </li>
                       <li className={classNames({'active': this.state.disposition == 'completed'})}>
                         <input

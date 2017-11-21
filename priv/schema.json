@@ -119,7 +119,7 @@
         "id": {"type": "string"},
         "type": {"enum": ["flag"]},
         "title": {"type": "string"},
-        "disposition": {"enum": ["partial", "completed", "ineligible", "refused"]},
+        "disposition": {"enum": ["interim partial", "completed", "ineligible", "refused"]},
         "skip_logic": {"type": ["string", "null"]}
       },
       "additionalProperties": false,

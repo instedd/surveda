@@ -67,7 +67,7 @@ export type ExplanationStep = BaseStep & MultilingualStep & {
 
 export type FlagStep = BaseStep & {
   type: 'flag',
-  disposition: 'completed' | 'partial' | 'ineligible',
+  disposition: 'completed' | 'interim partial' | 'ineligible',
   skipLogic: ?string
 };
 

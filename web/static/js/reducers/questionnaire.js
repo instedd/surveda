@@ -564,7 +564,7 @@ const changeStepType = (state, action) => {
         return {
           id: step.id,
           type: action.stepType,
-          disposition: 'partial',
+          disposition: 'interim partial',
           title: step.title,
           skipLogic: null
         }

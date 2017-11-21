@@ -25,7 +25,7 @@ type Props = {
 type State = {
   stepTitle: string,
   stepType: string,
-  disposition: 'completed' | 'partial' | 'ineligible' | 'refused',
+  disposition: 'completed' | 'interim partial' | 'ineligible' | 'refused',
   skipLogic: ?string
 };
 
@@ -87,9 +87,9 @@ class FlagStepEditor extends Component {
                   type='radio'
                   name='questionnaire_disposition'
                   className='with-gap'
-                  value='partial'
-                  checked={this.state.disposition == 'partial'}
-                  onChange={e => this.dispositionChange('partial')}
+                  value='interim partial'
+                  checked={this.state.disposition == 'interim partial'}
+                  onChange={e => this.dispositionChange('interim partial')}
                   disabled={readOnly}
                 />
                 <label htmlFor={`${step.id}_disposition_partial`}>Partial</label>

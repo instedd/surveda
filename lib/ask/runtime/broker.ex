@@ -610,8 +610,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp should_update_quota_bucket(new_disposition, old_disposition, true) do
-    (new_disposition != old_disposition && new_disposition == "partial")
-    || (new_disposition == "completed" && old_disposition != "partial" && old_disposition != "completed")
+    (new_disposition != old_disposition && new_disposition == "interim partial")
+    || (new_disposition == "completed" && old_disposition != "interim partial" && old_disposition != "completed")
   end
 
   defp should_update_quota_bucket(new_disposition, old_disposition, _) do

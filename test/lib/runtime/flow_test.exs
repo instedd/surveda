@@ -707,7 +707,7 @@ defmodule Ask.FlowTest do
       disposition = Reply.disposition(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert disposition == "partial"
+      assert disposition == "interim partial"
       assert flow.current_step == 1
     end
 
@@ -716,7 +716,7 @@ defmodule Ask.FlowTest do
       flow = Flow.start(quiz, "sms")
       flow_state = flow |> Flow.step(@sms_visitor)
       assert {:end, _, reply} = flow_state
-      assert Reply.disposition(reply) == "partial"
+      assert Reply.disposition(reply) == "interim partial"
     end
 
     test "two consecutive flag steps: ineligible, completed" do

@@ -666,13 +666,13 @@ defmodule Ask.SessionTest do
     quiz = insert(:questionnaire, steps: @flag_steps)
     {:ok, _, %{disposition: disposition}, _, _} = Session.start(quiz, respondent, channel, "sms")
 
-    assert disposition == "partial"
+    assert disposition == "interim partial"
   end
 
   test "flag and end", %{respondent: respondent, channel: channel} do
     quiz = build(:questionnaire, steps: @partial_step)
     {:end, %{disposition: disposition}, _} = Session.start(quiz, respondent, channel, "sms")
 
-    assert disposition == "partial"
+    assert disposition == "interim partial"
   end
 end

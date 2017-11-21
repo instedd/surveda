@@ -136,7 +136,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     # Check after flag step
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "partial"
+    assert respondent.disposition == "interim partial"
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "Yes", step_id: "s4"})
     json = json_response(conn, 200)

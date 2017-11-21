@@ -281,7 +281,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "aaa",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         multiple_choice_step(
           id: Ecto.UUID.generate,
@@ -317,7 +317,7 @@ defmodule Ask.DummySteps do
         flag_step( # This step is here to make sure we ignore this change
           id: "aaa",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         numeric_step(
           id: Ecto.UUID.generate,
@@ -451,7 +451,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "aaa",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         multiple_choice_step(
           id: "bbb",
@@ -551,7 +551,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "bbb",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         explanation_step(
           id: "ccc",
@@ -567,7 +567,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "aaa",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         )
       ]
 
@@ -599,7 +599,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "aaa",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         multiple_choice_step(
           id: "bbb",
@@ -690,7 +690,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "aaa",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         multiple_choice_step(
           id: "eee",
@@ -767,7 +767,7 @@ defmodule Ask.DummySteps do
         flag_step(
           id: "s3",
           title: "Let there be rock",
-          disposition: "partial"
+          disposition: "interim partial"
         ),
         multiple_choice_step(
           id: "s4",
