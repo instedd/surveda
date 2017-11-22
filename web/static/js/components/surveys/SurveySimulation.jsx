@@ -55,7 +55,7 @@ class SurveySimulation extends Component {
       let dispositionHistory = this.state.dispositionHistory
 
       if (status.disposition != this.state.disposition) {
-        dispositionHistory += status.disposition
+        dispositionHistory = [...dispositionHistory, status.disposition]
       }
 
       this.setState({
