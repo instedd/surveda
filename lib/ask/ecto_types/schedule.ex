@@ -82,8 +82,8 @@ defmodule Ask.Schedule do
 
     DayOfWeek.intersect?(days, DayOfWeek.from(date_time))
       && !Enum.member?(blocked_days, date_time |> Timex.to_date)
-      && start_time <= time
-      && end_time >= time
+      && Time.compare(start_time, time) != :gt
+      && Time.compare(end_time, time) != :lt
   end
 
   def default() do
