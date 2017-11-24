@@ -9,7 +9,7 @@ defmodule Ask.DayOfWeek do
   def cast(%{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}) do
     {:ok, %DayOfWeek{sun: sun, mon: mon, tue: tue, wed: wed, thu: thu, fri: fri, sat: sat}}
   end
-  def cast(map = %{}) do
+  def cast(%{} = map) do
     {:ok, %DayOfWeek{sun: map["sun"], mon: map["mon"], tue: map["tue"], wed: map["wed"], thu: map["thu"], fri: map["fri"], sat: map["sat"]}}
   end
   def cast(array) when is_list(array), do: load(array)
@@ -49,7 +49,7 @@ defmodule Ask.DayOfWeek do
       {:ok, day_of_week} ->
         day_of_week
       :error ->
-        raise "error when duming #{day_of_week}"
+        raise "error when dumping #{day_of_week}"
     end
   end
 

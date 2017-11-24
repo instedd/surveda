@@ -1,19 +1,22 @@
 defmodule Ask.Runtime.Reply do
+  alias __MODULE__
+  alias Ask.Runtime.ReplyStep
+
   defstruct stores: [], steps: [], disposition: nil, current_step: nil, total_steps: nil, error_message: nil
 
-  def prompts(%{steps: steps}) do
+  def prompts(%Reply{steps: steps}) do
     Enum.flat_map(steps, fn(step) -> step.prompts end)
   end
 
-  def disposition(%{disposition: disposition}) do
+  def disposition(%Reply{disposition: disposition}) do
     disposition
   end
 
-  def steps(%{steps: steps}) do
+  def steps(%Reply{steps: steps}) do
     steps
   end
 
-  def stores(%{stores: stores}) do
+  def stores(%Reply{stores: stores}) do
     stores
   end
 
@@ -21,13 +24,9 @@ defmodule Ask.Runtime.Reply do
     []
   end
 
-  def num_digits(%{steps: steps}) do
-    step = List.last(steps)
-    if step do
-      step.num_digits
-    else
-      nil
-    end
+  def num_digits(%Reply{steps: steps}) do
+    List.last(steps)
+    |> ReplyStep.num_digits
   end
 end
 
@@ -43,14 +42,11 @@ defmodule Ask.Runtime.ReplyStep do
     %ReplyStep{prompts: prompts, id: id, title: title, type: type, choices: choices, min: min, max: max, refusal: refusal, num_digits: num_digits}
   end
 
-  def title_with_index(step, index) do
-    case length(step.prompts) do
-      1 -> step.title
-      _ -> case step.title do
-             nil -> ""
-             "" -> ""
-             _ -> "#{step.title} #{index}"
-           end
-    end
-  end
+  def title_with_index(%ReplyStep{prompts: [_], title: title}, _), do: title
+  def title_with_index(%ReplyStep{title: nil}, _), do: ""
+  def title_with_index(%ReplyStep{title: ""}, _), do: ""
+  def title_with_index(%ReplyStep{title: title}, index), do: "#{title} #{index}"
+
+  def num_digits(%ReplyStep{num_digits: num_digits}), do: num_digits
+  def num_digits(_), do: nil
 end

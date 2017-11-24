@@ -21,6 +21,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
     assert [%{"to" => "sms://123456", "body" => "Hello!", "step_title" => "Hello!"}, %{"to" => "sms://123456", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
+
+    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+      total_received_sms: 1,
+      total_sent_sms: 2
+    }
   end
 
   test "callback with :end", %{conn: conn, respondent: respondent} do
@@ -31,6 +36,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
     assert json_response(conn, 200) == []
+
+    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+      total_received_sms: 1,
+      total_sent_sms: 0
+    }
   end
 
   test "callback with :end, :prompt", %{conn: conn, respondent: respondent} do
@@ -41,6 +51,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
     assert [%{"body" => "Bye!", "to" => "sms://123456", "step_title" => "Quota completed"}] = json_response(conn, 200)
+
+    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+      total_received_sms: 1,
+      total_sent_sms: 1
+    }
   end
 
   test "callback respondent not found", %{conn: conn} do
@@ -57,6 +72,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     end})
     conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"}, BrokerStub)
     assert [%{"to" => "sms://123457", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
+
+    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+      total_received_sms: 1,
+      total_sent_sms: 1
+    }
   end
 
   test "unknown callback is replied with OK", %{conn: conn} do
@@ -67,5 +87,14 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   test "status callback for unknown respondent is replied with OK", %{conn: conn} do
     conn = NuntiumChannel.callback(conn, %{"path" => ["status"], "respondent_id" => "-1", "state" => "delivered"})
     assert response(conn, 200) == ""
+  end
+
+  test "update stats", %{respondent: respondent} do
+    NuntiumChannel.update_stats(respondent, ReplyHelper.multiple(["Hello!", "Do you exercise?"]))
+
+    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+      total_received_sms: 1,
+      total_sent_sms: 2
+    }
   end
 end

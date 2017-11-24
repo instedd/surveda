@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
-  alias Ask.{Repo, Respondent, Channel}
+  alias Ask.{Repo, Respondent, Channel, Stats}
   alias Ask.Runtime.{Broker, Flow, Reply}
   alias Ask.Router.Helpers
   import Plug.Conn
@@ -179,6 +179,30 @@ defmodule Ask.Runtime.VerboiceChannel do
     Broker.channel_failed(respondent, status)
   end
 
+  def update_interactions(respondent) do
+    respondent = Respondent
+    |> Repo.get(respondent.id)
+
+    stats = respondent.stats
+    |> Stats.set_interaction_time(DateTime.utc_now())
+
+    respondent
+    |> Respondent.changeset(%{stats: stats})
+    |> Repo.update!
+  end
+
+  def update_call_time(respondent) do
+    respondent = Respondent
+    |> Repo.get(respondent.id)
+
+    stats = respondent.stats
+    |> Stats.add_total_call_time()
+
+    respondent
+    |> Respondent.changeset(%{stats: stats})
+    |> Repo.update!
+  end
+
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status} = params) do
     respondent = Repo.get!(Respondent, respondent_id)
     case status do
@@ -204,9 +228,11 @@ defmodule Ask.Runtime.VerboiceChannel do
       _ ->
         response = case params["Digits"] do
           nil -> Flow.Message.answer()
-          "timeout" -> Flow.Message.no_reply
+          "timeout" -> Flow.Message.no_reply()
           digits -> Flow.Message.reply(digits)
         end
+
+        update_interactions(respondent)
 
         case broker.sync_step(respondent, response, "ivr") do
           {:reply, reply} ->
@@ -215,8 +241,10 @@ defmodule Ask.Runtime.VerboiceChannel do
             gather(respondent, prompts, num_digits)
           {:end, {:reply, reply}} ->
             prompts = Reply.prompts(reply)
+            update_call_time(respondent)
             say_or_play(prompts) ++ [hangup()]
           :end ->
+            update_call_time(respondent)
             hangup()
         end
     end

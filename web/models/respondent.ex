@@ -1,5 +1,6 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
+  alias Ask.Ecto.Type.JSON
 
   schema "respondents" do
     field :phone_number, :string
@@ -36,9 +37,9 @@ defmodule Ask.Respondent do
 
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
-    field :session, Ask.Ecto.Type.JSON
-    field :mode, Ask.Ecto.Type.JSON
-    field :effective_modes, Ask.Ecto.Type.JSON
+    field :session, JSON
+    field :mode, JSON
+    field :effective_modes, JSON
     field :mobile_web_cookie_code, :string
     field :language, :string
     belongs_to :questionnaire, Ask.Questionnaire
@@ -48,6 +49,7 @@ defmodule Ask.Respondent do
     has_many :responses, Ask.Response
     has_many :survey_log_entries, Ask.SurveyLogEntry
     field :lock_version, :integer, default: 1
+    field :stats, Ask.Stats, default: %Ask.Stats{}
 
     field :experiment_name, :string, virtual: true
 
@@ -59,7 +61,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes])
+    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats])
     |> validate_required([:phone_number, :state])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end

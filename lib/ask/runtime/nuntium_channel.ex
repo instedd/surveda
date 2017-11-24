@@ -2,7 +2,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Web, :model
   alias Ask.Runtime.{Broker, NuntiumChannel, Flow, Reply, ReplyStep}
-  alias Ask.{Repo, Respondent, Channel}
+  alias Ask.{Repo, Respondent, Channel, Stats}
   import Ecto.Query
   import Plug.Conn
   defstruct [:oauth_token, :name, :base_url, :settings]
@@ -83,10 +83,13 @@ defmodule Ask.Runtime.NuntiumChannel do
       _ ->
         case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
           {:reply, reply} ->
+            update_stats(respondent, reply)
             reply
           {:end, {:reply, reply}} ->
+            update_stats(respondent, reply)
             reply
           :end ->
+            update_stats(respondent)
             nil
         end
     end
@@ -113,6 +116,20 @@ defmodule Ask.Runtime.NuntiumChannel do
         }
       end)
     end
+  end
+
+  def update_stats(respondent, reply \\ %Reply{}) do
+    respondent = Respondent
+    |> Repo.get(respondent.id)
+
+    stats = respondent.stats
+    stats = stats
+    |> Stats.add_received_sms()
+    |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
+
+    respondent
+    |> Respondent.changeset(%{stats: stats})
+    |> Repo.update!
   end
 
   def sync_channels(user_id, base_url) do
@@ -228,6 +245,8 @@ defmodule Ask.Runtime.NuntiumChannel do
         Enum.map(fn(msg) ->
           Map.merge(msg, %{suggested_channel: channel.settings["nuntium_channel"], session_token: token})
         end)
+
+      NuntiumChannel.update_stats(respondent)
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
