@@ -478,11 +478,11 @@ defmodule Ask.RespondentController do
   end
 
   defp render_results(conn, "csv", survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
-
     stats = survey.mode |> Enum.flat_map(fn(modes) ->
       modes |> Enum.flat_map(fn(mode) ->
         case mode do
           "sms" -> [:total_sent_sms, :total_received_sms]
+          "mobileweb" -> [:total_sent_sms, :total_received_sms]
           "ivr" -> [:total_call_time]
           _ -> []
         end

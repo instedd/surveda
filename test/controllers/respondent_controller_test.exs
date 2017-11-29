@@ -375,7 +375,7 @@ defmodule Ask.RespondentControllerTest do
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
       insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
       insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
-      respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"])
+      respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], stats: %Stats{total_sent_sms: 1})
       insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
       conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
@@ -401,7 +401,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_smoke == "No"
       assert line_3_exercises == ""
       assert line_3_disp == "Registered"
-      assert line_3_total_sent_sms == "0"
+      assert line_3_total_sent_sms == "1"
       assert line_3_total_received_sms == "0"
       assert line_3_total_call_time == "0"
     end
