@@ -2,7 +2,7 @@ defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
   require Ask.RespondentStats
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents, Stats}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -478,6 +478,17 @@ defmodule Ask.RespondentController do
   end
 
   defp render_results(conn, "csv", survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
+
+    stats = survey.mode |> Enum.flat_map(fn(modes) ->
+      modes |> Enum.flat_map(fn(mode) ->
+        case mode do
+          "sms" -> [:total_sent_sms, :total_received_sms]
+          "ivr" -> [:total_call_time]
+          _ -> []
+        end
+      end)
+    end) |> Enum.uniq
+
     # Now traverse each respondent and create a row for it
     csv_rows = respondents
     |> Stream.map(fn respondent ->
@@ -546,6 +557,10 @@ defmodule Ask.RespondentController do
 
         row = row ++ [Respondent.show_disposition(respondent.disposition)]
 
+        row = row ++ Enum.map(stats, fn stat ->
+          apply(Stats, stat, [respondent.stats])
+        end)
+
         row
     end)
 
@@ -558,6 +573,14 @@ defmodule Ask.RespondentController do
       header
     end
     header = header ++ ["Disposition"]
+    header = header ++ Enum.map(stats, fn stat ->
+      case stat do
+        :total_sent_sms -> "Total sent SMS"
+        :total_received_sms -> "Total received SMS"
+        :total_call_time -> "Total call time"
+      end
+    end)
+
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents")
