@@ -1,5 +1,25 @@
 # InSTEDD Surveda Changelog
 
+## Nutmeg 0.14
+
+### Bugfixes
+
+* Selecting "fallback mode" before "primary mode" raises an error [#1189](https://github.com/instedd/ask/issues/1189)
+* [Questionnaire] On the simulator the mouse cursor is a `pointer` but nothing is clickable [#1190](https://github.com/instedd/ask/issues/1190)
+* Changing the selected language doesn't change the loaded audio [#1194](https://github.com/instedd/ask/issues/1194)
+* [Questionnaire] The 'Thank you message' is not mandatory but it's sent all the times [#1198](https://github.com/instedd/ask/issues/1198)
+
+### Features
+
+* Export stats in respondents CSV file [#1205](https://github.com/instedd/ask/issues/1205)
+* Compute respondent stats [#1204](https://github.com/instedd/ask/issues/1204)
+* Interim Partial [#1206](https://github.com/instedd/ask/issues/1206)
+* Hide channel types when the provider is not configured [#1182](https://github.com/instedd/ask/issues/1182)
+* Channel provider should display the full provider name [#1191](https://github.com/instedd/ask/issues/1191)
+* All questions included in the quotas must be executed before rejecting the respondent. [#1156](https://github.com/instedd/ask/issues/1156)
+* Avoid unintentional capture of phone numbers [#1180](https://github.com/instedd/ask/issues/1180)
+
+
 ## Maple 0.13
 
 In this release the default batch size, applied to surveys with no cutoff rules, is raised to 10k. However this value can be customized on each deploy.
