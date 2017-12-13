@@ -1,11 +1,11 @@
 #!/bin/sh
 echo "----==== Running Mix tests ====----"
-MIX_TESTS="$(docker-compose run --rm app mix test)"
-
 NC='\033[0m'
 GREEN='\033[0;32m'
 
-if [[ $MIX_TESTS == *", 0 failures"* ]]; then
+MIX_TESTS="$(docker-compose run --rm app mix test)"
+
+if [ $? -eq 0 ]; then
   echo "${GREEN}OK${NC}";
 else
   echo "${MIX_TESTS}"
