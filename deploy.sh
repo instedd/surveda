@@ -19,7 +19,7 @@ if [ "$TRAVIS_TAG" = "" ]; then
 
     stable)
       echo "Pulling $PROJECT_VERSION and tagging as latest"
-      docker login -e ${DOCKER_EMAIL} -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
+      docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
       docker pull ${DOCKER_REPOSITORY}:${PROJECT_VERSION}
       docker tag ${DOCKER_REPOSITORY}:${PROJECT_VERSION} ${DOCKER_REPOSITORY}:latest
       docker push ${DOCKER_REPOSITORY}:latest
@@ -54,7 +54,7 @@ docker-compose run --rm webpack yarn deploy
 # Build and push Docker image
 echo "Docker tag: $DOCKER_TAG"
 docker build -t ${DOCKER_REPOSITORY}:${DOCKER_TAG} .
-docker login -e ${DOCKER_EMAIL} -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
+docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
 docker push ${DOCKER_REPOSITORY}:${DOCKER_TAG}
 
 # Push extra image on exact tags
