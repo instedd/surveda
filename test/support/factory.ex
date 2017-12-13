@@ -156,8 +156,7 @@ defmodule Ask.Factory do
       respondent_group: respondent_group,
       survey: (respondent_group |> Ask.Repo.preload(:survey)).survey,
       phone_number: phone_number,
-      sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number),
-      state: "pending"
+      sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number)
     }
   end
 

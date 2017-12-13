@@ -33,14 +33,16 @@ defmodule Ask.Runtime.Session do
 
     case flow |> Flow.step(session.current_mode |> SessionMode.visitor) do
       {:end, _, reply} ->
-        if Reply.prompts(reply) != [] do
+        respondent = if Reply.prompts(reply) != [] do
           log_prompts(reply, channel, flow.mode, respondent, true)
           runtime_channel |> Channel.ask(respondent, token, reply)
+        else
+          respondent
         end
         {:end, reply, respondent}
       {:ok, flow, reply} ->
         log_prompts(reply, channel, flow.mode, respondent)
-        runtime_channel |> Channel.ask(respondent, token, reply)
+        respondent = runtime_channel |> Channel.ask(respondent, token, reply)
         {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
     end
   end
