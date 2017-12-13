@@ -2,7 +2,7 @@ defmodule Ask.RespondentGroupControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Project, RespondentGroup, Respondent, Channel, RespondentGroupChannel}
+  alias Ask.{Project, RespondentGroup, Respondent, Channel, RespondentGroupChannel, Stats}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -77,6 +77,7 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Enum.at(respondents, 0).phone_number == "(549) 11 4234 2343"
       assert Enum.at(respondents, 0).sanitized_phone_number == "5491142342343"
       assert Enum.at(respondents, 0).respondent_group_id == group.id
+      assert Enum.at(respondents, 0).stats == %Stats{}
     end
 
     test "uploads CSV file with phone numbers ignoring additional columns", %{conn: conn, user: user} do
@@ -286,7 +287,7 @@ defmodule Ask.RespondentGroupControllerTest do
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
       CSV.decode(separator: ?\t) |>
       Enum.map(fn row ->
-        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: "registered"}
+        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: "registered", stats: %Stats{}}
       end)
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)

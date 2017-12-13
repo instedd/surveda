@@ -1,7 +1,8 @@
 defmodule Ask.RespondentTest do
   use Ask.ModelCase
+  import Ask.Factory
 
-  alias Ask.Respondent
+  alias Ask.{Respondent, Repo, Stats}
 
   @valid_attrs %{phone_number: "+ (123) 456 789"}
   @invalid_attrs %{}
@@ -41,5 +42,14 @@ defmodule Ask.RespondentTest do
     assert Respondent.token(1) == Respondent.token(1)
 
     assert Respondent.token(1) != Respondent.token(2)
+  end
+
+  test "respondent stats should be empty by default" do
+    respondent = build(:respondent) |> Repo.insert!
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    assert respondent.stats == %Stats{}
+
+    assert respondent.stats |> Stats.add_sent_sms |> Stats.total_sent_sms == 1
   end
 end

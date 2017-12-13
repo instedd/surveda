@@ -1,6 +1,6 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, RespondentGroupChannel}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, RespondentGroupChannel, Stats}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
@@ -282,7 +282,7 @@ defmodule Ask.RespondentGroupController do
   defp to_entries(rows, project, survey, group, local_time) do
     rows
     |> Stream.map(fn row ->
-      %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered"}
+      %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered", stats: %Stats{}}
     end)
   end
 

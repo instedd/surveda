@@ -40,7 +40,6 @@ defmodule Ask.Stats do
   def cast(_), do: :error
 
   def load(string) when is_binary(string), do: cast(Poison.decode!(string))
-  def load(nil), do: {:ok, %Stats{}}
   def load(_), do: :error
 
   def dump(%Stats{}=stats), do: Poison.encode(stats)

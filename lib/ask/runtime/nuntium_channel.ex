@@ -120,16 +120,16 @@ defmodule Ask.Runtime.NuntiumChannel do
 
   def update_stats(respondent, reply \\ %Reply{}) do
     respondent = Respondent
-    |> Repo.get(respondent.id)
+      |> Repo.get(respondent.id)
 
     stats = respondent.stats
     stats = stats
-    |> Stats.add_received_sms()
-    |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
+      |> Stats.add_received_sms()
+      |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
 
     respondent
-    |> Respondent.changeset(%{stats: stats})
-    |> Repo.update!
+      |> Respondent.changeset(%{stats: stats})
+      |> Repo.update!
   end
 
   def sync_channels(user_id, base_url) do
@@ -246,10 +246,12 @@ defmodule Ask.Runtime.NuntiumChannel do
           Map.merge(msg, %{suggested_channel: channel.settings["nuntium_channel"], session_token: token})
         end)
 
-      NuntiumChannel.update_stats(respondent)
+      respondent = NuntiumChannel.update_stats(respondent)
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
+
+      respondent
     end
 
     def has_delivery_confirmation?(_), do: true
