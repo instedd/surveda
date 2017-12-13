@@ -72,6 +72,7 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def ask(channel, respondent, token, prompts) do
     send channel.pid, [:ask, channel, respondent, token, prompts]
+    respondent
   end
 
   def has_queued_message?(channel, _) do
