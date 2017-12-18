@@ -48,15 +48,8 @@ defmodule Ask.QuotaBucket do
     end
   end
 
-  def matches_condition?(value, [from_val, to_val]) do
-    from = String.to_integer(from_val)
-    to = String.to_integer(to_val)
-    case Integer.parse(value) do
-      {value, ""} ->
-        from <= value && value <= to
-      _ ->
-        false
-    end
+  def matches_condition?(value, [from, to]) do
+    matches_condition?(value, [String.to_integer(from), String.to_integer(to)])
   end
 
   # Text condition

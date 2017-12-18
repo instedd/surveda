@@ -384,16 +384,12 @@ defmodule Ask.Runtime.Session do
   end
 
   defp store_responses_and_assign_bucket(respondent, {_, _, reply}, session) do
-    survey = (respondent |> Repo.preload(:survey)).survey
+    store_response(respondent, reply)
 
-    buckets =
-      case survey.quota_vars do
-        [] -> []
-        _ -> Repo.all(from q in QuotaBucket,
-               where: q.survey_id == ^survey.id)
-      end
+    try_to_assign_bucket(respondent, session)
+  end
 
-    # Add response to responses
+  defp store_response(respondent, reply) do
     Reply.stores(reply) |> Enum.each(fn {field_name, value} ->
       existing_responses = respondent
       |> assoc(:responses)
@@ -406,53 +402,71 @@ defmodule Ask.Runtime.Session do
         |> Repo.insert
       end
     end)
-
-    # Try to assign a bucket to the respondent
-    assign_bucket(respondent, buckets, session)
   end
 
-  defp assign_bucket(respondent, [], _session) do
+  defp try_to_assign_bucket(respondent, session) do
+    survey = (respondent |> Repo.preload(:survey)).survey
+
+    buckets =
+      case survey.quota_vars do
+        [] -> []
+        _ -> Repo.all(from q in QuotaBucket,
+               where: q.survey_id == ^survey.id)
+      end
+
+    try_to_assign_bucket(respondent, buckets, session)
+  end
+
+  defp try_to_assign_bucket(respondent, [], _session) do
     respondent
   end
 
-  defp assign_bucket(respondent, buckets, session) do
-    # Nothing to do if the respondent already has a bucket
+  defp try_to_assign_bucket(respondent, buckets, session) do
     if respondent.quota_bucket_id do
       respondent
     else
-      # Get respondent responses
-      responses = (respondent |> Repo.preload(:responses)).responses
-
-      # Convert them to list of {field_name, value}
-      responses = responses |> Enum.map(fn response ->
-          {response.field_name, response.value}
-        end) |> Enum.into([]) |> Enum.sort
-
-      # Check which bucket matches exactly those responses
-      buckets = buckets |> Enum.filter(fn bucket ->
-        bucket.condition |> Map.to_list |> Enum.all?(fn {key, value} ->
-          responses
-          |> Enum.filter(fn {response_key, _} -> response_key == key end)
-          |> Enum.all?(fn {_, response_value} ->
-            response_value |> QuotaBucket.matches_condition?(value)
-          end)
-        end)
-      end)
-
-      respondent =
-        case buckets do
-          [bucket] ->
-            respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
-            if (session.count_partial_results && respondent.disposition && (respondent.disposition == "partial" || respondent.disposition == "interim partial")) || (respondent.disposition && respondent.disposition == "completed") do
-              from(q in QuotaBucket, where: q.id == ^bucket.id) |> Repo.update_all(inc: [count: 1])
-            end
-            respondent
-          _ ->
-            respondent
-        end
-
       respondent
+        |> sorted_responses()
+        |> buckets_matching_responses(buckets)
+        |> assign_bucket_if_one_match(respondent, session)
     end
+  end
+
+  defp assign_bucket_if_one_match([bucket], respondent, session) do
+    respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+
+    if (session.count_partial_results && respondent.disposition && (respondent.disposition == "partial" || respondent.disposition == "interim partial")) || (respondent.disposition && respondent.disposition == "completed") do
+      from(q in QuotaBucket, where: q.id == ^bucket.id) |> Repo.update_all(inc: [count: 1])
+    end
+
+    respondent
+  end
+
+  defp assign_bucket_if_one_match(_buckets, respondent, _session) do
+    respondent
+  end
+
+  defp sorted_responses(respondent) do
+    (respondent |> Repo.preload(:responses)).responses
+      |> Enum.map(fn response ->
+        {response.field_name, response.value}
+      end) |> Enum.into([]) |> Enum.sort
+  end
+
+  defp buckets_matching_responses(responses, buckets) do
+    buckets |> Enum.filter(fn bucket ->
+      bucket.condition
+        |> Map.to_list
+        |> Enum.all?(fn {key, value} ->
+          responses = responses |> Enum.filter(fn {response_key, _} -> response_key == key end)
+          responses != []
+            && responses
+              |> Enum.all?(fn {_, response_value} ->
+                response_value
+                  |> QuotaBucket.matches_condition?(value)
+              end)
+        end)
+    end)
   end
 
   defp falls_in_quota_already_completed?(respondent, flow) do
