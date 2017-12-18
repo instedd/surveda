@@ -502,12 +502,59 @@ defmodule Ask.SessionTest do
 
     {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms")
 
-    {:ok, session, _, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
+    step_result = Session.sync_step(session, Flow.Message.reply("N"))
+    assert {:ok, session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "No"}), 10, _} = step_result
+
     respondent = Respondent |> Repo.get(respondent.id)
     assert respondent.quota_bucket_id == nil
 
-    # Session.sync_step(session, Flow.Message.reply("Y"))
     assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} = Session.sync_step(session, Flow.Message.reply("Y"))
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
+    assert respondent.quota_bucket_id == qb2.id
+  end
+
+  test "ends only after completing the quota numeric questions", %{quiz: quiz, respondent: respondent, channel: channel} do
+    survey = respondent.survey
+
+    quotas = %{
+      "vars" => ["Smokes", "Perfect Number"],
+      "buckets" => [
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "Yes"},
+                          %{"store" => "Perfect Number", "value" => [18,29]}],
+          "quota" => 1,
+          "count" => 1
+        },
+        %{
+          "condition" => [%{"store" => "Smokes", "value" => "No"},
+                          %{"store" => "Perfect Number", "value" => [18,29]}],
+          "quota" => 2,
+          "count" => 2
+        }
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    respondent = Respondent |> Repo.get(respondent.id)
+
+    {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms")
+
+    step_result = Session.sync_step(session, Flow.Message.reply("N"))
+    assert {:ok, session, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "No"}), 10, _} = step_result
+
+    respondent = Respondent |> Repo.get(respondent.id)
+    assert respondent.quota_bucket_id == nil
+
+    step_result = Session.sync_step(session, Flow.Message.reply("Y"))
+    assert {:ok, session, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??", %{"Exercises" => "Yes"}), 10, _} = step_result
+
+    assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} = Session.sync_step(session, Flow.Message.reply("20"))
     respondent = Respondent |> Repo.get(respondent.id)
 
     qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
