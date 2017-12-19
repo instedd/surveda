@@ -22,7 +22,6 @@ defmodule Ask.NumberTranslator do
 
     case table[str] do
       nil -> :not_found
-        #
       match -> {:ok, match}
     end
   end
@@ -45,7 +44,7 @@ defmodule Ask.NumberTranslator do
     {min_key, min_value} = Enum.min_by(array, fn({key, _}) ->
       Simetric.Levenshtein.compare(key, string)
     end)
-    if Simetric.Levenshtein.compare(min_key, string)/ String.length(string) <= 0.2 do
+    if Simetric.Levenshtein.compare(min_key, string) <= Float.ceil(String.length(string) / 5.0) do
       min_value
     else
       nil
