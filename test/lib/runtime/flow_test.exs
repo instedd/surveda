@@ -275,7 +275,6 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
 
-    # assert {:failed, _, _} = step
     assert {:no_retries_left, _, _} = step
   end
 
@@ -326,7 +325,6 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
 
-    # assert {:failed, _, _} = step
     assert {:no_retries_left, _, _} = step
   end
 
@@ -347,7 +345,6 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@ivr_visitor, Flow.Message.no_reply)
 
-    # assert {:failed, _, _} = step
     assert {:no_retries_left, _, _} = step
   end
 
@@ -493,6 +490,24 @@ defmodule Ask.FlowTest do
     test "when value is in a middle range it finds it, permissive" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
       result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" 50 units "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "accepts a string as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifty "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "accepts a string close enough to a number as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finty "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "accepts a string close enough to a number as an answer 2" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifti "))
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
