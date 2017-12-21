@@ -236,18 +236,14 @@ defmodule Ask.Runtime.Step do
   end
 
   defp is_numeric_permissive(str, language, step) do
-    number = Ask.NumberTranslator.check_if_string_is_number(str, language)
-    case number do
-      nil -> case Float.parse(String.trim(str)) do
-        {num, _} ->
-          if round(num) == num do
-            round(num)
-          else
-            num
-          end
-        :error -> false
-      end
-      _ -> number
+    case Float.parse(String.trim(str)) do
+      {num, _} ->
+        if round(num) == num do
+          round(num)
+        else
+          num
+        end
+      :error -> Ask.NumberTranslator.try_parse(str, language)
     end
   end
 end

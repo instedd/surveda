@@ -523,6 +523,40 @@ defmodule Ask.FlowTest do
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "51"}}} = result
     end
 
+    test "accepts a string with two words that is close enough to the same value more than one time" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" twenty_one "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "21"}}} = result
+    end
+
+    test "does not accept a string when is close enough to more than one number as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fixty "))
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
+    end
+
+    test "does not accept a string when is close enough to more than one number as an answer (2)" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fixty three"))
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
+    end
+
     test "does not accept a string when is not close enough to a number as an answer" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
       result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finte "))

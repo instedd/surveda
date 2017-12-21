@@ -31,8 +31,7 @@ defmodule Ask.NumberTranslator do
   def map(_), do: %{}
 
 
-  def check_if_string_is_number(string, language) do
-    compare_string(string, language)
+  def try_parse(string, language) do
     cond do
       map(language)[string] -> map(language)[string]
       true -> compare_string(string, language)
@@ -40,15 +39,38 @@ defmodule Ask.NumberTranslator do
   end
 
   def compare_string(string, language) do
-    array = map(language)
-    {min_key, min_value} = Enum.min_by(array, fn({key, _}) ->
-      Simetric.Levenshtein.compare(key, string)
+    current_language_list = map(language)
+
+    input_length = String.length(string)
+
+    {min_levenshtein, min_values} = Enum.reduce(current_language_list, {input_length, []}, fn({key, number}, min) ->
+      new_levenshtein = Simetric.Levenshtein.compare(key, string)
+      {current_min, current_numbers} = min
+
+      cond do
+        new_levenshtein < current_min -> {new_levenshtein, [number]}
+        new_levenshtein == current_min -> {new_levenshtein, [number | current_numbers]}
+        true -> min
+      end
     end)
-    if Simetric.Levenshtein.compare(min_key, string) <= Float.ceil(String.length(string) / 5.0) do
-      min_value
+
+    if min_levenshtein <= Float.ceil(input_length / 5.0) && has_unique_value(min_values) do
+      Enum.at(min_values, 0)
     else
-      nil
+      false
     end
+  end
+
+  def has_unique_value([head | tail]) do
+    compare_list(tail, head)
+  end
+
+  defp compare_list([head | tail], value) do
+    (head == value) && compare_list(tail, value)
+  end
+
+  defp compare_list([], value) do
+    true
   end
 
 end
