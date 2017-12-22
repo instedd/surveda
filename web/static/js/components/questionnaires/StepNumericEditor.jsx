@@ -96,6 +96,11 @@ class StepNumericEditor extends Component {
     questionnaireActions.toggleAcceptsRefusals(this.state.stepId)
   }
 
+  toggleAcceptsAlphabeticalAnswers(e) {
+    const { questionnaireActions } = this.props
+    questionnaireActions.toggleAcceptsAlphabeticalAnswers(this.state.stepId)
+  }
+
   changeRefusal() {
     const { questionnaireActions } = this.props
     return (response, smsValues, ivrValues, mobilewebValues, skipLogic, autoComplete = false) => {
@@ -125,6 +130,7 @@ class StepNumericEditor extends Component {
 
     const refusal = step.refusal || newRefusal()
     const acceptsRefusals = !!refusal.enabled
+    const acceptsAlphabeticalAnswers = step.alphabeticalAnswers
 
     let minErrors = isNew ? null : errorsByPath[`${errorPath}.minValue`]
     let minClassName = minErrors && minErrors.length > 0 ? 'invalid' : null
@@ -294,6 +300,10 @@ class StepNumericEditor extends Component {
         <label htmlFor='accepts_refusals'>Accepts refusals</label>
       </p>
       {refusalComponent}
+      <p>
+        <input id='accepts_alphabetical_answers' type='checkbox' defaultChecked={acceptsAlphabeticalAnswers} onClick={e => { this.toggleAcceptsAlphabeticalAnswers(e) }} disabled={readOnly} />
+        <label htmlFor='accepts_alphabetical_answers'>Accepts alphabetical answers</label>
+      </p>
     </div>
   }
 }

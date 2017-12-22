@@ -243,7 +243,12 @@ defmodule Ask.Runtime.Step do
         else
           num
         end
-      :error -> Ask.NumberTranslator.try_parse(str, language)
+      :error ->
+        if step["alphabetical_answers"] do
+          Ask.NumberTranslator.try_parse(str, language)
+        else
+          false
+        end
     end
   end
 end

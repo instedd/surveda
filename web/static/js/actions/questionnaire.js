@@ -53,6 +53,7 @@ export const SET_SECONDARY_COLOR = 'QUESTIONNAIRE_SET_SECONDARY_COLOR'
 export const SET_DISPLAYED_TITLE = 'QUESTIONNAIRE_SET_DISPLAYED_TITLE'
 export const SET_SURVEY_ALREADY_TAKEN_MESSAGE = 'QUESTIONNAIRE_SET_SURVEY_ALREADY_TAKEN_MESSAGE'
 export const TOGGLE_QUOTA_COMPLETED_STEPS = 'QUESTIONNAIRE_TOGGLE_QUOTA_COMPLETED_STEPS'
+export const TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS = 'QUESTIONNAIRE_TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS'
 export const SET_DIRTY = 'QUESTIONNAIRE_SET_DIRTY'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
@@ -383,6 +384,11 @@ export const changeDisposition = (stepId, disposition) => ({
 
 export const toggleAcceptsRefusals = (stepId) => ({
   type: TOGGLE_ACCEPT_REFUSALS,
+  stepId
+})
+
+export const toggleAcceptsAlphabeticalAnswers = (stepId) => ({
+  type: TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS,
   stepId
 })
 

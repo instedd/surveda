@@ -125,6 +125,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
         refusal: nil
       )]
     quiz = build(:questionnaire, steps: steps)
@@ -144,6 +145,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 0, max_value: 12345, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
         refusal: nil,
       )]
     quiz = build(:questionnaire, steps: steps)
@@ -163,6 +165,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
         refusal: nil,
       )]
     quiz = build(:questionnaire, steps: steps)
@@ -182,6 +185,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
         refusal: %{
           "responses" => %{
             "ivr" => ["#", "12"]
@@ -413,6 +417,7 @@ defmodule Ask.FlowTest do
         prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
         refusal: %{
           "enabled" => true,
           "responses" => %{
@@ -450,6 +455,7 @@ defmodule Ask.FlowTest do
         prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
         refusal: %{
           "enabled" => true,
           "responses" => %{
@@ -571,6 +577,46 @@ defmodule Ask.FlowTest do
       ]
     end
 
+    test "does not match a string when alphabetical_answers is set to false" do
+      steps = [
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(sms: sms_prompt("Which is the second perfect number?")),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: %{
+            "enabled" => false
+          }
+        ),
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+          },
+          store: "Swims",
+          choices: []
+        ),
+      ]
+
+      {:ok, flow, _} =
+        build(:questionnaire, steps: steps)
+        |> Flow.start("sms")
+        |> Flow.step(@sms_visitor)
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("twenty-eight"))
+
+      assert {:ok, flow, reply} = result
+
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "Which is the second perfect number?"
+      ]
+    end
+
     @numeric_steps_no_min_max [
       numeric_step(
         id: "ddd",
@@ -599,6 +645,7 @@ defmodule Ask.FlowTest do
             }
           ]
         ),
+        alphabetical_answers: false,
         refusal: nil
       ),
     ]
