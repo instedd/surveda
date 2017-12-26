@@ -16,6 +16,21 @@ defmodule Ask.FlowTest do
     assert %Flow{language: "en"} = flow
   end
 
+  @languageStep %{
+    "id" => "1234-5678",
+    "type" => "language-selection",
+    "title" => "Language selection",
+    "store" => "",
+    "prompt" => %{
+      "sms" => "1 for English, 2 for Spanish",
+      "ivr" => %{
+        "text" => "1 para ingles, 2 para español",
+        "audioSource" => "tts",
+      }
+    },
+    "language_choices" => ["en", "es"],
+  }
+
   test "first step of empty quiz" do
     quiz = build(:questionnaire)
     step = Flow.start(quiz, "sms") |> Flow.step(@sms_visitor)
@@ -617,6 +632,72 @@ defmodule Ask.FlowTest do
       ]
     end
 
+    test "alphabetical answers works with a questionnaire with more than one language (es)" do
+      steps = [numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: true,
+        refusal: nil
+        )]
+
+      languageStep = @languageStep
+      steps = [languageStep | steps]
+      quiz = build(:questionnaire, steps: steps)
+
+      flow = Flow.start(quiz, "sms")
+      assert flow.language == "en"
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      {_, flow1, reply1} = step
+      prompts = Reply.prompts(reply1)
+
+      assert flow1.language == "es"
+      assert prompts == ["Which is the second perfect number?? (Spanish)"]
+
+      step2 = flow1 |> Flow.step(@sms_visitor, Flow.Message.reply("veintiocho"))
+
+      {_, _, %Ask.Runtime.Reply{stores: %{"Perfect Number" => "28"}}} = step2
+    end
+
+    test "alphabetical answers works with a questionnaire with more than one language (en)" do
+      steps = [numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: true,
+        refusal: nil
+        )]
+
+      languageStep = @languageStep
+      steps = [languageStep | steps]
+      quiz = build(:questionnaire, steps: steps)
+
+      flow = Flow.start(quiz, "sms")
+      assert flow.language == "en"
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      {_, flow1, reply1} = step
+      prompts = Reply.prompts(reply1)
+
+      assert flow1.language == "en"
+      assert prompts == ["Which is the second perfect number??"]
+
+      step2 = flow1 |> Flow.step(@sms_visitor, Flow.Message.reply("twenty-eight"))
+
+      {_, _, %Ask.Runtime.Reply{stores: %{"Perfect Number" => "28"}}} = step2
+    end
+
     @numeric_steps_no_min_max [
       numeric_step(
         id: "ddd",
@@ -711,21 +792,6 @@ defmodule Ask.FlowTest do
       end
     end
   end
-
-  @languageStep %{
-    "id" => "1234-5678",
-    "type" => "language-selection",
-    "title" => "Language selection",
-    "store" => "",
-    "prompt" => %{
-      "sms" => "1 for English, 2 for Spanish",
-      "ivr" => %{
-        "text" => "1 para ingles, 2 para español",
-        "audioSource" => "tts",
-      }
-    },
-    "language_choices" => ["en", "es"],
-  }
 
   test "language selection step" do
     steps = @dummy_steps
