@@ -1,9 +1,13 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :has_queued_message, :delivery]
+  defstruct [:pid, :has_queued_message, :delivery, :message_expired]
 
   def new() do
     %Ask.TestChannel{pid: self()}
+  end
+
+  def new(:expired) do
+    %Ask.TestChannel{pid: self(), message_expired: true, delivery: false}
   end
 
   def new(has_queued_message) when is_boolean(has_queued_message) do
@@ -11,10 +15,12 @@ defmodule Ask.TestChannel do
   end
 
   def new(channel) do
-    pid = channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term
-    has_queued_message = channel.settings["has_queued_message"] |> String.to_atom
-    delivery = channel.settings["delivery"] |> String.to_atom
-    %Ask.TestChannel{pid: pid, has_queued_message: has_queued_message, delivery: delivery}
+    %Ask.TestChannel{
+      pid: channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term,
+      has_queued_message: channel.settings["has_queued_message"] |> String.to_atom,
+      delivery: channel.settings["delivery"] |> String.to_atom,
+      message_expired: channel.settings["message_expired"] |> String.to_atom
+    }
   end
 
   def new(has_queued_message, delivery) do
@@ -22,10 +28,12 @@ defmodule Ask.TestChannel do
   end
 
   def settings(channel) do
-    encoded_pid = channel.pid |> :erlang.term_to_binary |> Base.encode64
-    encoded_has_queued_message = channel.has_queued_message |> Atom.to_string
-    encoded_delivery = channel.delivery |> Atom.to_string
-    %{"pid" => encoded_pid, "has_queued_message" => encoded_has_queued_message, "delivery" => encoded_delivery}
+    %{
+      "pid" => channel.pid |> :erlang.term_to_binary |> Base.encode64,
+      "has_queued_message" => Atom.to_string(channel.has_queued_message),
+      "delivery" => Atom.to_string(channel.delivery),
+      "message_expired" => Atom.to_string(channel.message_expired)
+    }
   end
 
   def oauth2_authorize(_code, _redirect_uri, _base_url) do
@@ -61,13 +69,9 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     :ok
   end
 
-  def setup(channel, respondent, token) do
+  def setup(channel, respondent, token, _not_before, _not_after) do
     send channel.pid, [:setup, channel, respondent, token]
     {:ok, 0}
-  end
-
-  def has_delivery_confirmation?(channel) do
-    channel.delivery
   end
 
   def ask(channel, respondent, token, prompts) do
@@ -75,9 +79,11 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     respondent
   end
 
-  def has_queued_message?(channel, _) do
-    channel.has_queued_message
-  end
+  def has_delivery_confirmation?(%{delivery: delivery}), do: delivery
+
+  def has_queued_message?(%{has_queued_message: has_queued_message}, _), do: has_queued_message
+
+  def message_expired?(%{message_expired: message_expired}, _), do: message_expired
 
   def cancel_message(channel, channel_state) do
     send channel.pid, [:cancel_message, channel, channel_state]

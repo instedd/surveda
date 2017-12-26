@@ -395,5 +395,41 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = broker |> GenServer.stop
     end
+
+    test "call expired", %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, logger} = SurveyLogger.start_link
+      Broker.handle_info(:poll, nil, Timex.now)
+
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired"})
+
+      :ok = logger |> GenServer.stop
+
+      assert [enqueueing, timeout] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      assert enqueueing.survey_id == survey.id
+      assert enqueueing.action_data == "Enqueueing call"
+      assert enqueueing.action_type == "contact"
+
+      assert timeout.survey_id == survey.id
+      assert timeout.action_data == "Call expired, will be retried in next schedule window"
+      assert timeout.action_type == "contact"
+    end
   end
 end

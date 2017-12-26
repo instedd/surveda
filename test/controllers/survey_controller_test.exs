@@ -1059,6 +1059,7 @@ defmodule Ask.SurveyControllerTest do
       channel_state: channel_state,
       respondent: r1,
       flow: %Flow{questionnaire: questionnaire},
+      schedule: survey.schedule,
     }
     session = Session.dump(session)
     r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
@@ -1090,6 +1091,7 @@ defmodule Ask.SurveyControllerTest do
       channel_state: channel_state,
       respondent: r1,
       flow: %Flow{questionnaire: questionnaire},
+      schedule: survey.schedule,
     }
     session = Session.dump(session)
     r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!

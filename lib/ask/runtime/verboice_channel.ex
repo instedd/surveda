@@ -143,6 +143,10 @@ defmodule Ask.Runtime.VerboiceChannel do
     end)
   end
 
+  defp channel_failed(respondent, "expired", _) do
+    Broker.contact_attempt_expired(respondent, "Call expired, will be retried in next schedule window")
+  end
+
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy", "CallStatusCode" => code}) do
     Broker.channel_failed(respondent, "User hangup (#{code})")
   end
@@ -206,7 +210,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status} = params) do
     respondent = Repo.get!(Respondent, respondent_id)
     case status do
-      s when s in ["failed", "busy", "no-answer"] ->
+      s when s in ["failed", "busy", "no-answer", "expired"] ->
         channel_failed(respondent, status, params)
       _ -> :ok
     end
@@ -289,12 +293,14 @@ defmodule Ask.Runtime.VerboiceChannel do
     def ask(_, _, _, _), do: throw(:not_implemented)
     def prepare(_, _), do: :ok
 
-    def setup(channel, respondent, token) do
+    def setup(channel, respondent, token, not_before, not_after) do
       channel.client
       |> Verboice.Client.call(address: respondent.sanitized_phone_number,
                               channel: channel.channel_name,
                               callback_url: VerboiceChannel.callback_url(respondent),
-                              status_callback_url: VerboiceChannel.status_callback_url(respondent, token))
+                              status_callback_url: VerboiceChannel.status_callback_url(respondent, token),
+                              not_before: not_before,
+                              not_after: not_after)
       |> Ask.Runtime.VerboiceChannel.process_call_response
     end
 
@@ -310,6 +316,18 @@ defmodule Ask.Runtime.VerboiceChannel do
       end
     end
     def has_queued_message?(_, _) do
+      false
+    end
+
+    def message_expired?(channel, %{"verboice_call_id" => call_id}) do
+      response = channel.client
+      |> Verboice.Client.call_state(call_id)
+      case response do
+        {:ok, %{"state" => "expired"}} -> true
+        _ -> false
+      end
+    end
+    def message_expired?(_, _) do
       false
     end
 

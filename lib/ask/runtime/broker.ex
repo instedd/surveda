@@ -89,6 +89,18 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  def contact_attempt_expired(respondent, reason) do
+    session = respondent.session
+    if session do
+      response = session
+        |> Session.load
+        |> Session.contact_attempt_expired(reason)
+
+      update_respondent(respondent, response, nil)
+    end
+    :ok
+  end
+
   def delivery_confirm(respondent, title) do
     delivery_confirm(respondent, title, nil)
   end
@@ -233,7 +245,7 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
 
-    handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
+    handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do

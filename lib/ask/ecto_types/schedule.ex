@@ -53,8 +53,15 @@ defmodule Ask.Schedule do
   defp cast_blocked_days(_), do: []
 
   def load(string) when is_binary(string), do: cast(Poison.decode!(string))
-  def load(nil), do: {:ok, default()}
+  def load(nil), do: {:ok, always()}
   def load(_), do: :error
+
+  def load!(schedule) do
+    case load(schedule) do
+      {:ok, schedule} -> schedule
+      :error -> raise "Schedule load error #{inspect(schedule)}"
+    end
+  end
 
   def dump(%Schedule{day_of_week: day_of_week}=schedule) do
     {:ok, day_of_week}= DayOfWeek.dump(day_of_week)
@@ -65,6 +72,13 @@ defmodule Ask.Schedule do
     Poison.encode(schedule)
   end
   def dump(_), do: :error
+
+  def dump!(schedule) do
+    case dump(schedule) do
+      {:ok, schedule} -> schedule
+      :error -> raise "Schedule dump error #{inspect(schedule)}"
+    end
+  end
 
   def validate(schedule) do
     if schedule.start_time && schedule.end_time && schedule.start_time >= schedule.end_time do
@@ -110,7 +124,7 @@ defmodule Ask.Schedule do
     "Etc/UTC"
   end
 
-  def next_available_date_time(%Schedule{} = schedule, %DateTime{} = date_time) do
+  def next_available_date_time(%Schedule{} = schedule, %DateTime{} = date_time \\ DateTime.utc_now) do
     # TODO: Remove the necessity of converting this to erl dates
     date_time = date_time
     |> Timex.to_datetime(schedule.timezone)
@@ -141,6 +155,12 @@ defmodule Ask.Schedule do
 
     date_time
     |> Timex.Timezone.convert("Etc/UTC")
+  end
+
+  def at_end_time(%Schedule{end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
+    {erlang_date, _} = date_time |> Timex.to_erl
+    erlang_time = end_time |> Time.to_erl
+    Timex.Timezone.resolve(timezone, {erlang_date, erlang_time})
   end
 
   defp compare_time(%Schedule{start_time: start_time, end_time: end_time}, time) do
