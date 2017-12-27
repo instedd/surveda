@@ -311,7 +311,7 @@ class StepNumericEditor extends Component {
       {refusalComponent}
       <p>
         <input id='accepts_alphabetical_answers' type='checkbox' defaultChecked={acceptsAlphabeticalAnswers} onClick={e => { this.toggleAcceptsAlphabeticalAnswers(e) }} disabled={readOnly} />
-        <Tooltip text='Checking this box will make the survey accept written numbers as valid numeric responses, like ‘one’ or’ ‘fifty five’. Written numbers are supported up to one hundred (100).'>
+        <Tooltip text='Checking this box will make the survey accept <br /> written numbers as valid numeric responses, <br />like ‘one’ or’ ‘fifty five’. Written numbers are supported <br />up to one hundred (100).' acceptsHtml >
           <label htmlFor='accepts_alphabetical_answers'>Accepts alphabetical answers
             <i className='material-icons'>info_outline</i>
           </label>

@@ -9,10 +9,12 @@ export class Tooltip extends Component {
     position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
     delay: React.PropTypes.number,
     text: React.PropTypes.string.isRequired,
+    acceptsHtml: React.PropTypes.bool,
     className: React.PropTypes.string
   }
 
   static defaultProps = {
+    acceptsHtml: false,
     position: 'top',
     delay: 20
   }
@@ -118,13 +120,14 @@ export class Tooltip extends Component {
   }
 
   render() {
-    const { children, position, delay, text } = this.props
+    const { children, position, delay, text, acceptsHtml } = this.props
     const child = React.Children.only(children)
 
     return React.cloneElement(child, {
       className: child.props.className + ' tooltipped',
       'data-position': position,
       'data-delay': delay,
+      'data-html': acceptsHtml,
       'data-tooltip': text,
       'ref': 'node'
     })
