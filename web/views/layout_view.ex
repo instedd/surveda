@@ -15,6 +15,7 @@ defmodule Ask.LayoutView do
       csrf_token: get_csrf_token(),
       user: user_email,
       sentryDsn: sentry_dsn,
+      available_languages_for_numbers: Ask.NumberTranslator.langs(),
       nuntium: Config.provider_config(Nuntium) |> guisso_configs,
       verboice: Config.provider_config(Verboice) |> guisso_configs
     }

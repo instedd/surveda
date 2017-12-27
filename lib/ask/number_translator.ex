@@ -13,6 +13,18 @@ defmodule Ask.NumberTranslator.Macros do
       end
     end)
   end
+
+  defmacro generate_langs() do
+    {:ok, filenames} = File.ls(Path.join([__DIR__, "numbers"]))
+      languages = filenames |> Enum.map(fn filename ->
+        String.replace(filename, ".json", "")
+      end)
+    quote do
+      @external_resource Path.join([__DIR__, "numbers"])
+
+      def langs(), do: unquote(languages)
+    end
+  end
 end
 
 defmodule Ask.NumberTranslator do
@@ -28,8 +40,8 @@ defmodule Ask.NumberTranslator do
 
   require Ask.NumberTranslator.Macros
   Ask.NumberTranslator.Macros.generate_map
+  Ask.NumberTranslator.Macros.generate_langs
   def map(_), do: %{}
-
 
   def try_parse(string, language) do
     cond do
@@ -69,7 +81,7 @@ defmodule Ask.NumberTranslator do
     (head == value) && compare_list(tail, value)
   end
 
-  defp compare_list([], value) do
+  defp compare_list([], _) do
     true
   end
 

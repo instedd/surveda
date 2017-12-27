@@ -3,7 +3,7 @@ import * as actions from '../../actions/questionnaire'
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import 'materialize-autocomplete'
-import iso6393 from 'iso-639-3'
+import { translateLangCode } from '../timezones/util'
 import classNames from 'classnames/bind'
 import AddLanguage from './AddLanguage'
 import { hasErrorsInLanguage } from '../../questionnaireErrors'
@@ -28,11 +28,6 @@ class LanguagesList extends Component {
       const { dispatch } = props
       dispatch(actions.setDefaultLanguage(lang))
     }
-  }
-
-  translateLangCode(code) {
-    const language = iso6393.find((lang) => lang.iso6391 == code || lang.iso6393 == code)
-    return language.name
   }
 
   setActiveLanguage(e, language) {
@@ -84,7 +79,7 @@ class LanguagesList extends Component {
       </div>
 
     let otherLanguages = languages.filter((lang) => lang !== defaultLanguage)
-      .map((lang: string) => [lang, this.translateLangCode(lang)])
+      .map((lang: string) => [lang, translateLangCode(lang)])
       .sort(([c1, n1], [c2, n2]) => n1.localeCompare(n2))
       .map(([code, name]) => this.renderLanguageRow(code, name))
 
@@ -96,7 +91,7 @@ class LanguagesList extends Component {
     return (
       <div className='languages'>
         <LanguageSection title='Primary language'>
-          {this.renderLanguageRow(defaultLanguage, this.translateLangCode(defaultLanguage), true)}
+          {this.renderLanguageRow(defaultLanguage, translateLangCode(defaultLanguage), true)}
         </LanguageSection>
         {otherLanguagesComponent}
         {readOnly
