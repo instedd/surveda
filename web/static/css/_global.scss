@@ -544,6 +544,11 @@ i.survey-status { // icon for survey status on index
     left: 2.7rem;
   }
 }
+
+label + .tooltipped {
+  margin-left: 6px;
+}
+
   // ------- Questionnaires language selector ----------
 
   .language-selection {
@@ -1162,6 +1167,13 @@ i.survey-status { // icon for survey status on index
   i {
     font-size: 180px;
   }
+}
+
+.checkbox-error {
+  font-size: .8rem;
+  position: absolute;
+  margin-left: 2.3rem;
+  margin-top: -1.3rem;
 }
 
 
