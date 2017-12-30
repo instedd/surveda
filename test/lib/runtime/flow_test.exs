@@ -16,6 +16,21 @@ defmodule Ask.FlowTest do
     assert %Flow{language: "en"} = flow
   end
 
+  @languageStep %{
+    "id" => "1234-5678",
+    "type" => "language-selection",
+    "title" => "Language selection",
+    "store" => "",
+    "prompt" => %{
+      "sms" => "1 for English, 2 for Spanish",
+      "ivr" => %{
+        "text" => "1 para ingles, 2 para español",
+        "audioSource" => "tts",
+      }
+    },
+    "language_choices" => ["en", "es"],
+  }
+
   test "first step of empty quiz" do
     quiz = build(:questionnaire)
     step = Flow.start(quiz, "sms") |> Flow.step(@sms_visitor)
@@ -125,6 +140,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
         refusal: nil
       )]
     quiz = build(:questionnaire, steps: steps)
@@ -144,6 +160,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 0, max_value: 12345, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
         refusal: nil,
       )]
     quiz = build(:questionnaire, steps: steps)
@@ -163,6 +180,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
         refusal: nil,
       )]
     quiz = build(:questionnaire, steps: steps)
@@ -182,6 +200,7 @@ defmodule Ask.FlowTest do
           ),
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
         refusal: %{
           "responses" => %{
             "ivr" => ["#", "12"]
@@ -275,7 +294,6 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
 
-    # assert {:failed, _, _} = step
     assert {:no_retries_left, _, _} = step
   end
 
@@ -326,7 +344,6 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
 
-    # assert {:failed, _, _} = step
     assert {:no_retries_left, _, _} = step
   end
 
@@ -347,7 +364,6 @@ defmodule Ask.FlowTest do
 
     step = flow |> Flow.step(@ivr_visitor, Flow.Message.no_reply)
 
-    # assert {:failed, _, _} = step
     assert {:no_retries_left, _, _} = step
   end
 
@@ -416,6 +432,7 @@ defmodule Ask.FlowTest do
         prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
         refusal: %{
           "enabled" => true,
           "responses" => %{
@@ -453,6 +470,7 @@ defmodule Ask.FlowTest do
         prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
         refusal: %{
           "enabled" => true,
           "responses" => %{
@@ -496,6 +514,190 @@ defmodule Ask.FlowTest do
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
+    test "accepts a string as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifty "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "accepts a string with two words as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifty one "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "51"}}} = result
+    end
+
+    test "accepts a string close enough to a number as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finty "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "accepts a string close enough to a number as an answer 2" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifti "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "accepts a string with two words that is close enough as an answer (2 errors)" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finty onw "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "51"}}} = result
+    end
+
+    test "accepts a string with two words that is close enough to the same value more than one time" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" twenty_one "))
+      assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "21"}}} = result
+    end
+
+    test "does not accept a string when is close enough to more than one number as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fixty "))
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
+    end
+
+    test "does not accept a string when is close enough to more than one number as an answer (2)" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fixty three"))
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
+    end
+
+    test "does not accept a string when is not close enough to a number as an answer" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finte "))
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "What is the probability that a number has more prime factors than the sum of its digits?"
+      ]
+    end
+
+    test "does not match a string when alphabetical_answers is set to false" do
+      steps = [
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(sms: sms_prompt("Which is the second perfect number?")),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: %{
+            "enabled" => false
+          }
+        ),
+        multiple_choice_step(
+          id: "aaa",
+          title: "Title",
+          prompt: %{
+          },
+          store: "Swims",
+          choices: []
+        ),
+      ]
+
+      {:ok, flow, _} =
+        build(:questionnaire, steps: steps)
+        |> Flow.start("sms")
+        |> Flow.step(@sms_visitor)
+      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("twenty-eight"))
+
+      assert {:ok, flow, reply} = result
+
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+      assert prompts == [
+        "You have entered an invalid answer",
+        "Which is the second perfect number?"
+      ]
+    end
+
+    test "alphabetical answers works with a questionnaire with more than one language (es)" do
+      steps = [numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: true,
+        refusal: nil
+        )]
+
+      languageStep = @languageStep
+      steps = [languageStep | steps]
+      quiz = build(:questionnaire, steps: steps)
+
+      flow = Flow.start(quiz, "sms")
+      assert flow.language == "en"
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      {_, flow1, reply1} = step
+      prompts = Reply.prompts(reply1)
+
+      assert flow1.language == "es"
+      assert prompts == ["Which is the second perfect number?? (Spanish)"]
+
+      step2 = flow1 |> Flow.step(@sms_visitor, Flow.Message.reply("veintiocho"))
+
+      {_, _, %Ask.Runtime.Reply{stores: %{"Perfect Number" => "28"}}} = step2
+    end
+
+    test "alphabetical answers works with a questionnaire with more than one language (en)" do
+      steps = [numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: true,
+        refusal: nil
+        )]
+
+      languageStep = @languageStep
+      steps = [languageStep | steps]
+      quiz = build(:questionnaire, steps: steps)
+
+      flow = Flow.start(quiz, "sms")
+      assert flow.language == "en"
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      {_, flow1, reply1} = step
+      prompts = Reply.prompts(reply1)
+
+      assert flow1.language == "en"
+      assert prompts == ["Which is the second perfect number??"]
+
+      step2 = flow1 |> Flow.step(@sms_visitor, Flow.Message.reply("twenty-eight"))
+
+      {_, _, %Ask.Runtime.Reply{stores: %{"Perfect Number" => "28"}}} = step2
+    end
+
     @numeric_steps_no_min_max [
       numeric_step(
         id: "ddd",
@@ -524,6 +726,7 @@ defmodule Ask.FlowTest do
             }
           ]
         ),
+        alphabetical_answers: false,
         refusal: nil
       ),
     ]
@@ -589,21 +792,6 @@ defmodule Ask.FlowTest do
       end
     end
   end
-
-  @languageStep %{
-    "id" => "1234-5678",
-    "type" => "language-selection",
-    "title" => "Language selection",
-    "store" => "",
-    "prompt" => %{
-      "sms" => "1 for English, 2 for Spanish",
-      "ivr" => %{
-        "text" => "1 para ingles, 2 para español",
-        "audioSource" => "tts",
-      }
-    },
-    "language_choices" => ["en", "es"],
-  }
 
   test "language selection step" do
     steps = @dummy_steps

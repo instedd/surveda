@@ -147,3 +147,12 @@ textarea.materialize-textarea {
 .modal {
   @extend .white
 }
+
+.material-tooltip.large-tooltip {
+  @extend .black-text;
+  max-width: 350px;
+  font-weight: 300;
+  .backdrop {
+    @extend .grey, .lighten-3;
+  }
+}

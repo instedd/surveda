@@ -62,6 +62,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC: return changeExplanationStepSkipLogic(state, action)
     case actions.CHANGE_DISPOSITION: return changeDisposition(state, action)
     case actions.TOGGLE_ACCEPT_REFUSALS: return toggleAcceptsRefusals(state, action)
+    case actions.TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS: return toggleAcceptsAlphabeticalAnswers(state, action)
     case actions.CHANGE_REFUSAL: return changeRefusal(state, action)
     case actions.SET_DIRTY: return setDirty(state)
     default: return state
@@ -1267,6 +1268,16 @@ const toggleAcceptsRefusals = (state, action) => {
         ...refusal,
         enabled: !refusal.enabled
       }
+    }
+  })
+}
+
+const toggleAcceptsAlphabeticalAnswers = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    const alphabeticalAnswers = step.alphabeticalAnswers || false
+    return {
+      ...step,
+      alphabetical_answers: !alphabeticalAnswers
     }
   })
 }

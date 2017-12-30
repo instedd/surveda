@@ -69,6 +69,7 @@
         "ranges_delimiters": {"type": ["string", "null"]},
         "ranges": {"$ref": "#/definitions/ranges"},
         "store": {"type": "string"},
+        "alphabetical_answers": {"type": "boolean"},
         "refusal": {"oneOf": [{"$ref": "#/definitions/refusal"}, {"type":"null"}]}
       },
       "additionalProperties": false,
