@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## Nutmeg 0.14.1
+
+### Bugfixes
+
+* Fix regression of [#1156](https://github.com/instedd/ask/issues/1156)
+* Fix issues with old surveys without channel stats stored [#1207](https://github.com/instedd/ask/issues/1207)
+
 ## Nutmeg 0.14
 
 ### Bugfixes
