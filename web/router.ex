@@ -24,7 +24,7 @@ defmodule Ask.Router do
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json", "json-api"]
     plug :fetch_session
     plug :fetch_flash
 
@@ -85,6 +85,9 @@ defmodule Ask.Router do
           get "/links/:name", SurveyController, :create_link, as: :links
           put "/links/:name", SurveyController, :refresh_link, as: :links
           delete "/links/:name", SurveyController, :delete_link, as: :links
+          scope "/flow-results" do
+            get "/packages", FloipController, :index, as: :packages
+          end
         end
         post "/surveys/simulate_questionanire", SurveyController, :simulate_questionanire
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do

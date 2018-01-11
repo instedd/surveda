@@ -27,6 +27,7 @@ defmodule Ask.Survey do
     field :comparisons, JSON, default: []
     field :simulation, :boolean, default: false
     field :links, :any, virtual: true
+    field :floip_package_id, :string
 
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
@@ -44,6 +45,7 @@ defmodule Ask.Survey do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:name, :project_id, :mode, :state, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation])
+    |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
@@ -57,6 +59,14 @@ defmodule Ask.Survey do
       |> change(quota_vars: quotas["vars"])
       |> put_assoc(:quota_buckets, QuotaBucket.build_changeset(changeset.data, quotas["buckets"]))
       |> cast_assoc(:quota_buckets)
+    else
+      changeset
+    end
+  end
+
+  defp set_floip_package_id(changeset) do
+    unless get_field(changeset, :floip_package_id) do
+      change(changeset, floip_package_id: Ecto.UUID.generate)
     else
       changeset
     end
@@ -95,6 +105,14 @@ defmodule Ask.Survey do
         add_error(changeset, :from, "has to be less than the To")
       :ok ->
         changeset
+    end
+  end
+
+  def packages(survey) do
+    if Survey.has_floip_package?(survey) do
+      [survey.floip_package_id]
+    else
+      []
     end
   end
 
@@ -260,6 +278,10 @@ defmodule Ask.Survey do
 
   def cancelled?(survey) do
     survey.state == "terminated" && survey.exit_code == 1
+  end
+
+  def has_floip_package?(survey) do
+    survey.state == "running" || survey.state == "terminated"
   end
 
   def cancel_respondents(survey) do
