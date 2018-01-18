@@ -50,20 +50,48 @@ defmodule Ask.FloipControllerTest do
         self_link: project_survey_packages_url(conn, :index, project.id, survey.id)
       })
     end
+  end
 
-    # test "list only channels from the current user", %{conn: conn, user: user} do
-    #   channel = insert(:channel, user: user)
-    #   channel_map = %{"id"       => channel.id,
-    #                   "name"     => channel.name,
-    #                   "provider" => channel.provider,
-    #                   "settings" => channel.settings,
-    #                   "type"     => channel.type,
-    #                   "user_id"  => channel.user_id,
-    #                   "channelBaseUrl" => channel.base_url}
-    #   insert(:channel)
-    #   conn = get conn, channel_path(conn, :index)
-    #   assert json_response(conn, 200)["data"] == [channel_map]
-    # end
+  describe "show" do
+    test "does not leak packages that dont belong to user", %{conn: conn, user: user} do
+      user2 = insert(:user)
+      project = create_project_for_user(user2)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
 
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_package_descriptor_path(conn, :show, project.id, survey.id, survey.floip_package_id)
+      end
+    end
+
+    test "ensures provided package id is correct", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_package_descriptor_path(conn, :show, project.id, survey.id, "bar")
+      end
+    end
+
+    test "ensures provided package id belongs to running or terminated survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "not_ready", floip_package_id: "foo")
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_package_descriptor_path(conn, :show, project.id, survey.id, "foo")
+      end
+    end
+
+    test "shows a package descriptor", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+
+      conn = get conn, project_survey_package_descriptor_path(conn, :show, project.id, survey.id, survey.floip_package_id)
+
+      assert json_response(conn, 200) == Ask.FloipView.render("show.json", %{
+        self_link: project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo"),
+        responses_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
+        survey: survey
+      })
+    end
   end
 end

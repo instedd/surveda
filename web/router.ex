@@ -87,6 +87,8 @@ defmodule Ask.Router do
           delete "/links/:name", SurveyController, :delete_link, as: :links
           scope "/flow-results" do
             get "/packages", FloipController, :index, as: :packages
+            get "/packages/:floip_package_id", FloipController, :show, as: :package_descriptor
+            get "/packages/:floip_package_id/responses", FloipController, :responses, as: :package_responses
           end
         end
         post "/surveys/simulate_questionanire", SurveyController, :simulate_questionanire
