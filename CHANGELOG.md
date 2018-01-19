@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Larch 0.12.3
+
+### Bugfixes
+
+* Fix error when receiving delivery confirmation of messages from Nuntium when the mode is mobile web
+
 ## Larch 0.12.2
 
 ### Bugfixes
