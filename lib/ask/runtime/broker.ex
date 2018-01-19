@@ -105,7 +105,11 @@ defmodule Ask.Runtime.Broker do
   def delivery_confirm(respondent, title, mode) do
     unless respondent.session == nil do
       session = respondent.session |> Session.load
-      session_mode = session_mode(respondent, session, mode)
+      session_mode =
+        case session_mode(respondent, session, mode) do
+          :invalid_mode -> session.current_mode
+          mode -> mode
+        end
       Session.delivery_confirm(session, title, session_mode)
       update_respondent_disposition(session, "contacted")
     end
