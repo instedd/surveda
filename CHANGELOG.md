@@ -1,5 +1,14 @@
 # InSTEDD Surveda Changelog
 
+## Oak 0.15
+
+This release requires Verboice 3.2
+
+## Features
+
+* Support text responses for numeric questions [#1208](https://github.com/instedd/ask/issues/1208)
+* Avoid calls out of the survey schedule [#1209](https://github.com/instedd/ask/issues/1209)
+
 ## Nutmeg 0.14.1
 
 ### Bugfixes
