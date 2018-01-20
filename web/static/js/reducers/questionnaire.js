@@ -1277,7 +1277,7 @@ const toggleAcceptsAlphabeticalAnswers = (state, action) => {
     const alphabeticalAnswers = step.alphabeticalAnswers || false
     return {
       ...step,
-      alphabetical_answers: !alphabeticalAnswers
+      alphabeticalAnswers: !alphabeticalAnswers
     }
   })
 }

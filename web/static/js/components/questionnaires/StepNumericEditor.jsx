@@ -6,10 +6,11 @@ import { bindActionCreators } from 'redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { newRefusal } from '../../step'
 import ChoiceEditor from './ChoiceEditor'
-import { translateLangCode, arrayDiff } from '../timezones/util'
+import { translateLangCode } from '../timezones/util'
 import SkipLogic from './SkipLogic'
 import propsAreEqual from '../../propsAreEqual'
 import { config } from '../../config'
+import { difference } from 'lodash'
 
 type State = {
   stepId: string,
@@ -286,12 +287,31 @@ class StepNumericEditor extends Component {
       </Card>
     }
 
-    const diff = arrayDiff(questionnaire.languages, config.available_languages_for_numbers)
+    let alphabeticalAnswersComponent = null
+    if (sms) {
+      const missingLanguages =
+        difference(questionnaire.languages, config.available_languages_for_numbers)
+        .map(lang => translateLangCode(lang))
+        .join(', ')
 
-    const reducer = (accumulator, currentValue) =>
-      accumulator == '' ? accumulator + translateLangCode(currentValue) : accumulator + ', ' + translateLangCode(currentValue)
-
-    const langs = diff.reduce(reducer, '')
+      alphabeticalAnswersComponent =
+        <div>
+          <p>
+            <input id='accepts_alphabetical_answers' type='checkbox' checked={acceptsAlphabeticalAnswers} onChange={e => { this.toggleAcceptsAlphabeticalAnswers(e) }} disabled={readOnly} />
+            <label htmlFor='accepts_alphabetical_answers'>Accepts alphabetical answers
+        </label>
+            <Tooltip className='large-tooltip' text='Checking this box will make the survey accept written numbers as valid numeric responses, like "one" or "fifty five". Written numbers are supported up to one hundred (100).' acceptsHtml >
+              <i className='material-icons grey-text v-middle'>info_outline</i>
+            </Tooltip>
+          </p>
+          <p>
+            { (missingLanguages.length > 0)
+          ? <span className='text-error checkbox-error'>Not supported for: {missingLanguages}</span>
+          : <span />
+        }
+          </p>
+        </div>
+    }
 
     return <div>
       <h5>Responses</h5>
@@ -309,20 +329,7 @@ class StepNumericEditor extends Component {
         <label htmlFor='accepts_refusals'>Accepts refusals</label>
       </p>
       {refusalComponent}
-      <p>
-        <input id='accepts_alphabetical_answers' type='checkbox' defaultChecked={acceptsAlphabeticalAnswers} onClick={e => { this.toggleAcceptsAlphabeticalAnswers(e) }} disabled={readOnly} />
-        <label htmlFor='accepts_alphabetical_answers'>Accepts alphabetical answers
-        </label>
-        <Tooltip className='large-tooltip' text='Checking this box will make the survey accept written numbers as valid numeric responses, like ‘one’ or’ ‘fifty five’. Written numbers are supported up to one hundred (100).' acceptsHtml >
-          <i className='material-icons grey-text v-middle'>info_outline</i>
-        </Tooltip>
-      </p>
-      <p>
-        { (langs.length > 0)
-          ? <span className='text-error checkbox-error'>Not supported for: {langs}</span>
-          : <span />
-        }
-      </p>
+      {alphabeticalAnswersComponent}
     </div>
   }
 }
