@@ -26,6 +26,11 @@
 * All questions included in the quotas must be executed before rejecting the respondent. [#1156](https://github.com/instedd/ask/issues/1156)
 * Avoid unintentional capture of phone numbers [#1180](https://github.com/instedd/ask/issues/1180)
 
+## Maple 0.13.1
+
+### Bugfixes
+
+* Fix error when receiving delivery confirmation of messages from Nuntium when the mode is mobile web
 
 ## Maple 0.13
 
@@ -49,6 +54,12 @@ This version has some performance improvements to avoid runtime and UI errors wh
 * Show time of the next execution of the survey in the timezone defined in the schedule [#1175](https://github.com/instedd/ask/issues/1175)
 * Could not download CSV results for huge surveys [#1199](https://github.com/instedd/ask/issues/1199)
 * Fix validation of refusal messages [#1120](https://github.com/instedd/ask/issues/1120)
+
+## Larch 0.12.3
+
+### Bugfixes
+
+* Fix error when receiving delivery confirmation of messages from Nuntium when the mode is mobile web
 
 ## Larch 0.12.2
 
