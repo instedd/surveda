@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Nutmeg 0.14.2
+
+### Bugfixes
+
+* Fix error when receiving delivery confirmation of messages from Nuntium when the mode is mobile web
+
 ## Nutmeg 0.14.1
 
 ### Bugfixes
