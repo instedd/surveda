@@ -2922,6 +2922,21 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
+  test "accept delivery confirm when mode is mobile web" do
+    [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
+    {:ok, _broker} = Broker.start_link
+    Broker.poll
+
+    assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
+    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Contact", "sms")
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.disposition == "contacted"
+  end
+
   test "it doesn't crash on channel_failed when there's no session" do
     respondent = insert(:respondent)
     assert Broker.channel_failed(respondent) == :ok
