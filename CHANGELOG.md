@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Maple 0.13.1
+
+### Bugfixes
+
+* Fix error when receiving delivery confirmation of messages from Nuntium when the mode is mobile web
+
 ## Maple 0.13
 
 In this release the default batch size, applied to surveys with no cutoff rules, is raised to 10k. However this value can be customized on each deploy.
