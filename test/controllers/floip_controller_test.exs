@@ -28,7 +28,7 @@ defmodule Ask.FloipControllerTest do
       assert json_response(conn, 200)
     end
 
-    test "does not leak surveys that dont belong to user", %{conn: conn, user: user} do
+    test "does not leak surveys that dont belong to user", %{conn: conn, user: _user} do
       user2 = insert(:user)
       project = create_project_for_user(user2)
       survey = insert(:survey, project: project)
@@ -53,7 +53,7 @@ defmodule Ask.FloipControllerTest do
   end
 
   describe "show" do
-    test "does not leak packages that dont belong to user", %{conn: conn, user: user} do
+    test "does not leak packages that dont belong to user", %{conn: conn, user: _user} do
       user2 = insert(:user)
       project = create_project_for_user(user2)
       survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")

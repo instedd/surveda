@@ -22,13 +22,15 @@ defmodule Ask.FloipView do
           "created" => DateTime.to_iso8601(FloipPackage.created_at(survey), :extended),
           "modified" => DateTime.to_iso8601(FloipPackage.modified_at(survey), :extended),
           "id" => survey.floip_package_id,
+          "title" => survey.name,
           "resources" => [%{
             "api-data-url" => responses_link,
             "encoding" => "utf-8",
             "mediatype" => "application/json",
             "path" => nil,
             "schema" => %{
-              "fields" => FloipPackage.fields
+              "fields" => FloipPackage.fields,
+              "questions" => FloipPackage.questions(survey)
             }
           }]
         }

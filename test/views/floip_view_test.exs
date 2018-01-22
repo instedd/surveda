@@ -1,9 +1,9 @@
 defmodule Ask.FloipViewTest do
   use Ask.ConnCase, async: true
+  use Ask.DummySteps
 
   alias Ask.FloipView
   alias Ask.FloipPackage
-  alias Ask.Survey
 
   describe "index" do
     test "it renders with no packages" do
@@ -38,10 +38,15 @@ defmodule Ask.FloipViewTest do
 
   describe "show" do
     test "it renders" do
-      survey = %Survey{
+      quiz1 = insert(:questionnaire, steps: @dummy_steps)
+
+      survey = insert(:survey,
         floip_package_id: "foo",
-        started_at: DateTime.utc_now()
-      }
+        state: "running",
+        name: "My First Survey",
+        started_at: DateTime.utc_now(),
+        questionnaires: [quiz1]
+      )
 
       rendered = FloipView.render("show.json", %{
         survey: survey,
@@ -64,6 +69,7 @@ defmodule Ask.FloipViewTest do
             "created" => DateTime.to_iso8601(FloipPackage.created_at(survey), :extended),
             "modified" => DateTime.to_iso8601(FloipPackage.modified_at(survey), :extended),
             "id" => "foo",
+            "title" => "My First Survey",
             "resources" => [%{
               "path" => nil,
               "api-data-url" => "http://foobar/responses",
