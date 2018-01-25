@@ -9,6 +9,14 @@ defmodule Ask.FloipPackage do
     survey.started_at
   end
 
+  def responses(survey, request_link) do
+    %{
+      "responses" => [%{"id" => "foo"}, %{"id" => "bar"}],
+      "next_link" => request_link,
+      "previous_link" => request_link
+    }
+  end
+
   def questions(survey) do
     survey = survey |> Repo.preload(:questionnaires)
 

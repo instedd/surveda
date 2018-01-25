@@ -38,6 +38,31 @@ defmodule Ask.FloipView do
     }
   end
 
+  def render("responses.json", %{
+    self_link: self_link,
+    descriptor_link: descriptor_link,
+    survey: survey,
+    responses: responses }) do
+
+    %{
+      "data" => %{
+        "id" => survey.floip_package_id,
+        "type" => "flow-results-data",
+        "attributes" => %{
+          "responses" => [],
+        },
+        "relationships" => %{
+          "descriptor" => %{
+            "links" => %{
+              "self" => descriptor_link
+            }
+          },
+          "links" => render_links(self_link, responses["next_link"], responses["previous_link"])
+        }
+      }
+    }
+  end
+
   def render_package(package) do
     %{
       "type" => "packages",
@@ -45,11 +70,11 @@ defmodule Ask.FloipView do
     }
   end
 
-  def render_links(self_link) do
+  def render_links(self_link, next_link \\ nil, previous_link \\ nil) do
     %{
       "self" => self_link,
-      "next" => nil,
-      "previous" => nil
+      "next" => next_link,
+      "previous" => previous_link
     }
   end
 end

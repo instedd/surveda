@@ -2,6 +2,8 @@ defmodule Ask.FloipControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
+  alias Ask.FloipPackage
+
   setup %{conn: conn} do
     user = insert(:user)
     conn = conn
@@ -92,6 +94,53 @@ defmodule Ask.FloipControllerTest do
         responses_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
         survey: survey
       })
+    end
+  end
+
+  describe "responses" do
+    test "happy path", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+
+      requested_path = project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")
+      conn = get(conn, requested_path)
+
+      corresponding_descriptor_url = project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo")
+
+      assert json_response(conn, 200) == Ask.FloipView.render("responses.json",
+        descriptor_link: corresponding_descriptor_url,
+        self_link: requested_path,
+        survey: survey,
+        responses: FloipPackage.responses(survey, requested_path)
+      )
+    end
+
+    test "does not leak packages that dont belong to user", %{conn: conn, user: _user} do
+      user2 = insert(:user)
+      project = create_project_for_user(user2)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")
+      end
+    end
+
+    test "ensures provided package id is correct", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_package_responses_path(conn, :responses, project.id, survey.id, "bar")
+      end
+    end
+
+    test "ensures provided package id belongs to running or terminated survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "not_ready", floip_package_id: "foo")
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")
+      end
     end
   end
 end
