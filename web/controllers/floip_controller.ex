@@ -33,7 +33,7 @@ defmodule Ask.FloipController do
       survey: survey,
       self_link: conn.request_path,
       descriptor_link: project_survey_package_descriptor_url(conn, :show, project_id, survey_id, floip_package_id),
-      responses: FloipPackage.responses(survey, conn.request_path))
+      responses: FloipPackage.responses(survey))
   end
 
   defp validate_requested_package(conn, survey, floip_package_id) do

@@ -176,12 +176,13 @@ defmodule Ask.FloipPackageTest do
       insert(:respondent, survey: survey, hashed_number: number)
     end
 
-    def insert_response(respondent, field_name, response) do
+    def insert_response(respondent, field_name, response, id \\ nil) do
       insert(:response,
         respondent: respondent,
         field_name: field_name,
         value: response,
-        inserted_at: Timex.Ecto.DateTime.autogenerate)
+        inserted_at: Timex.Ecto.DateTime.autogenerate,
+        id: id)
     end
 
     def assert_same(floip_response, db_response) do
@@ -239,6 +240,40 @@ defmodule Ask.FloipPackageTest do
       # test, here we just focus on ensuring all responses are included
       assert_same(response_1, db_response_1)
       assert_same(response_2, db_response_2)
+    end
+
+    # FLOIP actually doesn't mandate this, but it does state:
+    #
+    # "A unique value identifying an individual Response within the Flow Results package.
+    # The value must be unique within the entire package. Row IDs may be an integer or a string.
+    # (The purpose of Row IDs is for systems offering paginated access to Responses within a Package.
+    # Although the rows may not be ordered by Row ID, software hosting data at paginated
+    # URLs must maintain an internal ordering based on Row IDs,
+    # such that it is possible to return the next X rows after a given Row ID.)"
+    #
+    # The most natural implementation of this for Surveda is to simply order by id.
+    test "responses are ordered by id" do
+      # Setup
+      survey = insert_survey()
+      # Notice we first insert with a higher id and then with a lower id,
+      # we want to force this to ensure there's an order by clause doing it's
+      # job for this test.
+      respondent_1 = insert_respondent(survey, "1234")
+      oldest_response = insert_response(respondent_1, "Exercises", "Yes", 2)
+      respondent_2 = insert_respondent(survey, "5678")
+      newest_response = insert_response(respondent_2, "Exercises", "No", 1)
+
+      # Test
+      responses = FloipPackage.responses(survey)
+
+      # Assertions
+      assert length(responses) == 2
+
+      response_1 = responses |> Enum.at(0)
+      response_2 = responses |> Enum.at(1)
+
+      assert_same(response_1, newest_response)
+      assert_same(response_2, oldest_response)
     end
   end
 end
