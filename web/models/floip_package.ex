@@ -1,5 +1,6 @@
 defmodule Ask.FloipPackage do
-  alias Ask.Repo
+  import Ecto.Query
+  alias Ask.{Repo, Survey, Response, Respondent}
 
   def created_at(survey) do
     survey.started_at
@@ -9,12 +10,20 @@ defmodule Ask.FloipPackage do
     survey.started_at
   end
 
-  def responses(survey, request_link) do
-    %{
-      "responses" => [%{"id" => "foo"}, %{"id" => "bar"}],
-      "next_link" => request_link,
-      "previous_link" => request_link
-    }
+  def responses(survey) do
+    stream = (from r in Response,
+      join: respondent in Respondent,
+      where: respondent.survey_id == ^survey.id and r.respondent_id == respondent.id,
+      select: {r, respondent})
+      |> Repo.stream
+      |> Stream.map(fn {r, respondent} ->
+        timestamp = DateTime.to_iso8601(r.inserted_at, :extended)
+        [timestamp, r.id, respondent.hashed_number, r.field_name, r.value, %{}]
+      end)
+
+    {:ok, responses} = Repo.transaction(fn() -> Enum.to_list(stream) end)
+
+    responses
   end
 
   def questions(survey) do
@@ -23,7 +32,7 @@ defmodule Ask.FloipPackage do
     survey.questionnaires
     |> Enum.flat_map(fn(q) -> q.steps end)
     |> Enum.filter(&floip_question?/1)
-    |> Enum.reduce(%{}, fn(step, acc) -> Map.put(acc, step["id"], to_floip_question(step)) end)
+    |> Enum.reduce(%{}, fn(step, acc) -> Map.put(acc, step["store"], to_floip_question(step)) end)
   end
 
   def to_floip_question(step = %{"type" => "multiple-choice"}) do
