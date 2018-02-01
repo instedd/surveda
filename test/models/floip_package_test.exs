@@ -176,13 +176,16 @@ defmodule Ask.FloipPackageTest do
       insert(:respondent, survey: survey, hashed_number: number)
     end
 
-    def insert_response(respondent, field_name, response, id \\ nil) do
+    def insert_response(respondent, field_name, response, id, inserted_at) do
       insert(:response,
         respondent: respondent,
         field_name: field_name,
         value: response,
-        inserted_at: Timex.Ecto.DateTime.autogenerate,
+        inserted_at: inserted_at,
         id: id)
+    end
+    def insert_response(respondent, field_name, response, id \\ nil) do
+      insert_response(respondent, field_name, response, id, Timex.Ecto.DateTime.autogenerate)
     end
 
     def assert_same(floip_response, db_response) do
@@ -191,7 +194,7 @@ defmodule Ask.FloipPackageTest do
 
     test "survey with no responses" do
       survey = insert_survey()
-      responses = FloipPackage.responses(survey)
+      {responses, nil, nil} = FloipPackage.responses(survey)
       assert responses == []
     end
 
@@ -202,7 +205,7 @@ defmodule Ask.FloipPackageTest do
       db_response = insert_response(respondent_1, "Exercises", "Yes")
 
       # Test
-      responses = FloipPackage.responses(survey)
+      {responses, only_response, only_response} = FloipPackage.responses(survey)
 
       # Assertions
       assert length(responses) == 1
@@ -228,13 +231,16 @@ defmodule Ask.FloipPackageTest do
       db_response_2 = insert_response(respondent_2, "Exercises", "No")
 
       # Test
-      responses = FloipPackage.responses(survey)
+      {responses, first_response, last_response} = FloipPackage.responses(survey)
 
       # Assertions
       assert length(responses) == 2
 
       response_1 = responses |> Enum.at(0)
       response_2 = responses |> Enum.at(1)
+
+      assert response_1 == first_response
+      assert response_2 == last_response
 
       # We already cover that the whole structure is sound in another
       # test, here we just focus on ensuring all responses are included
@@ -264,7 +270,7 @@ defmodule Ask.FloipPackageTest do
       newest_response = insert_response(respondent_2, "Exercises", "No", 1)
 
       # Test
-      responses = FloipPackage.responses(survey)
+      {responses, first_response, last_response} = FloipPackage.responses(survey)
 
       # Assertions
       assert length(responses) == 2
@@ -272,8 +278,206 @@ defmodule Ask.FloipPackageTest do
       response_1 = responses |> Enum.at(0)
       response_2 = responses |> Enum.at(1)
 
+      assert response_1 == first_response
+      assert response_2 == last_response
+
       assert_same(response_1, newest_response)
       assert_same(response_2, oldest_response)
+    end
+
+    test "return responses after a timestamp" do
+      # Setup
+      survey = insert_survey()
+      respondent_1 = insert_respondent(survey, "1234")
+      _db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      respondent_2 = insert_respondent(survey, "5678")
+      db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, Ecto.DateTime.cast!("2001-01-01 01:02:03"))
+
+      june_2000_iso8601 = %DateTime{
+        year: 2000, month: 6, day: 1,
+        zone_abbr: "UTC", hour: 1, minute: 2, second: 3, microsecond: {0, 0},
+        utc_offset: 3600, std_offset: 0, time_zone: "Etc/UTC"
+      } |> DateTime.to_iso8601
+
+      # Test
+      {responses, only_response, only_response} = FloipPackage.responses(survey, start_timestamp: june_2000_iso8601)
+
+      # Assertions
+      assert length(responses) == 1
+      assert_same(responses |> Enum.at(0), db_response_2)
+    end
+
+    test "return responses before a timestamp" do
+      # Setup
+      survey = insert_survey()
+      respondent_1 = insert_respondent(survey, "1234")
+      db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      respondent_2 = insert_respondent(survey, "5678")
+      _db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, Ecto.DateTime.cast!("2001-01-01 01:02:03"))
+
+      june_2000_iso8601 = %DateTime{
+        year: 2000, month: 6, day: 1,
+        zone_abbr: "UTC", hour: 1, minute: 2, second: 3, microsecond: {0, 0},
+        utc_offset: 3600, std_offset: 0, time_zone: "Etc/UTC"
+      } |> DateTime.to_iso8601
+
+      # Test
+      {responses, only_response, only_response} = FloipPackage.responses(survey, end_timestamp: june_2000_iso8601)
+
+      # Assertions
+      assert length(responses) == 1
+      assert_same(responses |> Enum.at(0), db_response_1)
+    end
+
+    test "return at most 15 responses if size=15" do
+      # Setup
+      survey = insert_survey()
+      respondent_1 = insert_respondent(survey, "1234")
+      db_responses = for i <- 1..20 do
+        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+      end
+
+      # Test
+      {responses, first_response, last_response} = FloipPackage.responses(survey, size: 15)
+
+      # Assertions
+      assert length(responses) == 15
+      for i <- 0..14 do
+        floip_response = responses |> Enum.at(i)
+        db_response = db_responses |> Enum.at(i)
+
+        assert_same(floip_response, db_response)
+
+        if (i == 0) do
+          assert_same(first_response, db_response)
+        end
+
+        if (i == 14) do
+          assert_same(last_response, db_response)
+        end
+      end
+    end
+
+    test "return all responses if size is not provided" do
+      # Setup
+      survey = insert_survey()
+      respondent_1 = insert_respondent(survey, "1234")
+      db_responses = for i <- 1..50 do
+        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+      end
+
+      # Test
+      {responses, first_response, last_response} = FloipPackage.responses(survey)
+
+      # Assertions
+      assert length(responses) == 50
+      for i <- 0..49 do
+        floip_response = responses |> Enum.at(i)
+        db_response = db_responses |> Enum.at(i)
+        assert_same(floip_response, db_response)
+
+        if (i == 0) do
+          assert_same(first_response, db_response)
+        end
+
+        if (i == 49) do
+          assert_same(last_response, db_response)
+        end
+      end
+    end
+
+    test "return all responses after an id" do
+      survey = insert_survey()
+      respondent_1 = insert_respondent(survey, "1234")
+      db_responses = for i <- 1..50 do
+        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+      end
+
+      # Test
+      {responses, first_response, last_response} = FloipPackage.responses(survey, after_cursor: 10)
+
+      # Assertions
+      assert length(responses) == 40
+      for i <- 0..39 do
+        floip_response = responses |> Enum.at(i)
+        db_response = db_responses |> Enum.at(i + 10)
+        assert_same(floip_response, db_response)
+
+        if (i == 0) do
+          assert_same(first_response, db_response)
+        end
+
+        if (i == 39) do
+          assert_same(last_response, db_response)
+        end
+      end
+    end
+
+    test "return all responses before an id" do
+      survey = insert_survey()
+      respondent_1 = insert_respondent(survey, "1234")
+      db_responses = for i <- 1..50 do
+        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+      end
+
+      # Test
+      {responses, first_response, last_response} = FloipPackage.responses(survey, before_cursor: 10)
+
+      # Assertions
+      assert length(responses) == 9
+      for i <- 0..8 do
+        floip_response = responses |> Enum.at(i)
+        db_response = db_responses |> Enum.at(i)
+        assert_same(floip_response, db_response)
+
+        if (i == 0) do
+          assert_same(first_response, db_response)
+        end
+
+        if (i == 8) do
+          assert_same(last_response, db_response)
+        end
+      end
+    end
+  end
+
+  describe "uri parsing" do
+    test "no query params results in an empty options dict" do
+      responses_options = FloipPackage.parse_query_params(%{})
+      assert responses_options == %{}
+    end
+
+    test "parses all valid query params" do
+      query_params = %{
+        "filter" => %{
+          "end-timestamp" => "2015-11-26 04:34:13Z",
+          "max-version" => "2",
+          "min-version" => "1",
+          "start-timestamp" => "2015-11-26 04:34:13Z"
+        },
+        "page" => %{
+          "afterCursor" => "12",
+          "beforeCursor" => "18",
+          "size" => "25"
+        }
+      }
+
+      responses_options = FloipPackage.parse_query_params(query_params)
+
+      {:ok, end_timestamp, _} = DateTime.from_iso8601("2015-11-26 04:34:13Z")
+      {:ok, start_timestamp, _} = DateTime.from_iso8601("2015-11-26 04:34:13Z")
+
+      assert responses_options == %{
+        end_timestamp: end_timestamp,
+        start_timestamp: start_timestamp,
+        after_cursor: 12,
+        before_cursor: 18,
+        size: 25
+      }
     end
   end
 end

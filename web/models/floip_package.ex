@@ -2,13 +2,21 @@ defmodule Ask.FloipPackage do
   import Ecto.Query
   alias Ask.{Repo, Response, Respondent}
 
+  def id(survey) do
+    survey.floip_package_id
+  end
+
+  def title(survey) do
+    survey.name
+  end
+
   # "The timestamp for when this package was created/published."
   #
   # There's no point in publishing a package from Surveda before the
   # survey actually starts. Before that point, a survey is just
   # a draft which can't get responses. So, created_at(package) == survey(started_at).
   def created_at(survey) do
-    survey.started_at
+    DateTime.to_iso8601(survey.started_at, :extended)
   end
 
   # "A version control indicator for the package.
@@ -18,27 +26,150 @@ defmodule Ask.FloipPackage do
   # so FLOIP package structure for a given survey is immutable,
   # so modified_at(package) == survey(started_at).
   def modified_at(survey) do
-    survey.started_at
+    DateTime.to_iso8601(survey.started_at, :extended)
+  end
+
+  def parse_query_params(query_params) do
+    options = %{}
+    options =
+      if query_params["filter"]["end-timestamp"] do
+        {:ok, end_timestamp, _} = DateTime.from_iso8601(query_params["filter"]["end-timestamp"])
+        options |> Map.put(:end_timestamp, end_timestamp)
+      else
+        options
+      end
+
+    options =
+      if query_params["filter"]["start-timestamp"] do
+        {:ok, start_timestamp, _} = DateTime.from_iso8601(query_params["filter"]["start-timestamp"])
+        options |> Map.put(:start_timestamp, start_timestamp)
+      else
+        options
+      end
+
+    options =
+      if query_params["page"]["afterCursor"] do
+        {after_cursor, _} = query_params["page"]["afterCursor"] |> Integer.parse
+        options |> Map.put(:after_cursor, after_cursor)
+      else
+        options
+      end
+
+    options =
+      if query_params["page"]["beforeCursor"] do
+        {before_cursor, _} = query_params["page"]["beforeCursor"] |> Integer.parse
+        options |> Map.put(:before_cursor, before_cursor)
+      else
+        options
+      end
+
+    options =
+      if query_params["page"]["size"] do
+        {size, _} = query_params["page"]["size"] |> Integer.parse
+        options |> Map.put(:size, size)
+      else
+        options
+      end
+
+    options
   end
 
   # Given a survey, returns its responses complying
   # with FLOIP.
+  # options:
+  # - start_timestamp: a string representing an ISO8601 date.
+  #   If given, only responses after (exclusive) that timestamp are provided.
+  # - end_timestamp: a string representing an ISO8601 date.
+  #   If given, only responses before (inclusive) that timestamp are provided.
   # Responses are ordered by ID.
-  def responses(survey) do
-    stream = (from r in Response,
-      join: respondent in Respondent,
-      where: respondent.survey_id == ^survey.id and r.respondent_id == respondent.id,
+  # - size: The requested number of responses per pagination page
+  # - after_cursor: The response row_id to requests responses after this id, when paginating forward
+  # - before_cursor: The response row_id to request responses prior to this id, when paginating in reverse
+  def responses(survey, options \\ %{}) do
+    dynamic = true
+    dynamic =
+      if options[:start_timestamp] do
+        start_timestamp = options[:start_timestamp]
+        dynamic([r, respondent], r.inserted_at > ^start_timestamp and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if options[:end_timestamp] do
+        end_timestamp = options[:end_timestamp]
+        dynamic([r, respondent], r.inserted_at <= ^end_timestamp and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if options[:after_cursor] do
+        after_cursor = options[:after_cursor]
+        dynamic([r, respondent], r.id > ^after_cursor and ^dynamic)
+      else
+        dynamic
+      end
+
+    dynamic =
+      if options[:before_cursor] do
+        before_cursor = options[:before_cursor]
+        dynamic([r, respondent], r.id < ^before_cursor and ^dynamic)
+      else
+        dynamic
+      end
+
+    query = (from r in Response,
+      join: respondent in Respondent, on: r.respondent_id == respondent.id,
+      where: respondent.survey_id == ^survey.id,
+      where: ^dynamic,
       order_by: r.id,
       select: {r, respondent})
+
+    query =
+      if options[:size] do
+        size = options[:size]
+        query |> limit(^size)
+      else
+        query
+      end
+
+    first_response =
+      query
+      |> first
+      |> Repo.one
+      |> db_response_to_floip_response
+
+    # TODO: do this in a sane way
+    last_response =
+      if options[:size] do
+        query
+        |> Repo.all
+        |> Enum.at(-1)
+        |> db_response_to_floip_response
+      else
+        query
+        |> last
+        |> Repo.one
+        |> db_response_to_floip_response
+      end
+
+    stream =
+      query
       |> Repo.stream
       |> Stream.map(fn {r, respondent} ->
-        timestamp = DateTime.to_iso8601(r.inserted_at, :extended)
-        [timestamp, r.id, respondent.hashed_number, r.field_name, r.value, %{}]
+        {r, respondent} |> db_response_to_floip_response
       end)
 
     {:ok, responses} = Repo.transaction(fn() -> Enum.to_list(stream) end)
 
-    responses
+    {responses, first_response, last_response}
+  end
+
+  defp db_response_to_floip_response(nil), do: nil
+  defp db_response_to_floip_response({r, respondent}) do
+    timestamp = DateTime.to_iso8601(r.inserted_at, :extended)
+    [timestamp, r.id, respondent.hashed_number, r.field_name, r.value, %{}]
   end
 
   # Maps a survey's steps to FLOIP questions.

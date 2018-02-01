@@ -45,11 +45,11 @@ defmodule Ask.FloipControllerTest do
       survey = insert(:survey, project: project, state: "running")
 
       conn = conn |> put_req_header("accept", "application/vnd.api+json")
-      conn = get conn, project_survey_packages_path(conn, :index, project.id, survey.id)
+      conn = get conn, "#{project_survey_packages_path(conn, :index, project.id, survey.id)}?foo=bar"
 
       assert json_response(conn, 200) == Ask.FloipView.render("index.json", %{
         packages: [ survey.floip_package_id ],
-        self_link: project_survey_packages_url(conn, :index, project.id, survey.id)
+        self_link: "#{project_survey_packages_url(conn, :index, project.id, survey.id)}?foo=bar"
       })
     end
   end
@@ -83,6 +83,24 @@ defmodule Ask.FloipControllerTest do
       end
     end
 
+    test "injects a self referential link to the view", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+
+      conn = get conn, "#{project_survey_package_descriptor_path(conn, :show, project.id, survey.id, survey.floip_package_id)}?foo=bar"
+
+      assert json_response(conn, 200) == Ask.FloipView.render("show.json", %{
+        self_link: "#{project_survey_package_descriptor_url(conn, :show, project.id, survey.id, survey.floip_package_id)}?foo=bar",
+        responses_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
+        created: FloipPackage.created_at(survey),
+        modified: FloipPackage.modified_at(survey),
+        fields: FloipPackage.fields,
+        questions: FloipPackage.questions(survey),
+        id: FloipPackage.id(survey),
+        title: FloipPackage.title(survey)
+      })
+    end
+
     test "shows a package descriptor", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
@@ -92,12 +110,88 @@ defmodule Ask.FloipControllerTest do
       assert json_response(conn, 200) == Ask.FloipView.render("show.json", %{
         self_link: project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo"),
         responses_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
-        survey: survey
+        created: FloipPackage.created_at(survey),
+        modified: FloipPackage.modified_at(survey),
+        fields: FloipPackage.fields,
+        questions: FloipPackage.questions(survey),
+        id: FloipPackage.id(survey),
+        title: FloipPackage.title(survey)
       })
     end
   end
 
   describe "responses" do
+    test "injects a self referential link to the view", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+
+      requested_path = "#{project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")}?foo=bar"
+      conn = get(conn, requested_path)
+
+      corresponding_descriptor_url = project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo")
+
+      {responses, _, _ } = FloipPackage.responses(survey)
+
+      assert json_response(conn, 200) == Ask.FloipView.render("responses.json",
+        descriptor_link: corresponding_descriptor_url,
+        self_link: "#{project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")}?foo=bar",
+        next_link: "#{project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")}?foo=bar",
+        previous_link: "#{project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")}?foo=bar",
+        id: FloipPackage.id(survey),
+        responses: responses
+      )
+    end
+
+    @tag :skip
+    test "injects links for next page and previous page", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+
+      respondent = insert(:respondent, survey: survey, hashed_number: "1234")
+      db_responses =
+        for i <- 1..50 do
+          response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
+          insert(:response,
+            respondent: respondent,
+            field_name: "Exercises #{i}",
+            value: "Yes",
+            inserted_at: Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"),
+            id: i)
+        end
+
+      base_path = project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")
+
+      base_query_params = "?filter[max-version]=2&filter[min-version]=1"
+
+      start_timestamp = "2000-01-01 00:00:00Z"
+      start_timestamp_filter = "&filter[start-timestamp]=#{start_timestamp}"
+
+      end_timestamp = "2000-01-01 00:59:00Z"
+      end_timestamp_filter = "&filter[end-timestamp]=#{end_timestamp}"
+
+      page_size = "&page[size]=5"
+
+      full_query_params = "#{base_query_params}#{start_timestamp_filter}#{end_timestamp_filter}#{page_size}"
+
+      conn = get(conn, "#{base_path}#{full_query_params}")
+
+      base_url = project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")
+      corresponding_descriptor_url = project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo")
+
+      # Highlights of this assertion:
+      # -self_link preserves the originally requested URL
+      # -next_link adds a "page[afterCursor]" param that specifies the last response id included in
+      #  this request (it's 5 because response id's go from 1 to 50, page[size]=5 and there wasn't a page[afterCursor] in the original request)
+      # -previous_link adds a "page[beforeCursor" param that specifies the first response id included in
+      #  this request (it's 1 because response id's go from 1 to 50 and there wasn't a page[afterCursor] in the original request).
+      #  Note it'd be better to set previous_link to null given it's the first page, but deadlines and late hours.
+      links = json_response(conn, 200)["data"]["relationships"]["links"]
+
+      assert links["self"] == ("#{base_url}#{full_query_params}" |> URI.encode)
+      assert links["next"]["relationships"]["links"]["next"] == ("#{base_url}#{full_query_params}&page[afterCursor]=5" |> URI.encode)
+      assert links["previous"]["relationships"]["links"]["previous"] == ("#{base_url}#{full_query_params}&page[beforeCursor]=1" |> URI.encode)
+    end
+
     test "happy path", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
@@ -107,11 +201,15 @@ defmodule Ask.FloipControllerTest do
 
       corresponding_descriptor_url = project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo")
 
+      {responses, _, _ } = FloipPackage.responses(survey)
+
       assert json_response(conn, 200) == Ask.FloipView.render("responses.json",
         descriptor_link: corresponding_descriptor_url,
-        self_link: requested_path,
-        survey: survey,
-        responses: FloipPackage.responses(survey, requested_path)
+        self_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
+        next_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
+        previous_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
+        id: FloipPackage.id(survey),
+        responses: responses
       )
     end
 

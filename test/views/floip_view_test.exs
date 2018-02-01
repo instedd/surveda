@@ -1,9 +1,6 @@
 defmodule Ask.FloipViewTest do
   use Ask.ConnCase, async: true
-  use Ask.DummySteps
-
   alias Ask.FloipView
-  alias Ask.FloipPackage
 
   describe "index" do
     test "it renders with no packages" do
@@ -38,20 +35,15 @@ defmodule Ask.FloipViewTest do
 
   describe "show" do
     test "it renders" do
-      quiz1 = insert(:questionnaire, steps: @dummy_steps)
-
-      survey = insert(:survey,
-        floip_package_id: "foo",
-        state: "running",
-        name: "My First Survey",
-        started_at: DateTime.utc_now(),
-        questionnaires: [quiz1]
-      )
-
       rendered = FloipView.render("show.json", %{
-        survey: survey,
         self_link: "http://foobar",
-        responses_link: "http://foobar/responses"
+        responses_link: "http://foobar/responses",
+        created: "some string date",
+        modified: "some other string date",
+        fields: ["field1", "field2"],
+        questions: ["question1", "question2"],
+        id: "foo",
+        title: "My First Survey"
       })
 
       assert rendered == %{
@@ -66,8 +58,8 @@ defmodule Ask.FloipViewTest do
           "attributes" => %{
             "profile" => "flow-results-package",
             "flow-results-specification" => "1.0.0-rc1",
-            "created" => DateTime.to_iso8601(FloipPackage.created_at(survey), :extended),
-            "modified" => DateTime.to_iso8601(FloipPackage.modified_at(survey), :extended),
+            "created" => "some string date",
+            "modified" => "some other string date",
             "id" => "foo",
             "title" => "My First Survey",
             "resources" => [%{
@@ -76,8 +68,8 @@ defmodule Ask.FloipViewTest do
               "mediatype" => "application/json",
               "encoding" => "utf-8",
               "schema" => %{
-                "fields" => FloipPackage.fields,
-                "questions" => FloipPackage.questions(survey)
+                "fields" => ["field1", "field2"],
+                "questions" => ["question1", "question2"]
               }
             }]
           }
@@ -88,24 +80,13 @@ defmodule Ask.FloipViewTest do
 
   describe "responses" do
     test "it renders" do
-      quiz1 = insert(:questionnaire, steps: @dummy_steps)
-
-      survey = insert(:survey,
-        floip_package_id: "foo",
-        state: "running",
-        name: "My First Survey",
-        started_at: DateTime.utc_now(),
-        questionnaires: [quiz1]
-      )
-
-      responses = FloipPackage.responses(survey, "http://foobar/packages/responses")
-
-
       rendered = FloipView.render("responses.json", %{
         descriptor_link: "http://foobar/packages",
         self_link: "http://foobar/packages/responses",
-        survey: survey,
-        responses: responses
+        next_link: "http://foobar/packages/responses?next",
+        previous_link: "http://foobar/packages/responses?previous",
+        id: "foo",
+        responses: [["response1_attribute1", "response1_attribute2"], ["response2_attribute1", "response2_attribute2"]]
       })
 
       assert rendered == %{
@@ -113,7 +94,7 @@ defmodule Ask.FloipViewTest do
           "type" => "flow-results-data",
           "id" => "foo",
           "attributes" => %{
-            "responses" => []
+            "responses" => [["response1_attribute1", "response1_attribute2"], ["response2_attribute1", "response2_attribute2"]]
           },
           "relationships" => %{
             "descriptor" => %{
