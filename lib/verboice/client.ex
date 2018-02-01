@@ -30,7 +30,7 @@ defmodule Verboice.Client do
   end
 
   def get_channels(client) do
-    url = URI.merge(client.base_url, "/api/channels") |> URI.to_string
+    url = URI.merge(client.base_url, "/api/channels/all") |> URI.to_string
 
     client.oauth2_client
     |> OAuth2.Client.get(url)
