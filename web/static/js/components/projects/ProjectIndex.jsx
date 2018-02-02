@@ -16,7 +16,7 @@ class ProjectIndex extends Component {
     this.creatingProject = false
 
     this.props.projectActions.clearProject()
-    this.props.actions.fetchProjects('active')
+    this.props.actions.fetchProjects({'archived': false})
   }
 
   newProject(e) {
@@ -58,8 +58,8 @@ class ProjectIndex extends Component {
     this.props.actions.archive(project)
   }
 
-  fetchProjects(type) {
-    this.props.actions.fetchProjects(type)
+  fetchProjects(options: Object) {
+    this.props.actions.fetchProjects(options)
   }
 
   render() {
@@ -93,8 +93,8 @@ class ProjectIndex extends Component {
 
     return (
       <div>
-        <div onClick={e => this.fetchProjects('active')}> Actives </div>
-        <div onClick={e => this.fetchProjects('archived')}> Archived </div>
+        <div onClick={e => this.fetchProjects({'archived': false})}> Actives </div>
+        <div onClick={e => this.fetchProjects({'archived': true})}> Archived </div>
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0)
           ? <div className='empty-projects'>

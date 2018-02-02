@@ -13,20 +13,20 @@ describe('projects reducer', () => {
   })
 
   it('should start fetching projects', () => {
-    const result = reducer(initialState, actions.startFetchingProjects())
+    const result = reducer(initialState, actions.startFetchingProjects(false))
     expect(result.fetching).toEqual(true)
   })
 
   it('should not reset order when fetching', () => {
-    const result = reducer(initialState, actions.startFetchingProjects())
+    const result = reducer(initialState, actions.startFetchingProjects(false))
     expect(result.sortBy).toEqual('updatedAt')
     expect(result.sortAsc).toEqual(false)
   })
 
   it('should receive projects', () => {
     const projects = {'1': {...project, id: 1}}
-    const r1 = reducer(initialState, actions.startFetchingProjects())
-    const result = reducer(r1, actions.receiveProjects(projects))
+    const r1 = reducer(initialState, actions.startFetchingProjects(false))
+    const result = reducer(r1, actions.receiveProjects(projects, false))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(projects)
     expect(result.order).toEqual([1])
@@ -34,8 +34,8 @@ describe('projects reducer', () => {
 
   it('should sort projects by name', () => {
     const projects = {'1': {...project, id: 1, name: 'foo'}, '2': {...project, id: 2, name: 'bar'}}
-    const r1 = reducer(initialState, actions.startFetchingProjects())
-    const r2 = reducer(r1, actions.receiveProjects(projects))
+    const r1 = reducer(initialState, actions.startFetchingProjects(false))
+    const r2 = reducer(r1, actions.receiveProjects(projects, false))
     const r3 = reducer(r2, actions.sortProjectsBy('name'))
     expect(r3.order).toEqual([2, 1])
     const r4 = reducer(r3, actions.sortProjectsBy('name'))
@@ -56,8 +56,8 @@ describe('projects reducer', () => {
     const p2 = {...project, id: 2, name: 'bar'}
     const projects = {'1': p1, '2': p2}
     const p = {...project, id: 1, name: 'foo'}
-    const r1 = reducer(initialState, actions.startFetchingProjects())
-    const r2 = reducer(r1, actions.receiveProjects(projects))
+    const r1 = reducer(initialState, actions.startFetchingProjects(false))
+    const r2 = reducer(r1, actions.receiveProjects(projects, false))
     const r3 = reducer(r2, actions.remove(p))
     expect(r3.items).toEqual({'2': p2})
   })

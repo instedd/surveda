@@ -8,9 +8,9 @@ export const FETCH = 'PROJECTS_FETCH'
 export const NEXT_PAGE = 'PROJECTS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'PROJECTS_PREVIOUS_PAGE'
 export const SORT = 'PROJECTS_SORT'
-export const REMOVED = 'PROJECTS_REMOVED'
+export const REMOVE = 'PROJECTS_REMOVE'
 
-export const fetchProjects = (type: string) => (dispatch: Function, getState: () => Store) => {
+export const fetchProjects = (options: Object) => (dispatch: Function, getState: () => Store) => {
   const state = getState()
 
   // Don't fetch projects if they are already being fetched
@@ -18,17 +18,19 @@ export const fetchProjects = (type: string) => (dispatch: Function, getState: ()
     return
   }
 
-  dispatch(startFetchingProjects())
-  return api.fetchProjects(type)
-    .then(response => dispatch(receiveProjects(response.entities.projects || {})))
+  dispatch(startFetchingProjects(options['archived']))
+  return api.fetchProjects(options)
+    .then(response => dispatch(receiveProjects(response.entities.projects || {}, options['archived'])))
 }
 
-export const startFetchingProjects = () => ({
-  type: FETCH
+export const startFetchingProjects = (archived: boolean): FilteredAction => ({
+  type: FETCH,
+  archived
 })
 
-export const receiveProjects = (items: IndexedList<Project>): ReceiveItemsAction => ({
+export const receiveProjects = (items: IndexedList<Project>, archived: boolean): ReceiveFilteredItemsAction => ({
   type: RECEIVE,
+  archived,
   items
 })
 
@@ -53,7 +55,7 @@ export const archive = (project: Project) => (dispatch: Function, getState: () =
 }
 
 export const remove = (project: Project) => ({
-  type: REMOVED,
+  type: REMOVE,
   id: project.id
 })
 

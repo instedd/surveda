@@ -1,10 +1,10 @@
 // @flow
 import * as actions from '../actions/projects'
-import collectionReducer, { defaultFilterProvider } from './collection'
+import collectionReducer from './collection'
 
 const itemsReducer = (state: IndexedList<Project>, action): IndexedList<Project> => {
   switch (action.type) {
-    case actions.REMOVED: return removeItem(state, action)
+    case actions.REMOVE: return removeItem(state, action)
     default: return state
   }
 }
@@ -28,4 +28,8 @@ const initialState = {
   }
 }
 
-export default collectionReducer(actions, itemsReducer, defaultFilterProvider, initialState)
+export const filterProvider = (action: FilteredAction): Filter => ({
+  archived: action.archived
+})
+
+export default collectionReducer(actions, itemsReducer, filterProvider, initialState)
