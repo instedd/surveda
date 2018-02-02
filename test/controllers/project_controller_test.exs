@@ -56,7 +56,7 @@ defmodule Ask.ProjectControllerTest do
 
     test "returns archived projects only", %{conn: conn, user: user} do
       archived_project = create_project_for_user(user, archived: true)
-      active_project = create_project_for_user(user, archived: false)
+      create_project_for_user(user, archived: false)
       archived_project = Project |> Repo.get(archived_project.id)
 
       conn = get conn, project_path(conn, :index, %{"archived" => "true"})
@@ -74,7 +74,7 @@ defmodule Ask.ProjectControllerTest do
     end
 
     test "returns active projects when no parameter is send", %{conn: conn, user: user} do
-      archived_project = create_project_for_user(user, archived: true)
+      create_project_for_user(user, archived: true)
       active_project = create_project_for_user(user, archived: false)
       active_project = Project |> Repo.get(active_project.id)
 

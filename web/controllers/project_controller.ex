@@ -9,19 +9,19 @@ defmodule Ask.ProjectController do
       _ -> false
     end
 
-    memberships = conn
+    projects = conn
     |> current_user
-    |> assoc(:project_memberships)
-    |> preload(:project)
+    |> assoc([:project_memberships, :project])
+    |> where([p], p.archived == ^archived)
+    |> preload(:project_memberships)
     |> Repo.all
-    |> Enum.filter(&(&1.project.archived == archived))
 
-    projects = memberships
-    |> Enum.map(&(&1.project))
+    memberships = projects
+    |> Enum.map(&(&1.project_memberships))
+    |> List.flatten
     |> Enum.uniq
 
-    levels_by_project = memberships
-    |> Enum.group_by(&(&1.project_id))
+    levels_by_project = memberships |> Enum.group_by(&(&1.project_id))
     |> Enum.to_list
     |> Enum.map(fn {id, memberships} ->
       level =

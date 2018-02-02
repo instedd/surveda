@@ -11,6 +11,6 @@ defmodule Ask.ProjectTest do
   end
 
   test "default value for archived is false" do
-    %Project{}.archived == false
+    assert %Project{}.archived == false
   end
 end
