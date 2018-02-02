@@ -54,6 +54,44 @@ defmodule Ask.ProjectControllerTest do
       ]
     end
 
+    test "returns archived projects only", %{conn: conn, user: user} do
+      archived_project = create_project_for_user(user, archived: true)
+      active_project = create_project_for_user(user, archived: false)
+      archived_project = Project |> Repo.get(archived_project.id)
+
+      conn = get conn, project_path(conn, :index, %{"archived" => "true"})
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id"      => archived_project.id,
+          "name"    => archived_project.name,
+          "running_surveys" => 0,
+          "updated_at" => NaiveDateTime.to_iso8601(archived_project.updated_at),
+          "read_only" => false,
+          "colour_scheme" => "default",
+          "owner" => true,
+        }
+      ]
+    end
+
+    test "returns active projects when no parameter is send", %{conn: conn, user: user} do
+      archived_project = create_project_for_user(user, archived: true)
+      active_project = create_project_for_user(user, archived: false)
+      active_project = Project |> Repo.get(active_project.id)
+
+      conn = get conn, project_path(conn, :index)
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id"      => active_project.id,
+          "name"    => active_project.name,
+          "running_surveys" => 0,
+          "updated_at" => NaiveDateTime.to_iso8601(active_project.updated_at),
+          "read_only" => false,
+          "colour_scheme" => "default",
+          "owner" => true,
+        }
+      ]
+    end
+
     test "shows running survey count", %{conn: conn, user: user} do
       project1 = create_project_for_user(user)
       project1 = Project |> Repo.get(project1.id)

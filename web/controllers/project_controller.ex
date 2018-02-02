@@ -3,12 +3,18 @@ defmodule Ask.ProjectController do
 
   alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
 
-  def index(conn, _params) do
+  def index(conn, params) do
+    archived = case params["archived"] do
+      "true" -> true
+      _ -> false
+    end
+
     memberships = conn
     |> current_user
     |> assoc(:project_memberships)
     |> preload(:project)
     |> Repo.all
+    |> Enum.filter(&(&1.project.archived == archived))
 
     projects = memberships
     |> Enum.map(&(&1.project))

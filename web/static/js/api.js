@@ -129,8 +129,9 @@ const newFormData = (file) => {
   return formData
 }
 
-export const fetchProjects = () => {
-  return apiFetchJSON(`projects`, arrayOf(projectSchema))
+export const fetchProjects = (type) => {
+  const params = (type == `archived`) ? `?archived=true` : `?archived=false`
+  return apiFetchJSON(`projects` + params, arrayOf(projectSchema))
 }
 
 export const fetchSurveys = (projectId) => {

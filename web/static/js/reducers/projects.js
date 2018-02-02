@@ -2,7 +2,18 @@
 import * as actions from '../actions/projects'
 import collectionReducer, { defaultFilterProvider } from './collection'
 
-const itemsReducer = (state: IndexedList<Project>, _): IndexedList<Project> => state
+const itemsReducer = (state: IndexedList<Project>, action): IndexedList<Project> => {
+  switch (action.type) {
+    case actions.REMOVED: return removeItem(state, action)
+    default: return state
+  }
+}
+
+const removeItem = (state: IndexedList<Project>, action: any) => {
+  const items = {...state}
+  delete items[action.id]
+  return items
+}
 
 const initialState = {
   fetching: false,

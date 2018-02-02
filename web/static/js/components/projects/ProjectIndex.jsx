@@ -16,7 +16,7 @@ class ProjectIndex extends Component {
     this.creatingProject = false
 
     this.props.projectActions.clearProject()
-    this.props.actions.fetchProjects()
+    this.props.actions.fetchProjects('active')
   }
 
   newProject(e) {
@@ -54,6 +54,14 @@ class ProjectIndex extends Component {
     this.props.actions.sortProjectsBy(property)
   }
 
+  archive(project: Project) {
+    this.props.actions.archive(project)
+  }
+
+  fetchProjects(type) {
+    this.props.actions.fetchProjects(type)
+  }
+
   render() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, router } = this.props
@@ -85,6 +93,8 @@ class ProjectIndex extends Component {
 
     return (
       <div>
+        <div onClick={e => this.fetchProjects('active')}> Actives </div>
+        <div onClick={e => this.fetchProjects('archived')}> Archived </div>
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0)
           ? <div className='empty-projects'>
@@ -134,6 +144,11 @@ class ProjectIndex extends Component {
                         day='numeric'
                         month='short'
                         year='numeric' />
+                    </td>
+                    <td className='right-align'>
+                      <a onClick={() => this.archive(project)}>
+                        <i className='material-icons'>archive</i>
+                      </a>
                     </td>
                   </tr>
                 )

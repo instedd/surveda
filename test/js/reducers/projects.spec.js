@@ -50,4 +50,15 @@ describe('projects reducer', () => {
     const r3 = reducer(r2, actions.previousProjectsPage())
     expect(r3.page).toEqual({index: 5, size: 5})
   })
+
+  it('shoud remove a project', () => {
+    const p1 = {...project, id: 1, name: 'foo'}
+    const p2 = {...project, id: 2, name: 'bar'}
+    const projects = {'1': p1, '2': p2}
+    const p = {...project, id: 1, name: 'foo'}
+    const r1 = reducer(initialState, actions.startFetchingProjects())
+    const r2 = reducer(r1, actions.receiveProjects(projects))
+    const r3 = reducer(r2, actions.remove(p))
+    expect(r3.items).toEqual({'2': p2})
+  })
 })
