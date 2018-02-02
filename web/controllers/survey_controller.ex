@@ -81,27 +81,35 @@ defmodule Ask.SurveyController do
 
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
     project = conn
-    |> load_project_for_change(project_id)
+      |> load_project_for_change(project_id)
 
-    changeset = project
-    |> assoc(:surveys)
-    |> Repo.get!(id)
-    |> Repo.preload([:questionnaires])
-    |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
-    |> Survey.changeset(survey_params)
-    |> update_questionnaires(survey_params)
-    |> Survey.update_state
+    survey = project
+      |> assoc(:surveys)
+      |> Repo.get!(id)
 
-    case Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires)) do
-      {:ok, survey} ->
-        project |> Project.touch!
-        render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(project_id, current_user(conn).id)))
-      {:error, changeset} ->
-        Logger.warn "Error when updating survey: #{inspect changeset}"
-        conn
+    unless survey.state == "running" do
+      changeset = survey
+        |> Repo.preload([:questionnaires])
+        |> Repo.preload([:quota_buckets])
+        |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
+        |> Survey.changeset(survey_params)
+        |> update_questionnaires(survey_params)
+        |> Survey.update_state
+
+      case Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires)) do
+        {:ok, survey} ->
+          project |> Project.touch!
+          render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(project_id, current_user(conn).id)))
+        {:error, changeset} ->
+          Logger.warn "Error when updating survey: #{inspect changeset}"
+          conn
+            |> put_status(:unprocessable_entity)
+            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+      end
+    else
+      conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
     end
   end
 

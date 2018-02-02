@@ -2,6 +2,8 @@ defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
   alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, RespondentGroupChannel, Stats}
 
+  plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
+
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
     |> load_project(project_id)
@@ -16,26 +18,18 @@ defmodule Ask.RespondentGroupController do
     render(conn, "index.json", respondent_groups: respondent_groups)
   end
 
-  def create(conn, %{"project_id" => project_id, "file" => file, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def create(conn, %{"file" => file}) do
+    project = conn.assigns.loaded_project
+    survey = conn.assigns.loaded_survey
 
     process_file(conn, survey, file, fn rows ->
       create_respondent_group(conn, survey, file.filename, rows, project)
     end)
   end
 
-  def update(conn, %{"project_id" => project_id, "survey_id" => survey_id, "id" => id, "respondent_group" => respondent_group_params}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def update(conn, %{"id" => id, "respondent_group" => respondent_group_params}) do
+    project = conn.assigns.loaded_project
+    survey = conn.assigns.loaded_survey
 
     group = survey
     |> assoc(:respondent_groups)
@@ -99,13 +93,9 @@ defmodule Ask.RespondentGroupController do
     end)
   end
 
-  def replace(conn, %{"project_id" => project_id, "survey_id" => survey_id, "respondent_group_id" => id, "file" => file}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def replace(conn, %{"respondent_group_id" => id, "file" => file}) do
+    project = conn.assigns.loaded_project
+    survey = conn.assigns.loaded_survey
 
     group = survey
     |> assoc(:respondent_groups)
@@ -207,14 +197,9 @@ defmodule Ask.RespondentGroupController do
     |> render("invalid_entries.json", %{invalid_entries: invalid_entries, filename: filename})
   end
 
-  def delete(conn, %{"project_id" => project_id, "survey_id" => survey_id, "id" => id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def delete(conn, %{"id" => id}) do
+    project = conn.assigns.loaded_project
+    survey = conn.assigns.loaded_survey
 
     # Check that the respondent_group is in the survey
     group = survey
@@ -236,7 +221,6 @@ defmodule Ask.RespondentGroupController do
     |> Repo.update!
 
     project |> Project.touch!
-
     conn
       |> put_status(:ok)
       |> render("empty.json", %{})
@@ -313,5 +297,25 @@ defmodule Ask.RespondentGroupController do
 
   defp keep_digits(string) do
     Regex.replace(~r/\D/, string, "", [:global])
+  end
+
+  defp find_and_check_survey_state(conn, _options) do
+    %{"project_id" => project_id, "survey_id" => survey_id} = conn.params
+
+    project = conn
+    |> load_project_for_change(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+    case survey.state do
+      n when n in ["terminated","running"] ->
+        conn
+          |> render_unprocessable_entity
+          |> halt()
+      _ ->
+        assign(conn, :loaded_survey, survey)
+          |> assign(:loaded_project, project)
+    end
   end
 end
