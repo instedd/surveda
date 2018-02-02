@@ -54,8 +54,8 @@ class ProjectIndex extends Component {
     this.props.actions.sortProjectsBy(property)
   }
 
-  archive(project: Project) {
-    this.props.actions.archive(project)
+  archive_or_unarchive(project: Project, action: string) {
+    this.props.actions.archive_or_unarchive(project, action)
   }
 
   fetchProjects(options: Object) {
@@ -64,7 +64,7 @@ class ProjectIndex extends Component {
 
   render() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, router } = this.props
+      totalCount, hasPreviousPage, hasNextPage, archived, router } = this.props
 
     if (!projects) {
       return (
@@ -146,9 +146,11 @@ class ProjectIndex extends Component {
                         year='numeric' />
                     </td>
                     <td className='right-align'>
-                      <a onClick={() => this.archive(project)}>
-                        <i className='material-icons'>archive</i>
-                      </a>
+                      {
+                        archived
+                        ? <a onClick={() => this.archive_or_unarchive(project, 'unarchive')}> <i className='material-icons'>archive</i></a>
+                        : <a onClick={() => this.archive_or_unarchive(project, 'archive')}> <i className='material-icons'>unarchive</i></a>
+                      }
                     </td>
                   </tr>
                 )
@@ -174,11 +176,13 @@ ProjectIndex.propTypes = {
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
+  archived: PropTypes.bool.isRequired,
   router: PropTypes.object
 }
 
 const mapStateToProps = (state) => {
   let projects = orderedItems(state.projects.items, state.projects.order)
+  const archived = projects ? state.projects.filter.archived : false
   const sortBy = state.projects.sortBy
   const sortAsc = state.projects.sortAsc
   const totalCount = projects ? projects.length : 0
@@ -200,7 +204,8 @@ const mapStateToProps = (state) => {
     endIndex,
     hasPreviousPage,
     hasNextPage,
-    totalCount
+    totalCount,
+    archived
   }
 }
 

@@ -47,8 +47,9 @@ export const sortProjectsBy = (property: string) => ({
   property
 })
 
-export const archive = (project: Project) => (dispatch: Function, getState: () => Store) => {
-  project = merge({}, project, {archived: true})
+export const archive_or_unarchive = (project: Project, action: string) => (dispatch: Function, getState: () => Store) => {
+  const new_status = (action == 'archive') ? true : false
+  project = merge({}, project, {archived: new_status})
   api.updateProject(project).then(response => {
     dispatch(remove(response.entities.projects[response.result]))
   })
