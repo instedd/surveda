@@ -87,7 +87,7 @@ defmodule Ask.SurveyController do
       |> assoc(:surveys)
       |> Repo.get!(id)
 
-    unless survey.state == "running" do
+    if survey |> Survey.editable? do
       changeset = survey
         |> Repo.preload([:questionnaires])
         |> Repo.preload([:quota_buckets])

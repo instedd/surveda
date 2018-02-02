@@ -308,14 +308,14 @@ defmodule Ask.RespondentGroupController do
     survey = project
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
-    case survey.state do
-      n when n in ["terminated","running"] ->
-        conn
-          |> render_unprocessable_entity
-          |> halt()
-      _ ->
+
+    if survey |> Survey.editable? do
         assign(conn, :loaded_survey, survey)
           |> assign(:loaded_project, project)
+    else
+      conn
+        |> render_unprocessable_entity
+        |> halt()
     end
   end
 end

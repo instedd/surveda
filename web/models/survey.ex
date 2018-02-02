@@ -85,6 +85,10 @@ defmodule Ask.Survey do
     end
   end
 
+  def editable?(%{state: "running"}), do: false
+  def editable?(%{state: "terminated"}), do: false
+  def editable?(_), do: true
+
   def validate_from_less_than_to(changeset) do
     case Schedule.validate(get_field(changeset, :schedule)) do
       :error ->
