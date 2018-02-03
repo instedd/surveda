@@ -80,6 +80,19 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Enum.at(respondents, 0).stats == %Stats{}
     end
 
+    test "does not upload a CSV file for a new group when the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
+      assert json_response(conn, 422)
+
+      all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      assert length(all) == 0
+    end
+
     test "uploads CSV file with phone numbers ignoring additional columns", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -275,6 +288,27 @@ defmodule Ask.RespondentGroupControllerTest do
 
       assert channel_ids == [channel.id]
     end
+
+    test "it doesn't updates the group channels when the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "running", schedule: completed_schedule())
+      group = insert(:respondent_group, survey: survey, respondents_count: 1)
+      channel = insert(:channel, name: "test")
+
+      attrs = %{channels: [%{id: channel.id, mode: channel.type}]}
+      conn = put conn, project_survey_respondent_group_path(conn, :update, project.id, survey.id, group.id), respondent_group: attrs
+      assert response(conn, 422)
+
+      group = RespondentGroup
+      |> Repo.get!(group.id)
+      |> Repo.preload(:channels)
+
+      channel_ids = group.channels
+      |> Enum.map(&(&1.id))
+
+      assert channel_ids == []
+    end
   end
 
   describe "delete" do
@@ -303,6 +337,33 @@ defmodule Ask.RespondentGroupControllerTest do
 
       all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
       assert length(all) == 0
+    end
+
+    test "it doesn't deletes a group when the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+      group = insert(:respondent_group, survey: survey)
+
+      entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
+      CSV.decode(separator: ?\t) |>
+      Enum.map(fn row ->
+        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: "registered", stats: %Stats{}}
+      end)
+
+      {respondents_count, _ } = Repo.insert_all(Respondent, entries)
+
+      all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      assert length(all) == respondents_count
+
+      conn = delete conn, project_survey_respondent_group_path(conn, :delete, survey.project.id, survey.id, group.id)
+      assert response(conn, 422)
+
+      group = RespondentGroup |> Repo.get_by(survey_id: survey.id)
+      assert group
+
+      all = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      assert length(all) == respondents_count
     end
 
     test "updates project updated_at when deleting", %{conn: conn, user: user}  do
@@ -362,9 +423,19 @@ defmodule Ask.RespondentGroupControllerTest do
   end
 
   describe "add" do
-    test "uploads CSV with more resopndents", %{conn: conn, user: user} do
+    test "uploads CSV with more respondents", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
+      perform_add_test_for_survey(conn, project, survey)
+    end
+
+    test "uploads CSV with more respondents even if the survey is running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      perform_add_test_for_survey(conn, project, survey)
+    end
+
+    def perform_add_test_for_survey(conn, project, survey) do
       group = insert(:respondent_group, survey: survey, respondents_count: 2, sample: ["9988776655", "(549) 11 4234 2343"])
 
       # This doesn't exist in the uploaded csv
