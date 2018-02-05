@@ -29,6 +29,54 @@ defmodule Ask.FloipPackage do
     DateTime.to_iso8601(survey.started_at, :extended)
   end
 
+  def query_params(options) do
+    start_timestamp =
+      if options[:start_timestamp] do
+        "filter[start-timestamp]=#{DateTime.to_iso8601(options[:start_timestamp], :extended)}"
+      else
+        nil
+      end
+
+    end_timestamp =
+      if options[:end_timestamp] do
+        "filter[end-timestamp]=#{DateTime.to_iso8601(options[:end_timestamp], :extended)}"
+      else
+        nil
+      end
+
+    size =
+      if options[:size] do
+        "page[size]=#{options[:size]}"
+      else
+        nil
+      end
+
+    after_cursor =
+      if options[:after_cursor] do
+        "page[afterCursor]=#{options[:after_cursor]}"
+      else
+        nil
+      end
+
+    before_cursor =
+      if options[:before_cursor] do
+        "page[beforeCursor]=#{options[:before_cursor]}"
+      else
+        nil
+      end
+
+    query =
+      [start_timestamp, end_timestamp, size, after_cursor, before_cursor]
+      |> Enum.filter(fn s -> s end)
+      |> Enum.join("&")
+
+    if String.length(query) > 0 do
+      "?#{query}"
+    else
+      ""
+    end
+  end
+
   def parse_query_params(query_params) do
     options = %{}
     options =

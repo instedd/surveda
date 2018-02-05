@@ -135,38 +135,37 @@ defmodule Ask.FloipControllerTest do
       assert json_response(conn, 200) == Ask.FloipView.render("responses.json",
         descriptor_link: corresponding_descriptor_url,
         self_link: "#{project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")}?foo=bar",
-        next_link: "#{project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")}?foo=bar",
-        previous_link: "#{project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")}?foo=bar",
+        next_link: nil,
+        previous_link: nil,
         id: FloipPackage.id(survey),
         responses: responses
       )
     end
 
-    @tag :skip
     test "injects links for next page and previous page", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
 
       respondent = insert(:respondent, survey: survey, hashed_number: "1234")
-      db_responses =
-        for i <- 1..50 do
-          response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-          insert(:response,
-            respondent: respondent,
-            field_name: "Exercises #{i}",
-            value: "Yes",
-            inserted_at: Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"),
-            id: i)
-        end
+
+      for i <- 1..50 do
+        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
+        insert(:response,
+          respondent: respondent,
+          field_name: "Exercises #{i}",
+          value: "Yes",
+          inserted_at: Ecto.DateTime.cast!("2000-01-01 00:#{response_minute}:00"),
+          id: i)
+      end
 
       base_path = project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")
 
-      base_query_params = "?filter[max-version]=2&filter[min-version]=1"
+      base_query_params = "?"
 
-      start_timestamp = "2000-01-01 00:00:00Z"
-      start_timestamp_filter = "&filter[start-timestamp]=#{start_timestamp}"
+      start_timestamp = "2000-01-01T00:00:00Z"
+      start_timestamp_filter = "filter[start-timestamp]=#{start_timestamp}"
 
-      end_timestamp = "2000-01-01 00:59:00Z"
+      end_timestamp = "2000-01-01T00:59:00Z"
       end_timestamp_filter = "&filter[end-timestamp]=#{end_timestamp}"
 
       page_size = "&page[size]=5"
@@ -176,20 +175,16 @@ defmodule Ask.FloipControllerTest do
       conn = get(conn, "#{base_path}#{full_query_params}")
 
       base_url = project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo")
-      corresponding_descriptor_url = project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo")
+      links = json_response(conn, 200)["data"]["relationships"]["links"]
 
       # Highlights of this assertion:
       # -self_link preserves the originally requested URL
       # -next_link adds a "page[afterCursor]" param that specifies the last response id included in
       #  this request (it's 5 because response id's go from 1 to 50, page[size]=5 and there wasn't a page[afterCursor] in the original request)
-      # -previous_link adds a "page[beforeCursor" param that specifies the first response id included in
-      #  this request (it's 1 because response id's go from 1 to 50 and there wasn't a page[afterCursor] in the original request).
-      #  Note it'd be better to set previous_link to null given it's the first page, but deadlines and late hours.
-      links = json_response(conn, 200)["data"]["relationships"]["links"]
-
-      assert links["self"] == ("#{base_url}#{full_query_params}" |> URI.encode)
-      assert links["next"]["relationships"]["links"]["next"] == ("#{base_url}#{full_query_params}&page[afterCursor]=5" |> URI.encode)
-      assert links["previous"]["relationships"]["links"]["previous"] == ("#{base_url}#{full_query_params}&page[beforeCursor]=1" |> URI.encode)
+      # -previous_link adds a "page[beforeCursor]" param that specifies the first response id included in
+      #  this request (it's 1 because response id's go from 1 to 50, and there wasn't a page[afterCursor] in the original request)
+      assert links["next"] == "#{base_url}#{full_query_params}&page[afterCursor]=5"
+      assert links["previous"] == "#{base_url}#{full_query_params}&page[beforeCursor]=1"
     end
 
     test "happy path", %{conn: conn, user: user} do
@@ -206,8 +201,8 @@ defmodule Ask.FloipControllerTest do
       assert json_response(conn, 200) == Ask.FloipView.render("responses.json",
         descriptor_link: corresponding_descriptor_url,
         self_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
-        next_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
-        previous_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
+        next_link: nil,
+        previous_link: nil,
         id: FloipPackage.id(survey),
         responses: responses
       )

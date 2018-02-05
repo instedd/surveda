@@ -480,4 +480,30 @@ defmodule Ask.FloipPackageTest do
       }
     end
   end
+
+  describe "query params writing" do
+    test "generates query params from complete options" do
+      {:ok, end_timestamp, _} = DateTime.from_iso8601("2015-11-26 04:34:13Z")
+      {:ok, start_timestamp, _} = DateTime.from_iso8601("2015-11-26 04:34:13Z")
+
+      responses_options = %{
+        end_timestamp: end_timestamp,
+        start_timestamp: start_timestamp,
+        after_cursor: 12,
+        before_cursor: 18,
+        size: 25
+      }
+
+      query_params = FloipPackage.query_params(responses_options)
+
+      iso_start_timestamp = DateTime.to_iso8601(responses_options[:start_timestamp], :extended)
+      iso_end_timestamp = DateTime.to_iso8601(responses_options[:end_timestamp], :extended)
+
+      assert query_params == "?filter[start-timestamp]=#{iso_start_timestamp}&filter[end-timestamp]=#{iso_end_timestamp}&page[size]=25&page[afterCursor]=12&page[beforeCursor]=18"
+    end
+
+    test "generates query params from empty options" do
+      assert FloipPackage.query_params(%{}) == ""
+    end
+  end
 end

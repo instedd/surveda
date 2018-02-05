@@ -39,17 +39,25 @@ defmodule Ask.FloipController do
     {all_responses, first_response, last_response} = FloipPackage.responses(survey, responses_options)
 
     next_link =
-      if length(all_responses) == 0 do
-        current_url(conn)
+      if last_response do
+        options_for_next_page = responses_options |> Map.put(:after_cursor, last_response |> Enum.at(1))
+        Ask.Router.Helpers.url(conn) <> conn.request_path <> FloipPackage.query_params(options_for_next_page)
       else
-        next_link = ~r/page[afterCursor]=(d)+/ |> Regex.replace(current_url(conn), "")
-        "#{next_link}&page[afterCursor]=#{last_response |> Enum.at(1)}"
+        nil
+      end
+
+    previous_link =
+      if first_response do
+        options_for_previous_page = responses_options |> Map.put(:before_cursor, first_response |> Enum.at(1))
+        Ask.Router.Helpers.url(conn) <> conn.request_path <> FloipPackage.query_params(options_for_previous_page)
+      else
+        nil
       end
 
     render(conn, "responses.json",
       self_link: current_url(conn),
       next_link: next_link,
-      previous_link: current_url(conn),
+      previous_link: previous_link,
       descriptor_link: project_survey_package_descriptor_url(conn, :show, project_id, survey_id, floip_package_id),
       id: floip_package_id,
       responses: all_responses)
