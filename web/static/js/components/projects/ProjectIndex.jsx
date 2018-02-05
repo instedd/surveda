@@ -54,8 +54,8 @@ class ProjectIndex extends Component {
     this.props.actions.sortProjectsBy(property)
   }
 
-  archive_or_unarchive(project: Project, action: string) {
-    this.props.actions.archive_or_unarchive(project, action)
+  archiveOrUnarchive(project: Project, action: string) {
+    this.props.actions.archiveOrUnarchive(project, action)
   }
 
   fetchProjects(options: Object) {
@@ -148,8 +148,8 @@ class ProjectIndex extends Component {
                     <td className='right-align'>
                       {
                         archived
-                        ? <a onClick={() => this.archive_or_unarchive(project, 'unarchive')}> <i className='material-icons'>archive</i></a>
-                        : <a onClick={() => this.archive_or_unarchive(project, 'archive')}> <i className='material-icons'>unarchive</i></a>
+                        ? <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}> <i className='material-icons'>archive</i> </a>
+                        : <a onClick={() => this.archiveOrUnarchive(project, 'archive')}> <i className='material-icons'>unarchive</i> </a>
                       }
                     </td>
                   </tr>
