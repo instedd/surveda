@@ -149,7 +149,7 @@ defmodule Ask.ProjectControllerTest do
     end
 
     test "shows chosen resource as read_only", %{conn: conn, user: user} do
-      project = create_project_for_user(user, level: "reader")
+      project = create_project_for_user(user, level: "reader", archived: true)
       project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
@@ -158,6 +158,12 @@ defmodule Ask.ProjectControllerTest do
         "read_only" => true,
         "colour_scheme" => "default",
         "owner" => false}
+    end
+
+    test "read_only is true when project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      conn = get conn, project_path(conn, :show, project)
+      assert json_response(conn, 200)["data"]["read_only"]
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
@@ -210,6 +216,28 @@ defmodule Ask.ProjectControllerTest do
       assert response["data"]["read_only"] == false
       assert response["data"]["owner"] == true
       assert Repo.get_by(Project, @valid_attrs)
+    end
+
+    test "sets archived status to true", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+      project = Project |> Repo.get(project.id)
+      assert project.archived
+    end
+
+    test "rejects archived parameter when it is invalid", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "foo"}
+      assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
+    end
+
+    test "rejects archived status update if user level is reader or editor", %{conn: conn, user: user} do
+      ["reader", "editor"] |> Enum.each(fn level ->
+        project = create_project_for_user(user, level: level)
+        assert_error_sent :forbidden, fn ->
+          conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+        end
+      end)
     end
 
     test "updates colour_scheme when it is valid", %{conn: conn, user: user} do

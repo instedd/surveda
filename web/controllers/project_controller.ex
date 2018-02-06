@@ -95,7 +95,7 @@ defmodule Ask.ProjectController do
     |> Repo.one
 
     if membership do
-      read_only = membership.level == "reader"
+      read_only = membership.level == "reader" || project.archived
       owner = membership.level == "owner"
       render(conn, "show.json", project: project, read_only: read_only, owner: owner)
     else
@@ -109,6 +109,39 @@ defmodule Ask.ProjectController do
 
     changeset = project
     |> Project.changeset(project_params)
+
+    case Repo.update(changeset) do
+      {:ok, project} ->
+        user = conn
+        |> current_user
+
+        membership = project
+        |> assoc(:project_memberships)
+        |> where([m], m.user_id == ^user.id)
+        |> Repo.one
+
+        owner = membership.level == "owner"
+        render(conn, "show.json", project: project, read_only: false, owner: owner)
+      {:error, changeset} ->
+        Logger.warn "Error when updating project #{project.id}: #{inspect changeset}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
+  def update_archived_status(conn, %{"project_id" => id, "project" => project_params}) do
+    project = conn
+    |> load_project_for_owner(id)
+
+    archived = case project_params["archived"] do
+      "true" -> true
+      "false" -> false
+      other -> other
+    end
+
+    changeset = project
+    |> Project.changeset(%{archived: archived})
 
     case Repo.update(changeset) do
       {:ok, project} ->

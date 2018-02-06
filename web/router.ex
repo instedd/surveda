@@ -94,6 +94,7 @@ defmodule Ask.Router do
         get "/autocomplete_other_language", ProjectController, :autocomplete_other_language, as: :autocomplete_other_language
         get "/collaborators", ProjectController, :collaborators, as: :collaborators
         post "/leave", ProjectController, :leave, as: :leave
+        put "/update_archived_status", ProjectController, :update_archived_status, as: :update_archived_status
       end
       resources "/channels", ChannelController, except: [:new, :edit]
       resources "/audios", AudioController, only: [:create, :show]

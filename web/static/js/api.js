@@ -248,6 +248,10 @@ export const updateProject = (project) => {
   return apiPutJSON(`projects/${project.id}`, projectSchema, { project })
 }
 
+export const updateProjectArchived = (project) => {
+  return apiPutJSON(`projects/${project.id}/update_archived_status`, projectSchema, { project })
+}
+
 export const updateSurvey = (projectId, survey) => {
   return apiPutJSON(`projects/${projectId}/surveys/${survey.id}`, surveySchema, { survey })
 }
