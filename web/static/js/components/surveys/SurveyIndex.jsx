@@ -117,7 +117,7 @@ class SurveyIndex extends Component {
       <div>
         {addButton}
         { surveys.length == 0
-        ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} />
+        ? <EmptyPage icon='assignment_turned_in' title='You have no surveys on this project' onClick={(e) => this.newSurvey(e)} readOnly={readOnly} />
         : <div className='row'>
           { surveys.map(survey => {
             return (
