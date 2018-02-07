@@ -5,7 +5,7 @@ import { withRouter } from 'react-router'
 import { createProject } from '../../api'
 import * as actions from '../../actions/projects'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty } from '../ui'
+import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
 import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
@@ -64,6 +64,34 @@ class ProjectIndex extends Component {
     this.props.actions.fetchProjects({'archived': newValue})
   }
 
+  archiveIconForProject(archived: boolean, project: Project) {
+    if (!project.owner) {
+      return null
+    } else {
+      if (archived) {
+        return (
+          <td className='action'>
+            <Tooltip text='unarchive'>
+              <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}>
+                <i className='material-icons'>unarchive</i>
+              </a>
+            </Tooltip>
+          </td>
+        )
+      } else {
+        return (
+          <td className='action'>
+            <Tooltip text='archive'>
+              <a onClick={() => this.archiveOrUnarchive(project, 'archive')}>
+                <i className='material-icons'>archive</i>
+              </a>
+            </Tooltip>
+          </td>
+        )
+      }
+    }
+  }
+
   render() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, archived, router } = this.props
@@ -92,6 +120,7 @@ class ProjectIndex extends Component {
         </ul>
       </div>
     )
+
     const archivedFilter = (<Input
       type='select'
       defaultValue={archived ? 'archive' : 'all_projects'}
@@ -124,15 +153,17 @@ class ProjectIndex extends Component {
             {archivedFilter}
             <CardTable title={title} footer={footer} highlight>
               <colgroup>
-                <col width='60%' />
+                <col width='50%' />
                 <col width='20%' />
                 <col width='20%' />
+                <col width='10%' />
               </colgroup>
               <thead>
                 <tr>
                   <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
                   <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
                   <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -155,13 +186,9 @@ class ProjectIndex extends Component {
                           month='short'
                           year='numeric' />
                       </td>
-                      <td className='right-align'>
-                        {
-                          archived
-                          ? <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}> <i className='material-icons'>archive</i> </a>
-                          : <a onClick={() => this.archiveOrUnarchive(project, 'archive')}> <i className='material-icons'>unarchive</i> </a>
-                        }
-                      </td>
+                      {
+                        this.archiveIconForProject(archived, project)
+                      }
                     </tr>
                   )
                 })
