@@ -60,13 +60,13 @@ class ProjectIndex extends Component {
   }
 
   fetchProjects(event: any) {
-    const newValue = (event.target.value == 'archive')
+    const newValue = (event.target.value == 'archived')
     this.props.actions.fetchProjects({'archived': newValue})
   }
 
   archiveIconForProject(archived: boolean, project: Project) {
     if (!project.owner) {
-      return null
+      return <td/>
     } else {
       if (archived) {
         return (
@@ -100,13 +100,16 @@ class ProjectIndex extends Component {
       defaultValue={archived ? 'archive' : 'all_projects'}
       onChange={e => this.fetchProjects(e)}
       >
-      <option key='archive' id='archive' name='archive' value='archive'> Archive </option>
+      <option key='archived' id='archived' name='archived' value='archived'> Archived </option>
       <option key='all_projects' id='all_projects' name='all_projects' value='all_projects'> All projects </option>
     </Input>
 
     return (
       <div>
-        {archivedFilter}
+        <AddButton text='Add project' onClick={e => this.newProject(e)} />
+        <div className='row filterIndex'>
+          {archivedFilter}
+        </div>
         { this.renderTable() }
       </div>
     )
@@ -143,7 +146,6 @@ class ProjectIndex extends Component {
 
     return (
       <div>
-        <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0 && !archived)
           ? <div className='empty-projects'>
             <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />

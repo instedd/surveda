@@ -207,3 +207,11 @@ label {
 .ac-item { // autocomplete dropdown li
   padding: 10px;
 }
+
+.filterIndex .input-field {
+  margin-top: -30px;
+  input {
+    @extend .grey-text;
+    border-bottom: none;
+  }
+}
