@@ -10,6 +10,7 @@ import * as routes from '../../routes'
 import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
+import { Input } from 'react-materialize'
 
 class ProjectIndex extends Component {
   componentWillMount() {
@@ -58,8 +59,9 @@ class ProjectIndex extends Component {
     this.props.actions.archiveOrUnarchive(project, action)
   }
 
-  fetchProjects(options: Object) {
-    this.props.actions.fetchProjects(options)
+  fetchProjects(event: any) {
+    const newValue = (event.target.value == 'archive')
+    this.props.actions.fetchProjects({'archived': newValue})
   }
 
   render() {
@@ -90,13 +92,19 @@ class ProjectIndex extends Component {
         </ul>
       </div>
     )
+    const archivedFilter = (<Input
+      type='select'
+      defaultValue={archived ? 'archive' : 'all_projects'}
+      onChange={e => this.fetchProjects(e)}
+      >
+      <option key='archive' id='archive' name='archive' value='archive'> Archive </option>
+      <option key='all_projects' id='all_projects' name='all_projects' value='all_projects'> All projects </option>
+    </Input>)
 
     return (
       <div>
-        <div onClick={e => this.fetchProjects({'archived': false})}> Actives </div>
-        <div onClick={e => this.fetchProjects({'archived': true})}> Archived </div>
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
-        { (projects.length == 0)
+        { (projects.length == 0 && !archived)
           ? <div className='empty-projects'>
             <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
             <div className='organize'>
@@ -112,52 +120,55 @@ class ProjectIndex extends Component {
               </p>
             </div>
           </div>
-          : <CardTable title={title} footer={footer} highlight>
-            <colgroup>
-              <col width='60%' />
-              <col width='20%' />
-              <col width='20%' />
-            </colgroup>
-            <thead>
-              <tr>
-                <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-              </tr>
-            </thead>
-            <tbody>
-              { range(0, pageSize).map(index => {
-                const project = projects[index]
-                if (!project) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
+          : <div>
+            {archivedFilter}
+            <CardTable title={title} footer={footer} highlight>
+              <colgroup>
+                <col width='60%' />
+                <col width='20%' />
+                <col width='20%' />
+              </colgroup>
+              <thead>
+                <tr>
+                  <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                  <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                  <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                </tr>
+              </thead>
+              <tbody>
+                { range(0, pageSize).map(index => {
+                  const project = projects[index]
+                  if (!project) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
-                return (
-                  <tr key={project.id}>
-                    <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} entityName='project' />
-                    </td>
-                    <td className='right-align'>
-                      {project.runningSurveys}
-                    </td>
-                    <td className='right-align'>
-                      <FormattedDate
-                        value={Date.parse(project.updatedAt)}
-                        day='numeric'
-                        month='short'
-                        year='numeric' />
-                    </td>
-                    <td className='right-align'>
-                      {
-                        archived
-                        ? <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}> <i className='material-icons'>archive</i> </a>
-                        : <a onClick={() => this.archiveOrUnarchive(project, 'archive')}> <i className='material-icons'>unarchive</i> </a>
-                      }
-                    </td>
-                  </tr>
-                )
-              })
-              }
-            </tbody>
-          </CardTable>
+                  return (
+                    <tr key={project.id}>
+                      <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
+                        <UntitledIfEmpty text={project.name} entityName='project' />
+                      </td>
+                      <td className='right-align'>
+                        {project.runningSurveys}
+                      </td>
+                      <td className='right-align'>
+                        <FormattedDate
+                          value={Date.parse(project.updatedAt)}
+                          day='numeric'
+                          month='short'
+                          year='numeric' />
+                      </td>
+                      <td className='right-align'>
+                        {
+                          archived
+                          ? <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}> <i className='material-icons'>archive</i> </a>
+                          : <a onClick={() => this.archiveOrUnarchive(project, 'archive')}> <i className='material-icons'>unarchive</i> </a>
+                        }
+                      </td>
+                    </tr>
+                  )
+                })
+                }
+              </tbody>
+            </CardTable>
+          </div>
         }
       </div>
     )
@@ -176,7 +187,7 @@ ProjectIndex.propTypes = {
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
-  archived: PropTypes.bool.isRequired,
+  archived: PropTypes.bool,
   router: PropTypes.object
 }
 
