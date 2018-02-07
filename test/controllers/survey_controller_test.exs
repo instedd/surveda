@@ -370,6 +370,13 @@ defmodule Ask.SurveyControllerTest do
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
+
+    test "forbids creation when project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_path(conn, :create, project.id)
+      end
+    end
   end
 
   describe "update" do

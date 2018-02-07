@@ -20,6 +20,7 @@ defmodule Ask.QuestionnaireController do
   def create(conn, %{"project_id" => project_id}) do
     project = conn
     |> load_project_for_change(project_id)
+    |> validate_project_not_archived(conn)
 
     params = conn.assigns[:questionnaire]
     |> Map.put_new("languages", ["en"])

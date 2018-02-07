@@ -220,7 +220,7 @@ defmodule Ask.ProjectControllerTest do
 
     test "sets archived status to true", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+      put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
       project = Project |> Repo.get(project.id)
       assert project.archived
     end
@@ -235,7 +235,7 @@ defmodule Ask.ProjectControllerTest do
       ["reader", "editor"] |> Enum.each(fn level ->
         project = create_project_for_user(user, level: level)
         assert_error_sent :forbidden, fn ->
-          conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+          put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
         end
       end)
     end

@@ -85,6 +85,15 @@ defmodule User.Helper do
     |> authorize_owner(conn)
   end
 
+  def validate_project_not_archived(project, conn) do
+    if project.archived do
+      # conn |> put_status(403) |> halt
+      raise UnauthorizedError, conn: conn
+    else
+      project
+    end
+  end
+
   def authorize_channel(channel, conn) do
     if channel.user_id != current_user(conn).id do
       raise UnauthorizedError, conn: conn

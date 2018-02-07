@@ -210,6 +210,13 @@ defmodule Ask.QuestionnaireControllerTest do
       end
     end
 
+    test "forbids creation when project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      assert_error_sent :forbidden, fn ->
+        post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
+      end
+    end
+
     test "updates project updated_at when questionnaire is created", %{conn: conn, user: user}  do
       datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = insert(:project, updated_at: datetime)
