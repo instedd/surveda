@@ -11,6 +11,8 @@ import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
 
+import { translate } from 'react-i18next'
+
 class ProjectIndex extends Component {
   componentWillMount() {
     this.creatingProject = false
@@ -56,7 +58,9 @@ class ProjectIndex extends Component {
 
   render() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, router } = this.props
+      totalCount, hasPreviousPage, hasNextPage, router, t } = this.props
+
+    // window.i18n = i18n
 
     if (!projects) {
       return (
@@ -66,7 +70,7 @@ class ProjectIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount == 1) ? ' project' : ' projects'}`
+    const title = `${totalCount} ${(totalCount == 1) ? t(' project') : t(' projects')}`
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
@@ -110,9 +114,9 @@ class ProjectIndex extends Component {
             </colgroup>
             <thead>
               <tr>
-                <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text={t('Name')} property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text={t('Running surveys')} property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text={t('Last activity date')} property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
@@ -159,6 +163,7 @@ ProjectIndex.propTypes = {
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
+  t: PropTypes.func,
   router: PropTypes.object
 }
 
@@ -194,4 +199,4 @@ const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex)))
