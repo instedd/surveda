@@ -1,43 +1,55 @@
 #!/bin/sh
 NC='\033[0m'
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 
 echo "----==== Running Mix tests ====----"
-MIX_TESTS="$(docker-compose run --rm app mix test)"
+docker-compose run --rm app mix test
+MIX=$?
 
-if [ $? -eq 0 ]; then
+if [ $MIX -eq 0 ]; then
   echo "${GREEN}OK${NC}";
-else
-  echo "${MIX_TESTS}"
 fi
 
 echo "----==== Running JS tests ====----"
-JS_TESTS="$(docker-compose run --rm webpack yarn test)"
+docker-compose run --rm webpack yarn test
+JS=$?
 
-if [ $? -eq 0 ]; then
+if [ $JS -eq 0 ]; then
   echo "${GREEN}OK${NC}";
-else
-  echo "${JS_TESTS}"
 fi
 
 echo "----==== Running Flow tests ====----"
-if hash flow 2>/dev/null; then
-  FLOW_TESTS="$(flow check)"
-else
-  FLOW_TESTS="$(./node_modules/.bin/flow check)"
-fi
+./node_modules/.bin/flow check
+FLOW=$?
 
-if [ $? -eq 0 ]; then
+if [ $FLOW -eq 0 ]; then
   echo "${GREEN}OK${NC}";
-else
-  echo "${FLOW_TESTS}"
 fi
 
 echo "----==== Running Eslint tests ====----"
-ESLINT_TESTS="$(docker-compose run --rm webpack yarn eslint)"
+docker-compose run --rm webpack yarn eslint
+ESLINT=$?
 
-if [ $? -eq 0 ]; then
+if [ $ESLINT -eq 0 ]; then
   echo "${GREEN}OK${NC}";
+fi
+
+if [ $MIX -eq 0 ] && [ $JS -eq 0 ] && [ $FLOW -eq 0 ] && [ $ESLINT -eq 0 ]; then
+  echo "${GREEN}----==== Good to go! ====----${NC}"
 else
-  echo "${ESLINT_TESTS}"
+  echo "${RED}----==== Oops! ====----${NC}"
+  if [ $MIX -ne 0 ]; then
+  echo "${RED}Mix tests failed${NC}";
+  fi
+  if [ $JS -ne 0 ]; then
+    echo "${RED}JS tests failed${NC}";
+  fi
+  if [ $FLOW -ne 0 ]; then
+    echo "${RED}Flow tests failed${NC}";
+  fi
+  if [ $ESLINT -ne 0 ]; then
+    echo "${RED}ESLint tests failed${NC}";
+  fi
+  echo "${RED}----==== Oops! ====----${NC}"
 fi
