@@ -2,6 +2,7 @@
 <PROJECT_ROOT>/node_modules/react-timeago
 <PROJECT_ROOT>/node_modules/csv-info
 <PROJECT_ROOT>/node_modules/draft-js
+<PROJECT_ROOT>/node_modules/react-i18next
 [include]
 [libs]
 web/static/js/decls/
