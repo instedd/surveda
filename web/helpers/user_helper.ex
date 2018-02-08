@@ -62,12 +62,6 @@ defmodule User.Helper do
     end
   end
 
-  def validate_editor_or_owner(conn, project_id) do
-    Project
-    |> Repo.get!(project_id)
-    |> authorize_change(conn)
-  end
-
   # Loads a project, and checks that the current user belongs to
   # it with any access level.
   def load_project(conn, project_id) do

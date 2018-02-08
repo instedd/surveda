@@ -66,7 +66,7 @@ defmodule Ask.ProjectControllerTest do
           "name"    => archived_project.name,
           "running_surveys" => 0,
           "updated_at" => NaiveDateTime.to_iso8601(archived_project.updated_at),
-          "read_only" => false,
+          "read_only" => true,
           "colour_scheme" => "default",
           "owner" => true,
         }
@@ -149,7 +149,7 @@ defmodule Ask.ProjectControllerTest do
     end
 
     test "shows chosen resource as read_only", %{conn: conn, user: user} do
-      project = create_project_for_user(user, level: "reader", archived: true)
+      project = create_project_for_user(user, archived: true)
       project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
@@ -157,7 +157,7 @@ defmodule Ask.ProjectControllerTest do
         "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => true,
         "colour_scheme" => "default",
-        "owner" => false}
+        "owner" => true}
     end
 
     test "read_only is true when project is archived", %{conn: conn, user: user} do
