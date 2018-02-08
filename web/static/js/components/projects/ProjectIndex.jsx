@@ -66,7 +66,7 @@ class ProjectIndex extends Component {
 
   archiveIconForProject(archived: boolean, project: Project) {
     if (!project.owner) {
-      return <td/>
+      return <td />
     } else {
       if (archived) {
         return (
@@ -97,7 +97,7 @@ class ProjectIndex extends Component {
 
     const archivedFilter = <Input
       type='select'
-      defaultValue={archived ? 'archive' : 'all_projects'}
+      value={archived ? 'archive' : 'all_projects'}
       onChange={e => this.fetchProjects(e)}
       >
       <option key='archived' id='archived' name='archived' value='archived'> Archived </option>

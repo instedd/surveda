@@ -261,7 +261,6 @@ defmodule Ask.RespondentGroupControllerTest do
     end
 
     test "forbids upload if project is archived", %{conn: conn, user: user}  do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
       project = insert(:project, archived: true)
       insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project)
@@ -427,7 +426,6 @@ defmodule Ask.RespondentGroupControllerTest do
     end
 
     test "forbids the deletion of a group if project is archived", %{conn: conn, user: user} do
-      project = insert(:project)
       project = insert(:project, archived: true)
       insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project)

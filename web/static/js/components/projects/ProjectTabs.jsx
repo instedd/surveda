@@ -34,14 +34,16 @@ class ProjectTabs extends Component {
       <a onClick={e => this.openColorSchemePopup(e)}><i className='material-icons'>palette</i>Change color scheme</a>
     </DropdownItem> : null
 
-    let more = (
+    const fetchedProject = project && !project.fetching
+    // Nothing to display in 'more' tab is user is owner and project is archived
+    let more = !fetchedProject || (fetchedProject && project.data.owner && readOnly) ? null : (
       <div className='col'>
         <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
           <DropdownItem className='dots'>
             <i className='material-icons'>more_vert</i>
           </DropdownItem>
           { changeColorScheme }
-          { project && !project.fetching && !project.data.owner
+          { fetchedProject && !project.data.owner
             ? <DropdownItem>
               <a onClick={e => this.leaveProject(e, projectId)}><i className='material-icons'>exit_to_app</i>Leave project</a>
             </DropdownItem>
