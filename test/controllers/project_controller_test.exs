@@ -268,6 +268,13 @@ defmodule Ask.ProjectControllerTest do
       end
     end
 
+    test "rejects update if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      assert_error_sent :forbidden, fn ->
+        put conn, project_path(conn, :update, project), project: @valid_attrs
+      end
+    end
+
   end
 
   describe "delete" do

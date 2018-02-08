@@ -62,6 +62,12 @@ defmodule User.Helper do
     end
   end
 
+  def validate_editor_or_owner(conn, project_id) do
+    Project
+    |> Repo.get!(project_id)
+    |> authorize_change(conn)
+  end
+
   # Loads a project, and checks that the current user belongs to
   # it with any access level.
   def load_project(conn, project_id) do
@@ -76,6 +82,7 @@ defmodule User.Helper do
     Project
     |> Repo.get!(project_id)
     |> authorize_change(conn)
+    |> validate_project_not_archived(conn)
   end
 
   # Loads a project, and checks that the current user its owner.
@@ -87,7 +94,6 @@ defmodule User.Helper do
 
   def validate_project_not_archived(project, conn) do
     if project.archived do
-      # conn |> put_status(403) |> halt
       raise UnauthorizedError, conn: conn
     else
       project

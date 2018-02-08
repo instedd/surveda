@@ -210,7 +210,7 @@ defmodule Ask.QuestionnaireControllerTest do
       end
     end
 
-    test "forbids creation when project is archived", %{conn: conn, user: user} do
+    test "forbids creation if project is archived", %{conn: conn, user: user} do
       project = create_project_for_user(user, archived: true)
       assert_error_sent :forbidden, fn ->
         post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
@@ -286,6 +286,14 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       assert_error_sent :forbidden, fn ->
         put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @invalid_attrs
+      end
+    end
+
+    test "rejects update if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      questionnaire = insert(:questionnaire, project: project)
+      assert_error_sent :forbidden, fn ->
+        put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @valid_attrs
       end
     end
 
@@ -610,6 +618,14 @@ defmodule Ask.QuestionnaireControllerTest do
 
     test "rejects delete for a project reader", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
+      questionnaire = insert(:questionnaire, project: project)
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, questionnaire)
+      end
+    end
+
+    test "rejects delete if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
       questionnaire = insert(:questionnaire, project: project)
       assert_error_sent :forbidden, fn ->
         delete conn, project_questionnaire_path(conn, :delete, questionnaire.project, questionnaire)

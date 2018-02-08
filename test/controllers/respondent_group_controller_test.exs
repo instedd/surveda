@@ -259,6 +259,18 @@ defmodule Ask.RespondentGroupControllerTest do
         post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
       end
     end
+
+    test "forbids upload if project is archived", %{conn: conn, user: user}  do
+      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      project = insert(:project, archived: true)
+      insert(:project_membership, user: user, project: project, level: "owner")
+      survey = insert(:survey, project: project)
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
+      end
+    end
   end
 
   describe "update" do
@@ -308,6 +320,20 @@ defmodule Ask.RespondentGroupControllerTest do
       |> Enum.map(&(&1.id))
 
       assert channel_ids == []
+    end
+
+    test "forbids to update group channels if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+      group = insert(:respondent_group, survey: survey, respondents_count: 1)
+      channel = insert(:channel, name: "test")
+
+      attrs = %{channels: [%{id: channel.id, mode: channel.type}]}
+
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_respondent_group_path(conn, :update, project.id, survey.id, group.id), respondent_group: attrs
+      end
     end
   end
 
@@ -379,7 +405,7 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
 
-    test "forbids the deleteion of a group if the project is from another user", %{conn: conn} do
+    test "forbids the deletion of a group if the project is from another user", %{conn: conn} do
       project = insert(:project)
       survey = insert(:survey, project: project)
       group = insert(:respondent_group, survey: survey)
@@ -389,9 +415,21 @@ defmodule Ask.RespondentGroupControllerTest do
       end
     end
 
-    test "forbids the deleteion of a group for project reader", %{conn: conn, user: user} do
+    test "forbids the deletion of a group for project reader", %{conn: conn, user: user} do
       project = insert(:project)
       insert(:project_membership, user: user, project: project, level: "reader")
+      survey = insert(:survey, project: project)
+      group = insert(:respondent_group, survey: survey)
+
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_respondent_group_path(conn, :delete, survey.project.id, survey.id, group.id)
+      end
+    end
+
+    test "forbids the deletion of a group if project is archived", %{conn: conn, user: user} do
+      project = insert(:project)
+      project = insert(:project, archived: true)
+      insert(:project_membership, user: user, project: project, level: "owner")
       survey = insert(:survey, project: project)
       group = insert(:respondent_group, survey: survey)
 

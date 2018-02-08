@@ -53,6 +53,18 @@ defmodule Ask.MembershipControllerTest do
     end
   end
 
+  test "forbids user to remove if project is archived", %{conn: conn, user: user} do
+    project = create_project_for_user(user, archived: true)
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      delete conn, project_membership_remove_path(conn, :remove, project.id), email: collaborator_email
+    end
+  end
+
   test "forbids user to remove owner", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     collaborator_email = "user2@surveda.instedd.org"
@@ -104,6 +116,18 @@ defmodule Ask.MembershipControllerTest do
 
   test "forbids user outside a project to update", %{conn: conn} do
     project = insert(:project)
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "reader"
+    end
+  end
+
+  test "forbids user to update if project is archived", %{conn: conn, user: user} do
+    project = create_project_for_user(user, archived: true)
     collaborator_email = "user2@surveda.instedd.org"
     collaborator = insert(:user, name: "user2", email: collaborator_email)
     collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
