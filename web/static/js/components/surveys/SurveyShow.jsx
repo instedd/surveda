@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
 import * as respondentActions from '../../actions/respondents'
-import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { Tooltip, Modal } from '../ui'
@@ -14,6 +13,10 @@ import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
 import classNames from 'classnames/bind'
+import { Stats, Forecasts } from '@instedd/surveda-d3-components'
+
+// TODO Remove this dependency
+import * as d3 from 'd3'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -210,99 +213,159 @@ class SurveyShow extends Component {
 
     let title = this.titleFor(questionnaires)
 
+    let stats = [
+      {value: 0, label: 'Target'},
+      {value: 0, label: 'Completes'},
+      {value: 0, label: 'Partials'},
+      {value: 0, label: 'Contacted Respondents'}
+    ]
+
+    let forecastsReferences = [
+      {label: 'Female 18 - 34', color: '#673ab7'},
+      {label: 'Female 35 - 49', color: '#009688'},
+      {label: 'Male 18 - 34', color: '#ffc107'},
+      {label: 'Male 35 - 49', color: '#ff5722'}
+    ]
+
+    let getValues = (start, today) => {
+      const days = d3.timeDays(start, today, 1)
+      var value = 0
+      const values = days.map(time => {
+        value += Math.round(Math.random() * 50)
+        return {time, value}
+      })
+      return values
+    }
+
+    // TODO: Make this a real forecast
+    let getForecast = (today, end, initial) => {
+      const days = d3.timeDays(new Date(today.getTime() - 24 * 60 * 60 * 1000), end, 1)
+      var value = initial
+      const forecast = days.map(time => {
+        var item = {time, value}
+        value += Math.round(Math.random() * 50)
+        return item
+      })
+      return forecast
+    }
+
+    const start = new Date()
+    const today = new Date(start.getTime() + Math.random() * 45 * 24 * 60 * 60 * 1000)
+    const end = new Date(today.getTime() + Math.round(Math.random() * 50 * 24 * 60 * 60 * 1000))
+
+    let forecasts = forecastsReferences.map(d => {
+      let values = getValues(start, today)
+      let initial = values.length ? values[values.length - 1].value : 0
+      let forecast = getForecast(today, end, initial)
+      return {...d, values, forecast}
+    })
+
     return (
-      <div className='row'>
-        {stopComponent}
-        <Modal card ref='stopModal' id='stop_survey_modal'>
-          <div className='modal-content'>
-            <div className='card-title header'>
-              <h5>Stop survey</h5>
-              <p>This will finalize the survey execution</p>
-            </div>
-            <div className='card-content'>
-              <div className='row'>
-                <div className='col s12'>
-                  <p className='red-text alert-left-icon'>
-                    <i className='material-icons'>warning</i>
-                    Stopped surveys cannot be restarted
-                  </p>
+      <div className='cockpit'>
+        <div className='row'>
+          {stopComponent}
+          <Modal card ref='stopModal' id='stop_survey_modal'>
+            <div className='modal-content'>
+              <div className='card-title header'>
+                <h5>Stop survey</h5>
+                <p>This will finalize the survey execution</p>
+              </div>
+              <div className='card-content'>
+                <div className='row'>
+                  <div className='col s12'>
+                    <p className='red-text alert-left-icon'>
+                      <i className='material-icons'>warning</i>
+                      Stopped surveys cannot be restarted
+                    </p>
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='col s12'>
+                    <p>
+                      Once you stop the survey, all invitations will be halted immediately.
+                    </p>
+                    <p>
+                      Respondents who are currently answering the survey will be cut off. Once
+                      you stop, you cannot restart.
+                    </p>
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='col s12'>
+                    <input
+                      id='stop_understood'
+                      type='checkbox'
+                      checked={stopUnderstood}
+                      onChange={() => this.toggleStopUnderstood()}
+                      className='filled-in' />
+                    <label htmlFor='stop_understood'>Understood</label>
+                  </div>
                 </div>
               </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <p>
-                    Once you stop the survey, all invitations will be halted immediately.
-                  </p>
-                  <p>
-                    Respondents who are currently answering the survey will be cut off. Once
-                    you stop, you cannot restart.
-                  </p>
-                </div>
-              </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <input
-                    id='stop_understood'
-                    type='checkbox'
-                    checked={stopUnderstood}
-                    onChange={() => this.toggleStopUnderstood()}
-                    className='filled-in' />
-                  <label htmlFor='stop_understood'>Understood</label>
-                </div>
+              <div className='card-action'>
+                <a
+                  className={classNames('btn-large red', { disabled: !stopUnderstood })}
+                  onClick={() => this.confirmStopSurvey()}>
+                  Stop
+                </a>
+                <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
               </div>
             </div>
-            <div className='card-action'>
-              <a
-                className={classNames('btn-large red', { disabled: !stopUnderstood })}
-                onClick={() => this.confirmStopSurvey()}>
-                Stop
-              </a>
-              <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
-            </div>
-          </div>
-        </Modal>
-        <div className='col s12 m9 l8'>
+          </Modal>
           <h4>
             {title}
           </h4>
           <SurveyStatus survey={survey} />
-          {this.dispositions(respondentsByDisposition, reference)}
+          <div className='col s12'>
+            <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
+              <div className='header'>
+                <div className='title'>Percent of completes</div>
+                <div className='description'>Count partials as completed</div>
+              </div>
+
+              <Stats data={stats} />
+              <Forecasts data={forecasts} />
+            </div>
+          </div>
         </div>
-        <div className='col s12 m3 l4'>
-          <div className='row questionnaires-color-references'>
-            {this.colorReferences(reference)}
+        <div className='row'>
+          <div className='col s12'>
+            {this.dispositions(respondentsByDisposition, reference)}
           </div>
+        </div>
+        <div className='row'>
 
-          <div className='row survey-chart'>
-            <div className='col s12'>
-              <label className='grey-text'>
-                { this.round(completionPercentage) + '% of target completed' }
-              </label>
+          <div className='col s12 m3 l4'>
+            <div className='row questionnaires-color-references'>
+              {this.colorReferences(reference)}
             </div>
-          </div>
 
-          <div className='row respondent-chart'>
-            <div className='col s12'>
-              <RespondentsChart cumulativePercentages={cumulativePercentages} />
+            <div className='row survey-chart'>
+              <div className='col s12'>
+                <label className='grey-text'>
+                  { this.round(completionPercentage) + '% of target completed' }
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div className='row'>
-            <div className='col s12'>
-              <label className='grey-text'>
-                Respondents contacted
-              </label>
-              <div>
-                { contactedRespondents + '/' + totalRespondents }
+            <div className='row'>
+              <div className='col s12'>
+                <label className='grey-text'>
+                  Respondents contacted
+                </label>
+                <div>
+                  { contactedRespondents + '/' + totalRespondents }
+                </div>
+              </div>
+            </div>
+
+            <div className='row'>
+              <div className='col s12'>
+                {modes}
               </div>
             </div>
           </div>
 
-          <div className='row'>
-            <div className='col s12'>
-              {modes}
-            </div>
-          </div>
         </div>
       </div>
     )

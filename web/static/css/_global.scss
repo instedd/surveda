@@ -238,6 +238,30 @@ i.survey-status { // icon for survey status on index
   margin-right: 10px;
 }
 
+.cockpit .card {
+  text-align: center;
+
+  .header {
+    margin-bottom: 48px;
+  }
+
+  .header {
+    .title {
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #999;
+      display: inline;
+    }
+  }
+
+  .stats {
+    margin-bottom: 30px;
+  }
+}
 
 // ------- Left Survey collection Wizard ----------
 

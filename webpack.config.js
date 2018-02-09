@@ -63,7 +63,8 @@ module.exports = {
               loader: 'sass-loader?sourceMap',
               options: {
                 includePaths: [
-                  path.join(__dirname, '/web/static/vendor/css')
+                  path.join(__dirname, '/web/static/vendor/css'),
+                  path.join(__dirname, '/node_modules')
                 ]
               }
             }
