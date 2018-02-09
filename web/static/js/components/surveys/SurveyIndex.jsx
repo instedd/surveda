@@ -121,7 +121,7 @@ class SurveyIndex extends Component {
         : <div className='row'>
           { surveys.map(survey => {
             return (
-              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} />
+              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} />
             )
           }) }
           { footer }
@@ -174,11 +174,12 @@ class SurveyCard extends PureComponent {
   props: {
     respondentsStats: Object,
     survey: Survey,
-    onDelete: (survey: Survey) => void
+    onDelete: (survey: Survey) => void,
+    readOnly: boolean
   };
 
   render() {
-    const { survey, respondentsStats, onDelete } = this.props
+    const { survey, respondentsStats, onDelete, readOnly } = this.props
 
     var deleteButton = null
     if (survey.state != 'running') {
@@ -187,8 +188,8 @@ class SurveyCard extends PureComponent {
         onDelete(survey)
       }
 
-      deleteButton =
-        <span onClick={onDeleteClick} className='right card-hover grey-text'>
+      deleteButton = readOnly ? null
+        : <span onClick={onDeleteClick} className='right card-hover grey-text'>
           <i className='material-icons'>delete</i>
         </span>
     }
