@@ -216,24 +216,7 @@ export const fetchRespondents = (projectId, surveyId, limit, page, sortBy, sortA
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, arrayOf(referenceSchema), {}, (json, schema) => {
-    return () => {
-      if (!json) { return null }
-      if (json.errors) {
-        console.log(json.errors)
-      }
-      const camelizedData = camelizeKeys(json.data)
-
-      if (camelizedData.reference) {
-        return normalize({
-          ...camelizedData,
-          reference: normalize(camelizedData.reference, schema).entities.reference
-        }, respondentsStatsSchema)
-      } else {
-        return normalize(camelizedData, respondentsStatsSchema)
-      }
-    }
-  })
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, respondentsStatsSchema)
 }
 
 export const fetchRespondentGroups = (projectId, surveyId) => {

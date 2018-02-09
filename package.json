@@ -32,7 +32,8 @@
     "react-dnd-html5-backend": "^2.1.2",
     "react-intl": "^2.1.5",
     "react-materialize": "^0.17.0",
-    "react-timeago": "^3.4.3"
+    "react-timeago": "^3.4.3",
+    "@instedd/surveda-d3-components" : "1.0.7"
   },
   "devDependencies": {
     "babel-eslint": "^7.0.0",
