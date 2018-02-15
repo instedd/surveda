@@ -1,29 +1,22 @@
 import i18n from 'i18next'
-// import LanguageDetector from 'i18next-browser-languagedetector'
+import english from '../../../locales/translations/en.json'
+import spanish from '../../../locales/translations/es.json'
+
+const currentLanguage = window.appConfig.user_settings.language
 
 i18n
-  // .use(LanguageDetector)
   .init({
     // we init with resources
     resources: {
       en: {
-        translations: {
-          'Name': 'Name',
-          'Running surveys': 'Running surveys',
-          'Last activity date': 'Last activity date'
-        }
+        translations: english
       },
       es: {
-        translations: {
-          'Name': 'Nombre',
-          'Running surveys': 'Encuestas corriendo',
-          'Last activity date': 'Fecha de última actividad',
-          ' project': ' proyecto',
-          ' projects': ' proyectos'
-        }
+        translations: spanish
       }
     },
     fallbackLng: 'en',
+    lng: currentLanguage,
 
     // have a common namespace used around the full app
     ns: ['translations'],

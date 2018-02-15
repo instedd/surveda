@@ -60,8 +60,6 @@ class ProjectIndex extends Component {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
       totalCount, hasPreviousPage, hasNextPage, router, t } = this.props
 
-    // window.i18n = i18n
-
     if (!projects) {
       return (
         <div>
@@ -92,7 +90,7 @@ class ProjectIndex extends Component {
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0)
           ? <div className='empty-projects'>
-            <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
+            <EmptyPage icon='folder' title={t('You have no projects yet')} onClick={e => this.newProject(e)} />
             <div className='organize'>
               <div className='icons'>
                 <i className='material-icons'>assignment_turned_in</i>
@@ -101,8 +99,8 @@ class ProjectIndex extends Component {
                 <i className='material-icons'>folder_shared</i>
               </div>
               <p>
-                <b>Organize your work</b><br />
-                  Manage surveys, questionnaires, and collaborators for each of your projects.
+                <b>{t('Organize your work')}</b><br />
+                {t('Manage surveys, questionnaires, and collaborators for each of your projects.')}
               </p>
             </div>
           </div>
@@ -127,7 +125,7 @@ class ProjectIndex extends Component {
                 return (
                   <tr key={project.id}>
                     <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} entityName='project' />
+                      <UntitledIfEmpty text={project.name} entityName={t('project')} />
                     </td>
                     <td className='right-align'>
                       {project.runningSurveys}

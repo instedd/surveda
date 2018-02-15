@@ -12,7 +12,6 @@ module.exports = {
     ],
     extensions: ['.js', '.jsx']
   },
-
   entry: {
     app: [
       './web/static/vendor/js/materialize.js',
@@ -100,14 +99,15 @@ module.exports = {
             return value
           }
         },
-        defaultLng: 'en',
-        lngs: ['en', 'es'],
+        defaultLng: 'template',
+        defaultValue: '',
+        keySeparator: false, // key separator
+        lngs: ['template'],
         interpolation: {
           prefix: '{{',
           suffix: '}}'
         },
         resource: {
-          loadPath: '{{lng}}/{{ns}}.json',
           savePath: '{{lng}}/{{ns}}.json'
         }
       }
