@@ -8,40 +8,9 @@ defmodule Ask.FloipView do
     }
   end
 
-  def render("show.json", %{
-    created: created,
-    modified: modified,
-    self_link: self_link,
-    responses_link: responses_link,
-    id: id,
-    title: title,
-    fields: fields,
-    questions: questions}) do
-    %{
-      "links" => render_links(self_link),
-      "data" => %{
-        "type" => "packages",
-        "id" => id,
-        "attributes" => %{
-          "profile" => "flow-results-package",
-          "flow-results-specification" => "1.0.0-rc1",
-          "created" => created,
-          "modified" => modified,
-          "id" => id,
-          "title" => title,
-          "resources" => [%{
-            "api-data-url" => responses_link,
-            "encoding" => "utf-8",
-            "mediatype" => "application/json",
-            "path" => nil,
-            "schema" => %{
-              "fields" => fields,
-              "questions" => questions
-            }
-          }]
-        }
-      }
-    }
+  def render("show.json", %{ self_link: self_link, descriptor: descriptor }) do
+    %{ "links" => render_links(self_link) }
+    |> Map.merge(descriptor)
   end
 
   def render("responses.json", %{

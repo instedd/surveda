@@ -17,17 +17,12 @@ defmodule Ask.FloipController do
   def show(conn, %{"project_id" => project_id, "survey_id" => survey_id, "floip_package_id" => floip_package_id}) do
     survey = load_survey(conn, project_id, survey_id)
     validate_requested_package(conn, survey, floip_package_id)
+    descriptor = FloipPackage.descriptor(survey, project_survey_package_responses_url(conn, :responses, project_id, survey_id, floip_package_id))
 
     render(conn,
       "show.json",
       self_link: current_url(conn),
-      responses_link: project_survey_package_responses_url(conn, :responses, project_id, survey_id, floip_package_id),
-      created: FloipPackage.created_at(survey),
-      modified: FloipPackage.modified_at(survey),
-      fields: FloipPackage.fields,
-      questions: FloipPackage.questions(survey),
-      id: FloipPackage.id(survey),
-      title: FloipPackage.title(survey))
+      descriptor: descriptor)
   end
 
   def responses(conn, params = %{"project_id" => project_id, "survey_id" => survey_id, "floip_package_id" => floip_package_id}) do

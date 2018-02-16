@@ -264,6 +264,34 @@ defmodule Ask.FloipPackage do
     |> Enum.member?(step["type"])
   end
 
+  # Descriptor payload of a survey's FLOIP package
+  def descriptor(survey, responses_link) do
+    %{
+      "data" => %{
+        "type" => "packages",
+        "id" => id(survey),
+        "attributes" => %{
+          "profile" => "flow-results-package",
+          "flow-results-specification" => "1.0.0-rc1",
+          "created" => created_at(survey),
+          "modified" => modified_at(survey),
+          "id" => id(survey),
+          "title" => title(survey),
+          "resources" => [%{
+            "api-data-url" => responses_link,
+            "encoding" => "utf-8",
+            "mediatype" => "application/json",
+            "path" => nil,
+            "schema" => %{
+              "fields" => fields,
+              "questions" => questions(survey)
+            }
+          }]
+        }
+      }
+    }
+  end
+
   # FLOIP mandatory fields.
   def fields() do
     [

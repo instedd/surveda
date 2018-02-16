@@ -169,7 +169,7 @@ defmodule Ask.FloipPackageTest do
       other_steps = non_floip_mappable_steps()
       quiz1 = insert(:questionnaire, steps: floip_mappable_steps)
       quiz2 = insert(:questionnaire, steps: other_steps)
-      insert(:survey, questionnaires: [quiz1, quiz2])
+      insert(:survey, questionnaires: [quiz1, quiz2], started_at: Timex.Ecto.DateTime.autogenerate)
     end
 
     def insert_respondent(survey, number) do
@@ -504,6 +504,39 @@ defmodule Ask.FloipPackageTest do
 
     test "generates query params from empty options" do
       assert FloipPackage.query_params(%{}) == ""
+    end
+  end
+
+  describe "descriptor" do
+    test "works" do
+      survey = insert_survey()
+
+      descriptor = FloipPackage.descriptor(survey, "http://gimme.responses")
+
+      assert descriptor == %{
+        "data" => %{
+          "type" => "packages",
+          "id" => FloipPackage.id(survey),
+          "attributes" => %{
+            "profile" => "flow-results-package",
+            "flow-results-specification" => "1.0.0-rc1",
+            "created" => FloipPackage.created_at(survey),
+            "modified" => FloipPackage.modified_at(survey),
+            "id" => FloipPackage.id(survey),
+            "title" => FloipPackage.title(survey),
+            "resources" => [%{
+              "api-data-url" => "http://gimme.responses",
+              "encoding" => "utf-8",
+              "mediatype" => "application/json",
+              "path" => nil,
+              "schema" => %{
+                "fields" => FloipPackage.fields,
+                "questions" => FloipPackage.questions(survey)
+              }
+            }]
+          }
+        }
+      }
     end
   end
 end

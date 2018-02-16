@@ -91,13 +91,7 @@ defmodule Ask.FloipControllerTest do
 
       assert json_response(conn, 200) == Ask.FloipView.render("show.json", %{
         self_link: "#{project_survey_package_descriptor_url(conn, :show, project.id, survey.id, survey.floip_package_id)}?foo=bar",
-        responses_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
-        created: FloipPackage.created_at(survey),
-        modified: FloipPackage.modified_at(survey),
-        fields: FloipPackage.fields,
-        questions: FloipPackage.questions(survey),
-        id: FloipPackage.id(survey),
-        title: FloipPackage.title(survey)
+        descriptor: FloipPackage.descriptor(survey, project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"))
       })
     end
 
@@ -109,13 +103,7 @@ defmodule Ask.FloipControllerTest do
 
       assert json_response(conn, 200) == Ask.FloipView.render("show.json", %{
         self_link: project_survey_package_descriptor_url(conn, :show, project.id, survey.id, "foo"),
-        responses_link: project_survey_package_responses_url(conn, :responses, project.id, survey.id, "foo"),
-        created: FloipPackage.created_at(survey),
-        modified: FloipPackage.modified_at(survey),
-        fields: FloipPackage.fields,
-        questions: FloipPackage.questions(survey),
-        id: FloipPackage.id(survey),
-        title: FloipPackage.title(survey)
+        descriptor: FloipPackage.descriptor(survey, project_survey_package_responses_url(conn, :responses, project.id, survey.id, survey.floip_package_id))
       })
     end
   end
