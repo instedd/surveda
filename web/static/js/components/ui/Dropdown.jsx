@@ -22,7 +22,7 @@ export class Dropdown extends Component {
   }
 
   render() {
-    const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly,iconLeft } = this.props
+    const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly, iconLeft = false } = this.props
     const onButtonClick = (event) => {
       event.preventDefault()
     }

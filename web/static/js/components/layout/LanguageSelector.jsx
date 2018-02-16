@@ -19,11 +19,11 @@ class LanguageSelector extends Component {
   languageNameFromCode(code) {
     switch (code) {
       case 'en':
-        return 'English (en)'
+        return 'English'
       case 'es':
-        return 'Español (es)'
+        return 'Español'
       case 'fr':
-        return 'Français (fr)'
+        return 'Français'
       default:
         return ''
     }
@@ -34,32 +34,31 @@ class LanguageSelector extends Component {
     const currentLanguage = i18n.language
 
     return (
-          <Dropdown className={this.props.className} label={this.languageNameFromCode(currentLanguage)} icon='language' iconLeft >
-            <DropdownDivider />
-            <DropdownItem>
-              <a onClick={() => this.changeLanguage('en')}>
-                <i className='material-icons' style={{opacity: `${currentLanguage == 'en' ? 1 : 0}`}} >done</i>
-                English
-                <span className='lang'>en</span>
-              </a>
-            </DropdownItem>
-            <DropdownItem>
-              <a onClick={() => this.changeLanguage('es')}>
-                <i className='material-icons' style={{opacity: `${currentLanguage == 'es' ? 1 : 0}`}} >done</i>
-                Español
-                <span className='lang'>es</span>
-              </a>
-            </DropdownItem>
-            <DropdownItem>
-              <a onClick={() => this.changeLanguage('fr')}>
-                <i className='material-icons' style={{opacity: `${currentLanguage == 'fr' ? 1 : 0}`}} >done</i>
-                Français
-                <span className='lang'>fr</span>
-              </a>
-            </DropdownItem>
-          </Dropdown>
+      <Dropdown className={'languageSelector'} label={`${this.languageNameFromCode(currentLanguage)} (${currentLanguage})`} icon='language' iconLeft >
+        <DropdownDivider />
+        <LanguageItem languageCode='en' currentLanguage={currentLanguage} langSelector={this} />
+        <LanguageItem languageCode='es' currentLanguage={currentLanguage} langSelector={this} />
+        <LanguageItem languageCode='fr' currentLanguage={currentLanguage} langSelector={this} />
+      </Dropdown>
     )
   }
+}
+
+const LanguageItem = ({languageCode, currentLanguage, langSelector}) => (
+  <DropdownItem>
+    <a onClick={() => langSelector.changeLanguage(languageCode)}>
+      <i className='material-icons' style={{opacity: `${currentLanguage == languageCode ? 1 : 0}`}} >done</i>
+      {langSelector.languageNameFromCode(currentLanguage)}
+      <span className='lang'>{languageCode}</span>
+    </a>
+  </DropdownItem>
+)
+
+LanguageItem.propTypes = {
+  langSelector: PropTypes.object,
+  languageCode: PropTypes.string,
+  languageName: PropTypes.string,
+  currentLanguage: PropTypes.string
 }
 
 LanguageSelector.propTypes = {
