@@ -11,6 +11,8 @@ import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
 
+import { translate } from 'react-i18next'
+
 class ProjectIndex extends Component {
   componentWillMount() {
     this.creatingProject = false
@@ -56,7 +58,7 @@ class ProjectIndex extends Component {
 
   render() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, router } = this.props
+      totalCount, hasPreviousPage, hasNextPage, router, t } = this.props
 
     if (!projects) {
       return (
@@ -66,7 +68,7 @@ class ProjectIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount == 1) ? ' project' : ' projects'}`
+    const title = `${totalCount} ${(totalCount == 1) ? t(' project') : t(' projects')}`
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
@@ -88,7 +90,7 @@ class ProjectIndex extends Component {
         <AddButton text='Add project' onClick={e => this.newProject(e)} />
         { (projects.length == 0)
           ? <div className='empty-projects'>
-            <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
+            <EmptyPage icon='folder' title={t('You have no projects yet')} onClick={e => this.newProject(e)} />
             <div className='organize'>
               <div className='icons'>
                 <i className='material-icons'>assignment_turned_in</i>
@@ -97,8 +99,8 @@ class ProjectIndex extends Component {
                 <i className='material-icons'>folder_shared</i>
               </div>
               <p>
-                <b>Organize your work</b><br />
-                  Manage surveys, questionnaires, and collaborators for each of your projects.
+                <b>{t('Organize your work')}</b><br />
+                {t('Manage surveys, questionnaires, and collaborators for each of your projects.')}
               </p>
             </div>
           </div>
@@ -110,9 +112,9 @@ class ProjectIndex extends Component {
             </colgroup>
             <thead>
               <tr>
-                <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text={t('Name')} property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text={t('Running surveys')} property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text={t('Last activity date')} property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
@@ -123,7 +125,7 @@ class ProjectIndex extends Component {
                 return (
                   <tr key={project.id}>
                     <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} entityName='project' />
+                      <UntitledIfEmpty text={project.name} entityName={t('project')} />
                     </td>
                     <td className='right-align'>
                       {project.runningSurveys}
@@ -159,6 +161,7 @@ ProjectIndex.propTypes = {
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
+  t: PropTypes.func,
   router: PropTypes.object
 }
 
@@ -194,4 +197,4 @@ const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex)))
