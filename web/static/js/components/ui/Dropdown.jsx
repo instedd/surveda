@@ -4,6 +4,7 @@ export class Dropdown extends Component {
   static propTypes = {
     label: PropTypes.node.isRequired,
     icon: PropTypes.string,
+    iconLeft: PropTypes.bool,
     children: PropTypes.node,
     constrainWidth: PropTypes.bool,
     readOnly: PropTypes.bool,
@@ -21,7 +22,7 @@ export class Dropdown extends Component {
   }
 
   render() {
-    const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly } = this.props
+    const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly,iconLeft } = this.props
     const onButtonClick = (event) => {
       event.preventDefault()
     }
@@ -30,7 +31,7 @@ export class Dropdown extends Component {
       <span className={className}>
         <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin={dataBelowOrigin} data-activates={this.dropdownId} data-constrainwidth={constrainWidth} ref='node'>
           {label}
-          {readOnly ? null : <i className='material-icons right'>{icon}</i> }
+          {readOnly ? null : <i className={iconLeft ? 'material-icons left' : 'material-icons right'}>{icon}</i> }
         </a>
         <ul id={this.dropdownId} className='dropdown-content'>
           {children}
