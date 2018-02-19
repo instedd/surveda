@@ -149,6 +149,12 @@ defmodule Ask.Factory do
     }
   end
 
+  def floip_endpoint_factory do
+    %Ask.FloipEndpoint{
+      uri: sequence(:string, &"http://foo-#{&1}.com")
+    }
+  end
+
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
     respondent_group = build(:respondent_group)

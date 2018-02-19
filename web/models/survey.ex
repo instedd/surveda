@@ -2,7 +2,7 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
-  alias Ask.{Schedule, ShortLink, Repo, Respondent, RespondentGroup, QuotaBucket, Questionnaire, SurveyQuestionnaire, Project}
+  alias Ask.{Schedule, ShortLink, Repo, Respondent, RespondentGroup, QuotaBucket, Questionnaire, SurveyQuestionnaire, Project, FloipEndpoint}
   alias Ask.Runtime.Broker
   alias Ask.Ecto.Type.JSON
 
@@ -33,6 +33,8 @@ defmodule Ask.Survey do
     has_many :respondents, Respondent
     has_many :quota_buckets, QuotaBucket, on_replace: :delete
     many_to_many :questionnaires, Questionnaire, join_through: SurveyQuestionnaire, on_replace: :delete
+
+    has_many :floip_endpoints, FloipEndpoint
 
     belongs_to :project, Project
 
