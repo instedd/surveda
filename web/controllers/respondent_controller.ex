@@ -179,7 +179,6 @@ defmodule Ask.RespondentController do
   end
 
   defp stats(conn, survey, total_respondents, respondents_by_disposition, respondents_by_completed_at, reference, buckets, layout) do
-
     total_quota =
       buckets
       |> Enum.reduce(0, fn bucket, total ->
@@ -216,6 +215,7 @@ defmodule Ask.RespondentController do
       cumulative_percentages: cumulative_percentages(respondents_by_completed_at, survey, target),
       completion_percentage: completion_percentage,
       total_respondents: total_respondents,
+      target: target,
       contacted_respondents: contacted_respondents
     }
 

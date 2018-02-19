@@ -11,7 +11,7 @@ import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
-import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
+import { referenceColorClasses, referenceColors } from '../../referenceColors'
 import classNames from 'classnames/bind'
 import { Stats, Forecasts } from '@instedd/surveda-d3-components'
 
@@ -28,10 +28,11 @@ class SurveyShow extends Component {
     survey: React.PropTypes.object,
     questionnaires: React.PropTypes.object,
     respondentsByDisposition: React.PropTypes.object,
-    reference: React.PropTypes.object,
+    reference: React.PropTypes.array,
     completedByDate: React.PropTypes.object,
     contactedRespondents: React.PropTypes.number,
     totalRespondents: React.PropTypes.number,
+    target: React.PropTypes.number,
     completionPercentage: React.PropTypes.number,
     cumulativePercentages: React.PropTypes.object
   }
@@ -143,31 +144,7 @@ class SurveyShow extends Component {
       modeDescriptions = modesForComparisons
     }
 
-    return modeDescriptions
-  }
-
-  colorReferences(references) {
-    let numberOfKeys = Object.keys(references).length
-    let referenceClasses = referenceBackgroundColorClasses(numberOfKeys)
-
-    let colorReferences = []
-    if (numberOfKeys > 1) {
-      let i = 0
-      for (var referenceId in references) {
-        const name = references[referenceId].name ? references[referenceId].name : null
-        const modes = references[referenceId].modes ? this.modesForComparisons(references[referenceId].modes) : null
-        const separator = name && modes ? (<div />) : null
-        colorReferences.push((
-          <div className='questionnaire-color-reference' key={referenceId}>
-            <div className={`color-circle-reference ${referenceClasses[i]}`} />
-            <div className='questionnaire-name'> {name}{separator}{modes} </div>
-          </div>
-        ))
-        i += 1
-      }
-    }
-
-    return colorReferences
+    return modeDescriptions.join('')
   }
 
   titleFor(questionnaires) {
@@ -184,18 +161,11 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
       return <p>Loading...</p>
-    }
-
-    let modes
-    if (survey.mode.length == 1) {
-      modes = <div className='survey-modes'>
-        {survey.mode[0].map((mode, index) => (this.modeFor(index, mode)))}
-      </div>
     }
 
     const readOnly = !project || project.readOnly
@@ -214,18 +184,24 @@ class SurveyShow extends Component {
     let title = this.titleFor(questionnaires)
 
     let stats = [
-      {value: 0, label: 'Target'},
-      {value: 0, label: 'Completes'},
-      {value: 0, label: 'Partials'},
-      {value: 0, label: 'Contacted Respondents'}
+      {value: target, label: 'Target'},
+      {value: respondentsByDisposition.responsive.detail.completed.count, label: 'Completes'},
+      {value: respondentsByDisposition.responsive.detail.partial.count, label: 'Partials'},
+      {value: contactedRespondents, label: 'Contacted Respondents'}
     ]
 
-    let forecastsReferences = [
-      {label: 'Female 18 - 34', color: '#673ab7'},
-      {label: 'Female 35 - 49', color: '#009688'},
-      {label: 'Male 18 - 34', color: '#ffc107'},
-      {label: 'Male 35 - 49', color: '#ff5722'}
-    ]
+    let colors = referenceColors(reference.length)
+
+    let forecastsReferences = reference.map((r, i) => {
+      const name = r.name ? r.name : ''
+      const modes = r.modes ? this.modesForComparisons(r.modes) : ''
+      const separator = name && modes ? ' | ' : ''
+
+      return {
+        label: `${name}${separator}${modes}`,
+        color: colors[i]
+      }
+    })
 
     let getValues = (start, today) => {
       const days = d3.timeDays(start, today, 1)
@@ -332,40 +308,6 @@ class SurveyShow extends Component {
           <div className='col s12'>
             {this.dispositions(respondentsByDisposition, reference)}
           </div>
-        </div>
-        <div className='row'>
-
-          <div className='col s12 m3 l4'>
-            <div className='row questionnaires-color-references'>
-              {this.colorReferences(reference)}
-            </div>
-
-            <div className='row survey-chart'>
-              <div className='col s12'>
-                <label className='grey-text'>
-                  { this.round(completionPercentage) + '% of target completed' }
-                </label>
-              </div>
-            </div>
-
-            <div className='row'>
-              <div className='col s12'>
-                <label className='grey-text'>
-                  Respondents contacted
-                </label>
-                <div>
-                  { contactedRespondents + '/' + totalRespondents }
-                </div>
-              </div>
-            </div>
-
-            <div className='row'>
-              <div className='col s12'>
-                {modes}
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     )
@@ -492,6 +434,7 @@ const mapStateToProps = (state, ownProps) => {
   let cumulativePercentages = {}
   let contactedRespondents = 0
   let totalRespondents = 0
+  let target = 0
   let completionPercentage = 0
   let reference = null
 
@@ -500,6 +443,7 @@ const mapStateToProps = (state, ownProps) => {
     cumulativePercentages = respondentsStatsRoot.cumulativePercentages
     contactedRespondents = respondentsStatsRoot.contactedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
+    target = respondentsStatsRoot.target
     completionPercentage = respondentsStatsRoot.completionPercentage
     reference = respondentsStatsRoot.reference
   }
@@ -514,6 +458,7 @@ const mapStateToProps = (state, ownProps) => {
     cumulativePercentages: cumulativePercentages,
     contactedRespondents: contactedRespondents,
     totalRespondents: totalRespondents,
+    target: target,
     reference: reference,
     completionPercentage: completionPercentage
   })
