@@ -48,7 +48,7 @@ const LanguageItem = ({languageCode, currentLanguage, langSelector}) => (
   <DropdownItem>
     <a onClick={() => langSelector.changeLanguage(languageCode)}>
       <i className='material-icons' style={{opacity: `${currentLanguage == languageCode ? 1 : 0}`}} >done</i>
-      {langSelector.languageNameFromCode(currentLanguage)}
+      {langSelector.languageNameFromCode(languageCode)}
       <span className='lang'>{languageCode}</span>
     </a>
   </DropdownItem>
