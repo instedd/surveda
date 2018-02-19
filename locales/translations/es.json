@@ -22,5 +22,6 @@
     "Last saved {{count}} year ago": "Cambios guardados hace {{count}} año",
     "Last saved {{count}} year ago_plural": "Cambios guardados hace {{count}} años",
     "Saving...": "Guardando cambios...",
+    "You have unsaved changes. Are you sure you want to close?": "Los cambios no se han guardado. Estás seguro que deseas cerrar?",
     "project": "proyecto"
 }

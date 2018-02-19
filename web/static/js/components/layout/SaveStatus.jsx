@@ -6,7 +6,6 @@ import { withRouter } from 'react-router'
 import { translate } from 'react-i18next'
 
 class SaveStatus extends Component {
-
   formatter(number, unit, suffix, date, defaultFormatter) {
     const { t } = this.props
 
@@ -30,6 +29,20 @@ class SaveStatus extends Component {
       default:
         return t(`Last saved {{count}} ${unit} {{text}}`, {count: number, text: suffix})
     }
+  }
+
+  componentWillMount() {
+    window.addEventListener('beforeunload', (ev) => {
+      const { saveStatus, t } = this.props
+
+      if (saveStatus && saveStatus.saving) {
+        ev.preventDefault()
+        ev.returnValue = t('You have unsaved changes. Are you sure you want to close?')
+        return ev
+      } else {
+        return null
+      }
+    })
   }
 
   render() {

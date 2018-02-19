@@ -21,5 +21,6 @@
   "Last saved {{count}} month ago_plural": "",
   "Last saved {{count}} year ago": "",
   "Last saved {{count}} year ago_plural": "",
+  "You have unsaved changes. Are you sure you want to close?": "",
   "Saving...": ""
 }
