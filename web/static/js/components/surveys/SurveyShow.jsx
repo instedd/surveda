@@ -119,32 +119,10 @@ class SurveyShow extends Component {
     )
   }
 
-  modeForComparison(mode: string) {
-    return (<div className='mode-inline-block' key={mode}>
-      <i className='material-icons'>{this.iconForMode(mode)}</i>
-      <span className='mode-label name'>{modeLabel(mode)}</span>
-    </div>
-    )
-  }
-
   modesForComparisons(modes: string[]) {
-    let modesForComparisons = modes.map((m, index) => {
-      return this.modeForComparison(m)
-    })
-
-    let modeDescriptions
-    if (modesForComparisons.length == 2) {
-      modeDescriptions = [
-        modesForComparisons[0],
-        <div className='mode-inline-block' key='0' />,
-        modesForComparisons[1],
-        <div className='mode-inline-block' key='1'>fallback</div>
-      ]
-    } else {
-      modeDescriptions = modesForComparisons
-    }
-
-    return modeDescriptions.join('')
+    return modes.length == 2
+      ? `${modeLabel(modes[0])}, ${modeLabel(modes[1])} fallback`
+      : modeLabel(modes[0])
   }
 
   titleFor(questionnaires) {
@@ -199,41 +177,51 @@ class SurveyShow extends Component {
 
       return {
         label: `${name}${separator}${modes}`,
-        color: colors[i]
+        color: colors[i],
+        id: r.id
       }
     })
 
-    let getValues = (start, today) => {
-      const days = d3.timeDays(start, today, 1)
-      var value = 0
-      const values = days.map(time => {
-        value += Math.round(Math.random() * 50)
-        return {time, value}
-      })
-      return values
-    }
+    // let getValues = (start, today) => {
+    //   const days = d3.timeDays(start, today, 1)
+    //   var value = 0
+    //   const values = days.map(time => {
+    //     value += Math.round(Math.random() * 50)
+    //     return {time, value}
+    //   })
+    //   return values
+    // }
 
     // TODO: Make this a real forecast
-    let getForecast = (today, end, initial) => {
-      const days = d3.timeDays(new Date(today.getTime() - 24 * 60 * 60 * 1000), end, 1)
-      var value = initial
-      const forecast = days.map(time => {
-        var item = {time, value}
-        value += Math.round(Math.random() * 50)
-        return item
-      })
-      return forecast
+    // let getForecast = (today, end, initial) => {
+    //   const days = d3.timeDays(new Date(today.getTime() - 24 * 60 * 60 * 1000), end, 1)
+    //   var value = initial
+    //   const forecast = days.map(time => {
+    //     var item = {time, value}
+    //     value += Math.round(Math.random() * 50)
+    //     return item
+    //   })
+    //   return forecast
+    // }
+
+    // const start = new Date()
+    // const today = new Date(start.getTime() + Math.random() * 45 * 24 * 60 * 60 * 1000)
+    // const end = new Date(today.getTime() + Math.round(Math.random() * 50 * 24 * 60 * 60 * 1000))
+
+    const formatDate = date => {
+      return new Date(Date.parse(date))
     }
 
-    const start = new Date()
-    const today = new Date(start.getTime() + Math.random() * 45 * 24 * 60 * 60 * 1000)
-    const end = new Date(today.getTime() + Math.round(Math.random() * 50 * 24 * 60 * 60 * 1000))
-
     let forecasts = forecastsReferences.map(d => {
-      let values = getValues(start, today)
-      let initial = values.length ? values[values.length - 1].value : 0
-      let forecast = getForecast(today, end, initial)
-      return {...d, values, forecast}
+      // let values = getValues(start, today)
+      // let initial = values.length ? values[values.length - 1].value : 0
+      // let forecast = getForecast(today, end, initial)
+
+      const values = (cumulativePercentages[d.id] || []).map(v => (
+        { time: formatDate(v.date), value: Number(v.percent) }
+      ))
+
+      return {...d, values, forecast: []}
     })
 
     return (
@@ -296,7 +284,10 @@ class SurveyShow extends Component {
             <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
               <div className='header'>
                 <div className='title'>Percent of completes</div>
-                <div className='description'>Count partials as completed</div>
+                {survey.countPartialResults
+                  ? <div className='description'>Count partials as completed</div>
+                  : ''
+                }
               </div>
 
               <Stats data={stats} />

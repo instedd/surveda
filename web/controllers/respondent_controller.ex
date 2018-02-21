@@ -164,6 +164,16 @@ defmodule Ask.RespondentController do
     render(conn, layout, stats: stats)
   end
 
+  defp reference([questionnaire], [modes]) do
+    [
+      %{
+        id: questionnaire.id,
+        name: questionnaire.name,
+        modes: modes
+      }
+    ]
+  end
+
   defp reference([_], mode) do
     mode
     |> Enum.map(fn modes ->
