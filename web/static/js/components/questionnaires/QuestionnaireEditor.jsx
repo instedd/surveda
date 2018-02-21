@@ -288,70 +288,71 @@ class QuestionnaireEditor extends Component {
             </PositionFixer>
           </div>
           {skipOnboarding
-        ? <div className='col s12 m8 offset-m1'>
-          <QuestionnaireSteps
-            ref='stepsComponent'
-            steps={questionnaire.steps}
-            errorPath='steps'
-            errorsByPath={errorsByPath}
-            onDeleteStep={this.deleteStep}
-            onSelectStep={this.selectStep}
-            onDeselectStep={this.deselectStep}
-            readOnly={readOnly}
-            selectedSteps={selectedSteps}
+            ? <div className='col s12 m8 offset-m1'>
+              <QuestionnaireSteps
+                ref='stepsComponent'
+                steps={questionnaire.steps}
+                errorPath='steps'
+                errorsByPath={errorsByPath}
+                onDeleteStep={this.deleteStep}
+                onSelectStep={this.selectStep}
+                onDeselectStep={this.deselectStep}
+                readOnly={readOnly}
+                selectedSteps={selectedSteps}
             />
-          {readOnly ? null
-          : <div className='row'>
-            <div className='col s12'>
-              <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
-            </div>
-          </div>
-          }
-          <div className='row'>
-            <div className='col s12'>
-              <div className='switch'>
-                <label>
-                  <input type='checkbox' checked={hasQuotaCompletedSteps} onChange={e => this.toggleQuotaCompletedSteps(e)} disabled={readOnly} />
-                  <span className='lever' />
-                </label>
+              {readOnly
+                ? null
+                : <div className='row'>
+                  <div className='col s12'>
+                    <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>Add Step</a>
+                  </div>
+                </div>
+              }
+              <div className='row'>
+                <div className='col s12'>
+                  <div className='switch'>
+                    <label>
+                      <input type='checkbox' checked={hasQuotaCompletedSteps} onChange={e => this.toggleQuotaCompletedSteps(e)} disabled={readOnly} />
+                      <span className='lever' />
+                    </label>
                 Quota completed steps
+                  </div>
+                </div>
               </div>
+              {hasQuotaCompletedSteps
+                ? <QuestionnaireSteps
+                  ref='quotaCompletedStepsComponent'
+                  quotaCompletedSteps
+                  steps={questionnaire.quotaCompletedSteps}
+                  errorPath='quotaCompletedSteps'
+                  errorsByPath={errorsByPath}
+                  onDeleteStep={this.deleteQuotaCompletedStep}
+                  onSelectStep={this.selectQuotaCompletedStep}
+                  onDeselectStep={this.deselectQuotaCompletedStep}
+                  readOnly={readOnly}
+                  selectedSteps={selectedQuotaCompletedSteps}
+                  />
+                : null}
+              {!readOnly && hasQuotaCompletedSteps
+                ? <div className='row'>
+                  <div className='col s12'>
+                    <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddQuotaCompletedStep(e)}>Add Quota Completed Step</a>
+                  </div>
+                </div>
+                : null
+              }
+              { questionnaire.activeMode == 'sms'
+                ? <SmsSettings readOnly={readOnly} />
+                : null }
+              { questionnaire.activeMode == 'ivr'
+                ? <PhoneCallSettings readOnly={readOnly} />
+                : null }
+              { questionnaire.activeMode == 'mobileweb'
+                ? <WebSettings readOnly={readOnly} />
+                : null }
             </div>
-          </div>
-          {hasQuotaCompletedSteps
-          ? <QuestionnaireSteps
-            ref='quotaCompletedStepsComponent'
-            quotaCompletedSteps
-            steps={questionnaire.quotaCompletedSteps}
-            errorPath='quotaCompletedSteps'
-            errorsByPath={errorsByPath}
-            onDeleteStep={this.deleteQuotaCompletedStep}
-            onSelectStep={this.selectQuotaCompletedStep}
-            onDeselectStep={this.deselectQuotaCompletedStep}
-            readOnly={readOnly}
-            selectedSteps={selectedQuotaCompletedSteps}
-            />
-          : null}
-          {!readOnly && hasQuotaCompletedSteps
-          ? <div className='row'>
-            <div className='col s12'>
-              <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddQuotaCompletedStep(e)}>Add Quota Completed Step</a>
-            </div>
-          </div>
-          : null
-          }
-          { questionnaire.activeMode == 'sms'
-          ? <SmsSettings readOnly={readOnly} />
-          : null }
-          { questionnaire.activeMode == 'ivr'
-          ? <PhoneCallSettings readOnly={readOnly} />
-          : null }
-          { questionnaire.activeMode == 'mobileweb'
-          ? <WebSettings readOnly={readOnly} />
-          : null }
-        </div>
-        : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
-        }
+            : <QuestionnaireOnboarding onDismiss={() => this.onOnboardingDismiss()} />
+            }
         </div>
       </div>
     )

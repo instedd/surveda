@@ -114,22 +114,38 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     assert respondent.stats.total_call_time == 10
   end
 
+  @channel_foo %{"id" => 1, "name" => "foo"}
+  @channel_bar %{"id" => 2, "name" => "bar"}
+  @channel_baz %{"id" => 3, "name" => "baz", "shared_by" => "other@user.com"}
+
   describe "channel sync" do
     test "create channels" do
       user = insert(:user)
       user_id = user.id
-      VerboiceChannel.sync_channels(user.id, "http://test.com", ["foo", "bar"])
-      channels = user |> assoc(:channels) |> where([c], c.provider == "verboice" and c.base_url == "http://test.com") |> Repo.all
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [@channel_foo, @channel_bar])
+      channels = Ask.Channel |> order_by([c], c.name) |> Repo.all
       assert [
-        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo"}},
-        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar"}}
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar", "verboice_channel_id" => 2}},
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1}}
+      ] = channels
+    end
+
+    test "create shared channel" do
+      user = insert(:user)
+      user_id = user.id
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [@channel_foo, @channel_bar, @channel_baz])
+      channels = Ask.Channel |> order_by([c], c.name) |> Repo.all
+      assert [
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "bar", settings: %{"verboice_channel" => "bar", "verboice_channel_id" => 2}},
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "baz", settings: %{"verboice_channel" => "baz", "verboice_channel_id" => 3, "shared_by" => "other@user.com"}},
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1}}
       ] = channels
     end
 
     test "delete channels" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "foo", settings: %{"verboice_channel" => "foo"})
-      VerboiceChannel.sync_channels(user.id, "http://test.com", ["bar"])
+      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1})
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [@channel_bar])
       refute Ask.Channel |> Repo.get(channel.id)
     end
 
@@ -140,13 +156,40 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert Ask.Channel |> Repo.get(channel.id)
     end
 
-    test "leave existing channels untouched" do
+    test "update existing channels" do
       user = insert(:user)
-      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "FOO", settings: %{"verboice_channel" => "foo"})
-      channel = Ask.Channel |> Repo.get(channel.id)
-      VerboiceChannel.sync_channels(user.id, "http://test.com", ["foo"])
-      channels = user |> assoc(:channels) |> where([c], c.provider == "verboice") |> Repo.all
-      assert [^channel] = channels
+      user_id = user.id
+      channel = insert(:channel, user: user, provider: "verboice", base_url: "http://test.com", name: "FOO", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1})
+      channel_id = channel.id
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [@channel_foo])
+      channels = Ask.Channel |> Repo.all
+      assert [
+        %Ask.Channel{id: ^channel_id, user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1}}
+      ] = channels
+    end
+
+    test "migrate existing channels adding the verboice channel id" do
+      user = insert(:user)
+      user_id = user.id
+      channel = insert(:channel, user: user, provider: "verboice", type: "ivr", base_url: "http://test.com", name: "foo", settings: %{"verboice_channel" => "foo"})
+      channel_id = channel.id
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [@channel_foo])
+      channels = Ask.Channel |> Repo.all
+      assert [
+        %Ask.Channel{id: ^channel_id, user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1}}
+      ] = channels
+    end
+
+    test "match existing channels by id" do
+      user = insert(:user)
+      user_id = user.id
+      channel = insert(:channel, user: user, provider: "verboice", type: "ivr", base_url: "http://test.com", name: "fooooo", settings: %{"verboice_channel" => "fooooo", "verboice_channel_id" => 1})
+      channel_id = channel.id
+      VerboiceChannel.sync_channels(user.id, "http://test.com", [@channel_foo])
+      channels = Ask.Channel |> Repo.all
+      assert [
+        %Ask.Channel{id: ^channel_id, user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1}}
+      ] = channels
     end
   end
 
