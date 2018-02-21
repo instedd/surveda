@@ -30,7 +30,7 @@ export const startFetchingQuestionnaires = (projectId: number) => ({
   projectId
 })
 
-export const receiveQuestionnaires = (projectId: number, items: IndexedList<Questionnaire>): ReceiveItemsAction => ({
+export const receiveQuestionnaires = (projectId: number, items: IndexedList<Questionnaire>): ReceiveFilteredItemsAction => ({
   type: RECEIVE,
   projectId,
   items

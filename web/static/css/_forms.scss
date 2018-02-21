@@ -208,6 +208,14 @@ label {
   padding: 10px;
 }
 
+.filterIndex .input-field {
+  margin-top: -30px;
+  input {
+    @extend .grey-text;
+    border-bottom: none;
+  }
+}
+
 .languageSelector {
   display: inline-block;
   text-align: left;

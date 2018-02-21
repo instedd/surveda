@@ -35,6 +35,7 @@ export type ValidationError = {
 export type Filter = {
   id?: ?number,
   projectId?: number,
+  archived?: ?boolean
 };
 
 export type Action = {
@@ -76,6 +77,10 @@ export type ListFilter = {
   projectId: ?number,
 }
 
+export type ArchiveFilter = {
+  archived: ?boolean
+};
+
 export type SurveyList = ListStore<Survey> & {
   filter: ?ListFilter,
 };
@@ -86,4 +91,6 @@ export type QuestionnaireList = ListStore<Questionnaire> & {
 
 export type ChannelList = ListStore<Channel>;
 
-export type ProjectList = ListStore<Project>;
+export type ProjectList = ListStore<Project> & {
+  filter: ?ArchiveFilter,
+};

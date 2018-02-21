@@ -40,6 +40,7 @@ defmodule Ask.SurveyController do
   def create(conn, params = %{"project_id" => project_id}) do
     project = conn
     |> load_project_for_change(project_id)
+    |> validate_project_not_archived(conn)
 
     survey_params = Map.get(params, "survey", %{})
     timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())

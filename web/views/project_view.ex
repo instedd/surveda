@@ -7,7 +7,7 @@ defmodule Ask.ProjectView do
       one = render_one(project)
       one
       |> Map.put(:running_surveys, Map.get(running_surveys_by_project, project.id, 0))
-      |> Map.put(:read_only, level == "reader")
+      |> Map.put(:read_only, level == "reader" || project.archived)
       |> Map.put(:owner, level == "owner")
     end)
     %{data: rendered}

@@ -137,7 +137,7 @@ class QuestionnaireIndex extends Component {
       <div>
         {addButton}
         { (questionnaires.length == 0)
-          ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' onClick={e => this.newQuestionnaire(e)} />
+          ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' onClick={e => this.newQuestionnaire(e)} readOnly={readOnly} />
         : <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
           <thead>
             <tr>

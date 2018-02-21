@@ -5,6 +5,7 @@ defmodule Ask.Project do
     field :name, :string
     field :salt, :string
     field :colour_scheme, :string
+    field :archived, :boolean, default: false
 
     has_many :questionnaires, Ask.Questionnaire
     has_many :surveys, Ask.Survey
@@ -19,7 +20,7 @@ defmodule Ask.Project do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :salt, :colour_scheme])
+    |> cast(params, [:name, :salt, :colour_scheme, :archived])
     |> validate_colour_scheme
   end
 

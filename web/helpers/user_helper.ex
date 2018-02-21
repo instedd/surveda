@@ -76,6 +76,7 @@ defmodule User.Helper do
     Project
     |> Repo.get!(project_id)
     |> authorize_change(conn)
+    |> validate_project_not_archived(conn)
   end
 
   # Loads a project, and checks that the current user its owner.
@@ -83,6 +84,14 @@ defmodule User.Helper do
     Project
     |> Repo.get!(project_id)
     |> authorize_owner(conn)
+  end
+
+  def validate_project_not_archived(project, conn) do
+    if project.archived do
+      raise UnauthorizedError, conn: conn
+    else
+      project
+    end
   end
 
   def authorize_channel(channel, conn) do

@@ -45,6 +45,16 @@ defmodule Ask.InviteControllerTest do
     end
   end
 
+  test "forbids user to invite if project is archived", %{conn: conn, user: user} do
+    project = create_project_for_user(user, archived: true)
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    end
+  end
+
   test "invites user as reader", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
@@ -285,6 +295,25 @@ defmodule Ask.InviteControllerTest do
     end
   end
 
+  test "forbids user to update if project is archived", %{conn: conn, user: user} do
+    project = create_project_for_user(user, archived: true)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "editor"})
+    end
+  end
+
+
   test "removes invite", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
@@ -338,4 +367,23 @@ defmodule Ask.InviteControllerTest do
       delete conn, invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
     end
   end
+
+  test "forbids user to remove invite if project is archived", %{conn: conn, user: user} do
+    project = create_project_for_user(user, archived: true)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      delete conn, invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
+    end
+  end
+
 end

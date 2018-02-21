@@ -370,6 +370,13 @@ defmodule Ask.SurveyControllerTest do
       project = Project |> Repo.get(project.id)
       assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
     end
+
+    test "forbids creation if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_path(conn, :create, project.id)
+      end
+    end
   end
 
   describe "update" do
@@ -558,6 +565,15 @@ defmodule Ask.SurveyControllerTest do
       end
     end
 
+    test "rejects update if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_path(conn, :update, survey.project, survey), survey: @invalid_attrs
+      end
+    end
+
     test "fails if the schedule from is greater or equal to the to", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -632,6 +648,15 @@ defmodule Ask.SurveyControllerTest do
 
     test "forbids delete for a project reader", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_path(conn, :delete, survey.project, survey)
+      end
+    end
+
+    test "forbids delete if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
       survey = insert(:survey, project: project)
 
       assert_error_sent :forbidden, fn ->
@@ -1007,6 +1032,15 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  test "forbids launch if project is archived", %{conn: conn, user: user} do
+    project = create_project_for_user(user, archived: true)
+    survey = insert(:survey, project: project, state: "ready")
+
+    assert_error_sent :forbidden, fn ->
+      post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+    end
+  end
+
   test "launches a survey with channel", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, state: "ready")
@@ -1328,6 +1362,60 @@ defmodule Ask.SurveyControllerTest do
 
     test "forbids readers to delete links", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
+      end
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
+      end
+    end
+
+    test "forbids to create links if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      end
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
+      end
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+      end
+    end
+
+    test "forbids to refresh links if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "incentives")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "interactions")
+      end
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_links_path(conn, :refresh_link, project, survey, "disposition_history")
+      end
+    end
+
+    test "forbids to delete links if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
       survey = insert(:survey, project: project)
 
       assert_error_sent :forbidden, fn ->
