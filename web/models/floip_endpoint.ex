@@ -11,6 +11,8 @@ defmodule Ask.FloipEndpoint do
     field :last_pushed_response_id, :integer
     field :retries, :integer
 
+    #field :state, disabled? | enabled | failed | terminated
+
     belongs_to :survey, Ask.Survey, primary_key: true
 
     timestamps()

@@ -1,6 +1,7 @@
 %{"accept": {:hex, :accept, "0.3.3", "548ebb6fb2e8b0d170e75bb6123aea6ceecb0189bb1231eeadf52eac08384a97", [:rebar3], [], "hexpm"},
   "alto_guisso": {:git, "https://github.com/instedd/alto_guisso_ex.git", "64de5efff48e948447935c9900408c304fef0f0d", []},
   "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], [], "hexpm"},
+  "bypass": {:hex, :bypass, "0.8.1", "16d409e05530ece4a72fabcf021a3e5c7e15dcc77f911423196a0c551f2a15ca", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, repo: "hexpm", optional: false]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
   "cachex": {:hex, :cachex, "2.1.0", "fad49b4e78d11c6c314e75bd8c9408f5b78cb065c047442798caed10803ee3be", [:mix], [{:eternal, "~> 1.1", [hex: :eternal, repo: "hexpm", optional: false]}], "hexpm"},
   "certifi": {:hex, :certifi, "1.2.1", "c3904f192bd5284e5b13f20db3ceac9626e14eeacfbb492e19583cf0e37b22be", [:rebar3], [], "hexpm"},
   "coherence": {:git, "https://github.com/manastech/coherence.git", "c02a5da8231909a50edecffd60edbf65b6ded96e", [branch: "v0.3.2"]},

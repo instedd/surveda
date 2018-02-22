@@ -2,9 +2,19 @@ defmodule FloipPusherTest do
   use Ask.ModelCase
   alias Ask.{Repo, FloipPusher, FloipEndpoint}
 
+  setup do
+    server = Bypass.open(port: 1234)
+    {:ok, server: server}
+  end
+
   defp insert_response(survey) do
     respondent = insert(:respondent, survey: survey)
     insert(:response, respondent: respondent)
+  end
+
+  defp insert_endpoint(survey), do: insert_endpoint(survey, [])
+  defp insert_endpoint(survey, opts) do
+    insert(:floip_endpoint, [survey_id: survey.id] ++ opts)
   end
 
   defp assert_last_response(survey, endpoint, response) do
@@ -12,22 +22,37 @@ defmodule FloipPusherTest do
     assert endpoint.last_pushed_response_id == response.id
   end
 
-  test "writes last successfully pushed response for each endpoint" do
+  defp expect_push(server, endpoint_namespace, package_id) do
+    Bypass.expect_once server, "POST", "/#{endpoint_namespace}/flow-results/packages/#{package_id}/responses", fn conn ->
+      Plug.Conn.resp(conn, 200, "")
+    end
+    server
+  end
+
+  defp expect_success(server) do
+    Bypass.expect server, fn conn ->
+      Plug.Conn.resp(conn, 200, "")
+    end
+  end
+
+  test "writes last successfully pushed response for each endpoint", %{server: server} do
     # 2 running surveys
     survey1 = insert(:survey, state: "running")
     survey2 = insert(:survey, state: "running")
 
     # 2 endpoints per survey
-    endpoint_1_survey_1 = insert(:floip_endpoint, survey_id: survey1.id, last_pushed_response_id: nil)
-    endpoint_2_survey_1 = insert(:floip_endpoint, survey_id: survey1.id, last_pushed_response_id: nil)
-    endpoint_1_survey_2 = insert(:floip_endpoint, survey_id: survey2.id, last_pushed_response_id: nil)
-    endpoint_2_survey_2 = insert(:floip_endpoint, survey_id: survey2.id, last_pushed_response_id: nil)
+    endpoint_1_survey_1 = insert_endpoint(survey1)
+    endpoint_2_survey_1 = insert_endpoint(survey1)
+    endpoint_1_survey_2 = insert_endpoint(survey2)
+    endpoint_2_survey_2 = insert_endpoint(survey2)
 
     # 2 responses per survey
     _response_1_survey_1 = insert_response(survey1)
     response_2_survey_1 = insert_response(survey1)
     _response_1_survey_2 = insert_response(survey2)
     response_2_survey_2 = insert_response(survey2)
+
+    server |> expect_success
 
     # Run the pusher
     {:ok, _} = FloipPusher.start_link
@@ -40,12 +65,42 @@ defmodule FloipPusherTest do
     assert_last_response(survey2, endpoint_2_survey_2, response_2_survey_2)
   end
 
-  test "pushes to all endpoints that have new responses" do
+  test "pushes to all endpoints that have new responses", %{server: server} do
+    # 2 running surveys
+    survey1 = insert(:survey, state: "running")
+    survey2 = insert(:survey, state: "running")
+
+    # 2 endpoints per survey
+    insert_endpoint(survey1, uri: "http://localhost:1234/1.1")
+    insert_endpoint(survey1, uri: "http://localhost:1234/2.1")
+    insert_endpoint(survey2, uri: "http://localhost:1234/1.2")
+    insert_endpoint(survey2, uri: "http://localhost:1234/2.2")
+
+    # 2 responses per survey
+    insert_response(survey1)
+    insert_response(survey1)
+    insert_response(survey2)
+    insert_response(survey2)
+
+    server
+    |> expect_push("1.1", survey1.floip_package_id)
+    |> expect_push("2.1", survey1.floip_package_id)
+    |> expect_push("1.2", survey2.floip_package_id)
+    |> expect_push("2.2", survey2.floip_package_id)
+
+    # Run the pusher
+    {:ok, _} = FloipPusher.start_link
+    FloipPusher.poll
+  end
+
+  test "does not overwrite last_pushed_response_id if push fails" do
     # Create 2 surveys
     # Add 2 endpoints to each survey
     # Add 2 responses to each survey
+    # Set up the mock to fail for one of the endpoints
     # Run poll
-    # Verify that the receiving mock gets one POST for each endpoint, including both responses
+    # Verify that last_pushed_response_id hasn't changed for the failing endpoint
+    # Verify that last_pushed_response_id has changed for succeeding endpoints
   end
 
   test "does not push to endpoints with no new responses" do
