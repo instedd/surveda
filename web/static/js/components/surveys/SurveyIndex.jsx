@@ -205,7 +205,7 @@ class SurveyCard extends PureComponent {
                 { String(Math.round(completionPercentage)) + '% of target completed' }
               </div>
               <div className='card-chart'>
-                {/*<RespondentsChart cumulativePercentages={cumulativePercentages} />*/}
+                {/* <RespondentsChart cumulativePercentages={cumulativePercentages} /> */}
               </div>
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>

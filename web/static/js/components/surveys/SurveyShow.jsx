@@ -15,9 +15,6 @@ import { referenceColorClasses, referenceColors } from '../../referenceColors'
 import classNames from 'classnames/bind'
 import { Stats, Forecasts } from '@instedd/surveda-d3-components'
 
-// TODO Remove this dependency
-import * as d3 from 'd3'
-
 class SurveyShow extends Component {
   static propTypes = {
     dispatch: React.PropTypes.func,
@@ -182,46 +179,13 @@ class SurveyShow extends Component {
       }
     })
 
-    // let getValues = (start, today) => {
-    //   const days = d3.timeDays(start, today, 1)
-    //   var value = 0
-    //   const values = days.map(time => {
-    //     value += Math.round(Math.random() * 50)
-    //     return {time, value}
-    //   })
-    //   return values
-    // }
-
-    // TODO: Make this a real forecast
-    // let getForecast = (today, end, initial) => {
-    //   const days = d3.timeDays(new Date(today.getTime() - 24 * 60 * 60 * 1000), end, 1)
-    //   var value = initial
-    //   const forecast = days.map(time => {
-    //     var item = {time, value}
-    //     value += Math.round(Math.random() * 50)
-    //     return item
-    //   })
-    //   return forecast
-    // }
-
-    // const start = new Date()
-    // const today = new Date(start.getTime() + Math.random() * 45 * 24 * 60 * 60 * 1000)
-    // const end = new Date(today.getTime() + Math.round(Math.random() * 50 * 24 * 60 * 60 * 1000))
-
-    const formatDate = date => {
-      return new Date(Date.parse(date))
-    }
-
+    // TODO: we should be doing this when receiving properties, not at render
     let forecasts = forecastsReferences.map(d => {
-      // let values = getValues(start, today)
-      // let initial = values.length ? values[values.length - 1].value : 0
-      // let forecast = getForecast(today, end, initial)
-
       const values = (cumulativePercentages[d.id] || []).map(v => (
-        { time: formatDate(v.date), value: Number(v.percent) }
+        { time: new Date(v.date), value: Number(v.percent) }
       ))
 
-      return {...d, values, forecast: []}
+      return {...d, values}
     })
 
     return (
@@ -291,7 +255,7 @@ class SurveyShow extends Component {
               </div>
 
               <Stats data={stats} />
-              <Forecasts data={forecasts} />
+              <Forecasts data={forecasts} ceil={100} forecast />
             </div>
           </div>
         </div>
