@@ -6,6 +6,12 @@ import { withRouter } from 'react-router'
 import { translate } from 'react-i18next'
 
 class SaveStatus extends Component {
+  bindedFormatter: Function
+  constructor(props) {
+    super(props)
+    this.bindedFormatter = this.formatter.bind(this)
+  }
+
   formatter(number, unit, suffix, date, defaultFormatter) {
     const { t } = this.props
 
@@ -35,7 +41,7 @@ class SaveStatus extends Component {
     window.addEventListener('beforeunload', (ev) => {
       const { saveStatus, t } = this.props
 
-      if (saveStatus && saveStatus.saving) {
+      if (saveStatus && (saveStatus.saving || saveStatus.error)) {
         ev.preventDefault()
         ev.returnValue = t('You have unsaved changes. Are you sure you want to close?')
         return ev
@@ -50,8 +56,6 @@ class SaveStatus extends Component {
 
     let show = false
 
-    const bindedFormatter = this.formatter.bind(this)
-
     for (var i = routes.length - 1; i >= 0; i--) {
       if (routes[i].showSavingStatus) {
         show = true
@@ -60,13 +64,17 @@ class SaveStatus extends Component {
     }
 
     if (show && saveStatus && (saveStatus.saving || saveStatus.updatedAt)) {
-      if (saveStatus.saving) {
+      if (saveStatus.error) {
+        return (
+          <div className='right grey-text'>{t('Warning! Changes were not saved. Retrying...')}</div>
+        )
+      } else if (saveStatus.saving) {
         return (
           <div className='right grey-text'>{t('Saving...')}</div>
         )
       } else {
         return (
-          <div className='right grey-text'><TimeAgo minPeriod='60' date={saveStatus.updatedAt + '+0000'} formatter={bindedFormatter} /></div>
+          <div className='right grey-text'><TimeAgo minPeriod='60' date={saveStatus.updatedAt + '+0000'} formatter={this.bindedFormatter} /></div>
         )
       }
     } else {
@@ -82,7 +90,7 @@ SaveStatus.propTypes = {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  saveStatus: state.saveStatus || {}
+  saveStatus: state.autoSaveStatus || {}
 })
 
 export default translate()(withRouter(connect(mapStateToProps)(SaveStatus)))

@@ -321,7 +321,10 @@ export const autocompleteIvrQuestionnaireMsg = (msgKey, item) => ({
 export const save = () => (dispatch, getState) => {
   const questionnaire = getState().questionnaire.data
   dispatch(saving())
-  api.updateQuestionnaire(questionnaire.projectId, questionnaire).then((response) => dispatch(saved(response.entities.questionnaires[response.result])))
+  return api.updateQuestionnaire(questionnaire.projectId, questionnaire)
+    .then(response =>
+      dispatch(saved(response.entities.questionnaires[response.result]))
+    )
 }
 
 export const createQuestionnaire = (projectId) => (dispatch) =>

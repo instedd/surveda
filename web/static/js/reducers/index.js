@@ -8,7 +8,7 @@ import respondentsStats from './respondentsStats'
 import questionnaires from './questionnaires'
 import questionnaire from './questionnaire'
 import survey from './survey'
-import saveStatus from './saveStatus'
+import autoSaveStatus from './autoSaveStatus'
 import channels from './channels'
 import guisso from './guisso'
 import respondents from './respondents'
@@ -31,7 +31,7 @@ export default combineReducers({
   questionnaire,
   questionnaires,
   survey,
-  saveStatus,
+  autoSaveStatus,
   respondents,
   respondentGroups,
   respondentsCount,
