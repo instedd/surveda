@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@instedd/surveda-d3-components@1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.5.tgz#79cb008ab5517351b08d36532c96e4703ed417fe"
+"@instedd/surveda-d3-components@1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.7.tgz#b43dd8c2fa5ef61f421ecff90ce8bf8118715c5a"
   dependencies:
     d3 "^4.0.0"
 
@@ -1723,6 +1723,10 @@ d3-zoom@1.7.1:
     d3-interpolate "1"
     d3-selection "1"
     d3-transition "1"
+
+d3@^3.5.17:
+  version "3.5.17"
+  resolved "https://registry.yarnpkg.com/d3/-/d3-3.5.17.tgz#bc46748004378b21a360c9fc7cf5231790762fb8"
 
 d3@^4.0.0:
   version "4.13.0"

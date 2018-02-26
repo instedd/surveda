@@ -10,7 +10,7 @@ import { AddButton, Card, EmptyPage, UntitledIfEmpty } from '../ui'
 import { ConfirmationModal } from '../ui/ConfirmationModal'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
-// import RespondentsChart from '../respondents/RespondentsChart'
+import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 
@@ -193,7 +193,7 @@ class SurveyCard extends PureComponent {
         </span>
     }
 
-    // let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
+    let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
 
     return (
@@ -205,7 +205,7 @@ class SurveyCard extends PureComponent {
                 { String(Math.round(completionPercentage)) + '% of target completed' }
               </div>
               <div className='card-chart'>
-                {/* <RespondentsChart cumulativePercentages={cumulativePercentages} /> */}
+                <RespondentsChart cumulativePercentages={cumulativePercentages} />
               </div>
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>

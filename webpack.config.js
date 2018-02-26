@@ -6,7 +6,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin')
 module.exports = {
   resolve: {
     modules: [
-      path.join(__dirname, '/node_modules'),
+      'node_modules',
       path.join(__dirname, '/web/static/js')
     ],
     extensions: ['.js', '.jsx']
