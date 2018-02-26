@@ -1,13 +1,4 @@
 {
-  " project": "",
-  " projects": "",
-  "You have no projects yet": "",
-  "Organize your work": "",
-  "Manage surveys, questionnaires, and collaborators for each of your projects.": "",
-  "Name": "",
-  "Running surveys": "",
-  "Last activity date": "",
-  "project": "",
   "All changes saved": "",
   "Last saved {{count}} minute ago": "",
   "Last saved {{count}} minute ago_plural": "",
@@ -22,5 +13,15 @@
   "Last saved {{count}} year ago": "",
   "Last saved {{count}} year ago_plural": "",
   "You have unsaved changes. Are you sure you want to close?": "",
-  "Saving...": ""
+  "Warning! Changes were not saved. Retrying...": "",
+  "Saving...": "",
+  " project": "",
+  " projects": "",
+  "You have no projects yet": "",
+  "Organize your work": "",
+  "Manage surveys, questionnaires, and collaborators for each of your projects.": "",
+  "Name": "",
+  "Running surveys": "",
+  "Last activity date": "",
+  "project": ""
 }

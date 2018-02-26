@@ -225,10 +225,10 @@ export const save = () => (dispatch: Function, getState: () => Store) => {
   const survey = getState().survey.data
   if (!survey) return
   dispatch(saving())
-  api.updateSurvey(survey.projectId, survey)
-    .then(response => {
-      return dispatch(saved(response.entities.surveys[response.result]))
-    })
+  return api.updateSurvey(survey.projectId, survey)
+    .then(response =>
+       dispatch(saved(response.entities.surveys[response.result]))
+    )
 }
 
 export const receiveLink = (link: Link) => ({

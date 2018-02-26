@@ -1,19 +1,17 @@
-import * as surveyActions from '../actions/survey'
-import * as questionnaireActions from '../actions/questionnaire'
+import * as actions from '../actions/autoSaveStatus'
 
 const initialState = {
   updatedAt: null,
+  error: false,
   saving: false
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case surveyActions.SAVING: return saving(state, action)
-    case surveyActions.SAVED: return saved(state, action)
-    case surveyActions.RECEIVE: return receive(state, action)
-    case questionnaireActions.SAVING: return saving(state, action)
-    case questionnaireActions.SAVED: return saved(state, action)
-    case questionnaireActions.RECEIVE: return receive(state, action)
+    case actions.SAVING: return saving(state, action)
+    case actions.SAVED: return saved(state, action)
+    case actions.RECEIVE: return receive(state, action)
+    case actions.ERROR: return error(state, action)
     default: return state
   }
 }
@@ -37,6 +35,14 @@ const saved = (state, action) => {
   return {
     ...state,
     updatedAt: action.data.updatedAt,
+    error: false,
     saving: false
+  }
+}
+
+const error = (state, action) => {
+  return {
+    ...state,
+    error: true
   }
 }
