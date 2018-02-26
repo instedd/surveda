@@ -2,7 +2,7 @@ import i18n from 'i18next'
 import english from '../../../locales/translations/en.json'
 import spanish from '../../../locales/translations/es.json'
 
-const currentLanguage = window.appConfig.user_settings.language
+const currentLanguage = window.appConfig.user_settings.language || 'en'
 
 i18n
   .init({
