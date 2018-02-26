@@ -324,19 +324,19 @@ defmodule Ask.RespondentController do
       |> Enum.into(%{})
   end
 
-  defp cumulative_percent_for(range, percent_by_date) do
+  defp cumulative_percent_for(range, percents_by_date) do
     range
-    |> Enum.reduce({percent_by_date, 0, []}, fn date, acc ->
+    |> Enum.reduce({percents_by_date, 0, []}, fn date, acc ->
       {percents_by_date, cumulative_percent, cumulative_percent_by_date} = acc
       case percents_by_date do
         [] ->
-          {[], cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
+          acc
         [{next_date, next_percent} | rest_percents_by_date] ->
           case Timex.compare(date, next_date) do
             -1 -> # date < next_date
               {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
             0 -> # date == next_date
-              {rest_percents_by_date, cumulative_percent + next_percent, cumulative_percent_by_date ++ [{date, min(cumulative_percent + next_percent, 100.0)}]}
+              {rest_percents_by_date, min(cumulative_percent + next_percent, 100.0), cumulative_percent_by_date ++ [{date, min(cumulative_percent + next_percent, 100.0)}]}
             1 -> # date > next_date, should not happen, but just in case
               acc
           end
