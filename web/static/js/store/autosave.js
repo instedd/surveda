@@ -7,12 +7,11 @@ export default (storeProvider, actions) => store => next => action => {
   switch (action.type) {
     case actions.RECEIVE: store.dispatch(autoSaveStatusActions.receive(result.data)); break
     case autoSaveStatusActions.SAVING: return result
-    case autoSaveStatusActions.SAVED: return result
   }
 
   if (state.dirty && !state.saving) {
-    store.dispatch(autoSaveStatusActions.saving())
     performSaveWithRetry(store, actions)
+    store.dispatch(autoSaveStatusActions.saving())
   }
 
   return result
