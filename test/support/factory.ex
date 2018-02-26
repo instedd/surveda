@@ -169,7 +169,7 @@ defmodule Ask.Factory do
 
   def response_factory do
     %Ask.Response{
-        field_name: "Smoke"
+      field_name: "Smoke"
     }
   end
 
