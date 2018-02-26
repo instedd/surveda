@@ -150,11 +150,23 @@ defmodule Ask.RespondentController do
       |> Enum.map(fn {_, c} -> c end)
       |> Enum.sum
 
+    grouped_respondents =
+      respondents_by_completed_at
+      |> Enum.reduce(%{}, fn {group_id, date, count}, acc ->
+        {_, next_acc} =
+          acc
+          |> Map.get_and_update(group_id, fn counts_by_date ->
+            {counts_by_date, (counts_by_date || []) ++ [{date, count}]}
+          end)
+
+        next_acc
+      end)
+
     stats = %{
       id: survey.id,
       reference: reference,
       respondents_by_disposition: respondent_counts(respondents_by_disposition, total_respondents),
-      cumulative_percentages: cumulative_percentages(respondents_by_completed_at, survey, target, buckets),
+      cumulative_percentages: cumulative_percentages(grouped_respondents, survey.started_at, survey.comparisons, target, buckets),
       completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
       target: target,
@@ -272,66 +284,57 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  defp cumulative_percentages(grouped_respondents, %{started_at: started_at, comparisons: []}, target, []) do
-    cumulative_percentages(grouped_respondents, started_at, fn (_group_id, date, count) ->
-      fn date_percent ->
-        {date_percent, date_percent ++ [{date, (count / target) * 100}]}
-      end
-    end)
+  defp percent_provider(_group_id, [], target, []) do
+    fn count ->
+      count / target * 100
+    end
   end
 
-  defp cumulative_percentages(grouped_respondents, %{started_at: started_at, comparisons: []}, _, buckets) do
-    cumulative_percentages(grouped_respondents, started_at, fn (group_id, date, count) ->
-      fn date_percent ->
-        bucket = buckets |> Enum.find(fn bucket -> bucket.id == group_id end)
-        {date_percent, date_percent ++ [{date, (count / bucket.quota) * 100}]}
-      end
-    end)
+  defp percent_provider(group_id, [], _target, buckets) do
+    bucket = buckets |> Enum.find(fn bucket -> bucket.id == group_id end)
+
+    fn count ->
+      count / bucket.quota * 100
+    end
   end
 
-  defp cumulative_percentages(grouped_respondents, %{started_at: started_at, comparisons: comparisons}, target, []) do
-    cumulative_percentages(grouped_respondents, started_at, fn (group_id, date, count) ->
-      fn date_percent ->
-        comparison =
-          comparisons
-          |> Enum.find(fn comparison ->
-            group_id == "#{comparison["questionnaire_id"]}#{comparison["mode"] |> Enum.join("")}"
-            || group_id == comparison["questionnaire_id"]
-            || group_id == comparison["mode"]
-          end)
+  defp percent_provider(group_id, comparisons, target, []) do
+    comparison =
+      comparisons
+      |> Enum.find(fn comparison ->
+        group_id == "#{comparison["questionnaire_id"]}#{comparison["mode"] |> Enum.join("")}" ||
+          group_id == comparison["questionnaire_id"] || group_id == comparison["mode"]
+      end)
 
-        {date_percent, date_percent ++ [{date, (count / (comparison["ratio"]*target/100)) * 100}]}
-      end
-    end)
+    fn count ->
+      count / (comparison["ratio"] * target / 100) * 100
+    end
   end
 
-  defp cumulative_percentages(grouped_respondents, started_at, date_percent_provider) do
-    range =
-      Timex.Interval.new(from: started_at, until: Timex.now)
-      |> Enum.map(&Timex.to_date/1)
-
+  defp cumulative_percentages(grouped_respondents, started_at, comparisons, target, buckets) do
     grouped_respondents
-      |> Enum.reduce(%{}, fn {group_id, date, count}, acc ->
-          {_, next_acc} =
-            acc
-            |> Map.put_new(group_id, [])
-            |> Map.get_and_update(group_id, date_percent_provider.(group_id, date, count))
-          next_acc
-        end)
-      |> Enum.map(fn {group_id, percents_by_date} ->
-          {group_id, cumulative_percent_for(range, percents_by_date)}
-        end)
-      |> Enum.into(%{})
+    |> Enum.map(fn {group_id, percents_by_date} ->
+      {group_id,
+       cumulative_percents_for_group(
+         started_at,
+         percents_by_date,
+         percent_provider(group_id, comparisons, target, buckets)
+       )}
+    end)
+    |> Enum.into(%{})
   end
 
-  defp cumulative_percent_for(range, percents_by_date) do
-    range
+  defp cumulative_percents_for_group(started_at, percents_by_date, percent_provider) do
+    Timex.Interval.new(from: started_at, until: Timex.now)
+    |> Enum.map(&Timex.to_date/1)
     |> Enum.reduce({percents_by_date, 0, []}, fn date, acc ->
       {percents_by_date, cumulative_percent, cumulative_percent_by_date} = acc
       case percents_by_date do
         [] ->
           acc
-        [{next_date, next_percent} | rest_percents_by_date] ->
+        [{next_date, next_count} | rest_percents_by_date] ->
+          next_percent = percent_provider.(next_count)
+
           case Timex.compare(date, next_date) do
             -1 -> # date < next_date
               {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
