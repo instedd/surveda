@@ -3,6 +3,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { ConfirmationModal, AudioDropzone, Dropdown, DropdownItem } from '../ui'
 import Draft from './Draft'
+import RecordAudio from './RecordAudio'
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
@@ -22,6 +23,7 @@ class IvrPrompt extends Component {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
+    this.setState({...this.state, recording: false})
   }
 
   stateFromProps(props) {
@@ -67,6 +69,11 @@ class IvrPrompt extends Component {
            $('#unprocessableEntity').modal('open')
          })
       })
+  }
+
+  toggleRecording = () => {
+    this.setState({...this.state, recording: !this.state.recording})
+    console.log(this.state)
   }
 
   render() {
@@ -128,9 +135,14 @@ class IvrPrompt extends Component {
                   {this.state.audioSource == 'upload' ? <i className='material-icons right'>done</i> : ''}
                 </a>
               </DropdownItem>
+              <DropdownItem>
+                <a onClick={e => this.toggleRecording()}>
+                  Toggle recording
+                </a>
+              </DropdownItem>
             </Dropdown>
           </div>
-          {(this.state.audioSource == 'upload')
+          {(this.state.audioSource == 'upload' && !this.state.recording)
             ? <div className='upload-audio'>
               <audio controls key={this.state.audioId}>
                 <source src={this.state.audioUri} type='audio/mpeg' />
@@ -140,6 +152,11 @@ class IvrPrompt extends Component {
               }
             </div>
             : ''}
+          {
+            this.state.recording
+            ? <RecordAudio stepId={stepId} />
+            : null
+          }
         </div>
       </div>
     )
