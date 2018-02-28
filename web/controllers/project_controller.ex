@@ -3,19 +3,27 @@ defmodule Ask.ProjectController do
 
   alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
 
-  def index(conn, _params) do
-    memberships = conn
-    |> current_user
-    |> assoc(:project_memberships)
-    |> preload(:project)
+  def index(conn, params) do
+    archived = case params["archived"] do
+      "true" -> true
+      _ -> false
+    end
+
+    current_user = conn |> current_user
+
+    projects = current_user
+    |> assoc([:project_memberships, :project])
+    |> where([p], p.archived == ^archived)
+    |> preload(:project_memberships)
     |> Repo.all
 
-    projects = memberships
-    |> Enum.map(&(&1.project))
+    memberships = projects
+    |> Enum.map(&(&1.project_memberships))
+    |> List.flatten
+    |> Enum.filter(&(&1.user_id == current_user.id))
     |> Enum.uniq
 
-    levels_by_project = memberships
-    |> Enum.group_by(&(&1.project_id))
+    levels_by_project = memberships |> Enum.group_by(&(&1.project_id))
     |> Enum.to_list
     |> Enum.map(fn {id, memberships} ->
       level =
@@ -89,7 +97,7 @@ defmodule Ask.ProjectController do
     |> Repo.one
 
     if membership do
-      read_only = membership.level == "reader"
+      read_only = membership.level == "reader" || project.archived
       owner = membership.level == "owner"
       render(conn, "show.json", project: project, read_only: read_only, owner: owner)
     else
@@ -103,6 +111,39 @@ defmodule Ask.ProjectController do
 
     changeset = project
     |> Project.changeset(project_params)
+
+    case Repo.update(changeset) do
+      {:ok, project} ->
+        user = conn
+        |> current_user
+
+        membership = project
+        |> assoc(:project_memberships)
+        |> where([m], m.user_id == ^user.id)
+        |> Repo.one
+
+        owner = membership.level == "owner"
+        render(conn, "show.json", project: project, read_only: false, owner: owner)
+      {:error, changeset} ->
+        Logger.warn "Error when updating project #{project.id}: #{inspect changeset}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
+  def update_archived_status(conn, %{"project_id" => id, "project" => project_params}) do
+    project = conn
+    |> load_project_for_owner(id)
+
+    archived = case project_params["archived"] do
+      "true" -> true
+      "false" -> false
+      other -> other
+    end
+
+    changeset = project
+    |> Project.changeset(%{archived: archived})
 
     case Repo.update(changeset) do
       {:ok, project} ->

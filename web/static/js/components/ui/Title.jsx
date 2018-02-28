@@ -15,13 +15,13 @@ const Title = ({ children }) => {
     <nav id='MainNav'>
       <div className='nav-wrapper'>
         <div className='row'>
-          <div className='col s9'>
+          <div className='col s8'>
             <div className='logo'>
               <Link className='logo-container' to='/' />
             </div>
             {renderChildren()}
           </div>
-          <div className='col s3'>
+          <div className='col s4'>
             <SaveStatus />
           </div>
         </div>

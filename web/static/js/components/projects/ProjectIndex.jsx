@@ -5,18 +5,21 @@ import { withRouter } from 'react-router'
 import { createProject } from '../../api'
 import * as actions from '../../actions/projects'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty } from '../ui'
+import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty, Tooltip } from '../ui'
 import * as routes from '../../routes'
 import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
+import { Input } from 'react-materialize'
+
+import { translate } from 'react-i18next'
 
 class ProjectIndex extends Component {
   componentWillMount() {
     this.creatingProject = false
 
     this.props.projectActions.clearProject()
-    this.props.actions.fetchProjects()
+    this.props.actions.fetchProjects({'archived': false})
   }
 
   newProject(e) {
@@ -54,9 +57,69 @@ class ProjectIndex extends Component {
     this.props.actions.sortProjectsBy(property)
   }
 
+  archiveOrUnarchive(project: Project, action: string) {
+    this.props.actions.archiveOrUnarchive(project, action)
+  }
+
+  fetchProjects(event: any) {
+    const newValue = (event.target.value == 'archived')
+    this.props.actions.fetchProjects({'archived': newValue})
+  }
+
+  archiveIconForProject(archived: boolean, project: Project) {
+    if (!project.owner) {
+      return <td />
+    } else {
+      if (archived) {
+        return (
+          <td className='action'>
+            <Tooltip text='unarchive'>
+              <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}>
+                <i className='material-icons'>unarchive</i>
+              </a>
+            </Tooltip>
+          </td>
+        )
+      } else {
+        return (
+          <td className='action'>
+            <Tooltip text='archive'>
+              <a onClick={() => this.archiveOrUnarchive(project, 'archive')}>
+                <i className='material-icons'>archive</i>
+              </a>
+            </Tooltip>
+          </td>
+        )
+      }
+    }
+  }
+
   render() {
+    const { archived } = this.props
+
+    const archivedFilter = <Input
+      type='select'
+      value={archived ? 'archive' : 'all_projects'}
+      onChange={e => this.fetchProjects(e)}
+      >
+      <option key='archived' id='archived' name='archived' value='archived'> Archived </option>
+      <option key='all_projects' id='all_projects' name='all_projects' value='all_projects'> All projects </option>
+    </Input>
+
+    return (
+      <div>
+        <AddButton text='Add project' onClick={e => this.newProject(e)} />
+        <div className='row filterIndex'>
+          {archivedFilter}
+        </div>
+        { this.renderTable() }
+      </div>
+    )
+  }
+
+  renderTable() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, router } = this.props
+      totalCount, hasPreviousPage, hasNextPage, archived, router, t } = this.props
 
     if (!projects) {
       return (
@@ -66,7 +129,7 @@ class ProjectIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount == 1) ? ' project' : ' projects'}`
+    const title = `${totalCount} ${(totalCount == 1) ? t(' project') : t(' projects')}`
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
@@ -85,10 +148,9 @@ class ProjectIndex extends Component {
 
     return (
       <div>
-        <AddButton text='Add project' onClick={e => this.newProject(e)} />
-        { (projects.length == 0)
+        { (projects.length == 0 && !archived)
           ? <div className='empty-projects'>
-            <EmptyPage icon='folder' title='You have no projects yet' onClick={e => this.newProject(e)} />
+            <EmptyPage icon='folder' title={t('You have no projects yet')} onClick={e => this.newProject(e)} />
             <div className='organize'>
               <div className='icons'>
                 <i className='material-icons'>assignment_turned_in</i>
@@ -97,33 +159,35 @@ class ProjectIndex extends Component {
                 <i className='material-icons'>folder_shared</i>
               </div>
               <p>
-                <b>Organize your work</b><br />
-                  Manage surveys, questionnaires, and collaborators for each of your projects.
+                <b>{t('Organize your work')}</b><br />
+                {t('Manage surveys, questionnaires, and collaborators for each of your projects.')}
               </p>
             </div>
           </div>
           : <CardTable title={title} footer={footer} highlight>
             <colgroup>
-              <col width='60%' />
+              <col width='50%' />
               <col width='20%' />
               <col width='20%' />
+              <col width='10%' />
             </colgroup>
             <thead>
               <tr>
-                <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Running surveys' property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text='Last activity date' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text={t('Name')} property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text={t('Running surveys')} property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader className='right-align' text={t('Last activity date')} property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <th />
               </tr>
             </thead>
             <tbody>
               { range(0, pageSize).map(index => {
                 const project = projects[index]
-                if (!project) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
+                if (!project) return <tr key={-index} className='empty-row'><td colSpan='4' /></tr>
 
                 return (
                   <tr key={project.id}>
                     <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} entityName='project' />
+                      <UntitledIfEmpty text={project.name} entityName={t('project')} />
                     </td>
                     <td className='right-align'>
                       {project.runningSurveys}
@@ -135,6 +199,9 @@ class ProjectIndex extends Component {
                         month='short'
                         year='numeric' />
                     </td>
+                    {
+                      this.archiveIconForProject(archived, project)
+                    }
                   </tr>
                 )
               })
@@ -159,11 +226,14 @@ ProjectIndex.propTypes = {
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
+  archived: PropTypes.bool,
+  t: PropTypes.func,
   router: PropTypes.object
 }
 
 const mapStateToProps = (state) => {
   let projects = orderedItems(state.projects.items, state.projects.order)
+  const archived = projects ? state.projects.filter.archived : false
   const sortBy = state.projects.sortBy
   const sortAsc = state.projects.sortAsc
   const totalCount = projects ? projects.length : 0
@@ -185,7 +255,8 @@ const mapStateToProps = (state) => {
     endIndex,
     hasPreviousPage,
     hasNextPage,
-    totalCount
+    totalCount,
+    archived
   }
 }
 
@@ -194,4 +265,4 @@ const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex)))

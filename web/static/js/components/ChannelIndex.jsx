@@ -56,6 +56,14 @@ class ChannelIndex extends Component {
     this.props.authActions.synchronizeChannels()
   }
 
+  channelDisplayName(channel) {
+    if (channel.settings && channel.settings.sharedBy) {
+      return `${channel.name} (shared by ${channel.settings.sharedBy})`
+    } else {
+      return channel.name
+    }
+  }
+
   render() {
     const { channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage } = this.props
 
@@ -216,7 +224,7 @@ class ChannelIndex extends Component {
 
                 return (<tr key={channel.id}>
                   <td>
-                    <UntitledIfEmpty text={channel.name} entityName='channel' />
+                    <UntitledIfEmpty text={this.channelDisplayName(channel)} entityName='channel' />
                   </td>
                   <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
                 </tr>)

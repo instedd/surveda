@@ -7,7 +7,7 @@ defmodule Ask.LayoutViewTest do
   end
 
   defp test_rendered_guisso_config(env, json_root) do
-    rendered_config = assign(build_conn(), :current_user, %{name: "John Doe", email: "john@doe.com"})
+    rendered_config = assign(build_conn(), :current_user, %{name: "John Doe", email: "john@doe.com", id: 3})
                         |> Ask.LayoutView.config
                         |> Poison.Parser.parse!
 

@@ -129,8 +129,8 @@ const newFormData = (file) => {
   return formData
 }
 
-export const fetchProjects = () => {
-  return apiFetchJSON(`projects`, arrayOf(projectSchema))
+export const fetchProjects = (options) => {
+  return apiFetchJSON(`projects?archived=${options['archived']}`, arrayOf(projectSchema))
 }
 
 export const fetchSurveys = (projectId) => {
@@ -231,6 +231,10 @@ export const updateProject = (project) => {
   return apiPutJSON(`projects/${project.id}`, projectSchema, { project })
 }
 
+export const updateProjectArchived = (project) => {
+  return apiPutJSON(`projects/${project.id}/update_archived_status`, projectSchema, { project })
+}
+
 export const updateSurvey = (projectId, survey) => {
   return apiPutJSON(`projects/${projectId}/surveys/${survey.id}`, surveySchema, { survey })
 }
@@ -284,11 +288,19 @@ export const autocompleteVars = (projectId, text) => {
 export const autocompletePrimaryLanguage = (projectId, mode, scope, language, text) => {
   return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&scope=${scope}&language=${language}&text=${encodeURIComponent(text)}`)
   .then(response => response.json())
+  .catch(error => {
+    console.log(error)
+    return []
+  })
 }
 
 export const autocompleteOtherLanguage = (projectId, mode, scope, primaryLanguage, otherLanguage, sourceText, targetText) => {
   return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&scope=${scope}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
   .then(response => response.json())
+  .catch(error => {
+    console.log(error)
+    return []
+  })
 }
 
 export const fetchCollaborators = (projectId) => {

@@ -2,6 +2,7 @@ var webpack = require('webpack')
 var path = require('path')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 var CopyWebpackPlugin = require('copy-webpack-plugin')
+const i18nextWebpackPlugin = require('i18next-scanner-webpack')
 
 module.exports = {
   resolve: {
@@ -11,7 +12,6 @@ module.exports = {
     ],
     extensions: ['.js', '.jsx']
   },
-
   entry: {
     app: [
       './web/static/vendor/js/materialize.js',
@@ -84,6 +84,35 @@ module.exports = {
   devtool: 'cheap-module-source-map',
 
   plugins: [
+    new i18nextWebpackPlugin({ // eslint-disable-line
+      src: path.resolve(__dirname, './web/static/js/**/*.{js,jsx}'),
+      dest: path.resolve(__dirname, 'locales'),
+      options: {
+        func: {
+          list: ['i18next.t', 'i18n.t', 't'],
+          extensions: ['.js', '.jsx']
+        },
+        trans: {
+          component: 'Trans',
+          i18nKey: 'i18nKey',
+          extensions: ['.js', '.jsx'],
+          fallbackKey: function(ns, value) {
+            return value
+          }
+        },
+        defaultLng: 'template',
+        defaultValue: '',
+        keySeparator: false, // key separator
+        lngs: ['template'],
+        interpolation: {
+          prefix: '{{',
+          suffix: '}}'
+        },
+        resource: {
+          savePath: '{{lng}}/{{ns}}.json'
+        }
+      }
+    }),
     new ExtractTextPlugin('css/[name].css'),
     new CopyWebpackPlugin([{ from: './web/static/assets' }]),
     new webpack.ProvidePlugin({

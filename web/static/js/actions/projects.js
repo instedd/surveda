@@ -1,5 +1,6 @@
 // @flow
 import * as api from '../api'
+import merge from 'lodash/merge'
 
 export const RECEIVE = 'PROJECTS_RECEIVE'
 export const RECEIVE_ERROR = 'PROJECTS_RECEIVE_ERROR'
@@ -7,8 +8,9 @@ export const FETCH = 'PROJECTS_FETCH'
 export const NEXT_PAGE = 'PROJECTS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'PROJECTS_PREVIOUS_PAGE'
 export const SORT = 'PROJECTS_SORT'
+export const REMOVE = 'PROJECTS_REMOVE'
 
-export const fetchProjects = () => (dispatch: Function, getState: () => Store) => {
+export const fetchProjects = (options: Object) => (dispatch: Function, getState: () => Store) => {
   const state = getState()
 
   // Don't fetch projects if they are already being fetched
@@ -16,17 +18,19 @@ export const fetchProjects = () => (dispatch: Function, getState: () => Store) =
     return
   }
 
-  dispatch(startFetchingProjects())
-  return api.fetchProjects()
-    .then(response => dispatch(receiveProjects(response.entities.projects || {})))
+  dispatch(startFetchingProjects(options['archived']))
+  return api.fetchProjects(options)
+    .then(response => dispatch(receiveProjects(response.entities.projects || {}, options['archived'])))
 }
 
-export const startFetchingProjects = () => ({
-  type: FETCH
+export const startFetchingProjects = (archived: boolean): FilteredAction => ({
+  type: FETCH,
+  archived
 })
 
-export const receiveProjects = (items: IndexedList<Project>): ReceiveItemsAction => ({
+export const receiveProjects = (items: IndexedList<Project>, archived: boolean): ReceiveFilteredItemsAction => ({
   type: RECEIVE,
+  archived,
   items
 })
 
@@ -42,3 +46,19 @@ export const sortProjectsBy = (property: string) => ({
   type: SORT,
   property
 })
+
+export const archiveOrUnarchive = (project: Project, action: string) => (dispatch: Function, getState: () => Store) => {
+  const archive = (action == 'archive')
+
+  project = merge({}, project, {archived: archive})
+  api.updateProjectArchived(project).then(response => {
+    dispatch(remove(response.entities.projects[response.result]))
+    window.Materialize.toast(`Project successfully ` + (archive ? `archived` : `unarchived`), 5000)
+  })
+}
+
+export const remove = (project: Project) => ({
+  type: REMOVE,
+  id: project.id
+})
+

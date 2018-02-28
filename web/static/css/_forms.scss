@@ -207,3 +207,42 @@ label {
 .ac-item { // autocomplete dropdown li
   padding: 10px;
 }
+
+.filterIndex .input-field {
+  margin-top: -30px;
+  input {
+    @extend .grey-text;
+    border-bottom: none;
+  }
+}
+
+.languageSelector {
+  display: inline-block;
+  text-align: left;
+  margin-right: 30px;
+  min-width: 100px;
+    > a {
+    @extend .grey-text;
+
+    i {
+      line-height: 16px;
+      margin-right: 10px;
+    }
+  }
+  .dropdown-content {
+    min-width: 145px;
+    width: auto !important;
+    transform: translateX(-35px);
+    a {
+      @extend .black-text;
+      i {
+        margin-right: 10px;
+      }
+      .lang {
+        @extend .grey-text;
+        @extend .right;
+        margin-left: 10px;
+      }
+    }
+  }
+}

@@ -2,18 +2,33 @@ defmodule Ask.LayoutView do
   use Ask.Web, :view
   alias Ask.Config
 
+  alias Ask.{User, Repo}
+
   def config(conn) do
     version = Application.get_env(:ask, :version)
     sentry_dsn = Application.get_env(:sentry, :public_dsn)
+
     user_email = case current_user(conn) do
       nil -> nil
       user -> user.email
+    end
+
+    user_settings = case current_user(conn) do
+      nil -> nil
+      user ->
+        db_user = User |> Repo.get(user.id)
+        if db_user do
+          db_user.settings
+        else
+          nil
+        end
     end
 
     client_config = %{
       version: version,
       csrf_token: get_csrf_token(),
       user: user_email,
+      user_settings: user_settings,
       sentryDsn: sentry_dsn,
       available_languages_for_numbers: Ask.NumberTranslator.langs(),
       nuntium: Config.provider_config(Nuntium) |> guisso_configs,

@@ -20,7 +20,7 @@ if [ $JS -eq 0 ]; then
 fi
 
 echo "----==== Running Flow tests ====----"
-./node_modules/.bin/flow check
+docker-compose run --rm webpack yarn flow check
 FLOW=$?
 
 if [ $FLOW -eq 0 ]; then

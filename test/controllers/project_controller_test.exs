@@ -54,6 +54,44 @@ defmodule Ask.ProjectControllerTest do
       ]
     end
 
+    test "returns archived projects only", %{conn: conn, user: user} do
+      archived_project = create_project_for_user(user, archived: true)
+      create_project_for_user(user, archived: false)
+      archived_project = Project |> Repo.get(archived_project.id)
+
+      conn = get conn, project_path(conn, :index, %{"archived" => "true"})
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id"      => archived_project.id,
+          "name"    => archived_project.name,
+          "running_surveys" => 0,
+          "updated_at" => NaiveDateTime.to_iso8601(archived_project.updated_at),
+          "read_only" => true,
+          "colour_scheme" => "default",
+          "owner" => true,
+        }
+      ]
+    end
+
+    test "returns active projects when no parameter is send", %{conn: conn, user: user} do
+      create_project_for_user(user, archived: true)
+      active_project = create_project_for_user(user, archived: false)
+      active_project = Project |> Repo.get(active_project.id)
+
+      conn = get conn, project_path(conn, :index)
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id"      => active_project.id,
+          "name"    => active_project.name,
+          "running_surveys" => 0,
+          "updated_at" => NaiveDateTime.to_iso8601(active_project.updated_at),
+          "read_only" => false,
+          "colour_scheme" => "default",
+          "owner" => true,
+        }
+      ]
+    end
+
     test "shows running survey count", %{conn: conn, user: user} do
       project1 = create_project_for_user(user)
       project1 = Project |> Repo.get(project1.id)
@@ -111,7 +149,7 @@ defmodule Ask.ProjectControllerTest do
     end
 
     test "shows chosen resource as read_only", %{conn: conn, user: user} do
-      project = create_project_for_user(user, level: "reader")
+      project = create_project_for_user(user, archived: true)
       project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
@@ -119,7 +157,13 @@ defmodule Ask.ProjectControllerTest do
         "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => true,
         "colour_scheme" => "default",
-        "owner" => false}
+        "owner" => true}
+    end
+
+    test "read_only is true when project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      conn = get conn, project_path(conn, :show, project)
+      assert json_response(conn, 200)["data"]["read_only"]
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
@@ -174,6 +218,28 @@ defmodule Ask.ProjectControllerTest do
       assert Repo.get_by(Project, @valid_attrs)
     end
 
+    test "sets archived status to true", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+      project = Project |> Repo.get(project.id)
+      assert project.archived
+    end
+
+    test "rejects archived parameter when it is invalid", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "foo"}
+      assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
+    end
+
+    test "rejects archived status update if user level is reader or editor", %{conn: conn, user: user} do
+      ["reader", "editor"] |> Enum.each(fn level ->
+        project = create_project_for_user(user, level: level)
+        assert_error_sent :forbidden, fn ->
+          put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+        end
+      end)
+    end
+
     test "updates colour_scheme when it is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       conn = put conn, project_path(conn, :update, project), project: %{colour_scheme: "better_data_for_health"}
@@ -197,6 +263,13 @@ defmodule Ask.ProjectControllerTest do
 
     test "rejects update if the project belong to the current user but as reader", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
+      assert_error_sent :forbidden, fn ->
+        put conn, project_path(conn, :update, project), project: @valid_attrs
+      end
+    end
+
+    test "rejects update if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
       assert_error_sent :forbidden, fn ->
         put conn, project_path(conn, :update, project), project: @valid_attrs
       end
