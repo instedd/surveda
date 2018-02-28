@@ -593,6 +593,11 @@ label + .tooltipped {
   margin-left: 6px;
 }
 
+a.record-audio-icon {
+  cursor: pointer;
+  color: red;
+}
+
   // ------- Questionnaires language selector ----------
 
   .language-selection {

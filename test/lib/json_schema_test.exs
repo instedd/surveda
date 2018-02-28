@@ -264,6 +264,13 @@ defmodule Ask.StepsValidatorTest do
       "audio_id": "3b74aec8-1d5d-4b05-81e3-ab4856062615"
     })
     |> valid_ivr
+
+    ~s({
+      "audio_source": "record",
+      "text": "How many fingers do you have?",
+      "audio_id": "3b74aec8-1d5d-4b05-81e3-ab4856062615"
+    })
+    |> valid_ivr
   end
 
   test "choice" do

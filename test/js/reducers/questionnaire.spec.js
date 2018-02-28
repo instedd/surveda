@@ -1317,11 +1317,30 @@ describe('questionnaire reducer', () => {
       const newStep = state.data.steps[state.data.steps.length - 1]
 
       const finalState = playActionsFromState(state, reducer)([
-        actions.changeStepAudioIdIvr(newStep.id, '1234')]
+        actions.changeStepAudioIdIvr(newStep.id, '1234', 'upload')]
       )
 
       const step = find(finalState.data.steps, s => s.id === newStep.id)
       expect(step.prompt['es'].ivr).toEqual({text: '', audioId: '1234', audioSource: 'upload'})
+    })
+
+    it('should update step audioId from a recording on a new step', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addLanguage('es'),
+        actions.setDefaultLanguage('es'),
+        actions.addStep()
+      ])
+
+      const newStep = state.data.steps[state.data.steps.length - 1]
+
+      const finalState = playActionsFromState(state, reducer)([
+        actions.changeStepAudioIdIvr(newStep.id, '1234', 'record')]
+      )
+
+      const step = find(finalState.data.steps, s => s.id === newStep.id)
+      expect(step.prompt['es'].ivr).toEqual({text: '', audioId: '1234', audioSource: 'record'})
     })
 
     it('should add a new language last inside the choices of the language selection step', () => {

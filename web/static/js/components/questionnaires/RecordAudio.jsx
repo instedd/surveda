@@ -15,7 +15,7 @@ class RecordAudio extends Component {
 
   constructor(props) {
     super(props)
-    this.state = {stepId: props.stepId}
+    this.state = {stepId: props.stepId, recording: false}
   }
 
   onClickRecord() {
@@ -44,41 +44,45 @@ class RecordAudio extends Component {
           const blob = new Blob(mp3Data, {type: 'audio/mp3'})
           const file = new File([blob], 'record_audio.mp3', {type: 'audio/mp3'})
           const audioURL = window.URL.createObjectURL(file)
+          this.props.uiActions.uploadAudio(this.state.stepId)
+          createAudio([file]).then(response => {
+            this.props.questionnaireActions.changeStepAudioIdIvr(this.state.stepId, response.result, 'record')
+            this.props.uiActions.finishAudioUpload()
+          })
           this.setState({...this.state, audioURL: audioURL, file: file})
         })
         fileReader.readAsArrayBuffer(chunks)
       }
       mediaRecorder.start(300000)
 
-      this.setState({...this.state, mediaRecorder: mediaRecorder})
+      this.setState({...this.state, mediaRecorder: mediaRecorder, streamReference: stream, recording: true})
     }
     navigator.mediaDevices.getUserMedia({audio: true}).then(onMediaSuccess)
   }
 
   onClickStop() {
     this.state.mediaRecorder.stop()
-  }
-
-  confirm() {
-    const file = this.state.file
-    this.props.uiActions.uploadAudio(this.state.stepId)
-    createAudio([file]).then(response => {
-      this.props.questionnaireActions.changeStepAudioIdIvr(this.state.stepId, response.result)
-      this.props.uiActions.finishAudioUpload()
-    })
+    if (this.state.streamReference) {
+      this.state.streamReference.getAudioTracks().forEach(track => {
+        track.stop()
+      })
+    }
+    this.setState({...this.state, recording: false})
   }
 
   render() {
+    const recordIcon = this.state.recording
+    ? <a className='record-audio-icon' onClick={() => this.onClickStop()}>
+      <i className='material-icons left'>stop</i>
+    </a>
+    : <a className='record-audio-icon' onClick={() => this.onClickRecord()}>
+      <i className='material-icons left'>fiber_manual_record</i>
+    </a>
+
     return (
-      <div>
-        <section className='main-controls'>
-          <audio controls src={this.state.audioURL || ''} />
-          <div id='buttons'>
-            <button onClick={() => this.onClickRecord()}>Record</button>
-            <button onClick={() => this.onClickStop()}>Stop</button>
-            <button onClick={() => this.confirm()}>Confirm</button>
-          </div>
-        </section>
+      <div className='upload-audio'>
+        <audio controls key={this.state.audioId} src={this.state.audioURL || ''} />
+        { recordIcon }
       </div>
     )
   }

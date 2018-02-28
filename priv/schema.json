@@ -208,7 +208,7 @@
       "type": "object",
       "properties": {
         "text": {"type": "string"},
-        "audio_source": {"enum": ["tts", "upload"]},
+        "audio_source": {"enum": ["tts", "upload", "record"]},
         "audio_id": {"type": "string"}
       },
       "additionalProperties": false,
