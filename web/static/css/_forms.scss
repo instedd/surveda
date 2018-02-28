@@ -119,17 +119,25 @@ label {
   margin-bottom: 40px;
   .audio-dropdown {
     display: inline-block;
-    width: 25%;
-    min-width: 145px;
+    min-width: 95px;
   }
   .upload-audio {
     padding-top: 20px;
+  }
+  .record-audio {
+    a {
+      position: absolute;
+      top: 2px;
+      left: 118px;
+      cursor: pointer;
+      color: #F44336;
+    }
   }
   audio {
     position: absolute;
     right: 5px;
     top: 0px;
-    width: 74%;
+    width: 70%;
   }
   .drop-uploading {
     text-align: center;
