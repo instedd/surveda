@@ -66,27 +66,6 @@ defmodule Ask.RespondentController do
     end
   end
 
-  defp cumulative_percent_for(range, percent_by_date) do
-    range
-    |> Enum.reduce({percent_by_date, 0, []}, fn date, acc ->
-      {percents_by_date, cumulative_percent, cumulative_percent_by_date} = acc
-      case percents_by_date do
-        [] ->
-          {[], cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
-        [{next_date, next_percent} | rest_percents_by_date] ->
-          case Timex.compare(date, next_date) do
-            -1 -> # date < next_date
-              {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
-            0 -> # date == next_date
-              {rest_percents_by_date, cumulative_percent + next_percent, cumulative_percent_by_date ++ [{date, cumulative_percent + next_percent}]}
-            1 -> # date > next_date, should not happen, but just in case
-              acc
-          end
-      end
-    end)
-    |> elem(2)
-  end
-
   def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     survey = conn
     |> load_project(project_id)
@@ -99,73 +78,49 @@ defmodule Ask.RespondentController do
   defp stats(conn, survey, []) do
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
-    if length(questionnaires) > 1 && length(survey.mode) > 1 do
-      reference = questionnaires
-      |> Enum.reduce([], fn(questionnaire, reference) ->
-        survey.mode
-        |> Enum.reduce(reference, fn(modes, reference) ->
-          reference ++ [%{
-            id: "#{questionnaire.id}#{modes |> Enum.join("")}",
-            name: questionnaire.name,
-            modes: modes
-          }]
-        end)
-      end)
 
-      stats(
-        conn,
-        survey,
-        respondent_count,
-        respondents_by_questionnaire_mode_and_disposition(survey),
-        respondents_by_questionnaire_mode_and_completed_at(survey),
-        reference,
-        [],
-        "stats.json"
-      )
-    else
-      if length(survey.mode) > 1 do
-        reference = survey.mode
-        |> Enum.map(fn(modes) ->
-          %{
-            id: modes |> Enum.join(""),
-            modes: modes
-          }
-        end)
+    cond do
+      length(questionnaires) > 1 && length(survey.mode) > 1 ->
+        stats(
+          conn,
+          survey,
+          respondent_count,
+          respondents_by_questionnaire_mode_and_disposition(survey),
+          respondents_by_questionnaire_mode_and_completed_at(survey),
+          reference(questionnaires, survey.mode),
+          [],
+          "stats.json"
+        )
 
+      length(survey.mode) > 1 ->
         stats(
           conn,
           survey,
           respondent_count,
           respondents_by_mode_and_disposition(survey),
           respondents_by_mode_and_completed_at(survey),
-          reference,
+          reference(questionnaires, survey.mode),
           [],
           "stats.json"
         )
-      else
-        reference = questionnaires
-        |> Enum.map(fn q ->
-          %{id: q.id, name: q.name}
-        end)
 
+      true ->
         stats(
           conn,
           survey,
           respondent_count,
           respondents_by_questionnaire_and_disposition(survey),
           respondents_by_questionnaire_and_completed_at(survey),
-          reference,
+          reference(questionnaires, survey.mode),
           [],
           "stats.json"
         )
-      end
     end
   end
 
   defp stats(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
-
     stats(
       conn,
       survey,
@@ -179,19 +134,7 @@ defmodule Ask.RespondentController do
   end
 
   defp stats(conn, survey, total_respondents, respondents_by_disposition, respondents_by_completed_at, reference, buckets, layout) do
-
-    total_quota =
-      buckets
-      |> Enum.reduce(0, fn bucket, total ->
-        total + (bucket.quota || 0)
-      end)
-
-    target =
-      cond do
-        total_quota > 0 -> total_quota
-        !is_nil(survey.cutoff) -> survey.cutoff
-        true -> total_respondents
-      end
+    target = target(survey, buckets, total_respondents)
 
     total_respondents_by_disposition =
       Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
@@ -207,19 +150,88 @@ defmodule Ask.RespondentController do
       |> Enum.map(fn {_, c} -> c end)
       |> Enum.sum
 
-    completion_percentage = (completed_or_partial / target) * 100
+    grouped_respondents =
+      respondents_by_completed_at
+      |> Enum.reduce(%{}, fn {group_id, date, count}, acc ->
+        {_, next_acc} =
+          acc
+          |> Map.get_and_update(group_id, fn counts_by_date ->
+            {counts_by_date, (counts_by_date || []) ++ [{date, count}]}
+          end)
+
+        next_acc
+      end)
 
     stats = %{
       id: survey.id,
       reference: reference,
       respondents_by_disposition: respondent_counts(respondents_by_disposition, total_respondents),
-      cumulative_percentages: cumulative_percentages(respondents_by_completed_at, survey, target),
-      completion_percentage: completion_percentage,
+      cumulative_percentages: cumulative_percentages(grouped_respondents, survey.started_at, survey.comparisons, target, buckets),
+      completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
+      target: target,
       contacted_respondents: contacted_respondents
     }
 
     render(conn, layout, stats: stats)
+  end
+
+  defp reference([questionnaire], [modes]) do
+    [
+      %{
+        id: questionnaire.id,
+        name: questionnaire.name,
+        modes: modes
+      }
+    ]
+  end
+
+  defp reference([_], mode) do
+    mode
+    |> Enum.map(fn modes ->
+      %{
+        id: modes |> Enum.join(""),
+        modes: modes
+      }
+    end)
+  end
+
+  defp reference(questionnaires, [_]) do
+    questionnaires
+    |> Enum.map(fn q ->
+      %{id: q.id, name: q.name}
+    end)
+  end
+
+  defp reference(questionnaires, mode) do
+    questionnaires
+    |> Enum.reduce([], fn questionnaire, reference ->
+      mode
+      |> Enum.reduce(reference, fn modes, reference ->
+        reference ++
+          [
+            %{
+              id: "#{questionnaire.id}#{modes |> Enum.join("")}",
+              name: questionnaire.name,
+              modes: modes
+            }
+          ]
+      end)
+    end)
+  end
+
+  defp target(survey, buckets, total_respondents) do
+    total_quota =
+      buckets
+      |> Enum.reduce(0, fn bucket, total ->
+        total + (bucket.quota || 0)
+      end)
+
+    cond do
+      total_quota > 0 -> total_quota
+      !is_nil(survey.cutoff) -> survey.cutoff
+      true -> total_respondents
+    end
   end
 
   defp respondent_counts(grouped_responents, total_respondents) do
@@ -272,28 +284,104 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  defp cumulative_percentages(grouped_respondents, survey, target) do
-    # Cumulative percentages by bucket by date
-    # TODO We are only displaying completed in the chart because we don't store the partial_at date yet.
+  defp percent_provider(_group_id, [], target, []) do
+    fn count ->
+      count / target * 100
+    end
+  end
 
-    range =
-      Timex.Interval.new(from: survey.started_at, until: Timex.now)
-      |> Enum.map(&Timex.to_date/1)
+  defp percent_provider(group_id, [], _target, buckets) do
+    bucket = buckets |> Enum.find(fn bucket -> bucket.id == group_id end)
 
+    fn count ->
+      count / bucket.quota * 100
+    end
+  end
+
+  defp percent_provider(group_id, comparisons, target, []) do
+    comparison =
+      comparisons
+      |> Enum.find(fn comparison ->
+        group_id == "#{comparison["questionnaire_id"]}#{comparison["mode"] |> Enum.join("")}" ||
+          group_id == comparison["questionnaire_id"] || group_id == comparison["mode"]
+      end)
+
+    fn count ->
+      count / (comparison["ratio"] * target / 100) * 100
+    end
+  end
+
+  defp cumulative_percentages(grouped_respondents, started_at, comparisons, target, buckets) do
     grouped_respondents
-      |> Enum.reduce(%{}, fn {group_id, date, count}, acc ->
-          {_, next_acc} =
-            acc
-            |> Map.put_new(group_id, [])
-            |> Map.get_and_update(group_id, fn date_percent ->
-                {date_percent, date_percent ++ [{date, (count / target) * 100}]} # TODO This should be the corresponding bucket quota
-              end)
-          next_acc
-        end)
-      |> Enum.map(fn {group_id, percents_by_date} ->
-          {group_id, cumulative_percent_for(range, percents_by_date)}
-        end)
-      |> Enum.into(%{})
+    |> Enum.map(fn {group_id, percents_by_date} ->
+      # To make sure the series starts at the same time that the survey
+      percents_by_date = [{started_at |> DateTime.to_date(), 0}] ++ percents_by_date
+
+      {group_id,
+       cumulative_percents_for_group(
+         percents_by_date,
+         percent_provider(group_id, comparisons, target, buckets)
+       )}
+    end)
+    |> Enum.into(%{})
+  end
+
+  defp cumulative_percents_for_group(
+         percents_by_date,
+         percent_provider,
+         cumulative_percent \\ 0,
+         result \\ []
+       )
+
+  defp cumulative_percents_for_group(_percents_by_date, _percent_provider, 100, result) do
+    result
+  end
+
+  defp cumulative_percents_for_group(
+         [{date, count}],
+         percent_provider,
+         cumulative_percent,
+         result
+       ) do
+    result ++ [{date, cumulative_percent |> add_percent(count, percent_provider)}]
+  end
+
+  defp cumulative_percents_for_group(
+         [{first_date, first_count}, {second_date, second_count} | rest_percents_by_date],
+         percent_provider,
+         cumulative_percent,
+         result
+       ) do
+    cumulative_percent = cumulative_percent |> add_percent(first_count, percent_provider)
+
+    result =
+      case Date.diff(second_date, first_date) do
+        # Just in case that we already had results for the date the survey started and we duplicated the value
+        0 ->
+          result
+
+        1 ->
+          result ++ [{first_date, cumulative_percent}]
+
+        _ ->
+          result ++
+            [
+              {first_date, cumulative_percent},
+              {second_date |> Timex.shift(days: -1), cumulative_percent}
+            ]
+      end
+
+    cumulative_percents_for_group(
+      [{second_date, second_count} | rest_percents_by_date],
+      percent_provider,
+      cumulative_percent,
+      result
+    )
+  end
+
+  defp add_percent(cumulative_percent, count, percent_provider) do
+    (cumulative_percent + percent_provider.(count))
+    |> min(100.0)
   end
 
   defp respondents_by_questionnaire_and_disposition(survey) do
@@ -333,18 +421,12 @@ defmodule Ask.RespondentController do
   defp respondents_by_questionnaire_mode_and_completed_at(survey) do
     Repo.all(
       from r in CompletedRespondents,
-      where: r.survey_id == ^survey.id,
+      where: r.survey_id == ^survey.id and r.questionnaire_id != 0 and r.mode != "",
       group_by: [r.questionnaire_id, r.mode, r.date],
       order_by: r.date,
       select: {r.questionnaire_id, r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
     |> Enum.map(fn({questionnaire_id, mode, completed_at, count}) ->
-      reference_id = if mode != "" && questionnaire_id != 0 do
-        "#{questionnaire_id}#{mode |> Poison.decode! |> Enum.join("")}"
-      else
-        nil
-      end
-
-      {reference_id, completed_at, count}
+      {"#{questionnaire_id}#{mode |> Poison.decode! |> Enum.join("")}", completed_at, count}
     end)
   end
 

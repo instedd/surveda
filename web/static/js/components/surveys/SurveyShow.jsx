@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
 import * as respondentActions from '../../actions/respondents'
-import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { Tooltip, Modal } from '../ui'
@@ -12,8 +11,9 @@ import { stopSurvey } from '../../api'
 import capitalize from 'lodash/capitalize'
 import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
-import { referenceBackgroundColorClasses, referenceColorClasses } from '../../referenceColors'
+import { referenceColorClasses, referenceColors } from '../../referenceColors'
 import classNames from 'classnames/bind'
+import { Stats, Forecasts } from '@instedd/surveda-d3-components'
 
 class SurveyShow extends Component {
   static propTypes = {
@@ -25,10 +25,11 @@ class SurveyShow extends Component {
     survey: React.PropTypes.object,
     questionnaires: React.PropTypes.object,
     respondentsByDisposition: React.PropTypes.object,
-    reference: React.PropTypes.object,
+    reference: React.PropTypes.array,
     completedByDate: React.PropTypes.object,
     contactedRespondents: React.PropTypes.number,
     totalRespondents: React.PropTypes.number,
+    target: React.PropTypes.number,
     completionPercentage: React.PropTypes.number,
     cumulativePercentages: React.PropTypes.object
   }
@@ -115,56 +116,10 @@ class SurveyShow extends Component {
     )
   }
 
-  modeForComparison(mode: string) {
-    return (<div className='mode-inline-block' key={mode}>
-      <i className='material-icons'>{this.iconForMode(mode)}</i>
-      <span className='mode-label name'>{modeLabel(mode)}</span>
-    </div>
-    )
-  }
-
   modesForComparisons(modes: string[]) {
-    let modesForComparisons = modes.map((m, index) => {
-      return this.modeForComparison(m)
-    })
-
-    let modeDescriptions
-    if (modesForComparisons.length == 2) {
-      modeDescriptions = [
-        modesForComparisons[0],
-        <div className='mode-inline-block' key='0' />,
-        modesForComparisons[1],
-        <div className='mode-inline-block' key='1'>fallback</div>
-      ]
-    } else {
-      modeDescriptions = modesForComparisons
-    }
-
-    return modeDescriptions
-  }
-
-  colorReferences(references) {
-    let numberOfKeys = Object.keys(references).length
-    let referenceClasses = referenceBackgroundColorClasses(numberOfKeys)
-
-    let colorReferences = []
-    if (numberOfKeys > 1) {
-      let i = 0
-      for (var referenceId in references) {
-        const name = references[referenceId].name ? references[referenceId].name : null
-        const modes = references[referenceId].modes ? this.modesForComparisons(references[referenceId].modes) : null
-        const separator = name && modes ? (<div />) : null
-        colorReferences.push((
-          <div className='questionnaire-color-reference' key={referenceId}>
-            <div className={`color-circle-reference ${referenceClasses[i]}`} />
-            <div className='questionnaire-name'> {name}{separator}{modes} </div>
-          </div>
-        ))
-        i += 1
-      }
-    }
-
-    return colorReferences
+    return modes.length == 2
+      ? `${modeLabel(modes[0])}, ${modeLabel(modes[1])} fallback`
+      : modeLabel(modes[0])
   }
 
   titleFor(questionnaires) {
@@ -181,18 +136,11 @@ class SurveyShow extends Component {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, completionPercentage, totalRespondents, project } = this.props
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
       return <p>Loading...</p>
-    }
-
-    let modes
-    if (survey.mode.length == 1) {
-      modes = <div className='survey-modes'>
-        {survey.mode[0].map((mode, index) => (this.modeFor(index, mode)))}
-      </div>
     }
 
     const readOnly = !project || project.readOnly
@@ -210,98 +158,110 @@ class SurveyShow extends Component {
 
     let title = this.titleFor(questionnaires)
 
+    let stats = [
+      {value: target, label: 'Target'},
+      {value: respondentsByDisposition.responsive.detail.completed.count, label: 'Completes'},
+      {value: respondentsByDisposition.responsive.detail.partial.count, label: 'Partials'},
+      {value: contactedRespondents, label: 'Contacted Respondents'}
+    ]
+
+    let colors = referenceColors(reference.length)
+
+    let forecastsReferences = reference.map((r, i) => {
+      const name = r.name ? r.name : ''
+      const modes = r.modes ? this.modesForComparisons(r.modes) : ''
+      const separator = name && modes ? ' | ' : ''
+
+      return {
+        label: `${name}${separator}${modes}`,
+        color: colors[i],
+        id: r.id
+      }
+    })
+
+    // TODO: we should be doing this when receiving properties, not at render
+    let forecasts = forecastsReferences.map(d => {
+      const values = (cumulativePercentages[d.id] || []).map(v => (
+        { time: new Date(v.date), value: Number(v.percent) }
+      ))
+
+      return {...d, values}
+    })
+
     return (
-      <div className='row'>
-        {stopComponent}
-        <Modal card ref='stopModal' id='stop_survey_modal'>
-          <div className='modal-content'>
-            <div className='card-title header'>
-              <h5>Stop survey</h5>
-              <p>This will finalize the survey execution</p>
-            </div>
-            <div className='card-content'>
-              <div className='row'>
-                <div className='col s12'>
-                  <p className='red-text alert-left-icon'>
-                    <i className='material-icons'>warning</i>
-                    Stopped surveys cannot be restarted
-                  </p>
+      <div className='cockpit'>
+        <div className='row'>
+          {stopComponent}
+          <Modal card ref='stopModal' id='stop_survey_modal'>
+            <div className='modal-content'>
+              <div className='card-title header'>
+                <h5>Stop survey</h5>
+                <p>This will finalize the survey execution</p>
+              </div>
+              <div className='card-content'>
+                <div className='row'>
+                  <div className='col s12'>
+                    <p className='red-text alert-left-icon'>
+                      <i className='material-icons'>warning</i>
+                      Stopped surveys cannot be restarted
+                    </p>
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='col s12'>
+                    <p>
+                      Once you stop the survey, all invitations will be halted immediately.
+                    </p>
+                    <p>
+                      Respondents who are currently answering the survey will be cut off. Once
+                      you stop, you cannot restart.
+                    </p>
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='col s12'>
+                    <input
+                      id='stop_understood'
+                      type='checkbox'
+                      checked={stopUnderstood}
+                      onChange={() => this.toggleStopUnderstood()}
+                      className='filled-in' />
+                    <label htmlFor='stop_understood'>Understood</label>
+                  </div>
                 </div>
               </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <p>
-                    Once you stop the survey, all invitations will be halted immediately.
-                  </p>
-                  <p>
-                    Respondents who are currently answering the survey will be cut off. Once
-                    you stop, you cannot restart.
-                  </p>
-                </div>
-              </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <input
-                    id='stop_understood'
-                    type='checkbox'
-                    checked={stopUnderstood}
-                    onChange={() => this.toggleStopUnderstood()}
-                    className='filled-in' />
-                  <label htmlFor='stop_understood'>Understood</label>
-                </div>
+              <div className='card-action'>
+                <a
+                  className={classNames('btn-large red', { disabled: !stopUnderstood })}
+                  onClick={() => this.confirmStopSurvey()}>
+                  Stop
+                </a>
+                <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
               </div>
             </div>
-            <div className='card-action'>
-              <a
-                className={classNames('btn-large red', { disabled: !stopUnderstood })}
-                onClick={() => this.confirmStopSurvey()}>
-                Stop
-              </a>
-              <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
-            </div>
-          </div>
-        </Modal>
-        <div className='col s12 m9 l8'>
+          </Modal>
           <h4>
             {title}
           </h4>
           <SurveyStatus survey={survey} />
-          {this.dispositions(respondentsByDisposition, reference)}
-        </div>
-        <div className='col s12 m3 l4'>
-          <div className='row questionnaires-color-references'>
-            {this.colorReferences(reference)}
-          </div>
-
-          <div className='row survey-chart'>
-            <div className='col s12'>
-              <label className='grey-text'>
-                { this.round(completionPercentage) + '% of target completed' }
-              </label>
-            </div>
-          </div>
-
-          <div className='row respondent-chart'>
-            <div className='col s12'>
-              <RespondentsChart cumulativePercentages={cumulativePercentages} />
-            </div>
-          </div>
-
-          <div className='row'>
-            <div className='col s12'>
-              <label className='grey-text'>
-                Respondents contacted
-              </label>
-              <div>
-                { contactedRespondents + '/' + totalRespondents }
+          <div className='col s12'>
+            <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
+              <div className='header'>
+                <div className='title'>Percent of completes</div>
+                {survey.countPartialResults
+                  ? <div className='description'>Count partials as completed</div>
+                  : ''
+                }
               </div>
+
+              <Stats data={stats} />
+              <Forecasts data={forecasts} ceil={100} forecast />
             </div>
           </div>
-
-          <div className='row'>
-            <div className='col s12'>
-              {modes}
-            </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
+            {this.dispositions(respondentsByDisposition, reference)}
           </div>
         </div>
       </div>
@@ -429,6 +389,7 @@ const mapStateToProps = (state, ownProps) => {
   let cumulativePercentages = {}
   let contactedRespondents = 0
   let totalRespondents = 0
+  let target = 0
   let completionPercentage = 0
   let reference = null
 
@@ -437,6 +398,7 @@ const mapStateToProps = (state, ownProps) => {
     cumulativePercentages = respondentsStatsRoot.cumulativePercentages
     contactedRespondents = respondentsStatsRoot.contactedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
+    target = respondentsStatsRoot.target
     completionPercentage = respondentsStatsRoot.completionPercentage
     reference = respondentsStatsRoot.reference
   }
@@ -451,6 +413,7 @@ const mapStateToProps = (state, ownProps) => {
     cumulativePercentages: cumulativePercentages,
     contactedRespondents: contactedRespondents,
     totalRespondents: totalRespondents,
+    target: target,
     reference: reference,
     completionPercentage: completionPercentage
   })
