@@ -314,9 +314,11 @@ defmodule Ask.RespondentController do
   defp cumulative_percentages(grouped_respondents, started_at, comparisons, target, buckets) do
     grouped_respondents
     |> Enum.map(fn {group_id, percents_by_date} ->
+      # To make sure the series starts at the same time that the survey
+      percents_by_date = [{started_at |> DateTime.to_date(), 0}] ++ percents_by_date
+
       {group_id,
        cumulative_percents_for_group(
-         started_at,
          percents_by_date,
          percent_provider(group_id, comparisons, target, buckets)
        )}
@@ -324,28 +326,62 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  defp cumulative_percents_for_group(started_at, percents_by_date, percent_provider) do
-    Timex.Interval.new(from: started_at, until: Timex.now)
-    |> Enum.map(&Timex.to_date/1)
-    |> Enum.reduce({percents_by_date, 0, []}, fn date, acc ->
-      {percents_by_date, cumulative_percent, cumulative_percent_by_date} = acc
-      case percents_by_date do
-        [] ->
-          acc
-        [{next_date, next_count} | rest_percents_by_date] ->
-          next_percent = percent_provider.(next_count)
+  defp cumulative_percents_for_group(
+         percents_by_date,
+         percent_provider,
+         cumulative_percent \\ 0,
+         result \\ []
+       )
 
-          case Timex.compare(date, next_date) do
-            -1 -> # date < next_date
-              {percents_by_date, cumulative_percent, cumulative_percent_by_date ++ [{date, cumulative_percent}]}
-            0 -> # date == next_date
-              {rest_percents_by_date, min(cumulative_percent + next_percent, 100.0), cumulative_percent_by_date ++ [{date, min(cumulative_percent + next_percent, 100.0)}]}
-            1 -> # date > next_date, should not happen, but just in case
-              acc
-          end
+  defp cumulative_percents_for_group(_percents_by_date, _percent_provider, 100, result) do
+    result
+  end
+
+  defp cumulative_percents_for_group(
+         [{date, count}],
+         percent_provider,
+         cumulative_percent,
+         result
+       ) do
+    result ++ [{date, cumulative_percent |> add_percent(count, percent_provider)}]
+  end
+
+  defp cumulative_percents_for_group(
+         [{first_date, first_count}, {second_date, second_count} | rest_percents_by_date],
+         percent_provider,
+         cumulative_percent,
+         result
+       ) do
+    cumulative_percent = cumulative_percent |> add_percent(first_count, percent_provider)
+
+    result =
+      case Date.diff(second_date, first_date) do
+        # Just in case that we already had results for the date the survey started and we duplicated the value
+        0 ->
+          result
+
+        1 ->
+          result ++ [{first_date, cumulative_percent}]
+
+        _ ->
+          result ++
+            [
+              {first_date, cumulative_percent},
+              {second_date |> Timex.shift(days: -1), cumulative_percent}
+            ]
       end
-    end)
-    |> elem(2)
+
+    cumulative_percents_for_group(
+      [{second_date, second_count} | rest_percents_by_date],
+      percent_provider,
+      cumulative_percent,
+      result
+    )
+  end
+
+  defp add_percent(cumulative_percent, count, percent_provider) do
+    (cumulative_percent + percent_provider.(count))
+    |> min(100.0)
   end
 
   defp respondents_by_questionnaire_and_disposition(survey) do
