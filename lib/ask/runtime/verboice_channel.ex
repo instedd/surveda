@@ -86,7 +86,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     [say_or_play(prompt) | say_or_play(prompts)]
   end
 
-  def say_or_play(%{"audio_source" => "upload", "audio_id" => audio_id}) do
+  def say_or_play(%{"audio_source" => audio_source, "audio_id" => audio_id}) when audio_source in ["upload", "record"] do
     element(:Play, Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id))
   end
 
