@@ -156,6 +156,11 @@ class IvrPrompt extends Component {
               </DropdownItem>
             </Dropdown>
           </div>
+          {
+            this.state.audioSource == 'record' && !readOnly
+            ? <RecordAudio stepId={stepId} serverUri={this.state.audioUri} />
+            : null
+          }
           {(this.state.audioSource == 'upload')
             ? <div className='upload-audio'>
               <audio controls key={this.state.audioId}>
@@ -166,11 +171,6 @@ class IvrPrompt extends Component {
               }
             </div>
             : ''}
-          {
-            this.state.audioSource == 'record' && !readOnly
-            ? <RecordAudio stepId={stepId} />
-            : null
-          }
         </div>
       </div>
     )

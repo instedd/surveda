@@ -8,6 +8,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
 
 type State = {
+  localURL: string
 };
 
 class RecordAudio extends Component {
@@ -15,7 +16,7 @@ class RecordAudio extends Component {
 
   constructor(props) {
     super(props)
-    this.state = {stepId: props.stepId, recording: false}
+    this.state = {stepId: props.stepId, recording: false, serverUri: props.serverUri}
   }
 
   onClickRecord() {
@@ -30,7 +31,6 @@ class RecordAudio extends Component {
         const channels = 1 // 1 for mono or 2 for stereo
         const sampleRate = 44100 // 44.1khz (normal mp3 samplerate)
         const kbps = 128 // encode 128kbps mp3
-        // const sampleBlockSize = 1152
         const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps)
 
         const fileReader = new FileReader()
@@ -42,17 +42,18 @@ class RecordAudio extends Component {
           mp3Data.push(mp3Tmp)
 
           const blob = new Blob(mp3Data, {type: 'audio/mp3'})
-          const file = new File([blob], 'record_audio.mp3', {type: 'audio/mp3'})
-          const audioURL = window.URL.createObjectURL(file)
+          const file = new File([blob], `${new Date().toISOString()}_record.mp3`, {type: 'audio/mp3'})
+          const localURL = window.URL.createObjectURL(file)
           this.props.uiActions.uploadAudio(this.state.stepId)
           createAudio([file]).then(response => {
             this.props.questionnaireActions.changeStepAudioIdIvr(this.state.stepId, response.result, 'record')
             this.props.uiActions.finishAudioUpload()
           })
-          this.setState({...this.state, audioURL: audioURL, file: file})
+          this.setState({...this.state, localURL: localURL, file: file})
         })
         fileReader.readAsArrayBuffer(chunks)
       }
+      // mediaRecorder requires a recording lenght. 5 minutes was chosen as max length
       mediaRecorder.start(300000)
 
       this.setState({...this.state, mediaRecorder: mediaRecorder, streamReference: stream, recording: true})
@@ -73,16 +74,20 @@ class RecordAudio extends Component {
   render() {
     const recordIcon = this.state.recording
     ? <a className='record-audio-icon' onClick={() => this.onClickStop()}>
-      <i className='material-icons left'>stop</i>
+      <i className='material-icons'>stop</i>
     </a>
     : <a className='record-audio-icon' onClick={() => this.onClickRecord()}>
-      <i className='material-icons left'>fiber_manual_record</i>
+      <i className='material-icons'>fiber_manual_record</i>
     </a>
 
+    const src = this.state.localURL || this.state.serverUri
+
     return (
-      <div className='upload-audio'>
-        <audio controls key={this.state.audioId} src={this.state.audioURL || ''} />
+      <div className='record-audio'>
         { recordIcon }
+        <audio controls key={src || 'noaudio'} >
+          <source src={src} type='audio/mpeg' />
+        </audio>
       </div>
     )
   }
@@ -91,6 +96,7 @@ class RecordAudio extends Component {
 RecordAudio.propTypes = {
   stepId: PropTypes.string,
   questionnaireActions: PropTypes.any,
+  serverUri: PropTypes.string,
   uiActions: PropTypes.any
 }
 
