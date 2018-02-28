@@ -70,11 +70,6 @@ class IvrPrompt extends Component {
       })
   }
 
-  toggleRecording = () => {
-    this.setState({...this.state, recording: !this.state.recording})
-    console.log(this.state)
-  }
-
   render() {
     const { value, inputErrors, audioIdErrors, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId } = this.props
     let { label } = this.props
