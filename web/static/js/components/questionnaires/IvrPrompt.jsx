@@ -26,7 +26,7 @@ class IvrPrompt extends Component {
   }
 
   stateFromProps(props) {
-    const { ivrPrompt, customHandlerFileUpload } = props
+    const { ivrPrompt, customHandlerFileUpload, customHandlerRecord } = props
 
     let audioId = null
 
@@ -37,6 +37,7 @@ class IvrPrompt extends Component {
     return {
       audioId: audioId,
       handleFileUpload: customHandlerFileUpload || this.genericHandlerFileUpload,
+      handleRecord: customHandlerRecord || this.genericHandlerRecord,
       audioSource: ivrPrompt.audioSource || 'tts',
       audioUri: (ivrPrompt.audioId ? `/api/v1/audios/${ivrPrompt.audioId}` : ''),
       audioErrors: ''
@@ -64,6 +65,26 @@ class IvrPrompt extends Component {
         e.json()
          .then((response) => {
            let errors = (response.errors.data || ['Only mp3 and wav files are allowed.']).join(' ')
+           this.setState({audioErrors: errors})
+           $('#unprocessableEntity').modal('open')
+         })
+      })
+  }
+
+  genericHandlerRecord = (files) => {
+    const { stepId } = this.props
+    this.props.uiActions.uploadAudio(stepId)
+    createAudio(files)
+      .then(response => {
+        this.setState({audioUri: `/api/v1/audios/${response.result}`}, () => {
+          this.props.questionnaireActions.changeStepAudioIdIvr(stepId, response.result, 'record')
+          this.props.uiActions.finishAudioUpload()
+        })
+      })
+      .catch((e) => {
+        e.json()
+         .then((response) => {
+           let errors = (response.errors.data)
            this.setState({audioErrors: errors})
            $('#unprocessableEntity').modal('open')
          })
@@ -153,7 +174,7 @@ class IvrPrompt extends Component {
           </div>
           {
             this.state.audioSource == 'record' && !readOnly
-            ? <RecordAudio stepId={stepId} serverUri={this.state.audioUri} />
+            ? <RecordAudio stepId={stepId} serverUri={this.state.audioUri} handleRecord={this.state.handleRecord} />
             : null
           }
           {(this.state.audioSource == 'upload')

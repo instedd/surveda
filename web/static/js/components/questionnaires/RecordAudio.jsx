@@ -3,7 +3,6 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as lamejs from 'lamejs'
 import MediaStreamRecorder from 'msr'
-import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
 
@@ -16,7 +15,7 @@ class RecordAudio extends Component {
 
   constructor(props) {
     super(props)
-    this.state = {stepId: props.stepId, recording: false, serverUri: props.serverUri}
+    this.state = {stepId: props.stepId, recording: false, serverUri: props.serverUri, handleRecord: props.handleRecord}
   }
 
   onClickRecord() {
@@ -44,11 +43,7 @@ class RecordAudio extends Component {
           const blob = new Blob(mp3Data, {type: 'audio/mp3'})
           const file = new File([blob], `${new Date().toISOString()}_record.mp3`, {type: 'audio/mp3'})
           const localURL = window.URL.createObjectURL(file)
-          this.props.uiActions.uploadAudio(this.state.stepId)
-          createAudio([file]).then(response => {
-            this.props.questionnaireActions.changeStepAudioIdIvr(this.state.stepId, response.result, 'record')
-            this.props.uiActions.finishAudioUpload()
-          })
+          this.state.handleRecord([file])
           this.setState({...this.state, localURL: localURL, file: file})
         })
         fileReader.readAsArrayBuffer(chunks)
@@ -97,7 +92,8 @@ RecordAudio.propTypes = {
   stepId: PropTypes.string,
   questionnaireActions: PropTypes.any,
   serverUri: PropTypes.string,
-  uiActions: PropTypes.any
+  uiActions: PropTypes.any,
+  handleRecord: PropTypes.func
 }
 
 const mapStateToProps = (state) => ({
