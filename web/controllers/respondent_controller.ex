@@ -133,7 +133,7 @@ defmodule Ask.RespondentController do
     )
   end
 
-  defp stats(conn, survey, total_respondents, respondents_by_disposition, respondents_by_completed_at, reference, buckets, layout) do
+  defp stats(conn, survey, total_respondents, respondents_by_disposition, respondents_by_completed_at, references, buckets, layout) do
     target = target(survey, buckets, total_respondents)
 
     total_respondents_by_disposition =
@@ -164,9 +164,9 @@ defmodule Ask.RespondentController do
 
     stats = %{
       id: survey.id,
-      reference: reference,
+      reference: references,
       respondents_by_disposition: respondent_counts(respondents_by_disposition, total_respondents),
-      cumulative_percentages: cumulative_percentages(grouped_respondents, survey, target, buckets),
+      cumulative_percentages: cumulative_percentages(references, grouped_respondents, survey, target, buckets),
       completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
       target: target,
@@ -311,8 +311,9 @@ defmodule Ask.RespondentController do
     end
   end
 
-  defp cumulative_percentages(grouped_respondents, %{started_at: started_at, comparisons: comparisons, state: state}, target, buckets) do
+  defp cumulative_percentages(references, grouped_respondents, %{started_at: started_at, comparisons: comparisons, state: state}, target, buckets) do
     grouped_respondents
+    |> Enum.into(Enum.map(references, fn reference -> {reference.id, []} end) |> Enum.into(%{}))
     |> Enum.map(fn {group_id, percents_by_date} ->
       # To make sure the series starts at the same time that the survey
 
@@ -466,7 +467,7 @@ defmodule Ask.RespondentController do
       group_by: [r.mode, r.date],
       order_by: r.date,
       select: {r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
-    |> Enum.map(fn({mode, completed_at, count}) -> {mode |> Poison.decode!, completed_at, count} end)
+    |> Enum.map(fn({mode, completed_at, count}) -> {mode |> Poison.decode! |> Enum.join(""), completed_at, count} end)
   end
 
   defp respondents_by_quota_bucket_and_completed_at(survey) do
