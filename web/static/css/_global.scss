@@ -127,58 +127,78 @@
   }
 }
 
-div.card-table td.referenceColor0 { color: #673ab7 !important; }
-div.card-table td.referenceColor1 { color: #3f51b5 !important; }
-div.card-table td.referenceColor2 { color: #2196f3 !important; }
-div.card-table td.referenceColor3 { color: #03a9f4 !important; }
-div.card-table td.referenceColor4 { color: #00bcd4 !important; }
-div.card-table td.referenceColor5 { color: #009688 !important; }
-div.card-table td.referenceColor6 { color: #4caf50 !important; }
-div.card-table td.referenceColor7 { color: #8bc34a !important; }
-div.card-table td.referenceColor8 { color: #cddc39 !important; }
-div.card-table td.referenceColor9 { color: #ffeb3b !important; }
-div.card-table td.referenceColor10 { color: #ffc107 !important; }
-div.card-table td.referenceColor11 { color: #ff9800 !important; }
-div.card-table td.referenceColor12 { color: #ff5722 !important; }
-div.card-table td.referenceColor13 { color: #f44336 !important; }
-div.card-table td.referenceColor14 { color: #e91e63 !important; }
-div.card-table td.referenceColor15 { color: #9c27b0 !important; }
+:root {
+  --reference-color0: #673ab7;
+  --reference-color1: #3f51b5;
+  --reference-color2: #2196f3;
+  --reference-color3: #03a9f4;
+  --reference-color4: #00bcd4;
+  --reference-color5: #009688;
+  --reference-color6: #4caf50;
+  --reference-color7: #8bc34a;
+  --reference-color8: #cddc39;
+  --reference-color9: #ffeb3b;
+  --reference-color10: #ffc107;
+  --reference-color11: #ff9800;
+  --reference-color12: #ff5722;
+  --reference-color13: #f44336;
+  --reference-color14: #e91e63;
+  --reference-color15: #9c27b0;
+  --single-reference-stroke-color: #4faf55;
+}
 
-.referenceBackgroundColor0 { background-color: #673ab7; }
-.referenceBackgroundColor1 { background-color: #3f51b5; }
-.referenceBackgroundColor2 { background-color: #2196f3; }
-.referenceBackgroundColor3 { background-color: #03a9f4; }
-.referenceBackgroundColor4 { background-color: #00bcd4; }
-.referenceBackgroundColor5 { background-color: #009688; }
-.referenceBackgroundColor6 { background-color: #4caf50; }
-.referenceBackgroundColor7 { background-color: #8bc34a; }
-.referenceBackgroundColor8 { background-color: #cddc39; }
-.referenceBackgroundColor9 { background-color: #ffeb3b; }
-.referenceBackgroundColor10 { background-color: #ffc107; }
-.referenceBackgroundColor11 { background-color: #ff9800; }
-.referenceBackgroundColor12 { background-color: #ff5722; }
-.referenceBackgroundColor13 { background-color: #f44336; }
-.referenceBackgroundColor14 { background-color: #e91e63; }
-.referenceBackgroundColor15 { background-color: #9c27b0; }
+div.card-table td.referenceColor0 { color: var(--reference-color0) !important; }
+div.card-table td.referenceColor1 { color: var(--reference-color1) !important; }
+div.card-table td.referenceColor2 { color: var(--reference-color2) !important; }
+div.card-table td.referenceColor3 { color: var(--reference-color3) !important; }
+div.card-table td.referenceColor4 { color: var(--reference-color4) !important; }
+div.card-table td.referenceColor5 { color: var(--reference-color5) !important; }
+div.card-table td.referenceColor6 { color: var(--reference-color6) !important; }
+div.card-table td.referenceColor7 { color: var(--reference-color7) !important; }
+div.card-table td.referenceColor8 { color: var(--reference-color8) !important; }
+div.card-table td.referenceColor9 { color: var(--reference-color9) !important; }
+div.card-table td.referenceColor10 { color: var(--reference-color10) !important; }
+div.card-table td.referenceColor11 { color: var(--reference-color11) !important; }
+div.card-table td.referenceColor12 { color: var(--reference-color12) !important; }
+div.card-table td.referenceColor13 { color: var(--reference-color13) !important; }
+div.card-table td.referenceColor14 { color: var(--reference-color14) !important; }
+div.card-table td.referenceColor15 { color: var(--reference-color15) !important; }
 
-path.respondentsData.referenceStrokeColor0 { stroke: #673ab7; }
-path.respondentsData.referenceStrokeColor1 { stroke: #3f51b5; }
-path.respondentsData.referenceStrokeColor2 { stroke: #2196f3; }
-path.respondentsData.referenceStrokeColor3 { stroke: #03a9f4; }
-path.respondentsData.referenceStrokeColor4 { stroke: #00bcd4; }
-path.respondentsData.referenceStrokeColor5 { stroke: #009688; }
-path.respondentsData.referenceStrokeColor6 { stroke: #4caf50; }
-path.respondentsData.referenceStrokeColor7 { stroke: #8bc34a; }
-path.respondentsData.referenceStrokeColor8 { stroke: #cddc39; }
-path.respondentsData.referenceStrokeColor9 { stroke: #ffeb3b; }
-path.respondentsData.referenceStrokeColor10 { stroke: #ffc107; }
-path.respondentsData.referenceStrokeColor11 { stroke: #ff9800; }
-path.respondentsData.referenceStrokeColor12 { stroke: #ff5722; }
-path.respondentsData.referenceStrokeColor13 { stroke: #f44336; }
-path.respondentsData.referenceStrokeColor14 { stroke: #e91e63; }
-path.respondentsData.referenceStrokeColor15 { stroke: #9c27b0; }
+.referenceBackgroundColor0 { background-color: var(--reference-color0); }
+.referenceBackgroundColor1 { background-color: var(--reference-color1); }
+.referenceBackgroundColor2 { background-color: var(--reference-color2); }
+.referenceBackgroundColor3 { background-color: var(--reference-color3); }
+.referenceBackgroundColor4 { background-color: var(--reference-color4); }
+.referenceBackgroundColor5 { background-color: var(--reference-color5); }
+.referenceBackgroundColor6 { background-color: var(--reference-color6); }
+.referenceBackgroundColor7 { background-color: var(--reference-color7); }
+.referenceBackgroundColor8 { background-color: var(--reference-color8); }
+.referenceBackgroundColor9 { background-color: var(--reference-color9); }
+.referenceBackgroundColor10 { background-color: var(--reference-color10); }
+.referenceBackgroundColor11 { background-color: var(--reference-color11); }
+.referenceBackgroundColor12 { background-color: var(--reference-color12); }
+.referenceBackgroundColor13 { background-color: var(--reference-color13); }
+.referenceBackgroundColor14 { background-color: var(--reference-color14); }
+.referenceBackgroundColor15 { background-color: var(--reference-color15); }
 
-.singleReferenceStrokeColor { stroke: #4faf55; }
+path.respondentsData.referenceStrokeColor0 { stroke: var(--reference-color0); }
+path.respondentsData.referenceStrokeColor1 { stroke: var(--reference-color1); }
+path.respondentsData.referenceStrokeColor2 { stroke: var(--reference-color2); }
+path.respondentsData.referenceStrokeColor3 { stroke: var(--reference-color3); }
+path.respondentsData.referenceStrokeColor4 { stroke: var(--reference-color4); }
+path.respondentsData.referenceStrokeColor5 { stroke: var(--reference-color5); }
+path.respondentsData.referenceStrokeColor6 { stroke: var(--reference-color6); }
+path.respondentsData.referenceStrokeColor7 { stroke: var(--reference-color7); }
+path.respondentsData.referenceStrokeColor8 { stroke: var(--reference-color8); }
+path.respondentsData.referenceStrokeColor9 { stroke: var(--reference-color9); }
+path.respondentsData.referenceStrokeColor10 { stroke: var(--reference-color10); }
+path.respondentsData.referenceStrokeColor11 { stroke: var(--reference-color11); }
+path.respondentsData.referenceStrokeColor12 { stroke: var(--reference-color12); }
+path.respondentsData.referenceStrokeColor13 { stroke: var(--reference-color13); }
+path.respondentsData.referenceStrokeColor14 { stroke: var(--reference-color14); }
+path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); }
+
+.singleReferenceStrokeColor { stroke: var(--single-reference-stroke-color); }
 
 // ------- Survey Card index page ----
 
@@ -238,6 +258,30 @@ i.survey-status { // icon for survey status on index
   margin-right: 10px;
 }
 
+.cockpit .card {
+  text-align: center;
+
+  .header {
+    margin-bottom: 48px;
+  }
+
+  .header {
+    .title {
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #999;
+      display: inline;
+    }
+  }
+
+  .stats {
+    margin-bottom: 30px;
+  }
+}
 
 // ------- Left Survey collection Wizard ----------
 

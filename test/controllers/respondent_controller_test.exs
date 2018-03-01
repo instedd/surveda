@@ -25,8 +25,8 @@ defmodule Ask.RespondentControllerTest do
 
     test "fetches responses on index", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
       questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire])
       respondent = insert(:respondent, survey: survey, mode: ["sms"], questionnaire_id: questionnaire.id, disposition: "completed")
       response = insert(:response, respondent: respondent, value: "Yes")
       response = Response |> Repo.get(response.id)
@@ -63,8 +63,8 @@ defmodule Ask.RespondentControllerTest do
     test "lists stats for a given survey", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 10, started_at: t)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire])
       insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
       insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
       insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
@@ -110,82 +110,165 @@ defmodule Ask.RespondentControllerTest do
         },
       }
 
-      cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
-
-      assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
-      assert Enum.at(cumulative_percentages, 0)["percent"] == 20
-      assert Enum.at(cumulative_percentages, 1)["date"] == "2016-01-02"
-      assert Enum.at(cumulative_percentages, 1)["percent"] == 50
       assert data["total_respondents"] == 15
+
+      assert data["cumulative_percentages"] == %{
+               to_string(questionnaire.id) => [
+                 %{"date" => "2016-01-01", "percent" => 20.0},
+                 %{"date" => "2016-01-02", "percent" => 50.0}
+               ]
+             }
     end
 
-    test "cumulative percentages for a survey with two questionnaires and two modes", %{conn: conn, user: user} do
+    test "cumulative percentages for a running survey with two questionnaires and two modes", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
       q1 = insert(:questionnaire, name: "test 1", project: project, steps: @dummy_steps)
       q2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
-      survey = insert(:survey, project: project, questionnaires: [q1, q2], cutoff: 10, mode: [["sms"], ["ivr"]], started_at: t)
-      insert_list(10, :respondent, survey: survey, questionnaire: q1, disposition: "partial")
+      survey =
+        insert(
+          :survey,
+          project: project,
+          questionnaires: [q1, q2],
+          state: "running",
+          cutoff: 10,
+          mode: [["sms"], ["ivr"]],
+          started_at: t,
+          comparisons: [
+            %{"ratio" => 25, "questionnaire_id" => q1.id, "mode" => ["sms"]},
+            %{"ratio" => 25, "questionnaire_id" => q2.id, "mode" => ["sms"]},
+            %{"ratio" => 25, "questionnaire_id" => q1.id, "mode" => ["ivr"]},
+            %{"ratio" => 25, "questionnaire_id" => q2.id, "mode" => ["ivr"]},
+          ]
+        )
+
       insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
       insert(:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
+      insert_list(6,:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
       insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-      data = json_response(conn, 200)["data"]
 
-      assert Enum.at(data["cumulative_percentages"]["#{q1.id}sms"], 0)["date"] == "2016-01-01"
-      assert Enum.at(data["cumulative_percentages"]["#{q1.id}sms"], 0)["percent"] == 10
-      assert Enum.at(data["cumulative_percentages"]["#{q2.id}sms"], 0)["date"] == "2016-01-01"
-      assert Enum.at(data["cumulative_percentages"]["#{q2.id}sms"], 0)["percent"] == 10
-      assert Enum.at(data["cumulative_percentages"]["#{q2.id}ivr"], 0)["date"] == "2016-01-01"
-      assert Enum.at(data["cumulative_percentages"]["#{q2.id}ivr"], 0)["percent"] == 0
-      assert Enum.at(data["cumulative_percentages"]["#{q2.id}ivr"], 1)["date"] == "2016-01-02"
-      assert Enum.at(data["cumulative_percentages"]["#{q2.id}ivr"], 1)["percent"] == 30
+      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+               "#{q1.id}sms" => [
+                 %{"date" => "2016-01-01", "percent" => 40.0},
+                 %{
+                   "date" => DateTime.utc_now() |> DateTime.to_date() |> Date.to_iso8601(),
+                   "percent" => 40.0
+                 }
+               ],
+               "#{q1.id}ivr" => [
+                 %{"date" => "2016-01-01", "percent" => 0.0},
+                 %{
+                   "date" => DateTime.utc_now() |> DateTime.to_date() |> Date.to_iso8601(),
+                   "percent" => 0.0
+                 }
+               ],
+               "#{q2.id}ivr" => [%{"date" => "2016-01-01", "percent" => 100.0}],
+               "#{q2.id}sms" => [
+                 %{"date" => "2016-01-01", "percent" => 40.0},
+                 %{
+                   "date" => DateTime.utc_now() |> DateTime.to_date() |> Date.to_iso8601(),
+                   "percent" => 40.0
+                 }
+               ]
+             }
+    end
+
+    test "cumulative percentages for a completed survey with two questionnaires and two modes", %{conn: conn, user: user} do
+      t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+      project = create_project_for_user(user)
+      q1 = insert(:questionnaire, name: "test 1", project: project, steps: @dummy_steps)
+      q2 = insert(:questionnaire, name: "test 2", project: project, steps: @dummy_steps)
+      survey =
+        insert(
+          :survey,
+          project: project,
+          questionnaires: [q1, q2],
+          state: "terminated",
+          cutoff: 10,
+          mode: [["sms"], ["ivr"]],
+          started_at: t,
+          comparisons: [
+            %{"ratio" => 25, "questionnaire_id" => q1.id, "mode" => ["sms"]},
+            %{"ratio" => 25, "questionnaire_id" => q2.id, "mode" => ["sms"]},
+            %{"ratio" => 25, "questionnaire_id" => q1.id, "mode" => ["ivr"]},
+            %{"ratio" => 25, "questionnaire_id" => q2.id, "mode" => ["ivr"]},
+          ]
+        )
+
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
+      insert_list(6,:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
+      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+
+      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+               "#{q1.id}sms" => [%{"date" => "2016-01-01", "percent" => 40.0}],
+               "#{q1.id}ivr" => [%{"date" => "2016-01-01", "percent" => 0.0}],
+               "#{q2.id}sms" => [%{"date" => "2016-01-01", "percent" => 40.0}],
+               "#{q2.id}ivr" => [%{"date" => "2016-01-01", "percent" => 100.0}]
+             }
     end
 
     test "cumulative percentages for a survey with two modes", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
       q1 = insert(:questionnaire, name: "test 1", project: project, steps: @dummy_steps)
-      survey = insert(:survey, project: project, questionnaires: [q1], cutoff: 10, mode: [["sms"], ["ivr"]], started_at: t)
+      survey =
+        insert(
+          :survey,
+          project: project,
+          questionnaires: [q1],
+          cutoff: 10,
+          mode: [["sms"], ["ivr"]],
+          started_at: t,
+          comparisons: [
+            %{"ratio" => 50, "questionnaire_id" => q1.id, "mode" => ["sms"]},
+            %{"ratio" => 50, "questionnaire_id" => q1.id, "mode" => ["ivr"]},
+          ]
+        )
+
       insert_list(10, :respondent, survey: survey, questionnaire: q1, disposition: "partial")
       insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
-      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-02T11:00:00Z"))
+      insert_list(30, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
+      insert_list(30, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-      data = json_response(conn, 200)["data"]
 
-      assert Enum.at(data["cumulative_percentages"]["ivr"], 0)["date"] == "2016-01-01"
-      assert Enum.at(data["cumulative_percentages"]["ivr"], 0)["percent"] == 0
-      assert Enum.at(data["cumulative_percentages"]["ivr"], 1)["date"] == "2016-01-02"
-      assert Enum.at(data["cumulative_percentages"]["ivr"], 1)["percent"] == 30
-      assert Enum.at(data["cumulative_percentages"]["sms"], 0)["date"] == "2016-01-01"
-      assert Enum.at(data["cumulative_percentages"]["sms"], 0)["percent"] == 20
+      assert json_response(conn, 200)["data"]["cumulative_percentages"] ==
+               %{
+                 "ivr" => [%{"date" => "2016-01-01", "percent" => 100.0}],
+                 "sms" => [
+                   %{"date" => "2016-01-01", "percent" => 20.0},
+                   %{"date" => "2016-01-02", "percent" => 40.0}
+                 ]
+               }
     end
 
     test "stats do not crash when a respondent has 'completed' disposition but no 'completed_at'", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 1, started_at: t)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 1, started_at: t, questionnaires: [questionnaire])
       insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: t |> Timex.to_erl |> Ecto.DateTime.from_erl)
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-      data = json_response(conn, 200)["data"]
 
-      cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
-      assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
-      assert Enum.at(cumulative_percentages, 0)["percent"] == 100
+      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+               to_string(questionnaire.id) => [%{"date" => "2016-01-01", "percent" => 100.0}]
+             }
     end
 
     test "lists stats for a given survey with quotas", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 10, started_at: t, quota_vars: ["gender"])
-      bucket_1 = insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 4, count: 2)
-      bucket_2 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 3, count: 3)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, quota_vars: ["gender"], questionnaires: [questionnaire])
+      bucket_1 = insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 4, count: 2)
+      bucket_2 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
       insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
       insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
       insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
@@ -230,21 +313,22 @@ defmodule Ask.RespondentControllerTest do
         },
       }
 
-      cumulative_percentages = data["cumulative_percentages"]
-      assert Enum.at(cumulative_percentages["#{bucket_1.id}"], 0)["date"] == "2016-01-01"
-      assert abs(Enum.at(cumulative_percentages["#{bucket_1.id}"], 0)["percent"] - 28) < 1
-      assert Enum.at(cumulative_percentages["#{bucket_2.id}"], 0)["date"] == "2016-01-01"
-      assert Enum.at(cumulative_percentages["#{bucket_2.id}"], 0)["percent"] == 0
-      assert Enum.at(cumulative_percentages["#{bucket_2.id}"], 1)["date"] == "2016-01-02"
-      assert abs(Enum.at(cumulative_percentages["#{bucket_2.id}"], 1)["percent"] - 42) < 1
       assert data["total_respondents"] == 16
+      assert data["cumulative_percentages"] ==
+               %{
+                 "#{bucket_1.id}" => [%{"date" => "2016-01-01", "percent" => 50.0}],
+                 "#{bucket_2.id}" => [
+                   %{"date" => "2016-01-01", "percent" => 0.0},
+                   %{"date" => "2016-01-02", "percent" => 25.0}
+                 ]
+               }
     end
 
     test "lists stats for a given survey, with dispositions", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 10, started_at: t)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire])
       insert_list(10, :respondent, survey: survey, state: "pending", disposition: "registered")
       insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
       insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
@@ -289,32 +373,65 @@ defmodule Ask.RespondentControllerTest do
         },
       }
 
-      cumulative_percentages = data["cumulative_percentages"][to_string(questionnaire.id)]
-
-      assert Enum.at(cumulative_percentages, 0)["date"] == "2016-01-01"
-      assert Enum.at(cumulative_percentages, 0)["percent"] == 10
-      assert Enum.at(cumulative_percentages, 1)["date"] == "2016-01-02"
-      assert Enum.at(cumulative_percentages, 1)["percent"] == 10
       assert data["total_respondents"] == 15
       assert data["completion_percentage"] == 20
+
+      assert data["cumulative_percentages"] == %{
+               to_string(questionnaire.id) => [%{"date" => "2016-01-01", "percent" => 10.0}]
+             }
     end
 
-    test "fills dates when any respondent completed the survey with 0's", %{conn: conn, user: user} do
+    test "fills previous dates when any respondent completed the survey with 0's", %{
+      conn: conn,
+      user: user
+    } do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 10, started_at: t)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire])
       insert_list(10, :respondent, survey: survey, state: "pending")
-      insert(:respondent, survey: survey, questionnaire: questionnaire, state: "completed", disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-03T10:00:00Z"))
 
-      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-      date_with_no_respondents =
-        json_response(conn, 200)["data"]["cumulative_percentages"]
-        |> Map.get(to_string(questionnaire.id))
-        |> Enum.at(1)
+      insert(
+        :respondent,
+        survey: survey,
+        questionnaire: questionnaire,
+        state: "completed",
+        disposition: "completed",
+        updated_at: Ecto.DateTime.cast!("2016-01-05T10:00:00Z")
+      )
 
-      assert date_with_no_respondents["date"] == "2016-01-02"
-      assert date_with_no_respondents["percent"] == 0
+      conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+
+      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+               to_string(questionnaire.id) => [
+                 %{"date" => "2016-01-01", "percent" => 0.0},
+                 %{"date" => "2016-01-04", "percent" => 0.0},
+                 %{"date" => "2016-01-05", "percent" => 10.0}
+               ]
+             }
+    end
+
+    test "fills dates with 0's if the survey is running and no respondent answered", %{
+      conn: conn,
+      user: user
+    } do
+      t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, state: "running", questionnaires: [questionnaire])
+      insert_list(10, :respondent, survey: survey, state: "pending")
+
+      conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+
+      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+               to_string(questionnaire.id) => [
+                 %{"date" => "2016-01-01", "percent" => 0.0},
+                 %{
+                   "date" => DateTime.utc_now() |> DateTime.to_date() |> Date.to_iso8601(),
+                   "percent" => 0
+                 }
+               ]
+             }
     end
 
     test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do
@@ -362,6 +479,7 @@ defmodule Ask.RespondentControllerTest do
         },
         "cumulative_percentages" => %{},
         "total_respondents" => 5,
+        "target" => 5,
         "contacted_respondents" => 0,
         "completion_percentage" => 0,
         "reference" => []
@@ -898,7 +1016,10 @@ defmodule Ask.RespondentControllerTest do
         ],
         "completion_percentage" => 0.0,
         "contacted_respondents" => 0,
-        "cumulative_percentages" => %{},
+        "cumulative_percentages" => %{
+          to_string(qb1.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
+          to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 0.0}]
+        },
         "id" => survey.id,
         "respondents_by_disposition" => %{
           "contacted" => %{
@@ -932,7 +1053,8 @@ defmodule Ask.RespondentControllerTest do
             "percent" => 100.0
           }
         },
-        "total_respondents" => 4
+        "total_respondents" => 4,
+        "target" => 5
       }}
     end
   end

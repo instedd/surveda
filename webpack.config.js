@@ -7,7 +7,7 @@ const i18nextWebpackPlugin = require('i18next-scanner-webpack')
 module.exports = {
   resolve: {
     modules: [
-      path.join(__dirname, '/node_modules'),
+      'node_modules',
       path.join(__dirname, '/web/static/js')
     ],
     extensions: ['.js', '.jsx']
@@ -63,7 +63,8 @@ module.exports = {
               loader: 'sass-loader?sourceMap',
               options: {
                 includePaths: [
-                  path.join(__dirname, '/web/static/vendor/css')
+                  path.join(__dirname, '/web/static/vendor/css'),
+                  path.join(__dirname, '/node_modules')
                 ]
               }
             }

@@ -25,3 +25,11 @@ export function referenceColorClassesWithPrefix(totalNeeded: number, prefix: str
     return prefix + parseInt((i * nextColorIncrement) % 16)
   })
 }
+
+export function referenceColors(totalNeeded: number) {
+  let style = getComputedStyle(document.getElementById('root'))
+
+  return referenceColorClassesWithPrefix(totalNeeded, '--reference-color').map((variableName) =>
+    style.getPropertyValue(variableName).trim()
+  )
+}
