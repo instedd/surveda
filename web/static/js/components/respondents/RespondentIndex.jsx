@@ -21,6 +21,7 @@ type Props = {
   questionnaires: {[id: any]: Questionnaire},
   respondents: {[id: any]: Respondent},
   order: any[],
+  userLevel: string,
   pageSize: number,
   pageNumber: number,
   totalCount: number,
@@ -248,7 +249,7 @@ class RespondentIndex extends Component {
       return <div>Loading...</div>
     }
 
-    const { survey, questionnaires, project, totalCount, order, sortBy, sortAsc } = this.props
+    const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel } = this.props
 
     const hasComparisons = survey.comparisons.length > 0
 
@@ -318,7 +319,7 @@ class RespondentIndex extends Component {
     }
 
     let incentivesCsvLink = null
-    if (project.owner) {
+    if (userLevel == 'owner' || userLevel == 'admin') {
       incentivesCsvLink = (
         <li className='collection-item'>
           <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
@@ -336,7 +337,7 @@ class RespondentIndex extends Component {
     }
 
     let interactionsCsvLink = null
-    if (project.owner) {
+    if (userLevel == 'owner' || userLevel == 'admin') {
       interactionsCsvLink = (
         <li className='collection-item'>
           <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
@@ -466,6 +467,7 @@ const mapStateToProps = (state, ownProps) => {
     questionnaires: state.questionnaires.items,
     respondents: state.respondents.items,
     order: state.respondents.order,
+    userLevel: state.project.data ? state.project.data.level : '',
     pageNumber,
     pageSize,
     startIndex,

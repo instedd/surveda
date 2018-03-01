@@ -39,7 +39,7 @@ class InviteConfirmation extends Component {
     }
 
     const inviteText = <span> {`${invite.inviter_email} has invited you to collaborate as ${invite.role} on `}<UntitledIfEmpty text={invite.project_name} entityName='project' /></span>
-    const roleAction = invite.role == 'editor' ? 'manage' : 'see'
+    const roleAction = (invite.role == 'editor' || invite.role == 'admin') ? 'manage' : 'see'
     const roleDescription = <span> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </span>
 
     return (

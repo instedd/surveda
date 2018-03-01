@@ -6,17 +6,19 @@ defmodule Ask.ProjectView do
       level = levels_by_project |> Map.get(project.id, "reader")
       one = render_one(project)
       one
-      |> Map.put(:running_surveys, Map.get(running_surveys_by_project, project.id, 0))
-      |> Map.put(:read_only, level == "reader")
-      |> Map.put(:owner, level == "owner")
+        |> Map.put(:running_surveys, Map.get(running_surveys_by_project, project.id, 0))
+        |> Map.put(:read_only, level == "reader")
+        |> Map.put(:owner, level == "owner")
+        |> Map.put(:level, level)
     end)
     %{data: rendered}
   end
 
-  def render("show.json", %{project: project, read_only: read_only, owner: owner}) do
+  def render("show.json", %{project: project, read_only: read_only, owner: owner, level: level}) do
     rendered = render_one(project, Ask.ProjectView, "project.json")
-    |> Map.put(:read_only, read_only)
-    |> Map.put(:owner, owner)
+      |> Map.put(:read_only, read_only)
+      |> Map.put(:owner, owner)
+      |> Map.put(:level, level)
     %{data: rendered}
   end
 

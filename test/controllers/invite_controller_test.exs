@@ -45,6 +45,22 @@ defmodule Ask.InviteControllerTest do
     end
   end
 
+  test "allows admin to invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "admin")
+    code = "ABC1234"
+    level = "admin"
+    email = "user@instedd.org"
+    conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    assert json_response(conn, 201) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => email
+      }
+    }
+  end
+
   test "invites user as reader", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
@@ -65,6 +81,22 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "editor"
+    email = "user@instedd.org"
+    conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    assert json_response(conn, 201) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => email
+      }
+    }
+  end
+
+  test "invites user as admin", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "admin"
     email = "user@instedd.org"
     conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     assert json_response(conn, 201) == %{
