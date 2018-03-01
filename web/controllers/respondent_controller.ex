@@ -303,7 +303,7 @@ defmodule Ask.RespondentController do
       comparisons
       |> Enum.find(fn comparison ->
         group_id == "#{comparison["questionnaire_id"]}#{comparison["mode"] |> Enum.join("")}" ||
-          group_id == comparison["questionnaire_id"] || group_id == comparison["mode"]
+          group_id == comparison["questionnaire_id"] || group_id == comparison["mode"] |> Enum.join("")
       end)
 
     fn count ->
