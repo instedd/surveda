@@ -166,7 +166,7 @@ defmodule Ask.RespondentController do
       id: survey.id,
       reference: reference,
       respondents_by_disposition: respondent_counts(respondents_by_disposition, total_respondents),
-      cumulative_percentages: cumulative_percentages(grouped_respondents, survey.started_at, survey.comparisons, target, buckets),
+      cumulative_percentages: cumulative_percentages(grouped_respondents, survey, target, buckets),
       completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
       target: target,
@@ -311,11 +311,19 @@ defmodule Ask.RespondentController do
     end
   end
 
-  defp cumulative_percentages(grouped_respondents, started_at, comparisons, target, buckets) do
+  defp cumulative_percentages(grouped_respondents, %{started_at: started_at, comparisons: comparisons, state: state}, target, buckets) do
     grouped_respondents
     |> Enum.map(fn {group_id, percents_by_date} ->
       # To make sure the series starts at the same time that the survey
+
+
       percents_by_date = [{started_at |> DateTime.to_date(), 0}] ++ percents_by_date
+
+      percents_by_date = if state == "running" do
+        percents_by_date ++ [{DateTime.utc_now() |> DateTime.to_date(), 0}]
+      else
+        percents_by_date
+      end
 
       {group_id,
        cumulative_percents_for_group(
@@ -333,7 +341,7 @@ defmodule Ask.RespondentController do
          result \\ []
        )
 
-  defp cumulative_percents_for_group(_percents_by_date, _percent_provider, 100, result) do
+  defp cumulative_percents_for_group(_percents_by_date, _percent_provider, 100.0, result) do
     result
   end
 
@@ -352,31 +360,52 @@ defmodule Ask.RespondentController do
          cumulative_percent,
          result
        ) do
-    cumulative_percent = cumulative_percent |> add_percent(first_count, percent_provider)
-
-    result =
-      case Date.diff(second_date, first_date) do
-        # Just in case that we already had results for the date the survey started and we duplicated the value
-        0 ->
+    case Date.diff(second_date, first_date) do
+      0 ->
+        # We already had results for that date and we duplicated the dot
+        cumulative_percents_for_group(
+          [{first_date, max(first_count, second_count)} | rest_percents_by_date],
+          percent_provider,
+          cumulative_percent,
           result
+        )
 
-        1 ->
+      1 ->
+        cumulative_percent = cumulative_percent |> add_percent(first_count, percent_provider)
+
+        cumulative_percents_for_group(
+          [{second_date, second_count} | rest_percents_by_date],
+          percent_provider,
+          cumulative_percent,
           result ++ [{first_date, cumulative_percent}]
+        )
 
-        _ ->
-          result ++
+      _ ->
+        cumulative_percent = cumulative_percent |> add_percent(first_count, percent_provider)
+
+        if second_count > 0 do
+          cumulative_percents_for_group(
             [
-              {first_date, cumulative_percent},
-              {second_date |> Timex.shift(days: -1), cumulative_percent}
-            ]
-      end
-
-    cumulative_percents_for_group(
-      [{second_date, second_count} | rest_percents_by_date],
-      percent_provider,
-      cumulative_percent,
-      result
-    )
+              {second_date |> Timex.shift(days: -1), 0},
+              {second_date, second_count} | rest_percents_by_date
+            ],
+            percent_provider,
+            cumulative_percent,
+            result ++ [{first_date, cumulative_percent}]
+          )
+        else
+          # We injected today's date with no aditional results
+          # there's no need for an additional point to mark the horizontal line
+          cumulative_percents_for_group(
+            [
+              {second_date, second_count} | rest_percents_by_date
+            ],
+            percent_provider,
+            cumulative_percent,
+            result ++ [{first_date, cumulative_percent}]
+          )
+        end
+    end
   end
 
   defp add_percent(cumulative_percent, count, percent_provider) do

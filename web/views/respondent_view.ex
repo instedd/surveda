@@ -116,7 +116,7 @@ defmodule Ask.RespondentView do
 
   def render("date_percentages.json", %{completed: {date, percentage}}) do
     %{
-      date: Ecto.Date.cast!(date) |> Ecto.Date.to_string,
+      date: Date.to_iso8601(date),
       percent: percentage
     }
   end
