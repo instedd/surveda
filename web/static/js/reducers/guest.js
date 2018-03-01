@@ -40,7 +40,7 @@ const changeEmail = (state, action) => {
 }
 
 const changeLevel = (state, action) => {
-  if (['reader', 'editor'].includes(action.level)) {
+  if (['admin', 'editor', 'reader'].includes(action.level)) {
     return {
       ...state,
       data: {

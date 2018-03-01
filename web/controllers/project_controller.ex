@@ -25,7 +25,11 @@ defmodule Ask.ProjectController do
           if Enum.any?(memberships, &(&1.level == "editor")) do
             "editor"
           else
-            "reader"
+            if Enum.any?(memberships, &(&1.level == "admin")) do
+              "admin"
+            else
+              "reader"
+            end
           end
         end
       {id, level}
@@ -64,7 +68,7 @@ defmodule Ask.ProjectController do
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_path(conn, :show, project))
-        |> render("show.json", project: project, read_only: false, owner: true)
+        |> render("show.json", project: project, read_only: false, owner: true, level: "owner")
       {:error, changeset} ->
         Logger.warn "Error when creating a new project: #{inspect changeset}"
         conn
@@ -91,7 +95,7 @@ defmodule Ask.ProjectController do
     if membership do
       read_only = membership.level == "reader"
       owner = membership.level == "owner"
-      render(conn, "show.json", project: project, read_only: read_only, owner: owner)
+      render(conn, "show.json", project: project, read_only: read_only, owner: owner, level: membership.level)
     else
       raise Ask.UnauthorizedError, conn: conn
     end
@@ -115,7 +119,7 @@ defmodule Ask.ProjectController do
         |> Repo.one
 
         owner = membership.level == "owner"
-        render(conn, "show.json", project: project, read_only: false, owner: owner)
+        render(conn, "show.json", project: project, read_only: false, owner: owner, level: membership.level)
       {:error, changeset} ->
         Logger.warn "Error when updating project #{project.id}: #{inspect changeset}"
         conn

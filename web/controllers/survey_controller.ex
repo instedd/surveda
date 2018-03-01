@@ -362,13 +362,13 @@ defmodule Ask.SurveyController do
           project_survey_respondents_results_path(conn, :results, project, survey, %{"_format" => "csv"})
         }
       "incentives" ->
-        authorize_owner(project, conn)
+        authorize_admin(project, conn)
         {
           Survey.link_name(survey, :incentives),
           project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"})
         }
       "interactions" ->
-        authorize_owner(project, conn)
+        authorize_admin(project, conn)
         {
           Survey.link_name(survey, :interactions),
           project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"})
@@ -401,7 +401,7 @@ defmodule Ask.SurveyController do
     |> load_project_for_change(project_id)
 
     if target_name == "interactions" || target_name == "incentives" do
-      authorize_owner(project, conn)
+      authorize_admin(project, conn)
     end
 
     survey = project
@@ -434,7 +434,7 @@ defmodule Ask.SurveyController do
     |> load_project_for_change(project_id)
 
     if target_name == "interactions" || target_name == "incentives" do
-      authorize_owner(project, conn)
+      authorize_admin(project, conn)
     end
 
     survey = project
