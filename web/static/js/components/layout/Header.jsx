@@ -3,8 +3,9 @@ import { Link } from 'react-router'
 import TitleContainer from './TitleContainer'
 import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
+import { translate } from 'react-i18next'
 
-const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnairesLink }) => {
+const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnairesLink, t }) => {
   let projectLink
   let questionnairesLink
 
@@ -21,7 +22,7 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
   if (project && showQuestionnairesLink) {
     questionnairesLink = (
       <li className='breadcrumb-item'>
-        <Link to={routes.questionnaireIndex(project.id)} className=''>Questionnaires</Link>
+        <Link to={routes.questionnaireIndex(project.id)} className=''>{t('Questionnaires')}</Link>
       </li>
     )
   }
@@ -34,12 +35,12 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
             <div className='col s12'>
               <ul className='breadcrumb-top'>
                 <li>
-                  <Link to={routes.projects} className=''> Projects </Link>
+                  <Link to={routes.projects} className=''>{t('Projects')}</Link>
                 </li>
                 { projectLink }
                 { questionnairesLink }
                 <li className='channels-tab'>
-                  <Link to={routes.channels}> Channels </Link>
+                  <Link to={routes.channels}>{t('Channels')}</Link>
                 </li>
               </ul>
               <ul className='right user-menu'>
@@ -50,10 +51,10 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
                       <span>{user}</span>
                     </DropdownItem>
                     <DropdownItem>
-                      <a href='/?explicit=true' target='_blank'>About Surveda</a>
+                      <a href='/?explicit=true' target='_blank'>{t('About Surveda')}</a>
                     </DropdownItem>
                     <DropdownItem>
-                      <a onClick={logout}>Logout</a>
+                      <a onClick={logout}>{t('Logout')}</a>
                     </DropdownItem>
                   </Dropdown>
                 </li>
@@ -69,6 +70,7 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
 }
 
 Header.propTypes = {
+  t: PropTypes.func,
   tabs: PropTypes.node,
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
@@ -77,4 +79,4 @@ Header.propTypes = {
   showQuestionnairesLink: PropTypes.bool
 }
 
-export default Header
+export default translate()(Header)

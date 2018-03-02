@@ -1,7 +1,8 @@
 {
+  "About Surveda": "Acerca de Surveda",
+  "Active": "Activos",
   "Add project": "Agregar proyecto",
   "All changes saved": "Todos los cambios fueron guardados",
-  "Active": "Activos",
   "Archive": "Archivar",
   "Archived": "Archivados",
   "Are you sure?": "¿Está seguro?",
@@ -28,6 +29,7 @@
   "Leave project": "Dejar proyecto",
   "LEAVE": "DEJAR",
   "Loading projects...": "Cargando proyectos...",
+  "Logout": "Cerrar sesión",
   "Manage surveys, questionnaires, and collaborators for each of your projects.": "Administre encuestas, cuestionarios y colaboradores para cada uno de sus proyectos.",
   "Name": "Nombre",
   "Organize your work": "Organice su trabajo",

@@ -1,7 +1,8 @@
 {
+  "About Surveda": "About Surveda",
+  "Active": "Active",
   "Add project": "Add project",
   "All changes saved": "All changes saved",
-  "Active": "Active",
   "Archive": "Archive",
   "Archived": "Archived",
   "Are you sure?": "Are you sure?",
@@ -28,6 +29,7 @@
   "Leave project": "Leave project",
   "LEAVE": "LEAVE",
   "Loading projects...": "Loading projects...",
+  "Logout": "Logout",
   "Manage surveys, questionnaires, and collaborators for each of your projects.": "Manage surveys, questionnaires, and collaborators for each of your projects.",
   "Name": "Name",
   "Organize your work": "Organize your work",
