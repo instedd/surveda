@@ -78,6 +78,18 @@ defmodule Ask.MembershipControllerTest do
     assert updated_membership.level == "reader"
   end
 
+  test "does not change level to an invalid value", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+
+    put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "invalid"
+    updated_membership = Repo.one(from p in ProjectMembership, where: p.user_id == ^collaborator.id)
+    assert updated_membership.level == "editor"
+  end
+
   test "forbids user to update owner", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     collaborator_email = "user2@surveda.instedd.org"

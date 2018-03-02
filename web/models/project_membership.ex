@@ -13,6 +13,7 @@ defmodule Ask.ProjectMembership do
     struct
     |> cast(params, [:user_id, :project_id, :level])
     |> validate_required([:user_id, :project_id, :level])
+    |> validate_inclusion(:level, ["owner", "admin", "editor", "reader"])
     |> foreign_key_constraint(:user)
     |> foreign_key_constraint(:project)
   end
