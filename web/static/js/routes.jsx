@@ -19,11 +19,13 @@ import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
 import CollaboratorIndex from './components/collaborators/CollaboratorIndex'
 import InviteConfirmation from './components/InviteConfirmation'
 
+const k = (s) => s
+
 export default (
   <Route path='/' component={App}>
     <IndexRedirect to='projects' />
 
-    <Route path='/projects' title='Projects'>
+    <Route path='/projects' title={k('Projects')}>
       <IndexRoute component={ProjectIndex} />
 
       <Route path=':projectId' title={ProjectTitle}>
@@ -59,7 +61,7 @@ export default (
       <IndexRoute component={InviteConfirmation} />
     </Route>
 
-    <Route path='/channels' title='Channels' >
+    <Route path='/channels' title={k('Channels')} >
       <IndexRoute component={ChannelIndex} />
     </Route>
   </Route>
@@ -83,7 +85,6 @@ export const collaboratorIndex = (projectId) => `${project(projectId)}/collabora
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`
-
 export const channels = '/channels'
 
 export const showOrEditSurvey = (s) => {

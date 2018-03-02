@@ -89,7 +89,7 @@ module.exports = {
       dest: path.resolve(__dirname, 'locales'),
       options: {
         func: {
-          list: ['i18next.t', 'i18n.t', 't'],
+          list: ['i18next.t', 'i18n.t', 't', 'k'],
           extensions: ['.js', '.jsx']
         },
         trans: {

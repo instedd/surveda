@@ -1,13 +1,14 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
 import SaveStatus from '../layout/SaveStatus'
+import { translate } from 'react-i18next'
 
-const Title = ({ children }) => {
+const Title = ({ children, t }) => {
   const renderChildren = () => {
     if (typeof children == 'string') {
-      return <a className='page-title'>{children}</a>
+      return <a className='page-title'>{t(children)}</a>
     } else {
-      return children
+      return t(children)
     }
   }
 
@@ -31,7 +32,8 @@ const Title = ({ children }) => {
 }
 
 Title.propTypes = {
-  children: PropTypes.node
+  children: PropTypes.node,
+  t: PropTypes.func
 }
 
-export default Title
+export default translate()(Title)
