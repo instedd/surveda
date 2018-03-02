@@ -8,7 +8,7 @@ const Title = ({ children, t }) => {
     if (typeof children == 'string') {
       return <a className='page-title'>{t(children)}</a>
     } else {
-      return t(children)
+      return children
     }
   }
 
