@@ -11,7 +11,6 @@ import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
 import { Input } from 'react-materialize'
-
 import { translate } from 'react-i18next'
 
 class ProjectIndex extends Component {
@@ -67,13 +66,14 @@ class ProjectIndex extends Component {
   }
 
   archiveIconForProject(archived: boolean, project: Project) {
+    const { t } = this.props
     if (!project.owner) {
       return <td />
     } else {
       if (archived) {
         return (
           <td className='action'>
-            <Tooltip text='unarchive'>
+            <Tooltip text={t('Unarchive')}>
               <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}>
                 <i className='material-icons'>unarchive</i>
               </a>
@@ -83,7 +83,7 @@ class ProjectIndex extends Component {
       } else {
         return (
           <td className='action'>
-            <Tooltip text='archive'>
+            <Tooltip text={t('Archive')}>
               <a onClick={() => this.archiveOrUnarchive(project, 'archive')}>
                 <i className='material-icons'>archive</i>
               </a>
@@ -95,20 +95,20 @@ class ProjectIndex extends Component {
   }
 
   render() {
-    const { archived } = this.props
+    const { archived, t } = this.props
 
     const archivedFilter = <Input
       type='select'
-      value={archived ? 'archive' : 'all_projects'}
+      value={archived ? 'archived' : 'active'}
       onChange={e => this.fetchProjects(e)}
       >
-      <option key='archived' id='archived' name='archived' value='archived'> Archived </option>
-      <option key='all_projects' id='all_projects' name='all_projects' value='all_projects'> All projects </option>
+      <option key='archived' id='archived' name='archived' value='archived'>{t('Archived')}</option>
+      <option key='active' id='active' name='active' value='active'>{t('Active')}</option>
     </Input>
 
     return (
       <div>
-        <AddButton text='Add project' onClick={e => this.newProject(e)} />
+        <AddButton text={t('Add project')} onClick={e => this.newProject(e)} />
         <div className='row filterIndex'>
           {archivedFilter}
         </div>
@@ -124,12 +124,12 @@ class ProjectIndex extends Component {
     if (!projects) {
       return (
         <div>
-          <CardTable title='Loading projects...' highlight />
+          <CardTable title={t('Loading projects...')} highlight />
         </div>
       )
     }
 
-    const title = `${totalCount} ${(totalCount == 1) ? t(' project') : t(' projects')}`
+    const title = `${totalCount} ${(totalCount == 1) ? t('project') : t('projects')}`
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
@@ -187,7 +187,7 @@ class ProjectIndex extends Component {
                 return (
                   <tr key={project.id}>
                     <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} entityName={t('project')} />
+                      <UntitledIfEmpty text={project.name} entityName={t('project')} emptyText={t('Untitled project')} />
                     </td>
                     <td className='right-align'>
                       {project.runningSurveys}

@@ -4,6 +4,7 @@ import { Modal } from '../ui'
 import * as projectActions from '../../actions/project'
 import { updateProject } from '../../api'
 import merge from 'lodash/merge'
+import { translate } from 'react-i18next'
 
 export class ColourSchemeModal extends Component {
   toggleColourScheme(colourScheme) {
@@ -16,15 +17,15 @@ export class ColourSchemeModal extends Component {
   }
 
   render() {
-    const { modalId, project } = this.props
+    const { modalId, project, t } = this.props
     if (project == null) return null
 
     return (
       <Modal card id={modalId}>
         <div className='modal-content'>
           <div className='card-title header'>
-            <h5>Select color scheme</h5>
-            <p>Choose an option to change the color scheme</p>
+            <h5>{t('Select color scheme')}</h5>
+            <p>{t('Choose an option to change the color scheme')}</p>
           </div>
           <div className='card-content'>
             <div className='row'>
@@ -38,7 +39,7 @@ export class ColourSchemeModal extends Component {
                   onChange={e => this.toggleColourScheme('default')}
                   className='with-gap'
                 />
-                <label className='colourScheme' htmlFor={`defaultScheme`}>Default color scheme</label>
+                <label className='colourScheme' htmlFor={`defaultScheme`}>{t('Default color scheme')}</label>
               </div>
             </div>
             <div className='row'>
@@ -52,12 +53,12 @@ export class ColourSchemeModal extends Component {
                   onChange={e => this.toggleColourScheme('better_data_for_health')}
                   className='with-gap'
                 />
-                <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>Data for health initiative</label>
+                <label className='colourScheme' htmlFor={`betterDataForHealthScheme`}>{t('Data for health initiative')}</label>
               </div>
             </div>
           </div>
           <div className='card-action'>
-            <a className='btn-large waves-effect waves-light blue modal-action modal-close '>Done</a>
+            <a className='btn-large waves-effect waves-light blue modal-action modal-close '>{t('Done')}</a>
           </div>
         </div>
       </Modal>
@@ -66,6 +67,7 @@ export class ColourSchemeModal extends Component {
 }
 
 ColourSchemeModal.propTypes = {
+  t: PropTypes.func,
   modalId: PropTypes.string,
   project: PropTypes.object,
   dispatch: PropTypes.func.isRequired
@@ -75,4 +77,4 @@ const mapStateToProps = (state) => ({
   project: state.project.data
 })
 
-export default connect(mapStateToProps)(ColourSchemeModal)
+export default translate()(connect(mapStateToProps)(ColourSchemeModal))

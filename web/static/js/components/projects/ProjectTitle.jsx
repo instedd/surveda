@@ -5,9 +5,11 @@ import { EditableTitleLabel } from '../ui'
 import merge from 'lodash/merge'
 import * as projectActions from '../../actions/project'
 import { updateProject } from '../../api'
+import { translate } from 'react-i18next'
 
 class ProjectTitle extends Component {
   static propTypes = {
+    t: PropTypes.func,
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
@@ -30,10 +32,10 @@ class ProjectTitle extends Component {
   }
 
   render() {
-    const { project, readOnly } = this.props
+    const { project, readOnly, t } = this.props
     if (project == null) return null
 
-    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+    return <EditableTitleLabel title={project.name} entityName='project' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} emptyText={t('Untitled project')} />
   }
 }
 
@@ -45,4 +47,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(ProjectTitle))
+export default translate()(withRouter(connect(mapStateToProps)(ProjectTitle)))

@@ -5,6 +5,7 @@ import {Tabs, TabLink, Dropdown, DropdownItem, ConfirmationModal} from '../ui'
 import * as routes from '../../routes'
 import ColourSchemeModal from './ColourSchemeModal'
 import { leaveProject } from '../../api'
+import { translate } from 'react-i18next'
 
 class ProjectTabs extends Component {
   openColorSchemePopup(e) {
@@ -12,13 +13,13 @@ class ProjectTabs extends Component {
   }
 
   leaveProject(event, projectId) {
-    const { router } = this.props
+    const { router, t } = this.props
     event.preventDefault()
 
     const leaveConfirmationModal: ConfirmationModal = this.refs.leaveConfirmationModal
     leaveConfirmationModal.open({
       modalText: <span>
-        <p><b>Are you sure?</b><br /> You won't be able to access this project anymore</p>
+        <p><b>{t('Are you sure?')}</b><br />{t('You won\'t be able to access this project anymore')}</p>
       </span>,
       onConfirm: () => {
         leaveProject(projectId)
@@ -28,24 +29,23 @@ class ProjectTabs extends Component {
   }
 
   render() {
-    const { projectId, project, readOnly } = this.props
+    const { projectId, project, readOnly, t, fetchedProject } = this.props
     const changeColorScheme = !readOnly
     ? <DropdownItem>
-      <a onClick={e => this.openColorSchemePopup(e)}><i className='material-icons'>palette</i>Change color scheme</a>
+      <a onClick={e => this.openColorSchemePopup(e)}><i className='material-icons'>palette</i>{t('Change color scheme')}</a>
     </DropdownItem> : null
 
-    const fetchedProject = project && !project.fetching
-    // Nothing to display in 'more' tab is user is owner and project is archived
-    let more = !fetchedProject || (fetchedProject && project.data.owner && readOnly) ? null : (
+    // Nothing to display in 'more' tab if user is owner and project is archived
+    let more = !fetchedProject || (fetchedProject && project.owner && readOnly) ? null : (
       <div className='col'>
         <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
           <DropdownItem className='dots'>
             <i className='material-icons'>more_vert</i>
           </DropdownItem>
           { changeColorScheme }
-          { fetchedProject && !project.data.owner
+          { fetchedProject && !project.owner
             ? <DropdownItem>
-              <a onClick={e => this.leaveProject(e, projectId)}><i className='material-icons'>exit_to_app</i>Leave project</a>
+              <a onClick={e => this.leaveProject(e, projectId)}><i className='material-icons'>exit_to_app</i>{t('Leave project')}</a>
             </DropdownItem>
             : ''
           }
@@ -56,12 +56,12 @@ class ProjectTabs extends Component {
     return (
       <div>
         <Tabs id='project_tabs' more={more}>
-          <TabLink tabId='project_tabs' to={routes.surveyIndex(projectId)}>Surveys</TabLink>
-          <TabLink tabId='project_tabs' to={routes.questionnaireIndex(projectId)}>Questionnaires</TabLink>
-          <TabLink tabId='project_tabs' to={routes.collaboratorIndex(projectId)}>Collaborators</TabLink>
+          <TabLink tabId='project_tabs' to={routes.surveyIndex(projectId)}>{t('Surveys')}</TabLink>
+          <TabLink tabId='project_tabs' to={routes.questionnaireIndex(projectId)}>{t('Questionnaires')}</TabLink>
+          <TabLink tabId='project_tabs' to={routes.collaboratorIndex(projectId)}>{t('Collaborators')}</TabLink>
         </Tabs>
         <ColourSchemeModal modalId='colourSchemeModal' />
-        <ConfirmationModal modalId='leave_project' ref='leaveConfirmationModal' confirmationText='LEAVE' header='Leave Project' showCancel />
+        <ConfirmationModal modalId='leave_project' ref='leaveConfirmationModal' confirmationText={t('LEAVE')} header={t('Leave project')} showCancel />
       </div>
     )
   }
@@ -72,16 +72,19 @@ class ProjectTabs extends Component {
 }
 
 ProjectTabs.propTypes = {
+  t: PropTypes.func,
   projectId: PropTypes.any.isRequired,
   router: PropTypes.object.isRequired,
   project: PropTypes.object,
+  fetchedProject: PropTypes.bool,
   readOnly: PropTypes.bool
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
-  project: state.project,
+  fetchedProject: state.project && !state.project.fetching,
+  project: state.project.data,
   readOnly: state.project && state.project.data ? state.project.data.readOnly : true
 })
 
-export default withRouter(connect(mapStateToProps)(ProjectTabs))
+export default translate()(withRouter(connect(mapStateToProps)(ProjectTabs)))
