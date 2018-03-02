@@ -29,6 +29,7 @@
   "Questionnaires": "",
   "Collaborators": "",
   "LEAVE": "",
+  "Version: {{version}}": "",
   "All changes saved": "",
   "Last saved {{count}} minute ago": "",
   "Last saved {{count}} minute ago_plural": "",

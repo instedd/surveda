@@ -102,7 +102,8 @@ module.exports = {
         },
         defaultLng: 'template',
         defaultValue: '',
-        keySeparator: false, // key separator
+        keySeparator: false,
+        nsSeparator: false,
         lngs: ['template'],
         interpolation: {
           prefix: '{{',

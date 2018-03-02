@@ -27,6 +27,7 @@ i18n
     defaultNS: 'translations',
 
     keySeparator: false, // we use content as keys
+    nsSeparator: false,
 
     interpolation: {
       escapeValue: false, // not needed for react!!
