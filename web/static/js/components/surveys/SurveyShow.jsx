@@ -255,7 +255,7 @@ class SurveyShow extends Component {
               </div>
 
               <Stats data={stats} />
-              <Forecasts data={forecasts} ceil={100} forecast />
+              <Forecasts data={forecasts} ceil={100} forecast={survey.state == 'running'} />
             </div>
           </div>
         </div>
