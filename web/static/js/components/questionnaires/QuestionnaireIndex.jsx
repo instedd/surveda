@@ -10,9 +10,8 @@ import * as actions from '../../actions/questionnaires'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as userSettingsActions from '../../actions/userSettings'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip } from '../ui'
+import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip, ConfirmationModal } from '../ui'
 import * as routes from '../../routes'
-import { ConfirmationModal } from '../ui/ConfirmationModal'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
 
 class QuestionnaireIndex extends Component {

@@ -1,6 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { Modal } from './Modal'
+import { I18n } from 'react-i18next'
 
 type Props = {
   showLink?: boolean,
@@ -62,7 +63,13 @@ export class ConfirmationModal extends Component {
       const onCancelClick = (e) => {
         e.preventDefault()
       }
-      cancelLink = <a href='#!' onClick={onCancelClick} className='modal-action modal-close waves-effect waves-green btn-flat'>Cancel</a>
+      cancelLink = <I18n>
+        {
+          t => (
+            <a href='#!' onClick={onCancelClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{t('Cancel')}</a>
+          )
+        }
+      </I18n>
     }
 
     let noLink = null
