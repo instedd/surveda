@@ -41,8 +41,15 @@ class CollaboratorIndex extends Component {
   }
 
   levelEditor(collaborator, readOnly) {
+    const { userLevel } = this.props
     const disabled = (readOnly || collaborator.role == 'owner')
-    const options = (collaborator.role == 'owner') ? ['owner'] : ['reader', 'editor']
+    var roles = ['editor', 'reader']
+
+    if (userLevel == 'owner' || userLevel == 'admin') {
+      roles = ['admin'].concat(roles)
+    }
+
+    const options = (collaborator.role == 'owner') ? ['owner'] : roles
     return (
       <td className='w-select'>
         <Input type='select'
@@ -138,7 +145,8 @@ CollaboratorIndex.propTypes = {
   actions: PropTypes.object.isRequired,
   inviteActions: PropTypes.object.isRequired,
   guestActions: PropTypes.object.isRequired,
-  projectActions: PropTypes.object.isRequired
+  projectActions: PropTypes.object.isRequired,
+  userLevel: PropTypes.string
 }
 
 const mapDispatchToProps = (dispatch) => ({
@@ -151,6 +159,7 @@ const mapDispatchToProps = (dispatch) => ({
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
+  userLevel: state.project.data ? state.project.data.level : '',
   collaborators: state.collaborators.items
 })
 

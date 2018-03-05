@@ -2,7 +2,7 @@ defmodule Ask.ProjectMembership do
   use Ask.Web, :model
 
   schema "project_memberships" do
-    field :level, :string # owner, editor, reader
+    field :level, :string # owner, admin, editor, reader
     belongs_to :user, Ask.User
     belongs_to :project, Ask.Project
 
@@ -13,6 +13,7 @@ defmodule Ask.ProjectMembership do
     struct
     |> cast(params, [:user_id, :project_id, :level])
     |> validate_required([:user_id, :project_id, :level])
+    |> validate_inclusion(:level, ["owner", "admin", "editor", "reader"])
     |> foreign_key_constraint(:user)
     |> foreign_key_constraint(:project)
   end

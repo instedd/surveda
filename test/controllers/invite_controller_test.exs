@@ -55,6 +55,52 @@ defmodule Ask.InviteControllerTest do
     end
   end
 
+  test "forbids owner to invite with owner permissions", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "owner"
+    email = "user@instedd.org"
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    end
+  end
+
+  test "forbids admin to invite with owner permissions", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "admin")
+    code = "ABC1234"
+    level = "owner"
+    email = "user@instedd.org"
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    end
+  end
+
+  test "forbids editor to invite with admin permissions", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "editor")
+    code = "ABC1234"
+    level = "admin"
+    email = "user@instedd.org"
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    end
+  end
+
+  test "allows admin to invite", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "admin")
+    code = "ABC1234"
+    level = "admin"
+    email = "user@instedd.org"
+    conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    assert json_response(conn, 201) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => email
+      }
+    }
+  end
+
   test "invites user as reader", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
@@ -87,6 +133,22 @@ defmodule Ask.InviteControllerTest do
     }
   end
 
+  test "invites user as admin", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "admin"
+    email = "user@instedd.org"
+    conn = get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+    assert json_response(conn, 201) == %{
+      "data" => %{
+        "project_id" => project.id,
+        "code" => code,
+        "level" => level,
+        "email" => email
+      }
+    }
+  end
+
   test "if an invite already exists and the same code is sent, it is updated with the new level", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
@@ -104,6 +166,18 @@ defmodule Ask.InviteControllerTest do
         "email" => email
       }
     }
+  end
+
+  test "if an invite already exists and the same code is sent, but the new level is owner it returns error", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "editor"
+    email = "user@instedd.org"
+    get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
+
+    assert_error_sent :forbidden, fn ->
+      get conn, invite_path(conn, :invite, %{"code" => code, "level" => "owner", "email" => email, "project_id" => project.id})
+    end
   end
 
   test "if an invite already exists and a different code is sent, it returns conflict", %{conn: conn, user: user} do
@@ -124,7 +198,7 @@ defmodule Ask.InviteControllerTest do
     }
   end
 
-  test "creates membership when acceepting invite", %{conn: conn, user: user} do
+  test "creates membership when accepting invite", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     user2 = insert(:user)
     code = "ABC1234"
@@ -259,6 +333,44 @@ defmodule Ask.InviteControllerTest do
     assert updated_invite.level == "editor"
   end
 
+  test "updates invite from reader to admin when the user is owner", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "admin"})
+
+    updated_invite = Repo.one(from i in Invite, where: i.project_id == ^project.id and i.email == ^email)
+    assert updated_invite.level == "admin"
+  end
+
+  test "updates invite from editor to admin when the user is admin", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "admin")
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "editor",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "admin"})
+
+    updated_invite = Repo.one(from i in Invite, where: i.project_id == ^project.id and i.email == ^email)
+    assert updated_invite.level == "admin"
+  end
+
   test "forbids user outside a project to update", %{conn: conn, user: user} do
     project = insert(:project)
     code = "ABC1234"
@@ -274,6 +386,60 @@ defmodule Ask.InviteControllerTest do
 
     assert_error_sent :forbidden, fn ->
       put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "editor"})
+    end
+  end
+
+  test "forbids owner to update to owner", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "editor",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "owner"})
+    end
+  end
+
+  test "forbids admin to update to owner", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "admin")
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "editor",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "owner"})
+    end
+  end
+
+  test "forbids editor to update to admin", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "editor")
+    code = "ABC1234"
+    email = "user@instedd.org"
+    invite = %{
+      "project_id" => project.id,
+      "code" => code,
+      "level" => "reader",
+      "email" => email,
+      "inviter_email" => user.email
+    }
+    Invite.changeset(%Invite{}, invite) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "admin"})
     end
   end
 

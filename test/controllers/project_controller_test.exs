@@ -41,6 +41,7 @@ defmodule Ask.ProjectControllerTest do
           "read_only" => false,
           "colour_scheme" => "default",
           "owner" => true,
+          "level" => "owner"
         },
         %{
           "id"      => project2.id,
@@ -50,6 +51,7 @@ defmodule Ask.ProjectControllerTest do
           "read_only" => true,
           "colour_scheme" => "default",
           "owner" => false,
+          "level" => "reader"
         }
       ]
     end
@@ -69,6 +71,7 @@ defmodule Ask.ProjectControllerTest do
           "read_only" => true,
           "colour_scheme" => "default",
           "owner" => true,
+          "level" => "owner"
         }
       ]
     end
@@ -88,6 +91,7 @@ defmodule Ask.ProjectControllerTest do
           "read_only" => false,
           "colour_scheme" => "default",
           "owner" => true,
+          "level" => "owner"
         }
       ]
     end
@@ -114,21 +118,24 @@ defmodule Ask.ProjectControllerTest do
                           "updated_at" => NaiveDateTime.to_iso8601(project1.updated_at),
                           "read_only" => false,
                           "colour_scheme" => "default",
-                          "owner" => true}
+                          "owner" => true,
+                          "level" => "owner"}
       project_map_2 = %{"id"      => project2.id,
                           "name"    => project2.name,
                           "running_surveys" => 1,
                           "updated_at" => NaiveDateTime.to_iso8601(project2.updated_at),
                           "read_only" => false,
                           "colour_scheme" => "default",
-                          "owner" => true}
+                          "owner" => true,
+                          "level" => "owner"}
       project_map_3 = %{"id"      => project3.id,
                           "name"    => project3.name,
                           "running_surveys" => 0,
                           "updated_at" => NaiveDateTime.to_iso8601(project3.updated_at),
                           "read_only" => false,
                           "colour_scheme" => "default",
-                          "owner" => true}
+                          "owner" => true,
+                          "level" => "owner"}
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
     end
 
@@ -145,11 +152,12 @@ defmodule Ask.ProjectControllerTest do
         "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => false,
         "colour_scheme" => "default",
-        "owner" => true}
+        "owner" => true,
+        "level" => "owner"}
     end
 
     test "shows chosen resource as read_only", %{conn: conn, user: user} do
-      project = create_project_for_user(user, archived: true)
+      project = create_project_for_user(user, level: "reader")
       project = Project |> Repo.get(project.id)
       conn = get conn, project_path(conn, :show, project)
       assert json_response(conn, 200)["data"] == %{"id" => project.id,
@@ -157,7 +165,8 @@ defmodule Ask.ProjectControllerTest do
         "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => true,
         "colour_scheme" => "default",
-        "owner" => true}
+        "owner" => false,
+        "level" => "reader"}
     end
 
     test "read_only is true when project is archived", %{conn: conn, user: user} do
@@ -188,7 +197,8 @@ defmodule Ask.ProjectControllerTest do
         "updated_at" => NaiveDateTime.to_iso8601(project.updated_at),
         "read_only" => true,
         "colour_scheme" => "default",
-        "owner" => false}
+        "owner" => false,
+        "level" => "reader"}
     end
 
   end

@@ -31,7 +31,7 @@ defmodule User.Helper do
   end
 
   # Checks that the current user belongs to the given project,
-  # as either an owner or editor, but not as a reader.
+  # as either an owner, admin or editor, but not as a reader.
   #
   # Use this method on create, update, delete and other controller actions
   # that perform a change on a resource related to a project.
@@ -39,7 +39,7 @@ defmodule User.Helper do
     user_id = current_user(conn).id
     memberships = project
                   |> assoc(:project_memberships)
-                  |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "editor"))
+                  |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "editor" or m.level == "admin"))
                   |> Repo.all
     case memberships do
       [] -> raise UnauthorizedError, conn: conn
@@ -47,14 +47,15 @@ defmodule User.Helper do
     end
   end
 
-  def authorize_owner(project, %{assigns: %{skip_auth: true}}) do
+  def authorize_admin(project, %{assigns: %{skip_auth: true}}) do
     project
   end
-  def authorize_owner(project, conn) do
+
+  def authorize_admin(project, conn) do
     user_id = current_user(conn).id
     memberships = project
                   |> assoc(:project_memberships)
-                  |> where([m], m.user_id == ^user_id and m.level == "owner")
+                  |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "admin"))
                   |> Repo.all
     case memberships do
       [] -> raise UnauthorizedError, conn: conn
@@ -83,7 +84,7 @@ defmodule User.Helper do
   def load_project_for_owner(conn, project_id) do
     Project
     |> Repo.get!(project_id)
-    |> authorize_owner(conn)
+    |> authorize_admin(conn)
   end
 
   def validate_project_not_archived(project, conn) do

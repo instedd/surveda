@@ -1,10 +1,21 @@
 # InSTEDD Surveda Changelog
 
+## Oak 0.15.1
+
+### Features
+
+* Added "admin" role level with same permissions as "owner" [#1170](https://github.com/instedd/ask/issues/1170)
+
+### Bugfixes
+
+* Fix: invitations can be created for "owner" [#1263](https://github.com/instedd/ask/issues/1263)
+* Fix: any value could be stored for membership level [#1262](https://github.com/instedd/ask/issues/1262)
+
 ## Oak 0.15
 
 This release requires Verboice 3.2
 
-## Features
+### Features
 
 * Support text responses for numeric questions [#1208](https://github.com/instedd/ask/issues/1208)
 * Avoid calls out of the survey schedule [#1209](https://github.com/instedd/ask/issues/1209)

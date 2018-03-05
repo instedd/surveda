@@ -69,7 +69,13 @@ export class InviteModal extends Component {
   }
 
   render() {
-    const { header, modalText, modalId, style, guest } = this.props
+    const { header, modalText, modalId, style, guest, userLevel } = this.props
+
+    var roles = ['editor', 'reader']
+
+    if (userLevel == 'owner' || userLevel == 'admin') {
+      roles = ['admin'].concat(roles)
+    }
 
     if (!guest) {
       return <div>Loading...</div>
@@ -117,7 +123,7 @@ export class InviteModal extends Component {
                 <option value=''>
                 Select a role
                 </option>
-                { ['editor', 'reader'].map((role) =>
+                {roles.map((role) =>
                   <option key={role} value={role}>
                     {startCase(role)}
                   </option>
@@ -154,7 +160,8 @@ InviteModal.propTypes = {
   onConfirm: PropTypes.func.isRequired,
   modalId: PropTypes.string.isRequired,
   projectId: PropTypes.number,
-  style: PropTypes.object
+  style: PropTypes.object,
+  userLevel: PropTypes.string
 }
 
 const mapDispatchToProps = (dispatch) => ({
@@ -165,6 +172,7 @@ const mapDispatchToProps = (dispatch) => ({
 
 const mapStateToProps = (state) => ({
   projectId: state.project.data.id,
+  userLevel: state.project.data.level,
   guest: state.guest
 })
 

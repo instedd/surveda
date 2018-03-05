@@ -1,7 +1,7 @@
 defmodule Ask.InviteController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, ProjectMembership, Invite, Logger}
+  alias Ask.{Project, ProjectMembership, Invite, Logger, UnauthorizedError}
   import Ecto.Query
 
   def accept_invitation(conn, %{"code" => code}) do
@@ -32,9 +32,25 @@ defmodule Ask.InviteController do
     end
   end
 
+  def invite(conn, %{"level" => "owner"}) do
+    raise UnauthorizedError, conn: conn
+  end
+
+  def invite(conn, %{"code" => code, "level" => "admin", "email" => email, "project_id" => project_id}) do
+    project = conn
+      |> load_project_for_owner(project_id)
+
+    perform_invite(conn, project, code, "admin", email, project_id)
+  end
+
   def invite(conn, %{"code" => code, "level" => level, "email" => email, "project_id" => project_id}) do
     project = conn
     |> load_project_for_change(project_id)
+
+    perform_invite(conn, project, code, level, email, project_id)
+  end
+
+  def perform_invite(conn, project, code, level, email, project_id) do
 
     current_user = conn |> current_user
     changeset = Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
@@ -111,10 +127,24 @@ defmodule Ask.InviteController do
     render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
 
+  def update(conn, %{"level" => "owner"}) do
+    raise UnauthorizedError, conn: conn
+  end
+
+  def update(conn, %{"email" => email, "project_id" => project_id, "level" => "admin"}) do
+    conn
+    |> load_project_for_owner(project_id)
+    perform_update(conn, email, project_id, "admin")
+  end
+
   def update(conn, %{"email" => email, "project_id" => project_id, "level" => new_level}) do
     conn
     |> load_project_for_change(project_id)
 
+    perform_update(conn, email, project_id, new_level)
+  end
+
+  def perform_update(conn, email, project_id, new_level) do
     Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
     |> Invite.changeset(%{level: new_level})
     |> Repo.update
@@ -124,7 +154,7 @@ defmodule Ask.InviteController do
   def remove(conn, %{"email" => email, "project_id" => project_id}) do
     conn
     |> load_project_for_change(project_id)
-    
+
     Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
     |> Repo.delete!()
     send_resp(conn, :no_content, "")
