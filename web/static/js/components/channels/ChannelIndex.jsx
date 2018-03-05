@@ -134,6 +134,11 @@ class ChannelIndex extends Component<any> {
       providerModals.push(providerModal('nuntium', index, config.nuntium[index].friendlyName, multipleNuntium))
     }
 
+    const newChannel = (providerType, providerIndex) => {
+      $('#add-channel').modal('close')
+      router.push(routes.channelNew(providerType, providerIndex))
+    }
+
     const nuntiumProviderUI = (index, multiple) => {
       let name = 'Nuntium'
       const { t } = this.props
@@ -143,7 +148,7 @@ class ChannelIndex extends Component<any> {
         <li key={`nuntium-${index}`} className='collection-item icon nuntium'>
           <h5>{name}</h5>
           {providerSwitch('nuntium', index)}
-          <span onClick={() => window.open(config.nuntium[index].baseUrl)}>
+          <span onClick={() => newChannel('nuntium', index)}>
             <i className='material-icons arrow-right'>chevron_right</i>
           </span>
           <span className='channel-description'>
@@ -168,7 +173,7 @@ class ChannelIndex extends Component<any> {
             <br />
             {t('Callcentric, SIP client, SIP server, Skype, Twillio')}
           </span>
-          <span onClick={() => window.open(config.verboice[index].baseUrl)}>
+          <span onClick={() => newChannel('verboice', index)}>
             <i className='material-icons arrow-right'>chevron_right</i>
           </span>
         </li>
