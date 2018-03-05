@@ -3,9 +3,11 @@ import { fetchTimezones } from '../../actions/timezones'
 import { formatTimezone } from './util'
 import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
+import { translate } from 'react-i18next'
 
 class TimezoneDropdown extends PureComponent {
   static propTypes = {
+    t: PropTypes.func,
     dispatch: PropTypes.func.isRequired,
     selectedTz: PropTypes.string,
     timezones: PropTypes.object,
@@ -19,11 +21,11 @@ class TimezoneDropdown extends PureComponent {
   }
 
   render() {
-    const { timezones, selectedTz, onChange, readOnly } = this.props
+    const { timezones, selectedTz, onChange, readOnly, t } = this.props
 
     if (!timezones || !timezones.items) {
       return (
-        <div>Loading timezones...</div>
+        <div>{t('Loading timezones...')}</div>
       )
     }
 
@@ -41,4 +43,4 @@ const mapStateToProps = (state, ownProps) => ({
   timezones: state.timezones
 })
 
-export default connect(mapStateToProps)(TimezoneDropdown)
+export default translate()(connect(mapStateToProps)(TimezoneDropdown))
