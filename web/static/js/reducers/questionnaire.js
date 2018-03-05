@@ -14,6 +14,7 @@ import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
 import * as language from '../language'
 import { validate } from './questionnaire.validation'
 import { defaultActiveMode } from '../questionnaire.mode'
+import undoReducer from './undo'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -101,7 +102,7 @@ const dirtyPredicate = (action, oldData, newData) => {
   }
 }
 
-export default validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))
+export default (undoReducer(actions, validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))): UndoReducer<Questionnaire>)
 
 const addChoice = (state, action) => {
   return changeStep(state, action.stepId, step => ({

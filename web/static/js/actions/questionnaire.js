@@ -55,6 +55,8 @@ export const SET_SURVEY_ALREADY_TAKEN_MESSAGE = 'QUESTIONNAIRE_SET_SURVEY_ALREAD
 export const TOGGLE_QUOTA_COMPLETED_STEPS = 'QUESTIONNAIRE_TOGGLE_QUOTA_COMPLETED_STEPS'
 export const TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS = 'QUESTIONNAIRE_TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS'
 export const SET_DIRTY = 'QUESTIONNAIRE_SET_DIRTY'
+export const UNDO = 'QUESTIONNAIRE_UNDO'
+export const REDO = 'QUESTIONNAIRE_REDO'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -105,6 +107,14 @@ export const shouldFetch = (state, projectId, id) => {
 
 export const setDirty = () => ({
   type: SET_DIRTY
+})
+
+export const undo = () => ({
+  type: UNDO
+})
+
+export const redo = () => ({
+  type: REDO
 })
 
 export const addChoice = (stepId) => ({
