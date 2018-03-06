@@ -15,6 +15,7 @@
     "react-infinite-calendar": "^2.3.0",
     "react-addons-css-transition-group": "15.6.2",
     "hammerjs": "^2.0.8",
+    "history": "^4.4.0",
     "i18next": "^10.3.0",
     "react-i18next": "^7.3.4",
     "i18next-scanner": "^2.4.4",
