@@ -2,6 +2,7 @@ defmodule Ask.MembershipController do
   use Ask.Web, :api_controller
 
   alias Ask.{ProjectMembership, User, UnauthorizedError, ActivityLog}
+  alias Ecto.Multi
 
   def remove(conn, %{"project_id" => project_id, "email" => email}) do
     conn
@@ -15,24 +16,17 @@ defmodule Ask.MembershipController do
     |> Repo.one
     |> check_target_collaborator_is_not_owner(conn)
 
-    activity_log_metadata = %{
-      project_name: project_membership.project.name,
-      collaborator_email: email,
-      collaborator_name: user.name
-    }
+    multi = Multi.new
+    |> Multi.delete(:delete, project_membership)
+    |> Multi.insert(:insert, ActivityLog.remove_collaborator(project_membership.project, current_user(conn), user, project_membership.level))
+    |> Repo.transaction
 
-    activity_log_props = %{
-      project_id: project_id, user_id: current_user(conn).id, entity_id: project_id, entity_type: "project", action: "remove_collaborator", metadata: activity_log_metadata
-    }
-
-    Repo.transaction fn ->
-      project_membership
-      |> Repo.delete!()
-
-      ActivityLog.create(activity_log_props)
+    case multi do
+      {:ok, _} -> send_resp(conn, :no_content, "")
+      {:error, _, error_changeset, _} -> conn
+                                |> put_status(:unprocessable_entity)
+                                |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
     end
-
-    send_resp(conn, :no_content, "")
   end
 
   def update(conn, %{"level" => "owner"}) do
@@ -60,28 +54,24 @@ defmodule Ask.MembershipController do
                           |> preload(:project)
                           |> Repo.one
 
-    activity_log_metadata = %{
-      project_name: project_membership.project.name,
-      collaborator_email: email,
-      collaborator_name: user.name,
-      old_role: project_membership.level,
-      new_role: new_level
-    }
-
-    activity_log_props = %{
-      project_id: project_id, user_id: current_user(conn).id, entity_id: project_id, entity_type: "project", action: "edit_collaborator", metadata: activity_log_metadata
-    }
-
-    Repo.transaction fn ->
-      project_membership
+    update_changeset = project_membership
       |> check_target_collaborator_is_not_owner(conn)
       |> ProjectMembership.changeset(%{level: new_level})
-      |> Repo.update
 
-      ActivityLog.create(activity_log_props)
+    multi = Multi.new
+    |> Multi.update(:update, update_changeset)
+    |> Multi.insert(:insert, ActivityLog.edit_collaborator(project_membership.project, current_user(conn), user, project_membership.level, new_level))
+    |> Repo.transaction
+
+    case multi do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+      {:error, _, error_changeset, _} ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
     end
 
-    send_resp(conn, :no_content, "")
   end
 
 end

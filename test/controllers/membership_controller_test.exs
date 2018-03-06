@@ -96,7 +96,8 @@ defmodule Ask.MembershipControllerTest do
     assert activity_log.metadata == %{
       "project_name" => project.name,
       "collaborator_email" => collaborator_email,
-      "collaborator_name" => collaborator.name
+      "collaborator_name" => collaborator.name,
+      "role" => "editor"
     }
   end
 
@@ -120,8 +121,9 @@ defmodule Ask.MembershipControllerTest do
     collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
     ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
 
-    put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "invalid"
+    conn = put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "invalid"
     updated_membership = Repo.one(from p in ProjectMembership, where: p.user_id == ^collaborator.id)
+    assert conn.status == 422
     assert updated_membership.level == "editor"
   end
 

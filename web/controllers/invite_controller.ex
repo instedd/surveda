@@ -1,7 +1,8 @@
 defmodule Ask.InviteController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, ProjectMembership, Invite, Logger, UnauthorizedError}
+  alias Ask.{Project, ProjectMembership, Invite, Logger, UnauthorizedError, ActivityLog}
+  alias Ecto.Multi
   import Ecto.Query
 
   def accept_invitation(conn, %{"code" => code}) do
@@ -51,16 +52,20 @@ defmodule Ask.InviteController do
   end
 
   def perform_invite(conn, project, code, level, email, project_id) do
-
     current_user = conn |> current_user
     changeset = Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
 
-    case Repo.insert(changeset) do
+    insert_multi = Multi.new()
+    |> Multi.insert(:insert_invite, changeset)
+    |> Multi.insert(:insert_log, ActivityLog.create_invite(project, current_user, email, level))
+    |> Repo.transaction
+
+    case insert_multi do
       {:ok, _} ->
         conn
         |> put_status(:created)
         |> render("invite.json", %{project_id: project.id, code: code, email: email, level: level})
-      {:error, _} ->
+      {:error, :insert_invite, _, _} ->
         invite = Repo.get_by(Invite, email: email, project_id: project_id)
         if (invite.code == code) do
           if(invite.level == level) do
@@ -71,12 +76,17 @@ defmodule Ask.InviteController do
             changeset = invite
               |> Invite.changeset(%{"level" => level})
 
-            case Repo.update(changeset) do
+            update_multi = Multi.new()
+            |> Multi.update(:update_invite, changeset)
+            |> Multi.insert(:insert_log, ActivityLog.edit_invite(project, current_user, email, invite.level, level))
+            |> Repo.transaction
+
+            case update_multi do
               {:ok, _} ->
                 conn
                   |> put_status(:created)
                   |> render("invite.json", %{project_id: project.id, code: code, email: email, level: level})
-              {:error, changeset} ->
+              {:error, _, _, _} ->
                 Logger.warn "Error when inviting collaborator #{inspect changeset}"
                 conn
                   |> put_status(:unprocessable_entity)
@@ -132,32 +142,55 @@ defmodule Ask.InviteController do
   end
 
   def update(conn, %{"email" => email, "project_id" => project_id, "level" => "admin"}) do
-    conn
-    |> load_project_for_owner(project_id)
-    perform_update(conn, email, project_id, "admin")
+    project = conn
+              |> load_project_for_owner(project_id)
+    perform_update(conn, email, project, "admin")
   end
 
   def update(conn, %{"email" => email, "project_id" => project_id, "level" => new_level}) do
-    conn
-    |> load_project_for_change(project_id)
+    project = conn
+              |> load_project_for_change(project_id)
 
-    perform_update(conn, email, project_id, new_level)
+    perform_update(conn, email, project, new_level)
   end
 
-  def perform_update(conn, email, project_id, new_level) do
-    Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
-    |> Invite.changeset(%{level: new_level})
-    |> Repo.update
-    send_resp(conn, :no_content, "")
+  def perform_update(conn, email, project, new_level) do
+    invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
+
+    multi = Multi.new
+    |> Multi.update(:update, Invite.changeset(invite, %{level: new_level}))
+    |> Multi.insert(:insert, ActivityLog.edit_invite(project, current_user(conn), email, invite.level, new_level))
+    |> Repo.transaction
+
+    case multi do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+      {:error, _, error_changeset, _} ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
+    end
   end
 
   def remove(conn, %{"email" => email, "project_id" => project_id}) do
-    conn
+    project = conn
     |> load_project_for_change(project_id)
 
-    Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
-    |> Repo.delete!()
-    send_resp(conn, :no_content, "")
+    invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project_id)
+
+    multi = Multi.new
+    |> Multi.delete(:delete, invite)
+    |> Multi.insert(:insert, ActivityLog.delete_invite(project, current_user(conn), email, invite.level))
+    |> Repo.transaction
+
+    case multi do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+      {:error, _, error_changeset, _} ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
+    end
   end
 
   defp notify_acces_to_user(_, recipient_user, current_user, email, code, project, level) do
@@ -182,7 +215,11 @@ defmodule Ask.InviteController do
     Ask.Email.invite(level, email, current_user, url, project)
     |> Ask.Mailer.deliver
 
-    Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
-    |> Repo.insert
+    changeset = Invite.changeset(%Invite{}, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id, "inviter_email" => current_user.email})
+
+    Multi.new
+    |> Multi.insert(:insert_invite, changeset)
+    |> Multi.insert(:insert_log, ActivityLog.create_invite(project, current_user, email, level))
+    |> Repo.transaction
   end
 end
