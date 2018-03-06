@@ -10,6 +10,7 @@ import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal
 import { Preloader } from 'react-materialize'
 import { config } from '../config'
 import { channelFriendlyName } from '../channelFriendlyName'
+import { translate } from 'react-i18next'
 
 class ChannelIndex extends Component {
   componentDidMount() {
@@ -65,7 +66,7 @@ class ChannelIndex extends Component {
   }
 
   render() {
-    const { channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage } = this.props
+    const { t, channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage } = this.props
 
     if (!channels) {
       return (
@@ -203,7 +204,7 @@ class ChannelIndex extends Component {
           </div>
         </Modal>
         { (channels.length == 0)
-        ? <EmptyPage icon='assignment' title='You have no channels on this project' onClick={(e) => this.addChannel(e)} />
+        ? <EmptyPage icon='assignment' title={t('You have no channels on this project')} onClick={(e) => this.addChannel(e)} createText={t('Create one', {context: 'channel'})} />
         : (
           <CardTable title={tableTitle} footer={footer} highlight className='noclick'>
             <colgroup>
@@ -239,6 +240,7 @@ class ChannelIndex extends Component {
 }
 
 ChannelIndex.propTypes = {
+  t: PropTypes.func,
   actions: PropTypes.object.isRequired,
   authActions: PropTypes.object.isRequired,
   channels: PropTypes.array,
@@ -287,4 +289,4 @@ const mapDispatchToProps = (dispatch) => ({
   authActions: bindActionCreators(authActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(ChannelIndex)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(ChannelIndex))

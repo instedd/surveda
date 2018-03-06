@@ -1,6 +1,9 @@
 {
   "Projects": "",
   "Channels": "",
+  "You have no channels on this project": "",
+  "Create one": "",
+  "Create one_channel": "",
   "Select color scheme": "",
   "Choose an option to change the color scheme": "",
   "Default color scheme": "",
@@ -15,6 +18,7 @@
   "project": "",
   "projects": "",
   "You have no projects yet": "",
+  "Create one_project": "",
   "Organize your work": "",
   "Manage surveys, questionnaires, and collaborators for each of your projects.": "",
   "Name": "",
@@ -49,5 +53,9 @@
   "Warning! Changes were not saved. Retrying...": "",
   "Saving...": "",
   "Loading timezones...": "",
+  "You have no surveys on this project": "",
+  "Create one_survey": "",
+  "You have no questionnaires on this project": "",
+  "Create one_questionnaire": "",
   "Cancel": ""
 }

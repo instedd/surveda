@@ -13,6 +13,7 @@ import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip, ConfirmationModal } from '../ui'
 import * as routes from '../../routes'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
+import { translate } from 'react-i18next'
 
 class QuestionnaireIndex extends Component {
   creatingQuestionnaire: boolean
@@ -96,7 +97,7 @@ class QuestionnaireIndex extends Component {
 
   render() {
     const { questionnaires, project, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, userSettings } = this.props
+      totalCount, hasPreviousPage, hasNextPage, userSettings, t } = this.props
 
     if (!questionnaires || !userSettings.settings) {
       return (
@@ -136,7 +137,7 @@ class QuestionnaireIndex extends Component {
       <div>
         {addButton}
         { (questionnaires.length == 0)
-          ? <EmptyPage icon='assignment' title='You have no questionnaires on this project' onClick={e => this.newQuestionnaire(e)} readOnly={readOnly} />
+          ? <EmptyPage icon='assignment' title={t('You have no questionnaires on this project')} onClick={e => this.newQuestionnaire(e)} readOnly={readOnly} createText={t('Create one', {context: 'questionnaire'})} />
         : <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
           <thead>
             <tr>
@@ -199,6 +200,7 @@ class QuestionnaireIndex extends Component {
 }
 
 QuestionnaireIndex.propTypes = {
+  t: PropTypes.func,
   actions: PropTypes.object.isRequired,
   projectActions: PropTypes.object.isRequired,
   questionnaireActions: PropTypes.object.isRequired,
@@ -256,4 +258,4 @@ const mapDispatchToProps = (dispatch) => ({
   userSettingsActions: bindActionCreators(userSettingsActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireIndex))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireIndex)))

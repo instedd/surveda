@@ -1,13 +1,14 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
+import { translate } from 'react-i18next'
 
-export const EmptyPage = ({ icon, title, linkPath, onClick, children, readOnly }) => {
+export const EmptyPage = translate()(({ icon, title, linkPath, onClick, children, readOnly, t, createText }) => {
   let link
   if (!readOnly) {
     if (linkPath) {
-      link = <Link to={linkPath}>Create one</Link>
+      link = <Link to={linkPath}>{createText}</Link>
     } else if (onClick) {
-      link = <a href='#' className='green-text' onClick={onClick}><h5>Create one</h5></a>
+      link = <a href='#' className='green-text' onClick={onClick}><h5>{createText}</h5></a>
     } else {
       link = children
     }
@@ -22,7 +23,7 @@ export const EmptyPage = ({ icon, title, linkPath, onClick, children, readOnly }
       {link}
     </div>
   )
-}
+})
 
 EmptyPage.propTypes = {
   icon: PropTypes.string.isRequired,

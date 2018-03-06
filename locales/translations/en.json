@@ -11,6 +11,7 @@
   "Channels": "Channels",
   "Choose an option to change the color scheme": "Choose an option to change the color scheme",
   "Collaborators": "Collaborators",
+  "Create one": "Create one",
   "Data for health initiative": "Data for health initiative",
   "Default color scheme": "Default color scheme",
   "Done": "Done",
@@ -47,7 +48,10 @@
   "Untitled project": "Untitled project",
   "Version: {{version}}": "Version: {{version}}",
   "Warning! Changes were not saved. Retrying...": "Warning! Changes were not saved. Retrying...",
+  "You have no channels on this project": "You have no channels on this project",
   "You have no projects yet": "You have no projects yet",
+  "You have no questionnaires on this project": "You have no questionnaires on this project",
+  "You have no surveys on this project": "You have no surveys on this project",
   "You have unsaved changes. Are you sure you want to close?": "You have unsaved changes. Are you sure you want to close?",
   "You won't be able to access this project anymore": "You won't be able to access this project anymore"
 }

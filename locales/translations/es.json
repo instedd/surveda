@@ -11,6 +11,8 @@
   "Channels": "Canales",
   "Choose an option to change the color scheme": "Elija una opción para cambiar el esquema de colores",
   "Collaborators": "Colaboradores",
+  "Create one": "Cree uno",
+  "Create one_survey": "Cree una",
   "Data for health initiative": "Iniciativa Datos para la Salud",
   "Default color scheme": "Esquema de color por defecto",
   "Done": "Listo",
@@ -47,7 +49,10 @@
   "Untitled project": "Proyecto sin título",
   "Version: {{version}}": "Versión: {{version}}",
   "Warning! Changes were not saved. Retrying...": "Atención! Los cambios no han sido guardados. Reintentando...",
+  "You have no channels on this project": "No tiene canales en este proyecto",
   "You have no projects yet": "Aún no tiene proyectos",
+  "You have no questionnaires on this project": "No tiene cuestionarios en este proyecto",
+  "You have no surveys on this project": "No tiene encuestas en este proyecto",
   "You have unsaved changes. Are you sure you want to close?": "Los cambios no se han guardado. ¿Está seguro que desea cerrar?",
   "You won't be able to access this project anymore": "No podrá acceder más a este proyecto"
 }
