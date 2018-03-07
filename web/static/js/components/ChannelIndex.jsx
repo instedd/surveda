@@ -76,7 +76,7 @@ class ChannelIndex extends Component {
       )
     }
 
-    const title = `${totalCount} ${(totalCount == 1) ? ' channel' : ' channels'}`
+    const title = `${totalCount} ${(totalCount == 1) ? t('channel') : t('channels')}`
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
@@ -108,9 +108,16 @@ class ChannelIndex extends Component {
       let name = `${provider[0].toUpperCase()}${provider.slice(1)}`
       if (multiple) name = `${name} (${friendlyName})`
 
-      return <ConfirmationModal key={`${provider}-${index}`} modalId={`${provider}Modal-${index}`} modalText={`Do you want to delete the channels provided by ${name}?`} header={`Turn off ${name}`} confirmationText='Yes' onConfirm={() => this.deleteProvider(provider, index)} style={{maxWidth: '600px'}} showCancel
-        /* onNo={() => this.turnOffProvider(provider, index)} */
-        />
+      return <ConfirmationModal
+        key={`${provider}-${index}`}
+        modalId={`${provider}Modal-${index}`}
+        modalText={t('Do you want to delete the channels provided by {{name}}?', {name})}
+        header={t('Turn off {{name}}', {name})}
+        confirmationText={t('Yes')}
+        onConfirm={() => this.deleteProvider(provider, index)}
+        style={{maxWidth: '600px'}}
+        showCancel
+      />
     }
 
     let syncButton = null
@@ -189,14 +196,14 @@ class ChannelIndex extends Component {
 
     return (
       <div>
-        <AddButton text='Add channel' onClick={(e) => this.addChannel(e)} />
+        <AddButton text={t('Add channel')} onClick={(e) => this.addChannel(e)} />
         {providerModals}
 
         <Modal card id='add-channel'>
           <div className='modal-content'>
             <div className='card-title header'>
-              <h5>Create a channel</h5>
-              <p>Surveda will sync available channels from these providers after user authorization</p>
+              <h5>{t('Create a channel')}</h5>
+              <p>{t('Surveda will sync available channels from these providers after user authorization')}</p>
             </div>
             <ul className='collection'>
               {providerUIs}
@@ -213,8 +220,8 @@ class ChannelIndex extends Component {
             </colgroup>
             <thead>
               <tr>
-                <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader text='Provider' property='provider' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text={t('Name')} property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader text={t('Provider')} property='provider' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               </tr>
             </thead>
             <tbody>
