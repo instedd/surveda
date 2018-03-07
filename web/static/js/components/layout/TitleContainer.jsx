@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { withRouter } from 'react-router'
-import Title from '../ui/Title'
+import { Title } from '../ui'
 
 class TitleContainer extends Component {
   render() {

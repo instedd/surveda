@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import SaveStatus from '../layout/SaveStatus'
 import { translate } from 'react-i18next'
 
-const Title = ({ children, t }) => {
+export const Title = translate()(({ children, t }) => {
   const renderChildren = () => {
     if (typeof children == 'string') {
       return <a className='page-title'>{t(children)}</a>
@@ -29,11 +29,9 @@ const Title = ({ children, t }) => {
       </div>
     </nav>
   )
-}
+})
 
 Title.propTypes = {
   children: PropTypes.node,
   t: PropTypes.func
 }
-
-export default translate()(Title)
