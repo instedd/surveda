@@ -7,8 +7,10 @@ import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
 import { hasErrorsInPrefixWithModeAndLanguage } from '../../questionnaireErrors'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 type Props = {
+  t: Function,
   step: Step,
   stepIndex: number,
   errorPath: string,
@@ -22,7 +24,7 @@ class QuestionnaireClosedStep extends Component {
   props: Props
 
   render() {
-    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps } = this.props
+    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, t } = this.props
 
     const stepIconClass = classNames({
       'material-icons left': true,
@@ -42,7 +44,7 @@ class QuestionnaireClosedStep extends Component {
                 onClick(step.id)
               }}>
                 <i className={stepIconClass}>{stepIconFont}</i>
-                <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} entityName='question' />
+                <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText={t('Untitled question')} />
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
               </a>
             </div>
@@ -65,4 +67,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withQuestionnaire(connect(mapStateToProps)(QuestionnaireClosedStep))
+export default translate()(withQuestionnaire(connect(mapStateToProps)(QuestionnaireClosedStep)))

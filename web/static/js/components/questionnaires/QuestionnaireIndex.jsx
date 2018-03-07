@@ -82,12 +82,12 @@ class QuestionnaireIndex extends Component {
   }
 
   delete(questionnaire: Questionnaire) {
-    const { projectId, actions } = this.props
+    const { projectId, actions, t } = this.props
 
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
     deleteConfirmationModal.open({
       modalText: <span>
-        <p>Are you sure you want to delete the questionnaire <b><UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' /></b>?</p>
+        <p>Are you sure you want to delete the questionnaire <b><UntitledIfEmpty text={questionnaire.name} emptyText={t('Untitled questionnaire')} /></b>?</p>
       </span>,
       onConfirm: () => {
         actions.deleteQuestionnaire(projectId, questionnaire)
@@ -157,7 +157,7 @@ class QuestionnaireIndex extends Component {
               return (
                 <tr key={questionnaire.id}>
                   <td onClick={() => this.goTo(questionnaire.id)}>
-                    <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
+                    <UntitledIfEmpty text={questionnaire.name} emptyText={t('Untitled questionnaire')} />
                   </td>
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     {questionnaire.updatedAt ? dateformat(new Date(questionnaire.updatedAt), 'mmm d, yyyy HH:MM') : '-'}

@@ -225,7 +225,7 @@ class ChannelIndex extends Component {
 
                 return (<tr key={channel.id}>
                   <td>
-                    <UntitledIfEmpty text={this.channelDisplayName(channel)} entityName='channel' />
+                    <UntitledIfEmpty text={this.channelDisplayName(channel)} emptyText={t('Untitled channel')} />
                   </td>
                   <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
                 </tr>)

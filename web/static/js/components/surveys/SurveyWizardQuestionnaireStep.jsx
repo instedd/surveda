@@ -5,9 +5,11 @@ import * as actions from '../../actions/survey'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as routes from '../../routes'
 import { UntitledIfEmpty } from '../ui'
+import { translate } from 'react-i18next'
 
 class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
+    t: PropTypes.func,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     projectId: PropTypes.any.isRequired,
@@ -60,7 +62,7 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   render() {
-    const { questionnaires, projectId, survey, readOnly } = this.props
+    const { questionnaires, projectId, survey, readOnly, t } = this.props
 
     const questionnaireIds = survey.questionnaireIds || []
     const questionnaireComparison = (questionnaireIds.length > 1) ? true : (!!survey.questionnaireComparison)
@@ -113,7 +115,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                       onChange={e => this.questionnaireChange(e)}
                       disabled={readOnly}
                     />
-                    <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} entityName='questionnaire' className={className} /></label>
+                    <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} emptyText={t('Untitled questionnaire')} className={className} /></label>
                   </p>
                 </div>
               )
@@ -126,4 +128,4 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 }
 
-export default withRouter(connect()(SurveyWizardQuestionnaireStep))
+export default translate()(withRouter(connect()(SurveyWizardQuestionnaireStep)))

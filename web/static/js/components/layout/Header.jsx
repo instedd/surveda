@@ -13,7 +13,7 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
     projectLink = (
       <li className='breadcrumb-item'>
         <Link to={routes.project(project.id)} className=''>
-          <UntitledIfEmpty text={project.name} entityName='project' />
+          <UntitledIfEmpty text={project.name} emptyText={t('Untitled project')} />
         </Link>
       </li>
     )

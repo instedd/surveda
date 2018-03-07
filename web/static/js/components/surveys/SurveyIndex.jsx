@@ -56,9 +56,10 @@ class SurveyIndex extends Component {
 
   deleteSurvey = (survey: Survey) => {
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+    const { t } = this.props
     deleteConfirmationModal.open({
       modalText: <span>
-        <p>Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} entityName='survey' /></b>?</p>
+        <p>Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?</p>
         <p>All the respondent information will be lost and cannot be undone.</p>
       </span>,
       onConfirm: () => {
@@ -122,7 +123,7 @@ class SurveyIndex extends Component {
         : <div className='row'>
           { surveys.map(survey => {
             return (
-              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} />
+              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
             )
           }) }
           { footer }
@@ -173,6 +174,7 @@ export default translate()(withRouter(connect(mapStateToProps)(SurveyIndex)))
 
 class SurveyCard extends PureComponent {
   props: {
+    t: Function,
     respondentsStats: Object,
     survey: Survey,
     onDelete: (survey: Survey) => void,
@@ -180,7 +182,7 @@ class SurveyCard extends PureComponent {
   };
 
   render() {
-    const { survey, respondentsStats, onDelete, readOnly } = this.props
+    const { survey, respondentsStats, onDelete, readOnly, t } = this.props
 
     var deleteButton = null
     if (survey.state != 'running') {
@@ -211,7 +213,7 @@ class SurveyCard extends PureComponent {
               </div>
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>
-                  <UntitledIfEmpty text={survey.name} entityName='survey' />
+                  <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
                   {deleteButton}
                 </span>
                 <SurveyStatus survey={survey} short />

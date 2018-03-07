@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import * as actions from '../actions/invites'
 import * as routes from '../routes'
 import { UntitledIfEmpty } from './ui'
+import { translate } from 'react-i18next'
 
 class InviteConfirmation extends Component {
   componentDidMount() {
@@ -32,13 +33,13 @@ class InviteConfirmation extends Component {
   }
 
   render() {
-    const { invite } = this.props
+    const { invite, t } = this.props
 
     if (!invite) {
       return <div>Loading...</div>
     }
 
-    const inviteText = <span> {`${invite.inviter_email} has invited you to collaborate as ${invite.role} on `}<UntitledIfEmpty text={invite.project_name} entityName='project' /></span>
+    const inviteText = <span> {`${invite.inviter_email} has invited you to collaborate as ${invite.role} on `}<UntitledIfEmpty text={invite.project_name} emptyText={t('Untitled project')} /></span>
     const roleAction = (invite.role == 'editor' || invite.role == 'admin') ? 'manage' : 'see'
     const roleDescription = <span> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </span>
 
@@ -57,6 +58,7 @@ class InviteConfirmation extends Component {
 }
 
 InviteConfirmation.propTypes = {
+  t: PropTypes.func,
   location: PropTypes.object.isRequired,
   router: PropTypes.object,
   invite: PropTypes.object,
@@ -68,4 +70,4 @@ const mapStateToProps = (state, ownProps) => ({
   project: state.project.data
 })
 
-export default connect(mapStateToProps)(InviteConfirmation)
+export default translate()(connect(mapStateToProps)(InviteConfirmation))

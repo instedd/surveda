@@ -6,8 +6,7 @@ export class EditableTitleLabel extends Component {
   static propTypes = {
     onSubmit: React.PropTypes.func.isRequired,
     title: React.PropTypes.string,
-    emptyText: React.PropTypes.string,
-    entityName: React.PropTypes.string,
+    emptyText: React.PropTypes.string.isRequired,
     editing: React.PropTypes.bool,
     readOnly: React.PropTypes.bool,
     more: React.PropTypes.node
@@ -46,7 +45,7 @@ export class EditableTitleLabel extends Component {
   }
 
   render() {
-    const { title, emptyText, entityName, more } = this.props
+    const { title, emptyText, more } = this.props
 
     let icon = null
     if ((!title || title.trim() == '') && !this.props.readOnly) {
@@ -57,7 +56,7 @@ export class EditableTitleLabel extends Component {
       return (
         <div className='title'>
           <a className={classNames({'page-title': true, 'truncate': (title && title.trim() != '')})} onClick={e => this.handleClick(e)}>
-            <UntitledIfEmpty text={title} emptyText={emptyText} entityName={entityName} />
+            <UntitledIfEmpty text={title} emptyText={emptyText} />
             {icon}
           </a>
           {more}

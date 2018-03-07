@@ -12,8 +12,10 @@ import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../questionnaire.mode'
 import find from 'lodash/find'
+import { translate } from 'react-i18next'
 
 type Props = {
+  t: Function,
   projectId: number,
   surveyId: number,
   survey: Survey,
@@ -249,7 +251,7 @@ class RespondentIndex extends Component {
       return <div>Loading...</div>
     }
 
-    const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel } = this.props
+    const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel, t } = this.props
 
     const hasComparisons = survey.comparisons.length > 0
 
@@ -419,7 +421,7 @@ class RespondentIndex extends Component {
                 let variantValue
                 let questionnaire
                 if (respondent.questionnaireId && respondent.mode && (questionnaire = questionnaires[respondent.questionnaireId])) {
-                  const questionnaireName = <UntitledIfEmpty text={questionnaire.name} entityName='questionnaire' />
+                  const questionnaireName = <UntitledIfEmpty text={questionnaire.name} emptyText={t('Untitled questionnaire')} />
                   variantValue = <span>{questionnaireName} - {modeLabel(respondent.mode)}</span>
                 } else {
                   variantValue = '-'
@@ -487,4 +489,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(RespondentIndex)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(RespondentIndex))

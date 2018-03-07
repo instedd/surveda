@@ -3,9 +3,11 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import { EditableTitleLabel } from '../ui'
 import * as surveyActions from '../../actions/survey'
+import { translate } from 'react-i18next'
 
 class SurveyTitle extends Component {
   static propTypes = {
+    t: PropTypes.func,
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.any.isRequired,
     surveyId: PropTypes.any.isRequired,
@@ -21,10 +23,10 @@ class SurveyTitle extends Component {
   }
 
   render() {
-    const { survey, readOnly } = this.props
+    const { survey, readOnly, t } = this.props
     if (survey == null) return null
 
-    return <EditableTitleLabel title={survey.name} entityName='survey' onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+    return <EditableTitleLabel title={survey.name} emptyText={t('Untitled survey')} onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
   }
 }
 
@@ -37,4 +39,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(SurveyTitle))
+export default translate()(withRouter(connect(mapStateToProps)(SurveyTitle)))

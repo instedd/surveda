@@ -4,9 +4,11 @@ import * as actions from '../../actions/survey'
 import { UntitledIfEmpty, PercentageInput } from '../ui'
 import find from 'lodash/find'
 import { modeLabel } from '../../questionnaire.mode'
+import { translate } from 'react-i18next'
 
 class SurveyWizardComparisonsStep extends Component {
   static propTypes = {
+    t: PropTypes.func,
     survey: PropTypes.object.isRequired,
     questionnaires: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
@@ -34,9 +36,9 @@ class SurveyWizardComparisonsStep extends Component {
   }
 
   questionnaireName(bucket) {
-    const { questionnaires } = this.props
+    const { questionnaires, t } = this.props
     const questionnaireName = questionnaires[bucket.questionnaireId] ? questionnaires[bucket.questionnaireId].name : ''
-    return <UntitledIfEmpty text={questionnaireName} />
+    return <UntitledIfEmpty text={questionnaireName} emptyText={t('Untitled questionnaire')} />
   }
 
   render() {
@@ -113,4 +115,4 @@ class SurveyWizardComparisonsStep extends Component {
   }
 }
 
-export default connect()(SurveyWizardComparisonsStep)
+export default translate()(connect()(SurveyWizardComparisonsStep))

@@ -3,16 +3,16 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { EditableTitleLabel, Card } from '../ui'
+import { translate } from 'react-i18next'
 
 class StepCard extends Component {
-
   stepTitleSubmit(value) {
     const { stepId } = this.props
     this.props.questionnaireActions.changeStepTitle(stepId, value)
   }
 
   render() {
-    const { onCollapse, stepId, children, icon, stepTitle, readOnly } = this.props
+    const { onCollapse, stepId, children, icon, stepTitle, readOnly, t } = this.props
 
     return (
       <Card key={stepId}>
@@ -21,7 +21,7 @@ class StepCard extends Component {
             <div className='row'>
               <div className='col s12'>
                 {icon}
-                <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} entityName='question' onSubmit={value => this.stepTitleSubmit(value)} />
+                <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} emptyText={t('Untitled question')} onSubmit={value => this.stepTitleSubmit(value)} />
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -41,6 +41,7 @@ class StepCard extends Component {
 }
 
 StepCard.propTypes = {
+  t: PropTypes.func,
   icon: PropTypes.object.isRequired,
   stepTitle: PropTypes.string.isRequired,
   stepId: PropTypes.any.isRequired,
@@ -54,4 +55,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepCard)
+export default translate()(connect(null, mapDispatchToProps)(StepCard))

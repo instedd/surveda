@@ -187,7 +187,7 @@ class ProjectIndex extends Component {
                 return (
                   <tr key={project.id}>
                     <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
-                      <UntitledIfEmpty text={project.name} entityName={t('project')} emptyText={t('Untitled project')} />
+                      <UntitledIfEmpty text={project.name} emptyText={t('Untitled project')} />
                     </td>
                     <td className='right-align'>
                       {project.runningSurveys}
