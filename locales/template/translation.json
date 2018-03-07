@@ -53,10 +53,15 @@
   "You have unsaved changes. Are you sure you want to close?": "",
   "Warning! Changes were not saved. Retrying...": "",
   "Saving...": "",
+  "You have no questionnaires on this project": "",
+  "Create one_questionnaire": "",
   "Loading timezones...": "",
   "You have no surveys on this project": "",
   "Create one_survey": "",
-  "You have no questionnaires on this project": "",
-  "Create one_questionnaire": "",
-  "Cancel": ""
+  "Cancel": "",
+  "Error details": "",
+  "Please contact support for further assistance": "",
+  "Error ID:": "",
+  "Call stack": "",
+  "CLOSE": ""
 }

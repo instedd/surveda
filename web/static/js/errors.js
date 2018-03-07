@@ -4,7 +4,7 @@ import { Unauthorized } from './api'
 import * as routes from './routes'
 import React from 'react'
 import { render } from 'react-dom'
-import { showError } from 'components/ui/ErrorModal'
+import { showError } from 'components/ui'
 
 if (typeof config != 'undefined') {
   Raven.config(config.sentryDsn, {release: config.version}).install()
