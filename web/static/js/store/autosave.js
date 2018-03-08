@@ -1,5 +1,5 @@
 import * as autoSaveStatusActions from '../actions/autoSaveStatus'
-import i18n from 'i18next'
+import i18n from '../i18next'
 import createHistory from 'history/createBrowserHistory'
 
 export default (storeProvider, actions) => store => next => action => {

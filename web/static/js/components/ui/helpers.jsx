@@ -1,4 +1,4 @@
-import i18n from 'i18next'
+import i18n from '../../i18next'
 
 export const roleDisplayName = (role) => {
   switch (role) {
