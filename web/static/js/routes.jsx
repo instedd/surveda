@@ -58,7 +58,7 @@ export default (
     </Route>
 
     <Route path='confirm'>
-      <IndexRoute component={InviteConfirmation} title={k('Accept invitation')}/>
+      <IndexRoute component={InviteConfirmation} title={k('Accept invitation')} />
     </Route>
 
     <Route path='/channels' title={k('Channels')} >
