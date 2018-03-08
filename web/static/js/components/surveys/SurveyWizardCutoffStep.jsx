@@ -6,9 +6,11 @@ import { InputWithLabel } from '../ui'
 import find from 'lodash/find'
 import join from 'lodash/join'
 import { stepStoreValues } from '../../reducers/questionnaire'
+import { translate } from 'react-i18next'
 
 class SurveyWizardCutoffStep extends Component {
   static propTypes = {
+    t: PropTypes.func,
     survey: PropTypes.object.isRequired,
     questionnaire: PropTypes.object,
     dispatch: PropTypes.func.isRequired,
@@ -81,12 +83,13 @@ class SurveyWizardCutoffStep extends Component {
   }
 
   header() {
+    const { t } = this.props
     return (
       <div className='row'>
         <div className='col s12'>
-          <h4>Configure cutoff rules</h4>
+          <h4>{t('Configure cutoff rules')}</h4>
           <p className='flow-text'>
-            Cutoff rules define when the survey will stop. You can use one or more of these options. If you don't select any, the survey will be sent to all respondents.
+            {t('Cutoff rules define when the survey will stop. You can use one or more of these options. If you don\'t select any, the survey will be sent to all respondents.')}
           </p>
         </div>
       </div>
@@ -94,7 +97,7 @@ class SurveyWizardCutoffStep extends Component {
   }
 
   renderWithQuotas() {
-    const { questionnaire, survey, readOnly } = this.props
+    const { questionnaire, survey, readOnly, t } = this.props
     const hasQuotas = questionnaire && survey.quotas.vars.length > 0
 
     let quotasModal = null
@@ -102,7 +105,7 @@ class SurveyWizardCutoffStep extends Component {
       quotasModal = (
         <div className='row'>
           <div className='col s12'>
-            <QuotasModal showLink={hasQuotas} modalId='setupQuotas' linkText='EDIT QUOTAS' header='Quotas' confirmationText='DONE' showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
+            <QuotasModal showLink={hasQuotas} modalId='setupQuotas' linkText={t('EDIT QUOTAS')} header={t('Quotas')} confirmationText={t('Done')} showCancel onConfirm={vars => this.setQuotaVars(vars)} questionnaire={questionnaire} survey={survey} />
           </div>
         </div>
       )
@@ -113,8 +116,8 @@ class SurveyWizardCutoffStep extends Component {
         <div className='row quotas'>
           <div className='col s12'>
             <input type='radio' className='filled-in with-gap' id='set-quotas' checked={hasQuotas} onChange={() => this.turnOnQuotas()} disabled={readOnly} />
-            <label htmlFor='set-quotas'>Quotas for completes</label>
-            <p className='grey-text'>Quotas allow you to define minimum number of completed results for specific categories such as age or gender.</p>
+            <label htmlFor='set-quotas'>{t('Quotas for completes')}</label>
+            <p className='grey-text'>{t('Quotas allow you to define minimum number of completed results for specific categories such as age or gender.')}</p>
           </div>
         </div>
         {quotasModal}
@@ -131,7 +134,7 @@ class SurveyWizardCutoffStep extends Component {
         onChange={this.toggleCountPartialResults}
       />
     )
-    const partialsLabel = <label className='bottom-margin' htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+    const partialsLabel = <label className='bottom-margin' htmlFor='toggle_count_partial_results'>{t('Count partials as completed')}</label>
 
     let partialsForCutoff = null
     let partialsForQuotas = null
@@ -159,7 +162,7 @@ class SurveyWizardCutoffStep extends Component {
         <div className='row'>
           <div className='col s12'>
             <input type='radio' className='with-gap' id='survey_cutoff' checked={!hasQuotas} onChange={() => this.turnOffQuotas()} disabled={readOnly} />
-            <label htmlFor='survey_cutoff'>Number of completes</label>
+            <label htmlFor='survey_cutoff'>{t('Number of completes')}</label>
             <div className='input-field inline'>
               <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
                 <input
@@ -195,14 +198,14 @@ class SurveyWizardCutoffStep extends Component {
   }
 
   renderWithoutQuotas() {
-    const { survey, readOnly } = this.props
+    const { survey, readOnly, t } = this.props
 
     return (
       <div>
         {this.header()}
         <div className='row'>
           <div className='col s12'>
-            Number of completes
+            {t('Number of completes')}
             <div className='input-field inline'>
               <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
                 <input
@@ -223,7 +226,7 @@ class SurveyWizardCutoffStep extends Component {
                 className='filled-in'
                 onChange={this.toggleCountPartialResults}
               />
-              <label htmlFor='toggle_count_partial_results'>Count partials as completed</label>
+              <label htmlFor='toggle_count_partial_results'>{t('Count partials as completed')}</label>
             </div>
           </div>
         </div>
@@ -242,4 +245,4 @@ class SurveyWizardCutoffStep extends Component {
   }
 }
 
-export default connect()(SurveyWizardCutoffStep)
+export default translate()(connect()(SurveyWizardCutoffStep))
