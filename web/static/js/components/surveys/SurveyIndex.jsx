@@ -6,7 +6,7 @@ import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal } from '../ui'
+import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, defaultIfEmpty } from '../ui'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -59,8 +59,13 @@ class SurveyIndex extends Component {
     const { t } = this.props
     deleteConfirmationModal.open({
       modalText: <span>
-        <p>Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?</p>
-        <p>All the respondent information will be lost and cannot be undone.</p>
+        <p>
+          {t(
+            'Are you sure you want to delete the survey {{survey_name}}?',
+            {survey_name: defaultIfEmpty(survey.name, t('Untitled survey'))}
+          )}
+        </p>
+        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
       </span>,
       onConfirm: () => {
         const { dispatch } = this.props
@@ -86,7 +91,7 @@ class SurveyIndex extends Component {
 
     if (!surveys) {
       return (
-        <div>Loading surveys...</div>
+        <div>{t('Loading surveys...')}</div>
       )
     }
 
@@ -129,7 +134,7 @@ class SurveyIndex extends Component {
           { footer }
         </div>
         }
-        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete survey' showCancel />
+        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
   }
@@ -206,7 +211,7 @@ class SurveyCard extends PureComponent {
           <Card>
             <div className='card-content'>
               <div className='grey-text'>
-                { String(Math.round(completionPercentage)) + '% of target completed' }
+                {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
               </div>
               <div className='card-chart'>
                 <RespondentsChart cumulativePercentages={cumulativePercentages} />
