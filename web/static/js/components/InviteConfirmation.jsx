@@ -59,7 +59,7 @@ class InviteConfirmation extends Component {
           <p><span> { inviteText } </span></p>
           <div className='divider' />
           <p className='small-text'><span> { roleDescription } </span></p>
-          <a className='btn-medium blue upcase' onClick={() => this.confirmInvitation()}>{t('Accept invitation')}</a>
+          <a className='btn-medium blue' onClick={() => this.confirmInvitation()}>{t('Accept invitation')}</a>
         </div>
       </div>
     )

@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
-import { QuotasModal } from './QuotasModal'
+import QuotasModal from './QuotasModal'
 import { InputWithLabel } from '../ui'
 import find from 'lodash/find'
 import join from 'lodash/join'

@@ -6,9 +6,11 @@ import filter from 'lodash/filter'
 import map from 'lodash/map'
 import join from 'lodash/join'
 import includes from 'lodash/includes'
+import { translate } from 'react-i18next'
 
-export class QuotasModal extends Component {
+class QuotasModal extends Component {
   static propTypes = {
+    t: PropTypes.func,
     showLink: PropTypes.bool,
     linkText: PropTypes.string,
     header: PropTypes.string.isRequired,
@@ -38,7 +40,7 @@ export class QuotasModal extends Component {
   }
 
   render() {
-    const { showLink, linkText, header, survey, questionnaire, modalId, style } = this.props
+    const { showLink, linkText, header, survey, questionnaire, modalId, style, t } = this.props
 
     this.state.buckets = {}
 
@@ -55,7 +57,7 @@ export class QuotasModal extends Component {
           <div className='modal-content'>
             <div className='card-title header'>
               <h5>{header}</h5>
-              <p>Choose the questionnaire answers you want to use to define quotas</p>
+              <p>{t('Choose the questionnaire answers you want to use to define quotas')}</p>
             </div>
             <div className='card-content'>
               {Object.keys(storeValues).map((storeValue) => {
@@ -76,7 +78,7 @@ export class QuotasModal extends Component {
                             <div className='input-field'>
                               <input type='text' ref={node => { this.state.steps[storeValue] = node }} defaultValue={rebuildInputFromQuotaBuckets(storeValue, survey)} />
                               <span className='small-text-bellow'>
-                                Enter comma-separated values to create ranges like 5,10,20
+                                {t('Enter comma-separated values to create ranges like 5,10,20')}
                               </span>
                             </div>
                           </div>
@@ -103,11 +105,13 @@ export class QuotasModal extends Component {
             </div>
           </div>
           <div className='card-action'>
-            <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={e => this.onSubmit(e)}>DONE</a>
-            <a href='#!' className='modal-action modal-close grey-text btn-link'>Cancel</a>
+            <a href='#!' className='modal-action modal-close waves-effect waves-light blue btn-large' onClick={e => this.onSubmit(e)}>{t('Done')}</a>
+            <a href='#!' className='modal-action modal-close grey-text btn-link'>{t('Cancel')}</a>
           </div>
         </Modal>
       </div>
     )
   }
 }
+
+export default translate()(QuotasModal)

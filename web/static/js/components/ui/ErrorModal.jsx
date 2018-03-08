@@ -32,7 +32,7 @@ class ErrorModalComponent extends Component {
           </div>
         </div>
         <div className='card-action'>
-          <a href='#!' className=' modal-action modal-close btn-flat grey-text'>{t('CLOSE')}</a>
+          <a href='#!' className=' modal-action modal-close btn-flat grey-text'>{t('Close')}</a>
         </div>
       </Modal>
     )
