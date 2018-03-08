@@ -7,9 +7,11 @@ import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
 import * as respondentGroupsActions from '../../actions/respondentGroups'
 import SurveyForm from './SurveyForm'
+import { translate } from 'react-i18next'
 
 class SurveySettings extends Component {
   static propTypes = {
+    t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
     surveyId: PropTypes.any.isRequired,
@@ -38,10 +40,10 @@ class SurveySettings extends Component {
   }
 
   render() {
-    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup } = this.props
+    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup, t } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
 
     const readOnly = !project || project.readOnly
@@ -74,4 +76,4 @@ const mapStateToProps = (state, ownProps) => ({
   survey: state.survey.data || {}
 })
 
-export default withRouter(connect(mapStateToProps)(SurveySettings))
+export default translate()(withRouter(connect(mapStateToProps)(SurveySettings)))
