@@ -487,7 +487,7 @@ const changeStepIvrAudioId = (state, action) => {
       ivr: {
         ...prompt.ivr,
         audioId: action.newId,
-        audioSource: 'upload'
+        audioSource: action.audioSource
       }
     }))
   })

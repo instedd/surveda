@@ -3,6 +3,7 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { ConfirmationModal, AudioDropzone, Dropdown, DropdownItem } from '../ui'
 import Draft from './Draft'
+import RecordAudio from './RecordAudio'
 import { createAudio } from '../../api.js'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
@@ -25,7 +26,7 @@ class IvrPrompt extends Component {
   }
 
   stateFromProps(props) {
-    const { ivrPrompt, customHandlerFileUpload } = props
+    const { ivrPrompt, customHandlerFileUpload, customHandlerRecord } = props
 
     let audioId = null
 
@@ -36,6 +37,7 @@ class IvrPrompt extends Component {
     return {
       audioId: audioId,
       handleFileUpload: customHandlerFileUpload || this.genericHandlerFileUpload,
+      handleRecord: customHandlerRecord || this.genericHandlerRecord,
       audioSource: ivrPrompt.audioSource || 'tts',
       audioUri: (ivrPrompt.audioId ? `/api/v1/audios/${ivrPrompt.audioId}` : ''),
       audioErrors: ''
@@ -54,7 +56,7 @@ class IvrPrompt extends Component {
     createAudio(files)
       .then(response => {
         this.setState({audioUri: `/api/v1/audios/${response.result}`}, () => {
-          this.props.questionnaireActions.changeStepAudioIdIvr(stepId, response.result)
+          this.props.questionnaireActions.changeStepAudioIdIvr(stepId, response.result, 'upload')
           this.props.uiActions.finishAudioUpload()
           $('audio')[0].load()
         })
@@ -63,6 +65,26 @@ class IvrPrompt extends Component {
         e.json()
          .then((response) => {
            let errors = (response.errors.data || ['Only mp3 and wav files are allowed.']).join(' ')
+           this.setState({audioErrors: errors})
+           $('#unprocessableEntity').modal('open')
+         })
+      })
+  }
+
+  genericHandlerRecord = (files) => {
+    const { stepId } = this.props
+    this.props.uiActions.uploadAudio(stepId)
+    createAudio(files)
+      .then(response => {
+        this.setState({audioUri: `/api/v1/audios/${response.result}`}, () => {
+          this.props.questionnaireActions.changeStepAudioIdIvr(stepId, response.result, 'record')
+          this.props.uiActions.finishAudioUpload()
+        })
+      })
+      .catch((e) => {
+        e.json()
+         .then((response) => {
+           let errors = (response.errors.data)
            this.setState({audioErrors: errors})
            $('#unprocessableEntity').modal('open')
          })
@@ -91,6 +113,19 @@ class IvrPrompt extends Component {
         </div>
     }
 
+    let dropdownLabel
+    switch (this.state.audioSource) {
+      case 'tts':
+        dropdownLabel = <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span>
+        break
+      case 'upload':
+        dropdownLabel = <span><i className='material-icons'>file_upload</i> Upload a file</span>
+        break
+      case 'record':
+        dropdownLabel = <span><i className='material-icons'>mic</i> Record </span>
+        break
+    }
+
     return (
       <div>
         <div className='row'>
@@ -113,7 +148,7 @@ class IvrPrompt extends Component {
           <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts MPEG and WAV files' header='Invalid file type' confirmationText='accept' style={{maxWidth: '600px'}} />
           <ConfirmationModal modalId='unprocessableEntity' header='Invalid file' modalText={this.state.audioErrors} confirmationText='accept' style={{maxWidth: '600px'}} />
           <div className='audio-dropdown'>
-            <Dropdown className='step-mode underlined' readOnly={readOnly} label={this.state.audioSource == 'tts' ? <span className='v-middle'><i className='material-icons'>record_voice_over</i> Text to speech</span> : <span><i className='material-icons'>file_upload</i> Upload a file</span>} constrainWidth={false} dataBelowOrigin={false}>
+            <Dropdown className='step-mode underlined' readOnly={readOnly} label={dropdownLabel} constrainWidth={false} dataBelowOrigin={false}>
               <DropdownItem>
                 <a onClick={e => changeIvrMode(e, 'tts')}>
                   <i className='material-icons left'>record_voice_over</i>
@@ -128,8 +163,20 @@ class IvrPrompt extends Component {
                   {this.state.audioSource == 'upload' ? <i className='material-icons right'>done</i> : ''}
                 </a>
               </DropdownItem>
+              <DropdownItem>
+                <a onClick={e => changeIvrMode(e, 'record')}>
+                  <i className='material-icons'>mic</i>
+                  Record
+                  {this.state.audioSource == 'record' ? <i className='material-icons right'>done</i> : ''}
+                </a>
+              </DropdownItem>
             </Dropdown>
           </div>
+          {
+            this.state.audioSource == 'record' && !readOnly
+            ? <RecordAudio stepId={stepId} serverUri={this.state.audioUri} handleRecord={this.state.handleRecord} />
+            : null
+          }
           {(this.state.audioSource == 'upload')
             ? <div className='upload-audio'>
               <audio controls key={this.state.audioId}>

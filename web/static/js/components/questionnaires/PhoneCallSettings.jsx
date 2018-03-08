@@ -56,7 +56,7 @@ class PhoneCallSettings extends Component {
     }))
   }
 
-  handleFileUpload = (files, key) => {
+  handleFileUploadOrRecord = (files, key, load = true) => {
     createAudio(files)
       .then(response => {
         const { dispatch } = this.props
@@ -65,7 +65,9 @@ class PhoneCallSettings extends Component {
           ...ivr,
           audioId: response.result
         }))
-        $(`.${key}Audio audio`)[0].load()
+        if (load) {
+          $(`.${key}Audio audio`)[0].load()
+        }
       })
       .catch((e) => {
         e.json()
@@ -145,7 +147,8 @@ class PhoneCallSettings extends Component {
       onBlur={e => this.messageBlur(e, 'errorMessage')}
       changeIvrMode={(e, mode) => this.modeChange(e, mode, 'errorMessage')}
       ivrPrompt={this.state.errorMessage}
-      customHandlerFileUpload={files => this.handleFileUpload(files, 'errorMessage')}
+      customHandlerFileUpload={files => this.handleFileUploadOrRecord(files, 'errorMessage')}
+      customHandlerRecord={files => this.handleFileUploadOrRecord(files, 'errorMessage', false)}
       autocomplete
       autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'errorMessage')}
       autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'errorMessage')}
@@ -165,7 +168,8 @@ class PhoneCallSettings extends Component {
       onBlur={e => this.messageBlur(e, 'thankYouMessage')}
       changeIvrMode={(e, mode) => this.modeChange(e, mode, 'thankYouMessage')}
       ivrPrompt={this.state.thankYouMessage}
-      customHandlerFileUpload={files => this.handleFileUpload(files, 'thankYouMessage')}
+      customHandlerFileUpload={files => this.handleFileUploadOrRecord(files, 'thankYouMessage')}
+      customHandlerRecord={files => this.handleFileUploadOrRecord(files, 'thankYouMessage', false)}
       autocomplete
       autocompleteGetData={(value, callback) => this.autocompleteGetData(value, callback, 'thankYouMessage')}
       autocompleteOnSelect={(item) => this.autocompleteOnSelect(item, 'thankYouMessage')}

@@ -172,10 +172,11 @@ export const changeStepPromptMobileWeb = (stepId, newPrompt) => ({
   newPrompt
 })
 
-export const changeStepAudioIdIvr = (stepId, newId) => ({
+export const changeStepAudioIdIvr = (stepId, newId, audioSource) => ({
   type: CHANGE_STEP_AUDIO_ID_IVR,
   stepId,
-  newId
+  newId,
+  audioSource
 })
 
 export const changeStepTitle = (stepId, newTitle) => ({
