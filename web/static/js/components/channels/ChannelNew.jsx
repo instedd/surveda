@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import { config } from '../../config'
 import { withRouter } from 'react-router'
 import * as routes from '../../routes'
+import { Link } from 'react-router'
 
 type Props = {
   location: {
@@ -54,7 +55,7 @@ class ChannelNew extends Component {
   onMessage(event) {
     const { iframe } = this.refs
 
-    if (event.source == iframe.contentWindow) {
+    if (iframe && event.source == iframe.contentWindow) {
       switch (event.data.type) {
         case 'resize':
           iframe.style.height = `${event.data.height}px`
@@ -76,9 +77,7 @@ class ChannelNew extends Component {
   }
 
   render() {
-    return (
-      <div className='row'>{ this.renderContent() }</div>
-    )
+    return this.renderContent()
   }
 
   renderContent() {
@@ -86,13 +85,29 @@ class ChannelNew extends Component {
 
     switch (state) {
       case 'created':
-        return <span>Done</span>
+        return (
+          <div className='valign-wrapper'>
+            <div className='big-done center-align'>
+              <i className='material-icons check'>check</i>
+              <br /><br />
+              <h5 className='green-text'>Channel ready to use</h5>
+              <br /><br /><br />
+              <Link to={routes.channels}>Back to channels</Link>
+            </div>
+          </div>
+        )
 
       default:
         (state: 'editing')
         const provider = this.channelProvider()
-        return <iframe className='col s12' style={{border: '0px'}}
-          ref='iframe' src={`${provider.baseUrl}/channels_ui/new`} />
+        return (
+          <div className='row white'>
+            <div className='col l6 offset-l3 m12'>
+              <iframe style={{border: '0px', width: '100%'}}
+                ref='iframe' src={`${provider.baseUrl}/channels_ui/new`} />
+            </div>
+          </div>
+        )
     }
   }
 }
