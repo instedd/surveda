@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Oak 0.15.2
+
+### Bugfixes
+
+* Fix error during launch of mobileweb surveys [#1273](https://github.com/instedd/ask/issues/1273)
+
 ## Oak 0.15.1
 
 ### Features
