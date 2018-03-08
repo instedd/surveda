@@ -78,7 +78,7 @@ defmodule Ask.Runtime.Session do
     reply = mobile_contact_reply(session)
 
     log_prompts(reply, session.current_mode.channel, flow.mode, session.respondent)
-    runtime_channel |> Channel.ask(respondent, token, reply)
+    respondent = runtime_channel |> Channel.ask(respondent, token, reply)
     {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
   end
 
@@ -211,7 +211,7 @@ defmodule Ask.Runtime.Session do
         base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
           |> Interval.duration(:minutes)
 
-        {:ok, session, %Reply{}, base_timeout + current_timeout(session), respondent}
+        {:ok, session, %Reply{}, base_timeout + current_timeout(session), session.respondent}
       true ->
         timeout(session, runtime_channel)
     end
@@ -225,13 +225,13 @@ defmodule Ask.Runtime.Session do
     switch_to_fallback_mode(session)
   end
 
-  def timeout(%{respondent: respondent} = session, runtime_channel) do
+  def timeout(session, runtime_channel) do
     session = session
       |> retry(runtime_channel)
       |> consume_retry()
 
     # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, current_timeout(session), respondent}
+    {:ok, session, %Reply{}, current_timeout(session), session.respondent}
   end
 
   def terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
@@ -271,8 +271,8 @@ defmodule Ask.Runtime.Session do
 
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
     log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
-    runtime_channel |> Channel.ask(session.respondent, token, reply)
-    %{session | token: token}
+    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
+    %{session | token: token, respondent: respondent}
   end
 
   def retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel, reason) do
@@ -298,8 +298,8 @@ defmodule Ask.Runtime.Session do
 
     reply = mobile_contact_reply(session)
     log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
-    runtime_channel |> Channel.ask(session.respondent, token, reply)
-    %{session | token: token}
+    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
+    %{session | token: token, respondent: respondent}
   end
 
   def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil} = session, reason) do

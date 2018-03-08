@@ -214,6 +214,7 @@ defmodule Ask.Runtime.Broker do
         handle_session_step(Session.timeout(session))
       rescue
         e in Ecto.StaleEntryError ->
+          Logger.error(inspect e)
           # Maybe sync_step or another action was executed while the timeout was executed,
           # and that means the respondent reply, so we don't need to apply the timeout anymore
           Repo.rollback(e)
