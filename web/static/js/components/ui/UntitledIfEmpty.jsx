@@ -1,5 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 
+export const defaultIfEmpty = (text, defaultText) => (!text || text.trim() == '') ? defaultText : text
+
 export class UntitledIfEmpty extends Component {
   render() {
     const { text, emptyText, className } = this.props

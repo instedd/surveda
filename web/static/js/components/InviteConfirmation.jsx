@@ -2,12 +2,12 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../actions/invites'
 import * as routes from '../routes'
-import { UntitledIfEmpty } from './ui'
+import { defaultIfEmpty, roleDisplayName } from './ui'
 import { translate } from 'react-i18next'
 
 class InviteConfirmation extends Component {
   componentDidMount() {
-    const { dispatch, router } = this.props
+    const { dispatch, router, t } = this.props
     const code = this.props.location.query.code
 
     dispatch(actions.fetchInvite(code)).then((invite) => {
@@ -17,7 +17,7 @@ class InviteConfirmation extends Component {
     },
       (reject) => {
         if (reject.status == 404) {
-          window.Materialize.toast('WARNING: Invalid invitation code', 15000)
+          window.Materialize.toast(t('WARNING: Invalid invitation code'), 15000)
           router.push(routes.projects)
         }
       }
@@ -36,21 +36,30 @@ class InviteConfirmation extends Component {
     const { invite, t } = this.props
 
     if (!invite) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
 
-    const inviteText = <span> {`${invite.inviter_email} has invited you to collaborate as ${invite.role} on `}<UntitledIfEmpty text={invite.project_name} emptyText={t('Untitled project')} /></span>
-    const roleAction = (invite.role == 'editor' || invite.role == 'admin') ? 'manage' : 'see'
-    const roleDescription = <span> { "You'll be able to " + roleAction + ' surveys, questionnaires, content and collaborators'} </span>
+    const inviteText = t(
+      '{{inviter_email}} has invited you to collaborate as {{role}} on {{project}}',
+      {
+        inviter_email: invite.inviter_email,
+        role: roleDisplayName(invite.role),
+        project: defaultIfEmpty(invite.project_name, t('Untitled project'))
+      }
+    )
+
+    const roleDescription = (invite.role == 'editor' || invite.role == 'admin')
+      ? t('You\'ll be able to manage surveys, questionnaires, content and collaborators')
+      : t('You\'ll be able to see surveys, questionnaires, content and collaborators')
 
     return (
       <div className='row accept-invitation'>
         <div className='col s12 center'>
           <h1><i className='material-icons grey-text xxlarge'>folder_shared</i></h1>
-          <p> { inviteText } </p>
+          <p><span> { inviteText } </span></p>
           <div className='divider' />
-          <p className='small-text'> { roleDescription } </p>
-          <a className='btn-medium blue' onClick={() => this.confirmInvitation()}> ACCEPT INVITATION </a>
+          <p className='small-text'><span> { roleDescription } </span></p>
+          <a className='btn-medium blue upcase' onClick={() => this.confirmInvitation()}>{t('Accept invitation')}</a>
         </div>
       </div>
     )
