@@ -1,15 +1,15 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { UntitledIfEmpty } from '.'
 import classNames from 'classnames/bind'
 
 export class EditableTitleLabel extends Component {
   static propTypes = {
-    onSubmit: React.PropTypes.func.isRequired,
-    title: React.PropTypes.string,
-    emptyText: React.PropTypes.string.isRequired,
-    editing: React.PropTypes.bool,
-    readOnly: React.PropTypes.bool,
-    more: React.PropTypes.node
+    onSubmit: PropTypes.func.isRequired,
+    title: PropTypes.string,
+    emptyText: PropTypes.string.isRequired,
+    editing: PropTypes.bool,
+    readOnly: PropTypes.bool,
+    more: PropTypes.node
   }
 
   constructor(props) {

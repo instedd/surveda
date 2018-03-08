@@ -16,7 +16,7 @@ export class UntitledIfEmpty extends Component {
 
 UntitledIfEmpty.propTypes = {
   text: PropTypes.string,
-  emptyText: PropTypes.string.required,
+  emptyText: PropTypes.string.isRequired,
   className: PropTypes.string,
   entityName: PropTypes.string
 }
