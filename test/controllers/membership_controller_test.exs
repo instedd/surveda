@@ -5,7 +5,7 @@ defmodule Ask.MembershipControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{ProjectMembership}
+  alias Ask.{ProjectMembership, ActivityLog}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -77,6 +77,30 @@ defmodule Ask.MembershipControllerTest do
     end
   end
 
+  test "generates log after removing membership", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+
+    delete conn, project_membership_remove_path(conn, :remove, project.id), email: collaborator_email
+
+    activity_log = ActivityLog |> Repo.one
+    assert activity_log.project_id == project.id
+    assert activity_log.user_id == user.id
+    assert activity_log.entity_id == project.id
+    assert activity_log.entity_type == "project"
+    assert activity_log.action == "remove_collaborator"
+
+    assert activity_log.metadata == %{
+      "project_name" => project.name,
+      "collaborator_email" => collaborator_email,
+      "collaborator_name" => collaborator.name,
+      "role" => "editor"
+    }
+  end
+
   test "updates member's level", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     collaborator_email = "user2@surveda.instedd.org"
@@ -97,8 +121,9 @@ defmodule Ask.MembershipControllerTest do
     collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
     ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
 
-    put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "invalid"
+    conn = put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "invalid"
     updated_membership = Repo.one(from p in ProjectMembership, where: p.user_id == ^collaborator.id)
+    assert conn.status == 422
     assert updated_membership.level == "editor"
   end
 
@@ -188,6 +213,31 @@ defmodule Ask.MembershipControllerTest do
     assert_error_sent :forbidden, fn ->
       put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "reader"
     end
+  end
+
+  test "generates log after updating membership", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+
+    put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "reader"
+
+    activity_log = ActivityLog |> Repo.one
+    assert activity_log.project_id == project.id
+    assert activity_log.user_id == user.id
+    assert activity_log.entity_id == project.id
+    assert activity_log.entity_type == "project"
+    assert activity_log.action == "edit_collaborator"
+
+    assert activity_log.metadata == %{
+      "project_name" => project.name,
+      "collaborator_email" => collaborator_email,
+      "collaborator_name" => collaborator.name,
+      "old_role" => "editor",
+      "new_role" => "reader"
+    }
   end
 
 end
