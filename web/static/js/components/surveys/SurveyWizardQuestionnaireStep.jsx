@@ -42,9 +42,10 @@ class SurveyWizardQuestionnaireStep extends Component {
   }
 
   newQuestionnaireButton(projectId, questionnaires) {
-    let buttonLabel = 'NEW QUESTIONNAIRE'
+    const { t } = this.props
+    let buttonLabel = t('New questionnaire')
     if (Object.keys(questionnaires).length == 0) {
-      buttonLabel = 'Create a questionnaire'
+      buttonLabel = t('Create a questionnaire')
     }
 
     return (
@@ -78,10 +79,8 @@ class SurveyWizardQuestionnaireStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4>Select a questionnaire</h4>
-            <p className='flow-text'>
-              The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.
-            </p>
+            <h4>{t('Select a questionnaire')}</h4>
+            <p className='flow-text'>{t('The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.')}</p>
           </div>
         </div>
         <div className='row'>
@@ -95,7 +94,7 @@ class SurveyWizardQuestionnaireStep extends Component {
                 className='filled-in'
                 disabled={readOnly}
                 />
-              <label htmlFor='questionnaires_comparison'>Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)</label>
+              <label htmlFor='questionnaires_comparison'>{t('Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)')}</label>
             </p>
           </div>
           <div className='col s12 survey-questionnaires'>
