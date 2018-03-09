@@ -81,11 +81,6 @@
   "You have unsaved changes. Are you sure you want to close?": "",
   "Warning! Changes were not saved. Retrying...": "",
   "Saving...": "",
-  "Loading timezones...": "",
-  "Untitled question": "",
-  "Untitled questionnaire": "",
-  "You have no questionnaires on this project": "",
-  "Create one_questionnaire": "",
   "Choose the questionnaire answers you want to use to define quotas": "",
   "Enter comma-separated values to create ranges like 5,10,20": "",
   "Cancel": "",
@@ -132,6 +127,7 @@
   "Quantity": "",
   "Percent": "",
   "Are you sure you want to stop the simulation": "",
+  "Untitled question": "",
   "Stop simulation": "",
   "Disposition": "",
   "Uncontacted": "",
@@ -182,6 +178,8 @@
   "Overview": "",
   "Respondents": "",
   "Settings": "",
+  "Untitled questionnaire": "",
+  "Indicate percentages of all sampled cases that will be allocated to each experimental condition": "",
   "Configure cutoff rules": "",
   "Cutoff rules define when the survey will stop. You can use one or more of these options. If you don't select any, the survey will be sent to all respondents.": "",
   "EDIT QUOTAS": "",
@@ -200,5 +198,8 @@
   "Owner": "",
   "Unknown role: {{role}}": "",
   "Unknown group: {{group}}": "",
-  "Unknown disposition: {{disposition}}": ""
+  "Unknown disposition: {{disposition}}": "",
+  "You have no questionnaires on this project": "",
+  "Create one_questionnaire": "",
+  "Loading timezones...": ""
 }

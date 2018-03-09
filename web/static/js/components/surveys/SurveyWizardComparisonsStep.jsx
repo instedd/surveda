@@ -42,7 +42,7 @@ class SurveyWizardComparisonsStep extends Component {
   }
 
   render() {
-    const { survey, readOnly } = this.props
+    const { survey, readOnly, t } = this.props
 
     let comparisonRows = null
     let comparisonTotal = null
@@ -102,10 +102,8 @@ class SurveyWizardComparisonsStep extends Component {
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4>Comparisons</h4>
-            <p className='flow-text'>
-              Indicate percentages of all sampled cases that will be allocated to each experimental condition
-            </p>
+            <h4>{t('Comparisons')}</h4>
+            <p className='flow-text'>{t('Indicate percentages of all sampled cases that will be allocated to each experimental condition')}</p>
           </div>
         </div>
         {comparisonRows}
