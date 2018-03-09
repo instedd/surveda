@@ -40,16 +40,14 @@ class CollaboratorIndex extends Component {
     action(projectId, collaborator, level)
   }
 
-  levelEditor(collaborator, readOnly) {
-    const { userLevel } = this.props
-    const disabled = (readOnly || collaborator.role == 'owner')
-    var roles = ['editor', 'reader']
+  levelEditor(collaborator, roles, readOnly) {
+    const roleNotPresent = !roles.includes(collaborator.role)
+    const disabled = (readOnly || roleNotPresent)
 
-    if (userLevel == 'owner' || userLevel == 'admin') {
-      roles = ['admin'].concat(roles)
-    }
+    const options = roleNotPresent
+        ? [collaborator.role]
+        : roles
 
-    const options = (collaborator.role == 'owner') ? ['owner'] : roles
     return (
       <td className='w-select'>
         <Input type='select'
@@ -77,12 +75,23 @@ class CollaboratorIndex extends Component {
     action(projectId, collaborator)
   }
 
+  availableRolesForUser() {
+    const { userLevel } = this.props
+    var roles = ['editor', 'reader']
+
+    if (userLevel == 'owner' || userLevel == 'admin') {
+      roles = ['admin'].concat(roles)
+    }
+    return roles
+  }
+
   render() {
     const { collaborators, project } = this.props
     if (!collaborators) {
       return <div>Loading...</div>
     }
     const title = `${collaborators.length} ${(collaborators.length == 1) ? ' collaborator' : ' collaborators'}`
+    const roles = this.availableRolesForUser()
 
     const readOnly = !project || project.readOnly
 
@@ -125,7 +134,7 @@ class CollaboratorIndex extends Component {
                 return (
                   <tr key={c.email}>
                     <td> {c.email} </td>
-                    {this.levelEditor(c, readOnly)}
+                    {this.levelEditor(c, roles, readOnly)}
                     {roleRemove(c)}
                   </tr>
                 )

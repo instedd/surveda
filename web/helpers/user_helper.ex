@@ -25,7 +25,7 @@ defmodule User.Helper do
                   |> where([m], m.user_id == ^user_id)
                   |> Repo.all
     case memberships do
-      [] -> raise UnauthorizedError, conn: conn
+      [] -> raise UnauthorizedError
       _ -> project
     end
   end
@@ -42,7 +42,7 @@ defmodule User.Helper do
                   |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "editor" or m.level == "admin"))
                   |> Repo.all
     case memberships do
-      [] -> raise UnauthorizedError, conn: conn
+      [] -> raise UnauthorizedError
       _ -> project
     end
   end
@@ -58,7 +58,7 @@ defmodule User.Helper do
                   |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "admin"))
                   |> Repo.all
     case memberships do
-      [] -> raise UnauthorizedError, conn: conn
+      [] -> raise UnauthorizedError
       _ -> project
     end
   end
@@ -88,27 +88,23 @@ defmodule User.Helper do
 
   def authorize_channel(channel, conn) do
     if channel.user_id != current_user(conn).id do
-      raise UnauthorizedError, conn: conn
+      raise UnauthorizedError
     end
     channel
   end
 
-  def check_target_collaborator_is_not_owner(membership, conn) do
+  def check_target_collaborator_is_not_owner(membership) do
     case membership.level do
-      "owner" -> raise UnauthorizedError, conn: conn
+      "owner" -> raise UnauthorizedError
       _ -> membership
     end
   end
 
   def user_level(project_id, user_id) do
-    memberships = ProjectMembership
+    membership = ProjectMembership
     |> where([m], m.user_id == ^user_id and  m.project_id == ^project_id)
-    |> Repo.all
+    |> Repo.one
 
-    cond do
-      Enum.any?(memberships, &(&1.level == "owner")) -> "owner"
-      Enum.any?(memberships, &(&1.level == "editor")) -> "editor"
-      true -> "reader"
-    end
+    if membership, do: membership.level, else: nil
   end
 end
