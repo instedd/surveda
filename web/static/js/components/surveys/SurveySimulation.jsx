@@ -6,9 +6,10 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as api from '../../api'
 import * as routes from '../../routes'
 import { icon } from '../../step'
-import { Tooltip, ConfirmationModal, Card } from '../ui'
+import { Tooltip, ConfirmationModal, Card, UntitledIfEmpty } from '../ui'
 import includes from 'lodash/includes'
 import classNames from 'classnames'
+import { translate } from 'react-i18next'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -80,12 +81,12 @@ class SurveySimulation extends Component {
   stopSimulation(e) {
     e.preventDefault()
 
-    const { router, projectId, surveyId } = this.props
+    const { router, projectId, surveyId, t } = this.props
 
     const stopSimulationModal = this.refs.stopSimulationModal
     stopSimulationModal.open({
       modalText: <span>
-        <p>Are you sure you want to stop the simulation</p>
+        <p>{t('Are you sure you want to stop the simulation')}</p>
       </span>,
       onConfirm: () => {
         api.stopSurveySimulation(projectId, surveyId)
@@ -111,6 +112,7 @@ class SurveySimulation extends Component {
   }
 
   stepComponent(step, index) {
+    const { t } = this.props
     let className = 'collection-item'
     let iconValue = icon(step.type)
 
@@ -130,7 +132,7 @@ class SurveySimulation extends Component {
     return (
       <li className={className} key={index}>
         <i className='material-icons left sharp'>{iconValue}</i>
-        <span className='title'>{step.title}</span>
+        <UntitledIfEmpty className='title' text={step.title} emptyText={t('Untitled question')} />
         <br />
         <span className='value'>{value}</span>
       </li>
@@ -138,30 +140,24 @@ class SurveySimulation extends Component {
   }
 
   render() {
+    const { t } = this.props
     return (
       <div>
-        <Tooltip text='Stop simulation'>
+        <Tooltip text={t('Stop simulation')}>
           <a className='btn-floating btn-large waves-effect waves-light red right mtop' onClick={(e) => this.stopSimulation(e)}>
             <i className='material-icons'>clear</i>
           </a>
         </Tooltip>
-        <ConfirmationModal modalId='survey_stop_simulation_modal' ref='stopSimulationModal' confirmationText='STOP' header='Stop simulation' showCancel />
+        <ConfirmationModal modalId='survey_stop_simulation_modal' ref='stopSimulationModal' confirmationText={t('Stop')} header={t('Stop simulation')} showCancel />
 
         <div className='row'>
           <div className='col s12 m4'>
-            <h4>
-              Disposition
-            </h4>
-            <p> {
-              // this.state.disposition
-            } </p>
+            <h4>{t('Disposition')}</h4>
             <ul className='disposition radio-no-pointer'>
               <li>
                 <div className='row'>
                   <div className='col s3'>
-                    <p>
-                      Uncontacted
-                    </p>
+                    <p>{t('Uncontacted')}</p>
                   </div>
                   <div className='col s9'>
                     <ul>
@@ -175,7 +171,7 @@ class SurveySimulation extends Component {
                           checked={includes(this.state.dispositionHistory, 'registered')}
                           className='with-gap'
                         />
-                        <label htmlFor='registered'>Registered</label>
+                        <label htmlFor='registered'>{t('Registered')}</label>
                       </li>
                       <li className={classNames({'active': this.state.disposition == 'queued'})}>
                         <input
@@ -187,7 +183,7 @@ class SurveySimulation extends Component {
                           checked={includes(this.state.dispositionHistory, 'queued')}
                           className='with-gap'
                         />
-                        <label htmlFor='queued'>Queued</label>
+                        <label htmlFor='queued'>{t('Queued')}</label>
                         <ul>
                           <li className={classNames({'active': this.state.disposition == 'failed'})}>
                             <input
@@ -199,7 +195,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'failed')}
                               className='with-gap'
                             />
-                            <label htmlFor='failed'>Failed</label>
+                            <label htmlFor='failed'>{t('Failed')}</label>
                           </li>
                         </ul>
                       </li>
@@ -210,9 +206,7 @@ class SurveySimulation extends Component {
               <li>
                 <div className='row'>
                   <div className='col s3'>
-                    <p>
-                      Contacted
-                    </p>
+                    <p>{t('Contacted')}</p>
                   </div>
                   <div className='col s9'>
                     <ul>
@@ -226,7 +220,7 @@ class SurveySimulation extends Component {
                           checked={includes(this.state.dispositionHistory, 'contacted')}
                           className='with-gap'
                         />
-                        <label htmlFor='contacted'>Contacted</label>
+                        <label htmlFor='contacted'>{t('Contacted')}</label>
                         <ul>
                           <li className={classNames({'active': this.state.disposition == 'unresponsive'})}>
                             <input
@@ -238,7 +232,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'unresponsive')}
                               className='with-gap'
                             />
-                            <label htmlFor='unresponsive'>Unresponsive</label>
+                            <label htmlFor='unresponsive'>{t('Unresponsive')}</label>
                           </li>
                         </ul>
                       </li>
@@ -249,9 +243,7 @@ class SurveySimulation extends Component {
               <li>
                 <div className='row'>
                   <div className='col s3'>
-                    <p>
-                      Responsive
-                    </p>
+                    <p>{t('Responsive')}</p>
                   </div>
                   <div className='col s9'>
                     <ul className='last'>
@@ -265,7 +257,7 @@ class SurveySimulation extends Component {
                           checked={includes(this.state.dispositionHistory, 'started')}
                           className='with-gap'
                         />
-                        <label htmlFor='started'>Started</label>
+                        <label htmlFor='started'>{t('Started')}</label>
                         <ul>
                           <li className={classNames({'active': this.state.disposition == 'refused'})}>
                             <input
@@ -277,7 +269,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'refused')}
                               className='with-gap'
                             />
-                            <label htmlFor='refused'>Refused</label>
+                            <label htmlFor='refused'>{t('Refused')}</label>
                           </li>
                           <li className={classNames({'active': this.state.disposition == 'ineligible'})}>
                             <input
@@ -289,7 +281,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'ineligible')}
                               className='with-gap'
                             />
-                            <label htmlFor='ineligible'>Ineligible</label>
+                            <label htmlFor='ineligible'>{t('Ineligible')}</label>
                           </li>
                           <li className={classNames({'active': this.state.disposition == 'rejected'})}>
                             <input
@@ -301,7 +293,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'rejected')}
                               className='with-gap'
                             />
-                            <label htmlFor='rejected'>Rejected</label>
+                            <label htmlFor='rejected'>{t('Rejected')}</label>
                           </li>
                           <li className={classNames({'active': this.state.disposition == 'breakoff'})}>
                             <input
@@ -313,7 +305,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'breakoff')}
                               className='with-gap'
                             />
-                            <label htmlFor='breakoff'>Breakoff</label>
+                            <label htmlFor='breakoff'>{t('Breakoff')}</label>
                           </li>
                         </ul>
                       </li>
@@ -327,7 +319,7 @@ class SurveySimulation extends Component {
                           checked={includes(this.state.dispositionHistory, 'interim partial')}
                           className='with-gap'
                         />
-                        <label htmlFor='partial'>Interim Partial</label>
+                        <label htmlFor='partial'>{t('Interim Partial')}</label>
                         <ul>
                           <li className={classNames({'active': this.state.disposition == 'partial'})}>
                             <input
@@ -339,7 +331,7 @@ class SurveySimulation extends Component {
                               checked={includes(this.state.dispositionHistory, 'partial')}
                               className='with-gap'
                             />
-                            <label htmlFor='partial'>Partial</label>
+                            <label htmlFor='partial'>{t('Partial')}</label>
                           </li>
                         </ul>
                       </li>
@@ -353,7 +345,7 @@ class SurveySimulation extends Component {
                           checked={includes(this.state.dispositionHistory, 'completed')}
                           className='with-gap'
                         />
-                        <label htmlFor='completed'>Completed</label>
+                        <label htmlFor='completed'>{t('Completed')}</label>
                       </li>
                     </ul>
                   </div>
@@ -371,8 +363,9 @@ class SurveySimulation extends Component {
 }
 
 SurveySimulation.propTypes = {
-  dispatch: React.PropTypes.func,
-  router: React.PropTypes.object,
+  t: PropTypes.func,
+  dispatch: PropTypes.func,
+  router: PropTypes.object,
   projectId: PropTypes.string,
   surveyId: PropTypes.string,
   survey: PropTypes.object,
@@ -388,4 +381,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(SurveySimulation))
+export default translate()(withRouter(connect(mapStateToProps)(SurveySimulation)))
