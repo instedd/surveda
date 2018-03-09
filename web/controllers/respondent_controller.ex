@@ -311,6 +311,8 @@ defmodule Ask.RespondentController do
     end
   end
 
+  defp cumulative_percentages(_, _, %{started_at: nil}, _, _), do: %{}
+
   defp cumulative_percentages(references, grouped_respondents, %{started_at: started_at, comparisons: comparisons, state: state}, target, buckets) do
     grouped_respondents
     |> Enum.into(Enum.map(references, fn reference -> {reference.id, []} end) |> Enum.into(%{}))
