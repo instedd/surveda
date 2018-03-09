@@ -13,7 +13,6 @@ import every from 'lodash/every'
 import some from 'lodash/some'
 import without from 'lodash/without'
 import filter from 'lodash/filter'
-import React from 'react'
 
 export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
@@ -257,64 +256,6 @@ export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
   conditions = flatten(conditions)
   conditions = uniqWith(conditions, isEqual)
   return conditions.join()
-}
-
-export const labelFor = (mode: string) => {
-  if (mode == 'sms') {
-    return 'SMS'
-  }
-  if (mode == 'ivr') {
-    return 'Phone call'
-  }
-  if (mode == 'mobileweb') {
-    return 'Mobile Web'
-  }
-  return 'Unknown mode'
-}
-
-export const iconFor = (mode: string) => {
-  if (mode == 'sms') {
-    return (<i className='material-icons v-middle icon-text '>sms</i>)
-  }
-  if (mode == 'ivr') {
-    return (<i className='material-icons v-middle icon-text '>phone</i>)
-  }
-  if (mode == 'mobileweb') {
-    return (<i className='material-icons v-middle icon-text '>phone_android</i>)
-  }
-  return null
-}
-
-export const modeLabel = (mode: string[]) => {
-  if (isEqual(mode, ['sms'])) {
-    return 'SMS'
-  }
-  if (isEqual(mode, ['sms', 'ivr'])) {
-    return 'SMS with phone call fallback'
-  }
-  if (isEqual(mode, ['sms', 'mobileweb'])) {
-    return 'SMS with Mobile Web fallback'
-  }
-  if (isEqual(mode, ['ivr'])) {
-    return 'Phone call'
-  }
-  if (isEqual(mode, ['ivr', 'sms'])) {
-    return 'Phone call with SMS fallback'
-  }
-  if (isEqual(mode, ['ivr', 'mobileweb'])) {
-    return 'Phone call with Mobile Web fallback'
-  }
-  if (isEqual(mode, ['mobileweb'])) {
-    return 'Mobile Web'
-  }
-  if (isEqual(mode, ['mobileweb', 'sms'])) {
-    return 'Mobile Web with SMS fallback'
-  }
-  if (isEqual(mode, ['mobileweb', 'ivr'])) {
-    return 'Mobile Web with phone call fallback'
-  }
-
-  return 'Unknown mode'
 }
 
 const saved = (state, action) => {

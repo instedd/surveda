@@ -7,7 +7,8 @@ import uniq from 'lodash/uniq'
 import some from 'lodash/some'
 import each from 'lodash/each'
 import isEqual from 'lodash/isEqual'
-import { labelFor, iconFor } from '../../reducers/survey'
+import { modeLabel } from '../../questionnaire.mode'
+import { iconFor } from '../ui'
 import * as respondentActions from '../../actions/respondentGroups'
 import * as uiActions from '../../actions/ui'
 import { Input } from 'react-materialize'
@@ -157,7 +158,7 @@ class SurveyWizardModeStep extends Component {
     const { t } = this.props
     const lastPrimary = this.comparisonPrimarySelectedIfLast()
     const selectorOptions = options.map((mode, index) => (
-      <option value={mode} key={mode + index}>{labelFor(mode)}</option>
+      <option value={mode} key={mode + index}>{modeLabel(mode)}</option>
     ))
     if (!primary) {
       selectorOptions.unshift(<option value='' key='select-primary-mode'>{t('Select primary mode')}</option>)
@@ -165,7 +166,7 @@ class SurveyWizardModeStep extends Component {
     if (lastPrimary && comparison) {
       return (
         <Input s={12} m={5} type='select' value={lastPrimary} disabled={readOnly} onChange={handler}>
-          <option value={lastPrimary} key={lastPrimary}>{labelFor(lastPrimary)}</option>
+          <option value={lastPrimary} key={lastPrimary}>{modeLabel(lastPrimary)}</option>
         </Input>
       )
     } else {
@@ -183,7 +184,7 @@ class SurveyWizardModeStep extends Component {
     if (lastFallback) {
       return (
         <Input s={12} m={5} type='select' value={lastFallback} disabled={readOnly} onChange={handler}>
-          <option value={lastFallback} key={lastFallback}>{labelFor(lastFallback)}</option>
+          <option value={lastFallback} key={lastFallback}>{modeLabel(lastFallback)}</option>
         </Input>
       )
     } else {
@@ -191,7 +192,7 @@ class SurveyWizardModeStep extends Component {
         <Input s={12} m={5} type='select' value={fallback || ''} disabled={readOnly} onChange={handler}>
           {<option value=''>{t('No fallback')}</option>}
           {options.map((mode, index) => {
-            return <option value={mode} key={mode + index}>{labelFor(mode)}</option>
+            return <option value={mode} key={mode + index}>{modeLabel(mode)}</option>
           })}
         </Input>
       )
@@ -228,11 +229,11 @@ class SurveyWizardModeStep extends Component {
         return (<tr key={'row' + mode[0] + mode[1]}>
           <td>
             {iconFor(mode[0])}
-            {labelFor(mode[0])}
+            {modeLabel(mode[0])}
           </td>
           <td>
             {mode[1] ? iconFor(mode[1]) : null}
-            {mode[1] ? labelFor(mode[1]) : 'No fallback'}
+            {mode[1] ? modeLabel(mode[1]) : 'No fallback'}
           </td>
           <td className='tdDelete'>
             {

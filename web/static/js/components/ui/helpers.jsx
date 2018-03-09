@@ -1,4 +1,5 @@
 import i18n from '../../i18next'
+import React from 'react'
 
 export const roleDisplayName = (role) => {
   switch (role) {
@@ -26,6 +27,19 @@ export const dispositionGroupLabel = (group) => {
     default:
       throw new Error(i18n.t('Unknown group: {{group}}', {group}))
   }
+}
+
+export const iconFor = (mode: string) => {
+  if (mode == 'sms') {
+    return (<i className='material-icons v-middle icon-text'>sms</i>)
+  }
+  if (mode == 'ivr') {
+    return (<i className='material-icons v-middle icon-text'>phone</i>)
+  }
+  if (mode == 'mobileweb') {
+    return (<i className='material-icons v-middle icon-text'>phone_android</i>)
+  }
+  return null
 }
 
 export const dispositionLabel = (disposition) => {
