@@ -21,19 +21,19 @@ class SaveStatus extends Component {
 
     switch (unit) {
       case 'minute':
-        return t(`Last saved {{count}} minute ago`, {count: number})
+        return t('Last saved {{count}} minute ago', {count: number})
       case 'hour':
-        return t(`Last saved {{count}} hour ago`, {count: number})
+        return t('Last saved {{count}} hour ago', {count: number})
       case 'day':
-        return t(`Last saved {{count}} day ago`, {count: number})
+        return t('Last saved {{count}} day ago', {count: number})
       case 'week':
-        return t(`Last saved {{count}} week ago`, {count: number})
+        return t('Last saved {{count}} week ago', {count: number})
       case 'month':
-        return t(`Last saved {{count}} month ago`, {count: number})
+        return t('Last saved {{count}} month ago', {count: number})
       case 'year':
-        return t(`Last saved {{count}} year ago`, {count: number})
+        return t('Last saved {{count}} year ago', {count: number})
       default:
-        return t(`Last saved {{count}} ${unit} {{text}}`, {count: number, text: suffix})
+        return t('Last saved {{count}} {{unit}} {{suffix}}', {count: number, suffix, unit})
     }
   }
 
