@@ -9,7 +9,7 @@
   "All the respondent information will be lost and cannot be undone.": "Toda la información de encuestados será perdida y no podrá deshacerse.",
   "Archive": "Archivar",
   "Archived": "Archivados",
-  "Are you sure you want to delete the survey {{survey_name}}?": "¿Está seguro que desea borrar la encuesta {{survey_name}}?",
+  "Are you sure you want to delete the survey <1><0></0></1>?": "¿Está seguro que desea borrar la encuesta <1><0></0></1>?",
   "Are you sure you want to stop the simulation": "Está seguro que quiere detener la simulación",
   "Are you sure?": "¿Está seguro?",
   "Assign incentives": "Asigne incentivos",

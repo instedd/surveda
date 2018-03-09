@@ -6,13 +6,13 @@ import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, defaultIfEmpty } from '../ui'
+import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal } from '../ui'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
-import { translate } from 'react-i18next'
+import { translate, Trans } from 'react-i18next'
 
 class SurveyIndex extends Component {
   static propTypes = {
@@ -60,10 +60,9 @@ class SurveyIndex extends Component {
     deleteConfirmationModal.open({
       modalText: <span>
         <p>
-          {t(
-            'Are you sure you want to delete the survey {{survey_name}}?',
-            {survey_name: defaultIfEmpty(survey.name, t('Untitled survey'))}
-          )}
+          <Trans>
+            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
+          </Trans>
         </p>
         <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
       </span>,
