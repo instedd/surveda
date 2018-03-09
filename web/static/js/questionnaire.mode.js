@@ -1,36 +1,37 @@
 // @flow
 import isEqual from 'lodash/isEqual'
+import i18n from './i18next'
 
 export const modeLabel = (mode: string | string[]) => {
   if (isEqual(mode, ['sms']) || isEqual(mode, 'sms')) {
-    return 'SMS'
+    return i18n.t('SMS')
   }
   if (isEqual(mode, ['sms', 'ivr'])) {
-    return 'SMS with phone call fallback'
+    return i18n.t('SMS with phone call fallback')
   }
   if (isEqual(mode, ['sms', 'mobileweb'])) {
-    return 'SMS with Mobile Web fallback'
+    return i18n.t('SMS with mobile web fallback')
   }
   if (isEqual(mode, ['ivr']) || isEqual(mode, 'ivr')) {
-    return 'Phone call'
+    return i18n.t('Phone call')
   }
   if (isEqual(mode, ['ivr', 'sms'])) {
-    return 'Phone call with SMS fallback'
+    return i18n.t('Phone call with SMS fallback')
   }
   if (isEqual(mode, ['ivr', 'mobileweb'])) {
-    return 'Phone call with Mobile Web fallback'
+    return i18n.t('Phone call with mobile web fallback')
   }
   if (isEqual(mode, ['mobileweb']) || isEqual(mode, 'mobileweb')) {
-    return 'Mobile Web'
+    return i18n.t('Mobile Web')
   }
   if (isEqual(mode, ['mobileweb', 'sms'])) {
-    return 'Mobile Web with SMS fallback'
+    return i18n.t('Mobile Web with SMS fallback')
   }
   if (isEqual(mode, ['mobileweb', 'ivr'])) {
-    return 'Mobile Web with phone call fallback'
+    return i18n.t('Mobile Web with phone call fallback')
   }
 
-  return 'Unknown mode'
+  return i18n.t('Unknown mode: {{mode}}', {mode})
 }
 
 export const modeOrder = (mode: string) => {
@@ -38,7 +39,7 @@ export const modeOrder = (mode: string) => {
     case 'sms': return 0
     case 'ivr': return 1
     case 'mobileweb': return 2
-    default: throw new Error(`Unknown mode: ${mode}`)
+    default: throw new Error(i18n.t('Unknown mode: {{mode}}', {mode}))
   }
 }
 

@@ -1,37 +1,38 @@
 // @flow
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
 import * as respondentActions from '../../actions/respondents'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
-import { Tooltip, Modal } from '../ui'
+import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from '../ui'
 import { stopSurvey } from '../../api'
-import capitalize from 'lodash/capitalize'
 import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceColorClasses, referenceColors } from '../../referenceColors'
 import classNames from 'classnames/bind'
 import { Stats, Forecasts } from '@instedd/surveda-d3-components'
+import { translate } from 'react-i18next'
 
 class SurveyShow extends Component {
   static propTypes = {
-    dispatch: React.PropTypes.func,
-    router: React.PropTypes.object,
-    project: React.PropTypes.object,
-    projectId: React.PropTypes.string.isRequired,
-    surveyId: React.PropTypes.string.isRequired,
-    survey: React.PropTypes.object,
-    questionnaires: React.PropTypes.object,
-    respondentsByDisposition: React.PropTypes.object,
-    reference: React.PropTypes.array,
-    completedByDate: React.PropTypes.object,
-    contactedRespondents: React.PropTypes.number,
-    totalRespondents: React.PropTypes.number,
-    target: React.PropTypes.number,
-    completionPercentage: React.PropTypes.number,
-    cumulativePercentages: React.PropTypes.object
+    t: PropTypes.func,
+    dispatch: PropTypes.func,
+    router: PropTypes.object,
+    project: PropTypes.object,
+    projectId: PropTypes.string.isRequired,
+    surveyId: PropTypes.string.isRequired,
+    survey: PropTypes.object,
+    questionnaires: PropTypes.object,
+    respondentsByDisposition: PropTypes.object,
+    reference: PropTypes.array,
+    completedByDate: PropTypes.object,
+    contactedRespondents: PropTypes.number,
+    totalRespondents: PropTypes.number,
+    target: PropTypes.number,
+    completionPercentage: PropTypes.number,
+    cumulativePercentages: PropTypes.object
   }
 
   state: {
@@ -82,6 +83,7 @@ class SurveyShow extends Component {
   }
 
   iconForMode(mode: string) {
+    const { t } = this.props
     let icon = null
     switch (mode) {
       case 'sms':
@@ -94,7 +96,7 @@ class SurveyShow extends Component {
         icon = 'phonelink'
         break
       default:
-        throw new Error(`Unhandled mode in iconForMode: ${mode}`)
+        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
     return icon
   }
@@ -103,44 +105,18 @@ class SurveyShow extends Component {
     return String.fromCodePoint(65 + index) // A, B, C, ...
   }
 
-  modeFor(index: number, mode: string) {
-    let type = (index == 0) ? 'Primary' : 'Fallback'
-    return (
-      <div className='mode' key={mode}>
-        <label className='grey-text'>{type} Mode</label>
-        <div>
-          <i className='material-icons'>{this.iconForMode(mode)}</i>
-          <span className='mode-label name'>{modeLabel(mode)}</span>
-        </div>
-      </div>
-    )
-  }
-
-  modesForComparisons(modes: string[]) {
-    return modes.length == 2
-      ? `${modeLabel(modes[0])}, ${modeLabel(modes[1])} fallback`
-      : modeLabel(modes[0])
-  }
-
   titleFor(questionnaires) {
-    let isComparison = Object.keys(questionnaires).length > 1
-    let title = ''
-    if (isComparison) {
-      title = 'Questionnaire performance comparison'
-    } else {
-      let questionnaireId = Object.keys(questionnaires)[0]
-      title = questionnaires[questionnaireId].name
-    }
-
-    return title
+    return Object.keys(questionnaires).length > 1
+      ? this.props.t('Questionnaire performance comparison')
+      : questionnaires[Object.keys(questionnaires)[0]].name
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project } = this.props
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
-      return <p>Loading...</p>
+      return <p>{t('Loading...')}</p>
     }
 
     const readOnly = !project || project.readOnly
@@ -148,7 +124,7 @@ class SurveyShow extends Component {
     let stopComponent = null
     if (!readOnly && survey.state == 'running') {
       stopComponent = (
-        <Tooltip text='Stop survey'>
+        <Tooltip text={t('Stop survey')}>
           <a className='btn-floating btn-large waves-effect waves-light red right mtop' onClick={() => this.stopSurvey()}>
             <i className='material-icons'>stop</i>
           </a>
@@ -159,17 +135,17 @@ class SurveyShow extends Component {
     let title = this.titleFor(questionnaires)
 
     let stats = [
-      {value: target, label: 'Target'},
-      {value: respondentsByDisposition.responsive.detail.completed.count, label: 'Completes'},
-      {value: respondentsByDisposition.responsive.detail.partial.count, label: 'Partials'},
-      {value: contactedRespondents, label: 'Contacted Respondents'}
+      {value: target, label: t('Target')},
+      {value: respondentsByDisposition.responsive.detail.completed.count, label: t('Completes')},
+      {value: respondentsByDisposition.responsive.detail.partial.count, label: t('Partials')},
+      {value: contactedRespondents, label: t('Contacted Respondents')}
     ]
 
     let colors = referenceColors(reference.length)
 
     let forecastsReferences = reference.map((r, i) => {
       const name = r.name ? r.name : ''
-      const modes = r.modes ? this.modesForComparisons(r.modes) : ''
+      const modes = r.modes ? modeLabel(r.modes) : ''
       const separator = name && modes ? ' | ' : ''
 
       return {
@@ -195,26 +171,25 @@ class SurveyShow extends Component {
           <Modal card ref='stopModal' id='stop_survey_modal'>
             <div className='modal-content'>
               <div className='card-title header'>
-                <h5>Stop survey</h5>
-                <p>This will finalize the survey execution</p>
+                <h5>{t('Stop survey')}</h5>
+                <p>{t('This will finalize the survey execution')}</p>
               </div>
               <div className='card-content'>
                 <div className='row'>
                   <div className='col s12'>
                     <p className='red-text alert-left-icon'>
                       <i className='material-icons'>warning</i>
-                      Stopped surveys cannot be restarted
+                      {t('Stopped surveys cannot be restarted')}
                     </p>
                   </div>
                 </div>
                 <div className='row'>
                   <div className='col s12'>
                     <p>
-                      Once you stop the survey, all invitations will be halted immediately.
+                      {t('Once you stop the survey, all invitations will be halted immediately.')}
                     </p>
                     <p>
-                      Respondents who are currently answering the survey will be cut off. Once
-                      you stop, you cannot restart.
+                      {t('Respondents who are currently answering the survey will be cut off. Once you stop, you cannot restart.')}
                     </p>
                   </div>
                 </div>
@@ -226,7 +201,7 @@ class SurveyShow extends Component {
                       checked={stopUnderstood}
                       onChange={() => this.toggleStopUnderstood()}
                       className='filled-in' />
-                    <label htmlFor='stop_understood'>Understood</label>
+                    <label htmlFor='stop_understood'>{t('Understood')}</label>
                   </div>
                 </div>
               </div>
@@ -234,9 +209,9 @@ class SurveyShow extends Component {
                 <a
                   className={classNames('btn-large red', { disabled: !stopUnderstood })}
                   onClick={() => this.confirmStopSurvey()}>
-                  Stop
+                  {t('Stop')}
                 </a>
-                <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>Cancel</a>
+                <a className='btn-flat grey-text' onClick={() => this.stopCancel()}>{t('Cancel')}</a>
               </div>
             </div>
           </Modal>
@@ -247,9 +222,9 @@ class SurveyShow extends Component {
           <div className='col s12'>
             <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
               <div className='header'>
-                <div className='title'>Percent of completes</div>
+                <div className='title'>{t('Percent of completes')}</div>
                 {survey.countPartialResults
-                  ? <div className='description'>Count partials as completed</div>
+                  ? <div className='description'>{t('Count partials as completed')}</div>
                   : ''
                 }
               </div>
@@ -301,7 +276,7 @@ class SurveyShow extends Component {
     }
     const groupRow =
       <tr key={group}>
-        <td>{capitalize(group)}</td>
+        <td>{dispositionGroupLabel(group)}</td>
         {groupStatsbyReference(referenceIds, detailsKeys, colorClasses, details)}
         <td className='right-align'>{groupStats.count}</td>
         <td className='right-align'>{this.round(groupStats.percent)}%</td>
@@ -334,7 +309,7 @@ class SurveyShow extends Component {
 
         return (
           <tr className='detail-row' key={detail}>
-            <td>{capitalize(detail)}</td>
+            <td>{dispositionLabel(detail)}</td>
             {referenceColumns}
             <td className='right-align'>{individualStat.count}</td>
             <td className='right-align'>{this.round(individualStat.percent)}%</td>
@@ -348,22 +323,23 @@ class SurveyShow extends Component {
   }
 
   dispositions(respondentsByDisposition, reference) {
+    const { t } = this.props
     const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
     let referenceIds = Object.keys(reference)
     return (
       <div className='card overflow'>
         <div className='card-table-title'>
-          Dispositions
+          {t('Dispositions')}
         </div>
         <div className='card-table'>
           <table>
             <thead>
               <tr>
-                <th>Status</th>
+                <th>{t('Status')}</th>
                 {referenceIds.length > 1 ? referenceIds.map((referenceId) => (<th key={referenceId} className='right-align' />)) : []}
-                <th className='right-align'>Quantity</th>
+                <th className='right-align'>{t('Quantity')}</th>
                 <th className='right-align'>
-                  Percent
+                  {t('Percent')}
                 </th>
               </tr>
             </thead>
@@ -419,4 +395,4 @@ const mapStateToProps = (state, ownProps) => {
   })
 }
 
-export default withRouter(connect(mapStateToProps)(SurveyShow))
+export default translate()(withRouter(connect(mapStateToProps)(SurveyShow)))
