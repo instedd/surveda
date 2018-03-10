@@ -3,7 +3,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel, ShortLink}
+  alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel, ShortLink, ActivityLog}
   alias Ask.Runtime.{Flow, Session}
   alias Ask.Runtime.SessionModeProvider
 
@@ -1202,6 +1202,23 @@ defmodule Ask.SurveyControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
+    test "activity logs for results link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "survey_results"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "survey_results"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "survey_results"})
+    end
+
     test "incentives link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -1241,6 +1258,23 @@ defmodule Ask.SurveyControllerTest do
 
       assert response(response, 204)
       assert [] == ShortLink |> Repo.all()
+    end
+
+    test "activity logs for incentives link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "incentives"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "incentives")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "incentives"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "incentives"})
     end
 
     test "interactions link generation", %{conn: conn, user: user} do
@@ -1284,6 +1318,23 @@ defmodule Ask.SurveyControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
+    test "activity logs for interactions link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "interactions"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "interactions")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "interactions"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "interactions"})
+    end
+
     test "disposition_history link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -1322,6 +1373,23 @@ defmodule Ask.SurveyControllerTest do
 
       assert response(response, 204)
       assert [] == ShortLink |> Repo.all()
+    end
+
+    test "activity logs for disposition_history link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "disposition_history"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "disposition_history")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "disposition_history"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "disposition_history"})
     end
 
     test "forbids readers to create links", %{conn: conn, user: user} do
@@ -1521,5 +1589,18 @@ defmodule Ask.SurveyControllerTest do
     end
     add_respondent_to group
     group
+  end
+
+  defp assert_link_log(%{log: log, user: user, project: project, survey: survey, action: action, report_type: report_type}  ) do
+    assert log.project_id == project.id
+    assert log.user_id == user.id
+    assert log.entity_id == survey.id
+    assert log.entity_type == "survey"
+    assert log.action == action
+
+    assert log.metadata == %{
+      "survey_name" => survey.name,
+      "report_type" => report_type
+    }
   end
 end
