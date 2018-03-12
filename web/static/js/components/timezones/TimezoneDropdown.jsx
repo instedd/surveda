@@ -30,7 +30,7 @@ class TimezoneDropdown extends PureComponent {
     }
 
     return (
-      <Input s={12} m={6} type='select' label='Timezones' value={selectedTz} onChange={onChange} disabled={readOnly}>
+      <Input s={12} m={6} type='select' label={t('Timezones')} value={selectedTz} onChange={onChange} disabled={readOnly}>
         {timezones.items.map((tz) => (
           <option value={tz} key={tz}>{formatTimezone(tz)}</option>
         ))}

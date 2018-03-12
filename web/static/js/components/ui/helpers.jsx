@@ -16,6 +16,20 @@ export const roleDisplayName = (role) => {
   }
 }
 
+export const dayLabel = (day) => {
+  switch (day) {
+    case 'sun': return i18n.t('Sun')
+    case 'mon': return i18n.t('Mon')
+    case 'tue': return i18n.t('Tue')
+    case 'wed': return i18n.t('Wed')
+    case 'thu': return i18n.t('Thu')
+    case 'fri': return i18n.t('Fri')
+    case 'sat': return i18n.t('Sat')
+    default:
+      throw new Error(i18n.t('Unknown day: {{day}}', {day}))
+  }
+}
+
 export const dispositionGroupLabel = (group) => {
   switch (group) {
     case 'responsive':

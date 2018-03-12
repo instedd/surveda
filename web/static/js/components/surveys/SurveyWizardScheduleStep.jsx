@@ -3,11 +3,13 @@ import * as uiActions from '../../actions/ui'
 import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import TimezoneDropdown from '../timezones/TimezoneDropdown'
-import { TimeDropdown, DatePicker } from '../ui'
+import { TimeDropdown, DatePicker, dayLabel } from '../ui'
 import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
+import { translate } from 'react-i18next'
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
+    t: PropTypes.func,
     survey: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired,
@@ -63,7 +65,7 @@ class SurveyWizardScheduleStep extends Component {
   }
 
   render() {
-    const { survey, readOnly, ui } = this.props
+    const { survey, readOnly, ui, t } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
     // Survey might be loaded without details
@@ -71,16 +73,16 @@ class SurveyWizardScheduleStep extends Component {
     let defaultTo = (survey && survey.schedule && survey.schedule.endTime) ? survey.schedule.endTime : '18:00:00'
 
     if (!survey || !survey.schedule || !survey.schedule.dayOfWeek) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
 
     return (
       <div>
         <div className='row'>
           <div className='col s12'>
-            <h4>Set up a schedule</h4>
+            <h4>{t('Setup a schedule')}</h4>
             <p className='flow-text'>
-              The schedule of your survey restricts the days and hours during which respondents will be contacted. You can also specify re-contact attempts intervals.
+              {t('The schedule of your survey restricts the days and hours during which respondents will be contacted. You can also specify re-contact attempts intervals.')}
             </p>
           </div>
         </div>
@@ -90,14 +92,14 @@ class SurveyWizardScheduleStep extends Component {
               <button type='button'
                 className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.schedule.dayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
                 onClick={() => readOnly ? null : this.toggleDay(day)}>
-                {day}
+                {dayLabel(day)}
               </button>
             </div>
           ))}
         </div>
         <div className='row'>
-          <TimeDropdown label='From' defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />
-          <TimeDropdown label='To' defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{at: 23, item: {label: '12:00 AM', value: '23:59:59'}}} />
+          <TimeDropdown label={t('From')} defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />
+          <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{at: 23, item: {label: '12:00 AM', value: '23:59:59'}}} />
         </div>
         <div className='row'>
           <div className='col s12'>
@@ -110,7 +112,7 @@ class SurveyWizardScheduleStep extends Component {
                 className='filled-in'
                 onChange={this.toggleBlockedDays}
               />
-              <label htmlFor='block-dates'>Block dates</label>
+              <label htmlFor='block-dates'>{t('Block dates')}</label>
             </div>
           </div>
         </div>
@@ -136,4 +138,4 @@ const mapStateToProps = (state, ownProps) => ({
   ui: state.ui.data.surveyWizard
 })
 
-export default connect(mapStateToProps)(SurveyWizardScheduleStep)
+export default translate()(connect(mapStateToProps)(SurveyWizardScheduleStep))
