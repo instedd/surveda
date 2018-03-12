@@ -102,6 +102,7 @@ module.exports = {
         },
         defaultLng: 'template',
         defaultValue: '',
+        sort: true,
         keySeparator: false,
         nsSeparator: false,
         lngs: ['template'],
