@@ -7,5 +7,5 @@
   "Last saved {{count}} week ago_plural": "Last saved {{count}} weeks ago",
   "Last saved {{count}} year ago_plural": "Last saved {{count}} years ago",
   "Last saved {{count}} {{unit}} {{suffix}}_plural": "Last saved {{count}} {{unit}}s {{suffix}}",
-  "{{count}} respondent has been added_plural": "{{count}} respondents has been added",
+  "{{count}} respondent has been added_plural": "{{count}} respondents has been added"
 }
