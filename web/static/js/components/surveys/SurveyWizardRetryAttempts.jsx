@@ -1,10 +1,11 @@
 import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
 import * as actions from '../../actions/survey'
-import { InputWithLabel } from '../ui'
+import { InputWithLabel, iconFor } from '../ui'
 import flatten from 'lodash/flatten'
 import uniq from 'lodash/uniq'
 import some from 'lodash/some'
+import { translate } from 'react-i18next'
 
 class SurveyWizardRetryAttempts extends Component {
   componentDidMount() {
@@ -20,6 +21,7 @@ class SurveyWizardRetryAttempts extends Component {
   }
 
   editingRetryConfiguration(mode, e) {
+    const { t } = this.props
     const value = e.target.value
     switch (mode) {
       case 'sms':
@@ -35,43 +37,53 @@ class SurveyWizardRetryAttempts extends Component {
         this.setState({fallbackDelay: value})
         break
       default:
-        throw new Error(`unknown mode: ${mode}`)
+        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
   }
 
   replaceTimeUnits(value) {
-    let formattedValue = value
-    formattedValue = formattedValue.replace('m', ' minutes')
-    formattedValue = formattedValue.replace('h', ' hours')
-    formattedValue = formattedValue.replace('d', ' days')
-    return formattedValue
+    const { t } = this.props
+
+    let match = /^(\d+)(.)$/.exec(value)
+    if (match) {
+      let count = parseInt(match[1])
+
+      switch (match[2]) {
+        case 'm':
+          return t('{{count}} minute', {count})
+        case 'd':
+          return t('{{count}} day', {count})
+        case 'h':
+          return t('{{count}} hour', {count})
+      }
+    }
+
+    return value
   }
 
   retryConfigurationFlow(mode, retriesValue) {
+    const { t } = this.props
     if (retriesValue) {
       let values = retriesValue.split(' ')
       values = values.filter((v) => v)
       values = values.filter((v) => /^\d+[mhd]$/.test(v))
-      let cssClass, icon
+      let cssClass
       switch (mode) {
         case 'sms':
           cssClass = 'sms-attempts'
-          icon = <i className='material-icons v-middle '>sms</i>
           break
         case 'ivr':
           cssClass = 'ivr-attempts'
-          icon = <i className='material-icons v-middle '>phone</i>
           break
         case 'mobileweb':
           cssClass = 'mobileweb-attempts'
-          icon = <i className='material-icons v-middle '>phone_android</i>
           break
         default:
-          throw new Error(`unknown mode: ${mode}`)
+          throw new Error(t('Unknown mode: {{mode}}', {mode}))
       }
       return (
         <ul className={cssClass}>
-          <li className='black-text'>{icon}Initial contact </li>
+          <li className='black-text'>{iconFor(mode)}{t('Initial contact')}</li>
           {values.map((v, i) =>
             <li key={mode + v + i}><span>{this.replaceTimeUnits(v)}</span></li>
           )}
@@ -81,7 +93,7 @@ class SurveyWizardRetryAttempts extends Component {
   }
 
   retryConfigurationChanged(mode, e) {
-    const { dispatch } = this.props
+    const { dispatch, t } = this.props
     e.preventDefault(e)
     switch (mode) {
       case 'sms':
@@ -97,11 +109,12 @@ class SurveyWizardRetryAttempts extends Component {
         dispatch(actions.changeFallbackDelay(this.state.fallbackDelay))
         break
       default:
-        throw new Error(`unknown mode: ${mode}`)
+        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
   }
 
   defaultValue(mode) {
+    const { t } = this.props
     switch (mode) {
       case 'sms':
         return this.state.smsRetryConfiguration
@@ -112,11 +125,12 @@ class SurveyWizardRetryAttempts extends Component {
       case 'fallbackDelay':
         return this.state.fallbackDelay
       default:
-        throw new Error(`unknown mode: ${mode}`)
+        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
   }
 
   invalid(mode, errors) {
+    const { t } = this.props
     switch (mode) {
       case 'sms':
         return !!errors.smsRetryConfiguration
@@ -127,11 +141,12 @@ class SurveyWizardRetryAttempts extends Component {
       case 'fallbackDelay':
         return !!errors.fallbackDelay
       default:
-        throw new Error(`unknown mode: ${mode}`)
+        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
   }
 
   errorText(mode, errors) {
+    const { t } = this.props
     switch (mode) {
       case 'sms':
         return errors.smsRetryConfiguration
@@ -142,28 +157,29 @@ class SurveyWizardRetryAttempts extends Component {
       case 'fallbackDelay':
         return errors.fallbackDelay
       default:
-        throw new Error(`unknown mode: ${mode}`)
+        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
   }
 
   label(mode) {
+    const { t } = this.props
     if (mode == 'sms') {
-      return 'SMS re-contact attempts'
+      return t('SMS re-contact attempts')
     }
 
     if (mode == 'ivr') {
-      return 'Phone re-contact attempts'
+      return t('Phone re-contact attempts')
     }
 
     if (mode == 'mobileweb') {
-      return 'Mobile Web re-contact attempts'
+      return t('Mobile Web re-contact attempts')
     }
 
-    throw new Error(`unknown mode: ${mode}`)
+    throw new Error(t('Unknown mode: {{mode}}', {mode}))
   }
 
   render() {
-    const { survey, readOnly } = this.props
+    const { survey, readOnly, t } = this.props
     if (!survey || !this.state) {
       return (<div />)
     }
@@ -185,7 +201,7 @@ class SurveyWizardRetryAttempts extends Component {
         fallbackDelayComponent = (
           <div className='row'>
             <div className='input-field col s12'>
-              <InputWithLabel value={defaultValue || ''} label='Fallback delay'>
+              <InputWithLabel value={defaultValue || ''} label={t('Fallback delay')}>
                 <input
                   type='text'
                   onChange={e => this.editingRetryConfiguration('fallbackDelay', e)}
@@ -195,7 +211,7 @@ class SurveyWizardRetryAttempts extends Component {
                 />
               </InputWithLabel>
               <span className='small-text-bellow'>
-                Enter a delay like 5m, 3h or 1d to express a time unit
+                {t('Enter a delay like 5m, 3h or 1d to express a time unit')}
               </span>
             </div>
           </div>
@@ -219,7 +235,7 @@ class SurveyWizardRetryAttempts extends Component {
                     />
                 </InputWithLabel>
                 <span className='small-text-bellow'>
-                  Enter delays like 5m 2h 1d to express time units
+                  {t('Enter delays like 5m 2h 1d to express time units')}
                 </span>
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
@@ -242,9 +258,10 @@ const mapStateToProps = (state, ownProps) => ({
 })
 
 SurveyWizardRetryAttempts.propTypes = {
+  t: PropTypes.func,
   dispatch: PropTypes.func.isRequired,
   survey: PropTypes.object,
   readOnly: PropTypes.bool
 }
 
-export default connect(mapStateToProps)(SurveyWizardRetryAttempts)
+export default translate()(connect(mapStateToProps)(SurveyWizardRetryAttempts))

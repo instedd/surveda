@@ -7,6 +7,18 @@
   "Last saved {{count}} week ago_plural": "Last saved {{count}} weeks ago",
   "Last saved {{count}} year ago_plural": "Last saved {{count}} years ago",
   "Last saved {{count}} {{unit}} {{suffix}}_plural": "Last saved {{count}} {{unit}}s {{suffix}}",
+  "{{count}} day from now_plural": "{{count}} days from now",
+  "{{count}} day_plural": "{{count}} days",
+  "{{count}} hour from now_plural": "{{count}} hours from now",
+  "{{count}} hour_plural": "{{count}} hours",
+  "{{count}} minute from now_plural": "{{count}} minutes from now",
+  "{{count}} minute": "{{count}} minute",
+  "{{count}} minute_plural": "{{count}} minutes",
+  "{{count}} month from now_plural": "{{count}} months from now",
   "{{count}} respondent has been added_plural": "{{count}} respondents has been added",
+  "{{count}} second from now_plural": "{{count}} seconds from now",
+  "{{count}} week from now_plural": "{{count}} weeks from now",
+  "{{count}} year from now_plural": "{{count}} years from now",
+  "{{count}} {{unit}} {{text}}_plural": "{{count}} {{unit}} {{text}}",
   "{{groupName}} ({{count}} contact)_plural": "{{groupName}} ({{count}} contacts)"
 }
