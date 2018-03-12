@@ -103,7 +103,7 @@
   "Mobile Web": "Web móvil",
   "Name": "Nombre",
   "New questionnaire": "Nuevo cuestionario",
-  "Next call <1></1> at <3>{{hour}}</3>": "Próxima llamada <1></1> a las <3>{{hour}}</3>",
+  "Next contact <1></1> at <3>{{hour}}</3>": "Próximo contacto <1></1> a las <3>{{hour}}</3>",
   "NEXT: Comparisons": "SIGUIENTE: Comparaciones",
   "NEXT: Select Mode": "SIGUIENTE: Elija un modo",
   "NEXT: Setup a Schedule": "SIGUIENTE: Configure una agenda",

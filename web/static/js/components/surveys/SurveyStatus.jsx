@@ -45,7 +45,7 @@ class SurveyStatus extends PureComponent {
     if (this.props.short) {
       return <Trans>Scheduled at {{hour}}</Trans>
     } else {
-      return <Trans>Next call <TimeAgo date={date} formatter={this.bindedFormatter} /> at {{hour}}</Trans>
+      return <Trans>Next contact <TimeAgo date={date} formatter={this.bindedFormatter} /> at {{hour}}</Trans>
     }
   }
 

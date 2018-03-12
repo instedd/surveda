@@ -109,7 +109,7 @@
   "NEXT: Upload your respondents list": "",
   "Name": "",
   "New questionnaire": "",
-  "Next call <1></1> at <3>{{hour}}</3>": "Next call <1></1> at <3>{{hour}}</3>",
+  "Next contact <1></1> at <3>{{hour}}</3>": "Next contact <1></1> at <3>{{hour}}</3>",
   "No fallback": "",
   "Number of completes": "",
   "Once you stop the survey, all invitations will be halted immediately.": "",
