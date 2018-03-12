@@ -1,15 +1,17 @@
 import React, { PropTypes } from 'react'
+import { translate, Trans } from 'react-i18next'
 
-export const RespondentsContainer = ({ children }) => {
+export const RespondentsContainer = translate()(({ children, t }) => {
+  const onClick = (e) => { e.preventDefault(); window.open('/files/phone_numbers_example.csv') }
+  const download = 'phone_numbers_example.csv'
+
   return (
     <div>
       <div className='row'>
         <div className='col s12'>
-          <h4>Upload your respondents list</h4>
+          <h4>{t('Upload your respondents list')}</h4>
           <p className='flow-text'>
-            Upload a CSV file like
-            <a href='#' onClick={(e) => { e.preventDefault(); window.open('/files/phone_numbers_example.csv') }} download='phone_numbers_example.csv'> this one </a>
-            with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.
+            <Trans>Upload a CSV file like <a href='#' onClick={onClick} download={download}>this one</a> with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.</Trans>
           </p>
         </div>
       </div>
@@ -20,8 +22,9 @@ export const RespondentsContainer = ({ children }) => {
       </div>
     </div>
   )
-}
+})
 
 RespondentsContainer.propTypes = {
+  t: PropTypes.func,
   children: PropTypes.node
 }

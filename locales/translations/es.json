@@ -199,6 +199,7 @@
   "Untitled question": "Pregunta sin título",
   "Untitled questionnaire": "Cuestionario sin título",
   "Untitled survey": "Encuesta sin título",
+  "Upload a CSV file like <1>this one</1> with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.": "Suba un archivo CSV como <1>este</1> con sus encuestados. Puede definir cuántos de estos encuestados necesitan completar exitosamente la encuesta seteando las reglas de corte.",
   "Upload your respondents list": "Suba su lista de encuestados",
   "Version: {{version}}": "Versión: {{version}}",
   "Warning! Changes were not saved. Retrying...": "Atención! Los cambios no han sido guardados. Reintentando...",
