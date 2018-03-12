@@ -238,6 +238,8 @@
   "{{count}} year from now_plural": "",
   "{{count}} {{unit}} {{text}}": "",
   "{{count}} {{unit}} {{text}}_plural": "",
+  "{{groupName}} ({{count}} contact)": "",
+  "{{groupName}} ({{count}} contact)_plural": "",
   "{{inviter_email}} has invited you to collaborate as {{role}} on {{project}}": "",
   "{{percentage}}% of target completed": ""
 }

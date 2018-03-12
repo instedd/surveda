@@ -229,6 +229,8 @@
   "{{count}} week from now_plural": "en {{count}} semanas",
   "{{count}} year from now": "en {{count}} año",
   "{{count}} year from now_plural": "en {{count}} años",
+  "{{groupName}} ({{count}} contact)": "{{groupName}} ({{count}} contacto)",
+  "{{groupName}} ({{count}} contact)_plural": "{{groupName}} ({{count}} contactos)",
   "{{inviter_email}} has invited you to collaborate as {{role}} on {{project}}": "{{inviter_email}} le ha invitado a colaborar como {{role}} en {{project}}",
   "{{percentage}}% of target completed": "{{percentage}}% del objetivo completado"
 }

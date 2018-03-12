@@ -38,7 +38,7 @@ export const RespondentsList = translate()(({ survey, group, add, remove, channe
             <table className='ncdtable'>
               <thead>
                 <tr>
-                  <th>{group.name} ({group.respondentsCount} contacts)</th>
+                  <th>{t('{{groupName}} ({{count}} contact)', {groupName: group.name, count: group.respondentsCount})}</th>
                 </tr>
               </thead>
               <tbody>
