@@ -10,9 +10,11 @@ import { RespondentsList } from './RespondentsList'
 import { RespondentsDropzone } from './RespondentsDropzone'
 import { RespondentsContainer } from './RespondentsContainer'
 import { PhoneNumberRow } from './PhoneNumberRow'
+import { translate } from 'react-i18next'
 
 class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
+    t: PropTypes.func,
     survey: PropTypes.object,
     respondentGroups: PropTypes.object.isRequired,
     respondentGroupsUploading: PropTypes.bool,
@@ -54,7 +56,7 @@ class SurveyWizardRespondentsStep extends Component {
   invalidRespondentsContent(data) {
     if (!data) return null
 
-    let { surveyStarted } = this.props
+    let { surveyStarted, t } = this.props
     if (surveyStarted) return
 
     let content = null
@@ -62,21 +64,23 @@ class SurveyWizardRespondentsStep extends Component {
     if (data.invalidEntries.length == 0) {
       content = (
         <div className='card-content card-error'>
-          <div><b>The file you uploaded does not contain any phone number.</b></div>
-          <div>Please upload antother file.</div>
+          <div><b>{t('The file you uploaded does not contain any phone number')}</b></div>
+          <div>{t('Please upload antother file.')}</div>
         </div>
       )
     } else {
-      const invalidEntriesText = data.invalidEntries.length === 1 ? 'An invalid entry was found at line ' : 'Invalid entries were found at lines '
       const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
+
+      const invalidEntriesText = t('An invalid entry was found at line {{lineNumbers}}', {count: data.invalidEntries.length, lineNumbers: lineNumbers.join(', ')})
+
       const extraLinesCount = data.invalidEntries.length - lineNumbers.length
-      const lineNumbersText = lineNumbers.join(', ') + (extraLinesCount > 0 ? ' and ' + String(extraLinesCount) + ' more.' : '')
+      const lineNumbersText = (extraLinesCount > 0 ? t('and {{count}} more.', {count: String(extraLinesCount)}) : '')
 
       content = (
         <div className='card-content card-error'>
-          <div><b>Errors found at '{data.filename}', file was not imported</b></div>
+          <div><b>{t('Errors found at \'{{filename}}\', file was not imported', {filename: data.filename})}</b></div>
           <div>{invalidEntriesText} {lineNumbersText}</div>
-          <div>Please fix those errors and upload again.</div>
+          <div>{t('Please fix those errors and upload again.')}</div>
         </div>
       )
     }
@@ -87,9 +91,7 @@ class SurveyWizardRespondentsStep extends Component {
           {content}
         </div>
         <div className='card-action right-align'>
-          <a className='blue-text' href='#' onClick={e => this.clearInvalids(e)}>
-            UNDERSTOOD
-          </a>
+          <a className='blue-text' href='#' onClick={e => this.clearInvalids(e)}>{t('Understood')}</a>
         </div>
       </Card>
     )
@@ -115,7 +117,7 @@ class SurveyWizardRespondentsStep extends Component {
     if (files.length < 1) return
     const file = files[0]
 
-    const { survey } = this.props
+    const { survey, t } = this.props
 
     // If the survey is running, the only option is to add more respondents
     if (survey.state == 'running') {
@@ -126,10 +128,10 @@ class SurveyWizardRespondentsStep extends Component {
     const addOrReplaceModal = this.refs.addOrReplaceModal
     addOrReplaceModal.open({
       modalText: <div>
-        <p>Do you want to add more respondents to this group or completely replace them?</p>
+        <p>{t('Do you want to add more respondents to this group or completely replace them?')}</p>
       </div>,
-      confirmationText: 'Add',
-      noText: 'Replace',
+      confirmationText: t('Add'),
+      noText: t('Replace'),
       onConfirm: e => {
         this.addMoreRespondents(group.id, file)
         addOrReplaceModal.close()
@@ -146,7 +148,7 @@ class SurveyWizardRespondentsStep extends Component {
     let removeRespondents = null
     let addMoreRespondents = null
 
-    const { survey } = this.props
+    const { survey, t } = this.props
 
     if (!readOnly) {
       const addMoreInputId = `addMoreRespondents${group.id}`
@@ -172,17 +174,17 @@ class SurveyWizardRespondentsStep extends Component {
         } else {
           addMoreRespondents = [
             <input key='x' id={addMoreInputId} type='file' accept='.csv' style={{display: 'none'}} onChange={e => addMore(e)} />,
-            <a key='y' href='#' onClick={addMoreClck} className='blue-text'>ADD MORE RESPONDENTS</a>
+            <a key='y' href='#' onClick={addMoreClck} className='blue-text'>{t('Add more respondents')}</a>
           ]
         }
       }
 
       if (!surveyStarted && !uploading) {
         removeRespondents = <ConfirmationModal showLink
-          modalId={`removeRespondents${group.id}`} linkText='REMOVE RESPONDENTS'
-          modalText="Are you sure you want to delete the respondents list? If you confirm, we won't be able to recover it. You will have to upload a new one."
-          header='Please confirm that you want to delete the respondents list'
-          confirmationText='DELETE THE RESPONDENTS LIST'
+          modalId={`removeRespondents${group.id}`} linkText={t('Remove respondents')}
+          modalText={t('Are you sure you want to delete the respondents list? If you confirm, we won\'t be able to recover it. You will have to upload a new one.')}
+          header={t('Please confirm that you want to delete the respondents list')}
+          confirmationText={t('Delete the respondents list')}
           style={{maxWidth: '600px'}} showCancel
           onConfirm={() => this.removeRespondents(group.id)} />
       }
@@ -203,6 +205,7 @@ class SurveyWizardRespondentsStep extends Component {
 
   componentWillReceiveProps(props) {
     // Check if any respondent group's respondentsCount changed, to show a toast
+    const { t } = this.props
     const groups = this.props.respondentGroups
     if (!groups) return
 
@@ -211,28 +214,26 @@ class SurveyWizardRespondentsStep extends Component {
       const newGroup = props.respondentGroups && props.respondentGroups[id]
       if (!newGroup) continue
 
-      const diff = newGroup.respondentsCount - group.respondentsCount
-      if (diff == 1) {
-        window.Materialize.toast('1 respondent has been added', 5000)
-      } else if (diff > 0) {
-        window.Materialize.toast(`${diff} respondents have been added`, 5000)
+      const count = newGroup.respondentsCount - group.respondentsCount
+      if (count > 0) {
+        window.Materialize.toast(t('{{count}} respondent has been added', {count}), 5000)
       }
     }
   }
 
   componentDidUpdate() {
-    let { actions, invalidGroup } = this.props
+    let { actions, invalidGroup, t } = this.props
     if (invalidGroup) {
-      window.Materialize.toast("Couldn't upload CSV: it contains rows that are not phone numbers", 5000)
+      window.Materialize.toast(t('Couldn\'t upload CSV: it contains rows that are not phone numbers'), 5000)
       actions.clearInvalidsRespondentsForGroup()
     }
   }
 
   render() {
-    let { survey, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, readOnly, surveyStarted } = this.props
+    let { survey, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, readOnly, surveyStarted, t } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
     if (!survey || !channels) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
 
     const mode = survey.mode || []
@@ -249,8 +250,8 @@ class SurveyWizardRespondentsStep extends Component {
       <RespondentsContainer>
         {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly, surveyStarted, respondentGroupsUploadingExisting[groupId]))}
 
-        <ConfirmationModal modalId='addOrReplaceGroup' ref='addOrReplaceModal' header='Add or replace respondents' />
-        <ConfirmationModal modalId='invalidTypeFile' modalText='The system only accepts CSV files' header='Invalid file type' confirmationText='accept' style={{maxWidth: '600px'}} />
+        <ConfirmationModal modalId='addOrReplaceGroup' ref='addOrReplaceModal' header={t('Add or replace respondents')} />
+        <ConfirmationModal modalId='invalidTypeFile' modalText={t('The system only accepts CSV files')} header={t('Invalid file type')} confirmationText={t('Accept')} style={{maxWidth: '600px'}} />
         {invalidRespondentsCard || respondentsDropzone}
       </RespondentsContainer>
     )
@@ -261,4 +262,4 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep)
+export default translate()(connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep))
