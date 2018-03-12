@@ -1,15 +1,11 @@
 import * as autoSaveStatusActions from '../actions/autoSaveStatus'
 import i18n from '../i18next'
-import createHistory from 'history/createBrowserHistory'
 
 export default (storeProvider, actions) => store => next => action => {
   const prevState = storeProvider(store.getState())
-  const history = createHistory()
-  const location = history.location
 
   // Prevent the user's internal navigation when the changes are not yet saved
-  if ((prevState.saving || prevState.error) && action.type == '@@router/LOCATION_CHANGE' && !location.pathname.includes('edit')) {
-    history.goBack()
+  if ((prevState.saving || prevState.error) && action.type == '@@router/LOCATION_CHANGE') {
     alert(i18n.t('Changes are still being saved. Please wait'))
     return false
   }
