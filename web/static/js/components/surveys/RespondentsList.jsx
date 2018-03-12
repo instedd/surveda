@@ -1,10 +1,13 @@
 import React, { PropTypes } from 'react'
 import { Card } from '../ui'
 import Dropzone from 'react-dropzone'
-import { NewRespondentChannel } from './NewRespondentChannel'
 import { dropzoneProps } from './RespondentsDropzone'
+import { Input } from 'react-materialize'
+import values from 'lodash/values'
+import { channelFriendlyName } from '../../channelFriendlyName'
+import { translate } from 'react-i18next'
 
-export const RespondentsList = ({ survey, group, add, remove, channels, modes, onChannelChange, onDrop, readOnly, surveyStarted, children }) => {
+export const RespondentsList = translate()(({ survey, group, add, remove, channels, modes, onChannelChange, onDrop, readOnly, surveyStarted, children, t }) => {
   let footer = null
   if (add || remove) {
     footer = (
@@ -24,7 +27,7 @@ export const RespondentsList = ({ survey, group, add, remove, channels, modes, o
   let currentChannels = group.channels || []
   let channelsComponent = []
   for (const targetMode of modes) {
-    channelsComponent.push(NewRespondentChannel(targetMode, channels, currentChannels, onChannelChange, readOnly, surveyStarted))
+    channelsComponent.push(NewRespondentChannel(targetMode, channels, currentChannels, onChannelChange, readOnly, surveyStarted, t))
   }
 
   let card = (
@@ -73,7 +76,7 @@ export const RespondentsList = ({ survey, group, add, remove, channels, modes, o
       </Dropzone>
     )
   }
-}
+})
 
 RespondentsList.propTypes = {
   survey: PropTypes.object,
@@ -87,4 +90,42 @@ RespondentsList.propTypes = {
   onChannelChange: PropTypes.func,
   children: PropTypes.node,
   onDrop: PropTypes.func
+}
+
+const NewRespondentChannel = (mode, allChannels, currentChannels, onChange, readOnly, surveyStarted, t) => {
+  const currentChannel = currentChannels.find(channel => channel.mode == mode) || {}
+
+  const type = mode == 'mobileweb' ? 'sms' : mode
+
+  let label
+  if (mode == 'mobileweb') {
+    label = t('SMS for mobile web channel')
+  } else if (mode == 'sms') {
+    label = t('SMS channel')
+  } else {
+    label = t('Phone channel')
+  }
+
+  let channels = values(allChannels)
+  channels = channels.filter(c => c.type == type)
+
+  return (
+    <div className='row' key={mode}>
+      <div className='input-field col s12'>
+        <Input s={12} type='select' label={label}
+          value={currentChannel.id || ''}
+          onChange={e => onChange(e, mode, allChannels)}
+          disabled={readOnly || surveyStarted}>
+          <option value=''>
+            {t('Select a channel...')}
+          </option>
+          { channels.map((channel) =>
+            <option key={channel.id} value={channel.id}>
+              {channel.name + channelFriendlyName(channel)}
+            </option>
+          )}
+        </Input>
+      </div>
+    </div>
+  )
 }
