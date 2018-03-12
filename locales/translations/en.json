@@ -16,6 +16,7 @@
   "{{count}} minute_plural": "{{count}} minutes",
   "{{count}} month from now_plural": "{{count}} months from now",
   "{{count}} respondent has been added_plural": "{{count}} respondents has been added",
+  "{{count}} respondent_plural": "{{count}} respondents",
   "{{count}} second from now_plural": "{{count}} seconds from now",
   "{{count}} week from now_plural": "{{count}} weeks from now",
   "{{count}} year from now_plural": "{{count}} years from now",

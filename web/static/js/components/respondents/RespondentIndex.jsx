@@ -206,7 +206,7 @@ class RespondentIndex extends Component {
   }
 
   downloadLink(link, onChange, refresh, name) {
-    const { project } = this.props
+    const { project, t } = this.props
 
     return <div className='access-link'>
       {
@@ -215,7 +215,7 @@ class RespondentIndex extends Component {
           <label>
             <input type='checkbox' checked={link != null} onChange={() => onChange(link)} />
             <span className='lever' />
-            <span className='label' >Public link:</span>
+            <span className='label' >{t('Public link:')}</span>
           </label>
         </div>
         : ''
@@ -247,11 +247,11 @@ class RespondentIndex extends Component {
   }
 
   render() {
-    if (!this.props.respondents || !this.props.survey || !this.props.questionnaires || !this.props.project) {
-      return <div>Loading...</div>
-    }
-
     const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel, t } = this.props
+
+    if (!this.props.respondents || !survey || !questionnaires || !this.props.project) {
+      return <div>{t('Loading...')}</div>
+    }
 
     const hasComparisons = survey.comparisons.length > 0
 
@@ -294,7 +294,7 @@ class RespondentIndex extends Component {
 
     const { startIndex, endIndex, hasPreviousPage, hasNextPage } = this.props
 
-    const title = `${totalCount} ${(totalCount == 1) ? ' respondent' : ' respondents'}`
+    const title = t('{{count}} respondent', {count: totalCount})
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
@@ -316,7 +316,7 @@ class RespondentIndex extends Component {
     let colspan = respondentsFieldName.length + 3
     let variantHeader = null
     if (hasComparisons) {
-      variantHeader = <th>Variant</th>
+      variantHeader = <th>{t('Variant')}</th>
       colspan += 1
     }
 
@@ -329,8 +329,8 @@ class RespondentIndex extends Component {
               <i className='material-icons'>get_app</i>
             </div>
             <div>
-              <p className='black-text'><b>Incentives file</b></p>
-              <p>One line for each respondent that completed the survey, including the experiment version and the full phone number</p>
+              <p className='black-text'><b>{t('Incentives file')}</b></p>
+              <p>{t('One line for each respondent that completed the survey, including the experiment version and the full phone number')}</p>
             </div>
           </a>
           {this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink')}
@@ -347,8 +347,8 @@ class RespondentIndex extends Component {
               <i className='material-icons'>get_app</i>
             </div>
             <div>
-              <p className='black-text'><b>Interactions</b></p>
-              <p>One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp</p>
+              <p className='black-text'><b>{t('Interactions')}</b></p>
+              <p>{t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp')}</p>
             </div>
           </a>
           {this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink')}
@@ -367,8 +367,8 @@ class RespondentIndex extends Component {
         </div>
         <Modal id='downloadCSV' confirmationText='Download CSV' card>
           <div className='card-title header'>
-            <h5>Download CSV</h5>
-            <p>Download survey respondents data as CSV</p>
+            <h5>{t('Download CSV')}</h5>
+            <p>{t('Download survey respondents data as CSV')}</p>
           </div>
           <ul className='collection download-csv'>
             <li className='collection-item'>
@@ -377,8 +377,8 @@ class RespondentIndex extends Component {
                   <i className='material-icons'>get_app</i>
                 </div>
                 <div>
-                  <p className='black-text'><b>Survey results</b></p>
-                  <p>One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp</p>
+                  <p className='black-text'><b>{t('Survey results')}</b></p>
+                  <p>{t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp')}</p>
                 </div>
               </a>
               {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
@@ -389,8 +389,8 @@ class RespondentIndex extends Component {
                   <i className='material-icons'>get_app</i>
                 </div>
                 <div>
-                  <p className='black-text'><b>Disposition History</b></p>
-                  <p>One line for each time the disposition of a respondent changed, including the timestamp</p>
+                  <p className='black-text'><b>{t('Disposition History')}</b></p>
+                  <p>{t('One line for each time the disposition of a respondent changed, including the timestamp')}</p>
                 </div>
               </a>
               {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
@@ -402,13 +402,13 @@ class RespondentIndex extends Component {
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
-              <SortableHeader text='Respondent ID' property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
               {respondentsFieldName.map(field =>
                 <th key={field}>{field}</th>
               )}
               {variantHeader}
-              <th>Disposition</th>
-              <SortableHeader text='Date' property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <th>{t('Disposition')}</th>
+              <SortableHeader text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
             </tr>
           </thead>
           <tbody>
