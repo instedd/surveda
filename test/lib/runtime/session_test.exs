@@ -52,7 +52,7 @@ defmodule Ask.SessionTest do
 
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
   end
 
   test "reloading the page should not consume retries in mobileweb mode", %{respondent: respondent, test_channel: test_channel, channel: channel} do
@@ -65,7 +65,7 @@ defmodule Ask.SessionTest do
 
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
 
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _, _} = Session.sync_step(session, Flow.Message.answer())
     assert {:ok, %Session{current_mode: %{retries: ^retries}} = session, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _, _} = Session.sync_step(session, Flow.Message.answer())
