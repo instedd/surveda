@@ -2,7 +2,7 @@ defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
   require Ask.RespondentStats
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents, Stats}
+  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents, Stats, ActivityLog}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -561,10 +561,10 @@ defmodule Ask.RespondentController do
       fn _ -> [] end)
 
 
-    render_results(conn, get_format(conn), survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
+    render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
   end
 
-  defp render_results(conn, "json", survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
+  defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
     respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     respondents = if has_comparisons do
       respondents
@@ -591,7 +591,7 @@ defmodule Ask.RespondentController do
     conn
   end
 
-  defp render_results(conn, "csv", survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
+  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
     stats = survey.mode |> Enum.flat_map(fn(modes) ->
       modes |> Enum.flat_map(fn(mode) ->
         case mode do
@@ -698,6 +698,7 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents")
+    ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert
     conn |> csv_stream(rows, filename)
   end
 
@@ -728,6 +729,7 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_disposition_history")
+    ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert
     {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
     conn
   end
@@ -754,6 +756,7 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_incentives")
+    ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert
     {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
     conn
   end
@@ -796,6 +799,7 @@ defmodule Ask.RespondentController do
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_interactions")
+    ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert
     {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
     conn
   end

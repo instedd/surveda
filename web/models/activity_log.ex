@@ -1,5 +1,6 @@
 defmodule Ask.ActivityLog do
   use Ask.Web, :model
+  import User.Helper
   alias Ask.{ActivityLog, Project, Survey}
 
   schema "activity_log" do
@@ -9,6 +10,7 @@ defmodule Ask.ActivityLog do
     field :entity_id, :integer
     field :action, :string
     field :metadata, Ask.Ecto.Type.JSON
+    field :remote_ip, :string
 
     timestamps()
   end
@@ -17,24 +19,30 @@ defmodule Ask.ActivityLog do
     ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
 
   def valid_actions("survey"), do:
-    ["enable_public_link", "regenerate_public_link", "disable_public_link"]
+    ["download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :user_id, :entity_id, :entity_type, :action, :metadata])
+    |> cast(params, [:project_id, :user_id, :entity_id, :entity_type, :action, :metadata, :remote_ip])
     |> validate_inclusion(:action, valid_actions(params[:entity_type] || struct.entity_type))
-    |> validate_required([:project_id, :user_id, :entity_id, :entity_type, :action])
+    |> validate_required([:project_id, :entity_id, :entity_type, :action, :remote_ip])
   end
 
   defp typeof(%Project{}), do: "project"
   defp typeof(%Survey{}), do: "survey"
 
-  defp create(action, project, user, entity, metadata) do
+  defp create(action, project, conn, entity, metadata) do
+    user_id = case current_user(conn) do
+      nil -> nil
+      user -> user.id
+    end
+
     ActivityLog.changeset(%ActivityLog{}, %{
       project_id: project.id,
-      user_id: user.id,
+      user_id: user_id,
       entity_type: typeof(entity),
       entity_id: entity.id,
+      remote_ip: :inet_parse.ntoa(conn.remote_ip) |> to_string,
       action: action,
       metadata: metadata
     })
@@ -48,8 +56,7 @@ defmodule Ask.ActivityLog do
   end
 
   def edit_collaborator(project, user, collaborator, old_role, new_role) do
-    create("edit_collaborator", project, user, project, %{
-      project_name: project.name,
+    create("edit_collaborator", project, user, project, %{project_name: project.name,
       collaborator_email: collaborator.email,
       collaborator_name: collaborator.name,
       old_role: old_role,
@@ -91,22 +98,29 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def enable_public_link(project, user, survey, target_name) do
-    create("enable_public_link", project, user, survey, %{
+  def download(project, conn, survey, report_type) do
+    create("download", project, conn, survey, %{
+      survey_name: survey.name,
+      report_type: report_type
+    })
+  end
+
+  def enable_public_link(project, conn, survey, target_name) do
+    create("enable_public_link", project, conn, survey, %{
       survey_name: survey.name,
       report_type: report_type_from(target_name)
     })
   end
 
-  def regenerate_public_link(project, user, survey, target_name) do
-    create("regenerate_public_link", project, user, survey, %{
+  def regenerate_public_link(project, conn, survey, target_name) do
+    create("regenerate_public_link", project, conn, survey, %{
       survey_name: survey.name,
       report_type: report_type_from(target_name)
     })
   end
 
-  def disable_public_link(project, user, survey, link) do
-    create("disable_public_link", project, user, survey, %{
+  def disable_public_link(project, conn, survey, link) do
+    create("disable_public_link", project, conn, survey, %{
       survey_name: survey.name,
       report_type: report_type_from(link.name |> String.split("/") |> List.last)
     })

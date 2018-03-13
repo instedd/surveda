@@ -397,7 +397,7 @@ defmodule Ask.SurveyController do
 
     multi = Multi.new
     |> Multi.run(:generate_link, fn _ -> ShortLink.generate_link(name, target) end)
-    |> Multi.insert(:log, ActivityLog.enable_public_link(project, current_user(conn), survey, target_name))
+    |> Multi.insert(:log, ActivityLog.enable_public_link(project, conn, survey, target_name))
     |> Repo.transaction
 
     case multi do
@@ -429,7 +429,7 @@ defmodule Ask.SurveyController do
     if link do
       multi = Multi.new
       |> Multi.run(:regenerate, fn _ -> ShortLink.regenerate(link) end)
-      |> Multi.insert(:log, ActivityLog.regenerate_public_link(project, current_user(conn), survey, target_name))
+      |> Multi.insert(:log, ActivityLog.regenerate_public_link(project, conn, survey, target_name))
       |> Repo.transaction
 
       case multi do
@@ -467,7 +467,7 @@ defmodule Ask.SurveyController do
     if link do
       multi = Multi.new
       |> Multi.delete(:delete, link)
-      |> Multi.insert(:log, ActivityLog.disable_public_link(project, current_user(conn), survey, link))
+      |> Multi.insert(:log, ActivityLog.disable_public_link(project, conn, survey, link))
       |> Repo.transaction
 
       case multi do
