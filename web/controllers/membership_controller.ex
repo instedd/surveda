@@ -18,7 +18,7 @@ defmodule Ask.MembershipController do
 
     multi = Multi.new
     |> Multi.delete(:delete, project_membership)
-    |> Multi.insert(:insert, ActivityLog.remove_collaborator(project_membership.project, current_user(conn), user, project_membership.level))
+    |> Multi.insert(:insert, ActivityLog.remove_collaborator(project_membership.project, conn, user, project_membership.level))
     |> Repo.transaction
 
     case multi do
@@ -60,7 +60,7 @@ defmodule Ask.MembershipController do
 
     multi = Multi.new
     |> Multi.update(:update, update_changeset)
-    |> Multi.insert(:insert, ActivityLog.edit_collaborator(project_membership.project, current_user(conn), user, project_membership.level, new_level))
+    |> Multi.insert(:insert, ActivityLog.edit_collaborator(project_membership.project, conn, user, project_membership.level, new_level))
     |> Repo.transaction
 
     case multi do

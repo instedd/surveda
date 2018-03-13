@@ -57,7 +57,7 @@ defmodule Ask.InviteController do
 
     insert_multi = Multi.new()
     |> Multi.insert(:insert_invite, changeset)
-    |> Multi.insert(:insert_log, ActivityLog.create_invite(project, current_user, email, level))
+    |> Multi.insert(:insert_log, ActivityLog.create_invite(project, conn, email, level))
     |> Repo.transaction
 
     case insert_multi do
@@ -78,7 +78,7 @@ defmodule Ask.InviteController do
 
             update_multi = Multi.new()
             |> Multi.update(:update_invite, changeset)
-            |> Multi.insert(:insert_log, ActivityLog.edit_invite(project, current_user, email, invite.level, level))
+            |> Multi.insert(:insert_log, ActivityLog.edit_invite(project, conn, email, invite.level, level))
             |> Repo.transaction
 
             case update_multi do
@@ -131,7 +131,7 @@ defmodule Ask.InviteController do
     if recipient_user do
       notify_acces_to_user(conn, recipient_user, current_user, email, code, project, level)
     else
-      send_invitation_email(code, level, email, project, current_user)
+      send_invitation_email(code, level, email, project, conn)
     end
 
     render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
@@ -159,7 +159,7 @@ defmodule Ask.InviteController do
 
     multi = Multi.new
     |> Multi.update(:update, Invite.changeset(invite, %{level: new_level}))
-    |> Multi.insert(:insert, ActivityLog.edit_invite(project, current_user(conn), email, invite.level, new_level))
+    |> Multi.insert(:insert, ActivityLog.edit_invite(project, conn, email, invite.level, new_level))
     |> Repo.transaction
 
     case multi do
@@ -180,7 +180,7 @@ defmodule Ask.InviteController do
 
     multi = Multi.new
     |> Multi.delete(:delete, invite)
-    |> Multi.insert(:insert, ActivityLog.delete_invite(project, current_user(conn), email, invite.level))
+    |> Multi.insert(:insert, ActivityLog.delete_invite(project, conn, email, invite.level))
     |> Repo.transaction
 
     case multi do
@@ -209,8 +209,9 @@ defmodule Ask.InviteController do
     end
   end
 
-  defp send_invitation_email(code, level, email, project, current_user) do
+  defp send_invitation_email(code, level, email, project, conn) do
     url = Ask.Endpoint.url <> "/confirm?code=#{code}"
+    current_user = current_user(conn)
 
     Ask.Email.invite(level, email, current_user, url, project)
     |> Ask.Mailer.deliver
@@ -219,7 +220,7 @@ defmodule Ask.InviteController do
 
     Multi.new
     |> Multi.insert(:insert_invite, changeset)
-    |> Multi.insert(:insert_log, ActivityLog.create_invite(project, current_user, email, level))
+    |> Multi.insert(:insert_log, ActivityLog.create_invite(project, conn, email, level))
     |> Repo.transaction
   end
 end

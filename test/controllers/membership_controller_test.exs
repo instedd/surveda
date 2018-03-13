@@ -83,6 +83,9 @@ defmodule Ask.MembershipControllerTest do
     collaborator = insert(:user, name: "user2", email: collaborator_email)
     collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
     ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+    remote_ip = {192, 168, 0, 128}
+    remote_ip_string = "192.168.0.128"
+    conn = conn |> Map.put(:remote_ip, remote_ip)
 
     delete conn, project_membership_remove_path(conn, :remove, project.id), email: collaborator_email
 
@@ -92,6 +95,7 @@ defmodule Ask.MembershipControllerTest do
     assert activity_log.entity_id == project.id
     assert activity_log.entity_type == "project"
     assert activity_log.action == "remove_collaborator"
+    assert activity_log.remote_ip == remote_ip_string
 
     assert activity_log.metadata == %{
       "project_name" => project.name,
@@ -221,6 +225,9 @@ defmodule Ask.MembershipControllerTest do
     collaborator = insert(:user, name: "user2", email: collaborator_email)
     collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "editor"}
     ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+    remote_ip = {192, 168, 0, 128}
+    remote_ip_string = "192.168.0.128"
+    conn = conn |> Map.put(:remote_ip, remote_ip)
 
     put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "reader"
 
@@ -230,6 +237,7 @@ defmodule Ask.MembershipControllerTest do
     assert activity_log.entity_id == project.id
     assert activity_log.entity_type == "project"
     assert activity_log.action == "edit_collaborator"
+    assert activity_log.remote_ip == remote_ip_string
 
     assert activity_log.metadata == %{
       "project_name" => project.name,

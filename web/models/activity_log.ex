@@ -55,8 +55,8 @@ defmodule Ask.ActivityLog do
     end
   end
 
-  def edit_collaborator(project, user, collaborator, old_role, new_role) do
-    create("edit_collaborator", project, user, project, %{project_name: project.name,
+  def edit_collaborator(project, conn, collaborator, old_role, new_role) do
+    create("edit_collaborator", project, conn, project, %{project_name: project.name,
       collaborator_email: collaborator.email,
       collaborator_name: collaborator.name,
       old_role: old_role,
@@ -64,8 +64,8 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def remove_collaborator(project, user, collaborator, role) do
-    create("remove_collaborator", project, user, project, %{
+  def remove_collaborator(project, conn, collaborator, role) do
+    create("remove_collaborator", project, conn, project, %{
       project_name: project.name,
       collaborator_email: collaborator.email,
       collaborator_name: collaborator.name,
@@ -73,8 +73,8 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def edit_invite(project, user, target_email, old_role, new_role) do
-    create("edit_invite", project, user, project, %{
+  def edit_invite(project, conn, target_email, old_role, new_role) do
+    create("edit_invite", project, conn, project, %{
       project_name: project.name,
       collaborator_email: target_email,
       old_role: old_role,
@@ -82,16 +82,16 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def delete_invite(project, user, target_email, role) do
-    create("delete_invite", project, user, project, %{
+  def delete_invite(project, conn, target_email, role) do
+    create("delete_invite", project, conn, project, %{
       project_name: project.name,
       collaborator_email: target_email,
       role: role
     })
   end
 
-  def create_invite(project, user, target_email, role) do
-    create("create_invite", project, user, project, %{
+  def create_invite(project, conn, target_email, role) do
+    create("create_invite", project, conn, project, %{
       project_name: project.name,
       collaborator_email: target_email,
       role: role
