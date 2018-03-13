@@ -328,7 +328,7 @@ defmodule Ask.BrokerTest do
     {:ok, _} = Broker.start_link
     Broker.handle_info(:poll, nil)
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "1d", schedule: Map.merge(Schedule.always(), %{day_of_week: tomorrow_schedule_day_of_week()})}) |> Repo.update!
+    survey |> Survey.changeset(%{sms_retry_configuration: "1d", schedule: Map.merge(Schedule.always(), %{day_of_week: day_after_tomorrow_schedule_day_of_week()})}) |> Repo.update!
 
     respondent = Repo.get(Respondent, respondent.id)
     Broker.sync_step(respondent, Flow.Message.reply("Yes"))
@@ -336,7 +336,7 @@ defmodule Ask.BrokerTest do
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
 
-    {erl_date, _} = Timex.now |> Timex.shift(days: 1) |> Timex.to_erl
+    {erl_date, _} = Timex.now |> Timex.shift(days: 2) |> Timex.to_erl
     time = Timex.Timezone.resolve("Etc/UTC", {erl_date, {0, 0, 0}})
     assert updated_respondent.timeout_at == time
   end
@@ -3433,16 +3433,16 @@ defmodule Ask.BrokerTest do
     [by_state["active"] || 0, by_state["pending"] || 0]
   end
 
-  defp tomorrow_schedule_day_of_week() do
+  defp day_after_tomorrow_schedule_day_of_week() do
     {erl_date, _} = Timex.now |> Timex.to_erl
     case :calendar.day_of_the_week(erl_date) do
-      1 -> %Ask.DayOfWeek{tue: true}
-      2 -> %Ask.DayOfWeek{wed: true}
-      3 -> %Ask.DayOfWeek{thu: true}
-      4 -> %Ask.DayOfWeek{fri: true}
-      5 -> %Ask.DayOfWeek{sat: true}
-      6 -> %Ask.DayOfWeek{sun: true}
-      7 -> %Ask.DayOfWeek{mon: true}
+      1 -> %Ask.DayOfWeek{wed: true}
+      2 -> %Ask.DayOfWeek{thu: true}
+      3 -> %Ask.DayOfWeek{fri: true}
+      4 -> %Ask.DayOfWeek{sat: true}
+      5 -> %Ask.DayOfWeek{sun: true}
+      6 -> %Ask.DayOfWeek{mon: true}
+      7 -> %Ask.DayOfWeek{tue: true}
     end
   end
 
