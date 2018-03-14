@@ -1,13 +1,14 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { CardTable, AddButton, Tooltip } from '../ui'
+import { CardTable, AddButton, Tooltip, roleDisplayName } from '../ui'
 import { Input } from 'react-materialize'
 import InviteModal from '../collaborators/InviteModal'
 import * as actions from '../../actions/collaborators'
 import * as inviteActions from '../../actions/invites'
 import * as projectActions from '../../actions/project'
 import * as guestActions from '../../actions/guest'
+import { translate } from 'react-i18next'
 
 class CollaboratorIndex extends Component {
   componentDidMount() {
@@ -41,7 +42,7 @@ class CollaboratorIndex extends Component {
   }
 
   levelEditor(collaborator, readOnly) {
-    const { userLevel } = this.props
+    const { userLevel, t } = this.props
     const disabled = (readOnly || collaborator.role == 'owner')
     var roles = ['editor', 'reader']
 
@@ -63,7 +64,7 @@ class CollaboratorIndex extends Component {
               id={option}
               name={option}
               value={option}>
-              {option + (collaborator.invited ? ' (invited)' : '')}
+              {(collaborator.invited ? t('{{role}} (invited)', {role: roleDisplayName(option)}) : roleDisplayName(option))}
             </option>
           )}
         </Input>
@@ -78,25 +79,26 @@ class CollaboratorIndex extends Component {
   }
 
   render() {
-    const { collaborators, project } = this.props
+    const { collaborators, project, t } = this.props
     if (!collaborators) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
-    const title = `${collaborators.length} ${(collaborators.length == 1) ? ' collaborator' : ' collaborators'}`
+    // const title = `${collaborators.length} ${(collaborators.length == 1) ? ' collaborator' : ' collaborators'}`
+    const title = t('{{count}} collaborator', {count: collaborators.length})
 
     const readOnly = !project || project.readOnly
 
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text='Invite collaborator' onClick={(e) => this.inviteCollaborator(e)} />
+        <AddButton text={t('Invite collaborators')} onClick={(e) => this.inviteCollaborator(e)} />
       )
     }
 
     const roleRemove = (c) => {
       if (!readOnly && c.role != 'owner') {
         return (<td className='action'>
-          <Tooltip text='Remove collaborator'>
+          <Tooltip text={t('Remove collaborator')}>
             <a className='btn-icon-grey' onClick={() => this.remove(c)}>
               <i className='material-icons'>delete</i>
             </a>
@@ -110,13 +112,13 @@ class CollaboratorIndex extends Component {
     return (
       <div>
         {addButton}
-        <InviteModal modalId='addCollaborator' modalText='The access of project collaborators will be managed through roles' header='Invite collaborators' confirmationText='accept' onConfirm={(event) => event.preventDefault()} style={{maxWidth: '800px'}} />
+        <InviteModal modalId='addCollaborator' modalText={t('The access of project collaborators will be managed through roles')} header={t('Invite collaborators')} confirmationText={t('Accept')} onConfirm={(event) => event.preventDefault()} style={{maxWidth: '800px'}} />
         <div>
           <CardTable title={title}>
             <thead>
               <tr>
-                <th>Email</th>
-                <th>Role</th>
+                <th>{t('Email')}</th>
+                <th>{t('Role')}</th>
                 <th />
               </tr>
             </thead>
@@ -139,6 +141,7 @@ class CollaboratorIndex extends Component {
 }
 
 CollaboratorIndex.propTypes = {
+  t: PropTypes.func,
   projectId: PropTypes.string.isRequired,
   project: PropTypes.object,
   collaborators: PropTypes.array,
@@ -163,4 +166,4 @@ const mapStateToProps = (state, ownProps) => ({
   collaborators: state.collaborators.items
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(CollaboratorIndex)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(CollaboratorIndex))

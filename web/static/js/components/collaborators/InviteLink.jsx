@@ -3,19 +3,24 @@ import { connect } from 'react-redux'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
 import CopyToClipboard from 'react-copy-to-clipboard'
+import { translate, Trans } from 'react-i18next'
 
 export class InviteLink extends Component {
-
+  constructor(props) {
+    super(props)
+    this.copyLink = this.copyLink.bind(this)
+  }
   copyLink() {
-    const { projectId, guest, dispatch } = this.props
+    const { projectId, guest, dispatch, t } = this.props
+
     if (guest.data.code) {
       dispatch(actions.invite(projectId, guest.data.code, guest.data.level, guest.data.email)).then(
         () => {
-          window.Materialize.toast(`Invite link was copied to the clipboard`, 5000)
+          window.Materialize.toast(t('Invite link was copied to the clipboard'), 5000)
         },
         (reject) => {
           reject.json().then(json => {
-            window.Materialize.toast(`Someone else already invited this user. Please try again`, 10000)
+            window.Materialize.toast(t('Someone else already invited this user. Please try again'), 10000)
           })
         }
       )
@@ -32,18 +37,17 @@ export class InviteLink extends Component {
   }
 
   render() {
-    const { guest } = this.props
+    const { guest, t } = this.props
 
     if (!guest) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
 
     return (
       <div className='colaborate-link'>
         <i className='material-icons'>link</i>
-        <span >Or invite to collaborate with a</span>
         <CopyToClipboard text={this.inviteLink()}>
-          <a onClick={(() => this.copyLink())}> single use link </a>
+          <Trans>Or invite to collaborate with a <a onClick={this.copyLink}> single use link </a></Trans>
         </CopyToClipboard>
       </div>
     )
@@ -51,6 +55,7 @@ export class InviteLink extends Component {
 }
 
 InviteLink.propTypes = {
+  t: PropTypes.func,
   projectId: PropTypes.number,
   guest: PropTypes.object.isRequired,
   dispatch: PropTypes.any
@@ -61,4 +66,4 @@ const mapStateToProps = (state) => ({
   guest: state.guest
 })
 
-export default connect(mapStateToProps)(InviteLink)
+export default translate()(connect(mapStateToProps)(InviteLink))

@@ -1,14 +1,14 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Modal, InputWithLabel } from '../ui'
+import { Modal, InputWithLabel, roleDisplayName } from '../ui'
 import { Input } from 'react-materialize'
-import { startCase } from 'lodash'
 import * as actions from '../../actions/invites'
 import * as collaboratorsActions from '../../actions/collaborators'
 import * as guestActions from '../../actions/guest'
 import InviteLink from './InviteLink'
 import { config } from '../../config'
+import { translate } from 'react-i18next'
 
 export class InviteModal extends Component {
   cancel() {
@@ -69,7 +69,7 @@ export class InviteModal extends Component {
   }
 
   render() {
-    const { header, modalText, modalId, style, guest, userLevel } = this.props
+    const { header, modalText, modalId, style, guest, userLevel, t } = this.props
 
     var roles = ['editor', 'reader']
 
@@ -78,16 +78,16 @@ export class InviteModal extends Component {
     }
 
     if (!guest) {
-      return <div>Loading...</div>
+      return <div>{t('Loading...')}</div>
     }
 
-    const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>Cancel</a>
+    const cancelButton = <a href='#!' className=' modal-action modal-close btn-flat grey-text' onClick={() => this.cancel()}>{t('Cancel')}</a>
 
     const validEmail = guest.data.email && !guest.errors.email
 
     const sendButton = guest.data.code && validEmail
-    ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>Send</a>
-    : <a className='btn-medium disabled'>Send</a>
+    ? <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={() => this.send()}>{t('Send')}</a>
+    : <a className='btn-medium disabled'>{t('Send')}</a>
 
     const initOptions = {
       complete: () => { this.cancel() }
@@ -104,28 +104,26 @@ export class InviteModal extends Component {
             <div className='row'>
               <div className='col s8'>
                 <div className='input-field'>
-                  <InputWithLabel id='collaborator_mail' value={guest.data.email} label={`Enter collaborator's email`} >
+                  <InputWithLabel id='collaborator_mail' value={guest.data.email} label={t('Enter collaborator\'s email')} >
                     <input type='text' onChange={e => { this.emailOnChange(e) }} onBlur={e => { this.emailOnBlur(e) }} />
                   </InputWithLabel>
                   {
                     !validEmail
                       ? <span className='small-text-bellow text-error'>
-                        Please enter a valid email
+                        {t('Please enter a valid email')}
                       </span>
                       : <span />
                   }
                 </div>
               </div>
               <div className='col s1' />
-              <Input s={3} type='select' label='Role'
+              <Input s={3} type='select' label={t('Role')}
                 value={guest.data.level || ''}
                 onChange={e => this.levelChanged(e)}>
-                <option value=''>
-                Select a role
-                </option>
+                <option value=''>{t('Select a role')}</option>
                 {roles.map((role) =>
                   <option key={role} value={role}>
-                    {startCase(role)}
+                    {roleDisplayName(role)}
                   </option>
                   )}
               </Input>
@@ -147,6 +145,7 @@ export class InviteModal extends Component {
 }
 
 InviteModal.propTypes = {
+  t: PropTypes.func,
   actions: PropTypes.object.isRequired,
   collaboratorsActions: PropTypes.object.isRequired,
   guestActions: PropTypes.object.isRequired,
@@ -176,4 +175,4 @@ const mapStateToProps = (state) => ({
   guest: state.guest
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(InviteModal)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(InviteModal))
