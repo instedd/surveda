@@ -1,8 +1,9 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink}
+  alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
   alias Ask.Runtime.Session
+  alias Ecto.Multi
 
   def index(conn, %{"project_id" => project_id} = params) do
     project = conn
@@ -394,10 +395,15 @@ defmodule Ask.SurveyController do
         |> send_resp(:no_content, target_name)
     end
 
-    case ShortLink.generate_link(name, target) do
-      {:ok, link} ->
+    multi = Multi.new
+    |> Multi.run(:generate_link, fn _ -> ShortLink.generate_link(name, target) end)
+    |> Multi.insert(:log, ActivityLog.enable_public_link(project, conn, survey, target_name))
+    |> Repo.transaction
+
+    case multi do
+      {:ok, %{generate_link: link}} ->
         render(conn, "link.json", link: link)
-      {:error, changeset} ->
+      {:error, _, changeset, _} ->
         Logger.warn "Error when creating link #{name}"
         conn
         |> put_status(:unprocessable_entity)
@@ -421,10 +427,15 @@ defmodule Ask.SurveyController do
     |> Repo.get_by(name: Survey.link_name(survey, String.to_atom(target_name)))
 
     if link do
-      case ShortLink.regenerate(link) do
-        {:ok, new_link} ->
+      multi = Multi.new
+      |> Multi.run(:regenerate, fn _ -> ShortLink.regenerate(link) end)
+      |> Multi.insert(:log, ActivityLog.regenerate_public_link(project, conn, survey, target_name))
+      |> Repo.transaction
+
+      case multi do
+        {:ok, %{regenerate: new_link}} ->
           render(conn, "link.json", link: new_link)
-        {:error, changeset} ->
+        {:error, _, changeset, _} ->
           Logger.warn "Error when regenerating results link #{inspect link}"
           conn
           |> put_status(:unprocessable_entity)
@@ -454,10 +465,23 @@ defmodule Ask.SurveyController do
     |> Repo.get_by(name: Survey.link_name(survey, String.to_atom(target_name)))
 
     if link do
-      Repo.delete!(link)
-    end
+      multi = Multi.new
+      |> Multi.delete(:delete, link)
+      |> Multi.insert(:log, ActivityLog.disable_public_link(project, conn, survey, link))
+      |> Repo.transaction
 
-    send_resp(conn, :no_content, "")
+      case multi do
+        {:ok, _} -> send_resp(conn, :no_content, "")
+        {:error, _, changeset, _} ->
+          Logger.warn "Error when deleting link #{inspect link}"
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+      end
+    else
+      conn
+      |> send_resp(:not_found, "")
+    end
   end
 
   def stop(conn, %{"survey_id" => id}) do

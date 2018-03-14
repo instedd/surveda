@@ -20,11 +20,11 @@ defmodule Ask.ShortLink do
   def generate_link(name, target) do
     case Repo.get_by(ShortLink, name: name) do
       nil ->
-        %ShortLink{
+        ShortLink.changeset(%ShortLink{
           name: name,
           target: target,
           hash: random_hash()
-        }
+        })
         |> Repo.insert
       link -> {:ok, link}
     end

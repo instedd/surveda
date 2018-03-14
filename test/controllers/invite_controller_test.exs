@@ -154,6 +154,10 @@ defmodule Ask.InviteControllerTest do
     code = "ABC1234"
     level = "editor"
     email = "user@instedd.org"
+    remote_ip = {192, 168, 0, 128}
+    remote_ip_string = "192.168.0.128"
+    conn = conn |> Map.put(:remote_ip, remote_ip)
+
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => level, "email" => email, "project_id" => project.id})
     activity_log = ActivityLog |> Repo.one
     assert activity_log.project_id == project.id
@@ -161,6 +165,7 @@ defmodule Ask.InviteControllerTest do
     assert activity_log.entity_id == project.id
     assert activity_log.entity_type == "project"
     assert activity_log.action == "create_invite"
+    assert activity_log.remote_ip == remote_ip_string
 
     assert activity_log.metadata == %{
       "project_name" => project.name,
@@ -192,6 +197,10 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user)
     code = "ABC1234"
     email = "user@instedd.org"
+    remote_ip = {192, 168, 0, 128}
+    remote_ip_string = "192.168.0.128"
+    conn = conn |> Map.put(:remote_ip, remote_ip)
+
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => "reader", "email" => email, "project_id" => project.id})
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => "editor", "email" => email, "project_id" => project.id})
 
@@ -201,6 +210,7 @@ defmodule Ask.InviteControllerTest do
     assert activity_log.entity_id == project.id
     assert activity_log.entity_type == "project"
     assert activity_log.action == "edit_invite"
+    assert activity_log.remote_ip == remote_ip_string
 
     assert activity_log.metadata == %{
       "project_name" => project.name,
@@ -214,6 +224,7 @@ defmodule Ask.InviteControllerTest do
     project = create_project_for_user(user)
     code = "ABC1234"
     email = "user@instedd.org"
+
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => "reader", "email" => email, "project_id" => project.id})
     get conn, invite_path(conn, :invite, %{"code" => code, "level" => "reader", "email" => email, "project_id" => project.id})
 
@@ -251,7 +262,7 @@ defmodule Ask.InviteControllerTest do
     }
   end
 
-  test "if doesn't generate activity log if an invite already exists and a different code is sent", %{conn: conn, user: user} do
+  test "it doesn't generate activity log if an invite already exists and a different code is sent", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
     code2 = "ABC1235"
@@ -410,6 +421,9 @@ defmodule Ask.InviteControllerTest do
       "inviter_email" => user.email
     }
     Invite.changeset(%Invite{}, invite) |> Repo.insert
+    remote_ip = {192, 168, 0, 128}
+    remote_ip_string = "192.168.0.128"
+    conn = conn |> Map.put(:remote_ip, remote_ip)
 
     put conn, invite_update_path(conn, :update, %{"project_id" => project.id, "email" => email, "level" => "editor"})
 
@@ -419,6 +433,7 @@ defmodule Ask.InviteControllerTest do
     assert activity_log.entity_id == project.id
     assert activity_log.entity_type == "project"
     assert activity_log.action == "edit_invite"
+    assert activity_log.remote_ip == remote_ip_string
 
     assert activity_log.metadata == %{
       "project_name" => project.name,
@@ -604,6 +619,9 @@ defmodule Ask.InviteControllerTest do
       "inviter_email" => user.email
     }
     Invite.changeset(%Invite{}, invite) |> Repo.insert
+    remote_ip = {192, 168, 0, 128}
+    remote_ip_string = "192.168.0.128"
+    conn = conn |> Map.put(:remote_ip, remote_ip)
 
     delete conn, invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
 
@@ -613,6 +631,7 @@ defmodule Ask.InviteControllerTest do
     assert activity_log.entity_id == project.id
     assert activity_log.entity_type == "project"
     assert activity_log.action == "delete_invite"
+    assert activity_log.remote_ip == remote_ip_string
 
     assert activity_log.metadata == %{
       "project_name" => project.name,

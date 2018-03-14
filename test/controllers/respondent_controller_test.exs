@@ -3,7 +3,7 @@ defmodule Ask.RespondentControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{QuotaBucket, Survey, Response, Respondent, ShortLink, Stats}
+  alias Ask.{QuotaBucket, Survey, Response, Respondent, ShortLink, Stats, ActivityLog}
 
   describe "normal" do
     setup %{conn: conn} do
@@ -1103,6 +1103,27 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_disp == "Registered"
     end
 
+    test "generates log when downloading results csv", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
+
+      remote_ip = {192, 168, 0, 128}
+      remote_ip_string = "192.168.0.128"
+      conn = conn |> Map.put(:remote_ip, remote_ip)
+
+      {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_results_path(conn, :results, project, survey, %{"_format" => "csv"}))
+      get conn, short_link_path(conn, :access, link.hash)
+
+      assert_download_log(%{log: ActivityLog |> Repo.one,
+        user: user,
+        project: project,
+        survey: survey,
+        report_type: "survey_results",
+        remote_ip: remote_ip_string
+      })
+    end
+
     test "download disposition history using download link", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
@@ -1130,6 +1151,27 @@ defmodule Ask.RespondentControllerTest do
        "34y5345tjyet,completed,Phone call,2000-01-01 04:05:06 UTC"]
     end
 
+    test "generates log when downloading disposition_history csv", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
+
+      remote_ip = {192, 168, 0, 128}
+      remote_ip_string = "192.168.0.128"
+      conn = conn |> Map.put(:remote_ip, remote_ip)
+
+      {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :disposition_history), project_survey_respondents_disposition_history_path(conn, :disposition_history, project, survey, %{"_format" => "csv"}))
+      get conn, short_link_path(conn, :access, link.hash)
+
+      assert_download_log(%{log: ActivityLog |> Repo.one,
+        user: user,
+        project: project,
+        survey: survey,
+        report_type: "disposition_history",
+        remote_ip: remote_ip_string
+      })
+    end
+
     test "download incentives using download link", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
@@ -1149,6 +1191,27 @@ defmodule Ask.RespondentControllerTest do
         "Telephone number,Questionnaire-Mode",
         "5678,test - SMS with phone call fallback"
       ]
+    end
+
+    test "generates log when downloading incentives csv", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+
+      remote_ip = {192, 168, 0, 128}
+      remote_ip_string = "192.168.0.128"
+      conn = conn |> Map.put(:remote_ip, remote_ip)
+
+      {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :incentives), project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"}))
+      get conn, short_link_path(conn, :access, link.hash)
+
+      assert_download_log(%{log: ActivityLog |> Repo.one,
+        user: user,
+        project: project,
+        survey: survey,
+        report_type: "incentives",
+        remote_ip: remote_ip_string
+      })
     end
 
     test "download interactions using download link", %{conn: conn, user: user} do
@@ -1185,9 +1248,45 @@ defmodule Ask.RespondentControllerTest do
       assert lines == expected_list
     end
 
+    test "generates log when downloading interactions csv", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+
+      remote_ip = {192, 168, 0, 128}
+      remote_ip_string = "192.168.0.128"
+      conn = conn |> Map.put(:remote_ip, remote_ip)
+
+      {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :interactions), project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"}))
+      get conn, short_link_path(conn, :access, link.hash)
+
+      assert_download_log(%{log: ActivityLog |> Repo.one,
+        user: user,
+        project: project,
+        survey: survey,
+        report_type: "interactions",
+        remote_ip: remote_ip_string
+      })
+    end
+
   end
 
   def completed_schedule() do
     Ask.Schedule.always()
   end
+
+  defp assert_download_log(%{log: log, project: project, survey: survey, report_type: report_type, remote_ip: remote_ip}) do
+    assert log.project_id == project.id
+    assert log.user_id == nil
+    assert log.entity_id == survey.id
+    assert log.entity_type == "survey"
+    assert log.action == "download"
+    assert log.remote_ip == remote_ip
+
+    assert log.metadata == %{
+      "survey_name" => survey.name,
+      "report_type" => report_type
+    }
+  end
+
 end
