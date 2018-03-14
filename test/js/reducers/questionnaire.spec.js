@@ -528,19 +528,19 @@ describe('questionnaire reducer', () => {
         path: "steps[1].prompt['en'].sms",
         lang: 'en',
         mode: 'sms',
-        message: 'SMS prompt must not be blank'
+        message: ['SMS prompt must not be blank']
       })
 
       expect(errors).toInclude({
         path: "steps[1].prompt['fr'].sms",
         lang: 'fr',
         mode: 'sms',
-        message: 'SMS prompt must not be blank'
+        message: ['SMS prompt must not be blank']
       })
 
       expect(resultState.errorsByPath).toInclude({
-        "steps[1].prompt['en'].sms": ['SMS prompt must not be blank'],
-        "steps[1].prompt['fr'].sms": ['SMS prompt must not be blank']
+        "steps[1].prompt['en'].sms": [['SMS prompt must not be blank']],
+        "steps[1].prompt['fr'].sms": [['SMS prompt must not be blank']]
       })
 
       expect(resultState.errorsByLang).toInclude({
@@ -561,7 +561,7 @@ describe('questionnaire reducer', () => {
         path: "steps[0].prompt['en'].mobileweb",
         lang: 'en',
         mode: 'mobileweb',
-        message: 'Mobile web prompt must not be blank'
+        message: ['Mobile web prompt must not be blank']
       })
     })
 
@@ -607,7 +607,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toExclude({
-        [`steps[0].prompt['en'].sms`]: ['SMS prompt is too long']
+        [`steps[0].prompt['en'].sms`]: [['SMS prompt is too long']]
       })
     })
 
@@ -648,13 +648,13 @@ describe('questionnaire reducer', () => {
         path: "steps[1].prompt['en'].ivr.text",
         lang: 'en',
         mode: 'ivr',
-        message: 'Voice prompt must not be blank'
+        message: ['Voice prompt must not be blank']
       })
       expect(errors).toInclude({
         path: "steps[1].prompt['fr'].ivr.text",
         lang: 'fr',
         mode: 'ivr',
-        message: 'Voice prompt must not be blank'
+        message: ['Voice prompt must not be blank']
       })
     })
 
@@ -669,7 +669,7 @@ describe('questionnaire reducer', () => {
         path: "steps[1].prompt['en'].ivr.audioId",
         lang: 'en',
         mode: 'ivr',
-        message: 'An audio file must be uploaded'
+        message: ['An audio file must be uploaded']
       })
     })
 
@@ -686,7 +686,7 @@ describe('questionnaire reducer', () => {
         path: 'steps[0].choices',
         lang: null,
         mode: null,
-        message: 'You should define at least two response options'
+        message: ['You should define at least two response options']
       })
     })
 
@@ -702,7 +702,7 @@ describe('questionnaire reducer', () => {
         path: 'steps[0].choices[0].value',
         lang: null,
         mode: null,
-        message: 'Response must not be blank'
+        message: ['Response must not be blank']
       })
     })
 
@@ -725,14 +725,14 @@ describe('questionnaire reducer', () => {
         path: "steps[1].choices[0]['en'].sms",
         lang: 'en',
         mode: 'sms',
-        message: 'SMS must not be blank'
+        message: ['"SMS" must not be blank']
       })
 
       expect(errors).toInclude({
         path: "steps[1].choices[0]['fr'].sms",
         lang: 'fr',
         mode: 'sms',
-        message: 'SMS must not be blank'
+        message: ['"SMS" must not be blank']
       })
     })
 
@@ -755,13 +755,13 @@ describe('questionnaire reducer', () => {
         path: "steps[1].choices[0]['en'].sms",
         lang: 'en',
         mode: 'sms',
-        message: "SMS must not be 'STOP'"
+        message: ['"SMS" cannot be "STOP"']
       })
       expect(errors).toInclude({
         path: "steps[1].choices[0]['fr'].sms",
         lang: 'fr',
         mode: 'sms',
-        message: "SMS must not be 'STOP'"
+        message: ['"SMS" cannot be "STOP"']
       })
     })
 
@@ -777,7 +777,7 @@ describe('questionnaire reducer', () => {
         path: "steps[0].choices[0]['en'].mobileweb",
         lang: 'en',
         mode: 'mobileweb',
-        message: 'Mobile web must not be blank'
+        message: ['"Mobile web" must not be blank']
       })
     })
 
@@ -799,7 +799,7 @@ describe('questionnaire reducer', () => {
         path: 'steps[1].choices[0].ivr',
         lang: null,
         mode: 'ivr',
-        message: '"Phone call" must not be blank'
+        message: ['"Phone call" must not be blank']
       })
     })
 
@@ -839,13 +839,13 @@ describe('questionnaire reducer', () => {
         path: 'steps[0].choices[1].ivr',
         lang: null,
         mode: 'ivr',
-        message: '"Phone call" must only consist of single digits, "#" or "*"'
+        message: ['"Phone call" must only consist of single digits, "#" or "*"']
       })
       expect(errors).toInclude({
         path: 'steps[1].choices[2].ivr',
         lang: null,
         mode: 'ivr',
-        message: '"Phone call" must only consist of single digits, "#" or "*"'
+        message: ['"Phone call" must only consist of single digits, "#" or "*"']
       })
     })
 
@@ -862,7 +862,7 @@ describe('questionnaire reducer', () => {
         path: 'steps[0].choices[1].value',
         lang: null,
         mode: null,
-        message: 'Value already used in a previous response'
+        message: ['Value already used in a previous response']
       })
     })
 
@@ -879,7 +879,7 @@ describe('questionnaire reducer', () => {
         path: "steps[0].choices[1]['en'].sms",
         lang: 'en',
         mode: 'sms',
-        message: 'Value "c" already used in a previous response'
+        message: ['Value "{{value}}" already used in a previous response', {value: 'c'}]
       })
     })
 
@@ -911,7 +911,7 @@ describe('questionnaire reducer', () => {
         path: 'steps[0].choices[1].ivr',
         lang: null,
         mode: 'ivr',
-        message: 'Value "2" already used in a previous response'
+        message: ['Value "{{value}}" already used in a previous response', {value: '2'}]
       })
     })
 
@@ -926,7 +926,7 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(resultState.errors).toNotInclude({
-        'steps[0].choices[1].ivr': ['Value "2" already used in a previous response']
+        'steps[0].choices[1].ivr': [['Value "{{value}}" already used in a previous response', {value: 2}]]
       })
     })
 
@@ -943,7 +943,7 @@ describe('questionnaire reducer', () => {
         path: "steps[0].choices[1]['en'].mobileweb",
         lang: 'en',
         mode: 'mobileweb',
-        message: 'Value "b" already used in a previous response'
+        message: ['Value "{{value}}" already used in a previous response', {value: 'b'}]
       })
     })
 
@@ -958,7 +958,7 @@ describe('questionnaire reducer', () => {
         path: "errorMessage.prompt['en'].sms",
         lang: 'en',
         mode: 'sms',
-        message: 'SMS prompt must not be blank'
+        message: ['SMS prompt must not be blank']
       })
     })
 
@@ -973,7 +973,7 @@ describe('questionnaire reducer', () => {
         path: `errorMessage.prompt['en'].ivr.text`,
         lang: 'en',
         mode: 'ivr',
-        message: 'Voice prompt must not be blank'
+        message: ['Voice prompt must not be blank']
       })
     })
 
@@ -1002,19 +1002,19 @@ describe('questionnaire reducer', () => {
         path: 'steps[0].prompt.sms',
         lang: null,
         mode: 'sms',
-        message: 'SMS prompt must not be blank'
+        message: ['SMS prompt must not be blank']
       })
       expect(errors).toInclude({
         path: 'steps[0].prompt.ivr.text',
         lang: null,
         mode: 'ivr',
-        message: 'Voice prompt must not be blank'
+        message: ['Voice prompt must not be blank']
       })
       expect(errors).toInclude({
         path: 'steps[0].prompt.mobileweb',
         lang: null,
         mode: 'mobileweb',
-        message: 'Mobile web prompt must not be blank'
+        message: ['Mobile web prompt must not be blank']
       })
     })
 
@@ -1029,7 +1029,7 @@ describe('questionnaire reducer', () => {
         path: `title['en']`,
         lang: 'en',
         mode: 'mobileweb',
-        message: 'Title must not be blank'
+        message: ['Title must not be blank']
       })
 
       const newState = playActionsFromState(state, reducer)([
@@ -1040,7 +1040,7 @@ describe('questionnaire reducer', () => {
         path: `title['en']`,
         lang: 'en',
         mode: 'mobileweb',
-        message: 'Title must not be blank'
+        message: ['Title must not be blank']
       })
     })
 
@@ -1055,7 +1055,7 @@ describe('questionnaire reducer', () => {
         path: `surveyAlreadyTakenMessage['en']`,
         lang: 'en',
         mode: 'mobileweb',
-        message: '"Survey already taken" message must not be blank'
+        message: ['"Survey already taken" message must not be blank']
       })
 
       const newState = playActionsFromState(state, reducer)([
@@ -1066,7 +1066,7 @@ describe('questionnaire reducer', () => {
         path: `surveyAlreadyTakenMessage['en['en']`,
         lang: 'en',
         mode: 'mobileweb',
-        message: '"Survey already taken" message must not be blank'
+        message: ['"Survey already taken" message must not be blank']
       })
     })
 
@@ -1082,7 +1082,7 @@ describe('questionnaire reducer', () => {
         path: 'steps[1].store',
         lang: null,
         mode: null,
-        message: 'Variable already used in a previous step'
+        message: ['Variable already used in a previous step']
       })
     })
 
@@ -1106,7 +1106,7 @@ describe('questionnaire reducer', () => {
         path: `steps[${i}].maxValue`,
         lang: null,
         mode: null,
-        message: 'Max value must be greater than the min value'
+        message: ['Max value must be greater than the min value']
       })
     })
 
@@ -1130,7 +1130,7 @@ describe('questionnaire reducer', () => {
         path: `steps[${i}].rangesDelimiters`,
         lang: null,
         mode: null,
-        message: "Delimiter 'a' must be a number"
+        message: ['Delimiter "{{delimiter}}" must be a number', {delimiter: 'a'}]
       })
     })
 
@@ -1154,7 +1154,7 @@ describe('questionnaire reducer', () => {
         path: `steps[${i}].rangesDelimiters`,
         lang: null,
         mode: null,
-        message: 'Delimiter 5 must be greater than the previous one (10)'
+        message: ['Delimiter {{delimiter}} must be greater than the previous one ({{previous}})', {delimiter: '5', previous: 10}]
       })
     })
 
@@ -1178,7 +1178,7 @@ describe('questionnaire reducer', () => {
         path: `steps[${i}].minValue`,
         lang: null,
         mode: null,
-        message: 'Min value must be less than or equal to the first delimiter (5)'
+        message: ['Min value must be less than or equal to the first delimiter ({{first}})', {first: 5}]
       })
     })
 
@@ -1202,7 +1202,7 @@ describe('questionnaire reducer', () => {
         path: `steps[${i}].maxValue`,
         lang: null,
         mode: null,
-        message: 'Max value must be greater than or equal to the last delimiter (20)'
+        message: ['Max value must be greater than or equal to the last delimiter ({{last}})', {last: 20}]
       })
     })
   })

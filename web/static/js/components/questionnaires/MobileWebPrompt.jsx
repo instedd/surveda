@@ -3,6 +3,8 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import Draft from './Draft'
+import map from 'lodash/map'
+import { translate } from 'react-i18next'
 
 class MobileWebPrompt extends Component {
   state: State
@@ -13,7 +15,7 @@ class MobileWebPrompt extends Component {
   }
 
   render() {
-    const { value, readOnly, onBlur, inputErrors } = this.props
+    const { value, readOnly, onBlur, inputErrors, t } = this.props
     let { label } = this.props
     if (!label) label = 'Mobile Web Message'
 
@@ -25,7 +27,7 @@ class MobileWebPrompt extends Component {
             <Draft
               label={label}
               onBlur={onBlur}
-              errors={shouldDisplayErrors && inputErrors}
+              errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
               value={value}
               readOnly={readOnly}
               />
@@ -37,6 +39,7 @@ class MobileWebPrompt extends Component {
 }
 
 MobileWebPrompt.propTypes = {
+  t: PropTypes.func,
   label: PropTypes.string,
   value: PropTypes.string.isRequired,
   originalValue: PropTypes.string.isRequired,
@@ -50,4 +53,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(MobileWebPrompt)
+export default translate()(connect(null, mapDispatchToProps)(MobileWebPrompt))

@@ -9,6 +9,8 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
 import propsAreEqual from '../../propsAreEqual'
 import { Preloader } from 'react-materialize'
+import map from 'lodash/map'
+import { translate } from 'react-i18next'
 
 type State = {
   audioErrors: string,
@@ -92,7 +94,7 @@ class IvrPrompt extends Component {
   }
 
   render() {
-    const { value, inputErrors, audioIdErrors, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId } = this.props
+    const { value, inputErrors, audioIdErrors, readOnly, changeIvrMode, autocomplete, autocompleteGetData, autocompleteOnSelect, uploadingAudio, stepId, t } = this.props
     let { label } = this.props
     if (!label) label = 'Voice message'
 
@@ -133,7 +135,7 @@ class IvrPrompt extends Component {
             <Draft
               label={label}
               value={value}
-              errors={shouldDisplayErrors && inputErrors}
+              errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
               readOnly={readOnly}
               onBlur={text => this.props.onBlur(text)}
               plainText
@@ -194,6 +196,7 @@ class IvrPrompt extends Component {
 }
 
 IvrPrompt.propTypes = {
+  t: PropTypes.func,
   label: PropTypes.string,
   customHandlerFileUpload: PropTypes.func,
   value: PropTypes.string.isRequired,
@@ -222,4 +225,4 @@ const mapDispatchToProps = (dispatch) => ({
   uiActions: bindActionCreators(uiActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(IvrPrompt)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(IvrPrompt))

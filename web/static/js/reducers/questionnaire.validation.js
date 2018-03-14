@@ -2,6 +2,8 @@
 import * as characterCounter from '../characterCounter'
 import { getStepPrompt, splitSmsText, newStepPrompt, newIvrPrompt } from '../step'
 
+const k = (...args: any) => args
+
 type ValidationContext = {
   sms: boolean,
   ivr: boolean,
@@ -145,7 +147,7 @@ const validatePrompt = (prompt: ?Prompt, context, lang, langPath) => {
 
 const validateSmsLangPrompt = (prompt: Prompt, context: ValidationContext, lang: ?string, path: string) => {
   if (isBlank(prompt.sms)) {
-    addError(context, `${path}.sms`, 'SMS prompt must not be blank', lang, 'sms')
+    addError(context, `${path}.sms`, k('SMS prompt must not be blank'), lang, 'sms')
     return
   }
 
@@ -158,16 +160,16 @@ const validateSmsLangPrompt = (prompt: Prompt, context: ValidationContext, lang:
 const validateIvrLangPrompt = (prompt: Prompt, context: ValidationContext, lang: ?string, path: string) => {
   let ivr = prompt.ivr || newIvrPrompt()
   if (isBlank(ivr.text)) {
-    addError(context, `${path}.ivr.text`, 'Voice prompt must not be blank', lang, 'ivr')
+    addError(context, `${path}.ivr.text`, k('Voice prompt must not be blank'), lang, 'ivr')
   }
   if (ivr.audioSource == 'upload' && !ivr.audioId) {
-    addError(context, `${path}.ivr.audioId`, 'An audio file must be uploaded', lang, 'ivr')
+    addError(context, `${path}.ivr.audioId`, k('An audio file must be uploaded'), lang, 'ivr')
   }
 }
 
 const validateMobileWebLangPrompt = (prompt: Prompt, context: ValidationContext, lang: ?string, path: string) => {
   if (isBlank(prompt.mobileweb)) {
-    addError(context, `${path}.mobileweb`, 'Mobile web prompt must not be blank', lang, 'mobileweb')
+    addError(context, `${path}.mobileweb`, k('Mobile web prompt must not be blank'), lang, 'mobileweb')
   }
 }
 
@@ -186,26 +188,26 @@ const validSkipLogic = (skipLogic, stepIndex, steps, context) => {
 
 const validateStepSkipLogic = (step, stepIndex, steps, context, path) => {
   if (!validSkipLogic(step.skipLogic, stepIndex, steps, context)) {
-    addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
+    addError(context, `${path}.skipLogic`, k('Cannot jump to a previous step'))
   }
 }
 
 const validateChoiceSkipLogic = (choice, stepIndex, choiceIndex, steps, context, path) => {
   if (!validSkipLogic(choice.skipLogic, stepIndex, steps, context)) {
-    addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
+    addError(context, `${path}.skipLogic`, k('Cannot jump to a previous step'))
   }
 }
 
 const validateRangeSkipLogic = (range, stepIndex, steps, context, path) => {
   if (!validSkipLogic(range.skipLogic, stepIndex, steps, context)) {
     // TODO: missing range info in path
-    addError(context, `${path}.skipLogic`, `Cannot jump to a previous step`)
+    addError(context, `${path}.skipLogic`, k('Cannot jump to a previous step'))
   }
 }
 
 const validateRangeDelimiters = (step, context, path) => {
   if (step.minValue != null && step.maxValue != null && step.minValue >= step.maxValue) {
-    addError(context, `${path}.maxValue`, 'Max value must be greater than the min value')
+    addError(context, `${path}.maxValue`, k('Max value must be greater than the min value'))
   }
 
   let delimiters = step.rangesDelimiters
@@ -219,15 +221,15 @@ const validateRangeDelimiters = (step, context, path) => {
     const int = parseInt(delimiter)
 
     if (isNaN(int)) {
-      addError(context, `${path}.rangesDelimiters`, `Delimiter '${delimiter}' must be a number`)
+      addError(context, `${path}.rangesDelimiters`, k('Delimiter "{{delimiter}}" must be a number', {delimiter}))
     }
 
     if (previous == null && step.minValue != null && step.minValue > int) {
-      addError(context, `${path}.minValue`, `Min value must be less than or equal to the first delimiter (${int})`)
+      addError(context, `${path}.minValue`, k('Min value must be less than or equal to the first delimiter ({{first}})', {first: int}))
     }
 
     if (previous != null && int <= previous) {
-      addError(context, `${path}.rangesDelimiters`, `Delimiter ${delimiter} must be greater than the previous one (${previous})`)
+      addError(context, `${path}.rangesDelimiters`, k('Delimiter {{delimiter}} must be greater than the previous one ({{previous}})', {delimiter, previous}))
     }
 
     if (!isNaN(int)) {
@@ -236,7 +238,7 @@ const validateRangeDelimiters = (step, context, path) => {
   }
 
   if (previous != null && step.maxValue != null && step.maxValue < previous) {
-    addError(context, `${path}.maxValue`, `Max value must be greater than or equal to the last delimiter (${previous})`)
+    addError(context, `${path}.maxValue`, k('Max value must be greater than or equal to the last delimiter ({{last}})', {last: previous}))
   }
 }
 
@@ -250,7 +252,7 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
   path = `${path}.choices`
 
   if (choices.length < 2) {
-    addError(context, path, 'You should define at least two response options')
+    addError(context, path, k('You should define at least two response options'))
   }
 
   for (let i = 0; i < choices.length; i++) {
@@ -267,7 +269,7 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
 
     let choice = choices[i]
     if (values.includes(choice.value)) {
-      addError(context, `${choicePath}.value`, 'Value already used in a previous response')
+      addError(context, `${choicePath}.value`, k('Value already used in a previous response'))
     }
 
     if (context.sms) {
@@ -278,7 +280,7 @@ const validateChoices = (choices: Choice[], stepIndex: number, context: Validati
       if (choice.responses.ivr) {
         for (let choiceIvr of choice.responses.ivr) {
           if (ivr.includes(choiceIvr)) {
-            addError(context, `${choicePath}.ivr`, `Value "${choiceIvr}" already used in a previous response`, null, 'ivr')
+            addError(context, `${choicePath}.ivr`, k('Value "{{value}}" already used in a previous response', {value: choiceIvr}), null, 'ivr')
           }
         }
         ivr.push(...choice.responses.ivr)
@@ -297,7 +299,7 @@ const validateSmsResponseDuplicates = (choice: Choice, context: ValidationContex
   if (choice.responses.sms && choice.responses.sms[lang]) {
     for (let choiceSms of choice.responses.sms[lang]) {
       if (otherSms[lang] && otherSms[lang].includes(choiceSms)) {
-        addError(context, `${path}.sms`, `Value "${choiceSms}" already used in a previous response`, lang, 'sms')
+        addError(context, `${path}.sms`, k('Value "{{value}}" already used in a previous response', {value: choiceSms}), lang, 'sms')
       }
     }
 
@@ -313,7 +315,7 @@ const validateMobileWebResponseDuplicates = (choice: Choice, context: Validation
   if (choice.responses.mobileweb && choice.responses.mobileweb[lang]) {
     let mobilewebSms = choice.responses.mobileweb[lang]
     if (otherMobileWeb[lang] && otherMobileWeb[lang].includes(mobilewebSms)) {
-      addError(context, `${path}.mobileweb`, `Value "${mobilewebSms}" already used in a previous response`, lang, 'mobileweb')
+      addError(context, `${path}.mobileweb`, k('Value "{{value}}" already used in a previous response', {value: mobilewebSms}), lang, 'mobileweb')
     }
 
     if (!otherMobileWeb[lang]) {
@@ -334,17 +336,17 @@ const validateChoiceSmsResponse = (choice, context, stepIndex: number, choiceInd
   path = `${path}.sms`
 
   if (sms.length == 0) {
-    addError(context, path, 'SMS must not be blank', lang, 'sms')
+    addError(context, path, k('"SMS" must not be blank'), lang, 'sms')
   }
 
   if (sms.some(x => x.toLowerCase() == 'stop')) {
-    addError(context, path, "SMS must not be 'STOP'", lang, 'sms')
+    addError(context, path, k('"SMS" cannot be "STOP"'), lang, 'sms')
   }
 }
 
 const validateChoiceMobileWebResponse = (choice, context, stepIndex: number, choiceIndex: number, lang: string, path: string) => {
   if (!choice.responses.mobileweb || isBlank(choice.responses.mobileweb[lang])) {
-    addError(context, `${path}.mobileweb`, 'Mobile web must not be blank', lang, 'mobileweb')
+    addError(context, `${path}.mobileweb`, k('"Mobile web" must not be blank'), lang, 'mobileweb')
   }
 }
 
@@ -353,18 +355,18 @@ const validateChoiceIvrResponse = (choice, context, stepIndex: number, choiceInd
 
   if (choice.responses.ivr &&
       choice.responses.ivr.length == 0) {
-    addError(context, path, '"Phone call" must not be blank', null, 'ivr')
+    addError(context, path, k('"Phone call" must not be blank'), null, 'ivr')
   }
 
   if (choice.responses.ivr &&
       choice.responses.ivr.some(value => !value.match('^[0-9#*]*$'))) {
-    addError(context, path, '"Phone call" must only consist of single digits, "#" or "*"', null, 'ivr')
+    addError(context, path, k('"Phone call" must only consist of single digits, "#" or "*"'), null, 'ivr')
   }
 }
 
 const validateChoice = (choice: Choice, context: ValidationContext, stepIndex: number, choiceIndex: number, steps, path) => {
   if (isBlank(choice.value)) {
-    addError(context, `${path}.value`, 'Response must not be blank')
+    addError(context, `${path}.value`, k('Response must not be blank'))
   }
   validateChoiceOrRefusal(choice, context, stepIndex, choiceIndex, steps, path)
 }
@@ -421,7 +423,7 @@ const validateTitle = (data, context) => {
   context.languages.forEach(lang => {
     const text = (data.settings.title || {})[lang]
     if (isBlank(text)) {
-      addError(context, `title['${lang}']`, 'Title must not be blank', lang, 'mobileweb')
+      addError(context, `title['${lang}']`, k('Title must not be blank'), lang, 'mobileweb')
     }
   })
 }
@@ -430,7 +432,7 @@ const validateMobileWebSmsMessage = (data, context) => {
   if (!context.mobileweb) return
 
   if (isBlank(data.settings.mobileWebSmsMessage)) {
-    addError(context, 'mobileWebSmsMessage', 'Mobile web SMS message must not be blank', null, 'mobileweb')
+    addError(context, 'mobileWebSmsMessage', k('Mobile web SMS message must not be blank'), null, 'mobileweb')
     return
   }
 
@@ -456,12 +458,12 @@ const validateMobileWebColorStyle = (data, context) => {
   const secondary = data.settings.mobileWebColorStyle.secondaryColor
   if (primary) {
     if (!colorRegex.test(primary)) {
-      addError(context, 'mobileWebColorStyle.primaryColor', 'Mobile web primary color is invalid ', null, 'mobileweb')
+      addError(context, 'mobileWebColorStyle.primaryColor', k('Mobile web primary color is invalid '), null, 'mobileweb')
     }
   }
   if (secondary) {
     if (!colorRegex.test(secondary)) {
-      addError(context, 'mobileWebColorStyle.secondaryColor', 'Mobile web secondary color is invalid', null, 'mobileweb')
+      addError(context, 'mobileWebColorStyle.secondaryColor', k('Mobile web secondary color is invalid'), null, 'mobileweb')
     }
   }
   return
@@ -471,7 +473,7 @@ const validateMobileWebSurveyIsOverMessage = (data, context) => {
   if (!context.mobileweb) return
 
   if (isBlank(data.settings.mobileWebSurveyIsOverMessage)) {
-    addError(context, 'mobileWebSurveyIsOverMessage', 'Mobile web "Survey is over" message must not be blank', null, 'mobileweb')
+    addError(context, 'mobileWebSurveyIsOverMessage', k('Mobile web "Survey is over" message must not be blank'), null, 'mobileweb')
   }
 }
 
@@ -481,7 +483,7 @@ const validateSurveyAlreadyTakenMessage = (data, context) => {
   context.languages.forEach(lang => {
     const text = (data.settings.surveyAlreadyTakenMessage || {})[lang]
     if (isBlank(text)) {
-      addError(context, `surveyAlreadyTakenMessage['${lang}']`, '"Survey already taken" message must not be blank', lang, 'mobileweb')
+      addError(context, `surveyAlreadyTakenMessage['${lang}']`, k('"Survey already taken" message must not be blank'), lang, 'mobileweb')
     }
   })
 }
@@ -516,7 +518,7 @@ const validateDuplicateStepStore0 = (step, stores, context, path) => {
   if (store.length == 0) return
 
   if (stores[store]) {
-    addError(context, path, 'Variable already used in a previous step')
+    addError(context, path, k('Variable already used in a previous step'))
   }
 
   stores[store] = true

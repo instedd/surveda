@@ -11,6 +11,8 @@ import SkipLogic from './SkipLogic'
 import propsAreEqual from '../../propsAreEqual'
 import { config } from '../../config'
 import { difference } from 'lodash'
+import map from 'lodash/map'
+import { translate } from 'react-i18next'
 
 type State = {
   stepId: string,
@@ -112,9 +114,10 @@ class StepNumericEditor extends Component {
   }
 
   maybeTooltip(component, errors) {
+    const { t } = this.props
     if (errors && errors.length > 0) {
       return (
-        <Tooltip text={errors.join(', ')} position='bottom' className='error'>
+        <Tooltip text={map(errors, (error) => t(...error)).join(', ')} position='bottom' className='error'>
           {component}
         </Tooltip>
       )
@@ -335,6 +338,7 @@ class StepNumericEditor extends Component {
 }
 
 StepNumericEditor.propTypes = {
+  t: PropTypes.func,
   questionnaireActions: PropTypes.object.isRequired,
   stepId: PropTypes.number,
   minValue: PropTypes.number,
@@ -356,4 +360,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepNumericEditor)
+export default translate()(connect(null, mapDispatchToProps)(StepNumericEditor))

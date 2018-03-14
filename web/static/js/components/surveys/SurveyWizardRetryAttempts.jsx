@@ -145,22 +145,6 @@ class SurveyWizardRetryAttempts extends Component {
     }
   }
 
-  errorText(mode, errors) {
-    const { t } = this.props
-    switch (mode) {
-      case 'sms':
-        return errors.smsRetryConfiguration
-      case 'ivr':
-        return errors.ivrRetryConfiguration
-      case 'mobileweb':
-        return errors.mobilewebRetryConfiguration
-      case 'fallbackDelay':
-        return errors.fallbackDelay
-      default:
-        throw new Error(t('Unknown mode: {{mode}}', {mode}))
-    }
-  }
-
   label(mode) {
     const { t } = this.props
     if (mode == 'sms') {

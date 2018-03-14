@@ -1,9 +1,12 @@
 import React, { PropTypes, Component } from 'react'
 import uuid from 'node-uuid'
 import classNames from 'classnames/bind'
+import map from 'lodash/map'
+import { translate } from 'react-i18next'
 
-export class InputWithLabel extends Component {
+class InputWithLabelComponent extends Component {
   static propTypes = {
+    t: PropTypes.func,
     children: PropTypes.node,
     id: PropTypes.any,
     value: PropTypes.oneOfType([
@@ -16,7 +19,7 @@ export class InputWithLabel extends Component {
   }
 
   render() {
-    const { children, className, value, label, errors, readOnly } = this.props
+    const { children, className, value, label, errors, readOnly, t } = this.props
     const id = this.props.id || uuid.v4()
 
     var childrenWithProps = React.Children.map(children, function(child) {
@@ -33,7 +36,7 @@ export class InputWithLabel extends Component {
     let errorMessage = null
 
     if (errors && errors.length > 0) {
-      errorMessage = errors.join(', ')
+      errorMessage = map(errors, (error) => t(...error)).join(', ')
     }
 
     return (
@@ -44,3 +47,5 @@ export class InputWithLabel extends Component {
     )
   }
 }
+
+export const InputWithLabel = translate()(InputWithLabelComponent)

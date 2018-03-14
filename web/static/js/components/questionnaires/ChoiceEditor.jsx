@@ -5,8 +5,11 @@ import classNames from 'classnames/bind'
 import SkipLogic from './SkipLogic'
 import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined, getChoiceResponseMobileWebJoined } from '../../step'
 import propsAreEqual from '../../propsAreEqual'
+import map from 'lodash/map'
+import { translate } from 'react-i18next'
 
 type Props = {
+  t: Function,
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
@@ -186,9 +189,9 @@ class ChoiceEditor extends Component {
   }
 
   cell(value: string, errors: ?string[], shouldDisplay: boolean, onClick: Function) {
-    const { isNew } = this.props
+    const { isNew, t } = this.props
 
-    const tooltip = (errors || [value]).join(', ')
+    const tooltip = (map(errors, (error) => t(...error)) || [value]).join(', ')
 
     const elem = shouldDisplay
       ? <div>
@@ -336,4 +339,4 @@ class ChoiceEditor extends Component {
   }
 }
 
-export default ChoiceEditor
+export default translate()(ChoiceEditor)

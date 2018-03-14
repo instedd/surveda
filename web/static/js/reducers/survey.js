@@ -14,6 +14,8 @@ import some from 'lodash/some'
 import without from 'lodash/without'
 import filter from 'lodash/filter'
 
+const k = (...args: any) => args
+
 export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
@@ -92,7 +94,7 @@ const validateRetry = (state: DataStore<Survey>, mode, key) => {
   values = values.filter((v) => v)
   const invalid = values.some((v) => !timeSpecRegex.test(v))
   if (invalid) {
-    state.errorsByPath[key] = ['Re-contact configuration is invalid']
+    state.errorsByPath[key] = [k('Re-contact configuration is invalid')]
   }
 }
 
@@ -112,7 +114,7 @@ const validateFallbackDelay = (state: DataStore<Survey>) => {
 
   const invalid = !timeSpecRegex.test(fallbackDelay)
   if (invalid) {
-    state.errorsByPath.fallbackDelay = ['Fallback delay is invalid']
+    state.errorsByPath.fallbackDelay = [k('Fallback delay is invalid')]
   }
 }
 

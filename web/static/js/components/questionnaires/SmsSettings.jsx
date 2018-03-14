@@ -118,7 +118,7 @@ class SmsSettings extends Component {
   thankYouMessageComponent() {
     return <SmsPrompt id='sms_settings_thank_you'
       label='Thank you message'
-      inputErrors={[]}
+      inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
       readOnly={this.props.readOnly}
