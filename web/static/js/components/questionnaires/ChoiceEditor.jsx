@@ -9,7 +9,6 @@ import map from 'lodash/map'
 import { translate } from 'react-i18next'
 
 type Props = {
-  t: Function,
   onDelete: Function,
   onChoiceChange: Function,
   choice: Choice,
@@ -24,6 +23,7 @@ type Props = {
   ivr: boolean,
   errorPath: string,
   errorsByPath: ErrorsByPath,
+  t: Function,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
   isNew: boolean
@@ -209,7 +209,7 @@ class ChoiceEditor extends Component {
   }
 
   render() {
-    const { onDelete, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, isNew, lang, smsAutocompleteGetData, smsAutocompleteOnSelect } = this.props
+    const { onDelete, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, isNew, lang, smsAutocompleteGetData, smsAutocompleteOnSelect, t } = this.props
 
     const isRefusal = choiceIndex == 'refusal'
 
@@ -231,7 +231,7 @@ class ChoiceEditor extends Component {
           ? <td onMouseDown={e => this.setDoNotClose('response')}>
             <input
               type='text'
-              placeholder='Response'
+              placeholder={t('Response')}
               value={this.state.response}
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
@@ -247,7 +247,7 @@ class ChoiceEditor extends Component {
             <input
               type='text'
               ref='smsInput'
-              placeholder='Valid entries'
+              placeholder={t('Valid entries')}
               value={this.state.sms}
               autoFocus={this.state.focus == 'sms'}
               onChange={e => this.smsChange(e, e.target.value)}
@@ -269,7 +269,7 @@ class ChoiceEditor extends Component {
           ? <td onMouseDown={e => this.setDoNotClose('ivr')}>
             <input
               type='text'
-              placeholder='Valid entries'
+              placeholder={t('Valid entries')}
               value={this.state.ivr}
               autoFocus={this.state.focus == 'ivr'}
               onChange={e => this.ivrChange(e)}
@@ -285,7 +285,7 @@ class ChoiceEditor extends Component {
           ? <td onMouseDown={e => this.setDoNotClose('mobileweb')}>
             <input
               type='text'
-              placeholder='Valid entries'
+              placeholder={t('Valid entries')}
               value={this.state.mobileweb}
               autoFocus={this.state.focus == 'mobileweb'}
               onChange={e => this.mobilewebChange(e, e.target.value)}

@@ -9,6 +9,7 @@ import StepCard from './StepCard'
 import StepDeleteButton from './StepDeleteButton'
 import SkipLogic from './SkipLogic'
 import propsAreEqual from '../../propsAreEqual'
+import { translate } from 'react-i18next'
 
 type Props = {
   step: ExplanationStep,
@@ -22,6 +23,7 @@ type Props = {
   quotaCompletedSteps: boolean,
   stepsAfter: Step[],
   stepsBefore: Step[],
+  t: Function,
   isNew: boolean
 };
 
@@ -63,7 +65,7 @@ class ExplanationStepEditor extends Component {
   }
 
   render() {
-    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, isNew, readOnly, quotaCompletedSteps } = this.props
+    const { step, stepIndex, onCollapse, stepsAfter, stepsBefore, onDelete, errorPath, errorsByPath, isNew, readOnly, quotaCompletedSteps, t } = this.props
 
     return (
       <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />} >
@@ -75,7 +77,7 @@ class ExplanationStepEditor extends Component {
           errorsByPath={errorsByPath}
           isNew={isNew}
           classes='no-separator'
-          title='Message'
+          title={t('Message')}
         />
         <li className='collection-item' key='editor'>
           <div className='row'>
@@ -86,7 +88,7 @@ class ExplanationStepEditor extends Component {
                 value={step.skipLogic}
                 stepsAfter={stepsAfter}
                 stepsBefore={stepsBefore}
-                label='Skip logic'
+                label={t('Skip logic')}
               />
             </div>
           </div>
@@ -101,4 +103,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(ExplanationStepEditor)
+export default translate()(connect(null, mapDispatchToProps)(ExplanationStepEditor))

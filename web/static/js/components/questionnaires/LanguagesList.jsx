@@ -8,6 +8,7 @@ import classNames from 'classnames/bind'
 import AddLanguage from './AddLanguage'
 import { hasErrorsInLanguage } from '../../questionnaireErrors'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 type Props = {
   defaultLanguage: string,
@@ -16,6 +17,7 @@ type Props = {
   errors: ValidationError[],
   onRemoveLanguage: Function,
   dispatch: Function,
+  t: Function,
   readOnly: boolean
 };
 
@@ -68,7 +70,7 @@ class LanguagesList extends Component {
   }
 
   render() {
-    const { languages, defaultLanguage, readOnly } = this.props
+    const { languages, defaultLanguage, readOnly, t } = this.props
 
     const LanguageSection = ({title, children}) =>
       <div className='row'>
@@ -85,12 +87,12 @@ class LanguagesList extends Component {
 
     let otherLanguagesComponent = null
     if (otherLanguages.length != 0) {
-      otherLanguagesComponent = <LanguageSection title='Other languages'>{otherLanguages}</LanguageSection>
+      otherLanguagesComponent = <LanguageSection title={t('Other languages')}>{otherLanguages}</LanguageSection>
     }
 
     return (
       <div className='languages'>
-        <LanguageSection title='Primary language'>
+        <LanguageSection title={t('Primary language')}>
           {this.renderLanguageRow(defaultLanguage, translateLangCode(defaultLanguage), true)}
         </LanguageSection>
         {otherLanguagesComponent}
@@ -112,4 +114,4 @@ const mapStateToProps = (state, ownProps) => ({
   errors: state.questionnaire.errors
 })
 
-export default withQuestionnaire(connect(mapStateToProps)(LanguagesList))
+export default translate()(withQuestionnaire(connect(mapStateToProps)(LanguagesList)))

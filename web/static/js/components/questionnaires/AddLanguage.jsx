@@ -4,6 +4,7 @@ import { Autocomplete } from '../ui'
 import iso6393 from 'iso-639-3'
 import 'materialize-autocomplete'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 class AddLanguage extends Component {
   constructor(props) {
@@ -48,17 +49,18 @@ class AddLanguage extends Component {
   }
 
   render() {
+    const { t } = this.props
     if (!this.state.editing) {
       return (
         <a className='btn-icon-grey' onClick={e => this.startEdit(e)}>
           <i className='material-icons'>add</i>
-          <span>Add Language</span>
+          <span>{t('Add Language')}</span>
         </a>
       )
     } else {
       return (
         <div className='input-field language-selection'>
-          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' placeholder='Start typing a language' onBlur={e => this.endEdit(e)} />
+          <input type='text' ref='languageInput' id='languageInput' autoComplete='off' className='autocomplete' placeholder={t('Start typing a language')} onBlur={e => this.endEdit(e)} />
           <Autocomplete
             getInput={() => this.refs.languageInput}
             getData={(value, callback) => this.autocompleteGetData(value, callback)}
@@ -81,7 +83,8 @@ class AddLanguage extends Component {
 
 AddLanguage.propTypes = {
   questionnaire: PropTypes.object,
+  t: PropTypes.func,
   dispatch: PropTypes.func
 }
 
-export default withQuestionnaire(AddLanguage)
+export default translate()(withQuestionnaire(AddLanguage))
