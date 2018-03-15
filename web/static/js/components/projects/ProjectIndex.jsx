@@ -28,8 +28,6 @@ class ProjectIndex extends Component {
     if (this.creatingProject) return
     this.creatingProject = true
 
-    const { router } = this.props
-
     let theProject
     createProject({name: ''})
         .then(response => {
@@ -38,7 +36,7 @@ class ProjectIndex extends Component {
         })
         .then(() => {
           this.creatingProject = false
-          router.push(routes.project(theProject.id))
+          this.navigateToProject(theProject.id)
         })
   }
 
@@ -94,6 +92,11 @@ class ProjectIndex extends Component {
     }
   }
 
+  navigateToProject(projectId) {
+    const { router } = this.props
+    router.push(routes.project(projectId))
+  }
+
   render() {
     const { archived, t } = this.props
 
@@ -119,7 +122,7 @@ class ProjectIndex extends Component {
 
   renderTable() {
     const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, archived, router, t } = this.props
+      totalCount, hasPreviousPage, hasNextPage, archived, t } = this.props
 
     if (!projects) {
       return (
@@ -186,13 +189,13 @@ class ProjectIndex extends Component {
 
                 return (
                   <tr key={project.id}>
-                    <td className='project-name' onClick={() => router.push(routes.project(project.id))}>
+                    <td className='project-name' onClick={() => this.navigateToProject(project.id)}>
                       <UntitledIfEmpty text={project.name} emptyText={t('Untitled project')} />
                     </td>
-                    <td className='right-align'>
+                    <td className='right-align' onClick={() => this.navigateToProject(project.id)}>
                       {project.runningSurveys}
                     </td>
-                    <td className='right-align'>
+                    <td className='right-align' onClick={() => this.navigateToProject(project.id)}>
                       <FormattedDate
                         value={Date.parse(project.updatedAt)}
                         day='numeric'
