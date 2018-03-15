@@ -19,7 +19,9 @@ defmodule Ask.ActivityLog do
     ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
 
   def valid_actions("survey"), do:
-    ["download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
+    ["create", "edit", "rename", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
+
+  def valid_actions(_), do: []
 
   def changeset(struct, params \\ %{}) do
     struct
@@ -124,5 +126,32 @@ defmodule Ask.ActivityLog do
       survey_name: survey.name,
       report_type: report_type_from(link.name |> String.split("/") |> List.last)
     })
+  end
+
+  def create_survey(project, conn, survey) do
+    create("create", project, conn, survey, nil)
+  end
+
+  def edit_survey(project, conn, survey) do
+    create("edit", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def rename_survey(project, conn, survey, old_survey_name, new_survey_name) do
+    create("rename", project, conn, survey, %{
+      old_survey_name: old_survey_name,
+      new_survey_name: new_survey_name
+    })
+  end
+
+  def delete_survey(project, conn, survey) do
+    create("delete", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def start(project, conn, survey) do
+    create("start", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def stop(project, conn, survey) do
+    create("stop", project, conn, survey, %{survey_name: survey.name})
   end
 end

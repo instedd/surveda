@@ -1202,27 +1202,6 @@ defmodule Ask.SurveyControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
-    test "activity logs for results link", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-
-      remote_ip = {192, 168, 0, 128}
-      remote_ip_string = "192.168.0.128"
-      conn = conn |> Map.put(:remote_ip, remote_ip)
-
-      get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
-      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "survey_results", remote_ip: remote_ip_string})
-
-      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
-      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "survey_results", remote_ip: remote_ip_string})
-
-      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
-      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "survey_results", remote_ip: remote_ip_string})
-    end
-
     test "incentives link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -1262,27 +1241,6 @@ defmodule Ask.SurveyControllerTest do
 
       assert response(response, 204)
       assert [] == ShortLink |> Repo.all()
-    end
-
-    test "activity logs for incentives link", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-
-      remote_ip = {192, 168, 0, 128}
-      remote_ip_string = "192.168.0.128"
-      conn = conn |> Map.put(:remote_ip, remote_ip)
-
-      get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
-      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "incentives", remote_ip: remote_ip_string})
-
-      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "incentives")
-      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "incentives", remote_ip: remote_ip_string})
-
-      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
-      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "incentives", remote_ip: remote_ip_string})
     end
 
     test "interactions link generation", %{conn: conn, user: user} do
@@ -1326,27 +1284,6 @@ defmodule Ask.SurveyControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
-    test "activity logs for interactions link", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-
-      remote_ip = {192, 168, 0, 128}
-      remote_ip_string = "192.168.0.128"
-      conn = conn |> Map.put(:remote_ip, remote_ip)
-
-      get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
-      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "interactions", remote_ip: remote_ip_string})
-
-      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "interactions")
-      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "interactions", remote_ip: remote_ip_string})
-
-      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
-      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "interactions", remote_ip: remote_ip_string})
-    end
-
     test "disposition_history link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -1385,27 +1322,6 @@ defmodule Ask.SurveyControllerTest do
 
       assert response(response, 204)
       assert [] == ShortLink |> Repo.all()
-    end
-
-    test "activity logs for disposition_history link", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-
-      remote_ip = {192, 168, 0, 128}
-      remote_ip_string = "192.168.0.128"
-      conn = conn |> Map.put(:remote_ip, remote_ip)
-
-      get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
-      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "disposition_history", remote_ip: remote_ip_string})
-
-      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "disposition_history")
-      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "disposition_history", remote_ip: remote_ip_string})
-
-      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
-      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
-      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "disposition_history", remote_ip: remote_ip_string})
     end
 
     test "forbids readers to create links", %{conn: conn, user: user} do
@@ -1576,6 +1492,154 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "activity logs" do
+    setup %{conn: conn} do
+      remote_ip = {192, 168, 0, 128}
+      conn = %{conn | remote_ip: remote_ip}
+      {:ok, conn: conn, remote_ip: remote_ip}
+    end
+
+    test "generates logs for results link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "results")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "survey_results", remote_ip: "192.168.0.128"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "results")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "survey_results", remote_ip: "192.168.0.128"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "results")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "survey_results", remote_ip: "192.168.0.128"})
+    end
+
+    test "generates logs for incentives link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "incentives", remote_ip: "192.168.0.128"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "incentives")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "incentives", remote_ip: "192.168.0.128"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "incentives")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "incentives", remote_ip: "192.168.0.128"})
+    end
+
+    test "generates logs for interactions link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "interactions", remote_ip: "192.168.0.128"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "interactions")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "interactions", remote_ip: "192.168.0.128"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "interactions")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "interactions", remote_ip: "192.168.0.128"})
+    end
+
+    test "generates logs for disposition_history link", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      get conn, project_survey_links_path(conn, :create_link, project, survey, "disposition_history")
+      activity_log_create = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_create, user: user, project: project, survey: survey, action: "enable_public_link", report_type: "disposition_history", remote_ip: "192.168.0.128"})
+
+      put conn, project_survey_links_path(conn, :refresh_link, project, survey, "disposition_history")
+      activity_log_regenerate = ActivityLog |> where([log], log.action == "regenerate_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_regenerate, user: user, project: project, survey: survey, action: "regenerate_public_link", report_type: "disposition_history", remote_ip: "192.168.0.128"})
+
+      delete conn, project_survey_links_path(conn, :delete_link, project, survey, "disposition_history")
+      activity_log_delete = ActivityLog |> where([log], log.action == "disable_public_link") |> Repo.one
+      assert_link_log(%{log: activity_log_delete, user: user, project: project, survey: survey, action: "disable_public_link", report_type: "disposition_history", remote_ip: "192.168.0.128"})
+    end
+
+    test "generates log after creating a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      post conn, project_survey_path(conn, :create, project.id)
+
+      log = ActivityLog |> Repo.one
+      survey = Survey |> Repo.one
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "create", remote_ip: "192.168.0.128", metadata: nil})
+    end
+
+    test "generates log after deleting a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      delete conn, project_survey_path(conn, :delete, survey.project, survey)
+      log = ActivityLog |> Repo.one
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "delete", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates log after launching a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "ready")
+
+      post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
+      log = ActivityLog |> Repo.one
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "start", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates log after stopping a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+
+      post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      log = ActivityLog|> Repo.one
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "stop", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates log after updating a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      put conn, project_survey_path(conn, :update, project, survey), survey: %{cutoff: 30}
+      log = ActivityLog|> Repo.one
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "edit", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates rename log if name changed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      put conn, project_survey_path(conn, :update, project, survey), survey: %{name: "new name"}
+      log = ActivityLog|> Repo.one
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_survey_name" => survey.name, "new_survey_name" => "new name"}})
+    end
+
+    test "generates both rename and edit log if name and another property changes", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      put conn, project_survey_path(conn, :update, project, survey), survey: %{cutoff: 30, name: "new name"}
+      rename_log = ActivityLog|> where([log], log.action == "rename") |> Repo.one
+      edit_log = ActivityLog|> where([log], log.action == "edit") |> Repo.one
+
+      assert_survey_log(%{log: rename_log, user: user, project: project, survey: survey, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_survey_name" => survey.name, "new_survey_name" => "new name"}})
+      assert_survey_log(%{log: edit_log, user: user, project: project, survey: survey, action: "edit", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+  end
+
   def prepare_for_state_update(user) do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
@@ -1609,17 +1673,25 @@ defmodule Ask.SurveyControllerTest do
     group
   end
 
-  defp assert_link_log(%{log: log, user: user, project: project, survey: survey, action: action, report_type: report_type, remote_ip: remote_ip}) do
+  defp assert_log(log, user, project, survey, action, remote_ip) do
     assert log.project_id == project.id
     assert log.user_id == user.id
     assert log.entity_id == survey.id
     assert log.entity_type == "survey"
     assert log.action == action
     assert log.remote_ip == remote_ip
+  end
 
+  defp assert_link_log(%{log: log, user: user, project: project, survey: survey, action: action, report_type: report_type, remote_ip: remote_ip}) do
+    assert_log(log, user, project, survey, action, remote_ip)
     assert log.metadata == %{
       "survey_name" => survey.name,
       "report_type" => report_type
     }
+  end
+
+  defp assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: action, remote_ip: remote_ip, metadata: metadata}) do
+    assert_log(log, user, project, survey, action, remote_ip)
+    assert log.metadata == metadata
   end
 end
