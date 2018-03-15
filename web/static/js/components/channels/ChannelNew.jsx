@@ -6,6 +6,7 @@ import * as routes from '../../routes'
 import { connect } from 'react-redux'
 import * as channelActions from '../../actions/channels'
 import { bindActionCreators } from 'redux'
+import * as api from '../../api'
 
 type Props = {
   location: {
@@ -21,7 +22,8 @@ type Props = {
 class ChannelNew extends Component {
   props: Props;
   state: {
-    state: 'editing' | 'created'
+    state: 'editing' | 'created',
+    accessToken?: string,
   }
   onMessage: Function;
 
@@ -55,6 +57,10 @@ class ChannelNew extends Component {
 
   componentDidMount() {
     window.addEventListener('message', this.onMessage, false)
+
+    const { provider, baseUrl } = this.channelProvider()
+    api.getUIToken(provider, baseUrl)
+      .then(accessToken => this.setState({accessToken}))
   }
 
   componentWillUnmount() {
@@ -106,12 +112,17 @@ class ChannelNew extends Component {
 
       default:
         (state: 'editing')
+        const { accessToken } = this.state
+        if (!accessToken) {
+          return null
+        }
+
         const { baseUrl } = this.channelProvider()
         return (
           <div className='row white'>
             <div className='col l6 offset-l3 m12'>
               <iframe style={{border: '0px', width: '100%'}}
-                ref='iframe' src={`${baseUrl}/channels_ui/new`} />
+                ref='iframe' src={`${baseUrl}/channels_ui/new?access_token=${accessToken}`} />
             </div>
           </div>
         )

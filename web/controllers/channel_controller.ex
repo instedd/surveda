@@ -95,6 +95,6 @@ defmodule Ask.ChannelController do
     provider = Ask.Channel.provider(provider)
     channel = provider.create_channel(user, base_url, api_channel)
 
-    render(conn, "show.json", channel: channel)
+    render(conn, "show.json", channel: channel |> Repo.preload(:projects))
   end
 end

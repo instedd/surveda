@@ -310,6 +310,11 @@ export const synchronizeChannels = () => {
   return apiFetch(`authorizations/synchronize`)
 }
 
+export const getUIToken = (provider, baseUrl) => {
+  return apiFetch(`authorizations/ui_token?provider=${provider}&base_url=${encodeURIComponent(baseUrl)}`)
+    .then(response => response.json())
+}
+
 export const autocompleteVars = (projectId, text) => {
   return apiFetch(`projects/${projectId}/autocomplete_vars?text=${encodeURIComponent(text)}`)
   .then(response => response.json())
