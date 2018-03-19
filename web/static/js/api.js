@@ -252,6 +252,10 @@ export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }
 
+export const fetchChannel = (channelId) => {
+  return apiFetchJSON(`channels/${channelId}`, channelSchema)
+}
+
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
     questionnaireSchema, { questionnaire })

@@ -2,14 +2,15 @@
 import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
+import { withRouter } from 'react-router'
+import * as routes from '../../routes'
 import { orderedItems } from '../../reducers/collection'
 import * as actions from '../../actions/channels'
 import range from 'lodash/range'
 import * as authActions from '../../actions/authorizations'
-import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal, ConfirmationModal } from '../ui'
+import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal, ConfirmationModal, channelFriendlyName } from '../ui'
 import { Preloader } from 'react-materialize'
 import { config } from '../../config'
-import { channelFriendlyName } from '../../channelFriendlyName'
 import { translate } from 'react-i18next'
 
 class ChannelIndex extends Component {
@@ -66,7 +67,7 @@ class ChannelIndex extends Component {
   }
 
   render() {
-    const { t, channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage } = this.props
+    const { t, channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage, router } = this.props
 
     if (!channels) {
       return (
@@ -231,7 +232,7 @@ class ChannelIndex extends Component {
 
                 if (!channel) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
-                return (<tr key={channel.id}>
+                return (<tr key={channel.id} onClick={() => router.push(routes.channel(channel.id))}>
                   <td>
                     <UntitledIfEmpty text={this.channelDisplayName(channel)} emptyText={t('Untitled channel')} />
                   </td>
@@ -260,7 +261,8 @@ ChannelIndex.propTypes = {
   endIndex: PropTypes.number.isRequired,
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
-  totalCount: PropTypes.number.isRequired
+  totalCount: PropTypes.number.isRequired,
+  router: PropTypes.object
 }
 
 const mapStateToProps = (state) => {
@@ -297,4 +299,4 @@ const mapDispatchToProps = (dispatch) => ({
   authActions: bindActionCreators(authActions, dispatch)
 })
 
-export default translate()(connect(mapStateToProps, mapDispatchToProps)(ChannelIndex))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ChannelIndex)))

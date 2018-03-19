@@ -195,6 +195,7 @@ const bareChannel: Channel = {
   userId: 1,
   name: 'Channel Name',
   type: 'sms',
+  projects: [],
   provider: 'nuntium',
   settings: {
     nuntiumChannel: 'Nuntium Channel Name'

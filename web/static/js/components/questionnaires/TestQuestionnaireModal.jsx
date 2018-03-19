@@ -4,11 +4,10 @@ import * as channelActions from '../../actions/channels'
 import { withRouter } from 'react-router'
 import * as routes from '../../routes'
 import { connect } from 'react-redux'
-import { Modal, InputWithLabel } from '../ui'
+import { Modal, InputWithLabel, channelFriendlyName } from '../ui'
 import { Input } from 'react-materialize'
 import * as api from '../../api'
 import withQuestionnaire from './withQuestionnaire'
-import { channelFriendlyName } from '../../channelFriendlyName'
 import { translate } from 'react-i18next'
 
 class TestQuestionnaireModal extends Component {
