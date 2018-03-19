@@ -89,7 +89,7 @@ class StepStoreVariable extends Component {
     return (<li className='collection-item' key='variable_name'>
       <div className='row'>
         <div className='col s12'>
-          Variable name:
+          {t('Variable name:')}
           <div className='input-field inline min-width'>
             <input
               type='text'

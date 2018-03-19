@@ -11,12 +11,14 @@ import * as routes from '../../routes'
 import * as api from '../../api'
 import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 class QuestionnaireMenu extends Component {
   static propTypes = {
     questionnaire: PropTypes.object,
     questionnaireActions: PropTypes.object.isRequired,
     uiActions: PropTypes.object.isRequired,
+    t: PropTypes.func,
     readOnly: PropTypes.bool
   }
 
@@ -51,6 +53,8 @@ class QuestionnaireMenu extends Component {
   uploadCsv(e) {
     e.preventDefault()
 
+    const { t } = this.props
+
     let files = e.target.files
     if (files.length < 1) return
 
@@ -62,27 +66,27 @@ class QuestionnaireMenu extends Component {
 
       // Do some validations before uploading the CSV
       if (csv.length == 0) {
-        window.Materialize.toast('Error: CSV is empty', 5000)
+        window.Materialize.toast(t('Error: CSV is empty'), 5000)
         return
       }
 
       let primaryLanguageCode = this.props.questionnaire.defaultLanguage
       let primaryLanguageName = language.codeToName(primaryLanguageCode)
       if (!primaryLanguageName) {
-        window.Materialize.toast(`Error: primary language name not found for code ${primaryLanguageCode}`, 5000)
+        window.Materialize.toast(`${t('Error: primary language name not found for code')} ${primaryLanguageCode}`, 5000)
         return
       }
 
       let headers = csv[0]
       let defaultLanguageIndex = headers.indexOf(primaryLanguageName)
       if (defaultLanguageIndex == -1) {
-        window.Materialize.toast(`Error: CSV doesn't have a header for the primary language '${primaryLanguageName}'`, 5000)
+        window.Materialize.toast(`${t('Error: CSV doesn\'t have a header for the primary language')} '${primaryLanguageName}'`, 5000)
         return
       }
 
       this.props.questionnaireActions.uploadCsvForTranslation(csv)
 
-      window.Materialize.toast(`CSV uploaded successfully! ${csv.length - 1} keys were updated in ${headers.length - 1} languages`, 5000)
+      window.Materialize.toast(`${t('CSV uploaded successfully! {{count}} key was updated', {count: csv.length - 1})} ${t('in {{count}} language', {count: headers.length - 1})}`, 5000)
     }
     reader.readAsText(file)
 
@@ -219,4 +223,4 @@ const mapDispatchToProps = (dispatch) => ({
   uiActions: bindActionCreators(uiActions, dispatch)
 })
 
-export default withQuestionnaire(withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireMenu)))
+export default translate()(withQuestionnaire(withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireMenu))))

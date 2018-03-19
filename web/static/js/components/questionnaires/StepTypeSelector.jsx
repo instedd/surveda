@@ -5,12 +5,14 @@ import { connect } from 'react-redux'
 import { Dropdown, DropdownItem } from '../ui'
 import { icon } from '../../step'
 import * as questionnaireActions from '../../actions/questionnaire'
+import { translate } from 'react-i18next'
 
 type Props = {
   stepType: string,
   readOnly: boolean,
   quotaCompletedSteps?: boolean,
   stepId: any,
+  t: Function,
   questionnaireActions: any
 };
 
@@ -22,7 +24,7 @@ class StepTypeSelector extends Component {
   }
 
   render() {
-    const { stepType, readOnly, quotaCompletedSteps } = this.props
+    const { stepType, readOnly, quotaCompletedSteps, t } = this.props
 
     const label = <i className='material-icons sharp'>{icon(stepType)}</i>
 
@@ -31,21 +33,21 @@ class StepTypeSelector extends Component {
         <DropdownItem>
           <a onClick={e => this.changeStepType('multiple-choice')}>
             <i className='material-icons left'>list</i>
-            Multiple choice
+            {t('Multiple choice')}
             {stepType == 'multiple-choice' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
         <DropdownItem>
           <a onClick={e => this.changeStepType('numeric')}>
             <i className='material-icons left sharp'>dialpad</i>
-            Numeric
+            {t('Numeric')}
             {stepType == 'numeric' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
         <DropdownItem>
           <a onClick={e => this.changeStepType('explanation')}>
             <i className='material-icons left sharp'>chat_bubble_outline</i>
-            Explanation
+            {t('Explanation')}
             {stepType == 'explanation' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem>
@@ -54,7 +56,7 @@ class StepTypeSelector extends Component {
         : <DropdownItem>
           <a onClick={e => this.changeStepType('flag')}>
             <i className='material-icons left sharp'>flag</i>
-            Flag
+            {t('Flag')}
             {stepType == 'flag' ? <i className='material-icons right'>done</i> : ''}
           </a>
         </DropdownItem> }
@@ -68,4 +70,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepTypeSelector)
+export default translate()(connect(null, mapDispatchToProps)(StepTypeSelector))

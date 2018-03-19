@@ -8,10 +8,10 @@ type Props = {
   respondent: Respondent,
   responses: Response[],
   variantColumn: ?React$Element<*>
-}
+};
 
 class RespondentRow extends Component {
-  props: Props
+  props: Props;
   render() {
     const { respondent, responses, variantColumn } = this.props
 

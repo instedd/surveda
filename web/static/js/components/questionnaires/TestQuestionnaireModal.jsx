@@ -9,6 +9,7 @@ import { Input } from 'react-materialize'
 import * as api from '../../api'
 import withQuestionnaire from './withQuestionnaire'
 import { channelFriendlyName } from '../../channelFriendlyName'
+import { translate } from 'react-i18next'
 
 class TestQuestionnaireModal extends Component {
   constructor(props) {
@@ -63,31 +64,31 @@ class TestQuestionnaireModal extends Component {
   }
 
   modeOptions() {
-    const { questionnaire } = this.props
+    const { questionnaire, t } = this.props
     const options = []
 
-    options.push(<option key='none' value=''>Select mode...</option>)
+    options.push(<option key='none' value=''>{t('Select mode...')}</option>)
     if (questionnaire.modes.indexOf('sms') != -1) {
-      options.push(<option key='sms' value='sms'>SMS</option>)
+      options.push(<option key='sms' value='sms'>{t('SMS')}</option>)
     }
     if (questionnaire.modes.indexOf('ivr') != -1) {
-      options.push(<option key='ivr' value='ivr'>Phone call</option>)
+      options.push(<option key='ivr' value='ivr'>{t('Phone call')}</option>)
     }
     if (questionnaire.modes.indexOf('mobileweb') != -1) {
-      options.push(<option key='mobileweb' value='mobileweb'>Mobile web</option>)
+      options.push(<option key='mobileweb' value='mobileweb'>{t('Mobile web')}</option>)
     }
     return options
   }
 
   channelOptions(mode) {
-    const { channels } = this.props
+    const { channels, t } = this.props
 
     if (mode == '') return this.emptyChannelOptions()
 
     const type = mode == 'mobileweb' ? 'sms' : mode
 
     let channelOptions = []
-    channelOptions.push(<option key={0} value=''>Select a channel...</option>)
+    channelOptions.push(<option key={0} value=''>{t('Select a channel...')}</option>)
 
     for (const channelId in channels) {
       const channel = channels[channelId]
@@ -112,12 +113,12 @@ class TestQuestionnaireModal extends Component {
   }
 
   render() {
-    const { modalId } = this.props
+    const { modalId, t } = this.props
 
     let sendButton = null
     let cancelButton = <a href='#!' className='modal-action modal-close btn-flat grey-text'>Cancel</a>
     if (this.state.sending) {
-      sendButton = <a className='btn-medium disabled'>Sending...</a>
+      sendButton = <a className='btn-medium disabled'>{t('Sending...')}</a>
       cancelButton = null
     } else if (this.state.phoneNumber.trim().length != 0 &&
       this.state.mode != '' &&
@@ -125,27 +126,27 @@ class TestQuestionnaireModal extends Component {
       this.state.channelOptions.length > 1) {
       sendButton = <a className='btn-large waves-effect waves-light blue modal-action' onClick={e => this.send(e)}>Send</a>
     } else {
-      sendButton = <a className='btn-medium disabled'>Send</a>
+      sendButton = <a className='btn-medium disabled'>{t('Send')}</a>
     }
 
     return (
       <Modal card id={modalId} ref='modal' className='hidden-overflow'>
         <div className='modal-content'>
           <div className='card-title header'>
-            <h5>Test sandbox</h5>
-            <p>Test this questionnaire on a real device, the collected data will be ignored</p>
+            <h5>{t('Test sandbox')}</h5>
+            <p>{t('Test this questionnaire on a real device, the collected data will be ignored')}</p>
           </div>
           <div className='card-content'>
             <div className='row'>
-              <InputWithLabel className='col s3 input-field' label='Phone number' value={this.state.phoneNumber}>
+              <InputWithLabel className='col s3 input-field' label={t('Phone number')} value={this.state.phoneNumber}>
                 <input type='text' onChange={e => this.changePhoneNumber(e)} />
               </InputWithLabel>
               <div className='col s1' />
-              <Input s={2} type='select' value={this.state.mode} onChange={e => this.changeMode(e)} label='Mode'>
+              <Input s={2} type='select' value={this.state.mode} onChange={e => this.changeMode(e)} label={t('Mode')}>
                 {this.modeOptions()}
               </Input>
               <div className='col s1' />
-              <Input s={5} type='select' value={this.state.channelId} onChange={e => this.changeChannelId(e)} label='Channel'>
+              <Input s={5} type='select' value={this.state.channelId} onChange={e => this.changeChannelId(e)} label={t('Channel')}>
                 {this.state.channelOptions}
               </Input>
             </div>
@@ -172,7 +173,8 @@ TestQuestionnaireModal.propTypes = {
   channels: PropTypes.object,
   modalId: PropTypes.string.isRequired,
   questionnaire: PropTypes.object,
-  router: PropTypes.object
+  router: PropTypes.object,
+  t: PropTypes.func
 }
 
 const mapStateToProps = (state) => ({
@@ -183,4 +185,4 @@ const mapDispatchToProps = (dispatch) => ({
   channelActions: bindActionCreators(channelActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(withQuestionnaire(TestQuestionnaireModal)))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(withQuestionnaire(TestQuestionnaireModal))))

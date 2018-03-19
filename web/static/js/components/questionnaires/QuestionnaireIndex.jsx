@@ -13,7 +13,7 @@ import * as projectActions from '../../actions/project'
 import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip, ConfirmationModal } from '../ui'
 import * as routes from '../../routes'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
-import { translate } from 'react-i18next'
+import { translate, Trans } from 'react-i18next'
 
 class QuestionnaireIndex extends Component {
   creatingQuestionnaire: boolean
@@ -86,9 +86,9 @@ class QuestionnaireIndex extends Component {
 
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
     deleteConfirmationModal.open({
-      modalText: <span>
+      modalText: <Trans>
         <p>Are you sure you want to delete the questionnaire <b><UntitledIfEmpty text={questionnaire.name} emptyText={t('Untitled questionnaire')} /></b>?</p>
-      </span>,
+      </Trans>,
       onConfirm: () => {
         actions.deleteQuestionnaire(projectId, questionnaire)
       }
@@ -102,7 +102,7 @@ class QuestionnaireIndex extends Component {
     if (!questionnaires || !userSettings.settings) {
       return (
         <div>
-          <CardTable title='Loading questionnaires...' highlight />
+          <CardTable title={t('Loading questionnaires...')} highlight />
         </div>
       )
     }
@@ -111,7 +111,7 @@ class QuestionnaireIndex extends Component {
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
-          <li><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
+          <li><span className='grey-text'>{startIndex}-{endIndex} {t('of', {context: 'pagination'})} {totalCount}</span></li>
           { hasPreviousPage
             ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
             : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
@@ -129,7 +129,7 @@ class QuestionnaireIndex extends Component {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text='Add questionnaire' onClick={e => this.newQuestionnaire(e)} />
+        <AddButton text={t('Add questionnaire')} onClick={e => this.newQuestionnaire(e)} />
       )
     }
 
@@ -143,7 +143,7 @@ class QuestionnaireIndex extends Component {
             <tr>
               <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
               <SortableHeader text='Last Modified' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(propertyName) => this.sortBy(propertyName)} />
-              <th>Modes</th>
+              <th>{t('Modes')}</th>
               {readOnly ? null : <th className='action' />}
               {readOnly ? null : <th className='action' />}
               <th style={{width: '20px'}} />
@@ -193,7 +193,7 @@ class QuestionnaireIndex extends Component {
           </tbody>
         </CardTable>
         }
-        <ConfirmationModal modalId='questionnaire_index_delete' ref='deleteConfirmationModal' confirmationText='DELETE' header='Delete questionnaire' showCancel />
+        <ConfirmationModal modalId='questionnaire_index_delete' ref='deleteConfirmationModal' confirmationText={t('DELETE')} header={t('Delete questionnaire')} showCancel />
       </div>
     )
   }

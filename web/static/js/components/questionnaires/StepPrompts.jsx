@@ -10,6 +10,7 @@ import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText, getStepPrompt
 import * as api from '../../api'
 import propsAreEqual from '../../propsAreEqual'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 type State = {
   stepPromptSms: string,
@@ -31,6 +32,7 @@ type Props = {
   errorsByPath: ErrorsByPath,
   classes: string,
   title?: string,
+  t: Function,
   isNew: boolean
 };
 
@@ -212,7 +214,7 @@ class StepPrompts extends Component {
       <li className={`collection-item ${classes}`} key='prompts'>
         <div className='row'>
           <div className='col s12'>
-            <h5>{title || 'Question Prompt'}</h5>
+            <h5>{title || this.props.t('Question Prompt')}</h5>
           </div>
         </div>
         {smsInput}
@@ -227,4 +229,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(withQuestionnaire(StepPrompts))
+export default translate()(connect(null, mapDispatchToProps)(withQuestionnaire(StepPrompts)))

@@ -8,6 +8,7 @@ import { getPromptSms } from '../../step'
 import * as actions from '../../actions/questionnaire'
 import * as api from '../../api'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 class SmsSettings extends Component {
   constructor(props) {
@@ -60,7 +61,7 @@ class SmsSettings extends Component {
               <div className='card-content closed-step'>
                 <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
                   <i className={iconClass}>build</i>
-                  <span className={classNames({'text-error': hasErrors})}>SMS settings</span>
+                  <span className={classNames({'text-error': hasErrors})}>{this.props.t('SMS settings')}</span>
                   <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
                 </a>
               </div>
@@ -81,7 +82,7 @@ class SmsSettings extends Component {
                 <div className='col s12'>
                   <i className='material-icons left'>build</i>
                   <a className='page-title truncate'>
-                    <span>SMS settings</span>
+                    <span>{this.props.t('SMS settings')}</span>
                   </a>
                   <a className='collapse right' href='#!' onClick={(e) => this.handleClick(e)}>
                     <i className='material-icons'>expand_less</i>
@@ -103,7 +104,7 @@ class SmsSettings extends Component {
 
   errorMessageComponent() {
     return <SmsPrompt id='sms_settings_error'
-      label='Error message'
+      label={this.props.t('Error message')}
       inputErrors={this.messageErrors('errorMessage')}
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
@@ -117,7 +118,7 @@ class SmsSettings extends Component {
 
   thankYouMessageComponent() {
     return <SmsPrompt id='sms_settings_thank_you'
-      label='Thank you message'
+      label={this.props.t('Thank you message')}
       inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
@@ -195,6 +196,7 @@ SmsSettings.propTypes = {
   questionnaire: PropTypes.object,
   errorsByPath: PropTypes.object,
   errorMessage: PropTypes.string,
+  t: PropTypes.func,
   thankYouMessage: PropTypes.string,
   readOnly: PropTypes.bool
 }
@@ -205,4 +207,4 @@ const mapStateToProps = (state, ownProps) => ({
   thankYouMessage: getPromptSms(ownProps.questionnaire.settings.thankYouMessage, ownProps.questionnaire.activeLanguage)
 })
 
-export default withQuestionnaire(connect(mapStateToProps)(SmsSettings))
+export default translate()(withQuestionnaire(connect(mapStateToProps)(SmsSettings)))

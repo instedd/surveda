@@ -55,7 +55,7 @@ class SmsPrompt extends Component {
     let { inputErrors, readOnly, fixedEndLength, label, t } = this.props
 
     const shouldDisplayReducerErrors = (value == this.props.originalValue)
-    const reducerErrors = filter(inputErrors, (err) => err !== 'limit exceeded')
+    const reducerErrors = filter(inputErrors, (err) => err !== t('limit exceeded'))
 
     let errors = []
     if (shouldDisplayReducerErrors) {
@@ -68,7 +68,7 @@ class SmsPrompt extends Component {
       errors = null
     }
 
-    if (!label) label = 'SMS message'
+    if (!label) label = t('SMS message')
 
     const labelComponent = total == 1 ? label : `${label} (part ${index + 1})`
     const last = index + 1 == total

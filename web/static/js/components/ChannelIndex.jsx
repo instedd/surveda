@@ -71,7 +71,7 @@ class ChannelIndex extends Component {
     if (!channels) {
       return (
         <div>
-          <CardTable title='Loading channels...' highlight />
+          <CardTable title={t('Loading channels...')} highlight />
         </div>
       )
     }
@@ -80,7 +80,7 @@ class ChannelIndex extends Component {
     const footer = (
       <div className='card-action right-align'>
         <ul className='pagination'>
-          <li><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
+          <li><span className='grey-text'>{startIndex}-{endIndex} {t('of', {context: 'pagination'})} {totalCount}</span></li>
           { hasPreviousPage
             ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
             : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
@@ -148,6 +148,7 @@ class ChannelIndex extends Component {
 
     const nuntiumProviderUI = (index, multiple) => {
       let name = 'Nuntium'
+      const { t } = this.props
       if (multiple) name = `${name} (${config.nuntium[index].friendlyName})`
 
       return (
@@ -158,9 +159,9 @@ class ChannelIndex extends Component {
             <i className='material-icons arrow-right'>chevron_right</i>
           </span>
           <span className='channel-description'>
-            <b>SMS channels</b>
+            <b>{t('SMS channels')}</b>
             <br />
-            Clickatell, DTAC, I-POP, Multimodem iSms and 8 more
+            {t('Clickatell, DTAC, I-POP, Multimodem iSms and 8 more')}
           </span>
         </li>
       )
@@ -175,9 +176,9 @@ class ChannelIndex extends Component {
           <h5>{name}</h5>
           {providerSwitch('verboice', index)}
           <span className='channel-description'>
-            <b>Voice channels</b>
+            <b>{t('Voice channels')}</b>
             <br />
-            Callcentric, SIP client, SIP server, Skype, Twillio
+            {t('Callcentric, SIP client, SIP server, Skype, Twillio')}
           </span>
           <span onClick={() => window.open(config.verboice[index].baseUrl)}>
             <i className='material-icons arrow-right'>chevron_right</i>

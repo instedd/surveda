@@ -3,6 +3,7 @@ import findIndex from 'lodash/findIndex'
 import React, { Component } from 'react'
 import { Input } from 'react-materialize'
 import propsAreEqual from '../../propsAreEqual'
+import { translate } from 'react-i18next'
 
 type Props = {
   value: ?string,
@@ -10,6 +11,7 @@ type Props = {
   stepsBefore: Step[],
   stepsAfter: Step[],
   readOnly?: boolean,
+  t: Function,
   label?: string
 };
 
@@ -49,6 +51,7 @@ class SkipLogic extends Component {
   }
 
   skipOptions(currentValue: ?string, stepsAfter: Step[], stepsBefore: Step[]) {
+    const { t } = this.props
     let currentValueIsValid = false
 
     if (currentValue == null || currentValue === 'end') {
@@ -69,13 +72,13 @@ class SkipLogic extends Component {
 
     skipOptions.unshift({
       id: 'end',
-      title: 'End survey',
+      title: t('End survey'),
       enabled: true
     })
 
     skipOptions.unshift({
       id: '',
-      title: 'Next question',
+      title: t('Next question'),
       enabled: true
     })
 
@@ -84,7 +87,7 @@ class SkipLogic extends Component {
 
       skipOptions.unshift({
         id: currentValue,
-        title: stepIndex == -1 ? 'Step missing' : this.stringOrUntitledQuestion(stepsBefore[stepIndex].title),
+        title: stepIndex == -1 ? t('Step missing') : this.stringOrUntitledQuestion(stepsBefore[stepIndex].title),
         enabled: false
       })
     }
@@ -93,7 +96,7 @@ class SkipLogic extends Component {
   }
 
   stringOrUntitledQuestion(string: string) {
-    return string === '' ? 'Untitled question' : string
+    return string === '' ? this.props.t('Untitled question') : string
   }
 
   render() {
@@ -123,4 +126,4 @@ class SkipLogic extends Component {
   }
 }
 
-export default SkipLogic
+export default translate()(SkipLogic)

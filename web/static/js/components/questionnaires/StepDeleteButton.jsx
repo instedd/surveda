@@ -1,8 +1,10 @@
 // @flow
 import React, { Component } from 'react'
+import { translate } from 'react-i18next'
 
 type Props = {
-  onDelete: Function
+  onDelete: Function,
+  t: Function
 };
 
 class StepDeleteButton extends Component {
@@ -20,11 +22,11 @@ class StepDeleteButton extends Component {
         <a href='#!'
           className='right'
           onClick={(e) => this.delete(e)}>
-          DELETE
+          {this.props.t('DELETE')}
         </a>
       </div>
     </li>)
   }
 }
 
-export default StepDeleteButton
+export default translate()(StepDeleteButton)

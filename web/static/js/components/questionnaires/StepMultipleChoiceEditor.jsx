@@ -7,6 +7,7 @@ import ChoiceEditor from './ChoiceEditor'
 import { Card } from '../ui'
 import { getChoiceResponseSmsJoined } from '../../step'
 import * as api from '../../api'
+import { translate } from 'react-i18next'
 
 type Props = {
   actions: any,
@@ -16,6 +17,7 @@ type Props = {
   stepIndex: number,
   stepsBefore: Step[],
   stepsAfter: Step[],
+  t: Function,
   errorPath: string,
   errorsByPath: ErrorsByPath,
   isNew: boolean
@@ -113,7 +115,7 @@ class StepMultipleChoiceEditor extends Component {
   }
 
   render() {
-    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath, isNew } = this.props
+    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath, isNew, t } = this.props
     const { choices } = step
 
     const sms = questionnaire.activeMode == 'sms'
@@ -130,27 +132,27 @@ class StepMultipleChoiceEditor extends Component {
     return (
       <div>
         <h5>Responses</h5>
-        <p><b>List the texts you want to store for each possible choice and define valid values by commas.</b></p>
+        <p><b>{t('List the texts you want to store for each possible choice and define valid values by commas.')}</b></p>
         <Card className='scrollX'>
           <div className='card-table'>
             <table className='responses-table'>
               <thead>
                 <tr>
-                  <th style={{width: '25%'}}>Response</th>
+                  <th style={{width: '30%'}}>{t('Response')}</th>
                   { sms
-                  ? <th style={{width: '15%'}}>SMS</th>
+                  ? <th style={{width: '20%'}}>{t('SMS')}</th>
                   : null
                   }
                   { ivr
-                  ? <th style={{width: '15%'}}>Phone call</th>
+                  ? <th style={{width: '20%'}}>{t('Phone call')}</th>
                   : null
                   }
                   { mobileweb
-                  ? <th style={{width: '15%'}}>Mobile web</th>
+                  ? <th style={{width: '20%'}}>{t('Mobile web')}</th>
                   : null
                   }
-                  <th style={{width: '25%'}}>Skip logic</th>
-                  <th />
+                  <th style={{width: '35%'}}>{t('Skip logic')}</th>
+                  <th style={{width: '15%'}} />
                 </tr>
               </thead>
               <tbody>
@@ -199,4 +201,4 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(StepMultipleChoiceEditor)
+export default translate()(connect(null, mapDispatchToProps)(StepMultipleChoiceEditor))

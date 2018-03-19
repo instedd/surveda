@@ -4,6 +4,7 @@ import * as actions from '../../actions/questionnaire'
 import { Input } from 'react-materialize'
 import iso6393 from 'iso-639-3'
 import { Card } from '../ui'
+import { translate } from 'react-i18next'
 
 class StepLanguageSelection extends Component {
 
@@ -19,7 +20,7 @@ class StepLanguageSelection extends Component {
   }
 
   render() {
-    const { step, readOnly } = this.props
+    const { step, readOnly, t } = this.props
     const { languageChoices } = step
 
     let selectOptions = languageChoices.map((choice, index) =>
@@ -31,14 +32,14 @@ class StepLanguageSelection extends Component {
     return (
       <div>
         <h5>Options</h5>
-        <p><b>Choose a key for each language</b></p>
+        <p><b>{t('Choose a key for each language')}</b></p>
         <Card>
           <div className='card-table'>
             <table className='responses-table'>
               <thead>
                 <tr>
-                  <th style={{width: '80%'}}>Language</th>
-                  <th style={{width: '20%'}}>Key</th>
+                  <th style={{width: '80%'}}>{t('Language')}</th>
+                  <th style={{width: '20%'}}>{t('Key')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -69,8 +70,9 @@ class StepLanguageSelection extends Component {
 
 StepLanguageSelection.propTypes = {
   dispatch: PropTypes.func,
+  t: PropTypes.func,
   step: PropTypes.object.isRequired,
   readOnly: PropTypes.bool
 }
 
-export default connect()(StepLanguageSelection)
+export default translate()(connect()(StepLanguageSelection))

@@ -17,7 +17,7 @@ class MobileWebPrompt extends Component {
   render() {
     const { value, readOnly, onBlur, inputErrors, t } = this.props
     let { label } = this.props
-    if (!label) label = 'Mobile Web Message'
+    if (!label) label = t('Mobile Web Message')
 
     const shouldDisplayErrors = value == this.props.originalValue
     return (

@@ -8,10 +8,12 @@ import StepCard from './StepCard'
 import StepDeleteButton from './StepDeleteButton'
 import SkipLogic from './SkipLogic'
 import propsAreEqual from '../../propsAreEqual'
+import { translate } from 'react-i18next'
 
 type Props = {
   step: FlagStep,
   stepIndex: number,
+  t: Function,
   questionnaireActions: any,
   onDelete: Function,
   onCollapse: Function,
@@ -72,13 +74,13 @@ class FlagStepEditor extends Component {
   }
 
   render() {
-    const { step, onCollapse, stepsAfter, stepsBefore, onDelete, readOnly } = this.props
+    const { step, onCollapse, stepsAfter, stepsBefore, onDelete, readOnly, t } = this.props
 
     return (
       <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} icon={<StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} />} >
         <li className='collection-item' key='dispositions'>
-          <h5>Disposition</h5>
-          <p><b>Choose the disposition you want to set at this point of the questionnaire.</b></p>
+          <h5>{t('Disposition')}</h5>
+          <p><b>{t('Choose the disposition you want to set at this point of the questionnaire.')}</b></p>
           <div className='row'>
             <div className='col s6'>
               <p>
@@ -92,7 +94,7 @@ class FlagStepEditor extends Component {
                   onChange={e => this.dispositionChange('interim partial')}
                   disabled={readOnly}
                 />
-                <label htmlFor={`${step.id}_disposition_partial`}>Partial</label>
+                <label htmlFor={`${step.id}_disposition_partial`}>{t('Partial')}</label>
               </p>
               <p>
                 <input
@@ -105,7 +107,7 @@ class FlagStepEditor extends Component {
                   onChange={e => this.dispositionChange('ineligible')}
                   disabled={readOnly}
                 />
-                <label htmlFor={`${step.id}_disposition_ineligible`}>Ineligible</label>
+                <label htmlFor={`${step.id}_disposition_ineligible`}>{t('Ineligible')}</label>
               </p>
               <p>
                 <input
@@ -118,7 +120,7 @@ class FlagStepEditor extends Component {
                   onChange={e => this.dispositionChange('refused')}
                   disabled={readOnly}
                 />
-                <label htmlFor={`${step.id}_disposition_refused`}>Refused</label>
+                <label htmlFor={`${step.id}_disposition_refused`}>{t('Refused')}</label>
               </p>
               <p>
                 <input
@@ -131,7 +133,7 @@ class FlagStepEditor extends Component {
                   onChange={e => this.dispositionChange('completed')}
                   disabled={readOnly}
                 />
-                <label htmlFor={`${step.id}_disposition_completed`}>Completed</label>
+                <label htmlFor={`${step.id}_disposition_completed`}>{t('Completed')}</label>
               </p>
             </div>
           </div>
@@ -143,7 +145,7 @@ class FlagStepEditor extends Component {
                 value={step.skipLogic}
                 stepsAfter={stepsAfter}
                 stepsBefore={stepsBefore}
-                label='Skip logic'
+                label={t('Skip logic')}
               />
             </div>
           </div>
@@ -158,4 +160,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default connect(null, mapDispatchToProps)(FlagStepEditor)
+export default translate()(connect(null, mapDispatchToProps)(FlagStepEditor))

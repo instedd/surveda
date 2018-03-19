@@ -8,6 +8,7 @@ import propsAreEqual from '../../propsAreEqual'
 import { getPromptMobileWeb } from '../../step'
 import * as actions from '../../actions/questionnaire'
 import withQuestionnaire from './withQuestionnaire'
+import { translate } from 'react-i18next'
 
 class WebSettings extends Component {
   constructor(props) {
@@ -82,6 +83,8 @@ class WebSettings extends Component {
   collapsed() {
     let hasErrors = this.hasErrors()
 
+    const { t } = this.props
+
     const iconClass = classNames({
       'material-icons left': true,
       'text-error': hasErrors
@@ -95,7 +98,7 @@ class WebSettings extends Component {
               <div className='card-content closed-step'>
                 <a className='truncate' href='#!' onClick={(e) => this.handleClick(e)}>
                   <i className={iconClass}>build</i>
-                  <span className={classNames({'text-error': hasErrors})}>Web settings</span>
+                  <span className={classNames({'text-error': hasErrors})}>{t('Web settings')}</span>
                   <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
                 </a>
               </div>
@@ -107,6 +110,7 @@ class WebSettings extends Component {
   }
 
   expanded() {
+    const { t } = this.props
     return (
       <div className='row' ref='self'>
         <Card className='z-depth-0'>
@@ -116,7 +120,7 @@ class WebSettings extends Component {
                 <div className='col s12'>
                   <i className='material-icons left'>build</i>
                   <a className='page-title truncate'>
-                    <span>Web settings</span>
+                    <span>{t('Web settings')}</span>
                   </a>
                   <a className='collapse right' href='#!' onClick={(e) => this.handleClick(e)}>
                     <i className='material-icons'>expand_less</i>
@@ -129,7 +133,7 @@ class WebSettings extends Component {
             </li>
             <li className='collection-item'>
               <h5>
-                Messages
+                {t('Messages')}
               </h5>
               {this.errorMessageComponent()}
             </li>
@@ -156,7 +160,7 @@ class WebSettings extends Component {
 
   errorMessageComponent() {
     return <MobileWebPrompt id='web_settings_error'
-      label='Error message'
+      label={this.props.t('Error message')}
       inputErrors={this.messageErrors('errorMessage')}
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
@@ -167,7 +171,7 @@ class WebSettings extends Component {
 
   thankYouMessageComponent() {
     return <MobileWebPrompt id='web_settings_thank_you'
-      label='Thank you message'
+      label={this.props.t('Thank you message')}
       inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
@@ -184,7 +188,7 @@ class WebSettings extends Component {
       <div className='col s12 input-field'>
         <InputWithLabel id='web_settings_title'
           value={this.state.title}
-          label='Title'
+          label={this.props.t('Title')}
           errors={this.titleErrors()}>
           <input
             type='text'
@@ -200,7 +204,7 @@ class WebSettings extends Component {
 
   smsMessageComponent() {
     return <SmsPrompt id='web_settings_sms_message'
-      label='SMS message'
+      label={this.props.t('SMS message')}
       inputErrors={this.smsMessageErrors()}
       value={this.state.smsMessage}
       originalValue={this.state.smsMessage}
@@ -212,7 +216,7 @@ class WebSettings extends Component {
 
   surveyIsOverMessageComponent() {
     return <MobileWebPrompt id='web_settings_survey_is_over'
-      label='"Survey is over" message'
+      label={this.props.t('"Survey is over" message')}
       inputErrors={this.surveyIsOverMessageErrors()}
       value={this.state.surveyIsOverMessage}
       originalValue={this.state.surveyIsOverMessage}
@@ -223,7 +227,7 @@ class WebSettings extends Component {
 
   surveyAlreadyTakenMessageComponent() {
     return <MobileWebPrompt id='web_settings_survey_already_taken'
-      label='"Survey already taken" message'
+      label={this.props.t('"Survey already taken" message')}
       inputErrors={this.surveyAlreadyTakenMessageErrors()}
       value={this.state.surveyAlreadyTakenMessage}
       originalValue={this.state.surveyAlreadyTakenMessage}
@@ -235,6 +239,7 @@ class WebSettings extends Component {
   colorSelectionComponent() {
     const primaryErrors = this.colorStyleMessageErrors('primary')
     const secondaryErrors = this.colorStyleMessageErrors('secondary')
+    const { t } = this.props
     // Default values for mobile web form are #6648a2 and #fb9a00
     const hasPrimaryErrors = primaryErrors && primaryErrors.length > 0
     const hasSecondaryErrors = secondaryErrors && secondaryErrors.length > 0
@@ -245,10 +250,10 @@ class WebSettings extends Component {
 
     return (
       <div className='style row'>
-        <h5>Style</h5>
+        <h5>{t('Style')}</h5>
         <div className='col s12 m6 l4 web-color input-field'>
           <div className='circle' style={{background: primary}} />
-          <InputWithLabel id='web_settings_primary_color' value={this.state.primaryColor} label='Primary color' errors={primaryErrors}>
+          <InputWithLabel id='web_settings_primary_color' value={this.state.primaryColor} label={t('Primary color')} errors={primaryErrors}>
             <input
               type='text'
               disabled={this.props.readOnly}
@@ -260,7 +265,7 @@ class WebSettings extends Component {
         </div>
         <div className='col s12 m6 l4 web-color input-field'>
           <div className='circle' style={{background: secondary}} />
-          <InputWithLabel id='web_settings_secondary_color' value={this.state.secondaryColor} label='Secondary color' errors={secondaryErrors}>
+          <InputWithLabel id='web_settings_secondary_color' value={this.state.secondaryColor} label={t('Secondary color')} errors={secondaryErrors}>
             <input
               type='text'
               disabled={this.props.readOnly}
@@ -333,6 +338,7 @@ WebSettings.propTypes = {
   questionnaire: PropTypes.object,
   errorsByPath: PropTypes.object,
   errorMessage: PropTypes.string,
+  t: PropTypes.func,
   thankYouMessage: PropTypes.string,
   title: PropTypes.string,
   smsMessage: PropTypes.string,
@@ -357,4 +363,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default withQuestionnaire(connect(mapStateToProps)(WebSettings))
+export default translate()(withQuestionnaire(connect(mapStateToProps)(WebSettings)))
