@@ -17,6 +17,7 @@ import ProjectTitle from './components/projects/ProjectTitle'
 import SurveyTitle from './components/surveys/SurveyTitle'
 import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
 import CollaboratorIndex from './components/collaborators/CollaboratorIndex'
+import ActivityIndex from './components/activity/ActivityIndex'
 import InviteConfirmation from './components/InviteConfirmation'
 
 const k = (s) => s
@@ -54,6 +55,10 @@ export default (
         <Route path='collaborators' >
           <IndexRoute components={{ body: CollaboratorIndex, tabs: ProjectTabs }} />
         </Route>
+
+        <Route path='activity' >
+          <IndexRoute components={{ body: ActivityIndex, tabs: ProjectTabs }} />
+        </Route>
       </Route>
     </Route>
 
@@ -82,6 +87,7 @@ export const respondentsInteractionsCSV = (projectId, surveyId) => `/api/v1${sur
 export const surveyEdit = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
 export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
+export const activityIndex = (projectId) => `${project(projectId)}/activity`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`

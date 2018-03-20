@@ -59,6 +59,7 @@ class ProjectTabs extends Component {
           <TabLink tabId='project_tabs' to={routes.surveyIndex(projectId)}>{t('Surveys')}</TabLink>
           <TabLink tabId='project_tabs' to={routes.questionnaireIndex(projectId)}>{t('Questionnaires')}</TabLink>
           <TabLink tabId='project_tabs' to={routes.collaboratorIndex(projectId)}>{t('Collaborators')}</TabLink>
+          <TabLink tabId='project_tabs' to={routes.activityIndex(projectId)}>{t('Activity')}</TabLink>
         </Tabs>
         <ColourSchemeModal modalId='colourSchemeModal' />
         <ConfirmationModal modalId='leave_project' ref='leaveConfirmationModal' confirmationText={t('LEAVE')} header={t('Leave project')} showCancel />

@@ -20,6 +20,7 @@ import guest from './guest'
 import invite from './invite'
 import userSettings from './userSettings'
 import ui from './ui/index'
+import activities from './activities'
 
 export default combineReducers({
   authorizations,
@@ -39,6 +40,7 @@ export default combineReducers({
   guisso,
   timezones,
   collaborators,
+  activities,
   guest,
   invite,
   userSettings,
