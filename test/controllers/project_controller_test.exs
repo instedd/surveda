@@ -3,7 +3,7 @@ defmodule Ask.ProjectControllerTest do
   use Ask.DummySteps
   use Ask.TestHelpers
 
-  alias Ask.Project
+  alias Ask.{Project, ActivityLog}
   @valid_attrs %{name: "some content"}
 
   setup %{conn: conn} do
@@ -378,6 +378,84 @@ defmodule Ask.ProjectControllerTest do
       %{"email" => user.email, "role" => "owner", "invited" => false, "code" => nil},
       %{"email" => user2.email, "role" => "editor", "invited" => true, "code" => code}
     ]
+  end
+
+  describe "activity logs" do
+    test "lists activities", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      collaborator_email = "foo@foo.com"
+      # current_user is set in conn because it is used in ActivityLog helpers
+      conn = %{conn | assigns: %{current_user: user}}
+
+      ActivityLog.create_invite(project, conn, collaborator_email, "editor") |> Repo.insert
+      ActivityLog.enable_public_link(project, conn, survey, "results") |> Repo.insert
+
+      invite_log = ActivityLog |> where([log], log.action == "create_invite") |> Repo.one
+      link_log = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
+
+
+      conn = get conn, project_activities_path(conn, :activities, project.id)
+      assert json_response(conn, 200)["data"] == [
+        %{"user_name" => user.name,
+          "action" => "create_invite",
+          "entity_type" => "project",
+          "id" => invite_log.id,
+          "inserted_at" => NaiveDateTime.to_iso8601(invite_log.inserted_at),
+          "metadata" => %{
+            "project_name" => project.name,
+            "collaborator_email" => collaborator_email,
+            "role" => "editor"
+          }
+        },
+        %{"user_name" => user.name,
+          "action" => "enable_public_link",
+          "entity_type" => "survey",
+          "id" => link_log.id,
+          "inserted_at" => NaiveDateTime.to_iso8601(link_log.inserted_at),
+          "metadata" => %{
+            "survey_name" => survey.name,
+            "report_type" => "survey_results"
+          }
+        }
+      ]
+    end
+
+    test "doesn't list activities of other project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      project2 = create_project_for_user(user)
+      survey = insert(:survey, project: project2)
+      collaborator_email = "foo@foo.com"
+      # current_user is set in conn because it is used in ActivityLog helpers
+      conn = %{conn | assigns: %{current_user: user}}
+
+      ActivityLog.create_invite(project, conn, collaborator_email, "editor") |> Repo.insert
+      ActivityLog.enable_public_link(project2, conn, survey, "results") |> Repo.insert
+
+      invite_log = ActivityLog |> where([log], log.action == "create_invite") |> Repo.one
+
+      conn = get conn, project_activities_path(conn, :activities, project.id)
+      assert json_response(conn, 200)["data"] == [
+        %{"user_name" => user.name,
+          "action" => "create_invite",
+          "entity_type" => "project",
+          "id" => invite_log.id,
+          "inserted_at" => NaiveDateTime.to_iso8601(invite_log.inserted_at),
+          "metadata" => %{
+            "project_name" => project.name,
+            "collaborator_email" => collaborator_email,
+            "role" => "editor"
+          }
+        }
+      ]
+    end
+
+    test "forbid access if user is not member of the project", %{conn: conn} do
+      project = insert(:project)
+      assert_error_sent :forbidden, fn ->
+        get conn, project_activities_path(conn, :activities, project)
+      end
+    end
   end
 
 end

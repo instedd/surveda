@@ -93,6 +93,7 @@ defmodule Ask.Router do
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
         get "/autocomplete_other_language", ProjectController, :autocomplete_other_language, as: :autocomplete_other_language
         get "/collaborators", ProjectController, :collaborators, as: :collaborators
+        get "/activities", ProjectController, :activities, as: :activities
         post "/leave", ProjectController, :leave, as: :leave
         put "/update_archived_status", ProjectController, :update_archived_status, as: :update_archived_status
       end
