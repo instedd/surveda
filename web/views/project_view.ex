@@ -43,7 +43,8 @@ defmodule Ask.ProjectView do
   end
 
   def render("activity.json", %{activity: activity}) do
-    %{user_name: (if activity.user, do: activity.user.name, else: activity.remote_ip),
+    %{user_name: (if activity.user, do: activity.user.name, else: nil),
+      remote_ip: activity.remote_ip,
       action: activity.action,
       entity_type: activity.entity_type,
       metadata: activity.metadata,

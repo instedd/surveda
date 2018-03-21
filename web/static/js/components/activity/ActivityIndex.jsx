@@ -83,7 +83,7 @@ class ActivityIndex extends Component {
           {activities.map(activity => {
             return (
               <tr key={activity.id}>
-                <td>{activity.userName}</td>
+                <td>{activity.userName || activity.remoteIp}</td>
                 <td>
                   <ActivityDescription activity={activity} />
                 </td>

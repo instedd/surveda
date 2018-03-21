@@ -381,12 +381,17 @@ defmodule Ask.ProjectControllerTest do
   end
 
   describe "activity logs" do
+    setup %{conn: conn, user: user} do
+      remote_ip = {192, 168, 0, 128}
+      # current_user is set in conn because it is used in ActivityLog helpers to create changesets
+      conn = %{conn | assigns: %{current_user: user}, remote_ip: remote_ip}
+      {:ok, conn: conn}
+    end
+
     test "lists activities", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       collaborator_email = "foo@foo.com"
-      # current_user is set in conn because it is used in ActivityLog helpers
-      conn = %{conn | assigns: %{current_user: user}}
 
       ActivityLog.create_invite(project, conn, collaborator_email, "editor") |> Repo.insert
       ActivityLog.enable_public_link(project, conn, survey, "results") |> Repo.insert
@@ -402,6 +407,7 @@ defmodule Ask.ProjectControllerTest do
           "entity_type" => "project",
           "id" => invite_log.id,
           "inserted_at" => NaiveDateTime.to_iso8601(invite_log.inserted_at),
+          "remote_ip" => "192.168.0.128",
           "metadata" => %{
             "project_name" => project.name,
             "collaborator_email" => collaborator_email,
@@ -412,6 +418,7 @@ defmodule Ask.ProjectControllerTest do
           "action" => "enable_public_link",
           "entity_type" => "survey",
           "id" => link_log.id,
+          "remote_ip" => "192.168.0.128",
           "inserted_at" => NaiveDateTime.to_iso8601(link_log.inserted_at),
           "metadata" => %{
             "survey_name" => survey.name,
@@ -426,8 +433,6 @@ defmodule Ask.ProjectControllerTest do
       project2 = create_project_for_user(user)
       survey = insert(:survey, project: project2)
       collaborator_email = "foo@foo.com"
-      # current_user is set in conn because it is used in ActivityLog helpers
-      conn = %{conn | assigns: %{current_user: user}}
 
       ActivityLog.create_invite(project, conn, collaborator_email, "editor") |> Repo.insert
       ActivityLog.enable_public_link(project2, conn, survey, "results") |> Repo.insert
@@ -440,6 +445,7 @@ defmodule Ask.ProjectControllerTest do
           "action" => "create_invite",
           "entity_type" => "project",
           "id" => invite_log.id,
+          "remote_ip" => "192.168.0.128",
           "inserted_at" => NaiveDateTime.to_iso8601(invite_log.inserted_at),
           "metadata" => %{
             "project_name" => project.name,
