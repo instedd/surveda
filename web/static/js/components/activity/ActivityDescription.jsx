@@ -2,13 +2,29 @@ import React, { Component, PropTypes } from 'react'
 import { translate } from 'react-i18next'
 
 class ActivityDescription extends Component {
+  reportTypeText(reportType) {
+    const { t } = this.props
+    switch (reportType) {
+      case 'survey_results':
+        return t('survey results')
+      case 'disposition_history':
+        return t('disposition history')
+      case 'incentives':
+        return t('incentives')
+      case 'interactions':
+        return t('interactions')
+      default:
+        return ''
+    }
+  }
+
   text(activity) {
     const { t } = this.props
     const metadata = activity.metadata || {}
-    let reportType
     switch (activity.entityType) {
       case 'survey':
         const surveyName = metadata['surveyName'] || 'Untitled'
+        const reportType = this.reportTypeText(metadata['reportType'])
         switch (activity.action) {
           case 'create':
             return t('Created survey')
@@ -28,16 +44,12 @@ class ActivityDescription extends Component {
           case 'stop':
             return t('Paused <i>{{surveyName}}</i> survey', {surveyName: surveyName})
           case 'download':
-            reportType = metadata['reportType'].split('_').join(' ')
             return t('Downloaded <i>{{surveyName}}</i> {{reportType}}', {surveyName: surveyName, reportType: reportType})
           case 'enable_public_link':
-            reportType = metadata['reportType'].split('_').join(' ')
             return t('Enabled <i>{{surveyName}}</i> {{reportType}} link', {surveyName: surveyName, reportType: reportType})
           case 'disable_public_link':
-            reportType = metadata['reportType'].split('_').join(' ')
             return t('Disabled <i>{{surveyName}}</i> {{reportType}} link', {surveyName: surveyName, reportType: reportType})
           case 'regenerate_public_link':
-            reportType = metadata['reportType'].split('_').join(' ')
             return t('Reset <i>{{surveyName}}</i> {{reportType}} link', {surveyName: surveyName, reportType: reportType})
           default:
             return ''
