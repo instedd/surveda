@@ -1,7 +1,7 @@
 defmodule Ask.ProjectController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger, ActivityLog}
+  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
 
   def index(conn, params) do
     archived = case params["archived"] do
