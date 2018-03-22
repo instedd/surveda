@@ -4,7 +4,7 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 
 echo "----==== Running Mix tests ====----"
-docker-compose run --rm app mix test
+docker-compose run --rm -e MIX_ENV=test app mix do compile --force --warnings-as-errors, test
 MIX=$?
 
 if [ $MIX -eq 0 ]; then
