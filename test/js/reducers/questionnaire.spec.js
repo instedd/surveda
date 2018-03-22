@@ -309,6 +309,20 @@ describe('questionnaire reducer', () => {
 
       expect(result.data.name).toEqual(questionnaire.name)
     })
+
+    it('does not add extra items to undo/redo stack when saving', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.saving(),
+        actions.undo(),
+        actions.saved()
+      ])
+
+      expect(result.undo.length).toEqual(0)
+      expect(result.redo.length).toEqual(1)
+    })
   })
 
   describe('modes', () => {

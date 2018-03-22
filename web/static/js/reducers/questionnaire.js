@@ -74,11 +74,11 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
   // React will call this with an undefined the first time for initialization.
   // We mimic that in the specs, so DataStore<Questionnaire> needs to become optional here.
   return (state: ?DataStore<Questionnaire>, action: any) => {
+    const oldData = state ? state.data : null
     const newState = reducer(state, action)
-    if (state !== newState) {
+
+    if (newState.data && oldData !== newState.data) {
       validate(newState)
-    }
-    if (newState.data) {
       return {
         ...newState,
         data: {
@@ -86,9 +86,9 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
           valid: newState.errors.length == 0
         }
       }
-    } else {
-      return newState
     }
+
+    return newState
   }
 }
 

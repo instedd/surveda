@@ -17,7 +17,7 @@ const undoReducer = <T>(actions: UndoActions, reducer: StoreReducer<T>): UndoRed
       case actions.REDO: return redo(state)
       default:
         const newState = reducer(state, action)
-        if (newState.dirty) {
+        if (state.data && newState.data !== state.data) {
           return {
             ...newState,
             undo: [state.data, ...state.undo],

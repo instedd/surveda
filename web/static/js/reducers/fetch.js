@@ -88,7 +88,7 @@ const fetch = (state, action, filterProvider) => {
 }
 
 const saved = (state, action, filterProvider, dataReducer) => {
-  const newData = action.data == null ? null : dataReducer(state.data, action)
+  const newData = action.data == null ? state.data : dataReducer(state.data, action)
   return {
     ...state,
     saving: false,
