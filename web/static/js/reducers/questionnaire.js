@@ -77,7 +77,7 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
     const oldData = state ? state.data : null
     const newState = reducer(state, action)
 
-    if (newState.data && oldData !== newState.data) {
+    if ((newState.data && oldData !== newState.data) || action.type == actions.UNDO || action.type == actions.REDO) {
       validate(newState)
       return {
         ...newState,

@@ -323,6 +323,39 @@ describe('questionnaire reducer', () => {
       expect(result.undo.length).toEqual(0)
       expect(result.redo.length).toEqual(1)
     })
+
+    it('runs validations after undo', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
+        actions.undo()
+      ])
+
+      expect(result.errors).toExclude({
+        path: "steps[1].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('runs validations after redo', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
+        actions.undo(),
+        actions.redo()
+      ])
+
+      expect(result.errors).toInclude({
+        path: "steps[1].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['SMS prompt must not be blank']
+      })
+    })
   })
 
   describe('modes', () => {

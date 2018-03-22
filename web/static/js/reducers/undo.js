@@ -13,8 +13,8 @@ const undoReducer = <T>(actions: UndoActions, reducer: StoreReducer<T>): UndoRed
     }
 
     switch (action.type) {
-      case actions.UNDO: return undo(state)
-      case actions.REDO: return redo(state)
+      case actions.UNDO: return undo(state, reducer, action)
+      case actions.REDO: return redo(state, reducer, action)
       default:
         const newState = reducer(state, action)
         if (state.data && newState.data !== state.data) {
@@ -34,28 +34,36 @@ const undoReducer = <T>(actions: UndoActions, reducer: StoreReducer<T>): UndoRed
   }
 }
 
-const undo = <T>(state: DataStoreWithUndo<T>): DataStoreWithUndo<T> => {
+const undo = <T>(state: DataStoreWithUndo<T>, reducer: StoreReducer<T>, action: any): DataStoreWithUndo<T> => {
   if (state.undo.length == 0) {
     return state
   }
 
-  return {
+  const newState: DataStoreWithUndo<T> = {
     ...state,
-    data: head(state.undo),
+    data: head(state.undo)
+  }
+
+  return {
+    ...reducer(newState, action),
     undo: tail(state.undo),
     redo: [state.data, ...state.redo],
     dirty: true
   }
 }
 
-const redo = <T>(state: DataStoreWithUndo<T>): DataStoreWithUndo<T> => {
+const redo = <T>(state: DataStoreWithUndo<T>, reducer: StoreReducer<T>, action: any): DataStoreWithUndo<T> => {
   if (state.redo.length == 0) {
     return state
   }
 
-  return {
+  const newState: DataStoreWithUndo<T> = {
     ...state,
-    data: head(state.redo),
+    data: head(state.redo)
+  }
+
+  return {
+    ...reducer(newState, action),
     undo: [state.data, ...state.undo],
     redo: tail(state.redo),
     dirty: true
