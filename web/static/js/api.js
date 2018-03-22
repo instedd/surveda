@@ -12,6 +12,7 @@ const respondentsStatsSchema = new Schema('respondents')
 const referenceSchema = new Schema('reference')
 const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
+const activitySchema = new Schema('activities')
 
 export class Unauthorized {
   constructor(response) {
@@ -313,6 +314,10 @@ export const removeCollaborator = (projectId, collaboratorEmail) => {
 
 export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) => {
   return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
+}
+
+export const fetchActivities = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/activities`, arrayOf(activitySchema))
 }
 
 export const fetchSettings = () => {

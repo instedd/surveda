@@ -11,6 +11,7 @@ defmodule Ask.Project do
     has_many :surveys, Ask.Survey
     many_to_many :users, Ask.User, join_through: Ask.ProjectMembership, on_replace: :delete
     has_many :project_memberships, Ask.ProjectMembership
+    has_many :activity_logs, Ask.ActivityLog
 
     timestamps()
   end

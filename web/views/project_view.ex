@@ -38,6 +38,21 @@ defmodule Ask.ProjectView do
     }
   end
 
+  def render("activities.json", %{activities: activities}) do
+    %{data: render_many(activities, Ask.ProjectView, "activity.json", as: :activity)}
+  end
+
+  def render("activity.json", %{activity: activity}) do
+    %{user_name: (if activity.user, do: activity.user.name, else: nil),
+      remote_ip: activity.remote_ip,
+      action: activity.action,
+      entity_type: activity.entity_type,
+      metadata: activity.metadata,
+      id: activity.id,
+      inserted_at: activity.inserted_at
+    }
+  end
+
   defp render_one(project) do
     %{id: project.id,
       name: project.name,

@@ -1,7 +1,7 @@
 defmodule Ask.ProjectController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
+  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger, ActivityLog}
 
   def index(conn, params) do
     archived = case params["archived"] do
@@ -278,5 +278,15 @@ defmodule Ask.ProjectController do
     |> Enum.map( fn x -> %{email: x.email, level: x.level, invited: true, code: x.code} end )
 
     render(conn, "collaborators.json", collaborators: memberships ++ invites)
+  end
+
+  def activities(conn, %{"project_id" => id}) do
+    activities = conn
+    |> load_project(id)
+    |> assoc(:activity_logs)
+    |> Repo.all
+    |> Repo.preload(:user)
+
+    render(conn, "activities.json", activities: activities)
   end
 end
