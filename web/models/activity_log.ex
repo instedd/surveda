@@ -1,7 +1,7 @@
 defmodule Ask.ActivityLog do
   use Ask.Web, :model
   import User.Helper
-  alias Ask.{ActivityLog, Project, Survey}
+  alias Ask.{ActivityLog, Project, Survey, Questionnaire}
 
   schema "activity_log" do
     belongs_to :project, Ask.Project
@@ -21,6 +21,9 @@ defmodule Ask.ActivityLog do
   def valid_actions("survey"), do:
     ["create", "edit", "rename", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
+  def valid_actions("questionnaire"), do:
+    ["create", "edit", "rename", "delete"]
+
   def valid_actions(_), do: []
 
   def changeset(struct, params \\ %{}) do
@@ -32,6 +35,7 @@ defmodule Ask.ActivityLog do
 
   defp typeof(%Project{}), do: "project"
   defp typeof(%Survey{}), do: "survey"
+  defp typeof(%Questionnaire{}), do: "questionnaire"
 
   defp create(action, project, conn, entity, metadata) do
     user_id = case current_user(conn) do
@@ -153,5 +157,26 @@ defmodule Ask.ActivityLog do
 
   def stop(project, conn, survey) do
     create("stop", project, conn, survey, %{survey_name: survey.name})
+  end
+
+
+
+  def create_questionnaire(project, conn, questionnaire) do
+    create("create", project, conn, questionnaire, nil)
+  end
+
+  def edit_questionnaire(project, conn, questionnaire) do
+    create("edit", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
+  end
+
+  def rename_questionnaire(project, conn, questionnaire, old_questionnaire_name, new_questionnaire_name) do
+    create("rename", project, conn, questionnaire, %{
+      old_questionnaire_name: old_questionnaire_name,
+      new_questionnaire_name: new_questionnaire_name
+    })
+  end
+
+  def delete_questionnaire(project, conn, questionnaire) do
+    create("delete", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
   end
 end
