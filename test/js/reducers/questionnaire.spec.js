@@ -167,6 +167,217 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  describe('undo/redo', () => {
+    it('has a sane initial state', () => {
+      expect(initialState.undo).toEqual([])
+      expect(initialState.redo).toEqual([])
+    })
+
+    it('should start with empty undo/redo stacks', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      expect(result.undo).toEqual([])
+      expect(result.redo).toEqual([])
+    })
+
+    it('stores undo history', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.changeName('Name 2')
+      ])
+
+      expect(result.data.name).toEqual('Name 2')
+      expect(result.undo.length).toEqual(2)
+      expect(result.undo[0].name).toEqual('Name 1')
+      expect(result.undo[1].name).toEqual(questionnaire.name)
+    })
+
+    it('undoes change', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.changeName('Name 2'),
+        actions.undo()
+      ])
+
+      expect(result.data.name).toEqual('Name 1')
+      expect(result.undo.length).toEqual(1)
+      expect(result.undo[0].name).toEqual(questionnaire.name)
+    })
+
+    it('saves redo states when undoing', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.changeName('Name 2'),
+        actions.undo(),
+        actions.undo()
+      ])
+
+      expect(result.data.name).toEqual(questionnaire.name)
+      expect(result.undo).toEqual([])
+      expect(result.redo.length).toEqual(2)
+      expect(result.redo[0].name).toEqual('Name 1')
+      expect(result.redo[1].name).toEqual('Name 2')
+    })
+
+    it('redoes changes', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.changeName('Name 2'),
+        actions.undo(),
+        actions.undo(),
+        actions.redo(),
+        actions.redo()
+      ])
+
+      expect(result.data.name).toEqual('Name 2')
+      expect(result.undo.length).toEqual(2)
+      expect(result.undo[0].name).toEqual('Name 1')
+      expect(result.undo[1].name).toEqual(questionnaire.name)
+    })
+
+    it('making change clears the redo stack', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.changeName('Name 2'),
+        actions.undo(),
+        actions.changeName('Name 3')
+      ])
+
+      expect(result.data.name).toEqual('Name 3')
+      expect(result.undo.length).toEqual(2)
+      expect(result.undo[0].name).toEqual('Name 1')
+      expect(result.undo[1].name).toEqual(questionnaire.name)
+      expect(result.redo).toEqual([])
+    })
+
+    it('undoing a change sets dirty flag', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.saving(),
+        actions.saved(),
+        actions.undo()
+      ])
+
+      expect(result.dirty).toEqual(true)
+    })
+
+    it('redoing a change sets dirty flag', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.undo(),
+        actions.saving(),
+        actions.saved(),
+        actions.redo()
+      ])
+
+      expect(result.dirty).toEqual(true)
+    })
+
+    it('does nothing if there is no undo history', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.undo()
+      ])
+
+      expect(result.data.name).toEqual(questionnaire.name)
+    })
+
+    it('does nothing if there is no redo history', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.redo()
+      ])
+
+      expect(result.data.name).toEqual(questionnaire.name)
+    })
+
+    it('does not add extra items to undo/redo stack when saving', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Name 1'),
+        actions.saving(),
+        actions.undo(),
+        actions.saved()
+      ])
+
+      expect(result.undo.length).toEqual(0)
+      expect(result.redo.length).toEqual(1)
+    })
+
+    it('runs validations after undo', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
+        actions.undo()
+      ])
+
+      expect(result.errors).toExclude({
+        path: "steps[1].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('runs validations after redo', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ''),
+        actions.undo(),
+        actions.redo()
+      ])
+
+      expect(result.errors).toInclude({
+        path: "steps[1].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('does not add undo history when switching modes', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setActiveMode('ivr')
+      ])
+
+      expect(result.undo.length).toEqual(0)
+    })
+
+    it('does not add undo history when switching languages', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setActiveLanguage('es')
+      ])
+
+      expect(result.undo.length).toEqual(0)
+    })
+  })
+
   describe('modes', () => {
     it('should add mode', () => {
       const result = playActions([

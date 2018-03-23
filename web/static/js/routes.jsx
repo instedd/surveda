@@ -19,6 +19,7 @@ import QuestionnaireTitle from './components/questionnaires/QuestionnaireTitle'
 import CollaboratorIndex from './components/collaborators/CollaboratorIndex'
 import ActivityIndex from './components/activity/ActivityIndex'
 import InviteConfirmation from './components/InviteConfirmation'
+import * as questionnaireActions from './actions/questionnaire'
 
 const k = (s) => s
 
@@ -49,7 +50,7 @@ export default (
           <Route path=':questionnaireId' >
             <IndexRedirect to='edit' />
           </Route>
-          <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} showSavingStatus />
+          <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} showSavingStatus undo={{state: (state) => state.questionnaire, actions: questionnaireActions}} />
         </Route>
 
         <Route path='collaborators' >

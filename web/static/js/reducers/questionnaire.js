@@ -14,6 +14,7 @@ import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
 import * as language from '../language'
 import { validate } from './questionnaire.validation'
 import { defaultActiveMode } from '../questionnaire.mode'
+import undoReducer from './undo'
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
@@ -73,11 +74,11 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
   // React will call this with an undefined the first time for initialization.
   // We mimic that in the specs, so DataStore<Questionnaire> needs to become optional here.
   return (state: ?DataStore<Questionnaire>, action: any) => {
+    const oldData = state ? state.data : null
     const newState = reducer(state, action)
-    if (state !== newState) {
+
+    if ((newState.data && oldData !== newState.data) || action.type == actions.UNDO || action.type == actions.REDO) {
       validate(newState)
-    }
-    if (newState.data) {
       return {
         ...newState,
         data: {
@@ -85,9 +86,9 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
           valid: newState.errors.length == 0
         }
       }
-    } else {
-      return newState
     }
+
+    return newState
   }
 }
 
@@ -101,7 +102,7 @@ const dirtyPredicate = (action, oldData, newData) => {
   }
 }
 
-export default validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))
+export default (undoReducer(actions, dirtyPredicate, validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))): UndoReducer<Questionnaire>)
 
 const addChoice = (state, action) => {
   return changeStep(state, action.stepId, step => ({

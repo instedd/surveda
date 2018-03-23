@@ -191,3 +191,19 @@ footer {
     margin-bottom: 0;
   }
 }
+
+.undo-buttons {
+  margin-left: 4px;
+
+  i {
+    display: inline-block !important;
+    margin: 0px 8px;
+    cursor: pointer;
+    color: color("grey", "base");
+    user-select: none;
+
+    &.disabled {
+      color: color("grey", "darken-2");
+    }
+  }
+}

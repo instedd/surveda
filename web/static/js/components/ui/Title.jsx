@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
+import Undo from './Undo'
 import SaveStatus from '../layout/SaveStatus'
 import { translate } from 'react-i18next'
 
@@ -23,6 +24,7 @@ export const Title = translate()(({ children, t }) => {
             {renderChildren()}
           </div>
           <div className='col s4'>
+            <Undo />
             <SaveStatus />
           </div>
         </div>

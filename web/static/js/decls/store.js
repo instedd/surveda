@@ -42,6 +42,8 @@ export type Action = {
   type: string
 };
 
+export type DirtyPredicate<T> = (action: Action, oldData: ?DataStore<T>, newData: ?DataStore<T>) => boolean;
+
 export type FilteredAction = Action & Filter;
 
 export type ReceiveDataAction = Action & {

@@ -4,7 +4,7 @@
   "scripts": {
     "deploy": "webpack -p --devtool source-map",
     "watch": "webpack --watch --progress --color",
-    "test": "mocha --compilers js:babel-register -r jsdom-global/register test/js/**/*.js --reporter dot",
+    "test": "mocha --opts test/js/mocha.opts",
     "eslint": "eslint --ext .jsx,.js web/static/js/ test/js"
   },
   "dependencies": {
