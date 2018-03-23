@@ -392,7 +392,7 @@ defmodule Ask.ProjectControllerTest do
       enable_link_log = ActivityLog |> Repo.get!(enable_link_id)
 
       conn = get conn, project_activities_path(conn, :activities, project.id)
-      assert json_response(conn, 200)["data"] == [
+      assert json_response(conn, 200)["data"]["activities"] == [
         %{"user_name" => user.name,
           "action" => "create_invite",
           "entity_type" => "project",
@@ -417,6 +417,7 @@ defmodule Ask.ProjectControllerTest do
           }
         }
       ]
+      assert json_response(conn, 200)["meta"]["count"] == 2
     end
 
     test "paginates activities", %{conn: conn, user: user} do
@@ -430,8 +431,10 @@ defmodule Ask.ProjectControllerTest do
       first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2)
       second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2)
 
-      assert (json_response(first_page, 200)["data"] |> Enum.map(&(&1["action"]))) == ["create_invite", "edit_collaborator"]
-      assert (json_response(second_page, 200)["data"] |> Enum.map(&(&1["action"]))) == ["enable_public_link", "start"]
+      assert (json_response(first_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["create_invite", "edit_collaborator"]
+      assert (json_response(first_page, 200)["meta"]["count"] == 4)
+      assert (json_response(second_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["enable_public_link", "start"]
+      assert (json_response(second_page, 200)["meta"]["count"] == 4)
     end
 
     test "sort activities by insertedAt in ascendent order", %{conn: conn, user: user} do
@@ -445,8 +448,10 @@ defmodule Ask.ProjectControllerTest do
       first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2, sort_by: "insertedAt", sort_asc: true)
       second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2, sort: "insertedAt", sort_asc: true)
 
-      assert (json_response(first_page, 200)["data"] |> Enum.map(&(&1["action"]))) == ["create_invite", "edit_collaborator"]
-      assert (json_response(second_page, 200)["data"] |> Enum.map(&(&1["action"]))) == ["enable_public_link", "start"]
+      assert (json_response(first_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["create_invite", "edit_collaborator"]
+      assert (json_response(first_page, 200)["meta"]["count"] == 4)
+      assert (json_response(second_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["enable_public_link", "start"]
+      assert (json_response(second_page, 200)["meta"]["count"] == 4)
     end
 
     test "sort activities by insertedAt in descendent order", %{conn: conn, user: user} do
@@ -460,8 +465,10 @@ defmodule Ask.ProjectControllerTest do
       first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2, sort_by: "insertedAt", sort_asc: false)
       second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2, sort_by: "insertedAt", sort_asc: false)
 
-      assert (json_response(first_page, 200)["data"] |> Enum.map(&(&1["action"]))) == ["start", "enable_public_link"]
-      assert (json_response(second_page, 200)["data"] |> Enum.map(&(&1["action"]))) == ["edit_collaborator", "create_invite"]
+      assert (json_response(first_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["start", "enable_public_link"]
+      assert (json_response(first_page, 200)["meta"]["count"] == 4)
+      assert (json_response(second_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["edit_collaborator", "create_invite"]
+      assert (json_response(second_page, 200)["meta"]["count"] == 4)
     end
 
     test "doesn't list activities of other project", %{conn: conn, user: user} do
@@ -475,7 +482,7 @@ defmodule Ask.ProjectControllerTest do
       create_invite_log = ActivityLog |> Repo.get!(create_invite_id)
 
       conn = get conn, project_activities_path(conn, :activities, project.id)
-      assert json_response(conn, 200)["data"] == [
+      assert json_response(conn, 200)["data"]["activities"] == [
         %{"user_name" => user.name,
           "action" => "create_invite",
           "entity_type" => "project",

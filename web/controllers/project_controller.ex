@@ -286,16 +286,20 @@ defmodule Ask.ProjectController do
     sort_by = Map.get(params, "sort_by", "")
     sort_asc = Map.get(params, "sort_asc", "")
 
-    activities = conn
+    all_activities_query = conn
     |> load_project(id)
     |> assoc(:activity_logs)
     |> preload(:user)
+
+    all_activities_count = all_activities_query |> Repo.all |> Enum.count
+
+    activities = all_activities_query
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_activities(sort_by, sort_asc)
     |> Repo.all
 
-    render(conn, "activities.json", activities: activities)
+    render(conn, "activities.json", activities: activities, activities_count: all_activities_count)
   end
 
   defp sort_activities(query, sort_by, sort_asc) do

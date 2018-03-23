@@ -77,6 +77,14 @@ const respondentsCallback = (json, schema) => {
   }
 }
 
+const activitiesCallback = (json, schema) => {
+  return () => {
+    let normalized = normalize(camelizeKeys(json.data.activities), schema)
+    normalized.activitiesCount = parseInt(json.meta.count)
+    return normalized
+  }
+}
+
 const handleResponse = (response, callback) => {
   if (response.ok) {
     return callback()
@@ -316,8 +324,8 @@ export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) 
   return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
 }
 
-export const fetchActivities = (projectId) => {
-  return apiFetchJSON(`projects/${projectId}/activities`, arrayOf(activitySchema))
+export const fetchActivities = (projectId, limit, page, sortBy, sortAsc) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/activities?limit=${limit}&page=${page}&sort_by=${sortBy}&sort_asc=${sortAsc}`, arrayOf(activitySchema), {}, activitiesCallback)
 }
 
 export const fetchSettings = () => {
