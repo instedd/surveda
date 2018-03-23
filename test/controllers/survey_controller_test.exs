@@ -1621,7 +1621,7 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
 
-      put conn, project_survey_path(conn, :update, project, survey), survey: %{name: "new name"}
+      put conn, project_survey_path(conn, :update, project, survey), survey: %{name: "new name", quotas: %{vars: [], buckets: []}, questionnaires: []}
       log = ActivityLog|> Repo.one
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_survey_name" => survey.name, "new_survey_name" => "new name"}})

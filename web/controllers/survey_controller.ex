@@ -105,8 +105,9 @@ defmodule Ask.SurveyController do
         |> update_questionnaires(survey_params)
         |> Survey.update_state
 
-      rename_log = if Map.has_key?(changeset.changes, :name), do: ActivityLog.rename_survey(project, conn, survey, survey.name, changeset.changes.name), else: nil
-      edit_log = if Enum.any?(Map.keys(changeset.changes), fn key -> key != :name end), do: ActivityLog.edit_survey(project, conn, survey), else: nil
+      changed_properties = changed_properties(changeset)
+      rename_log = if :name in changed_properties, do: ActivityLog.rename_survey(project, conn, survey, survey.name, changeset.changes.name), else: nil
+      edit_log = if Enum.any?(changed_properties, &(&1 != :name)), do: ActivityLog.edit_survey(project, conn, survey), else: nil
 
       multi = Multi.new
       |> Multi.run(:survey, fn _ ->

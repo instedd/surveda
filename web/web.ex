@@ -41,6 +41,7 @@ defmodule Ask.Web do
       import User.Helper
       import CSV.Helper
       import Pagination.Helper
+      import Changeset.Helper
     end
   end
 
