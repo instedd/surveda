@@ -289,11 +289,11 @@ defmodule Ask.ProjectController do
     all_activities_query = conn
     |> load_project(id)
     |> assoc(:activity_logs)
-    |> preload(:user)
 
-    all_activities_count = all_activities_query |> Repo.all |> Enum.count
+    all_activities_count = all_activities_query |> select(count("*")) |> Repo.one
 
     activities = all_activities_query
+    |> preload(:user)
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_activities(sort_by, sort_asc)
