@@ -63,6 +63,7 @@ const receive = (state, action, filterProvider) => {
     return {
       ...state,
       fetching: false,
+      dirty: false,
       data: data
     }
   }
@@ -75,7 +76,7 @@ const fetch = (state, action, filterProvider) => {
 
   let newData = null
 
-  if (isEqual(state.filter, newFilter)) {
+  if (isEqual(state.filter, newFilter) && !state.dirty) {
     newData = state.data
   }
 
