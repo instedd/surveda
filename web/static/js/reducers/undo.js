@@ -1,7 +1,7 @@
 // @flow
 import { head, tail } from 'lodash'
 
-const undoReducer = <T>(actions: UndoActions, reducer: StoreReducer<T>): UndoReducer<T> => {
+const undoReducer = <T>(actions: UndoActions, dirtyPredicate: DirtyPredicate<T>, reducer: StoreReducer<T>): UndoReducer<T> => {
   return (state: ?DataStoreWithUndo<T>, action: any) => {
     if (state == undefined) {
       const initialState = reducer(state, action)
@@ -17,7 +17,7 @@ const undoReducer = <T>(actions: UndoActions, reducer: StoreReducer<T>): UndoRed
       case actions.REDO: return redo(state, reducer, action)
       default:
         const newState = reducer(state, action)
-        if (state.data && newState.data !== state.data) {
+        if (dirtyPredicate(action, state, newState) && state.data && newState.data !== state.data) {
           return {
             ...newState,
             undo: [state.data, ...state.undo],

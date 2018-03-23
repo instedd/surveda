@@ -102,7 +102,7 @@ const dirtyPredicate = (action, oldData, newData) => {
   }
 }
 
-export default (undoReducer(actions, validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))): UndoReducer<Questionnaire>)
+export default (undoReducer(actions, dirtyPredicate, validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))): UndoReducer<Questionnaire>)
 
 const addChoice = (state, action) => {
   return changeStep(state, action.stepId, step => ({

@@ -356,6 +356,26 @@ describe('questionnaire reducer', () => {
         message: ['SMS prompt must not be blank']
       })
     })
+
+    it('does not add undo history when switching modes', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setActiveMode('ivr')
+      ])
+
+      expect(result.undo.length).toEqual(0)
+    })
+
+    it('does not add undo history when switching languages', () => {
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setActiveLanguage('es')
+      ])
+
+      expect(result.undo.length).toEqual(0)
+    })
   })
 
   describe('modes', () => {
