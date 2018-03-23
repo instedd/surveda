@@ -15,6 +15,7 @@ defmodule Ask.ChannelView do
       name: channel.name,
       type: channel.type,
       provider: channel.provider,
+      projects: [],
       channelBaseUrl: channel.base_url,
       settings: channel.settings}
   end

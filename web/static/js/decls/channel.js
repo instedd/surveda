@@ -3,7 +3,7 @@ export type Channel = {
   userId?: number,
   name: string,
   type: string,
-  projects: number[],
+  projects: Project[],
   provider: string,
   settings: {}
 }

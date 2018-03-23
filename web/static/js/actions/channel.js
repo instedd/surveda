@@ -2,6 +2,7 @@
 import * as api from '../api'
 
 export const SHARE = 'CHANNEL_SHARE'
+export const REMOVE_SHARED_PROJECT = 'CHANNEL_REMOVE_SHARED_PROJECT'
 export const FETCH = 'CHANNEL_FETCH'
 export const RECEIVE = 'CHANNEL_RECEIVE'
 export const SAVING = 'CHANNEL_SAVING'
@@ -48,8 +49,13 @@ export const shouldFetch = (state: DataStore<Channel>, projectId: number, id: nu
   return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
 }
 
-export const share = (projectId: string) => ({
+export const shareWithProject = (projectId: number) => ({
   type: SHARE,
+  projectId
+})
+
+export const removeSharedProject = (projectId: number) => ({
+  type: REMOVE_SHARED_PROJECT,
   projectId
 })
 

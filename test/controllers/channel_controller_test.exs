@@ -24,6 +24,7 @@ defmodule Ask.ChannelControllerTest do
                       "settings" => channel.settings,
                       "type"     => channel.type,
                       "user_id"  => channel.user_id,
+                      "projects" => [],
                       "channelBaseUrl" => channel.base_url}
       insert(:channel)
       conn = get conn, channel_path(conn, :index)
@@ -43,6 +44,7 @@ defmodule Ask.ChannelControllerTest do
                                                    "type" => channel.type,
                                                    "provider" => channel.provider,
                                                    "settings" => channel.settings,
+                                                   "projects" => [],
                                                    "channelBaseUrl" => channel.base_url}
     end
 
