@@ -12,7 +12,6 @@ defmodule Ask.Channel do
     belongs_to :user, Ask.User
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectChannel, on_replace: :delete
-    has_many :project_channels, Ask.ProjectChannel
 
     timestamps()
   end

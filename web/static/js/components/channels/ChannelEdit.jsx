@@ -39,7 +39,11 @@ class ChannelEdit extends Component {
   }
 
   onConfirmClick() {
-    return () => {}
+    const { router, dispatch } = this.props
+    return () => {
+      router.push(routes.channels)
+      dispatch(actions.updateChannel())
+    }
   }
 
   render() {

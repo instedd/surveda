@@ -1,5 +1,6 @@
 defmodule Ask.ChannelControllerTest do
   use Ask.ConnCase
+  use Ask.TestHelpers
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -10,7 +11,6 @@ defmodule Ask.ChannelControllerTest do
   end
 
   describe "index" do
-
     test "check index response is 200", %{conn: conn} do
       conn = get conn, channel_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
@@ -30,11 +30,9 @@ defmodule Ask.ChannelControllerTest do
       conn = get conn, channel_path(conn, :index)
       assert json_response(conn, 200)["data"] == [channel_map]
     end
-
   end
 
   describe "show" do
-
     test "shows chosen resource", %{conn: conn, user: user} do
       channel = insert(:channel, user: user)
       conn = get conn, channel_path(conn, :show, channel)
@@ -60,7 +58,18 @@ defmodule Ask.ChannelControllerTest do
         get conn, channel_path(conn, :show, channel)
       end
     end
-
   end
 
+  describe "update" do
+    test "share channel with projects", %{conn: conn, user: user} do
+      project1 = create_project_for_user(user)
+      project2 = create_project_for_user(user)
+
+      channel = insert(:channel, user: user)
+
+      conn = put conn, channel_path(conn, :update, channel), channel: %{projects: [project1.id, project2.id]}
+
+      assert json_response(conn, 200)["data"]["projects"] == [project1.id, project2.id]
+    end
+  end
 end

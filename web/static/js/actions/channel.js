@@ -16,6 +16,13 @@ export const createChannel = (projectId: number) => (dispatch: Function, getStat
     return channel
   })
 
+export const updateChannel = () => (dispatch: Function, getState: () => Store) => {
+  dispatch(saving())
+  api.updateChannel(getState().channel.data).then(response => {
+    dispatch(saved(response.result))
+  })
+}
+
 export const fetchChannel = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Channel => {
   dispatch(fetch(projectId, id))
   return api.fetchChannel(projectId, id)
