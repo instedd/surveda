@@ -381,33 +381,24 @@ defmodule Ask.ProjectControllerTest do
   end
 
   describe "activity logs" do
-    setup %{conn: conn, user: user} do
-      remote_ip = {192, 168, 0, 128}
-      # current_user is set in conn because it is used in ActivityLog helpers to create changesets
-      conn = %{conn | assigns: %{current_user: user}, remote_ip: remote_ip}
-      {:ok, conn: conn}
-    end
-
     test "lists activities", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       collaborator_email = "foo@foo.com"
 
-      ActivityLog.create_invite(project, conn, collaborator_email, "editor") |> Repo.insert
-      ActivityLog.enable_public_link(project, conn, survey, "results") |> Repo.insert
-
-      invite_log = ActivityLog |> where([log], log.action == "create_invite") |> Repo.one
-      link_log = ActivityLog |> where([log], log.action == "enable_public_link") |> Repo.one
-
+      %{id: create_invite_id} = insert(:activity_log, project: project, user: user, entity_type: "project", entity_id: project.id, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"), metadata: %{project_name: project.name, collaborator_email: collaborator_email, role: "editor"})
+      %{id: enable_link_id} = insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"), user: user, entity_type: "survey", entity_id: survey.id, metadata: %{survey_name: survey.name, report_type: "survey_results"})
+      create_invite_log = ActivityLog |> Repo.get!(create_invite_id)
+      enable_link_log = ActivityLog |> Repo.get!(enable_link_id)
 
       conn = get conn, project_activities_path(conn, :activities, project.id)
-      assert json_response(conn, 200)["data"] == [
+      assert json_response(conn, 200)["data"]["activities"] == [
         %{"user_name" => user.name,
           "action" => "create_invite",
           "entity_type" => "project",
-          "id" => invite_log.id,
-          "inserted_at" => NaiveDateTime.to_iso8601(invite_log.inserted_at),
-          "remote_ip" => "192.168.0.128",
+          "id" => create_invite_id,
+          "inserted_at" => NaiveDateTime.to_iso8601(create_invite_log.inserted_at),
+          "remote_ip" => "192.168.0.1",
           "metadata" => %{
             "project_name" => project.name,
             "collaborator_email" => collaborator_email,
@@ -417,36 +408,87 @@ defmodule Ask.ProjectControllerTest do
         %{"user_name" => user.name,
           "action" => "enable_public_link",
           "entity_type" => "survey",
-          "id" => link_log.id,
-          "remote_ip" => "192.168.0.128",
-          "inserted_at" => NaiveDateTime.to_iso8601(link_log.inserted_at),
+          "id" => enable_link_id,
+          "remote_ip" => "192.168.0.1",
+          "inserted_at" => NaiveDateTime.to_iso8601(enable_link_log.inserted_at),
           "metadata" => %{
             "survey_name" => survey.name,
             "report_type" => "survey_results"
           }
         }
       ]
+      assert json_response(conn, 200)["meta"]["count"] == 2
+    end
+
+    test "paginates activities", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      insert(:activity_log, project: project, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"))
+      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"))
+      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-03 00:00:00"))
+      insert(:activity_log, project: project, action: "start", inserted_at: Ecto.DateTime.cast!("2000-01-04 00:00:00"))
+
+      first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2)
+      second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2)
+
+      assert (json_response(first_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["create_invite", "edit_collaborator"]
+      assert (json_response(first_page, 200)["meta"]["count"] == 4)
+      assert (json_response(second_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["enable_public_link", "start"]
+      assert (json_response(second_page, 200)["meta"]["count"] == 4)
+    end
+
+    test "sort activities by insertedAt in ascendent order", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      insert(:activity_log, project: project, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"))
+      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"))
+      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-03 00:00:00"))
+      insert(:activity_log, project: project, action: "start", inserted_at: Ecto.DateTime.cast!("2000-01-04 00:00:00"))
+
+      first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2, sort_by: "insertedAt", sort_asc: true)
+      second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2, sort: "insertedAt", sort_asc: true)
+
+      assert (json_response(first_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["create_invite", "edit_collaborator"]
+      assert (json_response(first_page, 200)["meta"]["count"] == 4)
+      assert (json_response(second_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["enable_public_link", "start"]
+      assert (json_response(second_page, 200)["meta"]["count"] == 4)
+    end
+
+    test "sort activities by insertedAt in descendent order", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      insert(:activity_log, project: project, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"))
+      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"))
+      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-03 00:00:00"))
+      insert(:activity_log, project: project, action: "start", inserted_at: Ecto.DateTime.cast!("2000-01-04 00:00:00"))
+
+      first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2, sort_by: "insertedAt", sort_asc: false)
+      second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2, sort_by: "insertedAt", sort_asc: false)
+
+      assert (json_response(first_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["start", "enable_public_link"]
+      assert (json_response(first_page, 200)["meta"]["count"] == 4)
+      assert (json_response(second_page, 200)["data"]["activities"] |> Enum.map(&(&1["action"]))) == ["edit_collaborator", "create_invite"]
+      assert (json_response(second_page, 200)["meta"]["count"] == 4)
     end
 
     test "doesn't list activities of other project", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       project2 = create_project_for_user(user)
-      survey = insert(:survey, project: project2)
+      survey = insert(:survey, project: project)
       collaborator_email = "foo@foo.com"
 
-      ActivityLog.create_invite(project, conn, collaborator_email, "editor") |> Repo.insert
-      ActivityLog.enable_public_link(project2, conn, survey, "results") |> Repo.insert
-
-      invite_log = ActivityLog |> where([log], log.action == "create_invite") |> Repo.one
+      %{id: create_invite_id} = insert(:activity_log, project: project, user: user, entity_type: "project", entity_id: project.id, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"), metadata: %{project_name: project.name, collaborator_email: collaborator_email, role: "editor"})
+      insert(:activity_log, project: project2, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"), user: user, entity_type: "survey", entity_id: survey.id, metadata: %{survey_name: survey.name, report_type: "survey_results"})
+      create_invite_log = ActivityLog |> Repo.get!(create_invite_id)
 
       conn = get conn, project_activities_path(conn, :activities, project.id)
-      assert json_response(conn, 200)["data"] == [
+      assert json_response(conn, 200)["data"]["activities"] == [
         %{"user_name" => user.name,
           "action" => "create_invite",
           "entity_type" => "project",
-          "id" => invite_log.id,
-          "remote_ip" => "192.168.0.128",
-          "inserted_at" => NaiveDateTime.to_iso8601(invite_log.inserted_at),
+          "id" => create_invite_log.id,
+          "remote_ip" => "192.168.0.1",
+          "inserted_at" => NaiveDateTime.to_iso8601(create_invite_log.inserted_at),
           "metadata" => %{
             "project_name" => project.name,
             "collaborator_email" => collaborator_email,

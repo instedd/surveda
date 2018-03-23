@@ -185,4 +185,10 @@ defmodule Ask.Factory do
       expires_at: Timex.now |> Timex.add(Timex.Duration.from_hours(1))
     }
   end
+
+  def activity_log_factory do
+    %Ask.ActivityLog{
+      remote_ip: "192.168.0.1"
+    }
+  end
 end

@@ -40,6 +40,7 @@ defmodule Ask.Web do
 
       import User.Helper
       import CSV.Helper
+      import Pagination.Helper
     end
   end
 

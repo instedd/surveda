@@ -280,13 +280,36 @@ defmodule Ask.ProjectController do
     render(conn, "collaborators.json", collaborators: memberships ++ invites)
   end
 
-  def activities(conn, %{"project_id" => id}) do
-    activities = conn
+  def activities(conn, %{"project_id" => id} = params) do
+    limit = Map.get(params, "limit", "")
+    page = Map.get(params, "page", "")
+    sort_by = Map.get(params, "sort_by", "")
+    sort_asc = Map.get(params, "sort_asc", "")
+
+    all_activities_query = conn
     |> load_project(id)
     |> assoc(:activity_logs)
-    |> Repo.all
-    |> Repo.preload(:user)
 
-    render(conn, "activities.json", activities: activities)
+    all_activities_count = all_activities_query |> select(count("*")) |> Repo.one
+
+    activities = all_activities_query
+    |> preload(:user)
+    |> conditional_limit(limit)
+    |> conditional_page(limit, page)
+    |> sort_activities(sort_by, sort_asc)
+    |> Repo.all
+
+    render(conn, "activities.json", activities: activities, activities_count: all_activities_count)
+  end
+
+  defp sort_activities(query, sort_by, sort_asc) do
+    case {sort_by, sort_asc} do
+      {"insertedAt", "true"} ->
+        query |> order_by([log], asc: log.inserted_at)
+      {"insertedAt", "false"} ->
+        query |> order_by([log], desc: log.inserted_at)
+      _ ->
+        query
+    end
   end
 end

@@ -38,8 +38,8 @@ defmodule Ask.ProjectView do
     }
   end
 
-  def render("activities.json", %{activities: activities}) do
-    %{data: render_many(activities, Ask.ProjectView, "activity.json", as: :activity)}
+  def render("activities.json", %{activities: activities, activities_count: activities_count}) do
+    %{data: %{activities: render_many(activities, Ask.ProjectView, "activity.json", as: :activity)}, meta: %{count: activities_count}}
   end
 
   def render("activity.json", %{activity: activity}) do

@@ -9,24 +9,29 @@ import { translate } from 'react-i18next'
 
 class ActivityIndex extends Component {
   componentDidMount() {
-    const { projectId } = this.props
+    const { projectId, pageNumber } = this.props
     if (projectId) {
-      this.props.actions.fetchActivities(projectId)
+      this.props.actions.fetchActivities(projectId, pageNumber)
     }
   }
 
   nextPage(e) {
     e.preventDefault()
-    this.props.actions.nextActivitiesPage()
+
+    const { projectId, pageNumber } = this.props
+    this.props.actions.fetchActivities(projectId, pageNumber + 1)
   }
 
   previousPage(e) {
     e.preventDefault()
-    this.props.actions.previousActivitiesPage()
+
+    const { projectId, pageNumber } = this.props
+    this.props.actions.fetchActivities(projectId, pageNumber - 1)
   }
 
-  sortBy(property) {
-    this.props.actions.sortActivitiesBy(property)
+  sort() {
+    const { projectId } = this.props
+    this.props.actions.sortActivities(projectId)
   }
 
   formatDate(date) {
@@ -76,7 +81,7 @@ class ActivityIndex extends Component {
           <tr>
             <th>{t('User')}</th>
             <th>{t('Action')}</th>
-            <SortableHeader text={t('Last activity')} property='insertedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+            <SortableHeader text={t('Last activity')} property='insertedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sort()} />
           </tr>
         </thead>
         <tbody>
@@ -109,6 +114,7 @@ ActivityIndex.propTypes = {
   endIndex: PropTypes.number.isRequired,
   hasPreviousPage: PropTypes.bool.isRequired,
   hasNextPage: PropTypes.bool.isRequired,
+  pageNumber: PropTypes.number.isRequired,
   pageSize: PropTypes.number.isRequired
 }
 
@@ -120,21 +126,19 @@ const mapStateToProps = (state, ownProps) => {
   let activities = orderedItems(state.activities.items, state.activities.order)
   const sortBy = state.activities.sortBy
   const sortAsc = state.activities.sortAsc
-  const totalCount = activities ? activities.length : 0
-  const pageIndex = state.activities.page.index
+  const totalCount = state.activities.page.totalCount
+  const pageNumber = state.activities.page.number
   const pageSize = state.activities.page.size
-  if (activities) {
-    activities = activities.slice(pageIndex, pageIndex + pageSize)
-  }
-  const startIndex = Math.min(totalCount, pageIndex + 1)
-  const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const hasPreviousPage = startIndex > 1
+  const startIndex = (pageNumber - 1) * pageSize + 1
+  const endIndex = Math.min(startIndex + pageSize - 1, totalCount)
+  const hasPreviousPage = pageNumber > 1
   const hasNextPage = endIndex < totalCount
 
   return {
     projectId: ownProps.params.projectId,
     activities,
     totalCount,
+    pageNumber,
     pageSize,
     startIndex,
     endIndex,

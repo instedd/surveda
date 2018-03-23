@@ -27,30 +27,6 @@ defmodule Ask.RespondentController do
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
 
-  defp conditional_limit query, limit do
-    case limit do
-      "" -> query
-      number -> query |> limit(^number)
-    end
-  end
-
-  defp conditional_page query, limit, page do
-    limit_number = case limit do
-      "" -> 10
-      _ ->
-        {limit_value, _} = Integer.parse(limit)
-        limit_value
-    end
-
-    case page do
-      "" -> query
-      _ ->
-        {page_number, _} = Integer.parse(page)
-        offset = limit_number * (page_number - 1)
-        query |> offset(^offset)
-    end
-  end
-
   defp sort_respondents(query, sort_by, sort_asc) do
     case {sort_by, sort_asc} do
       {"phoneNumber", "true"} ->
