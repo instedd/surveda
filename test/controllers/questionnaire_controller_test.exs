@@ -693,16 +693,6 @@ defmodule Ask.QuestionnaireControllerTest do
       assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "delete", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => questionnaire.name}})
     end
 
-    test "generates log after updating a questionnaire", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project)
-
-      put conn, project_questionnaire_path(conn, :update, questionnaire.project, questionnaire), questionnaire: @valid_attrs
-      log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "edit" end)
-
-      assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "edit", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => questionnaire.name}})
-    end
-
     test "generates rename log if name changed", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
@@ -711,6 +701,147 @@ defmodule Ask.QuestionnaireControllerTest do
       log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "rename" end)
 
       assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_questionnaire_name" => questionnaire.name, "new_questionnaire_name" => "some content"}})
+    end
+
+    test "generates log for changes in modes", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, modes: ["sms", "ivr"])
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{modes: ["sms", "mobileweb"]})
+
+      log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "add_mode" end)
+      log_2 = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "remove_mode" end)
+
+      assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "add_mode", remote_ip: "192.168.0.128", metadata: %{"added_mode" => "mobileweb"}})
+
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_mode", remote_ip: "192.168.0.128", metadata: %{"removed_mode" => "ivr"}})
+    end
+
+    # test "generates log for changes in languages", %{conn: conn, user: user} do
+    #   project = create_project_for_user(user)
+    #   questionnaire = insert(:questionnaire, project: project, languages: ["en", "fr"])
+
+    #   put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{languages: ["es", "en"]})
+
+    #   log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "change_languages" end)
+
+    #   assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "change_languages", remote_ip: "192.168.0.128", metadata: %{"added_languages" => ["es"], "removed_languages" => ["fr"]}})
+    # end
+
+    test "generates log when two steps are created", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      all_steps = [first_step, second_step | tail_steps] = @dummy_steps
+
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: tail_steps)
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{steps: all_steps})
+
+      all_logs = ActivityLog|> Repo.all
+
+      log_1 = all_logs |> Enum.find(fn(x) -> x.action == "create_step" && x.metadata["step_id"] == first_step["id"]  end)
+      log_2 = all_logs |> Enum.find(fn(x) -> x.action == "create_step" && x.metadata["step_id"] == second_step["id"]  end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "create_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "step_title" => first_step["title"], "step_type" => first_step["type"]}})
+
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "create_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
+
+      assert length(all_logs) == 2
+    end
+
+    test "generates log when two steps are deleted", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      all_steps = [first_step, second_step | tail_steps] = @dummy_steps
+
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{steps: tail_steps})
+
+      all_logs = ActivityLog|> Repo.all
+
+      log_1 = all_logs |> Enum.find(fn(x) -> x.action == "delete_step" && x.metadata["step_id"] == first_step["id"]  end)
+      log_2 = all_logs |> Enum.find(fn(x) -> x.action == "delete_step" && x.metadata["step_id"] == second_step["id"]  end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "step_title" => first_step["title"], "step_type" => first_step["type"]}})
+
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
+
+      assert length(all_logs) == 2
+    end
+
+    test "generates log when two steps are renamed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      all_steps = [first_step, second_step | tail_steps] = @dummy_steps
+
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+
+      new_first_step = %{first_step | "title" => "new title"}
+      new_second_step = %{second_step | "title" => "other new title"}
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  %{@valid_attrs | steps: [new_first_step, new_second_step | tail_steps]}
+
+      all_logs = ActivityLog|> Repo.all
+
+      log_1 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == first_step["id"]  end)
+      log_2 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == second_step["id"]  end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "old_step_title" => first_step["title"], "new_step_title" => new_first_step["title"]}})
+
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "old_step_title" => second_step["title"], "new_step_title" => new_second_step["title"]}})
+
+      assert length(all_logs) == 2
+    end
+
+    test "generates log when a step is renamed and other is deleted", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      all_steps = [first_step, second_step | tail_steps] = @dummy_steps
+
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+
+      new_first_step = %{first_step | "title" => "new title"}
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  %{@valid_attrs | steps: [new_first_step | tail_steps]}
+
+      all_logs = ActivityLog|> Repo.all
+
+      log_1 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == first_step["id"]  end)
+      log_2 = all_logs |> Enum.find(fn(x) -> x.action == "delete_step" && x.metadata["step_id"] == second_step["id"]  end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "old_step_title" => first_step["title"], "new_step_title" => new_first_step["title"]}})
+
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
+
+      assert length(all_logs) == 2
+    end
+
+    test "generates log when two steps are edited", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      all_steps = [first_step, second_step | tail_steps] = @dummy_steps
+
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+
+      new_first_step = %{first_step | "store" => "new store"}
+      new_second_step = %{second_step | "store" => "other new store", "title" => "new title"}
+
+      put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  %{@valid_attrs | steps: [new_first_step, new_second_step | tail_steps]}
+
+      all_logs = ActivityLog|> Repo.all
+
+      log_1 = all_logs |> Enum.find(fn(x) -> x.action == "edit_step" && x.metadata["step_id"] == first_step["id"]  end)
+      log_2 = all_logs |> Enum.find(fn(x) -> x.action == "edit_step" && x.metadata["step_id"] == second_step["id"]  end)
+      log_3 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == second_step["id"]  end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "step_title" => first_step["title"]}})
+
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => new_second_step["title"]}})
+
+      assert_questionnaire_log(%{log: log_3, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "old_step_title" => second_step["title"], "new_step_title" => new_second_step["title"]}})
+
+      assert length(all_logs) == 3
     end
 
   end

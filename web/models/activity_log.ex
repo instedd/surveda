@@ -22,7 +22,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
   def valid_actions("questionnaire"), do:
-    ["create", "edit", "rename", "delete"]
+    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "create_step", "delete_step", "rename_step", "edit_step"]
 
   def valid_actions(_), do: []
 
@@ -159,14 +159,36 @@ defmodule Ask.ActivityLog do
     create("stop", project, conn, survey, %{survey_name: survey.name})
   end
 
-
-
   def create_questionnaire(project, conn, questionnaire) do
     create("create", project, conn, questionnaire, nil)
   end
 
   def edit_questionnaire(project, conn, questionnaire) do
     create("edit", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
+  end
+
+  def add_questionnaire_mode(project, conn, questionnaire, added_mode) do
+    create("add_mode", project, conn, questionnaire, %{added_mode: added_mode})
+  end
+
+  def remove_questionnaire_mode(project, conn, questionnaire, removed_mode) do
+    create("remove_mode", project, conn, questionnaire, %{removed_mode: removed_mode})
+  end
+
+  def create_questionnaire_step(project, conn, questionnaire, step_id, step_title, step_type) do
+    create("create_step", project, conn, questionnaire, %{:step_id => step_id, :step_title => step_title, :step_type => step_type})
+  end
+
+  def delete_questionnaire_step(project, conn, questionnaire, step_id, step_title, step_type) do
+    create("delete_step", project, conn, questionnaire, %{:step_id => step_id, :step_title => step_title, :step_type => step_type})
+  end
+
+  def rename_questionnaire_step(project, conn, questionnaire, step_id, old_step_title, new_step_title) do
+    create("rename_step", project, conn, questionnaire, %{:step_id => step_id, :old_step_title => old_step_title, :new_step_title => new_step_title})
+  end
+
+  def edit_questionnaire_step(project, conn, questionnaire, step_id, step_title) do
+    create("edit_step", project, conn, questionnaire, %{:step_id => step_id, :step_title => step_title})
   end
 
   def rename_questionnaire(project, conn, questionnaire, old_questionnaire_name, new_questionnaire_name) do

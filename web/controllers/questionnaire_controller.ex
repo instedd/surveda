@@ -77,18 +77,9 @@ defmodule Ask.QuestionnaireController do
     changeset = questionnaire
     |> Questionnaire.changeset(params)
 
-    rename_log = if Map.has_key?(changeset.changes, :name), do: ActivityLog.rename_questionnaire(project, conn, questionnaire, questionnaire.name, changeset.changes.name), else: nil
-    edit_log = if Enum.any?(Map.keys(changeset.changes), fn key -> key != :name end), do: ActivityLog.edit_questionnaire(project, conn, questionnaire), else: nil
     multi = Multi.new
-    |> Multi.run(:questionnaire, fn _ ->
-      Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires))
-    end)
-    |> Multi.run(:rename_log, fn _ ->
-      if rename_log, do: rename_log |> Repo.insert, else: {:ok, nil}
-    end)
-    |> Multi.run(:edit_log, fn _ ->
-      if edit_log, do: edit_log |> Repo.insert, else: {:ok, nil}
-    end)
+    |> Multi.update(:questionnaire, changeset, force: Map.has_key?(changeset.changes, :questionnaires))
+    |> Questionnaire.update_activity_logs(conn, project, changeset)
     |> Repo.transaction
 
     case multi do
