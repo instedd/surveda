@@ -252,6 +252,10 @@ export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }
 
+export const fetchProjectChannels = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/channels`, arrayOf(channelSchema))
+}
+
 export const fetchChannel = (channelId) => {
   return apiFetchJSON(`channels/${channelId}`, channelSchema)
 }

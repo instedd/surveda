@@ -30,6 +30,43 @@ defmodule Ask.ChannelControllerTest do
       conn = get conn, channel_path(conn, :index)
       assert json_response(conn, 200)["data"] == [channel_map]
     end
+
+    test "list only channels for a given project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      user2 = insert(:user)
+
+      channel1 = insert(:channel, user: user, projects: [project])
+      channel2 = insert(:channel, user: user2, projects: [project])
+
+      insert(:channel, user: user)
+      insert(:channel, user: user2)
+
+      channel_map1 = %{
+        "id" => channel1.id,
+        "name" => channel1.name,
+        "provider" => channel1.provider,
+        "settings" => channel1.settings,
+        "type" => channel1.type,
+        "user_id" => channel1.user_id,
+        "projects" => [project.id],
+        "channelBaseUrl" => channel1.base_url
+      }
+
+      channel_map2 = %{
+        "id" => channel2.id,
+        "name" => channel2.name,
+        "provider" => channel2.provider,
+        "settings" => channel2.settings,
+        "type" => channel2.type,
+        "user_id" => channel2.user_id,
+        "projects" => [project.id],
+        "channelBaseUrl" => channel2.base_url
+      }
+
+      conn = get(conn, project_channel_path(conn, :index, project.id))
+      assert json_response(conn, 200)["data"] == [channel_map1, channel_map2]
+    end
   end
 
   describe "show" do

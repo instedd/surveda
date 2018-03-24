@@ -30,4 +30,9 @@ declare module 'react-redux' {
     mapStateToProps: null,
     mapDispatchToProps: MapDispatchToProps<OP, DP>
   ): Connect<P, void, DP>
+
+  declare function connect<P, OP, DP>(
+    mapStateToProps: null | void,
+    mapDispatchToProps: null | void
+  ): Connect<P, void, void>
 }

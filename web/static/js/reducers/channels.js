@@ -1,6 +1,6 @@
 // @flow
 import * as actions from '../actions/channels'
-import collectionReducer from './collection'
+import collectionReducer, { projectFilterProvider } from './collection'
 
 const itemsReducer = (state: IndexedList<Channel>, action: any): IndexedList<Channel> => {
   switch (action.type) {
@@ -9,7 +9,7 @@ const itemsReducer = (state: IndexedList<Channel>, action: any): IndexedList<Cha
   }
 }
 
-export default collectionReducer(actions, itemsReducer)
+export default collectionReducer(actions, itemsReducer, projectFilterProvider)
 
 const create = (state, action) => {
   return {
