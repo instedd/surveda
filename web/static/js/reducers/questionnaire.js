@@ -6,7 +6,7 @@ import map from 'lodash/map'
 import reject from 'lodash/reject'
 import concat from 'lodash/concat'
 import * as actions from '../actions/questionnaire'
-import uuid from 'node-uuid'
+import uuidv4 from 'uuid/v4'
 import fetchReducer from './fetch'
 import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
   getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvrText, getChoiceResponseSmsJoined,
@@ -609,7 +609,7 @@ const addQuotaCompletedStep = (state, action) => {
 
 const newLanguageSelectionStep = (first: string, second: string): LanguageSelectionStep => {
   return {
-    id: uuid.v4(),
+    id: uuidv4(),
     type: 'language-selection',
     title: 'Language selection',
     store: 'language',
@@ -620,7 +620,7 @@ const newLanguageSelectionStep = (first: string, second: string): LanguageSelect
 
 export const newMultipleChoiceStep = () => {
   return {
-    id: uuid.v4(),
+    id: uuidv4(),
     type: 'multiple-choice',
     title: '',
     store: '',
@@ -677,7 +677,7 @@ const toggleQuotaCompletedSteps = (state, action) => {
 }
 
 export const newExplanationStep = () => ({
-  id: uuid.v4(),
+  id: uuidv4(),
   type: 'explanation',
   title: '',
   store: '',

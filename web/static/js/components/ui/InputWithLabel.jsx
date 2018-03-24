@@ -1,5 +1,5 @@
 import React, { PropTypes, Component } from 'react'
-import uuid from 'node-uuid'
+import uuidv4 from 'uuid/v4'
 import classNames from 'classnames/bind'
 import map from 'lodash/map'
 import { translate } from 'react-i18next'
@@ -20,7 +20,7 @@ class InputWithLabelComponent extends Component {
 
   render() {
     const { children, className, value, label, errors, readOnly, t } = this.props
-    const id = this.props.id || uuid.v4()
+    const id = this.props.id || uuidv4()
 
     var childrenWithProps = React.Children.map(children, function(child) {
       if (child) {

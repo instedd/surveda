@@ -1,6 +1,6 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
-import uuid from 'node-uuid'
+import uuidv4 from 'uuid/v4'
 import classNames from 'classnames/bind'
 
 export class Modal extends Component {
@@ -20,7 +20,7 @@ export class Modal extends Component {
 
   render() {
     const { className, showLink, linkText, style, children, card = false } = this.props
-    const id = this.props.id || uuid.v4()
+    const id = this.props.id || uuidv4()
 
     let modalLink = null
     if (showLink) {
