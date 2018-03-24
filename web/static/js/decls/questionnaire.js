@@ -15,12 +15,12 @@ export type Questionnaire = {
 };
 
 export type Settings = {
-  errorMessage: LocalizedPrompt,
-  mobileWebSmsMessage: ?string,
-  mobileWebSurveyIsOverMessage: ?string,
+  errorMessage?: LocalizedPrompt,
+  mobileWebSmsMessage?: ?string,
+  mobileWebSurveyIsOverMessage?: ?string,
   mobileWebColorStyle?: ColorStylePrompt,
-  title: {[lang: string]: string},
-  surveyAlreadyTakenMessage: {[lang: string]: string},
+  title?: {[lang: string]: string},
+  surveyAlreadyTakenMessage?: {[lang: string]: string},
   thankYouMessage?: LocalizedPrompt,
 };
 

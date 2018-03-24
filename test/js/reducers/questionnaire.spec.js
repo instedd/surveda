@@ -376,6 +376,27 @@ describe('questionnaire reducer', () => {
 
       expect(result.undo.length).toEqual(0)
     })
+
+    it('can undo questionnaire settings changes', () => {
+      const q = {...questionnaire,
+        settings: {...questionnaire.settings,
+          errorMessage: {
+            en: {
+              sms: 'error'
+            }
+          }
+        }
+      }
+
+      const result = playActions([
+        actions.fetch(1, 1),
+        actions.receive(q),
+        actions.setSmsQuestionnaireMsg('errorMessage', 'another error'),
+        actions.undo()
+      ])
+
+      expect(result.data.settings.errorMessage['en'].sms).toEqual('error')
+    })
   })
 
   describe('modes', () => {

@@ -766,47 +766,53 @@ const reorderLanguages = (state, action) => {
   }
 }
 
-const setQuestionnaireMsg = (state, action, mode) => {
-  let questionnaireMsg
-  let activeLanguageMsg
+type LocalizedSettingKey = 'errorMessage' | 'thankYouMessage';
+type MsgAction<T> = {msgKey: LocalizedSettingKey, msg: T};
 
-  questionnaireMsg = Object.assign({}, state.settings[action.msgKey])
-
-  if (state.settings[action.msgKey] && state.settings[action.msgKey][state.activeLanguage]) {
-    activeLanguageMsg = questionnaireMsg[state.activeLanguage]
-  } else {
-    activeLanguageMsg = {}
-    questionnaireMsg[state.activeLanguage] = activeLanguageMsg
-  }
-
-  let msg = action.msg
-  if (typeof (msg) == 'string') {
-    msg = msg.trim()
-  }
-  if (msg.text) {
-    msg.text = msg.text.trim()
-  }
-
-  activeLanguageMsg[mode] = msg
-
-  let newState = {
-    ...state,
-    settings: {...state.settings}
-  }
-  newState.settings[action.msgKey] = questionnaireMsg
-  return newState
+const updateLocalizedPrompt = (localizedPrompt: ?LocalizedPrompt, lang: string, update: Prompt => Prompt): LocalizedPrompt => {
+  let newLocalizedPrompt: LocalizedPrompt = {...localizedPrompt}
+  // HACK: we use this syntax because otherwise Flow would not type check this assignment
+  newLocalizedPrompt[lang] = update(newLocalizedPrompt[lang])
+  return newLocalizedPrompt
 }
 
-const setIvrQuestionnaireMsg = (state, action) => {
-  return setQuestionnaireMsg(state, action, 'ivr')
+const setQuestionnaireAudioMsg = (state: Questionnaire, key: LocalizedSettingKey, msg: AudioPrompt): Questionnaire => {
+  const audioPrompt = {
+    ...msg,
+    text: msg.text.trim()
+  }
+
+  return {...state,
+    settings: {...state.settings,
+      [key]: updateLocalizedPrompt(state.settings[key], state.activeLanguage, prompt => ({...prompt,
+        ivr: audioPrompt
+      }))
+    }
+  }
 }
 
-const setSmsQuestionnaireMsg = (state, action) => {
-  return setQuestionnaireMsg(state, action, 'sms')
+const setQuestionnaireTextMsg = (state: Questionnaire, key: LocalizedSettingKey, msg: string, mode: 'sms' | 'mobileweb'): Questionnaire => {
+  const textPrompt = msg.trim()
+
+  return {...state,
+    settings: {...state.settings,
+      [key]: updateLocalizedPrompt(state.settings[key], state.activeLanguage, prompt => ({...prompt,
+        [mode]: textPrompt
+      }))
+    }
+  }
 }
 
-const setMobileWebQuestionnaireMsg = (state, action) => {
-  return setQuestionnaireMsg(state, action, 'mobileweb')
+const setIvrQuestionnaireMsg = (state: Questionnaire, action: MsgAction<AudioPrompt>): Questionnaire => {
+  return setQuestionnaireAudioMsg(state, action.msgKey, action.msg)
+}
+
+const setSmsQuestionnaireMsg = (state: Questionnaire, action: MsgAction<string>) => {
+  return setQuestionnaireTextMsg(state, action.msgKey, action.msg, 'sms')
+}
+
+const setMobileWebQuestionnaireMsg = (state: Questionnaire, action: MsgAction<string>) => {
+  return setQuestionnaireTextMsg(state, action.msgKey, action.msg, 'mobileweb')
 }
 
 const autocompleteSmsQuestionnaireMsg = (state, action) => {
@@ -1034,20 +1040,20 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
     addMessageToCsvForTranslation(questionnaire.settings.thankYouMessage, defaultLang, context)
   }
 
-  if (questionnaire.settings.title) {
-    const defaultTitle = questionnaire.settings.title[defaultLang]
+  const title = questionnaire.settings.title
+  if (title) {
+    const defaultTitle = title[defaultLang]
     if (defaultTitle && defaultTitle.trim().length != 0) {
-      addToCsvForTranslation(defaultTitle, context, lang =>
-        questionnaire.settings.title[lang] || ''
-      )
+      addToCsvForTranslation(defaultTitle, context, lang => title[lang] || '')
     }
   }
 
-  if (questionnaire.settings.surveyAlreadyTakenMessage) {
-    const defaultMessage = questionnaire.settings.surveyAlreadyTakenMessage[defaultLang]
+  const surveyAlreadyTakenMessage = questionnaire.settings.surveyAlreadyTakenMessage
+  if (surveyAlreadyTakenMessage) {
+    const defaultMessage = surveyAlreadyTakenMessage[defaultLang]
     if (defaultMessage && defaultMessage.trim().length != 0) {
       addToCsvForTranslation(defaultMessage, context, lang =>
-        questionnaire.settings.surveyAlreadyTakenMessage[lang] || ''
+        surveyAlreadyTakenMessage[lang] || ''
       )
     }
   }
