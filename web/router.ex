@@ -67,6 +67,7 @@ defmodule Ask.Router do
       resources "/projects", ProjectController, except: [:new, :edit] do
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
         put "/memberships/update", MembershipController, :update, as: :membership_update
+        resources "/channels", ChannelController, only: [:index]
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/set_name", SurveyController, :set_name
           post "/launch", SurveyController, :launch

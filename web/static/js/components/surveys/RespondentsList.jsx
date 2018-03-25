@@ -1,10 +1,9 @@
 import React, { PropTypes } from 'react'
-import { Card } from '../ui'
+import { Card, channelFriendlyName } from '../ui'
 import Dropzone from 'react-dropzone'
 import { dropzoneProps } from './RespondentsDropzone'
 import { Input } from 'react-materialize'
 import values from 'lodash/values'
-import { channelFriendlyName } from '../../channelFriendlyName'
 import { translate } from 'react-i18next'
 
 export const RespondentsList = translate()(({ survey, group, add, remove, channels, modes, onChannelChange, onDrop, readOnly, surveyStarted, children, t }) => {

@@ -18,6 +18,8 @@ export const fetchProjects = (options: Object) => (dispatch: Function, getState:
     return
   }
 
+  if (!options) options = {'archived': false}
+
   dispatch(startFetchingProjects(options['archived']))
   return api.fetchProjects(options)
     .then(response => dispatch(receiveProjects(response.entities.projects || {}, options['archived'])))

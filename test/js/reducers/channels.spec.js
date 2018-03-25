@@ -14,13 +14,13 @@ describe('channels reducer', () => {
 
   it('should start fetching channels', () => {
     const projectId = 100
-    const result = reducer(initialState, actions.startFetchingChannels(projectId))
+    const result = reducer(initialState, actions.fetch(projectId))
     expect(result.fetching).toEqual(true)
   })
 
   it('should receive channels', () => {
     const channels = {'1': {...channel, id: 1}}
-    const r1 = reducer(initialState, actions.startFetchingChannels())
+    const r1 = reducer(initialState, actions.fetch())
     const result = reducer(r1, actions.receiveChannels(channels))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(channels)
@@ -29,7 +29,7 @@ describe('channels reducer', () => {
 
   it('should sort channels by name', () => {
     const channels = {'1': {...channel, id: 1, name: 'foo'}, '2': {...channel, id: 2, name: 'bar'}}
-    const r1 = reducer(initialState, actions.startFetchingChannels())
+    const r1 = reducer(initialState, actions.fetch())
     const r2 = reducer(r1, actions.receiveChannels(channels))
     const r3 = reducer(r2, actions.sortChannelsBy('name'))
     expect(r3.order).toEqual([2, 1])

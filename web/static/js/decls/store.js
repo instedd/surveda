@@ -4,6 +4,7 @@ export type Store = {
   questionnaires: QuestionnaireList,
   survey: DataStore<Survey>,
   surveys: SurveyList,
+  channel: Channel,
   channels: ChannelList,
   projects: ProjectList
 };

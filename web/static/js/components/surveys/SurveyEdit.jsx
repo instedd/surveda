@@ -34,7 +34,7 @@ class SurveyEdit extends Component {
       projectActions.fetchProject(projectId)
       dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
       dispatch(projectActions.fetchProject(projectId))
-      dispatch(channelsActions.fetchChannels())
+      dispatch(channelsActions.fetchProjectChannels(projectId))
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
       dispatch(respondentGroupsActions.fetchRespondentGroups(projectId, surveyId))
     }
