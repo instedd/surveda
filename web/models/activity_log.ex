@@ -1,7 +1,7 @@
 defmodule Ask.ActivityLog do
   use Ask.Web, :model
   import User.Helper
-  alias Ask.{ActivityLog, Project, Survey}
+  alias Ask.{ActivityLog, Project, Survey, Questionnaire}
 
   schema "activity_log" do
     belongs_to :project, Ask.Project
@@ -21,6 +21,9 @@ defmodule Ask.ActivityLog do
   def valid_actions("survey"), do:
     ["create", "edit", "rename", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
+  def valid_actions("questionnaire"), do:
+    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step"]
+
   def valid_actions(_), do: []
 
   def changeset(struct, params \\ %{}) do
@@ -32,6 +35,7 @@ defmodule Ask.ActivityLog do
 
   defp typeof(%Project{}), do: "project"
   defp typeof(%Survey{}), do: "survey"
+  defp typeof(%Questionnaire{}), do: "questionnaire"
 
   defp create(action, project, conn, entity, metadata) do
     user_id = case current_user(conn) do
@@ -153,5 +157,56 @@ defmodule Ask.ActivityLog do
 
   def stop(project, conn, survey) do
     create("stop", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def create_questionnaire(project, conn, questionnaire) do
+    create("create", project, conn, questionnaire, nil)
+  end
+
+  def edit_questionnaire(project, conn, questionnaire) do
+    create("edit", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
+  end
+
+  def add_questionnaire_mode(project, conn, questionnaire, questionnaire_name, added_mode) do
+    create("add_mode", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, mode: added_mode})
+  end
+
+  def remove_questionnaire_mode(project, conn, questionnaire, questionnaire_name, removed_mode) do
+    create("remove_mode", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, mode: removed_mode})
+  end
+
+  def add_questionnaire_language(project, conn, questionnaire, questionnaire_name, added_language) do
+    create("add_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: added_language})
+  end
+
+  def remove_questionnaire_language(project, conn, questionnaire, questionnaire_name, removed_language) do
+    create("remove_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: removed_language})
+  end
+
+  def create_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
+    create("create_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title, step_type: step_type})
+  end
+
+  def delete_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
+    create("delete_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title, step_type: step_type})
+  end
+
+  def rename_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, old_step_title, new_step_title) do
+    create("rename_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, old_step_title: old_step_title, new_step_title: new_step_title})
+  end
+
+  def edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title) do
+    create("edit_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title})
+  end
+
+  def rename_questionnaire(project, conn, questionnaire, old_questionnaire_name, new_questionnaire_name) do
+    create("rename", project, conn, questionnaire, %{
+      old_questionnaire_name: old_questionnaire_name,
+      new_questionnaire_name: new_questionnaire_name
+    })
+  end
+
+  def delete_questionnaire(project, conn, questionnaire) do
+    create("delete", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
   end
 end

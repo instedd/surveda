@@ -1,7 +1,8 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Questionnaire, SurveyQuestionnaire, Survey, Project, JsonSchema, Audio, Logger}
+  alias Ask.{Questionnaire, SurveyQuestionnaire, Survey, Project, JsonSchema, Audio, Logger, ActivityLog}
+  alias Ecto.Multi
 
   plug :validate_params when action in [:create, :update]
 
@@ -30,15 +31,22 @@ defmodule Ask.QuestionnaireController do
     |> build_assoc(:questionnaires)
     |> Questionnaire.changeset(params)
 
-    case Repo.insert(changeset) do
-      {:ok, questionnaire} ->
+    multi = Multi.new
+    |> Multi.insert(:questionnaire, changeset)
+    |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+      ActivityLog.create_questionnaire(project, conn, questionnaire) |> Repo.insert
+    end)
+    |> Repo.transaction
+
+    case multi do
+      {:ok, %{questionnaire: questionnaire}} ->
         project |> Project.touch!
         questionnaire |> Questionnaire.recreate_variables!
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
         |> render("show.json", questionnaire: questionnaire)
-      {:error, changeset} ->
+      {:error, _, changeset, _} ->
         Logger.warn "Error when creating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
@@ -69,8 +77,13 @@ defmodule Ask.QuestionnaireController do
     changeset = questionnaire
     |> Questionnaire.changeset(params)
 
-    case Repo.update(changeset) do
-      {:ok, questionnaire} ->
+    multi = Multi.new
+    |> Multi.update(:questionnaire, changeset, force: Map.has_key?(changeset.changes, :questionnaires))
+    |> Questionnaire.update_activity_logs(conn, project, changeset)
+    |> Repo.transaction
+
+    case multi do
+      {:ok, %{questionnaire: questionnaire}} ->
         project |> Project.touch!
         questionnaire |> Questionnaire.recreate_variables!
         questionnaire |> Ask.Translation.rebuild
@@ -82,7 +95,7 @@ defmodule Ask.QuestionnaireController do
         end
 
         render(conn, "show.json", questionnaire: questionnaire)
-      {:error, changeset} ->
+      {:error, _, changeset, _} ->
         Logger.warn "Error when updating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
@@ -116,7 +129,14 @@ defmodule Ask.QuestionnaireController do
     changeset = load_questionnaire_not_snapshot(project, id)
     |> Questionnaire.changeset(%{deleted: true})
 
-    case Repo.update(changeset) do
+    multi = Multi.new
+    |> Multi.update(:questionnaire, changeset)
+    |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+      ActivityLog.delete_questionnaire(project, conn, questionnaire) |> Repo.insert
+    end)
+    |> Repo.transaction
+
+    case multi do
       {:ok, _} ->
         project |> Project.touch!
 
@@ -140,7 +160,7 @@ defmodule Ask.QuestionnaireController do
 
         send_resp(conn, :no_content, "")
 
-      {:error, changeset} ->
+      {:error, _, changeset, _} ->
         Logger.warn "Error when deleting questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)

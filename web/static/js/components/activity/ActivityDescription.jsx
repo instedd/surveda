@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { translate } from 'react-i18next'
+import { translateLangCode } from '../timezones/util'
 
 class ActivityDescription extends Component {
   reportTypeText(reportType) {
@@ -15,6 +16,18 @@ class ActivityDescription extends Component {
         return t('interactions')
       default:
         return ''
+    }
+  }
+
+  modeName(mode) {
+    const { t } = this.props
+    switch (mode) {
+      case 'sms':
+        return t('SMS')
+      case 'ivr':
+        return t('Phone call')
+      case 'mobileweb':
+        return t('Mobile web')
     }
   }
 
@@ -69,6 +82,41 @@ class ActivityDescription extends Component {
           default:
             return ''
         }
+      case 'questionnaire':
+        const questionnaireName = metadata['questionnaireName'] || t('Untitled questionnaire')
+        const stepTitle = metadata['stepTitle'] || t('Untitled question')
+        switch (activity.action) {
+          case 'create':
+            return t('Created questionnaire')
+          case 'delete':
+            return t('Deleted questionnaire <i>{{questionnaireName}}', {questionnaireName})
+          case 'rename':
+            const {oldQuestionnaireName, newQuestionnaireName} = metadata
+            if (oldQuestionnaireName) {
+              return t('Renamed <i>{{oldQuestionnaireName}}</i> questionnaire to <i>{{newQuestionnaireName}}</i>', {oldQuestionnaireName: oldQuestionnaireName, newQuestionnaireName: newQuestionnaireName})
+            } else {
+              return t('Named questionnaire as <i>{{newQuestionnaireName}}</i>', {newQuestionnaireName: newQuestionnaireName})
+            }
+          case 'add_mode':
+            return t('Added mode <i>{{mode}}</i> to <i>{{questionnaireName}}', {questionnaireName, mode: this.modeName(metadata['mode'])})
+          case 'remove_mode':
+            return t('Removed mode <i>{{mode}}</i> from <i>{{questionnaireName}}', {questionnaireName, mode: this.modeName(metadata['mode'])})
+          case 'add_language':
+            return t('Added language <i>{{language}}</i> to <i>{{questionnaireName}}', {questionnaireName, language: translateLangCode(metadata['language'])})
+          case 'remove_language':
+            return t('Removed language <i>{{language}}</i> from <i>{{questionnaireName}}', {questionnaireName, language: translateLangCode(metadata['language'])})
+          case 'create_step':
+            return t('Added step <i>{{stepTitle}}</i> to <i>{{questionnaireName}}</i>', {questionnaireName, stepTitle})
+          case 'edit_step':
+            return t('Edited step <i>{{stepTitle}}</i> of <i>{{questionnaireName}}</i>', {questionnaireName, stepTitle})
+          case 'rename_step':
+            const oldStepTitle = metadata['oldStepTitle'] || t('Untitled question')
+            const newStepTitle = metadata['newStepTitle'] || t('Untitled question')
+            return t('Step <i>{{oldStepTitle}}</i> of <i>{{questionnaireName}}</i> renamed to <i>{{newStepTitle}}</i>', {questionnaireName, oldStepTitle, newStepTitle})
+          case 'delete_step':
+            return t('Removed step <i>{{stepTitle}}</i> from <i>{{questionnaireName}}</i>', {questionnaireName, stepTitle})
+        }
+        break
       default:
         return ''
     }
