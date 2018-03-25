@@ -627,6 +627,44 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "set_name" do
+    test "set name of a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      conn = post conn, project_survey_survey_path(conn, :set_name, project, survey), name: "new name"
+
+      assert response(conn, 204)
+      assert Repo.get(Survey, survey.id).name == "new name"
+    end
+
+    test "rejects set_name if the survey doesn't belong to the current user", %{conn: conn} do
+      survey = insert(:survey)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_name, survey.project, survey), name: "new name"
+      end
+    end
+
+    test "rejects set_name for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_name, survey.project, survey), name: "new name"
+      end
+    end
+
+    test "rejects set_name if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_name, survey.project, survey), name: "new name"
+      end
+    end
+  end
+
   describe "delete" do
     test "deletes chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -1637,6 +1675,16 @@ defmodule Ask.SurveyControllerTest do
 
       assert_survey_log(%{log: rename_log, user: user, project: project, survey: survey, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_survey_name" => survey.name, "new_survey_name" => "new name"}})
       assert_survey_log(%{log: edit_log, user: user, project: project, survey: survey, action: "edit", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates rename log with set_name action", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      post conn, project_survey_survey_path(conn, :set_name, project, survey), name: "new name"
+      log = ActivityLog |> Repo.one!()
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_survey_name" => survey.name, "new_survey_name" => "new name"}})
     end
   end
 

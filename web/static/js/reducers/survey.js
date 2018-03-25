@@ -62,6 +62,7 @@ const dirtyPredicate = (action, oldData, newData) => {
     case actions.RECEIVE_LINK: return false
     case actions.REFRESH_LINK: return false
     case actions.DELETE_LINK: return false
+    case actions.CHANGE_NAME: return false
     default: return true
   }
 }

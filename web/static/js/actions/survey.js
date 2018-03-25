@@ -121,10 +121,16 @@ export const setState = (state: string) => ({
   state
 })
 
-export const changeName = (newName: string) => ({
-  type: CHANGE_NAME,
-  newName
-})
+export const changeName = (newName: string) => (dispatch: Function, getState: () => Store) => {
+  const survey = getState().survey.data
+  if (!survey) return
+  api.setSurveyName(survey.projectId, survey.id, newName)
+
+  dispatch({
+    type: CHANGE_NAME,
+    newName
+  })
+}
 
 export const setScheduleFrom = (hour: string, nextHour: string) => ({
   type: SET_SCHEDULE_FROM,
