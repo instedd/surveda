@@ -22,7 +22,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
   def valid_actions("questionnaire"), do:
-    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "create_step", "delete_step", "rename_step", "edit_step"]
+    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step"]
 
   def valid_actions(_), do: []
 
@@ -168,11 +168,19 @@ defmodule Ask.ActivityLog do
   end
 
   def add_questionnaire_mode(project, conn, questionnaire, added_mode) do
-    create("add_mode", project, conn, questionnaire, %{added_mode: added_mode})
+    create("add_mode", project, conn, questionnaire, %{mode: added_mode})
   end
 
   def remove_questionnaire_mode(project, conn, questionnaire, removed_mode) do
-    create("remove_mode", project, conn, questionnaire, %{removed_mode: removed_mode})
+    create("remove_mode", project, conn, questionnaire, %{mode: removed_mode})
+  end
+
+  def add_questionnaire_language(project, conn, questionnaire, added_language) do
+    create("add_language", project, conn, questionnaire, %{language: added_language})
+  end
+
+  def remove_questionnaire_language(project, conn, questionnaire, removed_language) do
+    create("remove_language", project, conn, questionnaire, %{language: removed_language})
   end
 
   def create_questionnaire_step(project, conn, questionnaire, step_id, step_title, step_type) do

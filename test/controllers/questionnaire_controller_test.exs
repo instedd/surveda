@@ -712,21 +712,24 @@ defmodule Ask.QuestionnaireControllerTest do
       log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "add_mode" end)
       log_2 = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "remove_mode" end)
 
-      assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "add_mode", remote_ip: "192.168.0.128", metadata: %{"added_mode" => "mobileweb"}})
+      assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "add_mode", remote_ip: "192.168.0.128", metadata: %{"mode" => "mobileweb"}})
 
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_mode", remote_ip: "192.168.0.128", metadata: %{"removed_mode" => "ivr"}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_mode", remote_ip: "192.168.0.128", metadata: %{"mode" => "ivr"}})
     end
 
-    # test "generates log for changes in languages", %{conn: conn, user: user} do
-    #   project = create_project_for_user(user)
-    #   questionnaire = insert(:questionnaire, project: project, languages: ["en", "fr"])
+    test "generates log for changes in languages", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, languages: ["en", "fr"])
 
-    #   put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{languages: ["es", "en"]})
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{languages: ["es", "en"]})
+      assert response(conn, 200)
 
-    #   log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "change_languages" end)
+      log_1 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "add_language" end)
+      log_2 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "remove_language" end)
 
-    #   assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "change_languages", remote_ip: "192.168.0.128", metadata: %{"added_languages" => ["es"], "removed_languages" => ["fr"]}})
-    # end
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "add_language", remote_ip: "192.168.0.128", metadata: %{"language" => "es"}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_language", remote_ip: "192.168.0.128", metadata: %{"language" => "fr"}})
+    end
 
     test "generates log when two steps are created", %{conn: conn, user: user} do
       project = create_project_for_user(user)

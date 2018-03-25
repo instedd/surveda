@@ -138,6 +138,23 @@ defmodule Ask.Questionnaire do
       end
 
     multi =
+      if Map.has_key?(changeset.changes, :languages) do
+        added = changeset.changes.languages -- questionnaire.languages
+        removed = questionnaire.languages -- changeset.changes.languages
+        multi = added |> Enum.reduce(multi, fn language, multi ->
+          Multi.insert(multi, {:add_language_log, language}, ActivityLog.add_questionnaire_language(project, conn, questionnaire, language))
+        end)
+
+        multi = removed |> Enum.reduce(multi, fn language, multi ->
+          Multi.insert(multi, {:remove_language_log, language}, ActivityLog.remove_questionnaire_language(project, conn, questionnaire, language))
+        end)
+
+        multi
+      else
+        multi
+      end
+
+    multi =
       if Map.has_key?(changeset.changes, :steps) do
         multi
           |> delta_steps(conn, project, changeset)
@@ -151,12 +168,8 @@ defmodule Ask.Questionnaire do
   defp delta_steps(multi, conn, project, changeset) do
     questionnaire = changeset.data
 
-    new_steps = get_change(changeset, :steps) |> Map.new(fn step ->
-      {step["id"], step}
-    end)
-    old_steps = changeset.data.steps |> Map.new(fn step ->
-      {step["id"], step}
-    end)
+    new_steps = get_change(changeset, :steps) |> Map.new(&{&1["id"], &1})
+    old_steps = changeset.data.steps |> Map.new(&{&1["id"], &1})
 
     new_step_ids = new_steps |> Map.keys()
     old_step_ids = old_steps |> Map.keys()
@@ -180,7 +193,7 @@ defmodule Ask.Questionnaire do
     end)
 
     # Rename steps
-    common_step_ids = new_step_ids --( new_step_ids -- old_step_ids)
+    common_step_ids = new_step_ids -- (new_step_ids -- old_step_ids)
 
     multi = common_step_ids |> Enum.reduce(multi, fn step_id, multi ->
       new_step = new_steps[step_id]
