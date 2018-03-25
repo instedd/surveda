@@ -214,7 +214,7 @@ class Draft extends React.Component {
     }
 
     let errorComponent = null
-    if (errors) {
+    if (errors && errors.length > 0) {
       const errorMessage = errors.join(', ')
       errorComponent = <div className='error'>{errorMessage}</div>
       className = `${className} invalid`
