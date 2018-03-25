@@ -91,7 +91,7 @@ class StepMultipleChoiceEditor extends Component {
 
     const defaultLanguage = questionnaire.defaultLanguage
     const activeLanguage = questionnaire.activeLanguage
-    const editor = this.refs[`choiceEditor${index}`]
+    const editor = ChoiceEditor.fromRef(this.refs[`choiceEditor${index}`])
 
     if (activeLanguage == defaultLanguage) {
       let value = this.smsAutocompleteItems.find(i => i.id == item.id)
@@ -109,7 +109,7 @@ class StepMultipleChoiceEditor extends Component {
 
     const { choices } = this.props.step
 
-    const editor = this.refs[`choiceEditor${choices.length - 1}`]
+    const editor = ChoiceEditor.fromRef(this.refs[`choiceEditor${choices.length - 1}`])
     editor.enterEditMode(null, 'response')
     this.addingChoice = false
   }

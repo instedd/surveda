@@ -337,6 +337,10 @@ class ChoiceEditor extends Component {
       )
     }
   }
+
+  static fromRef(ref): ChoiceEditor {
+    return ref.getWrappedInstance()
+  }
 }
 
-export default translate()(ChoiceEditor)
+export default translate(null, {withRef: true})(ChoiceEditor)
