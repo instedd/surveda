@@ -20,6 +20,7 @@ i18n
       }
     },
     fallbackLng: 'en',
+    returnEmptyString: false,
     lng: currentLanguage,
 
     // have a common namespace used around the full app
