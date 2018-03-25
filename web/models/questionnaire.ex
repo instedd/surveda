@@ -112,6 +112,7 @@ defmodule Ask.Questionnaire do
 
   def update_activity_logs(multi, conn, project, changeset) do
     questionnaire = changeset.data
+    questionnaire_name = get_field(changeset, :name)
 
     multi =
       if Map.has_key?(changeset.changes, :name) do
@@ -125,11 +126,11 @@ defmodule Ask.Questionnaire do
         added = changeset.changes.modes -- questionnaire.modes
         removed = questionnaire.modes -- changeset.changes.modes
         multi = added |> Enum.reduce(multi, fn mode, multi ->
-          Multi.insert(multi, {:add_mode_log, mode}, ActivityLog.add_questionnaire_mode(project, conn, questionnaire, mode))
+          Multi.insert(multi, {:add_mode_log, mode}, ActivityLog.add_questionnaire_mode(project, conn, questionnaire, questionnaire_name, mode))
         end)
 
         multi = removed |> Enum.reduce(multi, fn mode, multi ->
-          Multi.insert(multi, {:remove_mode_log, mode}, ActivityLog.remove_questionnaire_mode(project, conn, questionnaire, mode))
+          Multi.insert(multi, {:remove_mode_log, mode}, ActivityLog.remove_questionnaire_mode(project, conn, questionnaire, questionnaire_name, mode))
         end)
 
         multi
@@ -142,11 +143,11 @@ defmodule Ask.Questionnaire do
         added = changeset.changes.languages -- questionnaire.languages
         removed = questionnaire.languages -- changeset.changes.languages
         multi = added |> Enum.reduce(multi, fn language, multi ->
-          Multi.insert(multi, {:add_language_log, language}, ActivityLog.add_questionnaire_language(project, conn, questionnaire, language))
+          Multi.insert(multi, {:add_language_log, language}, ActivityLog.add_questionnaire_language(project, conn, questionnaire, questionnaire_name, language))
         end)
 
         multi = removed |> Enum.reduce(multi, fn language, multi ->
-          Multi.insert(multi, {:remove_language_log, language}, ActivityLog.remove_questionnaire_language(project, conn, questionnaire, language))
+          Multi.insert(multi, {:remove_language_log, language}, ActivityLog.remove_questionnaire_language(project, conn, questionnaire, questionnaire_name, language))
         end)
 
         multi
@@ -167,6 +168,7 @@ defmodule Ask.Questionnaire do
 
   defp delta_steps(multi, conn, project, changeset) do
     questionnaire = changeset.data
+    questionnaire_name = get_field(changeset, :name)
 
     new_steps = get_change(changeset, :steps) |> Map.new(&{&1["id"], &1})
     old_steps = changeset.data.steps |> Map.new(&{&1["id"], &1})
@@ -180,7 +182,7 @@ defmodule Ask.Questionnaire do
     multi = created_step_ids |> Enum.reduce(multi, fn step_id, multi ->
       step = new_steps[step_id]
 
-      Multi.insert(multi, {:add_step_log, step_id}, ActivityLog.create_questionnaire_step(project, conn, questionnaire, step_id, step["title"], step["type"]))
+      Multi.insert(multi, {:add_step_log, step_id}, ActivityLog.create_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step["title"], step["type"]))
     end)
 
     # Delete steps
@@ -189,7 +191,7 @@ defmodule Ask.Questionnaire do
     multi = deleted_step_ids |> Enum.reduce(multi, fn step_id, multi ->
       step = old_steps[step_id]
 
-      Multi.insert(multi, {:delete_step_log, step_id}, ActivityLog.delete_questionnaire_step(project, conn, questionnaire, step_id, step["title"], step["type"]))
+      Multi.insert(multi, {:delete_step_log, step_id}, ActivityLog.delete_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step["title"], step["type"]))
     end)
 
     # Rename steps
@@ -200,13 +202,13 @@ defmodule Ask.Questionnaire do
       old_step = old_steps[step_id]
 
       multi = if new_step["title"] != old_step["title"] do
-        Multi.insert(multi, {:rename_step_log, step_id}, ActivityLog.rename_questionnaire_step(project, conn, questionnaire, step_id, old_step["title"], new_step["title"]))
+        Multi.insert(multi, {:rename_step_log, step_id}, ActivityLog.rename_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, old_step["title"], new_step["title"]))
       else
         multi
       end
 
       if Map.delete(new_step, "title") != Map.delete(old_step, "title") do
-        Multi.insert(multi, {:edit_step_log, step_id}, ActivityLog.edit_questionnaire_step(project, conn, questionnaire, step_id, new_step["title"]))
+        Multi.insert(multi, {:edit_step_log, step_id}, ActivityLog.edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, new_step["title"]))
       else
         multi
       end

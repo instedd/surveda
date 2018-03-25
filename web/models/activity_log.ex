@@ -167,36 +167,36 @@ defmodule Ask.ActivityLog do
     create("edit", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
   end
 
-  def add_questionnaire_mode(project, conn, questionnaire, added_mode) do
-    create("add_mode", project, conn, questionnaire, %{mode: added_mode})
+  def add_questionnaire_mode(project, conn, questionnaire, questionnaire_name, added_mode) do
+    create("add_mode", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, mode: added_mode})
   end
 
-  def remove_questionnaire_mode(project, conn, questionnaire, removed_mode) do
-    create("remove_mode", project, conn, questionnaire, %{mode: removed_mode})
+  def remove_questionnaire_mode(project, conn, questionnaire, questionnaire_name, removed_mode) do
+    create("remove_mode", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, mode: removed_mode})
   end
 
-  def add_questionnaire_language(project, conn, questionnaire, added_language) do
-    create("add_language", project, conn, questionnaire, %{language: added_language})
+  def add_questionnaire_language(project, conn, questionnaire, questionnaire_name, added_language) do
+    create("add_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: added_language})
   end
 
-  def remove_questionnaire_language(project, conn, questionnaire, removed_language) do
-    create("remove_language", project, conn, questionnaire, %{language: removed_language})
+  def remove_questionnaire_language(project, conn, questionnaire, questionnaire_name, removed_language) do
+    create("remove_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: removed_language})
   end
 
-  def create_questionnaire_step(project, conn, questionnaire, step_id, step_title, step_type) do
-    create("create_step", project, conn, questionnaire, %{:step_id => step_id, :step_title => step_title, :step_type => step_type})
+  def create_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
+    create("create_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title, step_type: step_type})
   end
 
-  def delete_questionnaire_step(project, conn, questionnaire, step_id, step_title, step_type) do
-    create("delete_step", project, conn, questionnaire, %{:step_id => step_id, :step_title => step_title, :step_type => step_type})
+  def delete_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
+    create("delete_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title, step_type: step_type})
   end
 
-  def rename_questionnaire_step(project, conn, questionnaire, step_id, old_step_title, new_step_title) do
-    create("rename_step", project, conn, questionnaire, %{:step_id => step_id, :old_step_title => old_step_title, :new_step_title => new_step_title})
+  def rename_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, old_step_title, new_step_title) do
+    create("rename_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, old_step_title: old_step_title, new_step_title: new_step_title})
   end
 
-  def edit_questionnaire_step(project, conn, questionnaire, step_id, step_title) do
-    create("edit_step", project, conn, questionnaire, %{:step_id => step_id, :step_title => step_title})
+  def edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title) do
+    create("edit_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title})
   end
 
   def rename_questionnaire(project, conn, questionnaire, old_questionnaire_name, new_questionnaire_name) do

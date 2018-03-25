@@ -709,12 +709,11 @@ defmodule Ask.QuestionnaireControllerTest do
 
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{modes: ["sms", "mobileweb"]})
 
-      log = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "add_mode" end)
-      log_2 = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "remove_mode" end)
+      log_1 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "add_mode" end)
+      log_2 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "remove_mode" end)
 
-      assert_questionnaire_log(%{log: log, user: user, project: project, questionnaire: questionnaire, action: "add_mode", remote_ip: "192.168.0.128", metadata: %{"mode" => "mobileweb"}})
-
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_mode", remote_ip: "192.168.0.128", metadata: %{"mode" => "ivr"}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "add_mode", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "mode" => "mobileweb"}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_mode", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "mode" => "ivr"}})
     end
 
     test "generates log for changes in languages", %{conn: conn, user: user} do
@@ -727,8 +726,8 @@ defmodule Ask.QuestionnaireControllerTest do
       log_1 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "add_language" end)
       log_2 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "remove_language" end)
 
-      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "add_language", remote_ip: "192.168.0.128", metadata: %{"language" => "es"}})
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_language", remote_ip: "192.168.0.128", metadata: %{"language" => "fr"}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "add_language", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "language" => "es"}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_language", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "language" => "fr"}})
     end
 
     test "generates log when two steps are created", %{conn: conn, user: user} do
@@ -745,9 +744,9 @@ defmodule Ask.QuestionnaireControllerTest do
       log_1 = all_logs |> Enum.find(fn(x) -> x.action == "create_step" && x.metadata["step_id"] == first_step["id"]  end)
       log_2 = all_logs |> Enum.find(fn(x) -> x.action == "create_step" && x.metadata["step_id"] == second_step["id"]  end)
 
-      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "create_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "step_title" => first_step["title"], "step_type" => first_step["type"]}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "create_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => first_step["id"], "step_title" => first_step["title"], "step_type" => first_step["type"]}})
 
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "create_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "create_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
 
       assert length(all_logs) == 2
     end
@@ -766,9 +765,9 @@ defmodule Ask.QuestionnaireControllerTest do
       log_1 = all_logs |> Enum.find(fn(x) -> x.action == "delete_step" && x.metadata["step_id"] == first_step["id"]  end)
       log_2 = all_logs |> Enum.find(fn(x) -> x.action == "delete_step" && x.metadata["step_id"] == second_step["id"]  end)
 
-      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "step_title" => first_step["title"], "step_type" => first_step["type"]}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => first_step["id"], "step_title" => first_step["title"], "step_type" => first_step["type"]}})
 
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
 
       assert length(all_logs) == 2
     end
@@ -790,9 +789,9 @@ defmodule Ask.QuestionnaireControllerTest do
       log_1 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == first_step["id"]  end)
       log_2 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == second_step["id"]  end)
 
-      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "old_step_title" => first_step["title"], "new_step_title" => new_first_step["title"]}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => first_step["id"], "old_step_title" => first_step["title"], "new_step_title" => new_first_step["title"]}})
 
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "old_step_title" => second_step["title"], "new_step_title" => new_second_step["title"]}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => second_step["id"], "old_step_title" => second_step["title"], "new_step_title" => new_second_step["title"]}})
 
       assert length(all_logs) == 2
     end
@@ -813,9 +812,9 @@ defmodule Ask.QuestionnaireControllerTest do
       log_1 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == first_step["id"]  end)
       log_2 = all_logs |> Enum.find(fn(x) -> x.action == "delete_step" && x.metadata["step_id"] == second_step["id"]  end)
 
-      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "old_step_title" => first_step["title"], "new_step_title" => new_first_step["title"]}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => first_step["id"], "old_step_title" => first_step["title"], "new_step_title" => new_first_step["title"]}})
 
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "delete_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => second_step["id"], "step_title" => second_step["title"], "step_type" => second_step["type"]}})
 
       assert length(all_logs) == 2
     end
@@ -838,11 +837,11 @@ defmodule Ask.QuestionnaireControllerTest do
       log_2 = all_logs |> Enum.find(fn(x) -> x.action == "edit_step" && x.metadata["step_id"] == second_step["id"]  end)
       log_3 = all_logs |> Enum.find(fn(x) -> x.action == "rename_step" && x.metadata["step_id"] == second_step["id"]  end)
 
-      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => first_step["id"], "step_title" => first_step["title"]}})
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => first_step["id"], "step_title" => first_step["title"]}})
 
-      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "step_title" => new_second_step["title"]}})
+      assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => second_step["id"], "step_title" => new_second_step["title"]}})
 
-      assert_questionnaire_log(%{log: log_3, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"step_id" => second_step["id"], "old_step_title" => second_step["title"], "new_step_title" => new_second_step["title"]}})
+      assert_questionnaire_log(%{log: log_3, user: user, project: project, questionnaire: questionnaire, action: "rename_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => second_step["id"], "old_step_title" => second_step["title"], "new_step_title" => new_second_step["title"]}})
 
       assert length(all_logs) == 3
     end
