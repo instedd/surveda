@@ -17,16 +17,18 @@ defmodule Ask.ChannelController do
     |> current_user
     |> assoc(:channels)
     |> Repo.all
+    |> Repo.preload(:projects)
 
-    render(conn, "index.json", channels: channels |> Repo.preload(:projects))
+    render(conn, "index.json", channels: channels)
   end
 
   def show(conn, %{"id" => id}) do
     channel = Channel
     |> Repo.get!(id)
     |> authorize_channel(conn)
+    |> Repo.preload(:projects)
 
-    render(conn, "show.json", channel: channel |> Repo.preload(:projects))
+    render(conn, "show.json", channel: channel)
   end
 
   def update(conn, %{"id" => id, "channel" => channel_params}) do
@@ -39,7 +41,7 @@ defmodule Ask.ChannelController do
     changeset =
       channel
       |> Channel.changeset(channel_params)
-      |> update_projects(channel_params)
+      |> update_projects(channel_params, conn)
 
     case Repo.update(changeset, force: Map.has_key?(changeset.changes, :projects)) do
       {:ok, channel} ->
@@ -54,10 +56,10 @@ defmodule Ask.ChannelController do
     end
   end
 
-  defp update_projects(changeset, %{"projects" => project_ids}) do
+  defp update_projects(changeset, %{"projects" => project_ids}, conn) do
     projects_changeset =
       Enum.map(project_ids, fn id ->
-        Repo.get!(Project, id) |> change
+        Repo.get!(Project, id) |> authorize(conn) |> change
       end)
 
     changeset
