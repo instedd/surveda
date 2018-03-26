@@ -170,15 +170,34 @@ defmodule Ask.Questionnaire do
         multi
       end
 
+    multi =
+      if Map.has_key?(changeset.changes, :quota_completed_steps) do
+        multi
+          |> delta_quota_completed_steps(conn, project, changeset)
+      else
+        multi
+      end
+
     multi
   end
 
-  defp delta_steps(multi, conn, project, changeset) do
-    questionnaire = changeset.data
-    questionnaire_name = get_field(changeset, :name)
+  defp delta_quota_completed_steps(multi, conn, project, changeset) do
+    new_steps = get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1})
+    old_steps = if changeset.data.quota_completed_steps, do: changeset.data.quota_completed_steps |> Map.new(&{&1["id"], &1}), else: %{}
 
+    delta(multi, conn, project, changeset, new_steps, old_steps)
+  end
+
+  defp delta_steps(multi, conn, project, changeset) do
     new_steps = get_change(changeset, :steps) |> Map.new(&{&1["id"], &1})
     old_steps = changeset.data.steps |> Map.new(&{&1["id"], &1})
+
+    delta(multi, conn, project, changeset, new_steps, old_steps)
+  end
+
+  defp delta(multi, conn, project, changeset, new_steps, old_steps) do
+    questionnaire = changeset.data
+    questionnaire_name = get_field(changeset, :name)
 
     new_step_ids = new_steps |> Map.keys()
     old_step_ids = old_steps |> Map.keys()
