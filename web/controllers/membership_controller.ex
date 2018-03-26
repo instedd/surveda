@@ -14,7 +14,7 @@ defmodule Ask.MembershipController do
     |> where([pm], pm.user_id == ^user.id and pm.project_id == ^project_id)
     |> preload(:project)
     |> Repo.one
-    |> check_target_collaborator_is_not_owner(conn)
+    |> check_target_collaborator_is_not_owner()
 
     multi = Multi.new
     |> Multi.delete(:delete, project_membership)
@@ -29,15 +29,8 @@ defmodule Ask.MembershipController do
     end
   end
 
-  def update(conn, %{"level" => "owner"}) do
-    raise UnauthorizedError, conn: conn
-  end
-
-  def update(conn, %{"project_id" => project_id, "level" => "admin", "email" => email}) do
-    conn
-    |> load_project_for_owner(project_id)
-
-    perform_update(conn, project_id, "admin", email)
+  def update(_, %{"level" => "owner"}) do
+    raise UnauthorizedError
   end
 
   def update(conn, %{"project_id" => project_id, "level" => new_level, "email" => email}) do
@@ -55,8 +48,9 @@ defmodule Ask.MembershipController do
                           |> Repo.one
 
     update_changeset = project_membership
-      |> check_target_collaborator_is_not_owner(conn)
+      |> check_target_collaborator_is_not_owner()
       |> ProjectMembership.changeset(%{level: new_level})
+      |> ProjectMembership.authorize(user_level(project_id, current_user(conn).id))
 
     multi = Multi.new
     |> Multi.update(:update, update_changeset)

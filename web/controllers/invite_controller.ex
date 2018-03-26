@@ -33,8 +33,8 @@ defmodule Ask.InviteController do
     end
   end
 
-  def invite(conn, %{"level" => "owner"}) do
-    raise UnauthorizedError, conn: conn
+  def invite(_, %{"level" => "owner"}) do
+    raise UnauthorizedError
   end
 
   def invite(conn, %{"code" => code, "level" => "admin", "email" => email, "project_id" => project_id}) do
@@ -129,7 +129,7 @@ defmodule Ask.InviteController do
     recipient_user = Repo.one(from u in Ask.User, where: u.email == ^email)
 
     if recipient_user do
-      notify_acces_to_user(conn, recipient_user, current_user, email, code, project, level)
+      notify_access_to_user(conn, recipient_user, current_user, email, code, project, level)
     else
       send_invitation_email(code, level, email, project, conn)
     end
@@ -137,8 +137,8 @@ defmodule Ask.InviteController do
     render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
   end
 
-  def update(conn, %{"level" => "owner"}) do
-    raise UnauthorizedError, conn: conn
+  def update(_, %{"level" => "owner"}) do
+    raise UnauthorizedError
   end
 
   def update(conn, %{"email" => email, "project_id" => project_id, "level" => "admin"}) do
@@ -193,7 +193,7 @@ defmodule Ask.InviteController do
     end
   end
 
-  defp notify_acces_to_user(_, recipient_user, current_user, email, code, project, level) do
+  defp notify_access_to_user(_, recipient_user, current_user, email, code, project, level) do
     invite = Repo.one(from i in Invite, where: i.code == ^code)
 
     changeset = %{"user_id" => recipient_user.id, "project_id" => project.id, "level" => level}

@@ -730,12 +730,56 @@ defmodule Ask.QuestionnaireControllerTest do
       assert_questionnaire_log(%{log: log_2, user: user, project: project, questionnaire: questionnaire, action: "remove_language", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "language" => "fr"}})
     end
 
+    test "generates log for changes in settings", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, settings: %{
+        "error_message" => %{
+          "en" => %{
+            "sms" => "You have entered an invalid answer",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "You have entered an invalid answer (ivr)"
+            }
+          }
+        }})
+
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{settings:
+        %{
+        "error_message" => %{
+          "en" => %{
+            "sms" => "The answer is invalid",
+            "ivr" => %{
+              "audio_source" => "tts",
+              "text" => "You have entered an invalid answer (ivr)"
+            }
+          }
+        }}
+        })
+      assert response(conn, 200)
+
+      log_1 = ActivityLog |> Repo.all |> Enum.find(fn(x) -> x.action == "edit_settings" end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "edit_settings", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => questionnaire.name}})
+    end
+
+    test "generates log for changes in quota completed steps", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, settings: @valid_attrs.settings, quota_completed_steps: [%{"id" => "quota-completed-step", "prompt" => %{"en" => %{"ivr" => %{"audio_source" => "tts", "text" => "Quota completed (ivr)"}, "sms" => "Quota completed"}}, "skip_logic" => nil, "title" => "Completed", "type" => "explanation"}])
+
+      conn = put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{quota_completed_steps: [%{"id" => "quota-completed-step", "prompt" => %{"en" => %{"ivr" => %{"audio_source" => "tts", "text" => "Quota completed (ivr)"}, "sms" => "Quota completed"}}, "skip_logic" => nil, "title" => "Completed", "type" => "new explanation"}]})
+      assert response(conn, 200)
+
+      log_1 = ActivityLog|> Repo.all |> Enum.find(fn(x) -> x.action == "edit_step" && x.metadata["step_id"] == "quota-completed-step" end)
+
+      assert_questionnaire_log(%{log: log_1, user: user, project: project, questionnaire: questionnaire, action: "edit_step", remote_ip: "192.168.0.128", metadata: %{"questionnaire_name" => "some content", "step_id" => "quota-completed-step", "step_title" => "Completed"}})
+    end
+
     test "generates log when two steps are created", %{conn: conn, user: user} do
       project = create_project_for_user(user)
 
       all_steps = [first_step, second_step | tail_steps] = @dummy_steps
 
-      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: tail_steps)
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: tail_steps, settings: @valid_attrs.settings)
 
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{steps: all_steps})
 
@@ -756,7 +800,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
       all_steps = [first_step, second_step | tail_steps] = @dummy_steps
 
-      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps, settings: @valid_attrs.settings)
 
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire:  Map.merge(@valid_attrs, %{steps: tail_steps})
 
@@ -777,7 +821,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
       all_steps = [first_step, second_step | tail_steps] = @dummy_steps
 
-      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps, settings: @valid_attrs.settings)
 
       new_first_step = %{first_step | "title" => "new title"}
       new_second_step = %{second_step | "title" => "other new title"}
@@ -801,7 +845,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
       all_steps = [first_step, second_step | tail_steps] = @dummy_steps
 
-      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps, settings: @valid_attrs.settings)
 
       new_first_step = %{first_step | "title" => "new title"}
 
@@ -824,7 +868,7 @@ defmodule Ask.QuestionnaireControllerTest do
 
       all_steps = [first_step, second_step | tail_steps] = @dummy_steps
 
-      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps)
+      questionnaire = insert(:questionnaire, project: project, name: @valid_attrs.name, steps: all_steps, settings: @valid_attrs.settings)
 
       new_first_step = %{first_step | "store" => "new store"}
       new_second_step = %{second_step | "store" => "other new store", "title" => "new title"}

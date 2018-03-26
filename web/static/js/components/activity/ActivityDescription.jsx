@@ -115,6 +115,8 @@ class ActivityDescription extends Component {
             return t('Step <i>{{oldStepTitle}}</i> of <i>{{questionnaireName}}</i> renamed to <i>{{newStepTitle}}</i>', {questionnaireName, oldStepTitle, newStepTitle})
           case 'delete_step':
             return t('Removed step <i>{{stepTitle}}</i> from <i>{{questionnaireName}}</i>', {questionnaireName, stepTitle})
+          case 'edit_settings':
+            return t('Edited settings on <i>{{questionnaireName}}</i>', {questionnaireName})
         }
         break
       default:

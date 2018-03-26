@@ -168,7 +168,7 @@ defmodule Ask.MobileSurveyController do
       if request_cookie == respondent_cookie do
         success_fn.(conn)
       else
-        raise Ask.UnauthorizedError, conn: conn
+        raise Ask.UnauthorizedError
       end
     else
       cookie_value = Ecto.UUID.generate

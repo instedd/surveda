@@ -183,6 +183,18 @@ defmodule Ask.MembershipControllerTest do
     end
   end
 
+  test "forbids editor to downgrade an admin to editor", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "editor")
+    collaborator_email = "user2@surveda.instedd.org"
+    collaborator = insert(:user, name: "user2", email: collaborator_email)
+    collaborator_membership = %{"user_id" => collaborator.id, "project_id" => project.id, "level" => "admin"}
+    ProjectMembership.changeset(%ProjectMembership{}, collaborator_membership) |> Repo.insert
+
+    assert_error_sent :forbidden, fn ->
+      put conn, project_membership_update_path(conn, :update, project.id), email: collaborator_email, level: "editor"
+    end
+  end
+
   test "forbids reader to update", %{conn: conn, user: user} do
     project = create_project_for_user(user, level: "reader")
     collaborator_email = "user2@surveda.instedd.org"

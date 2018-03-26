@@ -15,7 +15,6 @@ defmodule Ask.Questionnaire do
     field :default_language, :string
     field :valid, :boolean
     field :deleted, :boolean
-    field :deltas, JSON, virtual: true
     belongs_to :snapshot_of_questionnaire, Ask.Questionnaire, foreign_key: :snapshot_of
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
@@ -122,6 +121,13 @@ defmodule Ask.Questionnaire do
       end
 
     multi =
+      if Map.has_key?(changeset.changes, :settings) && (changeset.changes.settings != questionnaire.settings) do
+        Multi.insert(multi, :edit_settings_log, ActivityLog.edit_settings(project, conn, questionnaire))
+      else
+        multi
+      end
+
+    multi =
       if Map.has_key?(changeset.changes, :modes) do
         added = changeset.changes.modes -- questionnaire.modes
         removed = questionnaire.modes -- changeset.changes.modes
@@ -163,15 +169,34 @@ defmodule Ask.Questionnaire do
         multi
       end
 
+    multi =
+      if Map.has_key?(changeset.changes, :quota_completed_steps) do
+        multi
+          |> delta_quota_completed_steps(conn, project, changeset)
+      else
+        multi
+      end
+
     multi
   end
 
-  defp delta_steps(multi, conn, project, changeset) do
-    questionnaire = changeset.data
-    questionnaire_name = get_field(changeset, :name)
+  defp delta_quota_completed_steps(multi, conn, project, changeset) do
+    new_steps = get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1})
+    old_steps = if changeset.data.quota_completed_steps, do: changeset.data.quota_completed_steps |> Map.new(&{&1["id"], &1}), else: %{}
 
+    delta(multi, conn, project, changeset, new_steps, old_steps)
+  end
+
+  defp delta_steps(multi, conn, project, changeset) do
     new_steps = get_change(changeset, :steps) |> Map.new(&{&1["id"], &1})
     old_steps = changeset.data.steps |> Map.new(&{&1["id"], &1})
+
+    delta(multi, conn, project, changeset, new_steps, old_steps)
+  end
+
+  defp delta(multi, conn, project, changeset, new_steps, old_steps) do
+    questionnaire = changeset.data
+    questionnaire_name = get_field(changeset, :name)
 
     new_step_ids = new_steps |> Map.keys()
     old_step_ids = old_steps |> Map.keys()

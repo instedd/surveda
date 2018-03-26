@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Oak 0.15.3
+
+### Bugfixes
+
+* Fix: Collaborator roles not appearing correctly [#1269](https://github.com/instedd/ask/issues/1269)
+
 ## Oak 0.15.2
 
 ### Bugfixes

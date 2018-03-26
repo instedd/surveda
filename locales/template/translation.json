@@ -109,6 +109,7 @@
   "Downloaded <i>{{surveyName}}</i> {{reportType}}": "",
   "EDIT QUOTAS": "",
   "Edited <i>{{surveyName}}</i> survey": "",
+  "Edited settings on <i>{{questionnaireName}}</i>": "",
   "Edited step <i>{{stepTitle}}</i> of <i>{{questionnaireName}}</i>": "",
   "Editing": "",
   "Editing_survey": "",
