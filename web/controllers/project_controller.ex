@@ -105,7 +105,7 @@ defmodule Ask.ProjectController do
       owner = membership.level == "owner"
       render(conn, "show.json", project: project, read_only: read_only, owner: owner, level: membership.level)
     else
-      raise Ask.UnauthorizedError, conn: conn
+      raise Ask.UnauthorizedError
     end
   end
 
