@@ -55,7 +55,7 @@ class ActivityDescription extends Component {
           case 'start':
             return t('Started <i>{{surveyName}}</i> survey', {surveyName: surveyName})
           case 'stop':
-            return t('Paused <i>{{surveyName}}</i> survey', {surveyName: surveyName})
+            return t('Stopped <i>{{surveyName}}</i> survey', {surveyName: surveyName})
           case 'download':
             return t('Downloaded <i>{{surveyName}}</i> {{reportType}}', {surveyName: surveyName, reportType: reportType})
           case 'enable_public_link':
