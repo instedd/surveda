@@ -15,7 +15,6 @@ defmodule Ask.Questionnaire do
     field :default_language, :string
     field :valid, :boolean
     field :deleted, :boolean
-    field :deltas, JSON, virtual: true
     belongs_to :snapshot_of_questionnaire, Ask.Questionnaire, foreign_key: :snapshot_of
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
