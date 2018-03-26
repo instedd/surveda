@@ -122,6 +122,13 @@ defmodule Ask.Questionnaire do
       end
 
     multi =
+      if Map.has_key?(changeset.changes, :settings) && (changeset.changes.settings != questionnaire.settings) do
+        Multi.insert(multi, :edit_settings_log, ActivityLog.edit_settings(project, conn, questionnaire))
+      else
+        multi
+      end
+
+    multi =
       if Map.has_key?(changeset.changes, :modes) do
         added = changeset.changes.modes -- questionnaire.modes
         removed = questionnaire.modes -- changeset.changes.modes

@@ -22,7 +22,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
   def valid_actions("questionnaire"), do:
-    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step"]
+    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings"]
 
   def valid_actions(_), do: []
 
@@ -193,6 +193,10 @@ defmodule Ask.ActivityLog do
 
   def rename_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, old_step_title, new_step_title) do
     create("rename_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, old_step_title: old_step_title, new_step_title: new_step_title})
+  end
+
+  def edit_settings(project, conn, questionnaire) do
+    create("edit_settings", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
   end
 
   def edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title) do

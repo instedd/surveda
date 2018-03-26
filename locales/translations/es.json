@@ -149,6 +149,7 @@
     "Downloaded <i>{{surveyName}}<\/i> {{reportType}}": "Descargó {{reportType}} en <i>{{surveyName}}<\/i>",
     "EDIT QUOTAS": "EDITAR CUOTAS",
     "Edited <i>{{surveyName}}<\/i> survey": "Editó la encuesta <i>{{surveyName}}<\/i>",
+    "Edited settings on <i>{{questionnaireName}}<\/i>": "Configuraciones editadas en <i>{{questionnaireName}}<\/i>",
     "Edited step <i>{{stepTitle}}<\/i> of <i>{{questionnaireName}}<\/i>": "",
     "Editing": "Editando",
     "Editing_survey": "Editando",
