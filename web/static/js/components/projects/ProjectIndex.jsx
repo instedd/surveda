@@ -55,7 +55,11 @@ class ProjectIndex extends Component {
   }
 
   archiveOrUnarchive(project: Project, action: string) {
-    this.props.actions.archiveOrUnarchive(project, action)
+    const { t } = this.props
+    this.props.actions.archiveOrUnarchive(project, action).then(() => {
+      const description = action == 'unarchive' ? t('Project successfully unarchived') : t('Project successfully archived')
+      window.Materialize.toast(description, 5000)
+    })
   }
 
   fetchProjects(event: any) {

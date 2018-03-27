@@ -35,10 +35,19 @@ class CollaboratorIndex extends Component {
   }
 
   levelChanged(e, collaborator) {
-    const { projectId, inviteActions, actions } = this.props
+    const { projectId, inviteActions, actions, t } = this.props
     const level = e.target.value
-    const action = collaborator.invited ? inviteActions.updateLevel : actions.updateLevel
-    action(projectId, collaborator, level)
+    let action, description
+    if (collaborator.invited) {
+      action = inviteActions.updateLevel
+      description = t('Invite level successfully updated')
+    } else {
+      action = actions.updateLevel
+      description = t('Collaborator level successfully updated')
+    }
+    action(projectId, collaborator, level).then(() => {
+      window.Materialize.toast(description, 5000)
+    })
   }
 
   levelEditor(collaborator, roles, readOnly) {
@@ -72,9 +81,18 @@ class CollaboratorIndex extends Component {
   }
 
   remove(collaborator) {
-    const { projectId, inviteActions, actions } = this.props
-    const action = collaborator.invited ? inviteActions.removeInvite : actions.removeCollaborator
-    action(projectId, collaborator)
+    const { projectId, inviteActions, actions, t } = this.props
+    let action, description
+    if (collaborator.invited) {
+      action = inviteActions.removeInvite
+      description = t('Invite successfully removed')
+    } else {
+      action = actions.removeCollaborator
+      description = t('Collaborator successfully removed')
+    }
+    action(projectId, collaborator).then(() => {
+      window.Materialize.toast(description, 5000)
+    })
   }
 
   availableRolesForUser() {

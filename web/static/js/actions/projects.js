@@ -51,11 +51,9 @@ export const sortProjectsBy = (property: string) => ({
 
 export const archiveOrUnarchive = (project: Project, action: string) => (dispatch: Function, getState: () => Store) => {
   const archive = (action == 'archive')
-
   project = merge({}, project, {archived: archive})
-  api.updateProjectArchived(project).then(response => {
+  return api.updateProjectArchived(project).then(response => {
     dispatch(remove(response.entities.projects[response.result]))
-    window.Materialize.toast(`Project successfully ` + (archive ? `archived` : `unarchived`), 5000)
   })
 }
 
