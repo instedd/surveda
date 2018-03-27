@@ -5,6 +5,7 @@ import { orderedItems } from '../../reducers/collection'
 import { CardTable, SortableHeader } from '../ui'
 import ActivityDescription from './ActivityDescription'
 import * as actions from '../../actions/activities'
+import dateformat from 'dateformat'
 import { translate } from 'react-i18next'
 
 class ActivityIndex extends Component {
@@ -32,19 +33,6 @@ class ActivityIndex extends Component {
   sort() {
     const { projectId } = this.props
     this.props.actions.sortActivities(projectId)
-  }
-
-  formatDate(date) {
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale || 'en-US'
-    const options = {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: false
-    }
-    return date.toLocaleTimeString(locale, options)
   }
 
   render() {
@@ -92,7 +80,7 @@ class ActivityIndex extends Component {
                 <td>
                   <ActivityDescription activity={activity} />
                 </td>
-                <td>{this.formatDate(new Date(activity.insertedAt))}</td>
+                <td>{dateformat(new Date(activity.insertedAt), 'mmm d, yyyy HH:MM')}</td>
               </tr>
             )
           }) }
