@@ -7,25 +7,13 @@ defmodule Ask.PageController do
     explicit = params["explicit"]
     user = conn.assigns[:current_user]
 
-    filtered_params_string = "?" <> Enum.reduce(params, "", fn({key, value}, acc) ->
-      if key != "path" do
-        str = case acc do
-          "" -> acc
-          _  -> acc <> "&"
-        end
-        str <> key <> "=" <> value
-      else
-        acc
-      end
-    end)
-
     case {path, user, explicit} do
       {_, _, "true"} ->
         conn |> render("landing.html")
       {[], nil, _} ->
         conn |> render("landing.html")
-      {path, nil, _} ->
-        conn |> redirect(to: "#{session_path(conn, :new)}?redirect=/#{Enum.join path, "/"}#{filtered_params_string}")
+      {_, nil, _} ->
+        conn |> redirect(to: session_path(conn, :new, redirect: current_path(conn)))
       _ ->
         conn |> render("index.html", user: user, body_class: compute_body_class(path))
     end
