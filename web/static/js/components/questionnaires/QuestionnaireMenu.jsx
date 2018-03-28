@@ -169,7 +169,7 @@ class QuestionnaireMenu extends Component {
   }
 
   render() {
-    const { questionnaire, readOnly } = this.props
+    const { questionnaire, readOnly, t } = this.props
 
     return (
       <Dropdown className='title-options options questionnaire-menu' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
@@ -179,7 +179,7 @@ class QuestionnaireMenu extends Component {
         <DropdownItem>
           <a href='#' onClick={e => this.exportZip(e)}>
             <i className='material-icons'>file_download</i>
-            <span>Export questionnaire</span>
+            <span>{t('Export questionnaire')}</span>
           </a>
         </DropdownItem>
         { !readOnly
@@ -188,7 +188,7 @@ class QuestionnaireMenu extends Component {
             <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
             <a href='#' onClick={e => this.openImportZipDialog(e)}>
               <i className='material-icons'>file_upload</i>
-              <span>Import questionnaire</span>
+              <span>{t('Import questionnaire')}</span>
             </a>
           </DropdownItem>
           : ''}
@@ -196,7 +196,7 @@ class QuestionnaireMenu extends Component {
           ? <DropdownItem>
             <a href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
               <i className='material-icons'>file_download</i>
-              <span>Download contents as CSV</span>
+              <span>{t('Download contents as CSV')}</span>
             </a>
           </DropdownItem>
           : ''}
@@ -205,7 +205,7 @@ class QuestionnaireMenu extends Component {
             <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
             <a href='#' onClick={e => this.openUploadCsvDialog(e)}>
               <i className='material-icons'>file_upload</i>
-              <span>Upload contents as CSV</span>
+              <span>{t('Upload contents as CSV')}</span>
             </a>
           </DropdownItem>
           : ''}
