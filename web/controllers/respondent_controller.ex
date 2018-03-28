@@ -2,7 +2,17 @@ defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
   require Ask.RespondentStats
 
-  alias Ask.{Respondent, RespondentDispositionHistory, Questionnaire, Survey, SurveyLogEntry, CompletedRespondents, Stats, ActivityLog}
+  alias Ask.{
+    ActivityLog,
+    CompletedRespondents,
+    Logger,
+    Questionnaire,
+    Respondent,
+    RespondentDispositionHistory,
+    Stats,
+    Survey,
+    SurveyLogEntry
+  }
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -43,12 +53,21 @@ defmodule Ask.RespondentController do
   end
 
   def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    survey =
+      conn
+      |> load_project(project_id)
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
 
     stats(conn, survey, survey.quota_vars)
+  rescue
+    e ->
+      Logger.error "Error occurred while processing respondent stats (survey_id: #{survey_id}): #{inspect e} #{inspect System.stacktrace}"
+      Sentry.capture_exception(e, [
+        stacktrace: System.stacktrace(),
+        extra: %{survey_id: survey_id}])
+
+      render(conn, "stats.json", stats: nil)
   end
 
   defp stats(conn, survey, []) do

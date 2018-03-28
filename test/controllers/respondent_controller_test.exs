@@ -434,6 +434,36 @@ defmodule Ask.RespondentControllerTest do
              }
     end
 
+    test "answers empty if anything breaks", %{conn: conn, user: user} do
+      t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, quota_vars: ["gender"], questionnaires: [questionnaire])
+      bucket_1 = insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 4, count: 2)
+      bucket_2 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
+      bucket_3 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
+      insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
+      insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_3)
+
+      Repo.delete(bucket_3)
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      data = json_response(conn, 200)["data"]
+
+      assert data["id"] == nil
+      assert data["reference"] == %{}
+      assert data["respondents_by_disposition"] == %{}
+      assert data["cumulative_percentages"] == %{}
+      assert data["completion_percentage"] == 0
+      assert data["contacted_respondents"] == 0
+      assert data["total_respondents"] == 0
+      assert data["target"] == 0
+    end
+
+
     test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
