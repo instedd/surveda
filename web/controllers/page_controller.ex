@@ -5,13 +5,16 @@ defmodule Ask.PageController do
 
   def index(conn, params = %{"path" => path}) do
     explicit = params["explicit"]
+    if params["locale"] do
+      Gettext.put_locale(Ask.Gettext, params["locale"])
+    end
     user = conn.assigns[:current_user]
 
     case {path, user, explicit} do
       {_, _, "true"} ->
-        conn |> render("landing.html")
+        conn |> render("landing.html", current_locale: current_locale_description(Gettext.get_locale(Ask.Gettext)))
       {[], nil, _} ->
-        conn |> render("landing.html")
+        conn |> render("landing.html", current_locale: current_locale_description(Gettext.get_locale(Ask.Gettext)))
       {_, nil, _} ->
         conn |> redirect(to: session_path(conn, :new, redirect: current_path(conn)))
       _ ->
@@ -35,6 +38,15 @@ defmodule Ask.PageController do
         end
       _ ->
         nil
+    end
+  end
+
+  defp current_locale_description(locale) do
+    case locale do
+      "en" -> "English (en)"
+      "es" -> "Español (es)"
+      "fr" -> "Français (fr)"
+      _ -> "English (en)"
     end
   end
 end
