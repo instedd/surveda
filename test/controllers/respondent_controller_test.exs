@@ -6,14 +6,7 @@ defmodule Ask.RespondentControllerTest do
   alias Ask.{QuotaBucket, Survey, Response, Respondent, ShortLink, Stats, ActivityLog}
 
   describe "normal" do
-    setup %{conn: conn} do
-      user = insert(:user)
-      conn = conn
-        |> put_private(:test_user, user)
-        |> put_req_header("accept", "application/json")
-
-      {:ok, conn: conn, user: user}
-    end
+    setup :user
 
     test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -463,7 +456,6 @@ defmodule Ask.RespondentControllerTest do
       assert data["target"] == 0
     end
 
-
     test "target_value field equals respondents count when cutoff is not defined", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -515,6 +507,190 @@ defmodule Ask.RespondentControllerTest do
         "reference" => []
       }
     end
+
+    test "quotas_stats", %{conn: conn, user: user} do
+      t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+      project = create_project_for_user(user)
+
+      quotas = %{
+        "vars" => ["Smokes", "Exercises"],
+        "buckets" => [
+          %{
+            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
+            "quota" => 1,
+            "count" => 1
+          },
+          %{
+            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
+            "quota" => 4,
+            "count" => 2
+          },
+        ]
+      }
+
+      survey = insert(:survey, project: project, started_at: t)
+      survey = survey
+      |> Repo.preload([:quota_buckets])
+      |> Survey.changeset(%{quotas: quotas})
+      |> Repo.update!
+
+      qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
+      qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
+
+      insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb1.id, completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "active", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "active", disposition: "queued")
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      assert json_response(conn, 200) == %{ "data" => %{
+        "reference" => [
+         %{"name" => "Smokes: No - Exercises: No", "id" => qb1.id},
+          %{"name" => "Smokes: No - Exercises: Yes", "id" => qb4.id}
+        ],
+        "completion_percentage" => 0.0,
+        "contacted_respondents" => 0,
+        "cumulative_percentages" => %{
+          to_string(qb1.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
+          to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 0.0}]
+        },
+        "id" => survey.id,
+        "respondents_by_disposition" => %{
+          "contacted" => %{
+            "count" => 0,
+            "detail" => %{
+              "contacted" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "unresponsive" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+            },
+            "percent" => 0.0
+          },
+          "responsive" => %{
+            "count" => 0,
+            "detail" => %{
+              "breakoff" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "completed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "ineligible" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "refused" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "rejected" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+            },
+            "percent" => 0.0
+          },
+          "uncontacted" => %{
+            "count" => 4,
+            "detail" => %{
+              "failed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "queued" => %{"by_reference" => %{"" => 1}, "count" => 1, "percent" => 25.0},
+              "registered" => %{"by_reference" => %{"#{qb1.id}" => 1, "#{qb4.id}" => 2}, "count" => 3, "percent" => 75.0}
+            },
+            "percent" => 100.0
+          }
+        },
+        "total_respondents" => 4,
+        "target" => 5
+      }}
+    end
+
+  test "quotas_stats with a zero quota bucket", %{conn: conn, user: user} do
+      t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+      project = create_project_for_user(user)
+
+      quotas = %{
+        "vars" => ["Smokes", "Exercises"],
+        "buckets" => [
+          %{
+            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
+            "quota" => 0,
+            "count" => 1
+          },
+          %{
+            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
+            "quota" => 5,
+            "count" => 0
+          },
+          %{
+            "condition" => [%{"store" => "Smokes", "value" => "yes"}, %{"store" => "Exercises", "value" => "No"}],
+            "quota" => 0,
+            "count" => 0
+          },
+          %{
+            "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
+            "quota" => 5,
+            "count" => 2
+          },
+        ]
+      }
+
+      survey = insert(:survey, project: project, started_at: t)
+      survey = survey
+      |> Repo.preload([:quota_buckets])
+      |> Survey.changeset(%{quotas: quotas})
+      |> Repo.update!
+
+      qb1 = (from q in QuotaBucket, where: q.condition == ^%{"Exercises" => "No", "Smokes" => "No"}) |> Repo.one
+      qb2 = (from q in QuotaBucket, where: q.condition == ^%{"Exercises" => "Yes", "Smokes" => "No"}) |> Repo.one
+      qb4 = (from q in QuotaBucket, where: q.condition == ^%{"Exercises" => "Yes", "Smokes" => "Yes"}) |> Repo.one
+
+      insert(:respondent, survey: survey, state: "completed", disposition: "completed", quota_bucket_id: qb1.id, updated_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "completed", disposition: "completed", quota_bucket_id: qb4.id, updated_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "completed", disposition: "completed", quota_bucket_id: qb4.id, updated_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "active", disposition: "contacted", quota_bucket_id: qb4.id, updated_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+      insert(:respondent, survey: survey, state: "active", disposition: "queued")
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      assert json_response(conn, 200) == %{ "data" => %{
+        "reference" => [
+          %{"name" => "Smokes: No - Exercises: Yes", "id" => qb2.id},
+          %{"name" => "Smokes: Yes - Exercises: Yes", "id" => qb4.id}
+        ],
+        "completion_percentage" => 30.0,
+        "contacted_respondents" => 4,
+        "cumulative_percentages" => %{
+          to_string(qb2.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
+          to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 40.0}]
+        },
+        "id" => survey.id,
+        "respondents_by_disposition" => %{
+          "contacted" => %{
+            "count" => 1,
+            "detail" => %{
+              "contacted" => %{"by_reference" => %{"#{qb4.id}" => 1}, "count" => 1, "percent" => 20.0},
+              "unresponsive" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+            },
+            "percent" => 20.0
+          },
+          "responsive" => %{
+            "count" => 2,
+            "detail" => %{
+              "breakoff" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "completed" => %{"by_reference" => %{"#{qb4.id}"=> 2}, "count" => 2, "percent" => 40.0},
+              "ineligible" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "refused" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "rejected" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+            },
+            "percent" => 40.0
+          },
+          "uncontacted" => %{
+            "count" => 1,
+            "detail" => %{
+              "failed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "queued" => %{"by_reference" => %{"" => 1}, "count" => 1, "percent" => 20.0},
+              "registered" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+            },
+            "percent" => 20.0
+          }
+        },
+        "total_respondents" => 5,
+        "target" => 10
+      }}
+    end
+  end
+
+  describe "download" do
+    setup :user
 
     test "download results csv", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -1003,100 +1179,10 @@ defmodule Ask.RespondentControllerTest do
       assert length(lines) == length(expected_list)
       assert lines == expected_list
     end
-
-    test "quotas_stats", %{conn: conn, user: user} do
-      t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-      project = create_project_for_user(user)
-
-      quotas = %{
-        "vars" => ["Smokes", "Exercises"],
-        "buckets" => [
-          %{
-            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
-            "quota" => 1,
-            "count" => 1
-          },
-          %{
-            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
-            "quota" => 4,
-            "count" => 2
-          },
-        ]
-      }
-
-      survey = insert(:survey, project: project, started_at: t)
-      survey = survey
-      |> Repo.preload([:quota_buckets])
-      |> Survey.changeset(%{quotas: quotas})
-      |> Repo.update!
-
-      qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
-      qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
-
-      insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb1.id, completed_at: Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}"))
-      insert(:respondent, survey: survey, state: "completed", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-      insert(:respondent, survey: survey, state: "active", quota_bucket_id: qb4.id, completed_at: Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
-      insert(:respondent, survey: survey, state: "active", disposition: "queued")
-
-      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
-      assert json_response(conn, 200) == %{ "data" => %{
-        "reference" => [
-         %{"name" => "Smokes: No - Exercises: No", "id" => qb1.id},
-          %{"name" => "Smokes: No - Exercises: Yes", "id" => qb4.id}
-        ],
-        "completion_percentage" => 0.0,
-        "contacted_respondents" => 0,
-        "cumulative_percentages" => %{
-          to_string(qb1.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
-          to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 0.0}]
-        },
-        "id" => survey.id,
-        "respondents_by_disposition" => %{
-          "contacted" => %{
-            "count" => 0,
-            "detail" => %{
-              "contacted" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "unresponsive" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
-            },
-            "percent" => 0.0
-          },
-          "responsive" => %{
-            "count" => 0,
-            "detail" => %{
-              "breakoff" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "completed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "ineligible" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "refused" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "rejected" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
-            },
-            "percent" => 0.0
-          },
-          "uncontacted" => %{
-            "count" => 4,
-            "detail" => %{
-              "failed" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "queued" => %{"by_reference" => %{"" => 1}, "count" => 1, "percent" => 25.0},
-              "registered" => %{"by_reference" => %{"#{qb1.id}" => 1, "#{qb4.id}" => 2}, "count" => 3, "percent" => 75.0}
-            },
-            "percent" => 100.0
-          }
-        },
-        "total_respondents" => 4,
-        "target" => 5
-      }}
-    end
   end
 
   describe "links" do
-    setup %{conn: conn} do
-      user = insert(:user)
-      conn = conn
-        |> put_req_header("accept", "application/json")
-
-      {:ok, conn: conn, user: user}
-    end
+    setup :user
 
     test "download results csv using a download link", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -1319,4 +1405,12 @@ defmodule Ask.RespondentControllerTest do
     }
   end
 
+  defp user(%{conn: conn}) do
+    user = insert(:user)
+    conn = conn
+      |> put_private(:test_user, user)
+      |> put_req_header("accept", "application/json")
+
+    {:ok, conn: conn, user: user}
+  end
 end

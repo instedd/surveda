@@ -115,13 +115,15 @@ defmodule Ask.RespondentController do
 
   defp stats(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
+    empty_bucket_ids = buckets |> Enum.filter(fn(bucket) -> bucket.quota == 0 end) |> Enum.map(&(&1.id))
+    buckets = buckets |> Enum.reject(fn(bucket) -> bucket.quota == 0 end)
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     stats(
       conn,
       survey,
       respondent_count,
-      respondents_by_bucket_and_disposition(survey),
-      respondents_by_quota_bucket_and_completed_at(survey),
+      respondents_by_bucket_and_disposition(survey, empty_bucket_ids),
+      respondents_by_quota_bucket_and_completed_at(survey, empty_bucket_ids),
       buckets,
       buckets,
       "quotas_stats.json"
@@ -313,8 +315,6 @@ defmodule Ask.RespondentController do
     |> Enum.into(Enum.map(references, fn reference -> {reference.id, []} end) |> Enum.into(%{}))
     |> Enum.map(fn {group_id, percents_by_date} ->
       # To make sure the series starts at the same time that the survey
-
-
       percents_by_date = [{started_at |> DateTime.to_date(), 0}] ++ percents_by_date
 
       percents_by_date = if state == "running" do
@@ -432,8 +432,8 @@ defmodule Ask.RespondentController do
     Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :mode])
   end
 
-  defp respondents_by_bucket_and_disposition(survey) do
-    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :quota_bucket_id])
+  defp respondents_by_bucket_and_disposition(survey, bucket_ids) do
+    Ask.RespondentStats.respondent_count(survey_id: ^survey.id, quota_bucket_id: not_in_list(^bucket_ids), by: [:state, :disposition, :quota_bucket_id])
   end
 
   defp respondents_by_questionnaire_and_completed_at(survey) do
@@ -467,10 +467,10 @@ defmodule Ask.RespondentController do
     |> Enum.map(fn({mode, completed_at, count}) -> {mode |> Poison.decode! |> Enum.join(""), completed_at, count} end)
   end
 
-  defp respondents_by_quota_bucket_and_completed_at(survey) do
+  defp respondents_by_quota_bucket_and_completed_at(survey, bucket_ids) do
     Repo.all(
       from r in CompletedRespondents,
-      where: r.survey_id == ^survey.id,
+      where: r.survey_id == ^survey.id and r.quota_bucket_id not in ^bucket_ids,
       group_by: [r.quota_bucket_id, r.date],
       order_by: r.date,
       select: {r.quota_bucket_id, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))})
