@@ -436,8 +436,6 @@
   "incentives": "",
   "interactions": "",
   "limit exceeded": "",
-  "of": "",
-  "of_pagination": "",
   "project": "",
   "projects": "",
   "survey results": "",
@@ -473,5 +471,6 @@
   "{{groupName}} ({{count}} contact)_plural": "",
   "{{inviter_email}} has invited you to collaborate as {{role}} on {{project}}": "",
   "{{percentage}}% of target completed": "",
-  "{{role}} (invited)": ""
+  "{{role}} (invited)": "",
+  "{{startIndex}}-{{endIndex}} of {{totalCount}}": ""
 }

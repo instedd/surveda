@@ -10,7 +10,7 @@ import * as actions from '../../actions/questionnaires'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as userSettingsActions from '../../actions/userSettings'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip, ConfirmationModal } from '../ui'
+import { AddButton, EmptyPage, SortableHeader, CardTable, UntitledIfEmpty, Tooltip, ConfirmationModal, PagingFooter } from '../ui'
 import * as routes from '../../routes'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
 import { translate, Trans } from 'react-i18next'
@@ -30,13 +30,11 @@ class QuestionnaireIndex extends Component {
     this.props.userSettingsActions.fetchSettings()
   }
 
-  nextPage(e) {
-    e.preventDefault()
+  nextPage() {
     this.props.actions.nextQuestionnairesPage()
   }
 
-  previousPage(e) {
-    e.preventDefault()
+  previousPage() {
     this.props.actions.previousQuestionnairesPage()
   }
 
@@ -96,8 +94,7 @@ class QuestionnaireIndex extends Component {
   }
 
   render() {
-    const { questionnaires, project, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, userSettings, t } = this.props
+    const { questionnaires, project, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, userSettings, t } = this.props
 
     if (!questionnaires || !userSettings.settings) {
       return (
@@ -108,21 +105,10 @@ class QuestionnaireIndex extends Component {
     }
 
     const title = `${totalCount} ${(totalCount == 1) ? ' questionnaire' : ' questionnaires'}`
-    const footer = (
-      <div className='card-action right-align'>
-        <ul className='pagination'>
-          <li><span className='grey-text'>{startIndex}-{endIndex} {t('of', {context: 'pagination'})} {totalCount}</span></li>
-          { hasPreviousPage
-            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
-          }
-          { hasNextPage
-            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
-          }
-        </ul>
-      </div>
-    )
+    const footer = <PagingFooter
+      {...{startIndex, endIndex, totalCount}}
+      onPreviousPage={() => this.previousPage()}
+      onNextPage={() => this.nextPage()} />
 
     const readOnly = !project || project.readOnly
 
@@ -214,8 +200,6 @@ QuestionnaireIndex.propTypes = {
   pageSize: PropTypes.number.isRequired,
   startIndex: PropTypes.number.isRequired,
   endIndex: PropTypes.number.isRequired,
-  hasPreviousPage: PropTypes.bool.isRequired,
-  hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
   router: PropTypes.object
 }
@@ -233,8 +217,6 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const hasPreviousPage = startIndex > 1
-  const hasNextPage = endIndex < totalCount
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
@@ -245,8 +227,6 @@ const mapStateToProps = (state, ownProps) => {
     pageSize,
     startIndex,
     endIndex,
-    hasPreviousPage,
-    hasNextPage,
     totalCount
   }
 }

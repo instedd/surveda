@@ -6,7 +6,7 @@ import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal } from '../ui'
+import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -24,8 +24,6 @@ class SurveyIndex extends Component {
     surveys: PropTypes.array,
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    hasPreviousPage: PropTypes.bool.isRequired,
-    hasNextPage: PropTypes.bool.isRequired,
     totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired
   }
@@ -73,20 +71,18 @@ class SurveyIndex extends Component {
     })
   }
 
-  nextPage(e) {
+  nextPage() {
     const { dispatch } = this.props
-    e.preventDefault()
     dispatch(actions.nextSurveysPage())
   }
 
-  previousPage(e) {
+  previousPage() {
     const { dispatch } = this.props
-    e.preventDefault()
     dispatch(actions.previousSurveysPage())
   }
 
   render() {
-    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage, t } = this.props
+    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
 
     if (!surveys) {
       return (
@@ -94,21 +90,10 @@ class SurveyIndex extends Component {
       )
     }
 
-    const footer = (
-      <div className='card-action right-align'>
-        <ul className='pagination'>
-          <li style={{lineHeight: 2}}><span className='grey-text'>{startIndex}-{endIndex} of {totalCount}</span></li>
-          { hasPreviousPage
-            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
-          }
-          { hasNextPage
-            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
-          }
-        </ul>
-      </div>
-    )
+    const footer = <PagingFooter
+      {...{startIndex, endIndex, totalCount}}
+      onPreviousPage={() => this.previousPage()}
+      onNextPage={() => this.nextPage()} />
 
     const readOnly = !project || project.readOnly
 
@@ -157,8 +142,6 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const hasPreviousPage = startIndex > 1
-  const hasNextPage = endIndex < totalCount
 
   return {
     projectId: ownProps.params.projectId,
@@ -168,8 +151,6 @@ const mapStateToProps = (state, ownProps) => {
     respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
-    hasPreviousPage,
-    hasNextPage,
     totalCount
   }
 }

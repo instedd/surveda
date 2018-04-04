@@ -8,7 +8,7 @@ import { orderedItems } from '../../reducers/collection'
 import * as actions from '../../actions/channels'
 import range from 'lodash/range'
 import * as authActions from '../../actions/authorizations'
-import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal, ConfirmationModal, channelFriendlyName } from '../ui'
+import { AddButton, EmptyPage, CardTable, UntitledIfEmpty, SortableHeader, Modal, ConfirmationModal, PagingFooter, channelFriendlyName } from '../ui'
 import { Preloader } from 'react-materialize'
 import { config } from '../../config'
 import { translate } from 'react-i18next'
@@ -40,13 +40,11 @@ class ChannelIndex extends Component {
     this.props.authActions.toggleAuthorization(provider, index)
   }
 
-  nextPage(e) {
-    e.preventDefault()
+  nextPage() {
     this.props.actions.nextChannelsPage()
   }
 
-  previousPage(e) {
-    e.preventDefault()
+  previousPage() {
     this.props.actions.previousChannelsPage()
   }
 
@@ -67,7 +65,7 @@ class ChannelIndex extends Component {
   }
 
   render() {
-    const { t, channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, hasPreviousPage, hasNextPage, router } = this.props
+    const { t, channels, authorizations, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, router } = this.props
 
     if (!channels) {
       return (
@@ -78,21 +76,10 @@ class ChannelIndex extends Component {
     }
 
     const title = `${totalCount} ${(totalCount == 1) ? t('channel') : t('channels')}`
-    const footer = (
-      <div className='card-action right-align'>
-        <ul className='pagination'>
-          <li><span className='grey-text'>{startIndex}-{endIndex} {t('of', {context: 'pagination'})} {totalCount}</span></li>
-          { hasPreviousPage
-            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
-          }
-          { hasNextPage
-            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
-          }
-        </ul>
-      </div>
-    )
+    const footer = <PagingFooter
+      {...{startIndex, endIndex, totalCount}}
+      onPreviousPage={() => this.previousPage()}
+      onNextPage={() => this.nextPage()} />
 
     const providerSwitch = (provider, index) => {
       const disabled = authorizations.fetching
@@ -259,8 +246,6 @@ ChannelIndex.propTypes = {
   pageSize: PropTypes.number.isRequired,
   startIndex: PropTypes.number.isRequired,
   endIndex: PropTypes.number.isRequired,
-  hasPreviousPage: PropTypes.bool.isRequired,
-  hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
   router: PropTypes.object
 }
@@ -278,8 +263,6 @@ const mapStateToProps = (state) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const hasPreviousPage = startIndex > 1
-  const hasNextPage = endIndex < totalCount
   return {
     sortBy,
     sortAsc,
@@ -287,8 +270,6 @@ const mapStateToProps = (state) => {
     pageSize,
     startIndex,
     endIndex,
-    hasPreviousPage,
-    hasNextPage,
     totalCount,
     authorizations: state.authorizations
   }
