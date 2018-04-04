@@ -1,0 +1,104 @@
+## `msgid`s in this file come from POT (.pot) files.
+##
+## Do not add, change, or remove `msgid`s manually here as
+## they're tied to the ones in the corresponding POT file
+## (with the same domain).
+##
+## Use `mix gettext.extract --merge` or `mix gettext.merge`
+## to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: es\n"
+
+#: web/templates/page/landing.html.eex:86
+msgid "Ask and Discover"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:66 web/templates/page/landing.html.eex:73
+msgid "About Instedd Platform"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:68 web/templates/page/landing.html.eex:75
+msgid "Login"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:69 web/templates/page/landing.html.eex:76
+msgid "Sign up for free"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:87
+msgid "Find insights in the voice of communities"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:91
+msgid "Surveda is an open source survey tool that collects data from populations via mobile phone."
+msgstr ""
+
+#: web/templates/page/landing.html.eex:89
+msgid "What is Surveda?"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:104
+msgid "Surveda uses the root word “survey,” with the Latin meaning of “oversee” or “inspect”."
+msgstr ""
+
+#: web/templates/page/landing.html.eex:103
+msgid "What does the name “Surveda” mean?"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:105
+msgid "Veda evokes wisdom, from the Sanskrit word for knowledge or understanding."
+msgstr ""
+
+#: web/templates/page/landing.html.eex:118
+msgid "<span>Ask</span> the right questions in any language"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:155
+msgid "<span>Adapt</span> open source code for greater flexibility"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:131
+msgid "<span>Deploy</span> surveys by voice, text, mobile web and more"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:145
+msgid "<span>Evaluate</span> performance of surveys and quickly test research hypotheses"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:168
+msgid "A tool to combat noncommunicable diseases"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:179
+msgid "More about the Bloomberg Philanthropies Data for Health Initiative"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:183
+#: web/templates/page/landing.html.eex:192
+msgid "Read more"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:169
+msgid "Surveda was developed as part of the Bloomberg Philanthropies Data for Health Initiative NCD Mobile Phone Survey. Surveda will be used to collect critical information about noncommunicable diseases (NCDs) in low- and middle-income countries worldwide (LMICs). It is an open source tool on a common software platform, which means that Surveda is accessible to individuals and organizations interested in creating their own surveys."
+msgstr ""
+
+#: web/templates/page/landing.html.eex:181
+msgid "The Bloomberg Philanthropies Data for Health Initiative aims to strengthen the collection and use of critical public health information. Working in selected low- and middle-income countries, the three components of this initiative seek to: i) strengthen the quality of birth and death registration systems and improve information on cause of death; ii) explore innovative approaches to NCD surveillance, including the use of mobile phone surveys; and iii) enhance."
+msgstr ""
+
+#: web/templates/page/landing.html.eex:188
+msgid "More about the NCD Mobile Survey"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:207
+msgid "Support"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:206
+msgid "Terms of service"
+msgstr ""
+
+#: web/templates/page/landing.html.eex:190
+msgid "The NCD mobile phone survey is a nationally-representative survey of adults 18 years of age and older using a standard protocol. Using technology platforms such as interactive voice response (IVR), short message service (SMS), computer-assisted telephone interviewing (CATI), mobile web, as well as a mix of these modes, mobile phone surveys provide timely data and allow for rapid feedback of results. It is intended to generate comparable data within and across countries. This survey supplements and supports national household face-to-face surveys."
+msgstr ""

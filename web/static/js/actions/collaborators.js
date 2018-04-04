@@ -14,18 +14,16 @@ export const fetchCollaborators = (projectId) => dispatch => {
 }
 
 export const removeCollaborator = (projectId, collaborator) => dispatch => {
-  api.removeCollaborator(projectId, collaborator.email)
+  return api.removeCollaborator(projectId, collaborator.email)
     .then(response => {
       dispatch(collaboratorRemoved(collaborator))
-      window.Materialize.toast(`Collaborator successfully removed`, 5000)
     })
 }
 
 export const updateLevel = (projectId, collaborator, level) => dispatch => {
-  api.updateCollaboratorLevel(projectId, collaborator.email, level)
+  return api.updateCollaboratorLevel(projectId, collaborator.email, level)
     .then(response => {
       dispatch(collaboratorLevelUpdated(collaborator, level))
-      window.Materialize.toast(`Collaborator level successfully updated`, 5000)
     })
 }
 

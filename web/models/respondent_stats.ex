@@ -83,6 +83,11 @@ defmodule Ask.RespondentStats do
               |> where([s], field(s, unquote(field)) == unquote(nil_value))
             end
         end
+      {:not_in_list, _, [value]} ->
+        quote do
+          unquote(quoted)
+          |> where([s], field(s, unquote(field)) not in unquote(value))
+        end
       value ->
         quote do
           unquote(quoted)

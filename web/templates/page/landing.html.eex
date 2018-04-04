@@ -52,20 +52,28 @@
                   c-2.3,0-3.8,0.1-4.5,0.4c-0.4,0.1-0.7,0.3-1.1,0.5C158.8,35.3,158.4,36,158.4,36.9z"/>
               </g>
             </svg>
+            <a class='dropdown-button language-selector-home' href='#!' data-activates='lang-dropdown' data-induration='100' data-outduration='50' data-beloworigin='true' data-constrainwidth='false'>
+                <%= @current_locale %>
+              </a>
+              <ul id='lang-dropdown' class='dropdown-content'>
+                <li><a href="/?locale=en">English (en)</a></li>
+                <li><a href="/?locale=es">Español (es)</a></li>
+                <li><a href="/?locale=fr">Français (fr)</a></li>
+              </ul>
             <a href="#" data-activates="mobile-demo" class="button-collapse grey-text"><i class="material-icons">menu</i></a>
           </a>
           <ul class="right hide-on-med-and-down">
-            <li><a href="http://instedd.org/technologies/" class="btn-flat btn-large">About Instedd Platform</a></li>
+            <li><a href="http://instedd.org/technologies/" class="btn-flat btn-large"><%= gettext "About Instedd Platform" %></a></li>
             <%= unless @current_user do %>
-              <li><a href='<%= session_path @conn, :new %>' class="btn-flat btn-large">Login</a></li>
-              <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined">Sign up for free</a></li>
+              <li><a href='<%= session_path @conn, :new %>' class="btn-flat btn-large"><%= gettext "Login" %></a></li>
+              <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined"><%= gettext "Sign up for free" %></a></li>
             <% end %>
           </ul>
           <ul class="side-nav" id="mobile-demo">
-            <li><a href="http://instedd.org/technologies/" class="btn-flat btn-large">About Instedd Platform</a></li>
+            <li><a href="http://instedd.org/technologies/" class="btn-flat btn-large"><%= gettext "About Instedd Platform" %></a></li>
             <%= unless @current_user do %>
-              <li><a href='<%= session_path @conn, :new %>' class="btn-flat btn-large">Login</a></li>
-              <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined">Sign up for free</a></li>
+              <li><a href='<%= session_path @conn, :new %>' class="btn-flat btn-large"><%= gettext "Login" %></a></li>
+              <li><a href="<%= registration_path @conn, :new %>" class="btn-flat btn-large outlined"><%= gettext "Sign up for free" %></a></li>
             <% end %>
           </ul>
         </div>
@@ -75,12 +83,13 @@
       <div class="section main">
         <div class='row main'>
           <div class='col s12 m5'>
-            <h3>Ask and Discover</h3>
-            <h5>Find insights in the voice of communities </h5>
+            <h3><%= gettext "Ask and Discover" %></h3>
+            <h5><%= gettext "Find insights in the voice of communities" %></h5>
             <p>
-              What is Surveda?
+              <%= gettext "What is Surveda?" %>
               <br>
-              Surveda is an open source survey tool that collects data from populations via mobile phone.</p>
+              <%= gettext "Surveda is an open source survey tool that collects data from populations via mobile phone." %></p>
+
           </div>
           <div class='col s12 m7'>
             <img class="right responsive-img" src='/images/welcome-main.png' width='581px' />
@@ -91,9 +100,9 @@
       <div class="section right-img grey lighten-4 grey-section">
         <div class='row'>
           <div class='col s12 m8'>
-            <h5>What does the name “Surveda” mean?</h5>
-            <p>Surveda uses the root word “survey,” with the Latin meaning of “oversee” or “inspect”.
-            <br>Veda evokes wisdom, from the Sanskrit word for knowledge or understanding. </p>
+            <h5><%= gettext "What does the name “Surveda” mean?" %></h5>
+            <p><%= gettext "Surveda uses the root word \“survey,\” with the Latin meaning of \“oversee\” or \“inspect\”." %>
+            <br><%= gettext "Veda evokes wisdom, from the Sanskrit word for knowledge or understanding." %></p>
           </div>
           <div class='col s12 m4'>
             <img class="responsive-img" src='/images/surveda-name.png' width='296px' />
@@ -106,7 +115,7 @@
         <div class='row'>
           <div class='col s12 m7'>
             <div class='description'>
-              <h3><span>Ask</span> the right questions in any language</h3>
+              <h3><%= raw (gettext "<span>Ask</span> the right questions in any language") %></h3>
             </div>
           </div>
           <div class='col s12 m5'>
@@ -119,7 +128,7 @@
         <div class='row'>
           <div class='col s12 center'>
             <div class='description'>
-              <h3><span>Deploy</span> surveys by voice, text, mobile web and more</h3>
+              <h3><%= raw (gettext "<span>Deploy</span> surveys by voice, text, mobile web and more") %></h3>
               <img class="responsive-img center-align" src='/images/welcome-img04.png' />
             </div>
           </div>
@@ -133,7 +142,7 @@
           </div>
           <div class='col s12 m7'>
             <div class='description'>
-              <h3><span>Evaluate</span> performance of surveys and quickly test research hypotheses</h3>
+              <h3><%= raw (gettext "<span>Evaluate</span> performance of surveys and quickly test research hypotheses") %></h3>
             </div>
           </div>
         </div>
@@ -143,7 +152,7 @@
         <div class='row'>
           <div class='col s12 m7'>
             <div class='description'>
-              <h3><span>Adapt</span> open source code for greater flexibility</h3>
+              <h3><%= raw (gettext "<span>Adapt</span> open source code for greater flexibility") %></h3>
             </div>
           </div>
           <div class='col s12 m5'>
@@ -156,8 +165,8 @@
         <div class='row'>
           <div class='col s12 center'>
             <div class='description'>
-              <h3>A tool to combat noncommunicable diseases</h3>
-              <p>Surveda was developed as part of the Bloomberg Philanthropies Data for Health Initiative NCD Mobile Phone Survey. Surveda will be used to collect critical information about noncommunicable diseases (NCDs) in low- and middle-income countries worldwide (LMICs). It is an open source tool on a common software platform, which means that Surveda is accessible to individuals and organizations interested in creating their own surveys.</p>
+              <h3><%= gettext "A tool to combat noncommunicable diseases" %></h3>
+              <p><%= gettext "Surveda was developed as part of the Bloomberg Philanthropies Data for Health Initiative NCD Mobile Phone Survey. Surveda will be used to collect critical information about noncommunicable diseases (NCDs) in low- and middle-income countries worldwide (LMICs). It is an open source tool on a common software platform, which means that Surveda is accessible to individuals and organizations interested in creating their own surveys." %></p>
             </div>
           </div>
         </div>
@@ -167,15 +176,21 @@
       <div class="section grey lighten-4 columns">
         <div class='row'>
           <div class='col s12 m4 offset-m1'>
-            <h5>More about the Bloomberg Philanthropies Data for Health Initiative</h5>
+            <h5><%= gettext "More about the Bloomberg Philanthropies Data for Health Initiative" %></h5>
             <p>
-              The Bloomberg Philanthropies Data for Health Initiative aims to strengthen the collection and use of critical public health information. Working in selected low- and middle-income countries, the three components of this initiative seek to: i) strengthen the quality of birth and death registration systems and improve information on cause of death; ii) explore innovative approaches to NCD surveillance, including the use of mobile phone surveys; and iii) enhance. <a href="https://www.bloomberg.org/program/public-health/data-health/" target="_blank">Read more</a>
+              <%= gettext "The Bloomberg Philanthropies Data for Health Initiative aims to strengthen the collection and use of critical public health information. Working in selected low- and middle-income countries, the three components of this initiative seek to: i) strengthen the quality of birth and death registration systems and improve information on cause of death; ii) explore innovative approaches to NCD surveillance, including the use of mobile phone surveys; and iii) enhance." %>
+              <a href="https://www.bloomberg.org/program/public-health/data-health/" target="_blank">
+                <%= gettext "Read more" %>
+              </a>
             </p>
           </div>
           <div class='col s12 m4 offset-m1'>
-            <h5>More about the NCD Mobile Survey</h5>
+            <h5><%= gettext "More about the NCD Mobile Survey" %></h5>
             <p>
-              The NCD mobile phone survey is a nationally-representative survey of adults 18 years of age and older using a standard protocol. Using technology platforms such as interactive voice response (IVR), short message service (SMS), computer-assisted telephone interviewing (CATI), mobile web, as well as a mix of these modes, mobile phone surveys provide timely data and allow for rapid feedback of results. It is intended to generate comparable data within and across countries. This survey supplements and supports national household face-to-face surveys. <a href="https://www.ncdmobile.org/" target="_blank">Read more</a>
+              <%= gettext "The NCD mobile phone survey is a nationally-representative survey of adults 18 years of age and older using a standard protocol. Using technology platforms such as interactive voice response (IVR), short message service (SMS), computer-assisted telephone interviewing (CATI), mobile web, as well as a mix of these modes, mobile phone surveys provide timely data and allow for rapid feedback of results. It is intended to generate comparable data within and across countries. This survey supplements and supports national household face-to-face surveys." %>
+              <a href="https://www.ncdmobile.org/" target="_blank">
+                <%= gettext "Read more" %>
+              </a>
             </p>
 
           </div>
@@ -188,8 +203,8 @@
           <div class="col m9 s12">
             <ul>
               <li><a href="http://instedd.org">InSTEDD</a></li>
-              <li><a href="http://instedd.org/terms-of-service/">Terms of service</a></li>
-              <li><a href="mailto:support@instedd.org?subject=[surveda]">Support</a></li>
+              <li><a href="http://instedd.org/terms-of-service/"><%= gettext "Terms of service" %></a></li>
+              <li><a href="mailto:support@instedd.org?subject=[surveda]"><%= gettext "Support" %></a></li>
             </ul>
           </div>
           <div class="col m2 offset-m1 s12">
@@ -202,6 +217,8 @@
   <script type="text/javascript">
     $(document).ready(function() {
       $(".button-collapse").sideNav();
+      $(".dropdown-button").dropdown();
     });
+
   </script>
 </body>

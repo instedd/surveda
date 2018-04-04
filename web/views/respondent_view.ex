@@ -57,6 +57,20 @@ defmodule Ask.RespondentView do
     }
   end
 
+  def render("stats.json", %{stats: nil}) do
+    %{
+      data: %{
+        reference: %{},
+        respondents_by_disposition: %{},
+        cumulative_percentages: %{},
+        completion_percentage: 0,
+        contacted_respondents: 0,
+        total_respondents: 0,
+        target: 0
+      }
+    }
+  end
+
   def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, reference: reference, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
     %{
       data: %{

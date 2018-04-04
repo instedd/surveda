@@ -7,7 +7,45 @@ import { Card } from './'
 import InfiniteCalendar, { Calendar, defaultMultipleDateInterpolation, withMultipleDates } from 'react-infinite-calendar'
 import 'react-infinite-calendar/styles.css'
 
+import i18n from '../../i18next'
+
 const MultipleDatesCalendar = withMultipleDates(Calendar)
+
+const enLocale = {
+  name: 'en',
+  blank: 'Select a date...',
+  headerFormat: 'ddd, MMM Do',
+  todayLabel: {
+    long: 'Today'
+  },
+  weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  weekStartsOn: 0
+}
+
+const esLocale = {
+  name: 'es',
+  blank: 'Elija una fecha...',
+  headerFormat: 'ddd, MMM Do',
+  locale: require('date-fns/locale/es'),
+  todayLabel: {
+    long: 'Hoy'
+  },
+  weekdays: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+  weekStartsOn: 0
+}
+
+const frLocale = {
+  name: 'fr',
+  blank: 'Aucune date sélectionnée',
+  headerFormat: 'dddd, D MMM',
+  locale: require('date-fns/locale/fr'),
+  todayLabel: {
+    long: "Aujourd'hui",
+    short: 'Auj.'
+  },
+  weekdays: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
+  weekStartsOn: 1
+}
 
 export class DatePicker extends Component {
   addDate: Function
@@ -29,6 +67,17 @@ export class DatePicker extends Component {
     this.toggleDatePicker = this.toggleDatePicker.bind(this)
     this.state = {
       showDatePicker: false
+    }
+  }
+
+  getLocale(locale: string) {
+    switch (locale) {
+      case 'en':
+        return enLocale
+      case 'fr':
+        return frLocale
+      case 'es':
+        return esLocale
     }
   }
 
@@ -109,6 +158,7 @@ export class DatePicker extends Component {
                       showHeader: true,
                       showWeekdays: true
                     }}
+                    locale={this.getLocale(i18n.language)}
                     width='100%'
                     displayDate={false}
                     height={300}
