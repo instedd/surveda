@@ -35,8 +35,6 @@ class SurveyStatus extends PureComponent {
         return t('{{count}} month from now', {count: number})
       case 'year':
         return t('{{count}} year from now', {count: number})
-      default:
-        return t('{{count}} {{unit}} {{text}}', {count: number, text: suffix, unit})
     }
   }
 

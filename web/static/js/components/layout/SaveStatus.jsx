@@ -15,11 +15,9 @@ class SaveStatus extends Component {
   formatter(number, unit, suffix, date, defaultFormatter) {
     const { t } = this.props
 
-    if (unit == 'second') {
-      return t('All changes saved')
-    }
-
     switch (unit) {
+      case 'second':
+        return t('All changes saved')
       case 'minute':
         return t('Last saved {{count}} minute ago', {count: number})
       case 'hour':
@@ -32,8 +30,6 @@ class SaveStatus extends Component {
         return t('Last saved {{count}} month ago', {count: number})
       case 'year':
         return t('Last saved {{count}} year ago', {count: number})
-      default:
-        return t('Last saved {{count}} {{unit}} {{suffix}}', {count: number, suffix, unit})
     }
   }
 

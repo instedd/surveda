@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { orderedItems } from '../../reducers/collection'
-import { CardTable, SortableHeader } from '../ui'
+import { CardTable, SortableHeader, PagingFooter } from '../ui'
 import ActivityDescription from './ActivityDescription'
 import * as actions from '../../actions/activities'
 import dateformat from 'dateformat'
@@ -16,16 +16,12 @@ class ActivityIndex extends Component {
     }
   }
 
-  nextPage(e) {
-    e.preventDefault()
-
+  nextPage() {
     const { projectId, pageNumber } = this.props
     this.props.actions.fetchActivities(projectId, pageNumber + 1)
   }
 
-  previousPage(e) {
-    e.preventDefault()
-
+  previousPage() {
     const { projectId, pageNumber } = this.props
     this.props.actions.fetchActivities(projectId, pageNumber - 1)
   }
@@ -36,7 +32,7 @@ class ActivityIndex extends Component {
   }
 
   render() {
-    const { activities, totalCount, startIndex, endIndex, hasPreviousPage, hasNextPage, sortBy, sortAsc, t } = this.props
+    const { activities, totalCount, startIndex, endIndex, sortBy, sortAsc, t } = this.props
 
     if (!activities) {
       return (
@@ -47,21 +43,10 @@ class ActivityIndex extends Component {
     }
 
     const title = `${totalCount} ${(totalCount == 1) ? t('activity') : t('activities')}`
-    const footer = (
-      <div className='card-action right-align'>
-        <ul className='pagination'>
-          <li className='grey-text'>{startIndex}-{endIndex} of {totalCount}</li>
-          { hasPreviousPage
-            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
-          }
-          { hasNextPage
-            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
-          }
-        </ul>
-      </div>
-    )
+    const footer = <PagingFooter
+      {...{startIndex, endIndex, totalCount}}
+      onPreviousPage={() => this.previousPage()}
+      onNextPage={() => this.nextPage()} />
 
     return (<div>
       <CardTable title={title} footer={footer}>
@@ -100,8 +85,6 @@ ActivityIndex.propTypes = {
   totalCount: PropTypes.number.isRequired,
   startIndex: PropTypes.number.isRequired,
   endIndex: PropTypes.number.isRequired,
-  hasPreviousPage: PropTypes.bool.isRequired,
-  hasNextPage: PropTypes.bool.isRequired,
   pageNumber: PropTypes.number.isRequired,
   pageSize: PropTypes.number.isRequired
 }
@@ -119,8 +102,6 @@ const mapStateToProps = (state, ownProps) => {
   const pageSize = state.activities.page.size
   const startIndex = (pageNumber - 1) * pageSize + 1
   const endIndex = Math.min(startIndex + pageSize - 1, totalCount)
-  const hasPreviousPage = pageNumber > 1
-  const hasNextPage = endIndex < totalCount
 
   return {
     projectId: ownProps.params.projectId,
@@ -130,8 +111,6 @@ const mapStateToProps = (state, ownProps) => {
     pageSize,
     startIndex,
     endIndex,
-    hasPreviousPage,
-    hasNextPage,
     sortBy,
     sortAsc
   }

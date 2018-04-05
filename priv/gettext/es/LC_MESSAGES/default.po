@@ -1,104 +1,104 @@
-## `msgid`s in this file come from POT (.pot) files.
-##
-## Do not add, change, or remove `msgid`s manually here as
-## they're tied to the ones in the corresponding POT file
-## (with the same domain).
-##
-## Use `mix gettext.extract --merge` or `mix gettext.merge`
-## to merge POT files into PO files.
 msgid ""
 msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: lokalise.co\n"
+"Project-Id-Version: Surveda\n"
+"PO-Revision-Date: 2018-04-05 02:47\n"
+"Last-Translator: lokalise.co\n"
+"Language-Team: lokalise.co\n\n"
 "Language: es\n"
-
-#: web/templates/page/landing.html.eex:86
-msgid "Ask and Discover"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:66 web/templates/page/landing.html.eex:73
-msgid "About Instedd Platform"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:68 web/templates/page/landing.html.eex:75
-msgid "Login"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:69 web/templates/page/landing.html.eex:76
-msgid "Sign up for free"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:87
-msgid "Find insights in the voice of communities"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:91
-msgid "Surveda is an open source survey tool that collects data from populations via mobile phone."
-msgstr ""
-
-#: web/templates/page/landing.html.eex:89
-msgid "What is Surveda?"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:104
-msgid "Surveda uses the root word “survey,” with the Latin meaning of “oversee” or “inspect”."
-msgstr ""
-
-#: web/templates/page/landing.html.eex:103
-msgid "What does the name “Surveda” mean?"
-msgstr ""
-
-#: web/templates/page/landing.html.eex:105
-msgid "Veda evokes wisdom, from the Sanskrit word for knowledge or understanding."
-msgstr ""
-
-#: web/templates/page/landing.html.eex:118
-msgid "<span>Ask</span> the right questions in any language"
-msgstr ""
 
 #: web/templates/page/landing.html.eex:155
 msgid "<span>Adapt</span> open source code for greater flexibility"
-msgstr ""
+msgstr "<span>Adapte</span> el código fuente abierto para una mayor flexibilidad"
+
+#: web/templates/page/landing.html.eex:118
+msgid "<span>Ask</span> the right questions in any language"
+msgstr "<span>Formule</span> las preguntas correctas, en cualquier idioma"
 
 #: web/templates/page/landing.html.eex:131
 msgid "<span>Deploy</span> surveys by voice, text, mobile web and more"
-msgstr ""
+msgstr "<span>Gestione</span> encuestas por voz, texto, web móvil y más"
 
 #: web/templates/page/landing.html.eex:145
 msgid "<span>Evaluate</span> performance of surveys and quickly test research hypotheses"
-msgstr ""
+msgstr "<span>Evalúe</span> la performance de las encuestas y ponga a prueba rápidamente sus hipótesis de investigación"
 
 #: web/templates/page/landing.html.eex:168
 msgid "A tool to combat noncommunicable diseases"
-msgstr ""
+msgstr "Una herramienta para combatir las enfermedades no transmisibles"
+
+#: web/templates/page/landing.html.eex:66 web/templates/page/landing.html.eex:73
+msgid "About Instedd Platform"
+msgstr "Acerca de la Plataforma de InSTEDD"
+
+#: web/templates/page/landing.html.eex:78
+msgid "Ask and Discover"
+msgstr "Pregunte y Descubra"
+
+#: web/templates/page/landing.html.eex:87
+msgid "Find insights in the voice of communities"
+msgstr "Encuentre información reveladora en la voz de las comunidades"
+
+#: web/templates/page/landing.html.eex:68 web/templates/page/landing.html.eex:75
+msgid "Login"
+msgstr "Inicio de sesión"
 
 #: web/templates/page/landing.html.eex:179
 msgid "More about the Bloomberg Philanthropies Data for Health Initiative"
-msgstr ""
+msgstr "Más acerca de la Iniciativa Datos para la Salud de Bloomberg Philantropies"
+
+#: web/templates/page/landing.html.eex:188
+msgid "More about the NCD Mobile Survey"
+msgstr "Más acerca de la Encuesta sobre ENT mediante Teléfonos Móviles"
 
 #: web/templates/page/landing.html.eex:183
 #: web/templates/page/landing.html.eex:192
 msgid "Read more"
-msgstr ""
+msgstr "Leer más"
 
-#: web/templates/page/landing.html.eex:169
-msgid "Surveda was developed as part of the Bloomberg Philanthropies Data for Health Initiative NCD Mobile Phone Survey. Surveda will be used to collect critical information about noncommunicable diseases (NCDs) in low- and middle-income countries worldwide (LMICs). It is an open source tool on a common software platform, which means that Surveda is accessible to individuals and organizations interested in creating their own surveys."
-msgstr ""
-
-#: web/templates/page/landing.html.eex:181
-msgid "The Bloomberg Philanthropies Data for Health Initiative aims to strengthen the collection and use of critical public health information. Working in selected low- and middle-income countries, the three components of this initiative seek to: i) strengthen the quality of birth and death registration systems and improve information on cause of death; ii) explore innovative approaches to NCD surveillance, including the use of mobile phone surveys; and iii) enhance."
-msgstr ""
-
-#: web/templates/page/landing.html.eex:188
-msgid "More about the NCD Mobile Survey"
-msgstr ""
+#: web/templates/page/landing.html.eex:69 web/templates/page/landing.html.eex:76
+msgid "Sign up for free"
+msgstr "Regístrese gratis"
 
 #: web/templates/page/landing.html.eex:207
 msgid "Support"
-msgstr ""
+msgstr "Soporte"
+
+#: web/templates/page/landing.html.eex:91
+msgid "Surveda is an open source survey tool that collects data from populations via mobile phone."
+msgstr "Surveda es una herramienta de encuesta de código abierto que recopila datos de poblaciones a través de la telefonía móvil."
+
+#: web/templates/page/landing.html.eex:104
+msgid "Surveda uses the root word “survey,” with the Latin meaning of “oversee” or “inspect”."
+msgstr "Surveda incorpora la palabra raíz “survey” (encuesta), que tiene el significado latino de “supervisar” o “inspeccionar”."
+
+#: web/templates/page/landing.html.eex:169
+msgid "Surveda was developed as part of the Bloomberg Philanthropies Data for Health Initiative NCD Mobile Phone Survey. Surveda will be used to collect critical information about noncommunicable diseases (NCDs) in low- and middle-income countries worldwide (LMICs). It is an open source tool on a common software platform, which means that Surveda is accessible to individuals and organizations interested in creating their own surveys."
+msgstr "Surveda se desarrolló como parte de la Iniciativa Datos para la Salud de Bloomberg Philanthropies, Encuesta sobre ENT mediante Teléfonos Móviles. Surveda se utilizará para recopilar información crítica sobre enfermedades no transmisibles (ENT) en países de ingresos medios y bajos (PIMB) de todo el mundo. Es una herramienta de código abierto en una plataforma de software compartida, lo que significa que Surveda es accesible para personas y organizaciones interesadas en crear sus propias encuestas."
 
 #: web/templates/page/landing.html.eex:206
 msgid "Terms of service"
-msgstr ""
+msgstr "Términos de servicio"
+
+#: web/templates/page/landing.html.eex:181
+msgid "The Bloomberg Philanthropies Data for Health Initiative aims to strengthen the collection and use of critical public health information. Working in selected low- and middle-income countries, the three components of this initiative seek to: i) strengthen the quality of birth and death registration systems and improve information on cause of death; ii) explore innovative approaches to NCD surveillance, including the use of mobile phone surveys; and iii) enhance."
+msgstr "La Iniciativa Datos para la Salud de Bloomberg Philanthropies tiene como objetivo fortalecer la recopilación y el uso de información crítica sobre salud pública. Trabajando en países seleccionados de ingresos bajos y medios, los tres propósitos de esta iniciativa son: i) fortalecer la calidad de los sistemas de registro de nacimientos y defunciones y mejorar la información sobre la causa de la muerte; ii) explorar enfoques innovadores para la vigilancia de las ENT, incluido el uso de encuestas a través de teléfonos móviles; y iii) mejorar la eficiencia."
 
 #: web/templates/page/landing.html.eex:190
 msgid "The NCD mobile phone survey is a nationally-representative survey of adults 18 years of age and older using a standard protocol. Using technology platforms such as interactive voice response (IVR), short message service (SMS), computer-assisted telephone interviewing (CATI), mobile web, as well as a mix of these modes, mobile phone surveys provide timely data and allow for rapid feedback of results. It is intended to generate comparable data within and across countries. This survey supplements and supports national household face-to-face surveys."
-msgstr ""
+msgstr "La encuesta sobre ENT mediante teléfonos móviles es una encuesta nacionalmente representativa de adultos mayores de 18 años usando un protocolo estándar. Valiéndose de plataformas tecnológicas tales como la respuesta de voz interactiva (IVR), el servicio de mensajes cortos (SMS), las entrevistas telefónicas asistidas por computadora (CATI) y la web móvil, como así también una combinación de estos recursos, las encuestas a través de teléfonos móviles proporcionan datos ágiles y permiten una rápida retroalimentación de los resultados. Tiene el propósito de generar datos comparables dentro y entre países. Esta encuesta complementa y respalda las encuestas nacionales domiciliarias cara a cara. "
+
+#: web/templates/page/landing.html.eex:105
+msgid "Veda evokes wisdom, from the Sanskrit word for knowledge or understanding."
+msgstr "La palabra Veda evoca sabiduría: significa conocimiento o comprensión en sánscrito."
+
+#: web/templates/page/landing.html.eex:103
+msgid "What does the name “Surveda” mean?"
+msgstr "¿Qué significa el nombre “Surveda”?"
+
+#: web/templates/page/landing.html.eex:89
+msgid "What is Surveda?"
+msgstr "¿Qué es Surveda?"

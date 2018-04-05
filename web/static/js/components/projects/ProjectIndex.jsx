@@ -5,7 +5,7 @@ import { withRouter } from 'react-router'
 import { createProject } from '../../api'
 import * as actions from '../../actions/projects'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty, Tooltip } from '../ui'
+import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty, Tooltip, PagingFooter } from '../ui'
 import * as routes from '../../routes'
 import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
@@ -40,13 +40,11 @@ class ProjectIndex extends Component {
         })
   }
 
-  nextPage(e) {
-    e.preventDefault()
+  nextPage() {
     this.props.actions.nextProjectsPage()
   }
 
-  previousPage(e) {
-    e.preventDefault()
+  previousPage() {
     this.props.actions.previousProjectsPage()
   }
 
@@ -55,10 +53,10 @@ class ProjectIndex extends Component {
   }
 
   archiveOrUnarchive(project: Project, action: string) {
-    const { t, actions, hasPreviousPage } = this.props
+    const { t, actions, startIndex } = this.props
     actions.archiveOrUnarchive(project, action).then(() => {
       const { projects } = this.props
-      if (projects.length == 0 && hasPreviousPage) {
+      if (projects.length == 0 && startIndex > 0) {
         actions.previousProjectsPage()
       }
       const description = action == 'unarchive' ? t('Project successfully unarchived') : t('Project successfully archived')
@@ -129,8 +127,7 @@ class ProjectIndex extends Component {
   }
 
   renderTable() {
-    const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex,
-      totalCount, hasPreviousPage, hasNextPage, archived, t } = this.props
+    const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, archived, t } = this.props
 
     if (!projects) {
       return (
@@ -141,21 +138,10 @@ class ProjectIndex extends Component {
     }
 
     const title = `${totalCount} ${(totalCount == 1) ? t('project') : t('projects')}`
-    const footer = (
-      <div className='card-action right-align'>
-        <ul className='pagination'>
-          <li className='grey-text'>{startIndex}-{endIndex} of {totalCount}</li>
-          { hasPreviousPage
-            ? <li><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_left</i></li>
-          }
-          { hasNextPage
-            ? <li><a href='#!' onClick={e => this.nextPage(e)}><i className='material-icons'>chevron_right</i></a></li>
-            : <li className='disabled'><i className='material-icons'>chevron_right</i></li>
-          }
-        </ul>
-      </div>
-    )
+    const footer = <PagingFooter
+      {...{startIndex, endIndex, totalCount}}
+      onPreviousPage={() => this.previousPage()}
+      onNextPage={() => this.nextPage()} />
 
     return (
       <div>
@@ -234,8 +220,6 @@ ProjectIndex.propTypes = {
   pageSize: PropTypes.number.isRequired,
   startIndex: PropTypes.number.isRequired,
   endIndex: PropTypes.number.isRequired,
-  hasPreviousPage: PropTypes.bool.isRequired,
-  hasNextPage: PropTypes.bool.isRequired,
   totalCount: PropTypes.number.isRequired,
   archived: PropTypes.bool,
   t: PropTypes.func,
@@ -255,8 +239,6 @@ const mapStateToProps = (state) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const hasPreviousPage = startIndex > 1
-  const hasNextPage = endIndex < totalCount
   return {
     sortBy,
     sortAsc,
@@ -264,8 +246,6 @@ const mapStateToProps = (state) => {
     pageSize,
     startIndex,
     endIndex,
-    hasPreviousPage,
-    hasNextPage,
     totalCount,
     archived
   }
