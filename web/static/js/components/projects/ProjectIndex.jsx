@@ -53,10 +53,10 @@ class ProjectIndex extends Component {
   }
 
   archiveOrUnarchive(project: Project, action: string) {
-    const { t, actions, hasPreviousPage } = this.props
+    const { t, actions, startIndex } = this.props
     actions.archiveOrUnarchive(project, action).then(() => {
       const { projects } = this.props
-      if (projects.length == 0 && hasPreviousPage) {
+      if (projects.length == 0 && startIndex > 0) {
         actions.previousProjectsPage()
       }
       const description = action == 'unarchive' ? t('Project successfully unarchived') : t('Project successfully archived')
