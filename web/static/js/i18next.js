@@ -3,7 +3,7 @@ import english from '../../../locales/translations/en.json'
 import spanish from '../../../locales/translations/es.json'
 import french from '../../../locales/translations/fr.json'
 import { config } from './config'
-const currentLanguage = config.user_settings.language || 'en'
+const currentLanguage = (config.user_settings && config.user_settings.language) || 'en'
 
 i18n
   .init({
