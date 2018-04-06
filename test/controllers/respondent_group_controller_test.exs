@@ -236,16 +236,15 @@ defmodule Ask.RespondentGroupControllerTest do
     end
 
     test "updates project updated_at when uploading CSV", %{conn: conn, user: user}  do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, updated_at: datetime)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+      project = create_project_for_user(user, updated_at: datetime)
       survey = insert(:survey, project: project)
 
       file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
       post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
+      assert DateTime.compare(project.updated_at, datetime) == :gt
     end
 
     test "forbids upload for project reader", %{conn: conn, user: user}  do
@@ -392,16 +391,15 @@ defmodule Ask.RespondentGroupControllerTest do
     end
 
     test "updates project updated_at when deleting", %{conn: conn, user: user}  do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = insert(:project, updated_at: datetime)
-      insert(:project_membership, user: user, project: project, level: "owner")
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+      project = create_project_for_user(user, updated_at: datetime)
       survey = insert(:survey, project: project)
       group = insert(:respondent_group, survey: survey)
 
       delete conn, project_survey_respondent_group_path(conn, :delete, survey.project.id, survey.id, group.id)
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
+      assert DateTime.compare(project.updated_at, datetime) == :gt
     end
 
     test "forbids the deletion of a group if the project is from another user", %{conn: conn} do

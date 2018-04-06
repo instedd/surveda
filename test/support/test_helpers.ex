@@ -4,7 +4,8 @@ defmodule Ask.TestHelpers do
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
         archived = options[:archived] || false
-        project = insert(:project, archived: archived)
+        updated_at = options[:updated_at] || Timex.now
+        project = insert(:project, archived: archived, updated_at: updated_at)
         insert(:project_membership, user: user, project: project, level: level)
         project
       end

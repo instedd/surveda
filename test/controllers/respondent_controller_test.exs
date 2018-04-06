@@ -34,7 +34,7 @@ defmodule Ask.RespondentControllerTest do
                                                      "questionnaire_id" => questionnaire.id,
                                                      "disposition" => "completed",
                                                      "date" => DateTime.to_iso8601(response.updated_at),
-                                                     "updated_at" => NaiveDateTime.to_iso8601(respondent.updated_at),
+                                                     "updated_at" => DateTime.to_iso8601(respondent.updated_at),
                                                      "responses" => [
                                                        %{
                                                          "value" => response.value,
@@ -830,7 +830,7 @@ defmodule Ask.RespondentControllerTest do
           "questionnaire_id" => questionnaire.id,
           "disposition" => "partial",
           "date" => DateTime.to_iso8601(response_1.updated_at),
-          "updated_at" => NaiveDateTime.to_iso8601(respondent_1.updated_at),
+          "updated_at" => DateTime.to_iso8601(respondent_1.updated_at),
           "responses" => [
             %{
               "value" => "Yes",
@@ -851,7 +851,7 @@ defmodule Ask.RespondentControllerTest do
           "questionnaire_id" => questionnaire.id,
           "disposition" => "registered",
           "date" => DateTime.to_iso8601(response_2.updated_at),
-          "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
+          "updated_at" => DateTime.to_iso8601(respondent_2.updated_at),
           "responses" => [
             %{
               "value" => "No",
@@ -886,7 +886,7 @@ defmodule Ask.RespondentControllerTest do
            "questionnaire_id" => questionnaire.id,
            "disposition" => "partial",
            "date" => DateTime.to_iso8601(response_1.updated_at),
-           "updated_at" => NaiveDateTime.to_iso8601(respondent_1.updated_at),
+           "updated_at" => DateTime.to_iso8601(respondent_1.updated_at),
            "responses" => [
              %{
                "value" => "Yes",
@@ -924,7 +924,7 @@ defmodule Ask.RespondentControllerTest do
            "questionnaire_id" => questionnaire.id,
            "disposition" => "registered",
            "date" => DateTime.to_iso8601(response_2.updated_at),
-           "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
+           "updated_at" => DateTime.to_iso8601(respondent_2.updated_at),
            "responses" => [
              %{
                "value" => "No",
@@ -958,7 +958,7 @@ defmodule Ask.RespondentControllerTest do
            "questionnaire_id" => questionnaire.id,
            "disposition" => "registered",
            "date" => DateTime.to_iso8601(response_2.updated_at),
-           "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
+           "updated_at" => DateTime.to_iso8601(respondent_2.updated_at),
            "responses" => [
              %{
                "value" => "No",
@@ -1039,7 +1039,7 @@ defmodule Ask.RespondentControllerTest do
            "questionnaire_id" => questionnaire.id,
            "disposition" => "partial",
            "date" => DateTime.to_iso8601(response_1.updated_at),
-           "updated_at" => NaiveDateTime.to_iso8601(respondent_1.updated_at),
+           "updated_at" => DateTime.to_iso8601(respondent_1.updated_at),
            "experiment_name" => "test - SMS",
            "responses" => [
              %{
@@ -1062,7 +1062,7 @@ defmodule Ask.RespondentControllerTest do
            "experiment_name" => "test 2 - SMS with phone call fallback",
            "disposition" => "completed",
            "date" => DateTime.to_iso8601(response_2.updated_at),
-           "updated_at" => NaiveDateTime.to_iso8601(respondent_2.updated_at),
+           "updated_at" => DateTime.to_iso8601(respondent_2.updated_at),
            "responses" => [
              %{
                "value" => "No",
