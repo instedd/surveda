@@ -804,6 +804,7 @@ label + .tooltipped {
 
 .collapsible { // class for collapsed questionnaires
   @include transition(all ease-in-out .25s);
+  margin-bottom: 0;
   li {
     border-bottom: 1px solid color("grey", "lighten-2");
     .card {

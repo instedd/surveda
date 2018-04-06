@@ -5,6 +5,8 @@ import StepsList from './StepsList'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
+import Section from './Section'
+
 
 type Props = {
   steps: Step[],
@@ -52,7 +54,7 @@ class QuestionnaireSteps extends Component {
       const stepsAfter = steps.slice(itemIndex + 1)
 
       return (
-        <div>
+        <Section>
           <StepsList steps={stepsBefore} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
           <StepEditor
             step={currentStep}
@@ -67,7 +69,7 @@ class QuestionnaireSteps extends Component {
             stepsAfter={stepsAfter}
             stepsBefore={stepsBefore} />
           <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
-        </div>
+        </Section>
       )
     }
   }
