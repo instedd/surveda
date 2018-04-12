@@ -22,6 +22,11 @@ defmodule Ask.FloipPackageTest do
         "type" => "string"
       },
       %{
+        "name" => "session_id",
+        "title" => "Session ID",
+        "type" => "string"
+      },
+      %{
         "name" => "question_id",
         "title" => "Question ID",
         "type" => "string"
@@ -212,14 +217,15 @@ defmodule Ask.FloipPackageTest do
 
       response = responses |> hd
 
-      assert length(response) == 6
+      assert length(response) == 7
       {:ok, response_timestamp, _} = DateTime.from_iso8601(Enum.at(response, 0))
       assert DateTime.compare(response_timestamp, db_response.inserted_at) == :eq
       assert Enum.at(response, 1) == db_response.id
       assert Enum.at(response, 2) == db_response.respondent.hashed_number
-      assert Enum.at(response, 3) == "Exercises"
-      assert Enum.at(response, 4) == "Yes"
-      assert Enum.at(response, 5) == %{}
+      assert Enum.at(response, 3) == db_response.respondent.hashed_number
+      assert Enum.at(response, 4) == "Exercises"
+      assert Enum.at(response, 5) == "Yes"
+      assert Enum.at(response, 6) == %{}
     end
 
     test "survey with many responses" do
@@ -359,21 +365,18 @@ defmodule Ask.FloipPackageTest do
       end
     end
 
-    test "return all responses if size is not provided" do
+    test "return at most 1000 responses if size is not provided" do
       # Setup
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      db_responses = for i <- 1..50 do
-        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
-      end
+      db_responses = insert_list(2000, :response, respondent: respondent_1)
 
       # Test
       {responses, first_response, last_response} = FloipPackage.responses(survey)
 
       # Assertions
-      assert length(responses) == 50
-      for i <- 0..49 do
+      assert length(responses) == 1000
+      for i <- 0..999 do
         floip_response = responses |> Enum.at(i)
         db_response = db_responses |> Enum.at(i)
         assert_same(floip_response, db_response)
@@ -382,7 +385,7 @@ defmodule Ask.FloipPackageTest do
           assert_same(first_response, db_response)
         end
 
-        if (i == 49) do
+        if (i == 999) do
           assert_same(last_response, db_response)
         end
       end

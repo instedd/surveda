@@ -10,6 +10,10 @@ defmodule Ask.FloipPackage do
     survey.name
   end
 
+  def name(survey) do
+    survey.id |> to_string
+  end
+
   # "The timestamp for when this package was created/published."
   #
   # There's no point in publishing a package from Surveda before the
@@ -179,7 +183,7 @@ defmodule Ask.FloipPackage do
         size = options[:size]
         query |> limit(^size)
       else
-        query
+        query |> limit(1000)
       end
 
     first_response =
@@ -190,17 +194,10 @@ defmodule Ask.FloipPackage do
 
     # TODO: do this in a sane way
     last_response =
-      if options[:size] do
-        query
-        |> Repo.all
-        |> Enum.at(-1)
-        |> db_response_to_floip_response
-      else
-        query
-        |> last
-        |> Repo.one
-        |> db_response_to_floip_response
-      end
+      query
+      |> Repo.all
+      |> Enum.at(-1)
+      |> db_response_to_floip_response
 
     stream =
       query
@@ -214,10 +211,24 @@ defmodule Ask.FloipPackage do
     {responses, first_response, last_response}
   end
 
+  def responses_for_aggregator(survey, responses) do
+    %{
+      "data": %{
+        "type": "responses",
+        "id": id(survey),
+        "attributes": %{
+          "responses": responses
+        }
+      }
+    }
+  end
+
   defp db_response_to_floip_response(nil), do: nil
   defp db_response_to_floip_response({r, respondent}) do
     timestamp = DateTime.to_iso8601(r.inserted_at, :extended)
-    [timestamp, r.id, respondent.hashed_number, r.field_name, r.value, %{}]
+    # FLOIP needs us to define a session_id. In Surveda, each survey is only taken by a respondent
+    # once, so it's safe to assume session_id == contact_id.
+    [timestamp, r.id, respondent.hashed_number, respondent.hashed_number, r.field_name, r.value, %{}]
   end
 
   # Maps a survey's steps to FLOIP questions.
@@ -277,14 +288,24 @@ defmodule Ask.FloipPackage do
           "modified" => modified_at(survey),
           "id" => id(survey),
           "title" => title(survey),
+          "name" => name(survey),
           "resources" => [%{
             "api-data-url" => responses_link,
+            "profile" => "data-resource",
             "encoding" => "utf-8",
             "mediatype" => "application/json",
+            "name" => "#{name(survey)}-data",
             "path" => nil,
             "schema" => %{
               "fields" => fields,
               "questions" => questions(survey)
+              # %{
+              #   "a1234" => %{
+              #     "type" => "numeric",
+              #     "label" => "How old are you? Please enter your age in years.",
+              #     "type_options" => %{}
+              #   }
+              # }  #
             }
           }]
         }
@@ -308,6 +329,11 @@ defmodule Ask.FloipPackage do
       %{
         "name" => "contact_id",
         "title" => "Contact ID",
+        "type" => "string"
+      },
+      %{
+        "name" => "session_id",
+        "title" => "Session ID",
         "type" => "string"
       },
       %{
