@@ -1,9 +1,6 @@
 defmodule Ask.FloipEndpoint do
   use Ask.Web, :model
 
-  alias Ask.Survey
-  alias __MODULE__
-
   @primary_key false
   schema "floip_endpoints" do
     field :name, :string

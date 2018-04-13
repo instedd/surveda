@@ -527,11 +527,14 @@ defmodule Ask.FloipPackageTest do
             "modified" => FloipPackage.modified_at(survey),
             "id" => FloipPackage.id(survey),
             "title" => FloipPackage.title(survey),
+            "name" => FloipPackage.name(survey),
             "resources" => [%{
               "api-data-url" => "http://gimme.responses",
               "encoding" => "utf-8",
               "mediatype" => "application/json",
+              "profile" => "data-resource",
               "path" => nil,
+              "name" => "#{FloipPackage.name(survey)}-data",
               "schema" => %{
                 "fields" => FloipPackage.fields,
                 "questions" => FloipPackage.questions(survey)
