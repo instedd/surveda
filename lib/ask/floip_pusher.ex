@@ -97,8 +97,8 @@ defmodule Ask.FloipPusher do
     {:reply, :ok, state}
   end
 
-  def create_package(survey, endpoint) do
-    {:ok, body} = FloipPackage.descriptor(survey, "http://surveda-mock.dev") |> Poison.encode
+  def create_package(survey, endpoint, responses_uri) do
+    {:ok, body} = FloipPackage.descriptor(survey, responses_uri) |> Poison.encode
 
     endpoint_uri = String.to_charlist("#{endpoint.uri}/flow-results/packages")
 
