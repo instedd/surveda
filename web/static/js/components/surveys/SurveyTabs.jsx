@@ -10,9 +10,10 @@ class SurveyTabs extends Component {
 
     return (
       <Tabs id='survey_tabs'>
-        <TabLink tabId='survey_tabs' to={routes.survey(projectId, surveyId)}>{t('Overview')}</TabLink>
-        <TabLink tabId='survey_tabs' to={routes.surveyRespondents(projectId, surveyId)}>{t('Respondents')}</TabLink>
-        <TabLink tabId='survey_tabs' to={routes.surveySettings(projectId, surveyId)}>{t('Settings')}</TabLink>
+        <TabLink key='overview' tabId='survey_tabs' to={routes.survey(projectId, surveyId)}>{t('Overview')}</TabLink>
+        <TabLink key='respondents' tabId='survey_tabs' to={routes.surveyRespondents(projectId, surveyId)}>{t('Respondents')}</TabLink>
+        <TabLink key= 'settings' tabId='survey_tabs' to={routes.surveySettings(projectId, surveyId)}>{t('Settings')}</TabLink>
+        <TabLink key='integrations' tabId='survey_tabs' to={routes.surveyIntegrations(projectId, surveyId)}>{t('Integrations')}</TabLink>
       </Tabs>
     )
   }
@@ -26,7 +27,8 @@ SurveyTabs.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
-  surveyId: ownProps.params.surveyId
+  surveyId: ownProps.params.surveyId,
+  survey: state.survey.data
 })
 
 export default translate()(connect(mapStateToProps)(SurveyTabs))

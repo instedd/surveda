@@ -12,7 +12,11 @@ const respondentsStatsSchema = new Schema('respondents')
 const referenceSchema = new Schema('reference')
 const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
+<<<<<<< HEAD
 const activitySchema = new Schema('activities')
+=======
+const integrationSchema = new Schema('integrations')
+>>>>>>> Basic FLOIP integrations UI
 
 export class Unauthorized {
   constructor(response) {
@@ -454,4 +458,12 @@ export const deleteInteractionsLink = (projectId, surveyId) => {
 
 export const deleteDispositionHistoryLink = (projectId, surveyId) => {
   return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`)
+}
+
+export const fetchIntegrations = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, arrayOf(integrationSchema))
+}
+
+export const createIntegration = (projectId, surveyId, integration) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, integrationSchema, { integration })
 }
