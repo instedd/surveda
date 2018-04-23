@@ -22,7 +22,8 @@ type Props = {
   integrations: IntegrationList[],
   surveyActions: any,
   projectActions: any,
-  actions: any
+  actions: any,
+  fetching: boolean
 };
 
 type State = {
@@ -81,7 +82,7 @@ class IntegrationIndex extends Component<Props, State> {
 
   createIntegration(e) {
     e.preventDefault()
-    api.createIntegration(this.props.projectId, this.props.surveyId, this.state.editedIntegration)
+    this.props.actions.createIntegration(this.props.projectId, this.props.surveyId, this.state.editedIntegration)
   }
 
   modalNewIntegration() {
@@ -100,19 +101,19 @@ class IntegrationIndex extends Component<Props, State> {
               </InputWithLabel>
             </div>
             <div className='input-field'>
-              <InputWithLabel id='integration_uri' value={undefined} label="URI of the service that will receive the data (e.g.: 'https://api.ona.io/api/v1/'">
+              <InputWithLabel id='integration_uri' value={undefined} label="URI of the service that will receive the data (e.g.: 'https://api.ona.io/api/v1/')">
                 <input type='text' onChange={e => { this.uriOnChange(e) }} />
               </InputWithLabel>
             </div>
             <div className='input-field'>
-              <InputWithLabel id='integration_token' value={undefined} label="Authorization token (e.g.: 'Token tGzv3JOkF0XG5Qx2TlKWIA'">
+              <InputWithLabel id='integration_token' value={undefined} label="Authorization token (e.g.: 'Token tGzv3JOkF0XG5Qx2TlKWIA')">
                 <input type='text' onChange={e => { this.tokenOnChange(e) }} />
               </InputWithLabel>
             </div>
           </div>
           <div className='row button-actions'>
             <div className='col s12'>
-              <a href='#!' className=' modal-action modal-close waves-effect btn-medium blue' onClick={(e) => this.createIntegration(e)}>Create Integration</a>
+              <a href='#!' className='modal-action modal-close waves-effect btn-medium blue' onClick={(e) => this.createIntegration(e)}>Create Integration</a>
             </div>
           </div>
         </div>
@@ -121,7 +122,7 @@ class IntegrationIndex extends Component<Props, State> {
   }
 
   render() {
-    if (!this.props.integrations || !this.props.survey || !this.props.project) {
+    if (!this.props.integrations || this.props.fetching ||  !this.props.survey || !this.props.project) {
       return <div>Loading...</div>
     }
 
@@ -163,13 +164,14 @@ const mapStateToProps = (state, ownProps) => {
     survey: state.survey.data,
     project: state.project.data,
     integrations: values(state.integrations.items),
+    fetching: state.integrations.fetching
   }
 }
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   surveyActions: bindActionCreators(surveyActions, dispatch),
-  projectActions: bindActionCreators(projectActions, dispatch),
+  projectActions: bindActionCreators(projectActions, dispatch)
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(IntegrationIndex)

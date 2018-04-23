@@ -6,14 +6,7 @@ defmodule Ask.IntegrationController do
   alias Ask.{FloipEndpoint, FloipPackage, FloipPusher}
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
-    integrations = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-    |> assoc(:floip_endpoints)
-    |> Repo.all
-
-    render(conn, "index.json", integrations: integrations)
+    render(conn, "index.json", integrations: conn |> load_integrations(project_id, survey_id))
   end
 
   def create(conn, %{"integration" => integration_params, "survey_id" => survey_id, "project_id" => project_id}) do
@@ -55,5 +48,14 @@ defmodule Ask.IntegrationController do
         Once you checked both things, feel free to try again!
         """}
     end
+  end
+
+  defp load_integrations(conn, project_id, survey_id) do
+    conn
+    |> load_project(project_id)
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+    |> assoc(:floip_endpoints)
+    |> Repo.all
   end
 end

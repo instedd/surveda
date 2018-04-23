@@ -5,6 +5,14 @@ import { project } from '../routes';
 export const RECEIVE = 'INTEGRATIONS_RECEIVE'
 export const FETCH = 'INTEGRATIONS_FETCH'
 
+export const createIntegration = (projectId: number, surveyId: number, integration: Integration) => (dispatch: Function, getState: () => Store) => {
+  return api.createIntegration(projectId, surveyId, integration)
+    .then(response => {
+      console.log(response)
+      dispatch(fetchIntegrations(projectId, surveyId))
+    })
+}
+
 export const fetchIntegrations = (projectId: number, surveyId: number) => (dispatch: Function, getState: () => Store): Promise<?IntegrationList> => {
   const state = getState()
 
