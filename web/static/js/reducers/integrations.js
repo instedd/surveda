@@ -4,7 +4,7 @@ const initialState = {
   fetching: false,
   items: null,
   order: [],
-  surveyId: null,
+  surveyId: null
 }
 
 export default (state = initialState, action) => {

@@ -1,6 +1,5 @@
 // @flow
 import * as api from '../api'
-import { project } from '../routes';
 
 export const RECEIVE = 'INTEGRATIONS_RECEIVE'
 export const FETCH = 'INTEGRATIONS_FETCH'

@@ -2,17 +2,12 @@
 import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import {  } from '../ui'
 import * as actions from '../../actions/integrations'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import values from 'lodash/values'
-import { AddButton, CardTable, InputWithLabel, UntitledIfEmpty, Modal, SortableHeader, Tooltip } from '../ui'
+import { AddButton, CardTable, InputWithLabel, Modal } from '../ui'
 import IntegrationRow from './IntegrationRow'
-import * as routes from '../../routes'
-import find from 'lodash/find'
-import * as api from '../../api'
-
 
 type Props = {
   projectId: number,
@@ -41,10 +36,10 @@ class IntegrationIndex extends Component<DefaultProps, Props, State> {
     this.state = {
       editedIntegration: {
         id: 0,
-        name: "",
-        uri: "",
-        authToken: "",
-        state: "disabled"
+        name: '',
+        uri: '',
+        authToken: '',
+        state: 'disabled'
       }
     }
   }
@@ -88,27 +83,26 @@ class IntegrationIndex extends Component<DefaultProps, Props, State> {
   }
 
   modalNewIntegration() {
-    const { editedIntegration } = this.state
     return <Modal id='newIntegration' confirmationText='New integration' card>
       <div>
         <div className='card-title header'>
           <h5>Create a new integration</h5>
           <p>Surveda will periodically push responses from this survey to the service you configure here.</p>
         </div>
-        <div className='card-content' style={{maxHeight: "100vh"}}>
+        <div className='card-content' style={{maxHeight: '100vh'}}>
           <div className='row'>
             <div className='input-field'>
-              <InputWithLabel id='integration_name' value={undefined} label="Enter a name to identify your integration (e.g.: 'ONA')">
+              <InputWithLabel id='integration_name' value={undefined} label='Enter a name to identify your integration (e.g.: "ONA")'>
                 <input type='text' onChange={e => { this.nameOnChange(e) }} />
               </InputWithLabel>
             </div>
             <div className='input-field'>
-              <InputWithLabel id='integration_uri' value={undefined} label="URI of the service that will receive the data (e.g.: 'https://api.ona.io/api/v1/')">
+              <InputWithLabel id='integration_uri' value={undefined} label='URI of the service that will receive the data (e.g.: "https://api.ona.io/api/v1/")'>
                 <input type='text' onChange={e => { this.uriOnChange(e) }} />
               </InputWithLabel>
             </div>
             <div className='input-field'>
-              <InputWithLabel id='integration_token' value={undefined} label="Authorization token (e.g.: 'Token tGzv3JOkF0XG5Qx2TlKWIA')">
+              <InputWithLabel id='integration_token' value={undefined} label='Authorization token (e.g.: "Token tGzv3JOkF0XG5Qx2TlKWIA")'>
                 <input type='text' onChange={e => { this.tokenOnChange(e) }} />
               </InputWithLabel>
             </div>
@@ -124,17 +118,17 @@ class IntegrationIndex extends Component<DefaultProps, Props, State> {
   }
 
   render() {
-    if (!this.props.integrations || this.props.fetching ||  !this.props.survey || !this.props.project) {
+    if (!this.props.integrations || this.props.fetching || !this.props.survey || !this.props.project) {
       return <div>Loading...</div>
     }
 
-    const { survey, project, integrations } = this.props
+    const { integrations } = this.props
 
     return (
       <div className='white'>
         <AddButton text='Add integration' onClick={(e) => { e.preventDefault(); $('#newIntegration').modal('open') }} />
         {this.modalNewIntegration()}
-        <CardTable title="Integrations" tableScroll>
+        <CardTable title='Integrations' tableScroll>
           <thead>
             <tr>
               <th>Name</th>

@@ -1,6 +1,5 @@
 // @flow
 import React, { Component } from 'react'
-import capitalize from 'lodash/capitalize'
 
 type Props = {
   integration: Integration
