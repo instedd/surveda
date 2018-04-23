@@ -1,5 +1,6 @@
 defmodule FloipPusherTest do
   use Ask.ModelCase
+  use Ask.LogHelper
   alias Ask.{Repo, FloipPusher, FloipEndpoint, Response}
 
   setup do
@@ -51,6 +52,13 @@ defmodule FloipPusherTest do
     assert endpoint.retries == retries
   end
 
+  defp run_pusher_without_logging() do
+    without_logging do
+      {:ok, _} = FloipPusher.start_link
+      FloipPusher.poll
+    end
+  end
+
   test "writes last successfully pushed response for each endpoint", %{server: server} do
     # 2 running surveys
     survey1 = insert(:survey, state: "running")
@@ -71,8 +79,7 @@ defmodule FloipPusherTest do
     server |> expect_success_always
 
     # Run the pusher
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Verify that each endpoint ends up with the right last_response_id set
     assert_last_response(survey1, endpoint_1_survey_1, response_2_survey_1.id)
@@ -105,8 +112,7 @@ defmodule FloipPusherTest do
     |> expect_push_success("2.2", survey2.floip_package_id)
 
     # Run the pusher
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
   end
 
   test "does not overwrite last_pushed_response_id if push fails", %{server: server} do
@@ -131,8 +137,7 @@ defmodule FloipPusherTest do
     server |> expect_push_fail("1.1", survey1.floip_package_id)
 
     # Run the pusher
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Verify that last_pushed_response_id hasn't changed for the failing endpoint
     assert_last_response(survey1, endpoint_1_survey_1, nil)
@@ -168,8 +173,7 @@ defmodule FloipPusherTest do
     |> expect_push_success("2.2", survey2.floip_package_id)
 
     # Run the pusher
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
   end
 
   test "does not send more than 1000 responses per run per endpoint", %{server: server} do
@@ -193,8 +197,7 @@ defmodule FloipPusherTest do
     end
 
     # Run the pusher
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Verify the last pushed response is the 1000th.
     assert_last_response(survey, endpoint, (first(Response) |> Repo.one).id + 999)
@@ -215,8 +218,7 @@ defmodule FloipPusherTest do
     server |> expect_push_fail("1.1", survey.floip_package_id)
 
     # Run poll
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Verify that the endpoint retry counter is now set at 1
     assert_retries(endpoint, 1)
@@ -237,8 +239,7 @@ defmodule FloipPusherTest do
     server |> expect_success_always
 
     # Run poll
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Verify that the endpoint retry counter is now set at 0
     assert_retries(endpoint, 0)
@@ -273,8 +274,7 @@ defmodule FloipPusherTest do
     |> expect_push_success("2.2", survey2.floip_package_id)
 
     # Run poll
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
   end
 
   test "ignores disabled endpoints" do
@@ -288,8 +288,7 @@ defmodule FloipPusherTest do
     insert_response(survey1)
 
     # Run poll expecting not to receive a push
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
   end
 
   test "marks endpoint as disabled if it reaches 10 retries", %{server: server} do
@@ -311,8 +310,7 @@ defmodule FloipPusherTest do
     |> expect_push_fail("2.1", survey1.floip_package_id)
 
     # Run poll
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # The endpoint that has failed 10 times is now disabled
     endpoint = Repo.get_by(FloipEndpoint, uri: endpoint.uri, survey_id: survey1.id)
@@ -336,8 +334,7 @@ defmodule FloipPusherTest do
     endpoint = insert_endpoint(survey1, uri: "http://localhost:1234/1.1", last_pushed_response_id: last_response.id)
 
     # Pusher runs
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Endpoint state is now "terminated"
     endpoint = Repo.get_by(FloipEndpoint, uri: endpoint.uri, survey_id: survey1.id)
@@ -359,8 +356,7 @@ defmodule FloipPusherTest do
     server |> expect_success_always
 
     # Pusher runs
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Endpoint state remains enabled
     endpoint = Repo.get_by(FloipEndpoint, uri: endpoint.uri, survey_id: survey1.id)
@@ -383,8 +379,7 @@ defmodule FloipPusherTest do
     insert_endpoint(survey1, uri: "http://localhost:1234/1.1", state: "terminated")
 
     # Pusher runs
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
 
     # Endpoint server does not receive any POST
   end
@@ -399,9 +394,6 @@ defmodule FloipPusherTest do
       Plug.Conn.resp(conn, 200, "")
     end
 
-    {:ok, _} = FloipPusher.start_link
-    FloipPusher.poll
+    run_pusher_without_logging()
   end
-
-
 end
