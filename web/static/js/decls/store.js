@@ -100,7 +100,3 @@ export type ProjectList = ListStore<Project> & {
 };
 
 export type ProjectList = ListStore<Project>;
-
-export type IntegrationList = ListStore<Integration> & {
-  filter: ?ListFilter,
-};

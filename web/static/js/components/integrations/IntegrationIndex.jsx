@@ -19,7 +19,7 @@ type Props = {
   surveyId: number,
   survey: Survey,
   project: Project,
-  integrations: IntegrationList[],
+  integrations: Integration[],
   surveyActions: any,
   projectActions: any,
   actions: any,
@@ -28,9 +28,11 @@ type Props = {
 
 type State = {
   editedIntegration: Integration
-}
+};
 
-class IntegrationIndex extends Component<Props, State> {
+type DefaultProps = {};
+class IntegrationIndex extends Component<DefaultProps, Props, State> {
+  static defaultProps = {}
   props: Props
   state: State
 
@@ -143,7 +145,7 @@ class IntegrationIndex extends Component<Props, State> {
           </thead>
           <tbody>
             {
-              integrations.map((integration, index) => {
+              integrations.map((integration: Integration, index: number) => {
                 return <IntegrationRow
                   key={index}
                   integration={integration}

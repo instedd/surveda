@@ -1,4 +1,4 @@
-defmodule Ask.Repo.Migrations.AddFloipEndpointsTable do
+defmodule Ask.Repo.Migrations.ReplaceFloipEndpointsTable do
   use Ecto.Migration
 
   def change do

@@ -297,15 +297,8 @@ defmodule Ask.FloipPackage do
             "name" => "#{name(survey)}-data",
             "path" => nil,
             "schema" => %{
-              "fields" => fields,
+              "fields" => fields(),
               "questions" => questions(survey)
-              # %{
-              #   "a1234" => %{
-              #     "type" => "numeric",
-              #     "label" => "How old are you? Please enter your age in years.",
-              #     "type_options" => %{}
-              #   }
-              # }  #
             }
           }]
         }

@@ -13,7 +13,7 @@ export const createIntegration = (projectId: number, surveyId: number, integrati
     })
 }
 
-export const fetchIntegrations = (projectId: number, surveyId: number) => (dispatch: Function, getState: () => Store): Promise<?IntegrationList> => {
+export const fetchIntegrations = (projectId: number, surveyId: number) => (dispatch: Function, getState: () => Store): Promise<?Integration[]> => {
   const state = getState()
 
   // Don't fetch integrations if they are already being fetched

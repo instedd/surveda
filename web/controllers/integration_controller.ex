@@ -1,11 +1,10 @@
 defmodule Ask.IntegrationController do
   use Ask.Web, :api_controller
   require Logger
-  import PP
 
-  alias Ask.{FloipEndpoint, FloipPackage, FloipPusher}
+  alias Ask.{FloipEndpoint, FloipPusher}
 
-  def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+  def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     render(conn, "index.json", integrations: conn |> load_integrations(project_id, survey_id))
   end
 
@@ -31,7 +30,7 @@ defmodule Ask.IntegrationController do
     end
   end
 
-  defp create_integration(conn, params = %{"name" => name, "uri" => uri, "auth_token" => auth_token}, survey) do
+  defp create_integration(conn, params = %{"name" => _name, "uri" => uri, "auth_token" => _auth_token}, survey) do
     changeset = FloipEndpoint.changeset(%FloipEndpoint{}, params)
       |> put_assoc(:survey, survey)
 
