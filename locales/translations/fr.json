@@ -149,6 +149,7 @@
     "Download CSV": "Télécharger un CSV",
     "Download survey respondents data as CSV": "Télécharger les données des personnages interrogées en sondage sous la forme de CSV",
     "Downloaded <i>{{surveyName}}<\/i> {{reportType}}": "Téléchargement de <i>{{surveyName}}<\/i> {{reportType}}",
+    "Duplicate questionnaire": "Dupliquer le questionnaire",
     "EDIT QUOTAS": "ÉDITER LES QUOTAS",
     "Edited <i>{{surveyName}}<\/i> survey": "Enquête <i>{{surveyName}}<\/i> éditée",
     "Edited settings on <i>{{questionnaireName}}<\/i>": "Paramètres édités sur <i>{{questionnaireName}}<\/i>",

@@ -153,7 +153,7 @@ class QuestionnaireIndex extends Component {
                   </td>
                   {readOnly ? null
                     : <td className='action'>
-                      <Tooltip text='Duplicate questionnaire'>
+                      <Tooltip text={t('Duplicate questionnaire')}>
                         <a onClick={() => this.duplicate(questionnaire)}>
                           <i className='material-icons'>content_copy</i>
                         </a>
@@ -161,7 +161,7 @@ class QuestionnaireIndex extends Component {
                     </td>}
                   {readOnly ? null
                     : <td className='action'>
-                      <Tooltip text='Delete questionnaire'>
+                      <Tooltip text={t('Delete questionnaire')}>
                         <a onClick={() => this.delete(questionnaire)}>
                           <i className='material-icons'>delete</i>
                         </a>
