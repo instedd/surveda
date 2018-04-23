@@ -12,11 +12,8 @@ const respondentsStatsSchema = new Schema('respondents')
 const referenceSchema = new Schema('reference')
 const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
-<<<<<<< HEAD
 const activitySchema = new Schema('activities')
-=======
 const integrationSchema = new Schema('integrations')
->>>>>>> Basic FLOIP integrations UI
 
 export class Unauthorized {
   constructor(response) {
