@@ -592,7 +592,7 @@ defmodule Ask.RespondentControllerTest do
       }}
     end
 
-  test "quotas_stats with a zero quota bucket", %{conn: conn, user: user} do
+  test "quotas_stats with a zero or nil quota bucket", %{conn: conn, user: user} do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
 
@@ -611,7 +611,7 @@ defmodule Ask.RespondentControllerTest do
           },
           %{
             "condition" => [%{"store" => "Smokes", "value" => "yes"}, %{"store" => "Exercises", "value" => "No"}],
-            "quota" => 0,
+            "quota" => nil,
             "count" => 0
           },
           %{

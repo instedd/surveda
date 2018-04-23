@@ -115,8 +115,8 @@ defmodule Ask.RespondentController do
 
   defp stats(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
-    empty_bucket_ids = buckets |> Enum.filter(fn(bucket) -> bucket.quota == 0 end) |> Enum.map(&(&1.id))
-    buckets = buckets |> Enum.reject(fn(bucket) -> bucket.quota == 0 end)
+    empty_bucket_ids = buckets |> Enum.filter(fn(bucket) -> bucket.quota in [0, nil] end) |> Enum.map(&(&1.id))
+    buckets = buckets |> Enum.reject(fn(bucket) -> bucket.quota in [0, nil] end)
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     stats(
       conn,
