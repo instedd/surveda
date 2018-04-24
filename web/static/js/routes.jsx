@@ -1,6 +1,7 @@
 import React from 'react'
 import { Route, IndexRoute, IndexRedirect } from 'react-router'
 import App from './components/layout/App'
+import IntegrationIndex from './components/integrations/IntegrationIndex'
 import ProjectIndex from './components/projects/ProjectIndex'
 import SurveyEdit from './components/surveys/SurveyEdit'
 import SurveyIndex from './components/surveys/SurveyIndex'
@@ -42,6 +43,7 @@ export default (
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
             <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
             <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
+            <Route path='integrations' components={{ body: IntegrationIndex, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} showSavingStatus />
             <Route path='simulation' component={SurveySimulation} />
           </Route>
@@ -86,6 +88,7 @@ export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surv
 export const surveySimulation = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}/simulation`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
 export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
+export const surveyIntegrations = (projectId, surveyId) => `${survey(projectId, surveyId)}/integrations`
 export const respondentsResultsCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/results?_format=csv`
 export const respondentsDispositionHistoryCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/disposition_history?_format=csv`
 export const respondentsIncentivesCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/incentives?_format=csv`

@@ -40,4 +40,30 @@ defmodule Ask.SurveyTest do
     survey = %Survey{fallback_delay: "foo"}
     assert Survey.fallback_delay(survey) == nil
   end
+
+  test "default changeset includes a non-nil FLOIP package id" do
+    changeset = Survey.changeset(%Survey{})
+    assert get_field(changeset, :floip_package_id) != nil
+  end
+
+  test "default changeset does not override FLOIP package id" do
+    changeset = Survey.changeset(%Survey{floip_package_id: "foo"})
+    assert get_field(changeset, :floip_package_id) == "foo"
+  end
+
+  test "survey has FLOIP package if it is running" do
+    survey = %Survey{state: "running"}
+    assert length(survey |> Survey.packages) == 1
+  end
+
+  test "survey has FLOIP package if it is terminated" do
+    survey = %Survey{state: "terminated"}
+    assert length(survey |> Survey.packages) == 1
+  end
+
+  test "survey does not have FLOIP package unless it is running or terminated" do
+    # Because its underlying questionnaire may still change
+    survey = %Survey{state: "foo"}
+    assert length(survey |> Survey.packages) == 0
+  end
 end

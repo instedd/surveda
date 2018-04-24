@@ -13,6 +13,7 @@ const referenceSchema = new Schema('reference')
 const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
 const activitySchema = new Schema('activities')
+const integrationSchema = new Schema('integrations')
 
 export class Unauthorized {
   constructor(response) {
@@ -454,4 +455,12 @@ export const deleteInteractionsLink = (projectId, surveyId) => {
 
 export const deleteDispositionHistoryLink = (projectId, surveyId) => {
   return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`)
+}
+
+export const fetchIntegrations = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, arrayOf(integrationSchema))
+}
+
+export const createIntegration = (projectId, surveyId, integration) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, integrationSchema, { integration })
 }

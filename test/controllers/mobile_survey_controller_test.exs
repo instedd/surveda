@@ -33,7 +33,7 @@ defmodule Ask.MobileSurveyControllerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{token}"
+    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{token}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -207,7 +207,7 @@ defmodule Ask.MobileSurveyControllerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
 
     conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
     assert response(conn, 200)
@@ -290,7 +290,7 @@ defmodule Ask.MobileSurveyControllerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter http://app.ask.dev/mobile_survey/#{respondent.id}?token=#{token}"
+    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{token}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"

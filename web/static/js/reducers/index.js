@@ -22,6 +22,7 @@ import timezones from './timezones'
 import ui from './ui/index'
 import userSettings from './userSettings'
 import activities from './activities'
+import integrations from './integrations'
 
 export default combineReducers({
   activities,
@@ -46,5 +47,6 @@ export default combineReducers({
   surveys,
   timezones,
   ui,
-  userSettings
+  userSettings,
+  integrations
 })

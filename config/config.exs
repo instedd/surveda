@@ -5,6 +5,10 @@
 # is restricted to this project.
 use Mix.Config
 
+config :plug, :types, %{
+  "application/vnd.api+json" => ["json-api"]
+}
+
 # General application configuration
 config :ask,
   ecto_repos: [Ask.Repo]
