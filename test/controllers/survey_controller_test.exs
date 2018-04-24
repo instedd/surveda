@@ -35,7 +35,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id)
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "not_ready", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -48,7 +48,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "running")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -61,7 +61,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "completed")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "terminated", "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "terminated", "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -74,7 +74,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, %{"since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -125,7 +125,7 @@ defmodule Ask.SurveyControllerTest do
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
-        "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at),
+        "updated_at" => DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => [],
           "buckets" => []
@@ -171,7 +171,7 @@ defmodule Ask.SurveyControllerTest do
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
-        "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at),
+        "updated_at" => DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => ["gender", "smokes"],
           "buckets" => [
@@ -238,7 +238,7 @@ defmodule Ask.SurveyControllerTest do
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
-        "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at),
+        "updated_at" => DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => [],
           "buckets" => []
@@ -301,7 +301,7 @@ defmodule Ask.SurveyControllerTest do
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
         "fallback_delay" => nil,
-        "updated_at" => NaiveDateTime.to_iso8601(survey.updated_at),
+        "updated_at" => DateTime.to_iso8601(survey.updated_at),
         "quotas" => %{
           "vars" => [],
           "buckets" => []
@@ -363,12 +363,12 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "updates project updated_at when survey is created", %{conn: conn, user: user} do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = create_project_for_user(user)
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+      project = create_project_for_user(user, updated_at: datetime)
       post conn, project_survey_path(conn, :create, project.id)
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
+      assert DateTime.compare(project.updated_at, datetime) == :gt
     end
 
     test "forbids creation if project is archived", %{conn: conn, user: user} do
@@ -616,14 +616,14 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "updates project updated_at when survey is updated", %{conn: conn, user: user}  do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = create_project_for_user(user)
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+      project = create_project_for_user(user, updated_at: datetime)
       survey = insert(:survey, project: project)
 
       put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{name: "New name"}
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
+      assert DateTime.compare(project.updated_at, datetime) == :gt
     end
   end
 
@@ -713,14 +713,14 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "updates project updated_at when survey is deleted", %{conn: conn, user: user}  do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-      project = create_project_for_user(user)
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+      project = create_project_for_user(user, updated_at: datetime)
       survey = insert(:survey, project: project)
 
       delete conn, project_survey_path(conn, :delete, survey.project, survey)
 
       project = Project |> Repo.get(project.id)
-      assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
+      assert DateTime.compare(project.updated_at, datetime) == :gt
     end
 
     test "delete survey and all contents", %{conn: conn, user: user} do
@@ -1107,14 +1107,14 @@ defmodule Ask.SurveyControllerTest do
   end
 
   test "updates project updated_at when a survey is launched", %{conn: conn, user: user}  do
-    datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
-    project = create_project_for_user(user)
+    {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+    project = create_project_for_user(user, updated_at: datetime)
     survey = insert(:survey, project: project, state: "ready")
 
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     project = Project |> Repo.get(project.id)
-    assert Ecto.DateTime.compare((project.updated_at |> NaiveDateTime.to_erl |> Ecto.DateTime.from_erl), datetime) == :gt
+    assert DateTime.compare(project.updated_at, datetime) == :gt
   end
 
   test "stops survey", %{conn: conn, user: user} do

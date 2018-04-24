@@ -1,5 +1,23 @@
 # InSTEDD Surveda Changelog
 
+## Pine 0.16
+
+### Features
+
+* Localized UI (with translations in French and Spanish) [#1217](https://github.com/instedd/ask/issues/1217)
+* Archive projects [#1216](https://github.com/instedd/ask/issues/1216)
+* Autosave improvements [#1224](https://github.com/instedd/ask/issues/1224), [#1225](https://github.com/instedd/ask/issues/1225), [#1226](https://github.com/instedd/ask/issues/1226)
+* New survey cockpit [#1218](https://github.com/instedd/ask/issues/1218)
+* Record voice messages in the browser [#1223](https://github.com/instedd/ask/issues/1223)
+* Activity log [#1227](https://github.com/instedd/ask/issues/1227)
+* Undo/Redo in the questionnaire editor [#1253](https://github.com/instedd/ask/issues/1253)
+* Share channels with projects [#1248](https://github.com/instedd/ask/issues/1248), [#1249](https://github.com/instedd/ask/issues/1249)
+
+### Bugfixes
+
+* Avoid deletion of respondent groups when the survey is already running [#1203](https://github.com/instedd/ask/issues/1203)
+* Synchronize Verboice shared channels [#1219](https://github.com/instedd/ask/issues/1219)
+
 ## Oak 0.15.3
 
 ### Bugfixes
