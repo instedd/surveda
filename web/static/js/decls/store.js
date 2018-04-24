@@ -98,5 +98,3 @@ export type ChannelList = ListStore<Channel>;
 export type ProjectList = ListStore<Project> & {
   filter: ?ArchiveFilter,
 };
-
-export type ProjectList = ListStore<Project>;

@@ -46,9 +46,6 @@ export default combineReducers({
   survey,
   surveys,
   timezones,
-  collaborators,
-  guest,
-  invite,
   ui,
   userSettings,
   integrations
