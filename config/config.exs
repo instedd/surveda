@@ -32,6 +32,9 @@ config :ask, :channel,
     "verboice" => Ask.Runtime.VerboiceChannel
   }
 
+config :ask, Ask.FloipPusher,
+  poll_interval_in_minutes: {:system, "FLOIP_PUSHER_POLL_INTERVAL_IN_MINUTES", 15}
+
 config :ask, Ask.Runtime.Broker,
   batch_size: {:system, "BROKER_BATCH_SIZE", 10000},
   batch_limit_per_minute: {:system, "BROKER_BATCH_LIMIT_PER_MINUTE", 100},

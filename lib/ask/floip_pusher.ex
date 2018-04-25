@@ -6,7 +6,6 @@ defmodule Ask.FloipPusher do
 
   alias Ask.{Repo, FloipEndpoint, FloipPackage, Survey}
 
-  @poll_interval :timer.minutes(60)
   @server_ref {:global, __MODULE__}
 
   def server_ref, do: @server_ref
@@ -70,9 +69,30 @@ defmodule Ask.FloipPusher do
         end
       end)
 
-      {:ok, state}
+      {:noreply, state}
     after
-      :timer.send_after(@poll_interval, :poll)
+      poll_interval = poll_interval_in_minutes()
+
+      log_info("Scheduling next run in #{poll_interval} minutes")
+
+      poll_interval
+      |> :timer.minutes
+      |> :timer.send_after(:poll)
+    end
+  end
+
+  defp poll_interval_in_minutes() do
+    case Application.get_env(:ask, Ask.FloipPusher)[:poll_interval_in_minutes] do
+      {:system, env_var} ->
+        String.to_integer(System.get_env(env_var))
+      {:system, env_var, default} ->
+        env_value = System.get_env(env_var)
+        if env_value do
+          String.to_integer(env_value)
+        else
+          default
+        end
+      value -> value
     end
   end
 
