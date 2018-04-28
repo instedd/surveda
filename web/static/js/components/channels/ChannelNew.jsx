@@ -1,9 +1,11 @@
 // @flow
 import React, { Component } from 'react'
 import { config } from '../../config'
-import { withRouter } from 'react-router'
+import { withRouter, Link } from 'react-router'
 import * as routes from '../../routes'
-import { Link } from 'react-router'
+import { connect } from 'react-redux'
+import * as channelActions from '../../actions/channels'
+import { bindActionCreators } from 'redux'
 
 type Props = {
   location: {
@@ -12,7 +14,8 @@ type Props = {
       providerIndex: ?string
     }
   },
-  router: any
+  router: any,
+  channelActions: Object
 };
 
 class ChannelNew extends Component {
@@ -30,18 +33,24 @@ class ChannelNew extends Component {
 
   channelProvider() {
     const { providerType, providerIndex = 0 } = this.props.location.query
+    const index = parseInt(providerIndex)
 
+    let baseUrl: string
     switch (providerType) {
       case 'verboice':
-        return config.verboice[providerIndex]
+        baseUrl = config.verboice[index].baseUrl
+        break
 
       case 'nuntium':
-        return config.nuntium[providerIndex]
+        baseUrl = config.nuntium[index].baseUrl
+        break
 
       default:
         (providerType: empty)
         throw new Error(`Unknown provider type: ${providerType}`)
     }
+
+    return { provider: providerType, baseUrl }
   }
 
   componentDidMount() {
@@ -62,6 +71,8 @@ class ChannelNew extends Component {
           break
 
         case 'created':
+          const { provider, baseUrl } = this.channelProvider()
+          this.props.channelActions.createChannel(provider, baseUrl, event.data.channel)
           this.setState({ state: 'created' })
           break
 
@@ -77,10 +88,6 @@ class ChannelNew extends Component {
   }
 
   render() {
-    return this.renderContent()
-  }
-
-  renderContent() {
     const { state } = this.state
 
     switch (state) {
@@ -99,12 +106,12 @@ class ChannelNew extends Component {
 
       default:
         (state: 'editing')
-        const provider = this.channelProvider()
+        const { baseUrl } = this.channelProvider()
         return (
           <div className='row white'>
             <div className='col l6 offset-l3 m12'>
               <iframe style={{border: '0px', width: '100%'}}
-                ref='iframe' src={`${provider.baseUrl}/channels_ui/new`} />
+                ref='iframe' src={`${baseUrl}/channels_ui/new`} />
             </div>
           </div>
         )
@@ -112,4 +119,8 @@ class ChannelNew extends Component {
   }
 }
 
-export default withRouter(ChannelNew)
+const mapDispatchToProps = (dispatch) => ({
+  channelActions: bindActionCreators(channelActions, dispatch)
+})
+
+export default withRouter(connect(null, mapDispatchToProps)(ChannelNew))

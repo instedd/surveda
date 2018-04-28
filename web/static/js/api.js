@@ -269,6 +269,10 @@ export const updateChannel = (channel) => {
   return apiPutJSON(`/channels/${channel.id}`, channelSchema, { channel })
 }
 
+export const createChannel = (provider, baseUrl, channel) => {
+  return apiPostJSON(`channels`, channelSchema, { provider, baseUrl, channel })
+}
+
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
     questionnaireSchema, { questionnaire })

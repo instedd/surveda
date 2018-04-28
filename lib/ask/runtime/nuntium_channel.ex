@@ -149,6 +149,10 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
   end
 
+  def create_channel(_user, _base_url, _api_channel) do
+    raise "create_channel/3 not implemented"
+  end
+
   defp collect_remote_channels(client, accounts, all_channels \\ []) do
     case accounts do
       [account | accounts] ->

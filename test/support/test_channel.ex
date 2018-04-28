@@ -52,6 +52,13 @@ defmodule Ask.TestChannel do
     |> Ask.Repo.insert!
   end
 
+  def create_channel(user, base_url, api_channel) do
+    user
+    |> Ecto.build_assoc(:channels)
+    |> Ask.Channel.changeset(%{name: "test", provider: "test", base_url: base_url, type: "ivr", settings: api_channel})
+    |> Ask.Repo.insert!
+  end
+
   def callback(_conn, _params) do
   end
 

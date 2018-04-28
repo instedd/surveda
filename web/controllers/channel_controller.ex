@@ -80,4 +80,21 @@ defmodule Ask.ChannelController do
 
     send_resp(conn, :no_content, "")
   end
+
+  def create(conn, %{"provider" => provider, "base_url" => base_url, "channel" => api_channel}) do
+    user = current_user(conn)
+
+    token = user
+      |> assoc(:oauth_tokens)
+      |> Repo.get_by(provider: provider, base_url: base_url)
+
+    unless token do
+      raise Ask.UnauthorizedError, conn: conn
+    end
+
+    provider = Ask.Channel.provider(provider)
+    channel = provider.create_channel(user, base_url, api_channel)
+
+    render(conn, "show.json", channel: channel)
+  end
 end

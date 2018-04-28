@@ -63,3 +63,11 @@ export const sortChannelsBy = (property: string) => ({
   type: SORT,
   property
 })
+
+export const createChannel = (providerType: string, baseUrl: string, channel: Object) =>
+  (dispatch: Function) => {
+    return api
+      .createChannel(providerType, baseUrl, channel)
+      .then(() => dispatch(fetchChannels()))
+  }
+

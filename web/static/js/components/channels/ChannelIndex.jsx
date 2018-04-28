@@ -127,12 +127,12 @@ class ChannelIndex extends Component<any> {
     const multipleVerboice = config.verboice.length > 1
 
     let providerModals = []
-    for (let index in config.verboice) {
-      providerModals.push(providerModal('verboice', index, config.verboice[index].friendlyName, multipleVerboice))
-    }
-    for (let index in config.nuntium) {
-      providerModals.push(providerModal('nuntium', index, config.nuntium[index].friendlyName, multipleNuntium))
-    }
+    config.verboice.forEach((provider, index) => {
+      providerModals.push(providerModal('verboice', index, provider.friendlyName, multipleVerboice))
+    })
+    config.nuntium.forEach((provider, index) => {
+      providerModals.push(providerModal('nuntium', index, provider.friendlyName, multipleNuntium))
+    })
 
     const newChannel = (providerType, providerIndex) => {
       $('#add-channel').modal('close')
@@ -181,12 +181,12 @@ class ChannelIndex extends Component<any> {
     }
 
     let providerUIs = []
-    for (let index in config.verboice) {
+    config.verboice.forEach((_, index) => {
       providerUIs.push(verboiceProviderUI(index, multipleVerboice))
-    }
-    for (let index in config.nuntium) {
+    })
+    config.nuntium.forEach((_, index) => {
       providerUIs.push(nuntiumProviderUI(index, multipleNuntium))
-    }
+    })
 
     return (
       <div>
