@@ -219,7 +219,7 @@ class ChannelIndex extends Component {
 
                 if (!channel) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
-                return (<tr key={channel.id} onClick={() => router.push(routes.channel(channel.id))}>
+                return (<tr key={channel.id} onClick={() => router.push(routes.channelShare(channel.id))}>
                   <td>
                     <UntitledIfEmpty text={this.channelDisplayName(channel)} emptyText={t('Untitled channel')} />
                   </td>
