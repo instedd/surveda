@@ -7,6 +7,7 @@ import { connect } from 'react-redux'
 import * as channelActions from '../../actions/channels'
 import { bindActionCreators } from 'redux'
 import * as api from '../../api'
+import ChannelUI from './ChannelUI'
 
 type Props = {
   location: {
@@ -24,12 +25,10 @@ class ChannelNew extends Component {
   state: {
     state: 'editing' | 'created',
     accessToken?: string,
-  }
-  onMessage: Function;
+  };
 
   constructor() {
     super()
-    this.onMessage = this.onMessage.bind(this)
     this.state = { state: 'editing' }
   }
 
@@ -56,41 +55,20 @@ class ChannelNew extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener('message', this.onMessage, false)
-
     const { provider, baseUrl } = this.channelProvider()
     api.getUIToken(provider, baseUrl)
       .then(accessToken => this.setState({accessToken}))
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('message', this.onMessage)
+  onCreated(channel) {
+    const { provider, baseUrl } = this.channelProvider()
+    this.props.channelActions.createChannel(provider, baseUrl, channel)
+    this.setState({ state: 'created' })
   }
 
-  onMessage(event) {
-    const { iframe } = this.refs
-
-    if (iframe && event.source == iframe.contentWindow) {
-      switch (event.data.type) {
-        case 'resize':
-          iframe.style.height = `${event.data.height}px`
-          break
-
-        case 'created':
-          const { provider, baseUrl } = this.channelProvider()
-          this.props.channelActions.createChannel(provider, baseUrl, event.data.channel)
-          this.setState({ state: 'created' })
-          break
-
-        case 'cancel':
-          const { router } = this.props
-          router.push(routes.channels)
-          break
-
-        default:
-          console.log('Unexpected message received from channels UI', event.data)
-      }
-    }
+  onCancel() {
+    const { router } = this.props
+    router.push(routes.channels)
   }
 
   render() {
@@ -121,8 +99,7 @@ class ChannelNew extends Component {
         return (
           <div className='row white'>
             <div className='col l6 offset-l3 m12'>
-              <iframe style={{border: '0px', width: '100%'}}
-                ref='iframe' src={`${baseUrl}/channels_ui/new?access_token=${accessToken}`} />
+              <ChannelUI baseUrl={baseUrl} accessToken={accessToken} channelId='new' />
             </div>
           </div>
         )

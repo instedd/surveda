@@ -26,6 +26,7 @@ import ChannelTitle from './components/channels/ChannelTitle'
 import * as questionnaireActions from './actions/questionnaire'
 import ChannelTabs from './components/channels/ChannelTabs'
 import ChannelNew from './components/channels/ChannelNew'
+import ChannelSettings from './components/channels/ChannelSettings'
 
 const k = (s) => s
 
@@ -82,6 +83,7 @@ export default (
         <IndexRedirect to='share' />
         <Route path='share' components={{ body: ChannelEdit, tabs: ChannelTabs }} />
         <Route path='patterns' components={{ body: ChannelPatterns, tabs: ChannelTabs }} />
+        <Route path='settings' components={{ body: ChannelSettings, tabs: ChannelTabs }} />
       </Route>
     </Route>
   </Route>
@@ -111,6 +113,7 @@ export const channelNew = (providerType, providerIndex) => `/channels/new?provid
 export const channels = '/channels'
 export const channelShare = (id) => `${channels}/${id}/share`
 export const channelPatterns = (id) => `${channels}/${id}/patterns`
+export const channelSettings = (id) => `${channels}/${id}/settings`
 
 export const showOrEditSurvey = (s) => {
   if (s.state == 'not_ready' || s.state == 'ready') {

@@ -12,6 +12,7 @@ class ChannelTabs extends Component {
       <Tabs id='channel_tabs'>
         <TabLink key='share' tabId='channel_tabs' to={routes.channelShare(channelId)}>{t('Share')}</TabLink>
         <TabLink key='patterns' tabId='channel_tabs' to={routes.channelPatterns(channelId)}>{t('Patterns')}</TabLink>
+        <TabLink key='settings' tabId='channel_tabs' to={routes.channelSettings(channelId)}>{t('Settings')}</TabLink>
       </Tabs>
     )
   }
