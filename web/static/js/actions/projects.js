@@ -18,14 +18,14 @@ export const fetchProjects = (options: Object) => (dispatch: Function, getState:
     return
   }
 
-  if (!options) options = {'archived': false}
+  if (!options) options = {'archived': null}
 
   dispatch(startFetchingProjects(options['archived']))
   return api.fetchProjects(options)
     .then(response => dispatch(receiveProjects(response.entities.projects || {}, options['archived'])))
 }
 
-export const startFetchingProjects = (archived: boolean): FilteredAction => ({
+export const startFetchingProjects = (archived: ?boolean): FilteredAction => ({
   type: FETCH,
   archived
 })
