@@ -25,7 +25,6 @@ type State = {
   editedIntegration: Integration
 };
 
-type DefaultProps = {};
 class IntegrationIndex extends Component<Props, State> {
   constructor(props) {
     super(props)
