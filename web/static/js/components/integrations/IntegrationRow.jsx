@@ -3,10 +3,9 @@ import React, { Component } from 'react'
 
 type Props = {
   integration: Integration
-}
+};
 
-class IntegrationRow extends Component {
-  props: Props
+class IntegrationRow extends Component<Props> {
   render() {
     const { integration } = this.props
 

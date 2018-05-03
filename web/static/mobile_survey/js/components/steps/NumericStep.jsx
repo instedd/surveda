@@ -7,8 +7,7 @@ type State = {
   valid: boolean
 };
 
-class NumericStep extends Component {
-  state: State
+class NumericStep extends Component<any, State> {
   handleChange: PropTypes.func.isRequired
 
   constructor(props: any) {

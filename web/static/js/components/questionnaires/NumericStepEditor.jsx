@@ -32,10 +32,7 @@ type State = {
   stepTitle: string
 };
 
-class NumericStepEditor extends Component {
-  props: Props
-  state: State
-
+class NumericStepEditor extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)

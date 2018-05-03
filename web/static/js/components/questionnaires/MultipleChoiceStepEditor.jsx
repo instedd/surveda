@@ -32,10 +32,7 @@ type State = {
   stepTitle: string
 };
 
-class MultipleChoiceStepEditor extends Component {
-  props: Props
-  state: State
-
+class MultipleChoiceStepEditor extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)

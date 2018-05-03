@@ -13,7 +13,7 @@ import { Preloader } from 'react-materialize'
 import { config } from '../../config'
 import { translate } from 'react-i18next'
 
-class ChannelIndex extends Component {
+class ChannelIndex extends Component<any> {
   componentDidMount() {
     this.props.actions.fetchChannels()
   }

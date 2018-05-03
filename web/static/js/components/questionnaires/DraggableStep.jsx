@@ -17,9 +17,7 @@ type Props = {
   readOnly: boolean
 };
 
-class DraggableStep extends Component {
-  props: Props
-
+class DraggableStep extends Component<Props> {
   draggableStep() {
     const { step, isDragging, isOver, connectDragSource, children, readOnly } = this.props
 

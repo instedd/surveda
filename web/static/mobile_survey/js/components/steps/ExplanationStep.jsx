@@ -2,7 +2,12 @@
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
-class ExplanationStep extends Component {
+type Props = {
+  step: Object,
+  progress: number
+};
+
+class ExplanationStep extends Component<Props> {
   getValue() {
     return ''
   }
@@ -32,11 +37,6 @@ class ExplanationStep extends Component {
       </div>
     )
   }
-}
-
-ExplanationStep.propTypes = {
-  step: PropTypes.object,
-  progress: PropTypes.number
 }
 
 ExplanationStep.contextTypes = {

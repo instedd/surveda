@@ -6,9 +6,8 @@ type Props = {
   offset: number
 };
 
-export class PositionFixer extends Component {
+export class PositionFixer extends Component<Props> {
   recalculate: Function
-  props: Props
 
   constructor(props: Props) {
     super(props)

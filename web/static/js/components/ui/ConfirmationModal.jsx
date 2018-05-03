@@ -19,10 +19,7 @@ type Props = {
   initOptions?: any,
 };
 
-export class ConfirmationModal extends Component {
-  props: Props
-  state: Props
-
+export class ConfirmationModal extends Component<Props, Props> {
   constructor(props: Props) {
     super()
     this.state = props

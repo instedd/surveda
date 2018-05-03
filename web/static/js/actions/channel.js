@@ -8,14 +8,6 @@ export const RECEIVE = 'CHANNEL_RECEIVE'
 export const SAVING = 'CHANNEL_SAVING'
 export const SAVED = 'CHANNEL_SAVED'
 
-export const createChannel = (projectId: number) => (dispatch: Function, getState: () => Store) =>
-  api.createChannel(projectId).then(response => {
-    const channel = response.result
-    dispatch(fetch(projectId, channel.id))
-    dispatch(receive(channel))
-    return channel
-  })
-
 export const updateChannel = () => (dispatch: Function, getState: () => Store) => {
   dispatch(saving())
   api.updateChannel(getState().channel.data).then(response => {
@@ -23,9 +15,9 @@ export const updateChannel = () => (dispatch: Function, getState: () => Store) =
   })
 }
 
-export const fetchChannel = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Channel => {
-  dispatch(fetch(projectId, id))
-  return api.fetchChannel(projectId, id)
+export const fetchChannel = (id: number) => (dispatch: Function, getState: () => Store): Channel => {
+  dispatch(fetch(id))
+  return api.fetchChannel(id)
     .then(response => {
       dispatch(receive(response.entities.channels[response.result]))
     })
@@ -39,9 +31,9 @@ export const fetch = (id: number): FilteredAction => ({
   id
 })
 
-export const fetchChannelIfNeeded = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Promise<?Channel> => {
-  if (shouldFetch(getState().channel, projectId, id)) {
-    return dispatch(fetchChannel(projectId, id))
+export const fetchChannelIfNeeded = (id: number) => (dispatch: Function, getState: () => Store): Promise<?Channel> => {
+  if (shouldFetch(getState().channel, id)) {
+    return dispatch(fetchChannel(id))
   } else {
     return Promise.resolve(getState().channel.data)
   }
@@ -52,8 +44,8 @@ export const receive = (channel: Channel) => ({
   data: channel
 })
 
-export const shouldFetch = (state: DataStore<Channel>, projectId: number, id: number) => {
-  return !state.fetching || !(state.filter && (state.filter.projectId == projectId && state.filter.id == id))
+export const shouldFetch = (state: DataStore<Channel>, id: number) => {
+  return !state.fetching || !(state.filter && state.filter.id == id)
 }
 
 export const shareWithProject = (projectId: number) => ({

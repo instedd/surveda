@@ -16,9 +16,7 @@ type Props = {
   t: Function
 };
 
-class ProjectsList extends Component {
-  props: Props;
-
+class ProjectsList extends Component<Props> {
   removeSharedProject(projectId) {
     return () => this.props.dispatch(actions.removeSharedProject(projectId))
   }

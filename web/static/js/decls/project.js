@@ -2,5 +2,6 @@
 export type Project = {
   id: number,
   name: string,
-  updatedAt: string
+  updatedAt: string,
+  readOnly: boolean
 }

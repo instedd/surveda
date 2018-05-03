@@ -42,10 +42,7 @@ type State = {
   skipLogic: ?string,
 };
 
-class ChoiceEditor extends Component {
-  props: Props
-  state: State
-
+class ChoiceEditor extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
     this.state = { ...this.stateFromProps(props), editing: false, doNotClose: false, focus: null, errors: null }
@@ -61,7 +58,7 @@ class ChoiceEditor extends Component {
     }
   }
 
-  smsChange(event: ?Event, sms: string) {
+  smsChange(event: ?SyntheticEvent<>, sms: string) {
     if (event) event.preventDefault()
     this.setState({
       ...this.state,
@@ -150,7 +147,7 @@ class ChoiceEditor extends Component {
     }
   }
 
-  onKeyDown(event: Event, focus: Focus, autoComplete: boolean = false) {
+  onKeyDown(event: SyntheticKeyboardEvent<any>, focus: Focus, autoComplete: boolean = false) {
     if (event.key == 'Enter') {
       event.preventDefault()
       this.exitEditMode(autoComplete)
@@ -159,9 +156,9 @@ class ChoiceEditor extends Component {
     }
   }
 
-  smsCheckEmptyString(event: Event) {
+  smsCheckEmptyString(event: SyntheticEvent<HTMLInputElement>) {
     // This is due to a materialize css bug. Analogous to SmsPrompt
-    if (!event.target.value) {
+    if (!event.currentTarget.value) {
       this.smsChange(event, '')
     }
   }
@@ -236,7 +233,7 @@ class ChoiceEditor extends Component {
               autoFocus={this.state.focus == 'response'}
               onChange={e => this.responseChange(e)}
               onBlur={e => this.autoComplete(e)}
-              onKeyDown={(e: Event) => this.onKeyDown(e, 'sms', true)}
+              onKeyDown={e => this.onKeyDown(e, 'sms', true)}
               draggable
               onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
               />

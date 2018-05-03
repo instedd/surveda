@@ -19,10 +19,7 @@ type State = {
   value: ?string
 };
 
-class SkipLogic extends Component {
-  props: Props
-  state: State
-
+class SkipLogic extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
     this.state = { ...this.stateFromProps(props) }

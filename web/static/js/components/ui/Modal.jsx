@@ -3,7 +3,7 @@ import React, { Component, PropTypes } from 'react'
 import uuidv4 from 'uuid/v4'
 import classNames from 'classnames/bind'
 
-export class Modal extends Component {
+export class Modal extends Component<any> {
   componentDidMount() {
     let { initOptions } = this.props
     if (!initOptions) initOptions = {}

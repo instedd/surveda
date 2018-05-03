@@ -23,8 +23,7 @@ type State = {
   isNew: boolean
 };
 
-class QuestionnaireEditor extends Component {
-  state: State
+class QuestionnaireEditor extends Component<any, State> {
   preventSecondImportZipDialog: boolean
   setActiveMode: Function
   addMode: Function

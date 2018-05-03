@@ -2,7 +2,11 @@
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
-class EndStep extends Component {
+type Props = {
+  step: Object
+};
+
+class EndStep extends Component<Props> {
   getValue() {
     return ''
   }
@@ -20,10 +24,6 @@ class EndStep extends Component {
       </div>
     )
   }
-}
-
-EndStep.propTypes = {
-  step: PropTypes.object
 }
 
 export default EndStep

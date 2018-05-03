@@ -7,9 +7,7 @@ type Props = {
   t: Function
 };
 
-class StepDeleteButton extends Component {
-  props: Props
-
+class StepDeleteButton extends Component<Props> {
   delete(e: any) {
     e.preventDefault()
     const { onDelete } = this.props

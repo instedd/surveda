@@ -41,9 +41,7 @@ type State = {
   csvType: string
 };
 
-class RespondentIndex extends Component {
-  props: Props
-  state: State
+class RespondentIndex extends Component<Props, State> {
   toggleResultsLink: Function
   toggleIncentivesLink: Function
   toggleInteractionsLink: Function

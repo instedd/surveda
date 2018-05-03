@@ -22,9 +22,7 @@ type State = {
   ranges: Range[]
 };
 
-class StepNumericEditor extends Component {
-  state: State
-
+class StepNumericEditor extends Component<any, State> {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)

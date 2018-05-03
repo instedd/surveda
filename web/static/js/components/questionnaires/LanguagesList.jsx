@@ -21,9 +21,7 @@ type Props = {
   readOnly: boolean
 };
 
-class LanguagesList extends Component {
-  props: Props
-
+class LanguagesList extends Component<Props> {
   defaultLanguageSelected(lang) {
     const props = this.props
     return (e) => {

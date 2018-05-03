@@ -14,7 +14,7 @@ import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
 
-class SurveyIndex extends Component {
+class SurveyIndex extends Component<any> {
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
@@ -108,7 +108,7 @@ class SurveyIndex extends Component {
       <div>
         {addButton}
         { surveys.length == 0
-        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey(e)} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
+        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : <div className='row'>
           { surveys.map(survey => {
             return (
@@ -157,7 +157,7 @@ const mapStateToProps = (state, ownProps) => {
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyIndex)))
 
-class SurveyCard extends PureComponent {
+class SurveyCard extends PureComponent<any> {
   props: {
     t: Function,
     respondentsStats: Object,

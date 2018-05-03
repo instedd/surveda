@@ -20,9 +20,7 @@ type Props = {
   quotaCompletedSteps: boolean
 };
 
-class QuestionnaireClosedStep extends Component {
-  props: Props
-
+class QuestionnaireClosedStep extends Component<Props> {
   render() {
     const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, t } = this.props
 

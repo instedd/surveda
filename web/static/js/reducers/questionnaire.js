@@ -1363,10 +1363,11 @@ const translateSteps = (steps, defaultLanguage, lookup) => {
 
 const translateStep = (step, defaultLanguage, lookup): Step => {
   let newStep = {...step}
+
   if (step.type !== 'language-selection' && step.type !== 'flag') {
     newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
     if (step.type === 'multiple-choice') {
-      newStep.choices = translateChoices(newStep.choices, defaultLanguage, lookup)
+      newStep = {...newStep, choices: translateChoices(step.choices, defaultLanguage, lookup)}
     }
   }
   return ((newStep: any): Step)

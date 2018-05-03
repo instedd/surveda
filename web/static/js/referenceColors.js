@@ -27,7 +27,12 @@ export function referenceColorClassesWithPrefix(totalNeeded: number, prefix: str
 }
 
 export function referenceColors(totalNeeded: number) {
-  let style = getComputedStyle(document.getElementById('root'))
+  const rootElement = document.getElementById('root')
+  if (!rootElement) {
+    return []
+  }
+
+  let style = getComputedStyle(rootElement)
 
   return referenceColorClassesWithPrefix(totalNeeded, '--reference-color').map((variableName) =>
     style.getPropertyValue(variableName).trim()

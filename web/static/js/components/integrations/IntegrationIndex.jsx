@@ -26,11 +26,7 @@ type State = {
 };
 
 type DefaultProps = {};
-class IntegrationIndex extends Component<DefaultProps, Props, State> {
-  static defaultProps = {}
-  props: Props
-  state: State
-
+class IntegrationIndex extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.state = {
