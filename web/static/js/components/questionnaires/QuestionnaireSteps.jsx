@@ -7,7 +7,6 @@ import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
 import Section from './Section'
 
-
 type Props = {
   steps: Step[],
   errorPath: string,
