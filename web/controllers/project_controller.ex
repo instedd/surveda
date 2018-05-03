@@ -4,16 +4,18 @@ defmodule Ask.ProjectController do
   alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
 
   def index(conn, params) do
-    archived = case params["archived"] do
-      "true" -> true
-      _ -> false
-    end
+    archived =
+      case params["archived"] do
+        "true" -> true
+        "false" -> false
+        _ -> nil
+      end
 
     current_user = conn |> current_user
 
     projects = current_user
     |> assoc([:project_memberships, :project])
-    |> where([p], p.archived == ^archived)
+    |> filter_archived(archived)
     |> preload(:project_memberships)
     |> Repo.all
 
@@ -312,4 +314,7 @@ defmodule Ask.ProjectController do
         query
     end
   end
+
+  defp filter_archived(query, nil), do: query
+  defp filter_archived(query, archived), do: where(query, [p], p.archived == ^archived)
 end

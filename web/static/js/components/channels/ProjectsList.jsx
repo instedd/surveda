@@ -38,13 +38,17 @@ class ProjectsList extends Component {
   render() {
     const { selectedProjects, t, projects } = this.props
 
+    if (!projects) {
+      return null
+    }
+
     return (
       <div className='projects'>
         {
           selectedProjects && selectedProjects.length != 0
             ? <ProjectSection title={t('Share on projects')}>
               {
-                map(selectedProjects, (id) => this.renderProjectRow(id, projects[id].name))
+                map(selectedProjects, (id) => this.renderProjectRow(id, projects[id] && projects[id].name))
               }
             </ProjectSection>
             : ''
