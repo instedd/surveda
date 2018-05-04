@@ -2,7 +2,12 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 
-class Header extends Component {
+type Props = {
+  progress: number,
+  title: string
+};
+
+class Header extends Component<Props> {
   render() {
     const { progress, title } = this.props
     const percent = `${progress}%`
@@ -18,11 +23,6 @@ class Header extends Component {
       </header>
     )
   }
-}
-
-Header.propTypes = {
-  progress: PropTypes.number.isRequired,
-  title: PropTypes.string.isRequired
 }
 
 Header.contextTypes = {

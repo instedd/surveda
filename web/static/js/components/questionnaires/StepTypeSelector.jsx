@@ -16,9 +16,7 @@ type Props = {
   questionnaireActions: any
 };
 
-class StepTypeSelector extends Component {
-  props: Props
-
+class StepTypeSelector extends Component<Props> {
   changeStepType(type) {
     this.props.questionnaireActions.changeStepType(this.props.stepId, type)
   }

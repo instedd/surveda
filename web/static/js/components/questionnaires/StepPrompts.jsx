@@ -36,9 +36,7 @@ type Props = {
   isNew: boolean
 };
 
-class StepPrompts extends Component {
-  state: State
-  props: Props
+class StepPrompts extends Component<Props, State> {
   autocompleteItems: AutocompleteItem[]
 
   static defaultProps = {

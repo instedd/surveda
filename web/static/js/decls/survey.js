@@ -8,7 +8,7 @@ export type Survey = {
   name: string,
   cutoff: ?number,
   countPartialResults: boolean,
-  mode: [?string[]],
+  mode: string[][],
   modeComparison: boolean,
   state: string,
   exitCode: ?number,
@@ -52,7 +52,7 @@ export type SurveyPreview = {
   questionnaireIds: number[],
   channels: number[],
   name: string,
-  mode: [?string[]],
+  mode: string[][],
   state: string,
   cutoff: ?number,
 };
@@ -88,9 +88,17 @@ export type Respondent = {
   questionnaireId: number
 };
 
+export type Integration = {
+  id: number,
+  name: string,
+  uri: string,
+  authToken: string,
+  state: "enabled" | "terminated" | "disabled"
+};
+
 export type Response = {
   name: string,
   value: ?string
-}
+};
 
 export type Disposition = null | "completed" | "partial" | "ineligible";

@@ -20,10 +20,7 @@ type State = {
   editing: boolean
 };
 
-class AddProject extends Component {
-  props: Props;
-  state: State;
-
+class AddProject extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.state = {
@@ -69,7 +66,7 @@ class AddProject extends Component {
     const { t } = this.props
     if (!this.state.editing) {
       return (
-        <a className='btn-icon-grey' onClick={e => this.startEdit(e)}>
+        <a className='btn-icon-grey' onClick={e => this.startEdit()}>
           <span><i className='material-icons'>add</i></span>
           <span>{t('Add project')}</span>
         </a>

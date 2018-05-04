@@ -16,9 +16,7 @@ type Props = {
   t: Function
 };
 
-class ProjectsList extends Component {
-  props: Props;
-
+class ProjectsList extends Component<Props> {
   removeSharedProject(projectId) {
     return () => this.props.dispatch(actions.removeSharedProject(projectId))
   }
@@ -38,13 +36,17 @@ class ProjectsList extends Component {
   render() {
     const { selectedProjects, t, projects } = this.props
 
+    if (!projects) {
+      return null
+    }
+
     return (
       <div className='projects'>
         {
           selectedProjects && selectedProjects.length != 0
             ? <ProjectSection title={t('Share on projects')}>
               {
-                map(selectedProjects, (id) => this.renderProjectRow(id, projects[id].name))
+                map(selectedProjects, (id) => this.renderProjectRow(id, projects[id] && projects[id].name))
               }
             </ProjectSection>
             : ''

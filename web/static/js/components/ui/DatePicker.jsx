@@ -47,10 +47,9 @@ const frLocale = {
   weekStartsOn: 1
 }
 
-export class DatePicker extends Component {
+export class DatePicker extends Component<any, any> {
   addDate: Function
   toggleDatePicker: Function
-  state: Object
 
   static propTypes = {
     readOnly: PropTypes.bool,
@@ -82,7 +81,7 @@ export class DatePicker extends Component {
   }
 
   removeDate(date: any) {
-    return function(e) {
+    return function(e: Event) {
       this.props.removeDate(date)
       e.preventDefault()
     }.bind(this)
@@ -105,7 +104,7 @@ export class DatePicker extends Component {
 
   dateFromString(date: string) {
     const splitted = date.split('-')
-    return new Date(splitted[0], parseInt(splitted[1]) - 1, parseInt(splitted[2]))
+    return new Date(parseInt(splitted[0]), parseInt(splitted[1]) - 1, parseInt(splitted[2]))
   }
 
   formatDate(date: string) {

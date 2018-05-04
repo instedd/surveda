@@ -7,9 +7,10 @@ const k = (...args: any) => args
 type ValidationContext = {
   sms: boolean,
   ivr: boolean,
+  mobileweb: boolean,
   activeLanguage: string,
   languages: string[],
-  errors: [ValidationError]
+  errors: ValidationError[]
 };
 
 export const validate = (state: DataStore<Questionnaire>) => {

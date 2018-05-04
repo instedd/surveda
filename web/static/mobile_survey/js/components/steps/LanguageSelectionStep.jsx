@@ -3,7 +3,12 @@ import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 import languageNames from 'language-names'
 
-class LanguageSelectionStep extends Component {
+type Props = {
+  step: Object,
+  onClick: Function
+};
+
+class LanguageSelectionStep extends Component<Props> {
   getValue() {
     return this.refs.select.value
   }
@@ -27,11 +32,6 @@ class LanguageSelectionStep extends Component {
       </div>
     )
   }
-}
-
-LanguageSelectionStep.propTypes = {
-  step: PropTypes.object,
-  onClick: PropTypes.func
 }
 
 export default LanguageSelectionStep

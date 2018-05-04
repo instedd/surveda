@@ -207,7 +207,8 @@ export const channel: Channel = deepFreeze(bareChannel)
 const bareProject: Project = {
   id: 1,
   name: 'Project Name',
-  updatedAt: '2017-01-10T21:03:19'
+  updatedAt: '2017-01-10T21:03:19',
+  readOnly: false
 }
 
 export const project: Project = deepFreeze(bareProject)

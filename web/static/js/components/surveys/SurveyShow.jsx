@@ -15,7 +15,14 @@ import classNames from 'classnames/bind'
 import { Stats, Forecasts } from '@instedd/surveda-d3-components'
 import { translate } from 'react-i18next'
 
-class SurveyShow extends Component {
+type State = {
+  responsive: boolean,
+  contacted: boolean,
+  uncontacted: boolean,
+  stopUnderstood: boolean
+};
+
+class SurveyShow extends Component<any, State> {
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
@@ -33,13 +40,6 @@ class SurveyShow extends Component {
     target: PropTypes.number,
     completionPercentage: PropTypes.number,
     cumulativePercentages: PropTypes.object
-  }
-
-  state: {
-    responsive: boolean,
-    contacted: boolean,
-    uncontacted: boolean,
-    stopUnderstood: boolean
   }
 
   constructor(props) {

@@ -1,12 +1,12 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 
-export class ScrollToLink extends Component {
-  static propTypes = {
-    target: PropTypes.string.isRequired,
-    children: PropTypes.node
-  }
+type Props = {
+  target: string,
+  children: any
+};
 
+export class ScrollToLink extends Component<Props> {
   render() {
     const { children, target } = this.props
 
@@ -17,7 +17,7 @@ export class ScrollToLink extends Component {
   }
 }
 
-export const animatedScrollTo = (e: Event, target: String) => {
+export const animatedScrollTo = (e: Event, target: string) => {
   e.preventDefault()
 
   $('html, body').animate({

@@ -145,7 +145,7 @@ const previousPage = (state: ListStore<any>) => ({
   }
 })
 
-export const orderedItems = (items: IndexedList<any>, order: string[]) => {
+export const orderedItems = <T>(items: IndexedList<T>, order: string[]): ?T[] => {
   if (items && order) {
     return order.map(id => items[id])
   } else {

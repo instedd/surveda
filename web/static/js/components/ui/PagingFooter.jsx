@@ -11,9 +11,7 @@ type Props = {
   onNextPage: Function
 };
 
-class PagingFooterComponent extends Component {
-  props: Props;
-
+class PagingFooterComponent extends Component<Props> {
   previousPage(e) {
     e.preventDefault()
     this.props.onPreviousPage()

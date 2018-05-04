@@ -2,15 +2,13 @@
 import React, { Component } from 'react'
 import Dropzone from 'react-dropzone'
 
-type AudioDropzoneProps = {
+type Props = {
   onDrop: Function,
   onDropRejected: Function,
   error: boolean,
 };
 
-export class AudioDropzone extends Component {
-  props: AudioDropzoneProps
-
+export class AudioDropzone extends Component<Props> {
   render() {
     const { onDrop, onDropRejected, error } = this.props
 

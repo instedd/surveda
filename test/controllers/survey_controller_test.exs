@@ -246,19 +246,19 @@ defmodule Ask.SurveyControllerTest do
         "links" => [
           %{
             "name" => "survey/#{survey.id}/results",
-            "url" => "http://app.ask.dev/link/#{result_link.hash}"
+            "url" => "#{Ask.Endpoint.url}/link/#{result_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/incentives",
-            "url" => "http://app.ask.dev/link/#{incentives_link.hash}"
+            "url" => "#{Ask.Endpoint.url}/link/#{incentives_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/interactions",
-            "url" => "http://app.ask.dev/link/#{interactions_link.hash}"
+            "url" => "#{Ask.Endpoint.url}/link/#{interactions_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/disposition_history",
-            "url" => "http://app.ask.dev/link/#{disposition_history_link.hash}"
+            "url" => "#{Ask.Endpoint.url}/link/#{disposition_history_link.hash}"
           },
         ],
         "comparisons" => [],
@@ -309,11 +309,11 @@ defmodule Ask.SurveyControllerTest do
         "links" => [
           %{
             "name" => "survey/#{survey.id}/results",
-            "url" => "http://app.ask.dev/link/#{result_link.hash}"
+            "url" => "#{Ask.Endpoint.url}/link/#{result_link.hash}"
           },
           %{
             "name" => "survey/#{survey.id}/disposition_history",
-            "url" => "http://app.ask.dev/link/#{disposition_history_link.hash}"
+            "url" => "#{Ask.Endpoint.url}/link/#{disposition_history_link.hash}"
           },
         ],
         "comparisons" => [],
@@ -1090,7 +1090,9 @@ defmodule Ask.SurveyControllerTest do
 
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
-    assert_received [:prepare, ^test_channel, "http://app.ask.dev/callbacks/test"]
+
+    received_at_uri = "#{Ask.Endpoint.url}/callbacks/test"
+    assert_received [:prepare, ^test_channel, ^received_at_uri]
   end
 
   test "sets started_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do
@@ -1209,7 +1211,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
 
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
@@ -1218,7 +1220,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1228,7 +1230,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/results",
-        "url" => "http://app.ask.dev/link/#{new_link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
@@ -1250,14 +1252,14 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
 
       response = get conn, project_survey_links_path(conn, :create_link, project, survey, "incentives")
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1269,7 +1271,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/incentives",
-        "url" => "http://app.ask.dev/link/#{new_link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
@@ -1291,14 +1293,14 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
 
       response = get conn, project_survey_links_path(conn, :create_link, project, survey, "interactions")
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1310,7 +1312,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/interactions",
-        "url" => "http://app.ask.dev/link/#{new_link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash
@@ -1332,7 +1334,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
       assert link.target == "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
 
@@ -1340,7 +1342,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "url" => "http://app.ask.dev/link/#{link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{link.hash}"
       }
       assert ShortLink |> Repo.all |> length == 1
 
@@ -1350,7 +1352,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(response, 200) == %{
         "name" => "survey/#{survey.id}/disposition_history",
-        "url" => "http://app.ask.dev/link/#{new_link.hash}"
+        "url" => "#{Ask.Endpoint.url}/link/#{new_link.hash}"
       }
 
       assert link.hash != new_link.hash

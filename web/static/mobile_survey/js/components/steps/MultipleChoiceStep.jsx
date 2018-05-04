@@ -2,7 +2,12 @@
 import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
-class MultipleChoiceStep extends Component {
+type Props = {
+  step: Object,
+  onClick: Function
+};
+
+class MultipleChoiceStep extends Component<Props> {
   getValue() {
     return this.refs.select.value
   }
@@ -41,11 +46,6 @@ class MultipleChoiceStep extends Component {
       </div>
     )
   }
-}
-
-MultipleChoiceStep.propTypes = {
-  step: PropTypes.object,
-  onClick: PropTypes.func
 }
 
 MultipleChoiceStep.contextTypes = {

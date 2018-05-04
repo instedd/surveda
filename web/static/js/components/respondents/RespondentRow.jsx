@@ -10,8 +10,7 @@ type Props = {
   variantColumn: ?React$Element<*>
 };
 
-class RespondentRow extends Component {
-  props: Props;
+class RespondentRow extends Component<Props> {
   render() {
     const { respondent, responses, variantColumn } = this.props
 

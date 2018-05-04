@@ -20,9 +20,7 @@ type Props = {
   selectedSteps: Object
 };
 
-class QuestionnaireSteps extends Component {
-  props: Props
-
+class QuestionnaireSteps extends Component<Props> {
   dummyDropTarget() {
     const { steps, readOnly, quotaCompletedSteps } = this.props
 

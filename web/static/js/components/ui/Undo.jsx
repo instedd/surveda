@@ -11,10 +11,7 @@ type Props = {
   actions: any
 };
 
-export class Undo extends Component {
-  props: Props;
-  state: {};
-
+export class Undo extends Component<Props> {
   onUndoClick() {
     const { actions } = this.props
     actions.undo()

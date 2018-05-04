@@ -9,7 +9,7 @@ import LanguageSelectionStep from './steps/LanguageSelectionStep'
 import Header from './Header'
 import EndStep from './steps/EndStep'
 
-class Step extends Component {
+class Step extends Component<any> {
   handleSubmit: PropTypes.func.isRequired
   hideMoreContentHint: PropTypes.func.isRequired
   props: {
@@ -67,7 +67,9 @@ class Step extends Component {
   }
 
   isContentTallerThanViewport() {
-    const viewportHeight = document.documentElement.clientHeight
+    const documentElement = document.documentElement
+    if (!documentElement) return false
+    const viewportHeight = documentElement.clientHeight
     const contentHeight = this.refs.stepContent.offsetHeight
     return contentHeight > viewportHeight
   }

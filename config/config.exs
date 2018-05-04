@@ -5,6 +5,10 @@
 # is restricted to this project.
 use Mix.Config
 
+config :plug, :types, %{
+  "application/vnd.api+json" => ["json-api"]
+}
+
 # General application configuration
 config :ask,
   ecto_repos: [Ask.Repo]
@@ -27,6 +31,9 @@ config :ask, :channel,
     "nuntium" => Ask.Runtime.NuntiumChannel,
     "verboice" => Ask.Runtime.VerboiceChannel
   }
+
+config :ask, Ask.FloipPusher,
+  poll_interval_in_minutes: {:system, "FLOIP_PUSHER_POLL_INTERVAL_IN_MINUTES", 15}
 
 config :ask, Ask.Runtime.Broker,
   batch_size: {:system, "BROKER_BATCH_SIZE", 10000},

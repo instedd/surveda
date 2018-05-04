@@ -1,6 +1,7 @@
 import React from 'react'
 import { Route, IndexRoute, IndexRedirect } from 'react-router'
 import App from './components/layout/App'
+import IntegrationIndex from './components/integrations/IntegrationIndex'
 import ProjectIndex from './components/projects/ProjectIndex'
 import SurveyEdit from './components/surveys/SurveyEdit'
 import SurveyIndex from './components/surveys/SurveyIndex'
@@ -22,6 +23,7 @@ import InviteConfirmation from './components/InviteConfirmation'
 import ChannelEdit from './components/channels/ChannelEdit'
 import ChannelTitle from './components/channels/ChannelTitle'
 import * as questionnaireActions from './actions/questionnaire'
+import ChannelTabs from './components/channels/ChannelTabs'
 
 const k = (s) => s
 
@@ -42,6 +44,7 @@ export default (
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
             <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
             <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
+            <Route path='integrations' components={{ body: IntegrationIndex, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} showSavingStatus />
             <Route path='simulation' component={SurveySimulation} />
           </Route>
@@ -71,8 +74,10 @@ export default (
 
     <Route path='/channels' title={k('Channels')} >
       <IndexRoute component={ChannelIndex} />
+
       <Route path=':channelId' title={ChannelTitle} >
-        <IndexRoute component={ChannelEdit} />
+        <IndexRedirect to='share' />
+        <Route path='share' components={{ body: ChannelEdit, tabs: ChannelTabs }} />
       </Route>
     </Route>
   </Route>
@@ -86,6 +91,7 @@ export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surv
 export const surveySimulation = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}/simulation`
 export const surveyRespondents = (projectId, surveyId) => `${survey(projectId, surveyId)}/respondents`
 export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
+export const surveyIntegrations = (projectId, surveyId) => `${survey(projectId, surveyId)}/integrations`
 export const respondentsResultsCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/results?_format=csv`
 export const respondentsDispositionHistoryCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/disposition_history?_format=csv`
 export const respondentsIncentivesCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/incentives?_format=csv`
@@ -98,7 +104,7 @@ export const questionnaire = (projectId, questionnaireId) => `${questionnaireInd
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`
 export const channels = '/channels'
-export const channel = (id) => `${channels}/${id}`
+export const channelShare = (id) => `${channels}/${id}/share`
 
 export const showOrEditSurvey = (s) => {
   if (s.state == 'not_ready' || s.state == 'ready') {

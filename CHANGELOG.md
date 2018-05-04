@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## Pine 0.16.1
+
+### Bugfixes
+
+* Fix error on channel page when the channel is shared with an archived project [#1396](https://github.com/instedd/ask/issues/1396)
+* Allow longer text in `action_data` column for log entries [#1395](https://github.com/instedd/ask/issues/1395)
+
 ## Pine 0.16
 
 ### Features

@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 
-export class ScrollToTopButton extends Component {
+export class ScrollToTopButton extends Component<{}> {
   componentDidMount() {
     $(document).ready(function() {
       $(window).scroll(function() {

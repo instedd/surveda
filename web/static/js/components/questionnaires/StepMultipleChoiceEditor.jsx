@@ -23,8 +23,7 @@ type Props = {
   isNew: boolean
 };
 
-class StepMultipleChoiceEditor extends Component {
-  props: Props
+class StepMultipleChoiceEditor extends Component<Props> {
   smsAutocompleteItems: AutocompleteItem[]
 
   // When adding a choice, we set this var to `true`.

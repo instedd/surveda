@@ -24,8 +24,7 @@ type Props = {
   isNew: boolean
 };
 
-class StepEditor extends Component {
-  props: Props
+class StepEditor extends Component<Props> {
   clickedVarAutocomplete: boolean
 
   // Remember last step shown (expanded)

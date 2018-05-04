@@ -58,7 +58,8 @@ defmodule Ask.Mixfile do
       {:simetric, "~> 0.1.0"},
       {:prometheus_plugs, "~> 1.1"},
       {:alto_guisso, git: "https://github.com/instedd/alto_guisso_ex.git"},
-      {:pp, "~> 0.1.0", only: [:dev, :test]}
+      {:pp, "~> 0.1.0", only: [:dev, :test]},
+      {:bypass, "~> 0.8", only: :test}
    ]
   end
 

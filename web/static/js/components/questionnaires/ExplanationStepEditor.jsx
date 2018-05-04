@@ -32,10 +32,7 @@ type State = {
   skipLogic: ?string
 };
 
-class ExplanationStepEditor extends Component {
-  props: Props
-  state: State
-
+class ExplanationStepEditor extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)

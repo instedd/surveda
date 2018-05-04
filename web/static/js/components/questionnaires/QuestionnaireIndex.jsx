@@ -15,7 +15,7 @@ import * as routes from '../../routes'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
 import { translate, Trans } from 'react-i18next'
 
-class QuestionnaireIndex extends Component {
+class QuestionnaireIndex extends Component<any> {
   creatingQuestionnaire: boolean
   duplicatingQuestionnaire: boolean
 
