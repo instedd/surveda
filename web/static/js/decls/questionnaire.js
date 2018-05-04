@@ -123,7 +123,7 @@ export type MultilingualStep = {
 
 export type SectionStep = BaseStep & {
   type: 'section',
-  randomized: boolean,
+  randomize: boolean,
   steps: Step[]
 };
 

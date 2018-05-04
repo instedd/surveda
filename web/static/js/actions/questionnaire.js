@@ -9,6 +9,7 @@ export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
 export const SET_ACTIVE_MODE = 'QUESTIONNAIRE_SET_ACTIVE_MODE'
 export const ADD_MODE = 'QUESTIONNAIRE_ADD_MODE'
 export const REMOVE_MODE = 'QUESTIONNAIRE_REMOVE_MODE'
+export const ADD_SECTION = 'QUESTIONNAIRE_ADD_SECTION'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
@@ -200,6 +201,15 @@ export const changeStepType = (stepId, stepType) => ({
   stepId,
   stepType
 })
+
+export const addSection = () => ({
+  type: ADD_SECTION
+})
+
+export const addSectionWithCallback = () => (dispatch, getState) => {
+  dispatch(addSection())
+  return Promise.resolve()
+}
 
 export const addStep = () => ({
   type: ADD_STEP

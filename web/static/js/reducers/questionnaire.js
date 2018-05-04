@@ -66,6 +66,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS: return toggleAcceptsAlphabeticalAnswers(state, action)
     case actions.CHANGE_REFUSAL: return changeRefusal(state, action)
     case actions.SET_DIRTY: return setDirty(state)
+    case actions.ADD_SECTION: return addSection(state)
     default: return state
   }
 }
@@ -583,6 +584,16 @@ const changeStepStore = (state, action) => {
   }))
 }
 
+const addSection = (state, action) => {
+  return {
+    ...state,
+    steps: [
+      ...state.steps,
+      newSection()
+    ]
+  }
+}
+
 const addStep = (state, action) => {
   return {
     ...state,
@@ -628,6 +639,16 @@ export const newMultipleChoiceStep = () => {
       'en': newStepPrompt()
     },
     choices: []
+  }
+}
+
+export const newSection = (): SectionStep => {
+  return {
+    id: uuidv4(),
+    title: 'Section',
+    randomize: false,
+    type: 'section',
+    steps: []
   }
 }
 

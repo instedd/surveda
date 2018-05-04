@@ -85,6 +85,14 @@ class QuestionnaireEditor extends Component {
     })
   }
 
+  questionnaireAddSection(e) {
+    e.preventDefault()
+
+    this.props.questionnaireActions.addSectionWithCallback().then(step => {
+      this.props.uiActions.deselectStep()
+    })
+  }
+
   questionnaireAddQuotaCompletedStep(e) {
     e.preventDefault()
 
@@ -237,6 +245,18 @@ class QuestionnaireEditor extends Component {
     )
   }
 
+  addStepComponent() {
+    const { readOnly, t } = this.props
+    return (
+      readOnly ? null
+      : <div className='row'>
+        <div className='col s12'>
+          <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>{t('Add Step')}</a>
+          <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddSection(e)}>{t('Add Section')}</a>
+        </div>
+      </div>)
+  }
+
   openTestQuestionnaireModal(e) {
     e.preventDefault()
 
@@ -303,14 +323,7 @@ class QuestionnaireEditor extends Component {
                 readOnly={readOnly}
                 selectedSteps={selectedSteps}
             />
-              {readOnly
-                ? null
-                : <div className='row'>
-                  <div className='col s12'>
-                    <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>{t('Add Step')}</a>
-                  </div>
-                </div>
-              }
+              {this.addStepComponent()}
               <div className='row'>
                 <div className='col s12'>
                   <div className='switch'>

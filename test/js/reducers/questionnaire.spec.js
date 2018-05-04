@@ -446,6 +446,24 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  describe('sections', () => {
+    it('should add section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addSection()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      expect(resultState.data.steps.length).toEqual(preState.data.steps.length + 1)
+      expect(newStep.type).toEqual('section')
+    })
+  })
+
   describe('steps', () => {
     it('should add step', () => {
       const preState = playActions([

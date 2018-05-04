@@ -43,11 +43,13 @@
     "section": {
       "type": "object",
       "properties": {
+        "id": {"type": "string"},
+        "type": {"enum": ["section"]},
         "title": {"type": "string"},
         "randomize": {"type": "boolean"},
         "steps": {"$ref": "#/definitions/steps"}
       },
-      "required": ["title", "randomize", "steps"]
+      "required": ["id", "type", "title", "randomize", "steps"]
     },
 
     "steps": {
