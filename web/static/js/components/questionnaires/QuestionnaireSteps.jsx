@@ -20,6 +20,36 @@ type Props = {
   selectedSteps: Object
 };
 
+type StepGroup = {
+  section: ?SectionStep,
+  groupSteps: Step[]
+};
+
+// This function is here because I think it is too ad-hoc
+// to put it closer to the model.
+export const stepGroups = (steps: Step[]): StepGroup[] => {
+  // Some auxiliaries for better readability
+  const lastGroupIsSection = (groups) => groups[groups.length - 1].section !== null
+  const lastGroupIsForLanguageSelection = (groups) => !lastGroupIsSection(groups) && groups[groups.length - 1].groupSteps[0].type === 'language-selection'
+
+  const groups = steps.reduce((groups: StepGroup[], step: Step) => {
+    if (step.type === 'section') {
+      groups.push({ section: step, groupSteps: step.steps })
+    } else if (step.type === 'language-selection' ||
+                groups.length == 0 ||
+                lastGroupIsForLanguageSelection(groups) ||
+                lastGroupIsSection(groups)) {
+      groups.push({ section: null, groupSteps: [step] })
+    } else {
+      groups[groups.length - 1].groupSteps.push(step)
+    }
+
+    return groups
+  }, [])
+
+  return groups
+}
+
 class QuestionnaireSteps extends Component<Props> {
   dummyDropTarget() {
     const { steps, readOnly, quotaCompletedSteps } = this.props

@@ -618,7 +618,7 @@ const addQuotaCompletedStep = (state, action) => {
   }
 }
 
-const newLanguageSelectionStep = (first: string, second: string): LanguageSelectionStep => {
+export const newLanguageSelectionStep = (first: string, second: string): LanguageSelectionStep => {
   return {
     id: uuidv4(),
     type: 'language-selection',
