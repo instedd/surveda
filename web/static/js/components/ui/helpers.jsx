@@ -90,8 +90,8 @@ export const dispositionLabel = (disposition) => {
   }
 }
 
-const multipleNuntium = config.nuntium.length > 1
-const multipleVerboice = config.verboice.length > 1
+const multipleNuntium = config.nuntium && config.nuntium.length > 1
+const multipleVerboice = config.nuntium && config.verboice.length > 1
 
 const friendlyNamesByUrl = new Map()
 

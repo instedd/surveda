@@ -2,3 +2,4 @@
 -r jsdom-global/register
 --reporter dot
 --recursive
+--require ignore-styles
