@@ -66,6 +66,10 @@ defmodule Ask.ChannelController do
     |> put_assoc(:projects, projects_changeset)
   end
 
+  defp update_projects(changeset, _, _) do
+    changeset
+  end
+
   def delete(conn, %{"id" => id}) do
     Channel
     |> Repo.get!(id)

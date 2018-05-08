@@ -9,6 +9,7 @@ defmodule Ask.Channel do
     field :provider, :string
     field :base_url, :string
     field :settings, :map
+    field :patterns, Ask.Ecto.Type.JSON, default: []
     belongs_to :user, Ask.User
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectChannel, on_replace: :delete
@@ -36,7 +37,7 @@ defmodule Ask.Channel do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id])
+    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id, :patterns])
     |> validate_required([:name, :type, :provider, :settings, :user_id])
     |> assoc_constraint(:user)
   end
