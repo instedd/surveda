@@ -74,4 +74,14 @@ describe('channel reducer', () => {
     expect(state.data.patterns.length).toEqual(1)
     expect(state.data.patterns[0]).toEqual({'input': '', 'output': '222xxx'})
   })
+
+  it('removes pattern', () => {
+    const state = playActions([
+      actions.fetch(1),
+      actions.receive(channel),
+      actions.createPattern,
+      actions.removePattern(0)
+    ])
+    expect(state.data.patterns).toEqual([])
+  })
 })

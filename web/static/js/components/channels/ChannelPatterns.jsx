@@ -11,7 +11,7 @@ class Pattern extends Component {
     output: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     actions: PropTypes.object.isRequired,
-    t: PropTypes.function
+    t: PropTypes.func
   }
 
   constructor(props) {
@@ -41,10 +41,20 @@ class Pattern extends Component {
     actions.changeOutputPattern(index, value)
   }
 
+  removePattern() {
+    const { index, actions } = this.props
+    actions.removePattern(index)
+  }
+
   render() {
     const { input, output } = this.state
     return (
       <div className='row'>
+        <div className='col s1'>
+          <a onClick={() => this.removePattern()} style={{'cursor': 'pointer'}}>
+            <i className='material-icons v-middle'>clear</i>
+          </a>
+        </div>
         <div className='col s5'>
           <label>{this.props.t('Input')}</label>
           <input
@@ -123,7 +133,7 @@ class ChannelPatterns extends Component {
             </p>
             {
               patterns.map((p, index) =>
-                <Pattern key={index} index={index} input={p.input} output={p.output} actions={actions} t={t} />
+                <Pattern key={`${index}-${p.input}-${p.output}`} index={index} input={p.input} output={p.output} actions={actions} t={t} />
               )
             }
             <div className='col s12'>

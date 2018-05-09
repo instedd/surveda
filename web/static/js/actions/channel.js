@@ -6,6 +6,7 @@ export const REMOVE_SHARED_PROJECT = 'CHANNEL_REMOVE_SHARED_PROJECT'
 export const CREATE_PATTERN = 'CHANNEL_CREATE_PATTERN'
 export const SET_INPUT_PATTERN = 'CHANNEL_SET_INPUT_PATTERN'
 export const SET_OUTPUT_PATTERN = 'CHANNEL_SET_OUTPUT_PATTERN'
+export const REMOVE_PATTERN = 'CHANNEL_REMOVE_PATTERN'
 export const FETCH = 'CHANNEL_FETCH'
 export const RECEIVE = 'CHANNEL_RECEIVE'
 export const SAVING = 'CHANNEL_SAVING'
@@ -77,6 +78,11 @@ export const setOutputPattern = (index: number, value: string) => ({
   value
 })
 
+export const removePattern = (index: number) => ({
+  type: REMOVE_PATTERN,
+  index
+})
+
 export const saving = () => ({
   type: SAVING
 })
@@ -106,4 +112,8 @@ export const changeInputPattern = (index: number, value: string) => (dispatch: F
 
 export const changeOutputPattern = (index: number, value: string) => (dispatch: Function, getState: () => Store) => {
   dispatch(setOutputPattern(index, value))
+}
+
+export const deletePattern = (index: number) => (dispatch: Function, getState: () => Store) => {
+  dispatch(removePattern(index))
 }

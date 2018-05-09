@@ -12,6 +12,7 @@ export const dataReducer = (state: Channel, action: any): Channel => {
     case actions.CREATE_PATTERN: return createPattern(state)
     case actions.SET_INPUT_PATTERN: return setInputPattern(state, action)
     case actions.SET_OUTPUT_PATTERN: return setOutputPattern(state, action)
+    case actions.REMOVE_PATTERN: return removePattern(state, action)
     default: return state
   }
 }
@@ -78,4 +79,13 @@ const setOutputPattern = (state, action) => {
     ...state,
     patterns: patterns
   }
+}
+
+const removePattern = (state, action) => {
+  const patterns = [...state.patterns]
+  const newPatterns = [
+    ...patterns.slice(0, action.index),
+    ...patterns.slice(action.index + 1)
+  ]
+  return {...state, patterns: newPatterns}
 }
