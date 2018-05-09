@@ -49,34 +49,34 @@ class Pattern extends Component {
   render() {
     const { input, output } = this.state
     return (
-      <div className='row'>
-        <div className='col s1'>
-          <a onClick={() => this.removePattern()} style={{'cursor': 'pointer'}}>
+      <div className='row channel-pattern'>
+        <div className='col s1 bottom-align'>
+          <a onClick={() => this.removePattern()} className='grey-text text-lighten-1'>
             <i className='material-icons v-middle'>clear</i>
           </a>
         </div>
         <div className='col s5'>
-          <label>{this.props.t('Input')}</label>
+          <label className='grey-text'>{this.props.t('Input')}</label>
           <input
             type='text'
             value={input}
             onChange={e => this.inputPatternChange(e, e.target.value)}
             onBlur={e => this.inputPatternSubmit(e, e.target.value)}
           />
-          <span>{this.props.t('Input example')}</span>
+          <span className='small-text-bellow'>{this.props.t('Input sample: +36 (842) 8461-2644')}</span>
         </div>
-        <div className='col s1'>
-          <i className='material-icons v-middle'>arrow_forward</i>
+        <div className='col s1 valign-wrapper'>
+          <i className='material-icons grey-text text-lighten-1'>arrow_forward</i>
         </div>
         <div className='col s5'>
-          <label>{this.props.t('Output')}</label>
+          <label className='grey-text'>{this.props.t('Output')}</label>
           <input
             type='text'
             value={output}
             onChange={e => this.outputPatternChange(e, e.target.value)}
             onBlur={e => this.outputPatternSubmit(e, e.target.value)}
           />
-          <span>{this.props.t('Output example')}</span>
+          <span className='small-text-bellow'>{this.props.t('Output sample: 84284612644')}</span>
         </div>
       </div>
     )
@@ -126,7 +126,7 @@ class ChannelPatterns extends Component {
     return (
       <div className='white'>
         <div className='row'>
-          <div className='col s12 m6 push-m3'>
+          <div className='col s12 m8 push-m2'>
             <h4>{t('Apply patterns for numbers cleanup')}</h4>
             <p className='flow-text'>
               {t('Use different expressions in order to standardize the source phone number.')}
@@ -137,7 +137,7 @@ class ChannelPatterns extends Component {
               )
             }
             <div className='col s12'>
-              <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.addPattern(e)}>
+              <a href='#!' className='btn-flat blue-text no-padd n-case' onClick={e => this.addPattern(e)}>
                 <i className='material-icons v-middle blue-text left'>add</i>
                 {t('Add Pattern')}
               </a>
