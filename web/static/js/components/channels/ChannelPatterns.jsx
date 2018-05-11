@@ -11,6 +11,7 @@ class Pattern extends Component {
     output: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     actions: PropTypes.object.isRequired,
+    errors: PropTypes.object,
     t: PropTypes.func
   }
 
@@ -48,6 +49,60 @@ class Pattern extends Component {
 
   render() {
     const { input, output } = this.state
+    const { errors } = this.props
+
+    let inputPattern
+    if (errors && errors['input']) {
+      inputPattern = (<div className='col s5'>
+        <label className='label-error'>{this.props.t('Input')}</label>
+        <input
+          type='text'
+          value={input}
+          onChange={e => this.inputPatternChange(e, e.target.value)}
+          onBlur={e => this.inputPatternSubmit(e, e.target.value)}
+          className='invalid'
+        />
+        <span className={'error'}>{errors['input'][0]}</span>
+      </div>)
+    } else {
+      inputPattern = (<div className='col s5'>
+        <label className='grey-text'>{this.props.t('Input')}</label>
+        <input
+          type='text'
+          value={input}
+          onChange={e => this.inputPatternChange(e, e.target.value)}
+          onBlur={e => this.inputPatternSubmit(e, e.target.value)}
+        />
+        <span className='small-text-bellow'>Input sample: +36 (842) 8461-2644</span>
+      </div>)
+    }
+
+    let outputPattern
+    if (errors && errors['output']) {
+      outputPattern = (<div className='col s5'>
+        <label className='label-error'>{this.props.t('Output')}</label>
+        <input
+          type='text'
+          value={output}
+          onChange={e => this.outputPatternChange(e, e.target.value)}
+          onBlur={e => this.outputPatternSubmit(e, e.target.value)}
+          className='invalid'
+        />
+        <span className='error'>{errors['output'][0]}</span>
+      </div>)
+    } else {
+      outputPattern = (<div className='col s5'>
+        <label className='grey-text'>{this.props.t('Output')}</label>
+        <input
+          type='text'
+          value={output}
+          onChange={e => this.outputPatternChange(e, e.target.value)}
+          onBlur={e => this.outputPatternSubmit(e, e.target.value)}
+        />
+        <span className='small-text-bellow'>Output sample: 84284612644</span>
+      </div>)
+    }
+
     return (
       <div className='row channel-pattern'>
         <div className='col s1 bottom-align'>
@@ -55,29 +110,11 @@ class Pattern extends Component {
             <i className='material-icons v-middle'>clear</i>
           </a>
         </div>
-        <div className='col s5'>
-          <label className='grey-text'>{this.props.t('Input')}</label>
-          <input
-            type='text'
-            value={input}
-            onChange={e => this.inputPatternChange(e, e.target.value)}
-            onBlur={e => this.inputPatternSubmit(e, e.target.value)}
-          />
-          <span className='small-text-bellow'>{this.props.t('Input sample: +36 (842) 8461-2644')}</span>
-        </div>
+        {inputPattern}
         <div className='col s1 valign-wrapper'>
           <i className='material-icons grey-text text-lighten-1'>arrow_forward</i>
         </div>
-        <div className='col s5'>
-          <label className='grey-text'>{this.props.t('Output')}</label>
-          <input
-            type='text'
-            value={output}
-            onChange={e => this.outputPatternChange(e, e.target.value)}
-            onBlur={e => this.outputPatternSubmit(e, e.target.value)}
-          />
-          <span className='small-text-bellow'>{this.props.t('Output sample: 84284612644')}</span>
-        </div>
+        {outputPattern}
       </div>
     )
   }
@@ -89,7 +126,8 @@ class ChannelPatterns extends Component {
     channelId: PropTypes.string.isRequired,
     actions: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
-    patterns: PropTypes.array
+    patterns: PropTypes.array,
+    errorsByPath: PropTypes.object.isRequired
   }
 
   componentWillMount() {
@@ -118,7 +156,7 @@ class ChannelPatterns extends Component {
   }
 
   render() {
-    const { t, patterns, actions } = this.props
+    const { t, patterns, actions, errorsByPath } = this.props
     if (!patterns) {
       return <div>{t('Loading...')}</div>
     }
@@ -132,9 +170,9 @@ class ChannelPatterns extends Component {
               {t('Use different expressions in order to standardize the source phone number.')}
             </p>
             {
-              patterns.map((p, index) =>
-                <Pattern key={`${index}-${p.input}-${p.output}`} index={index} input={p.input} output={p.output} actions={actions} t={t} />
-              )
+              patterns.map((p, index) => {
+                return <Pattern key={`${index}-${p.input}-${p.output}`} index={index} input={p.input} output={p.output} actions={actions} t={t} errors={errorsByPath[index]} />
+              })
             }
             <div className='col s12'>
               <a href='#!' className='btn-flat blue-text no-padd n-case' onClick={e => this.addPattern(e)}>
@@ -159,7 +197,8 @@ const mapStateToProps = (state, ownProps) => {
   const patterns = state.channel.data ? state.channel.data.patterns : null
   return {
     channelId: ownProps.params.channelId,
-    patterns: patterns
+    patterns: patterns,
+    errorsByPath: state.channel.errorsByPath
   }
 }
 

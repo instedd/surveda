@@ -4,6 +4,8 @@ import fetchReducer from './fetch'
 import toInteger from 'lodash/toInteger'
 import findIndex from 'lodash/findIndex'
 import isEqual from 'lodash/isEqual'
+import each from 'lodash/each'
+import includes from 'lodash/includes'
 
 export const dataReducer = (state: Channel, action: any): Channel => {
   switch (action.type) {
@@ -17,15 +19,23 @@ export const dataReducer = (state: Channel, action: any): Channel => {
   }
 }
 
+const validateReducer = (reducer: StoreReducer<Channel>): StoreReducer<Channel> => {
+  return (state: ?DataStore<Channel>, action: any) => {
+    const newState = {...reducer(state, action), errorsByPath: {}}
+    if (newState.data) {
+      validate(newState)
+    }
+    return newState
+  }
+}
+
 const filterProvider = (action: FilteredAction) => ({
   id: action.id == null ? null : toInteger(action.id)
 })
 
-export default fetchReducer(actions, dataReducer, filterProvider)
+export default validateReducer(fetchReducer(actions, dataReducer, filterProvider))
 
 const share = (state, action) => {
-  console.log('state: ', state)
-  console.log('action: ', action)
   return {
     ...state,
     projects: [
@@ -88,4 +98,52 @@ const removePattern = (state, action) => {
     ...patterns.slice(action.index + 1)
   ]
   return {...state, patterns: newPatterns}
+}
+
+const validate = (state: any) => {
+  each(state.data.patterns, (p, index) => {
+    validatePattern(state, p, index)
+  })
+}
+
+const validatePattern = (state, p, index) => {
+  validateValidCharacters(state, p, index)
+  validateEqualNumberOfXs(state, p, index)
+}
+
+const validateEqualNumberOfXs = (state, p, index) => {
+  const inputXsCount = (p.input.match(/X/g) || []).length
+  const outputXsCount = (p.output.match(/X/g) || []).length
+  if (inputXsCount != outputXsCount) {
+    const errorStr = "Number of X's doesn't match"
+    addError(state, index, 'input', errorStr)
+    addError(state, index, 'output', errorStr)
+  }
+}
+
+const validateValidCharacters = (state, p, index) => {
+  const inputIsValid = p.input.match(/^[0-9X()+-\s]*$/g)
+  const outputIsValid = p.output.match(/^[0-9X()+-\s]*$/g)
+  const errorStr = 'Invalid characters. Only +, -, X, (, ), digits and whitespaces are allowed'
+  if (!inputIsValid) {
+    addError(state, index, 'input', errorStr)
+  }
+  if (!outputIsValid) {
+    addError(state, index, 'output', errorStr)
+  }
+}
+
+const addError = (state, index, type, error) => {
+  if (state.errorsByPath[index]) {
+    if (state.errorsByPath[index][type]) {
+      if (!includes(state.errorsByPath[index][type], error)) {
+        state.errorsByPath[index][type].push(error)
+      }
+    } else {
+      state.errorsByPath[index][type] = [error]
+    }
+  } else {
+    state.errorsByPath[index] = {}
+    state.errorsByPath[index][type] = [error]
+  }
 }

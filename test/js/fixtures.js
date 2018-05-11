@@ -319,7 +319,8 @@ const bareChannel: Channel = {
   settings: {
     nuntiumChannel: 'Nuntium Channel Name'
   },
-  patterns: []
+  patterns: [],
+  errorsByPath: {}
 }
 
 export const channel: Channel = deepFreeze(bareChannel)
