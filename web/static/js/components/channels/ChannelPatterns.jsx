@@ -47,9 +47,38 @@ class Pattern extends Component {
     actions.removePattern(index)
   }
 
+  exampleUsingDigits(pattern, digits) {
+    let digitIndex = 0
+    const example = Array(pattern.length)
+    for (let i = 0; i < pattern.length; i++) {
+      if (pattern[i] == 'X') {
+        example[i] = digits[digitIndex]
+        digitIndex++
+      } else {
+        example[i] = pattern[i]
+      }
+    }
+    return example.join('')
+  }
+
+  computeDigitsForExample(numberOfXs) {
+    const digits = Array(numberOfXs)
+    for (let i = 0; i < numberOfXs; i++) {
+      // (i+5)*7 % 10 computes a digit between 0-9 in an (arbitrary) deterministic way
+      digits[i] = (i + 5) * 7 % 10
+    }
+    return digits
+  }
+
   render() {
     const { input, output } = this.state
     const { errors } = this.props
+
+    // Compute digits optimistically
+    const inputXsCount = (input.match(/X/g) || []).length
+    const outputXsCount = (output.match(/X/g) || []).length
+    // Same digits must be used for both input and output patterns, so they're stored in a var
+    const digits = this.computeDigitsForExample(Math.max(inputXsCount, outputXsCount))
 
     let inputPattern
     if (errors && errors['input']) {
@@ -73,7 +102,7 @@ class Pattern extends Component {
           onChange={e => this.inputPatternChange(e, e.target.value)}
           onBlur={e => this.inputPatternSubmit(e, e.target.value)}
         />
-        <span className='small-text-bellow'>Input sample: +36 (842) 8461-2644</span>
+        <span className='small-text-bellow'>{'Input sample: ' + this.exampleUsingDigits(input, digits)}</span>
       </div>)
     }
 
@@ -99,7 +128,7 @@ class Pattern extends Component {
           onChange={e => this.outputPatternChange(e, e.target.value)}
           onBlur={e => this.outputPatternSubmit(e, e.target.value)}
         />
-        <span className='small-text-bellow'>Output sample: 84284612644</span>
+        <span className='small-text-bellow'>{'Output sample: ' + this.exampleUsingDigits(output, digits)}</span>
       </div>)
     }
 
