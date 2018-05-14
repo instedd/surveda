@@ -190,6 +190,8 @@ class ChannelPatterns extends Component {
       return <div>{t('Loading...')}</div>
     }
 
+    const hasErrors = Object.keys(errorsByPath).length > 0
+
     return (
       <div className='white'>
         <div className='row'>
@@ -213,8 +215,8 @@ class ChannelPatterns extends Component {
         </div>
         <div className='row'>
           <div className='col s12 m6 push-m3'>
-            <a href='#!' className='btn blue right' onClick={this.onConfirmClick()}>{t('Update')}</a>
-            <a href='#!' onClick={this.onCancelClick()} className='btn-flat right'>{t('Cancel')}</a>
+            <a className={'btn blue right' + (hasErrors ? ' disabled' : '')} onClick={this.onConfirmClick()}>{t('Update')}</a>
+            <a onClick={this.onCancelClick()} className='btn-flat right'>{t('Cancel')}</a>
           </div>
         </div>
       </div>
