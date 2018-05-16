@@ -875,6 +875,39 @@ defmodule Ask.DummySteps do
           steps: @explanation_steps_minimal
         )
       ]
+
+      @three_sections_skip_logic [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: true,
+          steps: [
+            multiple_choice_step(
+              id: "aaa",
+              title: "Do you want to end this section?",
+              prompt: prompt(
+                sms: sms_prompt("Do you want to end this section? Reply 1 for YES, 2 for NO")
+              ),
+              store: "end_section",
+              choices: [
+                choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end_section"),
+                choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+              ]
+            )] ++ @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: true,
+          steps: @explanation_steps_minimal
+        )
+      ]
     end
   end
 end

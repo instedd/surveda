@@ -949,6 +949,45 @@ defmodule Ask.FlowTest do
       assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know (Spanish)"]
       assert flow.current_step == {1,0}
     end
+
+    test "accepts an answer for the last question inside the first section and moves to the next section" do
+      quiz = build(:questionnaire, steps: @three_sections)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {0, 4}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Is this the last question?"]
+      assert flow.current_step == {0,4}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {1,0}
+    end
+
+    test "When skip logic is 'end section', it moves to the next one" do
+      quiz = build(:questionnaire, steps: @three_sections_skip_logic)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {0,0}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {1,0}
+    end
   end
 
   describe "flag steps" do

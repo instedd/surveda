@@ -40,6 +40,14 @@ defmodule Ask.Runtime.Flow do
     Enum.any?(questionnaire.steps, fn(step) -> step["type"] == "section" end)
   end
 
+  defp get_section_index(flow) do
+    elem(flow.current_step, 0)
+  end
+
+  defp get_step_index(flow) do
+    elem(flow.current_step, 1)
+  end
+
   defp next_step_by_skip_logic(flow, step, reply_value, mode) do
     step
     |> Step.skip_logic(reply_value, mode, flow.language)
@@ -49,6 +57,7 @@ defmodule Ask.Runtime.Flow do
   def next_step(nil, %Flow{has_sections: true} = flow), do: advance_step_in_section(flow)
   def next_step(nil, flow), do: flow.current_step + 1
   def next_step("end", flow), do: flow |> end_flow
+  def next_step("end_section", flow), do: {get_section_index(flow) + 1, 0}
   def next_step(next_id, flow) do
     next_step_index =
       flow
@@ -63,18 +72,17 @@ defmodule Ask.Runtime.Flow do
   end
 
   def advance_step_in_section(flow) do
-    section_index = elem(flow.current_step, 0)
-    step_index = elem(flow.current_step, 1)
+    section_index = get_section_index(flow)
+    step_index = get_step_index(flow)
 
     section = flow
       |> steps
       |> Enum.at(section_index)
 
-    if section["type"] == "section" do
-      # Here we should check if the section ended, and move to the next one
-      {section_index, step_index + 1}
-    else
+    if section["type"] != "section" || length(section["steps"]) == step_index + 1 do
       {section_index + 1, 0}
+    else
+      {section_index, step_index + 1}
     end
   end
 
@@ -337,8 +345,8 @@ defmodule Ask.Runtime.Flow do
   def current_step(%Flow{has_sections: true} = flow) do
     flow
     |> steps
-    |> Enum.at(elem(flow.current_step, 0))
-    |> get_step_from_section(elem(flow.current_step, 1))
+    |> Enum.at(get_section_index(flow))
+    |> get_step_from_section(get_step_index(flow))
   end
 
   def current_step(flow) do
