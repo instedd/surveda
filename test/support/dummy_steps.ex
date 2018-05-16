@@ -59,6 +59,16 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def section(id: id, title: title, randomize: randomize, steps: steps) do
+    %{
+      "id" => id,
+      "type" => "section",
+      "title" => title,
+      "randomize" => randomize,
+      "steps" => steps
+    }
+  end
+
   def prompt(sms: sms) do
     %{
       "en" => %{
@@ -834,6 +844,36 @@ defmodule Ask.DummySteps do
           disposition: "refused",
           skip_logic: "end"
         ),
+      ]
+
+      @one_section [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: true,
+          steps: @skip_logic
+        )
+      ]
+
+      @three_sections [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: true,
+          steps: @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: true,
+          steps: @explanation_steps_minimal
+        )
       ]
     end
   end
