@@ -356,9 +356,7 @@ defmodule Ask.Runtime.Flow do
   defp compute_progress(flow) do
     current_step_id = current_step(flow)["id"]
 
-    steps = flow
-    |> steps
-    |> Enum.reject(fn step -> step["type"] == "flag" end)
+    steps = get_filtered_steps(flow)
 
     current_step_index = steps
     |> Enum.find_index(fn step -> step["id"] == current_step_id end)
@@ -382,6 +380,26 @@ defmodule Ask.Runtime.Flow do
       end
 
     {current_step_index, total_steps}
+  end
+
+  def get_filtered_steps(%Flow{has_sections: true} = flow) do
+    steps = steps(flow)
+    flow.section_order |> Enum.flat_map(fn (index) ->
+      item = Enum.at(steps, index)
+      case item["type"] do
+        "section" ->
+          item["steps"]
+            |> Enum.reject(fn step -> step["type"] == "flag" end)
+        "flag" -> []
+        _ -> [item]
+      end
+    end)
+  end
+
+  def get_filtered_steps(flow) do
+    flow
+      |> steps
+      |> Enum.reject(fn step -> step["type"] == "flag" end)
   end
 
   def current_step(%Flow{has_sections: true} = flow) do

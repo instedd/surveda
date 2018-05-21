@@ -972,6 +972,31 @@ defmodule Ask.FlowTest do
       assert flow.current_step == {1,0}
     end
 
+    test "when moving to the next sextion it updates correctly the current_step for progress" do
+      quiz = build(:questionnaire, steps: @three_sections)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {0, 4}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert reply.total_steps == 12
+      assert reply.current_step == 5
+
+      assert prompts == ["Is this the last question?"]
+      assert flow.current_step == {0,4}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert reply.current_step == 6
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {1,0}
+    end
+
     test "When skip logic is 'end section', it moves to the next one" do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
@@ -1036,7 +1061,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["What's the number of this question??"]
       assert flow.current_step == {1,3}
       step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
-      assert {:ok, flow, reply} = step
+      assert {:ok, flow, _} = step
 
       section_index = Enum.at(flow.section_order, 2)
 
