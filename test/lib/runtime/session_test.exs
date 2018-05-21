@@ -55,6 +55,17 @@ defmodule Ask.SessionTest do
     assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
   end
 
+  test "applies patterns when starting", %{quiz: quiz} do
+    patterns = [%{"input" => "XXXX", "output" => "5XXXX"}]
+    test_channel = TestChannel.new
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: patterns)
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+
+    Session.start(quiz, respondent, channel, "sms", Schedule.always())
+
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "51234"
+  end
+
   test "reloading the page should not consume retries in mobileweb mode", %{respondent: respondent, test_channel: test_channel, channel: channel} do
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
     retries = [1, 2, 3]
