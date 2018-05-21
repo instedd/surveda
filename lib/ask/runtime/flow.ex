@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.Flow do
   # current_step: step_index | {section_index, step_index}
-  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false
+  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false, section_order: nil
   alias Ask.{Repo, Questionnaire}
   alias Ask.Runtime.{Reply, Step}
   alias Ask.Runtime.Flow.Visitor
@@ -9,7 +9,13 @@ defmodule Ask.Runtime.Flow do
   @max_retries 2
 
   def start(quiz, mode) do
-    %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language, has_sections: questionnaire_has_sections(quiz)}
+    has_sections = questionnaire_has_sections(quiz)
+    section_order = if(has_sections) do
+       randomize_sections(quiz)
+    else
+      nil
+    end
+    %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language, has_sections: has_sections, section_order: section_order}
   end
 
   def step(flow, visitor, reply \\ :answer) do
@@ -40,12 +46,39 @@ defmodule Ask.Runtime.Flow do
     Enum.any?(questionnaire.steps, fn(step) -> step["type"] == "section" end)
   end
 
-  defp get_section_index(flow) do
-    elem(flow.current_step, 0)
+  defp randomize_sections(questionnaire) do
+    ids_to_randomize = Enum.with_index(questionnaire.steps)
+      |> Enum.flat_map(fn {step, index} ->
+        if step["type"] == "section" && step["randomize"] do
+          [index]
+        else
+          []
+        end
+      end)
+
+    {sections, _} = Enum.with_index(questionnaire.steps)
+      |> Enum.flat_map_reduce(ids_to_randomize, fn({step, index}, acc) ->
+        if step["type"] == "section" && step["randomize"] do
+          extract_random_item(acc)
+        else
+          {[index], acc}
+        end
+      end)
+
+    sections
   end
 
-  defp get_step_index(flow) do
-    elem(flow.current_step, 1)
+  defp extract_random_item(list) do
+    item = Enum.random(list)
+    {[item], List.delete(list, item)}
+  end
+
+  defp get_section_index(%{current_step: {index, _}}) do
+    index
+  end
+
+  defp get_step_index(%{current_step: {_, index}}) do
+    index
   end
 
   defp next_step_by_skip_logic(flow, step, reply_value, mode) do
@@ -80,10 +113,19 @@ defmodule Ask.Runtime.Flow do
       |> Enum.at(section_index)
 
     if section["type"] != "section" || length(section["steps"]) == step_index + 1 do
-      {section_index + 1, 0}
+      if flow.section_order do
+        {next_section(section_index, flow.section_order), 0}
+      else
+        {section_index + 1, 0}
+      end
     else
       {section_index, step_index + 1}
     end
+  end
+
+  defp next_section(current_section_index, section_order) do
+    current_index = Enum.find_index(section_order, fn(x) -> x == current_section_index end)
+    Enum.at(section_order, current_index + 1)
   end
 
   defp advance_current_step(flow, step, reply_value, mode) do
@@ -343,10 +385,14 @@ defmodule Ask.Runtime.Flow do
   end
 
   def current_step(%Flow{has_sections: true} = flow) do
-    flow
-    |> steps
-    |> Enum.at(get_section_index(flow))
-    |> get_step_from_section(get_step_index(flow))
+    case get_section_index(flow) do
+      nil -> nil
+      section_index ->
+        flow
+          |> steps
+          |> Enum.at(section_index)
+          |> get_step_from_section(get_step_index(flow))
+    end
   end
 
   def current_step(flow) do

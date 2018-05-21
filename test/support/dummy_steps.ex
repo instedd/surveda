@@ -859,6 +859,27 @@ defmodule Ask.DummySteps do
         section(
           id: "section 1",
           title: "First section",
+          randomize: false,
+          steps: @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: false,
+          steps: @explanation_steps_minimal
+        )
+      ]
+
+      @three_sections_random [
+        section(
+          id: "section 1",
+          title: "First section",
           randomize: true,
           steps: @skip_logic
         ),
@@ -872,7 +893,7 @@ defmodule Ask.DummySteps do
           id: "section 3",
           title: "Third section",
           randomize: true,
-          steps: @explanation_steps_minimal
+          steps: @dummy_steps_with_flag
         )
       ]
 
@@ -880,7 +901,7 @@ defmodule Ask.DummySteps do
         section(
           id: "section 1",
           title: "First section",
-          randomize: true,
+          randomize: false,
           steps: [
             multiple_choice_step(
               id: "aaa",
@@ -904,7 +925,7 @@ defmodule Ask.DummySteps do
         section(
           id: "section 3",
           title: "Third section",
-          randomize: true,
+          randomize: false,
           steps: @explanation_steps_minimal
         )
       ]
