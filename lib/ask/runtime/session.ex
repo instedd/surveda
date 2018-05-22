@@ -136,15 +136,20 @@ defmodule Ask.Runtime.Session do
   end
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session) do
-    prev_sanitized_as_list = Respondent.sanitize_phone_number(respondent.phone_number) |> String.graphemes
-    patterns = ChannelPatterns.matching_patterns(current_mode.channel.patterns, prev_sanitized_as_list)
-    case patterns do
-      [] -> nil
+    respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent)
+    mode_start(%{session | token: Ecto.UUID.generate, respondent: respondent})
+  end
+
+  defp apply_patterns_if_match(patterns, respondent) do
+    sanitized_number_as_list = Respondent.sanitize_phone_number(respondent.phone_number) |> String.graphemes
+    matching_patterns = ChannelPatterns.matching_patterns(patterns, sanitized_number_as_list)
+    case matching_patterns do
+      [] -> respondent
       [p | _] ->
-        sanitized_phone_number = ChannelPatterns.apply_pattern(p, prev_sanitized_as_list)
-        respondent |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number}) |> Repo.update
+        sanitized_phone_number = ChannelPatterns.apply_pattern(p, sanitized_number_as_list)
+        {:ok, updated_respondent} = respondent |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number}) |> Repo.update
+        updated_respondent
     end
-    mode_start(%{session | token: Ecto.UUID.generate})
   end
 
   defp log_prompts(reply, channel, mode, respondent, force \\ false) do

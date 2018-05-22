@@ -32,6 +32,11 @@ defmodule Ask.ChannelPatternsTest do
     ])
   end
 
+  test "matching against empty patterns returns empty list" do
+    sanitized_phone_number = ["1", "2", "3", "4"]
+    assert ChannelPatterns.matching_patterns([], sanitized_phone_number) == []
+  end
+
   test "applies output pattern to sanitized phone number" do
     sanitized_phone_number = ["1", "2", "3", "4"]
     patterns = [
