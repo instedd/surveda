@@ -61,7 +61,11 @@ class Pattern extends Component {
     return example.join('')
   }
 
-  computeDigitsForExample(numberOfXs) {
+  computeDigitsForExample(input, output) {
+    const inputXsCount = (input.match(/X/g) || []).length
+    const outputXsCount = (output.match(/X/g) || []).length
+    const numberOfXs = Math.max(inputXsCount, outputXsCount)
+
     const digits = Array(numberOfXs)
     for (let i = 0; i < numberOfXs; i++) {
       // (i+5)*7 % 10 computes a digit between 0-9 in an (arbitrary) deterministic way
@@ -79,10 +83,8 @@ class Pattern extends Component {
     const errors = this.isNew() ? {} : this.props.errors
 
     // Compute digits optimistically
-    const inputXsCount = (input.match(/X/g) || []).length
-    const outputXsCount = (output.match(/X/g) || []).length
     // Same digits must be used for both input and output patterns, so they're stored in a var
-    const digits = this.computeDigitsForExample(Math.max(inputXsCount, outputXsCount))
+    const digits = this.computeDigitsForExample(input, output)
 
     let inputPattern
     if (errors && errors['input']) {
