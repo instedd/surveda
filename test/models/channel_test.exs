@@ -27,6 +27,13 @@ defmodule Ask.ChannelTest do
   end
 
   describe "patterns validation" do
+    test "validates empty patterns" do
+      patterns = %{patterns: [%{"input" => "", "output" => ""}]}
+      changeset = Channel.changeset(%Channel{}, Map.merge(@valid_attrs, patterns))
+      refute changeset.valid?
+      assert (changeset.errors |> Enum.at(0) |> elem(0) == :patterns)
+    end
+
     test "validates that number of X's matches" do
       patterns = %{patterns: [%{"input" => "X", "output" => "XX"}]}
       changeset = Channel.changeset(%Channel{}, Map.merge(@valid_attrs, patterns))

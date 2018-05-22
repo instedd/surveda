@@ -70,9 +70,13 @@ class Pattern extends Component {
     return digits
   }
 
+  isNew() {
+    return !this.props.input && !this.props.output
+  }
+
   render() {
     const { input, output } = this.state
-    const { errors } = this.props
+    const errors = this.isNew() ? {} : this.props.errors
 
     // Compute digits optimistically
     const inputXsCount = (input.match(/X/g) || []).length

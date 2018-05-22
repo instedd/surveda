@@ -7,6 +7,8 @@ import isEqual from 'lodash/isEqual'
 import each from 'lodash/each'
 import includes from 'lodash/includes'
 
+const k = (...args: any) => args
+
 export const dataReducer = (state: Channel, action: any): Channel => {
   switch (action.type) {
     case actions.SHARE: return share(state, action)
@@ -107,15 +109,26 @@ const validate = (state: any) => {
 }
 
 const validatePattern = (state, p, index) => {
+  validateNotEmpty(state, p, index)
   validateValidCharacters(state, p, index)
   validateEqualNumberOfXs(state, p, index)
+}
+
+const validateNotEmpty = (state, p, index) => {
+  const errorStr = k('Pattern must not be blank')
+  if (!p.input) {
+    addError(state, index, 'input', errorStr)
+  }
+  if (!p.output) {
+    addError(state, index, 'output', errorStr)
+  }
 }
 
 const validateEqualNumberOfXs = (state, p, index) => {
   const inputXsCount = (p.input.match(/X/g) || []).length
   const outputXsCount = (p.output.match(/X/g) || []).length
   if (inputXsCount != outputXsCount) {
-    const errorStr = "Number of X's doesn't match"
+    const errorStr = k("Number of X's doesn't match")
     addError(state, index, 'input', errorStr)
     addError(state, index, 'output', errorStr)
   }
@@ -124,7 +137,7 @@ const validateEqualNumberOfXs = (state, p, index) => {
 const validateValidCharacters = (state, p, index) => {
   const inputIsValid = p.input.match(/^[0-9X()+-\s]*$/g)
   const outputIsValid = p.output.match(/^[0-9X()+-\s]*$/g)
-  const errorStr = 'Invalid characters. Only +, -, X, (, ), digits and whitespaces are allowed'
+  const errorStr = k('Invalid characters. Only +, -, X, (, ), digits and whitespaces are allowed')
   if (!inputIsValid) {
     addError(state, index, 'input', errorStr)
   }

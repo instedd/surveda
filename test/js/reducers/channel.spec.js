@@ -126,13 +126,14 @@ describe('channel reducer', () => {
       expect(state.errorsByPath[2]['output']).toInclude('Invalid characters. Only +, -, X, (, ), digits and whitespaces are allowed')
     })
 
-    it("shouldn't validate when pattern is empty", () => {
+    it('validate patterns not empty', () => {
       const state = playActions([
         actions.fetch(1),
         actions.receive(channel),
         actions.createPattern
       ])
-      expect(state.errorsByPath[0]).toNotExist()
+      expect(state.errorsByPath[0]['input']).toInclude('Pattern must not be blank')
+      expect(state.errorsByPath[0]['output']).toInclude('Pattern must not be blank')
     })
   })
 })

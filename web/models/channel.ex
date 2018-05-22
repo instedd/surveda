@@ -76,6 +76,7 @@ defmodule Ask.Channel do
 
   defp validate_patterns(changeset) do
     changeset
+    |> validate_patterns_not_empty
     |> validate_equal_number_of_Xs
     |> validate_valid_characters
   end
@@ -86,6 +87,18 @@ defmodule Ask.Channel do
 
   defp valid_characters?(pattern) do
     Regex.match?(~r/^([0-9]|X|\(|\)|\+|\-| )*$/, pattern)
+  end
+
+  defp validate_patterns_not_empty(changeset) do
+    patterns = get_field(changeset, :patterns, [])
+    empty_pattern? = fn (p) ->
+      (Map.get(p, "input", "") == "") || (Map.get(p, "output", "") == "")
+    end
+    if Enum.any?(patterns, empty_pattern?) do
+      add_error(changeset, :patterns, "Pattern must not be blank")
+    else
+      changeset
+    end
   end
 
   defp validate_equal_number_of_Xs(changeset) do
