@@ -150,6 +150,18 @@ const bareQuestionnaire: Questionnaire = {
 const bareQuestionnaireWithSection: Questionnaire = {
   steps: [
     {
+      id: '92283e47-fda4-4ac6-b968-b96fc921dd8d',
+      maxValue:null,
+      minValue:null,
+      prompt:{},
+      ranges:[{from: null,skipLogic: null,to: null,}],
+      rangesDelimiters:null,
+      refusal:{enabled: false, responses: {}, skipLogic: null},
+      store:"likes_oranges",
+      title:"First question",
+      type:"numeric"
+    },
+    {
       type: 'section',
       title: 'Section 1',
       id: '4108b902-3af4-4c33-bb76-84c8e5029814',
