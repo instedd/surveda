@@ -51,6 +51,49 @@ export const stepGroups = (steps: Step[]): StepGroup[] => {
 }
 
 class QuestionnaireSteps extends Component<Props> {
+  render() {
+    const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+
+    const groups = stepGroups(steps)
+
+    return (
+      <div>
+        { groups.map((item, index) => (
+          item.section != null
+          // TODO: Ensure unique keys for each item
+            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.title} index={index}>
+              <QuestionnaireStepsGroup
+                steps={item.groupSteps}
+                errorPath={errorPath}
+                errorsByPath={errorsByPath}
+                onDeleteStep={onDeleteStep}
+                onSelectStep={onSelectStep}
+                onDeselectStep={onDeselectStep}
+                readOnly={readOnly}
+                selectedSteps={selectedSteps}
+                quotaCompletedSteps={quotaCompletedSteps}
+              />
+            </Section>
+          : <QuestionnaireStepsGroup
+            key={errorPath}
+            steps={item.groupSteps}
+            errorPath={errorPath}
+            errorsByPath={errorsByPath}
+            onDeleteStep={onDeleteStep}
+            onSelectStep={onSelectStep}
+            onDeselectStep={onDeselectStep}
+            readOnly={readOnly}
+            selectedSteps={selectedSteps}
+            quotaCompletedSteps={quotaCompletedSteps}
+          />
+
+        ))}
+      </div>
+    )
+  }
+}
+
+class QuestionnaireStepsGroup extends Component<Props> {
   dummyDropTarget() {
     const { steps, readOnly, quotaCompletedSteps } = this.props
 
@@ -65,7 +108,7 @@ class QuestionnaireSteps extends Component<Props> {
     return <div />
   }
 
-  questionnaireSteps() {
+  questionnaireStepsGroup() {
     const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
     const current = selectedSteps.currentStepId
     const currentStepIsNew = selectedSteps.currentStepIsNew
@@ -81,7 +124,7 @@ class QuestionnaireSteps extends Component<Props> {
       const stepsAfter = steps.slice(itemIndex + 1)
 
       return (
-        <Section>
+        <div>
           <StepsList steps={stepsBefore} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
           <StepEditor
             step={currentStep}
@@ -96,7 +139,7 @@ class QuestionnaireSteps extends Component<Props> {
             stepsAfter={stepsAfter}
             stepsBefore={stepsBefore} />
           <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
-        </Section>
+        </div>
       )
     }
   }
@@ -105,7 +148,7 @@ class QuestionnaireSteps extends Component<Props> {
     return (
       <div>
         {this.dummyDropTarget()}
-        {this.questionnaireSteps()}
+        {this.questionnaireStepsGroup()}
       </div>
     )
   }

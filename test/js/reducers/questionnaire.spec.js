@@ -6,7 +6,7 @@ import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
-import { questionnaire } from '../fixtures'
+import { questionnaire, questionnaireWithSection } from '../fixtures'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -461,6 +461,28 @@ describe('questionnaire reducer', () => {
 
       expect(resultState.data.steps.length).toEqual(preState.data.steps.length + 1)
       expect(newStep.type).toEqual('section')
+    })
+
+    it('should change step type inside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepType('17141bea-a81c-4227-bdda-f5f69188b0e7', 'numeric')
+      ])
+      const resultStep = find(preState.data.steps[1].steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+
+      expect(resultStep.type).toEqual('numeric')
+    })
+
+    it('should change step type when it`s outside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepType('92283e47-fda4-4ac6-b968-b96fc921dd8d', 'multiple-choice')
+      ])
+      const resultStep = find(preState.data.steps, s => s.id === '92283e47-fda4-4ac6-b968-b96fc921dd8d')
+
+      expect(resultStep.type).toEqual('multiple-choice')
     })
   })
 

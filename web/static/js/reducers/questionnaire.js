@@ -348,39 +348,96 @@ const moveStepToTop = (state, action) => {
   throw new Error(`Couldn't move step ${action.stepId} to the top`)
 }
 
+const hasSections = (steps) => {
+  return steps.some(function(item) {
+    return item.type == 'section'
+  })
+}
+
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T) {
   // First try to find the step in 'steps'
-  let steps = state.steps
-  let stepIndex = findIndex(steps, s => s.id == stepId)
+  let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')
 
-  if (stepIndex != -1) {
-    return {
-      ...state,
-      steps: [
-        ...steps.slice(0, stepIndex),
-        func(steps[stepIndex]),
-        ...steps.slice(stepIndex + 1)
-      ]
-    }
-  }
+  if (inSteps) return inSteps
 
   // If we couldn't find it there, it must be in 'quotaCompletedSteps'
-  steps = state.quotaCompletedSteps
+  let steps = state.quotaCompletedSteps
   if (steps) {
-    stepIndex = findIndex(steps, s => s.id == stepId)
-    if (stepIndex != -1) {
-      return {
-        ...state,
-        quotaCompletedSteps: [
-          ...steps.slice(0, stepIndex),
-          func(steps[stepIndex]),
-          ...steps.slice(stepIndex + 1)
-        ]
-      }
-    }
+    let inQuotaCompleted = findAndUpdateStep(steps, stepId, state, func, 'quotaCompletedSteps')
+    if (inQuotaCompleted) return inQuotaCompleted
   }
 
   throw new Error(`Bug: couldn't find step ${stepId}`)
+}
+
+const findAndUpdateStep = (steps, stepId, state, func, key) => {
+  if (hasSections(steps)) {
+    return findAndUpdateStepInSection(steps, stepId, state, func, key)
+  } else {
+    return findAndUpdateRegularStep(steps, stepId, state, func, key)
+  }
+}
+
+const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
+  let sectionIndex = null
+  let stepIndex = null
+  items.forEach((item, index) => {
+    if (item.type === 'section') {
+      let indexInSection = findIndex(item.steps, s => s.id == stepId)
+      if (indexInSection != -1) {
+        sectionIndex = index
+        stepIndex = indexInSection
+      }
+    } else {
+      if (item.id == stepId) {
+        sectionIndex = index
+        stepIndex = null
+      }
+    }
+  })
+
+  if (sectionIndex != -1 && sectionIndex != null) {
+    if (stepIndex != null) {
+      let steps = items[sectionIndex].steps
+
+      return {
+        ...state,
+        [key]: [
+          ...items.slice(0, sectionIndex),
+          {
+            ...steps,
+            steps: [
+              ...steps.slice(0, stepIndex),
+              func(steps[stepIndex]),
+              ...steps.slice(stepIndex + 1)
+            ]
+          },
+          ...items.slice(sectionIndex + 1)
+        ]
+      }
+    } else {
+      return updateRegularStep(state, items, sectionIndex, func, key)
+    }
+  }
+}
+
+const findAndUpdateRegularStep = (steps, stepId, state, func, key) => {
+  let stepIndex = findIndex(steps, s => s.id == stepId)
+
+  if (stepIndex != -1 && stepIndex != null) {
+    return updateRegularStep(state, steps, stepIndex, func, key)
+  }
+}
+
+const updateRegularStep = (state, steps, stepIndex, func, key) => {
+  return {
+    ...state,
+    [key]: [
+      ...steps.slice(0, stepIndex),
+      func(steps[stepIndex]),
+      ...steps.slice(stepIndex + 1)
+    ]
+  }
 }
 
 type ActionChangeStepSmsPrompt = {

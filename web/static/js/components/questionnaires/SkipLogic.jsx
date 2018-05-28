@@ -74,6 +74,12 @@ class SkipLogic extends Component<Props, State> {
     })
 
     skipOptions.unshift({
+      id: 'end_section',
+      title: t('End section'),
+      enabled: true
+    })
+
+    skipOptions.unshift({
       id: '',
       title: t('Next question'),
       enabled: true
