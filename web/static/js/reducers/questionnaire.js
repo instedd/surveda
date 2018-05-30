@@ -398,14 +398,15 @@ const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
 
   if (sectionIndex != -1 && sectionIndex != null) {
     if (stepIndex != null) {
-      let steps = items[sectionIndex].steps
+      const sectionStep = items[sectionIndex]
+      const steps = sectionStep.steps
 
       return {
         ...state,
         [key]: [
           ...items.slice(0, sectionIndex),
           {
-            ...steps,
+            ...sectionStep,
             steps: [
               ...steps.slice(0, stepIndex),
               func(steps[stepIndex]),
