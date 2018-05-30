@@ -474,6 +474,23 @@ describe('questionnaire reducer', () => {
       expect(resultStep.type).toEqual('numeric')
     })
 
+    it('should edit step prompt inside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  Edited prompt  ')
+      ])
+
+      const resultSection = preState.data.steps[1]
+
+      expect(resultSection.id).toEqual('4108b902-3af4-4c33-bb76-84c8e5029814')
+      expect(resultSection.title).toEqual('Section 1')
+
+      const resultStep = find(preState.data.steps[1].steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+
+      expect(resultStep.prompt['en'].sms).toEqual('Edited prompt')
+    })
+
     it('should change step type when it`s outside a section', () => {
       const preState = playActions([
         actions.fetch(1, 1),
