@@ -121,7 +121,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
     if (current == null || itemIndex < 0) {
       // All collapsed
-      return <StepsList steps={steps} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+      return <StepsList steps={steps} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} increaseErrorIndex={increaseErrorIndex} />
     } else {
       // Only one expanded
       const stepsBefore = steps.slice(0, itemIndex)
@@ -130,7 +130,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
       return (
         <div>
-          <StepsList steps={stepsBefore} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+          <StepsList steps={stepsBefore} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} increaseErrorIndex={increaseErrorIndex} />
           <StepEditor
             step={currentStep}
             stepIndex={itemIndex}
@@ -143,7 +143,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
             onDelete={onDeleteStep}
             stepsAfter={stepsAfter}
             stepsBefore={stepsBefore} />
-          <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+          <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} increaseErrorIndex={increaseErrorIndex} />
         </div>
       )
     }
