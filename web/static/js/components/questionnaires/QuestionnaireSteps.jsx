@@ -58,10 +58,9 @@ class QuestionnaireSteps extends Component<Props> {
 
     return (
       <div>
-        { groups.map((item) => (
+        { groups.map((item, index) => (
           item.section != null
-          // TODO: Ensure unique keys for each item
-            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.title} id={item.section.id}>
+            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.id} id={item.section.id}>
               <QuestionnaireStepsGroup
                 steps={item.groupSteps}
                 errorPath={errorPath}
@@ -75,7 +74,7 @@ class QuestionnaireSteps extends Component<Props> {
               />
             </Section>
           : <QuestionnaireStepsGroup
-            key={errorPath}
+            key={index}
             steps={item.groupSteps}
             errorPath={errorPath}
             errorsByPath={errorsByPath}
