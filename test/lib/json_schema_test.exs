@@ -34,6 +34,9 @@ defmodule Ask.StepsValidatorTest do
   defp valid_step(json), do: valid_thing(json, :step)
   defp invalid_step(json, case_desc), do: invalid_thing(json, :step, case_desc)
 
+  defp valid_section(json), do: valid_thing(json, :section)
+  defp invalid_section(json, case_desc), do: invalid_thing(json, :section, case_desc)
+
   defp valid_localized_prompt(json), do: valid_thing(json, :localized_prompt)
   defp invalid_localized_prompt(json, case_desc), do: invalid_thing(json, :localized_prompt, case_desc)
 
@@ -172,6 +175,115 @@ defmodule Ask.StepsValidatorTest do
       "skip_logic": null
     })
     |> valid_step
+  end
+
+  test "section" do
+    ~s(
+    {
+      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+      "title": "First Section",
+      "type": "section",
+      "randomize": false,
+      "steps": []
+    })
+    |> valid_section
+
+    ~s(
+    {
+      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+      "title": "First Section",
+      "type": "section",
+      "randomize": false,
+      "steps": [{
+        "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+        "title": "Smoke",
+        "type": "multiple-choice",
+        "prompt": {},
+        "store": "Smokes",
+        "choices": []
+      }]
+    })
+    |> valid_section
+
+    ~s(
+    {
+      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+      "title": "First Section",
+      "type": "section",
+      "randomize": false,
+      "steps": [{
+        "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+        "title": "Smoke",
+        "type": "multiple-choice",
+        "prompt": {},
+        "store": "Smokes",
+        "choices": []
+      },
+      {
+        "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+        "title": "Explanation",
+        "type": "explanation",
+        "prompt": {},
+        "skip_logic": null
+      }]
+    })
+    |> valid_section
+
+    ~s(
+    {
+      "title": "First Section",
+      "type": "section",
+      "randomize": false,
+      "steps": []
+    })
+    |> invalid_section("Section must have id")
+
+    ~s(
+    {
+      "id": "507f7f4f-b037-417f-bf80-e8bfc5d818ff",
+      "title": "First Section",
+      "type": "not-a-section",
+      "randomize": false,
+      "steps": []
+    })
+    |> invalid_section("Section type should be limited to certain values")
+
+    ~s(
+    {
+      "id": "507f7f4f-b037-417f-bf80-e8bfc5d818ff",
+      "title": "First Section",
+      "type": "section",
+      "steps": []
+    })
+    |> invalid_section("Section must have randomize")
+
+    ~s(
+    {
+      "id": "507f7f4f-b037-417f-bf80-e8bfc5d818ff",
+      "title": "First Section",
+      "type": "section",
+      "randomize": false,
+      "steps": ["not a step"]
+    })
+    |> invalid_section("Section must have valid steps")
+
+    ~s(
+    {
+      "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+      "title": "First Section",
+      "type": "section",
+      "randomize": false,
+      "steps": [{
+        "id": "9616feb6-33c0-4feb-8aa8-84ba9a607103",
+        "title": "Smoke",
+        "type": "invalid-step",
+        "prompt": {},
+        "store": "Smokes",
+        "choices": []
+      }]
+    })
+    |> invalid_section("Section must have valid steps")
+
   end
 
   test "localized prompt" do

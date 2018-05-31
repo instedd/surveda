@@ -107,7 +107,7 @@ export type Refusal = BaseChoice & {
   enabled: boolean
 };
 
-export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep | FlagStep;
+export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep | FlagStep | SectionStep;
 export type BaseStep = {
   id: string,
   title: string
@@ -119,6 +119,12 @@ export type StoreStep = {
 
 export type MultilingualStep = {
   prompt: LocalizedPrompt
+};
+
+export type SectionStep = BaseStep & {
+  type: 'section',
+  randomize: boolean,
+  steps: Step[]
 };
 
 export type SkipOption = {

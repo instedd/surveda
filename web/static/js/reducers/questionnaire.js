@@ -41,6 +41,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
     case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
     case actions.ADD_STEP: return addStep(state, action)
+    case actions.ADD_STEP_TO_SECTION: return addStepToSection(state, action)
     case actions.ADD_QUOTA_COMPLETED_STEP: return addQuotaCompletedStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
     case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
@@ -66,6 +67,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS: return toggleAcceptsAlphabeticalAnswers(state, action)
     case actions.CHANGE_REFUSAL: return changeRefusal(state, action)
     case actions.SET_DIRTY: return setDirty(state)
+    case actions.ADD_SECTION: return addSection(state)
     default: return state
   }
 }
@@ -347,39 +349,97 @@ const moveStepToTop = (state, action) => {
   throw new Error(`Couldn't move step ${action.stepId} to the top`)
 }
 
+export const hasSections = (steps: Array<Step>) => {
+  return steps.some(function(item) {
+    return item.type == 'section'
+  })
+}
+
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T) {
   // First try to find the step in 'steps'
-  let steps = state.steps
-  let stepIndex = findIndex(steps, s => s.id == stepId)
+  let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')
 
-  if (stepIndex != -1) {
-    return {
-      ...state,
-      steps: [
-        ...steps.slice(0, stepIndex),
-        func(steps[stepIndex]),
-        ...steps.slice(stepIndex + 1)
-      ]
-    }
-  }
+  if (inSteps) return inSteps
 
   // If we couldn't find it there, it must be in 'quotaCompletedSteps'
-  steps = state.quotaCompletedSteps
+  let steps = state.quotaCompletedSteps
   if (steps) {
-    stepIndex = findIndex(steps, s => s.id == stepId)
-    if (stepIndex != -1) {
-      return {
-        ...state,
-        quotaCompletedSteps: [
-          ...steps.slice(0, stepIndex),
-          func(steps[stepIndex]),
-          ...steps.slice(stepIndex + 1)
-        ]
-      }
-    }
+    let inQuotaCompleted = findAndUpdateStep(steps, stepId, state, func, 'quotaCompletedSteps')
+    if (inQuotaCompleted) return inQuotaCompleted
   }
 
   throw new Error(`Bug: couldn't find step ${stepId}`)
+}
+
+const findAndUpdateStep = (steps, stepId, state, func, key) => {
+  if (hasSections(steps)) {
+    return findAndUpdateStepInSection(steps, stepId, state, func, key)
+  } else {
+    return findAndUpdateRegularStep(steps, stepId, state, func, key)
+  }
+}
+
+const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
+  let sectionIndex = null
+  let stepIndex = null
+  items.forEach((item, index) => {
+    if (item.type === 'section') {
+      let indexInSection = findIndex(item.steps, s => s.id == stepId)
+      if (indexInSection != -1) {
+        sectionIndex = index
+        stepIndex = indexInSection
+      }
+    } else {
+      if (item.id == stepId) {
+        sectionIndex = index
+        stepIndex = null
+      }
+    }
+  })
+
+  if (sectionIndex != -1 && sectionIndex != null) {
+    if (stepIndex != null) {
+      const sectionStep = items[sectionIndex]
+      const steps = sectionStep.steps
+
+      return {
+        ...state,
+        [key]: [
+          ...items.slice(0, sectionIndex),
+          {
+            ...sectionStep,
+            steps: [
+              ...steps.slice(0, stepIndex),
+              func(steps[stepIndex]),
+              ...steps.slice(stepIndex + 1)
+            ]
+          },
+          ...items.slice(sectionIndex + 1)
+        ]
+      }
+    } else {
+      return updateRegularStep(state, items, sectionIndex, func, key)
+    }
+  }
+}
+
+const findAndUpdateRegularStep = (steps, stepId, state, func, key) => {
+  let stepIndex = findIndex(steps, s => s.id == stepId)
+
+  if (stepIndex != -1 && stepIndex != null) {
+    return updateRegularStep(state, steps, stepIndex, func, key)
+  }
+}
+
+const updateRegularStep = (state, steps, stepIndex, func, key) => {
+  return {
+    ...state,
+    [key]: [
+      ...steps.slice(0, stepIndex),
+      func(steps[stepIndex]),
+      ...steps.slice(stepIndex + 1)
+    ]
+  }
 }
 
 type ActionChangeStepSmsPrompt = {
@@ -583,6 +643,16 @@ const changeStepStore = (state, action) => {
   }))
 }
 
+const addSection = (state, action) => {
+  return {
+    ...state,
+    steps: [
+      ...state.steps,
+      newSection()
+    ]
+  }
+}
+
 const addStep = (state, action) => {
   return {
     ...state,
@@ -590,6 +660,33 @@ const addStep = (state, action) => {
       ...state.steps,
       newMultipleChoiceStep()
     ]
+  }
+}
+
+const addStepToSection = (state, action) => {
+  const step = newMultipleChoiceStep()
+  const items = state.steps
+  let sectionIndex = findIndex(items, s => s.id == action.sectionId)
+
+  const sectionStep = items[sectionIndex]
+
+  if (sectionStep !== null && sectionStep.type === 'section') {
+    return {
+      ...state,
+      steps: [
+        ...items.slice(0, sectionIndex),
+        {
+          ...sectionStep,
+          steps: [
+            ...sectionStep.steps,
+            step
+          ]
+        },
+        ...items.slice(sectionIndex + 1)
+      ]
+    }
+  } else {
+    return state
   }
 }
 
@@ -607,7 +704,7 @@ const addQuotaCompletedStep = (state, action) => {
   }
 }
 
-const newLanguageSelectionStep = (first: string, second: string): LanguageSelectionStep => {
+export const newLanguageSelectionStep = (first: string, second: string): LanguageSelectionStep => {
   return {
     id: uuidv4(),
     type: 'language-selection',
@@ -628,6 +725,16 @@ export const newMultipleChoiceStep = () => {
       'en': newStepPrompt()
     },
     choices: []
+  }
+}
+
+export const newSection = (): SectionStep => {
+  return {
+    id: uuidv4(),
+    title: 'Section',
+    randomize: false,
+    type: 'section',
+    steps: []
   }
 }
 
@@ -1363,8 +1470,7 @@ const translateSteps = (steps, defaultLanguage, lookup) => {
 
 const translateStep = (step, defaultLanguage, lookup): Step => {
   let newStep = {...step}
-
-  if (step.type !== 'language-selection' && step.type !== 'flag') {
+  if (step.type !== 'language-selection' && step.type !== 'flag' && step.type !== 'section') {
     newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
     if (step.type === 'multiple-choice') {
       newStep = {...newStep, choices: translateChoices(step.choices, defaultLanguage, lookup)}

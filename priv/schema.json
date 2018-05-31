@@ -8,7 +8,7 @@
     "questionnaire": {
       "type": "object",
       "properties": {
-        "steps": {"$ref": "#/definitions/steps"},
+        "steps": {"$ref": "#/definitions/steps-and-sections"},
         "settings": {"$ref": "#/definitions/settings"}
       },
       "required": ["steps", "settings"]
@@ -24,6 +24,32 @@
         "survey_already_taken_message": {"oneOf": [{"$ref": "#/definitions/localized_string"}, {"type":"null"}]},
         "thank_you_message": {"oneOf": [{"$ref": "#/definitions/localized_prompt"}, {"type":"null"}]}
       }
+    },
+
+    "steps-and-sections":{
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/step-or-section"
+      }
+    },
+
+    "step-or-section": {
+      "oneOf": [
+        {"$ref": "#/definitions/section"},
+        {"$ref": "#/definitions/step"}
+      ]
+    },
+
+    "section": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"enum": ["section"]},
+        "title": {"type": "string"},
+        "randomize": {"type": "boolean"},
+        "steps": {"$ref": "#/definitions/steps"}
+      },
+      "required": ["id", "type", "title", "randomize", "steps"]
     },
 
     "steps": {

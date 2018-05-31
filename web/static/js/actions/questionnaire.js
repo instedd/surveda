@@ -2,6 +2,7 @@
 import * as api from '../api'
 import { newMultipleChoiceStep } from '../reducers/questionnaire'
 import { defaultActiveMode } from '../questionnaire.mode'
+import findIndex from 'lodash/findIndex'
 
 export const FETCH = 'QUESTIONNAIRE_FETCH'
 export const RECEIVE = 'QUESTIONNAIRE_RECEIVE'
@@ -9,7 +10,9 @@ export const CHANGE_NAME = 'QUESTIONNAIRE_CHANGE_NAME'
 export const SET_ACTIVE_MODE = 'QUESTIONNAIRE_SET_ACTIVE_MODE'
 export const ADD_MODE = 'QUESTIONNAIRE_ADD_MODE'
 export const REMOVE_MODE = 'QUESTIONNAIRE_REMOVE_MODE'
+export const ADD_SECTION = 'QUESTIONNAIRE_ADD_SECTION'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
+export const ADD_STEP_TO_SECTION = 'QUESTIONNAIRE_ADD_STEP_TO_SECTION'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
 export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
@@ -201,6 +204,15 @@ export const changeStepType = (stepId, stepType) => ({
   stepType
 })
 
+export const addSection = () => ({
+  type: ADD_SECTION
+})
+
+export const addSectionWithCallback = () => (dispatch, getState) => {
+  dispatch(addSection())
+  return Promise.resolve()
+}
+
 export const addStep = () => ({
   type: ADD_STEP
 })
@@ -209,6 +221,20 @@ export const addStepWithCallback = () => (dispatch, getState) => {
   dispatch(addStep())
   const q = getState().questionnaire.data
   return Promise.resolve(q.steps[q.steps.length - 1])
+}
+
+export const addStepToSection = (sectionId) => ({
+  type: ADD_STEP_TO_SECTION,
+  sectionId
+})
+
+export const addStepToSectionWithCallback = (sectionId) => (dispatch, getState) => {
+  dispatch(addStepToSection(sectionId))
+  const q = getState().questionnaire.data
+  let sectionIndex = findIndex(q.steps, s => s.id == sectionId)
+  let steps = q.steps[sectionIndex].steps
+
+  return Promise.resolve(steps[steps.length - 1])
 }
 
 export const addQuotaCompletedStep = () => (dispatch, getState) => {

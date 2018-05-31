@@ -6,7 +6,7 @@ import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
-import { questionnaire } from '../fixtures'
+import { questionnaire, questionnaireWithSection } from '../fixtures'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -443,6 +443,82 @@ describe('questionnaire reducer', () => {
       ])
 
       expect(result.data.activeMode).toEqual('mobileweb')
+    })
+  })
+
+  describe('sections', () => {
+    it('should add section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addSection()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      expect(resultState.data.steps.length).toEqual(preState.data.steps.length + 1)
+      expect(newStep.type).toEqual('section')
+    })
+
+    it('should add step to section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addStepToSection('4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      const editedSection = resultState.data.steps[1]
+
+      expect(editedSection.steps.length).toEqual(originalSection.steps.length + 1)
+      expect(editedSection.steps[editedSection.steps.length - 1].title).toNotEqual('Do you exercise?')
+      expect(editedSection.steps[editedSection.steps.length - 1].type).toEqual('multiple-choice')
+    })
+
+    it('should change step type inside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepType('17141bea-a81c-4227-bdda-f5f69188b0e7', 'numeric')
+      ])
+      const resultStep = find(preState.data.steps[1].steps, s => s.id === '17141bea-a81c-4227-bdda-f5f69188b0e7')
+
+      expect(resultStep.type).toEqual('numeric')
+    })
+
+    it('should edit step prompt inside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepPromptSms('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '  Edited prompt  ')
+      ])
+
+      const resultSection = preState.data.steps[1]
+
+      expect(resultSection.id).toEqual('4108b902-3af4-4c33-bb76-84c8e5029814')
+      expect(resultSection.title).toEqual('Section 1')
+
+      const resultStep = find(preState.data.steps[1].steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+
+      expect(resultStep.prompt['en'].sms).toEqual('Edited prompt')
+    })
+
+    it('should change step type when it`s outside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepType('92283e47-fda4-4ac6-b968-b96fc921dd8d', 'multiple-choice')
+      ])
+      const resultStep = find(preState.data.steps, s => s.id === '92283e47-fda4-4ac6-b968-b96fc921dd8d')
+
+      expect(resultStep.type).toEqual('multiple-choice')
     })
   })
 
@@ -1436,6 +1512,76 @@ describe('questionnaire reducer', () => {
         mode: null,
         message: ['Max value must be greater than or equal to the last delimiter ({{last}})', {last: 20}]
       })
+    })
+  })
+
+  describe('validations with sections', () => {
+    it('should validate SMS message must not be blank if "SMS" mode is on', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: "steps[1].steps[0].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('should include error when skip logic is "end_section" and there is no sections', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', 'end_section')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'steps[0].choices[1].skipLogic',
+        lang: null,
+        mode: null,
+        message: ['Cannot jump to end of section if there is no sections']
+      })
+    })
+
+    it('should not include error when skip logic is "end_section" and there is sections', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', 'end_section')
+      ])
+
+      for (const error of resultState.errors) {
+        expect(error.path).toExclude('skipLogic')
+      }
+    })
+
+    it('should include error if skip logic does not refer to a posterior step within the same section', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', '92283e47-fda4-4ac6-b968-b96fc921dd8d')
+      ])
+      expect(resultState.errors).toInclude({
+        path: 'steps[1].steps[0].choices[1].skipLogic',
+        lang: null,
+        mode: null,
+        message: ['Cannot jump to a previous step or step outside section']
+      })
+    })
+
+    it('should not include error if skip logic refers to a posterior step within the same section', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      for (const error of resultState.errors) {
+        expect(error.path).toExclude('skipLogic')
+      }
     })
   })
 

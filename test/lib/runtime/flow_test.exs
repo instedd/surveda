@@ -801,12 +801,14 @@ defmodule Ask.FlowTest do
 
     flow = Flow.start(quiz, "sms")
     assert flow.language == "en"
+    assert flow.current_step == nil
 
     step = flow |> Flow.step(@sms_visitor)
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
 
     assert prompts == ["1 for English, 2 for Spanish"]
+    assert flow.current_step == 0
 
     step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
     assert {:ok, flow, reply} = step
@@ -814,6 +816,7 @@ defmodule Ask.FlowTest do
 
     assert flow.language == "es"
     assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO (Spanish)"]
+    assert flow.current_step == 1
   end
 
   test "language selection step doesn't crash on non-numeric" do
@@ -881,6 +884,188 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Is this the last question?", "Thanks for completing this survey"]
+    end
+  end
+
+  describe "sections" do
+    @language_selection [language_selection_step(
+        id: Ecto.UUID.generate,
+        title: "Language Selection",
+        prompt: %{
+          "sms" => sms_prompt("Reply 1 for English, mande 2 para Español"),
+          "ivr" => tts_prompt("Press 1 for English, aprete 2 para Español")
+        },
+        store: "language",
+        choices: ["en", "es"]
+      )]
+
+    test "performs the first question inside the first section" do
+      quiz = build(:questionnaire, steps: @one_section)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"]
+      assert flow.current_step == {0,0}
+    end
+
+    test "accepts an answer for the first question inside the first section and moves to the next step" do
+      quiz = build(:questionnaire, steps: @one_section)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"]
+      assert flow.current_step == {0,0}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {0,1}
+    end
+
+    test "accepts an answer for the language selection step and then moves inside the first section" do
+      steps = @language_selection ++ @one_section
+
+      quiz = build(:questionnaire, steps: steps)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Reply 1 for English, mande 2 para Español"]
+      assert flow.current_step == {0,0}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert flow.language == "es"
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know (Spanish)"]
+      assert flow.current_step == {1,0}
+    end
+
+    test "accepts an answer for the last question inside the first section and moves to the next section" do
+      quiz = build(:questionnaire, steps: @three_sections)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {0, 4}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Is this the last question?"]
+      assert flow.current_step == {0,4}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {1,0}
+    end
+
+    test "when moving to the next sextion it updates correctly the current_step for progress" do
+      quiz = build(:questionnaire, steps: @three_sections)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {0, 4}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert reply.total_steps == 12
+      assert reply.current_step == 5
+
+      assert prompts == ["Is this the last question?"]
+      assert flow.current_step == {0,4}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert reply.current_step == 6
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {1,0}
+    end
+
+    test "When skip logic is 'end section', it moves to the next one" do
+      quiz = build(:questionnaire, steps: @three_sections_skip_logic)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {0,0}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {1,0}
+    end
+
+    test "when it's on the last step of the last section, the survey finishes correctly" do
+      quiz = build(:questionnaire, steps: @three_sections_skip_logic)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {2, 1}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {2,1}
+
+      flow_state = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:end, _, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Thanks for completing this survey"]
+    end
+
+    # Randomize
+    test "when the flow starts it randomizes only the randomizable sections" do
+      quiz = build(:questionnaire, steps: @language_selection ++ @three_sections_random)
+      flow = Flow.start(quiz, "sms")
+
+      assert Enum.at(flow.section_order, 0) == 0
+
+      assert Enum.uniq(flow.section_order) == flow.section_order
+
+      assert Enum.at(flow.section_order, 2) == 2
+
+      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3]
+    end
+
+    test "when the section finishes, it follows with the next section by the random order" do
+      quiz = build(:questionnaire, steps: @three_sections_random)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {1, 3}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["What's the number of this question??"]
+      assert flow.current_step == {1,3}
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, _} = step
+
+      section_index = Enum.at(flow.section_order, 2)
+
+      assert flow.current_step == {section_index, 0}
     end
   end
 

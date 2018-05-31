@@ -5,6 +5,7 @@ import StepsList from './StepsList'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
+import Section from './Section'
 
 type Props = {
   steps: Step[],
@@ -19,7 +20,80 @@ type Props = {
   selectedSteps: Object
 };
 
+type StepGroup = {
+  section: ?SectionStep,
+  groupSteps: Step[]
+};
+
+// This function is here because I think it is too ad-hoc
+// to put it closer to the model.
+export const stepGroups = (steps: Step[]): StepGroup[] => {
+  // Some auxiliaries for better readability
+  const lastGroupIsSection = (groups) => groups[groups.length - 1].section !== null
+  const lastGroupIsForLanguageSelection = (groups) => !lastGroupIsSection(groups) && groups[groups.length - 1].groupSteps[0].type === 'language-selection'
+
+  const groups = steps.reduce((groups: StepGroup[], step: Step) => {
+    if (step.type === 'section') {
+      groups.push({ section: step, groupSteps: step.steps })
+    } else if (step.type === 'language-selection' ||
+                groups.length == 0 ||
+                lastGroupIsForLanguageSelection(groups) ||
+                lastGroupIsSection(groups)) {
+      groups.push({ section: null, groupSteps: [step] })
+    } else {
+      groups[groups.length - 1].groupSteps.push(step)
+    }
+
+    return groups
+  }, [])
+
+  return groups
+}
+
 class QuestionnaireSteps extends Component<Props> {
+  render() {
+    const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+
+    const groups = stepGroups(steps)
+
+    return (
+      <div>
+        { groups.map((item) => (
+          item.section != null
+          // TODO: Ensure unique keys for each item
+            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.title} id={item.section.id}>
+              <QuestionnaireStepsGroup
+                steps={item.groupSteps}
+                errorPath={errorPath}
+                errorsByPath={errorsByPath}
+                onDeleteStep={onDeleteStep}
+                onSelectStep={onSelectStep}
+                onDeselectStep={onDeselectStep}
+                readOnly={readOnly}
+                selectedSteps={selectedSteps}
+                quotaCompletedSteps={quotaCompletedSteps}
+              />
+            </Section>
+          : <QuestionnaireStepsGroup
+            key={errorPath}
+            steps={item.groupSteps}
+            errorPath={errorPath}
+            errorsByPath={errorsByPath}
+            onDeleteStep={onDeleteStep}
+            onSelectStep={onSelectStep}
+            onDeselectStep={onDeselectStep}
+            readOnly={readOnly}
+            selectedSteps={selectedSteps}
+            quotaCompletedSteps={quotaCompletedSteps}
+          />
+
+        ))}
+      </div>
+    )
+  }
+}
+
+class QuestionnaireStepsGroup extends Component<Props> {
   dummyDropTarget() {
     const { steps, readOnly, quotaCompletedSteps } = this.props
 
@@ -34,7 +108,7 @@ class QuestionnaireSteps extends Component<Props> {
     return <div />
   }
 
-  questionnaireSteps() {
+  questionnaireStepsGroup() {
     const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
     const current = selectedSteps.currentStepId
     const currentStepIsNew = selectedSteps.currentStepIsNew
@@ -74,7 +148,7 @@ class QuestionnaireSteps extends Component<Props> {
     return (
       <div>
         {this.dummyDropTarget()}
-        {this.questionnaireSteps()}
+        {this.questionnaireStepsGroup()}
       </div>
     )
   }

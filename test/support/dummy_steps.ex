@@ -59,6 +59,16 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def section(id: id, title: title, randomize: randomize, steps: steps) do
+    %{
+      "id" => id,
+      "type" => "section",
+      "title" => title,
+      "randomize" => randomize,
+      "steps" => steps
+    }
+  end
+
   def prompt(sms: sms) do
     %{
       "en" => %{
@@ -834,6 +844,90 @@ defmodule Ask.DummySteps do
           disposition: "refused",
           skip_logic: "end"
         ),
+      ]
+
+      @one_section [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: true,
+          steps: @skip_logic
+        )
+      ]
+
+      @three_sections [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: false,
+          steps: @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: false,
+          steps: @explanation_steps_minimal
+        )
+      ]
+
+      @three_sections_random [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: true,
+          steps: @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: true,
+          steps: @dummy_steps_with_flag
+        )
+      ]
+
+      @three_sections_skip_logic [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: false,
+          steps: [
+            multiple_choice_step(
+              id: "aaa",
+              title: "Do you want to end this section?",
+              prompt: prompt(
+                sms: sms_prompt("Do you want to end this section? Reply 1 for YES, 2 for NO")
+              ),
+              store: "end_section",
+              choices: [
+                choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end_section"),
+                choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+              ]
+            )] ++ @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: false,
+          steps: @explanation_steps_minimal
+        )
       ]
     end
   end

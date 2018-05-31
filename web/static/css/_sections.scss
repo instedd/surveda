@@ -1,0 +1,34 @@
+
+// ------- Sections ----------
+
+.section-container {
+  @extend .grey, .lighten-2;
+  padding: 1rem .5rem 10px .5rem;
+  border-radius: 10px 10px 10px 10px;
+
+  .section-container-header {
+    position: relative;
+    
+    .switch {
+      position: absolute;
+      top: 0px;
+    }
+    .section-number {
+      @extend .grey-text;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .close-section {
+      @extend .grey-text;
+      position: absolute;
+      right: 10px;
+      top: 0px;
+    }
+  }
+  .card {
+    margin-bottom: 0;
+    .collection {
+      margin-bottom: 0;
+    }
+  }
+}

@@ -1,130 +1,179 @@
 // @flow
 import deepFreeze from '../../web/static/vendor/js/deepFreeze'
-const bareQuestionnaire: Questionnaire = {
-  steps: [
-    {
-      type: 'multiple-choice',
-      title: 'Do you smoke?',
-      store: 'Smokes',
-      id: '17141bea-a81c-4227-bdda-f5f69188b0e7',
-      choices: [
-        {
-          value: 'Yes',
-          responses: {
-            sms: {
-              en: [
-                'Yes',
-                'Y',
-                '1'
-              ],
-              'es': [
-                'Sí',
-                'S',
-                '1'
-              ]
-            },
-            ivr: [
+
+const steps = [
+  {
+    type: 'multiple-choice',
+    title: 'Do you smoke?',
+    store: 'Smokes',
+    id: '17141bea-a81c-4227-bdda-f5f69188b0e7',
+    choices: [
+      {
+        value: 'Yes',
+        responses: {
+          sms: {
+            en: [
+              'Yes',
+              'Y',
               '1'
             ],
-            mobileweb: {
-              'en': 'Of course',
-              'es': 'Por supuesto'
-            }
+            'es': [
+              'Sí',
+              'S',
+              '1'
+            ]
           },
-          skipLogic: null
+          ivr: [
+            '1'
+          ],
+          mobileweb: {
+            'en': 'Of course',
+            'es': 'Por supuesto'
+          }
         },
-        {
-          value: 'No',
-          responses: {
-            sms: {
-              'en': [
-                'No',
-                'N',
-                '2'
-              ],
-              'es': [
-                'No',
-                'N',
-                '2'
-              ]
-            },
-            ivr: [
+        skipLogic: null
+      },
+      {
+        value: 'No',
+        responses: {
+          sms: {
+            'en': [
+              'No',
+              'N',
               '2'
             ],
-            mobileweb: {
-              'en': 'Not at all',
-              'es': 'Para nada'
-            }
+            'es': [
+              'No',
+              'N',
+              '2'
+            ]
           },
-          skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
-        }
-      ],
-      prompt: {
-        'en': {
-          sms: 'Do you smoke?',
-          ivr: {
-            text: 'Do you smoke?',
-            audioSource: 'tts'
-          },
-          mobileweb: 'Do you really smoke?'
+          ivr: [
+            '2'
+          ],
+          mobileweb: {
+            'en': 'Not at all',
+            'es': 'Para nada'
+          }
         },
-        'es': {
-          sms: 'Fumas?'
-        }
+        skipLogic: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15'
       }
+    ],
+    prompt: {
+      'en': {
+        sms: 'Do you smoke?',
+        ivr: {
+          text: 'Do you smoke?',
+          audioSource: 'tts'
+        },
+        mobileweb: 'Do you really smoke?'
+      },
+      'es': {
+        sms: 'Fumas?'
+      }
+    }
+  },
+  {
+    type: 'multiple-choice',
+    title: 'Do you exercise?',
+    store: 'Exercises',
+    id: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
+    choices: [
+      {
+        value: 'Yes',
+        responses: {
+          'en': {
+            sms: [
+              'Yes',
+              'Y',
+              '1'
+            ],
+            ivr: [
+              '1'
+            ]
+          }
+        },
+        skipLogic: null
+      },
+      {
+        value: 'No',
+        responses: {
+          'en': {
+            sms: [
+              'No',
+              'N',
+              '2'
+            ],
+            ivr: [
+              '2'
+            ]
+          }
+        },
+        skipLogic: null
+      }
+    ],
+    prompt: {
+      'en': {
+        sms: 'Do you exercise?'
+      },
+      'es': {
+        sms: 'Ejercitas?'
+      }
+    }
+  }
+]
+
+const bareQuestionnaire: Questionnaire = {
+  steps: steps,
+  quotaCompletedSteps: null,
+  projectId: 1,
+  name: 'Foo',
+  modes: [
+    'sms', 'ivr'
+  ],
+  id: 1,
+  defaultLanguage: 'en',
+  activeLanguage: 'en',
+  activeMode: 'sms',
+  languages: ['en'],
+  settings: {
+    errorMessage: {},
+    mobileWebSmsMessage: '',
+    mobileWebSurveyIsOverMessage: '',
+    title: {},
+    mobileWebColorStyle: {},
+    surveyAlreadyTakenMessage: {}
+  },
+  valid: true
+}
+
+const bareQuestionnaireWithSection: Questionnaire = {
+  steps: [
+    {
+      id: '92283e47-fda4-4ac6-b968-b96fc921dd8d',
+      maxValue: null,
+      minValue: null,
+      prompt: {},
+      ranges: [
+        {from: null, skipLogic: null, to: null}
+      ],
+      rangesDelimiters: null,
+      refusal: {enabled: false, responses: {}, skipLogic: null},
+      store: 'likes_oranges',
+      title: 'First question',
+      type: 'numeric'
     },
     {
-      type: 'multiple-choice',
-      title: 'Do you exercise?',
-      store: 'Exercises',
-      id: 'b6588daa-cd81-40b1-8cac-ff2e72a15c15',
-      choices: [
-        {
-          value: 'Yes',
-          responses: {
-            'en': {
-              sms: [
-                'Yes',
-                'Y',
-                '1'
-              ],
-              ivr: [
-                '1'
-              ]
-            }
-          },
-          skipLogic: null
-        },
-        {
-          value: 'No',
-          responses: {
-            'en': {
-              sms: [
-                'No',
-                'N',
-                '2'
-              ],
-              ivr: [
-                '2'
-              ]
-            }
-          },
-          skipLogic: null
-        }
-      ],
-      prompt: {
-        'en': {
-          sms: 'Do you exercise?'
-        },
-        'es': {
-          sms: 'Ejercitas?'
-        }
-      }
+      type: 'section',
+      title: 'Section 1',
+      id: '4108b902-3af4-4c33-bb76-84c8e5029814',
+      steps: steps,
+      randomize: false
     }
   ],
   quotaCompletedSteps: null,
   projectId: 1,
-  name: 'Foo',
+  name: 'Foo2',
   modes: [
     'sms', 'ivr'
   ],
@@ -152,6 +201,8 @@ const bareQuestionnaire: Questionnaire = {
 // The limitations of deepFreeze are probably related to sealed objects being used under its hood.
 // See: https://flowtype.org/docs/objects.html#sealed-object-types
 export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)
+
+export const questionnaireWithSection: Questionnaire = deepFreeze(bareQuestionnaireWithSection)
 
 const bareSurvey: Survey = {
   id: 1,
