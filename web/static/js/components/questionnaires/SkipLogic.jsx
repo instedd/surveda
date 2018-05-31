@@ -51,7 +51,7 @@ class SkipLogic extends Component<Props, State> {
     const { t } = this.props
     let currentValueIsValid = false
 
-    if (currentValue == null || currentValue === 'end') {
+    if (currentValue == null || currentValue === 'end' || currentValue === 'end_section') {
       currentValueIsValid = true
     }
 
