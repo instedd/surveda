@@ -348,7 +348,7 @@ const moveStepToTop = (state, action) => {
   throw new Error(`Couldn't move step ${action.stepId} to the top`)
 }
 
-const hasSections = (steps) => {
+export const hasSections = (steps: Array<Step>) => {
   return steps.some(function(item) {
     return item.type == 'section'
   })

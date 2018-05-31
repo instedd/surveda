@@ -1496,6 +1496,76 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  describe('validations with sections', () => {
+    it('should validate SMS message must not be blank if "SMS" mode is on', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: "steps[1].steps[0].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['SMS prompt must not be blank']
+      })
+    })
+
+    it('should include error when skip logic is "end_section" and there is no sections', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', 'end_section')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'steps[0].choices[1].skipLogic',
+        lang: null,
+        mode: null,
+        message: ['Cannot jump to end of section if there is no sections']
+      })
+    })
+
+    it('should not include error when skip logic is "end_section" and there is sections', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', 'end_section')
+      ])
+
+      for (const error of resultState.errors) {
+        expect(error.path).toExclude('skipLogic')
+      }
+    })
+
+    it('should include error if skip logic does not refer to a posterior step within the same section', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', '92283e47-fda4-4ac6-b968-b96fc921dd8d')
+      ])
+      expect(resultState.errors).toInclude({
+        path: 'steps[1].steps[0].choices[1].skipLogic',
+        lang: null,
+        mode: null,
+        message: ['Cannot jump to a previous step or step outside section']
+      })
+    })
+
+    it('should not include error if skip logic refers to a posterior step within the same section', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'No', 'No, N, 2', '2', 'M', 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      for (const error of resultState.errors) {
+        expect(error.path).toExclude('skipLogic')
+      }
+    })
+  })
+
   describe('multilanguage support', () => {
     it('should add language selection step when adding a language', () => {
       const preState = playActions([
