@@ -66,7 +66,7 @@ class QuestionnaireSteps extends Component<Props> {
             ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.id} id={item.section.id}>
               <QuestionnaireStepsGroup
                 steps={item.groupSteps}
-                errorPath={errorPath}
+                errorPath={`${errorPath}[${index}].steps`}
                 errorsByPath={errorsByPath}
                 onDeleteStep={onDeleteStep}
                 onSelectStep={onSelectStep}
