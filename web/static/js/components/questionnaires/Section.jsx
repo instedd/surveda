@@ -20,7 +20,8 @@ type Props = {
 class Section extends Component {
   props: Props;
 
-  toggleRandomize(id, checked) {
+  toggleRandomize(sectionId, checked) {
+    this.props.questionnaireActions.toggleRandomizeForSection(sectionId)
   }
 
   questionnaireAddStep(e, sectionId) {

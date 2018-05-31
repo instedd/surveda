@@ -11,6 +11,7 @@ export const SET_ACTIVE_MODE = 'QUESTIONNAIRE_SET_ACTIVE_MODE'
 export const ADD_MODE = 'QUESTIONNAIRE_ADD_MODE'
 export const REMOVE_MODE = 'QUESTIONNAIRE_REMOVE_MODE'
 export const ADD_SECTION = 'QUESTIONNAIRE_ADD_SECTION'
+export const TOGGLE_RANDOMIZE_FOR_SECTION = 'QUESTIONNAIRE_TOGGLE_RANDOMIZE_FOR_SECTION'
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const ADD_STEP_TO_SECTION = 'QUESTIONNAIRE_ADD_STEP_TO_SECTION'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
@@ -206,6 +207,11 @@ export const changeStepType = (stepId, stepType) => ({
 
 export const addSection = () => ({
   type: ADD_SECTION
+})
+
+export const toggleRandomizeForSection = (sectionId) => ({
+  type: TOGGLE_RANDOMIZE_FOR_SECTION,
+  sectionId
 })
 
 export const addSectionWithCallback = () => (dispatch, getState) => {
