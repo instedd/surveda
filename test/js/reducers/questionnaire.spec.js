@@ -463,6 +463,25 @@ describe('questionnaire reducer', () => {
       expect(newStep.type).toEqual('section')
     })
 
+    it('should add step to section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addStepToSection('4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      const editedSection = resultState.data.steps[1]
+
+      expect(editedSection.steps.length).toEqual(originalSection.steps.length + 1)
+      expect(editedSection.steps[editedSection.steps.length - 1].title).toNotEqual('Do you exercise?')
+      expect(editedSection.steps[editedSection.steps.length - 1].type).toEqual('multiple-choice')
+    })
+
     it('should change step type inside a section', () => {
       const preState = playActions([
         actions.fetch(1, 1),

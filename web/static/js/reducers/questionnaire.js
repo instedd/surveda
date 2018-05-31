@@ -41,6 +41,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
     case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
     case actions.ADD_STEP: return addStep(state, action)
+    case actions.ADD_STEP_TO_SECTION: return addStepToSection(state, action)
     case actions.ADD_QUOTA_COMPLETED_STEP: return addQuotaCompletedStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
     case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
@@ -659,6 +660,33 @@ const addStep = (state, action) => {
       ...state.steps,
       newMultipleChoiceStep()
     ]
+  }
+}
+
+const addStepToSection = (state, action) => {
+  const step = newMultipleChoiceStep()
+  const items = state.steps
+  let sectionIndex = findIndex(items, s => s.id == action.sectionId)
+
+  const sectionStep = items[sectionIndex]
+
+  if (sectionStep !== null && sectionStep.type === 'section') {
+    return {
+      ...state,
+      steps: [
+        ...items.slice(0, sectionIndex),
+        {
+          ...sectionStep,
+          steps: [
+            ...sectionStep.steps,
+            step
+          ]
+        },
+        ...items.slice(sectionIndex + 1)
+      ]
+    }
+  } else {
+    return state
   }
 }
 

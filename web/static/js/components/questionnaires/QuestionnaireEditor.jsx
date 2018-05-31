@@ -245,13 +245,18 @@ class QuestionnaireEditor extends Component<any, State> {
   }
 
   addStepComponent() {
-    const { readOnly, t } = this.props
+    const { readOnly, questionnaireHasSections, t } = this.props
+
+    let addStep = questionnaireHasSections
+    ? null
+    : <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>{t('Add Step')}</a>
+
     return (
       readOnly ? null
       : <div className='row'>
         <div className='col s12'>
-          <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e)}>{t('Add Step')}</a>
           <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddSection(e)}>{t('Add Section')}</a>
+          {addStep}
         </div>
       </div>)
   }
@@ -387,6 +392,7 @@ QuestionnaireEditor.propTypes = {
   projectId: PropTypes.any,
   questionnaireId: PropTypes.any,
   questionnaire: PropTypes.object,
+  questionnaireHasSections: PropTypes.bool,
   errors: PropTypes.array,
   errorsByPath: PropTypes.object,
   location: PropTypes.object,
@@ -401,6 +407,9 @@ const mapStateToProps = (state, ownProps) => ({
   readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
   questionnaireId: ownProps.params.questionnaireId,
   questionnaire: state.questionnaire.data,
+  questionnaireHasSections: state.questionnaire.data ? state.questionnaire.data.steps.some(function(item) {
+    return item.type == 'section'
+  }) : false,
   errors: state.questionnaire.errors,
   errorsByPath: state.questionnaire.errorsByPath || {},
   selectedSteps: state.ui.data.questionnaireEditor.steps,
