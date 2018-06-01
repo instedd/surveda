@@ -24,6 +24,9 @@
       right: 10px;
       top: 0px;
     }
+    + div {
+      min-height: 1.5rem;
+    }
   }
   .card {
     margin-bottom: 0;
@@ -31,4 +34,11 @@
       margin-bottom: 0;
     }
   }
+  + .section-container {
+    margin-top: 1.5rem;
+  }
+}
+
+div + .section-container {
+  margin-top: 1.5rem;
 }
