@@ -645,16 +645,20 @@ const changeStepStore = (state, action) => {
 }
 
 const addSection = (state, action) => {
+  let section = newSection()
   if (hasSections(state.steps)) {
     return {
       ...state,
       steps: [
         ...state.steps,
-        newSection()
+        {...section,
+          steps: [
+            newMultipleChoiceStep()
+          ]
+        }
       ]
     }
   } else {
-    let section = newSection()
     if (state.steps[0] && state.steps[0].type === 'language-selection') {
       return {
         ...state,
