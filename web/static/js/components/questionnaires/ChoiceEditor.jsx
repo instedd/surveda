@@ -216,6 +216,8 @@ class ChoiceEditor extends Component<Props, State> {
           onChange={skipOption => this.skipLogicChange(skipOption)}
           readOnly={readOnly}
           value={this.state.skipLogic}
+          errorPath={`${errorPath}[${choiceIndex}].skipLogic`}
+          errorsByPath={errorsByPath}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore}
           />

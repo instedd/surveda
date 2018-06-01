@@ -2,6 +2,7 @@
 import React, { Component } from 'react'
 import StepEditor from './StepEditor'
 import StepsList from './StepsList'
+import { hasSections } from '../../reducers/questionnaire'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
@@ -17,6 +18,7 @@ type Props = {
   onDeleteStep: Function,
   readOnly: boolean,
   quotaCompletedSteps?: boolean,
+  increaseErrorIndex?: boolean,
   selectedSteps: Object
 };
 
@@ -55,16 +57,16 @@ class QuestionnaireSteps extends Component<Props> {
     const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
 
     const groups = stepGroups(steps)
+    const increaseErrorIndex = (steps.length > 0) && !hasSections(steps) && steps[0].type == 'language-selection'
 
     return (
       <div>
-        { groups.map((item) => (
+        { groups.map((item, index) => (
           item.section != null
-          // TODO: Ensure unique keys for each item
-            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.title} id={item.section.id}>
+            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.id} id={item.section.id}>
               <QuestionnaireStepsGroup
                 steps={item.groupSteps}
-                errorPath={errorPath}
+                errorPath={`${errorPath}[${index}].steps`}
                 errorsByPath={errorsByPath}
                 onDeleteStep={onDeleteStep}
                 onSelectStep={onSelectStep}
@@ -75,10 +77,11 @@ class QuestionnaireSteps extends Component<Props> {
               />
             </Section>
           : <QuestionnaireStepsGroup
-            key={errorPath}
+            key={index}
             steps={item.groupSteps}
             errorPath={errorPath}
             errorsByPath={errorsByPath}
+            increaseErrorIndex={increaseErrorIndex && item.groupSteps[0].type != 'language-selection'}
             onDeleteStep={onDeleteStep}
             onSelectStep={onSelectStep}
             onDeselectStep={onDeselectStep}
@@ -109,14 +112,16 @@ class QuestionnaireStepsGroup extends Component<Props> {
   }
 
   questionnaireStepsGroup() {
-    const { steps, errorPath, errorsByPath, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+    const { steps, errorPath, errorsByPath, increaseErrorIndex, readOnly, quotaCompletedSteps, selectedSteps, onSelectStep, onDeselectStep, onDeleteStep } = this.props
+
     const current = selectedSteps.currentStepId
     const currentStepIsNew = selectedSteps.currentStepIsNew
     const itemIndex = steps.findIndex(step => step.id == current)
+    const errorIndex = increaseErrorIndex ? itemIndex + 1 : itemIndex
 
     if (current == null || itemIndex < 0) {
       // All collapsed
-      return <StepsList steps={steps} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+      return <StepsList steps={steps} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} increaseErrorIndex={increaseErrorIndex} />
     } else {
       // Only one expanded
       const stepsBefore = steps.slice(0, itemIndex)
@@ -125,11 +130,11 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
       return (
         <div>
-          <StepsList steps={stepsBefore} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+          <StepsList steps={stepsBefore} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} increaseErrorIndex={increaseErrorIndex} />
           <StepEditor
             step={currentStep}
             stepIndex={itemIndex}
-            errorPath={`${errorPath}[${itemIndex}]`}
+            errorPath={`${errorPath}[${errorIndex}]`}
             errorsByPath={errorsByPath}
             readOnly={readOnly}
             quotaCompletedSteps={!!quotaCompletedSteps}
@@ -138,7 +143,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
             onDelete={onDeleteStep}
             stepsAfter={stepsAfter}
             stepsBefore={stepsBefore} />
-          <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
+          <StepsList steps={stepsAfter} startIndex={itemIndex + 1} errorPath={errorPath} onClick={onSelectStep} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} increaseErrorIndex={increaseErrorIndex} />
         </div>
       )
     }

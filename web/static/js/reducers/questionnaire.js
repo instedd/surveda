@@ -68,6 +68,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.CHANGE_REFUSAL: return changeRefusal(state, action)
     case actions.SET_DIRTY: return setDirty(state)
     case actions.ADD_SECTION: return addSection(state)
+    case actions.TOGGLE_RANDOMIZE_FOR_SECTION: return toggleRandomizeForSection(state, action)
     default: return state
   }
 }
@@ -644,12 +645,63 @@ const changeStepStore = (state, action) => {
 }
 
 const addSection = (state, action) => {
-  return {
-    ...state,
-    steps: [
-      ...state.steps,
-      newSection()
-    ]
+  if (hasSections(state.steps)) {
+    return {
+      ...state,
+      steps: [
+        ...state.steps,
+        newSection()
+      ]
+    }
+  } else {
+    let section = newSection()
+    if (state.steps[0] && state.steps[0].type === 'language-selection') {
+      return {
+        ...state,
+        steps: [
+          state.steps[0],
+          {...section,
+            steps: [
+              ...state.steps.slice(1)
+            ]
+          }
+        ]
+      }
+    } else {
+      return {
+        ...state,
+        steps: [
+          {...section,
+            steps: [
+              ...state.steps
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+
+const toggleRandomizeForSection = (state, action) => {
+  const items = state.steps
+  let sectionIndex = findIndex(items, s => s.id == action.sectionId)
+
+  const sectionStep = items[sectionIndex]
+
+  if (sectionStep !== null && sectionStep.type === 'section') {
+    return {
+      ...state,
+      steps: [
+        ...items.slice(0, sectionIndex),
+        {
+          ...sectionStep,
+          randomize: !sectionStep.randomize
+        },
+        ...items.slice(sectionIndex + 1)
+      ]
+    }
+  } else {
+    return state
   }
 }
 
