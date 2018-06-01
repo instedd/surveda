@@ -11,7 +11,7 @@ defmodule Ask.Runtime.Flow do
   def start(quiz, mode) do
     has_sections = questionnaire_has_sections(quiz)
     section_order = if(has_sections) do
-       randomize_sections(quiz)
+      randomize_sections(quiz)
     else
       nil
     end
@@ -34,12 +34,28 @@ defmodule Ask.Runtime.Flow do
   end
 
   def dump(flow) do
-    %{current_step: flow.current_step, questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language, retries: flow.retries, in_quota_completed_steps: flow.in_quota_completed_steps}
+    %{current_step: dump_current_step(flow.current_step), questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language, retries: flow.retries, in_quota_completed_steps: flow.in_quota_completed_steps, section_order: flow.section_order}
+  end
+
+  def dump_current_step({first, second}) do
+    [first, second]
+  end
+
+  def dump_current_step(number) do
+    number
   end
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: state["current_step"], mode: state["mode"], language: state["language"], retries: state["retries"], in_quota_completed_steps: state["in_quota_completed_steps"], has_sections: questionnaire_has_sections(quiz)}
+    %Flow{questionnaire: quiz, current_step: load_current_step(state["current_step"]), mode: state["mode"], language: state["language"], retries: state["retries"], in_quota_completed_steps: state["in_quota_completed_steps"], has_sections: questionnaire_has_sections(quiz), section_order: state["section_order"]}
+  end
+
+  def load_current_step([first, second]) do
+    {first, second}
+  end
+
+  def load_current_step(number) do
+    number
   end
 
   def questionnaire_has_sections(questionnaire) do
@@ -64,7 +80,6 @@ defmodule Ask.Runtime.Flow do
           {[index], acc}
         end
       end)
-
     sections
   end
 
@@ -355,7 +370,6 @@ defmodule Ask.Runtime.Flow do
 
   defp compute_progress(flow) do
     current_step_id = current_step(flow)["id"]
-
     steps = get_filtered_steps(flow)
 
     current_step_index = steps

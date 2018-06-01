@@ -972,7 +972,7 @@ defmodule Ask.FlowTest do
       assert flow.current_step == {1,0}
     end
 
-    test "when moving to the next sextion it updates correctly the current_step for progress" do
+    test "when moving to the next section it updates correctly the current_step for progress" do
       quiz = build(:questionnaire, steps: @three_sections)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {0, 4}}
