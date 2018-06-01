@@ -82,6 +82,8 @@ class ExplanationStepEditor extends Component<Props, State> {
               <SkipLogic
                 onChange={skipOption => this.skipLogicChange(skipOption)}
                 readOnly={readOnly}
+                errorsByPath={errorsByPath}
+                errorPath={`${errorPath}.skipLogic`}
                 value={step.skipLogic}
                 stepsAfter={stepsAfter}
                 stepsBefore={stepsBefore}
