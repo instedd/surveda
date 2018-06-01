@@ -147,22 +147,29 @@ const bareQuestionnaire: Questionnaire = {
   valid: true
 }
 
+const languageSelection = {
+  id: '92283e47-fda4-4ac6-b968-b96fc921dd8d',
+  type: 'language-selection',
+  title: 'Language selection',
+  store: '',
+  prompt: {
+    sms: '1 for English, 2 for Spanish',
+    ivr: {
+      text: '1 para ingles, 2 para español',
+      audioSource: 'tts'
+    }
+  },
+  languageChoices: ['en', 'es']
+}
+
+const quizWithLangSelection = {
+  ...bareQuestionnaire,
+  steps: [languageSelection, ...steps]
+}
+
 const bareQuestionnaireWithSection: Questionnaire = {
   steps: [
-    {
-      id: '92283e47-fda4-4ac6-b968-b96fc921dd8d',
-      maxValue: null,
-      minValue: null,
-      prompt: {},
-      ranges: [
-        {from: null, skipLogic: null, to: null}
-      ],
-      rangesDelimiters: null,
-      refusal: {enabled: false, responses: {}, skipLogic: null},
-      store: 'likes_oranges',
-      title: 'First question',
-      type: 'numeric'
-    },
+    languageSelection,
     {
       type: 'section',
       title: 'Section 1',
@@ -203,6 +210,8 @@ const bareQuestionnaireWithSection: Questionnaire = {
 export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)
 
 export const questionnaireWithSection: Questionnaire = deepFreeze(bareQuestionnaireWithSection)
+
+export const questionnaireWithLangSelection: Questionnaire = deepFreeze(quizWithLangSelection)
 
 const bareSurvey: Survey = {
   id: 1,

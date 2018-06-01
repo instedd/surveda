@@ -6,7 +6,7 @@ import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
-import { questionnaire, questionnaireWithSection } from '../fixtures'
+import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection } from '../fixtures'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -459,8 +459,60 @@ describe('questionnaire reducer', () => {
 
       const newStep = resultState.data.steps[resultState.data.steps.length - 1]
 
-      expect(resultState.data.steps.length).toEqual(preState.data.steps.length + 1)
       expect(newStep.type).toEqual('section')
+    })
+
+    it('should add section when the questionnaire has no steps', () => {
+      const quiz = {
+        ...questionnaire,
+        steps: []
+      }
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(quiz)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addSection()
+      ])
+
+      const newStep = resultState.data.steps[resultState.data.steps.length - 1]
+
+      expect(newStep.type).toEqual('section')
+    })
+
+    it('should add section and put all the previous steps inside it', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addSection()
+      ])
+
+      const section = resultState.data.steps[resultState.data.steps.length - 1]
+
+      expect(section.steps.length).toEqual(preState.data.steps.length)
+
+      expect(section.type).toEqual('section')
+    })
+
+    it('should add section and put all the previous steps -except lang selection- inside it', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithLangSelection)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.addSection()
+      ])
+
+      const section = resultState.data.steps[resultState.data.steps.length - 1]
+
+      expect(section.steps.length).toEqual(preState.data.steps.length - 1)
+
+      expect(section.type).toEqual('section')
     })
 
     it('should add step to section', () => {
@@ -480,6 +532,23 @@ describe('questionnaire reducer', () => {
       expect(editedSection.steps.length).toEqual(originalSection.steps.length + 1)
       expect(editedSection.steps[editedSection.steps.length - 1].title).toNotEqual('Do you exercise?')
       expect(editedSection.steps[editedSection.steps.length - 1].type).toEqual('multiple-choice')
+    })
+
+    it('should toggle randomize in a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.toggleRandomizeForSection('4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      const editedSection = resultState.data.steps[1]
+
+      expect(editedSection.randomize).toEqual(!originalSection.randomize)
     })
 
     it('should change step type inside a section', () => {
