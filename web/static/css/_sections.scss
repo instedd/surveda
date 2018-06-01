@@ -2,8 +2,8 @@
 // ------- Sections ----------
 
 .section-container {
-  @extend .grey, .lighten-2;
-  padding: 1rem .5rem 10px .5rem;
+  background-color: #d7d7d7;
+  padding: 1rem .5rem 0 .5rem;
   border-radius: 10px 10px 10px 10px;
 
   .section-container-header {
@@ -41,4 +41,11 @@
 
 div + .section-container {
   margin-top: 1.5rem;
+}
+.add-step {
+  margin-bottom: 0;
+
+  a {
+    font-size: .95rem;
+  }
 }

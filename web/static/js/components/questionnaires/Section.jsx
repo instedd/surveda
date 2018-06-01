@@ -38,7 +38,7 @@ class Section extends Component {
 
     return (
       readOnly ? null
-      : <div className='row'>
+      : <div className='row add-step'>
         <div className='col s12'>
           <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e, id)}>Add Step to Section</a>
         </div>

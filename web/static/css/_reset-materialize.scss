@@ -44,8 +44,9 @@ nav {
   box-shadow: none;
 }
 
+.btn-flat,
 .btn-flat:hover {
-  background: none;
+  background: none !important;
 }
 
 input[type="checkbox"] + label:before,
