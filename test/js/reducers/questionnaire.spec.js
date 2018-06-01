@@ -1511,6 +1511,30 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should include range indexes in the skipLogic error path', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '5'),
+        actions.changeRangeSkipLogic(stepId, 'invalid', 0)
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: `steps[${i}].range[0].skipLogic`,
+        lang: null,
+        mode: null,
+        message: [ 'Cannot jump to a previous step or step outside section' ]
+      })
+    })
+
     it('should validate delimiter must be greater than the previous one', () => {
       const state = playActions([
         actions.fetch(1, 1),

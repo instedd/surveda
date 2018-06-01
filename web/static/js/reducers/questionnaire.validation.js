@@ -217,11 +217,10 @@ const validateChoiceSkipLogic = (choice, stepIndex, choiceIndex, steps, context,
   }
 }
 
-const validateRangeSkipLogic = (range, stepIndex, steps, context, path) => {
+const validateRangeSkipLogic = (range, stepIndex, rangeIndex, steps, context, path) => {
   const error = skipLogicError(range.skipLogic, stepIndex, steps, context)
   if (error) {
-    // TODO: missing range info in path
-    addError(context, `${path}.skipLogic`, error)
+    addError(context, `${path}.range[${rangeIndex}].skipLogic`, error)
   }
 }
 
@@ -263,8 +262,8 @@ const validateRangeDelimiters = (step, context, path) => {
 }
 
 const validateRanges = (ranges, stepIndex, context, steps, path) => {
-  for (const range of ranges) {
-    validateRangeSkipLogic(range, stepIndex, steps, context, path)
+  for (var rangeIndex = 0; rangeIndex < ranges.length; rangeIndex++) {
+    validateRangeSkipLogic(ranges[rangeIndex], stepIndex, rangeIndex, steps, context, path)
   }
 }
 

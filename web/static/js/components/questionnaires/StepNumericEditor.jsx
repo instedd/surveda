@@ -220,6 +220,8 @@ class StepNumericEditor extends Component<any, State> {
                     <SkipLogic
                       onChange={skipOption => this.skipLogicChange(skipOption, index)}
                       readOnly={readOnly}
+                      errorPath={`${errorPath}.range[${index}].skipLogic`}
+                      errorsByPath={errorsByPath}
                       value={range.skipLogic}
                       stepsAfter={stepsAfter}
                       stepsBefore={stepsBefore}
