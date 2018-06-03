@@ -1676,6 +1676,49 @@ describe('questionnaire reducer', () => {
         expect(error.path).toExclude('skipLogic')
       }
     })
+
+    it('should validate duplicate variable names of steps within the same section', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ' Smokes ')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'steps[1].steps[1].store',
+        lang: null,
+        mode: null,
+        message: ['Variable already used in a previous step']
+      })
+    })
+
+    it('should validate duplicate variable names of steps of different sections', () => {
+      let preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.addSection()
+      ])
+
+      let addedSection = preState.data.steps[preState.data.steps.length - 1]
+
+      preState = playActionsFromState(preState, reducer)([
+        actions.addStepToSection(addedSection.id)
+      ])
+
+      addedSection = find(preState.data.steps, s => s.id === addedSection.id)
+      const addedStep = addedSection.steps[0]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeStepStore(addedStep.id, ' Smokes ')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'steps[2].steps[0].store',
+        lang: null,
+        mode: null,
+        message: ['Variable already used in a previous step']
+      })
+    })
   })
 
   describe('multilanguage support', () => {

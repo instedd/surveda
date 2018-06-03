@@ -262,7 +262,7 @@ const validateRangeDelimiters = (step, context, path) => {
 }
 
 const validateRanges = (ranges, stepIndex, context, steps, path) => {
-  for (var rangeIndex = 0; rangeIndex < ranges.length; rangeIndex++) {
+  for (let rangeIndex = 0; rangeIndex < ranges.length; rangeIndex++) {
     validateRangeSkipLogic(ranges[rangeIndex], stepIndex, rangeIndex, steps, context, path)
   }
 }
@@ -512,7 +512,14 @@ const validateDuplicateStepStore = (steps, quotaCompletedSteps, context) => {
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
-    validateDuplicateStepStore0(step, stores, context, `steps[${i}].store`)
+    if (step.type === 'section') {
+      for (let j = 0; j < step.steps.length; j++) {
+        const sectionStep = step.steps[j]
+        validateDuplicateStepStore0(sectionStep, stores, context, `steps[${i}].steps[${j}].store`)
+      }
+    } else {
+      validateDuplicateStepStore0(step, stores, context, `steps[${i}].store`)
+    }
   }
 
   if (quotaCompletedSteps) {
