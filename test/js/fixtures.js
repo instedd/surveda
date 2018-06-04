@@ -123,8 +123,7 @@ const steps = [
   }
 ]
 
-const bareQuestionnaire: Questionnaire = {
-  steps: steps,
+const questionnaireCommonFields = {
   quotaCompletedSteps: null,
   projectId: 1,
   name: 'Foo',
@@ -145,6 +144,11 @@ const bareQuestionnaire: Questionnaire = {
     surveyAlreadyTakenMessage: {}
   },
   valid: true
+}
+
+const bareQuestionnaire: Questionnaire = {
+  ...questionnaireCommonFields,
+  steps: steps
 }
 
 const languageSelection = {
@@ -168,6 +172,8 @@ const quizWithLangSelection = {
 }
 
 const bareQuestionnaireWithSection: Questionnaire = {
+  ...questionnaireCommonFields,
+  name: 'Foo2',
   steps: [
     languageSelection,
     {
@@ -177,27 +183,30 @@ const bareQuestionnaireWithSection: Questionnaire = {
       steps: steps,
       randomize: false
     }
-  ],
-  quotaCompletedSteps: null,
-  projectId: 1,
+  ]
+}
+
+const bareQuestionnaireWith2Sections: Questionnaire = {
+  ...questionnaireCommonFields,
   name: 'Foo2',
-  modes: [
-    'sms', 'ivr'
-  ],
-  id: 1,
-  defaultLanguage: 'en',
-  activeLanguage: 'en',
-  activeMode: 'sms',
-  languages: ['en'],
-  settings: {
-    errorMessage: {},
-    mobileWebSmsMessage: '',
-    mobileWebSurveyIsOverMessage: '',
-    title: {},
-    mobileWebColorStyle: {},
-    surveyAlreadyTakenMessage: {}
-  },
-  valid: true
+  valid: false,
+  steps: [
+    languageSelection,
+    {
+      type: 'section',
+      title: 'Section 1',
+      id: '4108b902-3af4-4c33-bb76-84c8e5029814',
+      steps: steps,
+      randomize: false
+    },
+    {
+      type: 'section',
+      title: 'Section 2',
+      id: '2a16c315-0fd6-457b-96ab-84d4bcd0ba42',
+      steps: [],
+      randomize: false
+    }
+  ]
 }
 
 // TODO: investigate why Flow ignores the result of `deepFreeze`
@@ -210,6 +219,8 @@ const bareQuestionnaireWithSection: Questionnaire = {
 export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)
 
 export const questionnaireWithSection: Questionnaire = deepFreeze(bareQuestionnaireWithSection)
+
+export const questionnaireWith2Sections: Questionnaire = deepFreeze(bareQuestionnaireWith2Sections)
 
 export const questionnaireWithLangSelection: Questionnaire = deepFreeze(quizWithLangSelection)
 

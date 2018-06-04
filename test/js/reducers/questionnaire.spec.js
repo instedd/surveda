@@ -6,7 +6,7 @@ import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
-import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection } from '../fixtures'
+import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection, questionnaireWith2Sections } from '../fixtures'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -579,7 +579,7 @@ describe('questionnaire reducer', () => {
       expect(resultStep.prompt['en'].sms).toEqual('Edited prompt')
     })
 
-    it('should change step type when it`s outside a section', () => {
+    it('should change step title when it`s outside a section', () => {
       const preState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaireWithSection),
@@ -611,6 +611,49 @@ describe('questionnaire reducer', () => {
       expect(editedSection.steps.length).toEqual(originalSection.steps.length - 1)
       expect(deletedStep).toEqual(null)
       expect(steps[0].title).toEqual('Language selection')
+    })
+
+    it('should delete a section and all the steps inside, when there is at least one section left', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections)
+      ])
+
+      const originalSteps = preState.data.steps
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+      ])
+
+      const finalSteps = resultState.data.steps
+
+      const deletedSection = find(resultState.data.steps, s => s.id === '2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+
+      expect(finalSteps.length).toEqual(originalSteps.length - 1)
+      expect(finalSteps[1]).toEqual(originalSteps[1])
+      expect(deletedSection).toEqual(null)
+      expect(finalSteps[0].title).toEqual('Language selection')
+    })
+
+    it('should delete a section and flat all its steps on the questionnaire, when is the last section left', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteSection('4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      const finalSteps = resultState.data.steps
+
+      const deletedSection = find(resultState.data.steps, s => s.id === '4108b902-3af4-4c33-bb76-84c8e5029814')
+
+      expect(finalSteps).toEqual([preState.data.steps[0], ...originalSection.steps])
+      expect(deletedSection).toEqual(null)
+      expect(finalSteps[0].title).toEqual('Language selection')
     })
   })
 

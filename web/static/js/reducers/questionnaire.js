@@ -55,6 +55,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action)
     case actions.AUTOCOMPLETE_STEP_PROMPT_IVR: return autocompleteStepIvrPrompt(state, action)
     case actions.DELETE_STEP: return deleteStep(state, action)
+    case actions.DELETE_SECTION: return deleteSection(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
     case actions.CHANGE_CHOICE: return changeChoice(state, action)
@@ -255,6 +256,30 @@ const deleteStep = (state, action) => {
   return changeStep(state, action.stepId, step => {
     return null
   })
+}
+
+const deleteSection = (state, action) => {
+  const section = state.steps.find(s => s.id == action.sectionId)
+  const filteredSteps = filter(state.steps, s => s.id != action.sectionId)
+
+  if (hasSections(filteredSteps)) {
+    return {
+      ...state,
+      steps: filteredSteps
+    }
+  } else {
+    if (section && section.type === 'section') {
+      return {
+        ...state,
+        steps: [
+          ...filteredSteps,
+          ...section.steps
+        ]
+      }
+    } else {
+      return state
+    }
+  }
 }
 
 const moveStep = (state, action) => {

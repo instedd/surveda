@@ -15,6 +15,7 @@ export const TOGGLE_RANDOMIZE_FOR_SECTION = 'QUESTIONNAIRE_TOGGLE_RANDOMIZE_FOR_
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const ADD_STEP_TO_SECTION = 'QUESTIONNAIRE_ADD_STEP_TO_SECTION'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
+export const DELETE_SECTION = 'QUESTIONNAIRE_DELETE_SECTION'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
 export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
@@ -148,6 +149,11 @@ export const deleteChoice = (stepId, index) => ({
 export const deleteStep = (stepId) => ({
   type: DELETE_STEP,
   stepId
+})
+
+export const deleteSection = (sectionId) => ({
+  type: DELETE_SECTION,
+  sectionId
 })
 
 export const changeStepStore = (stepId, newStore) => ({
