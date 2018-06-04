@@ -574,7 +574,7 @@ describe('questionnaire reducer', () => {
       expect(resultSection.id).toEqual('4108b902-3af4-4c33-bb76-84c8e5029814')
       expect(resultSection.title).toEqual('Section 1')
 
-      const resultStep = find(preState.data.steps[1].steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      const resultStep = find(resultSection.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
 
       expect(resultStep.prompt['en'].sms).toEqual('Edited prompt')
     })
@@ -583,11 +583,34 @@ describe('questionnaire reducer', () => {
       const preState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaireWithSection),
-        actions.changeStepType('92283e47-fda4-4ac6-b968-b96fc921dd8d', 'multiple-choice')
+        actions.changeStepTitle('92283e47-fda4-4ac6-b968-b96fc921dd8d', ' new Title ')
       ])
       const resultStep = find(preState.data.steps, s => s.id === '92283e47-fda4-4ac6-b968-b96fc921dd8d')
 
-      expect(resultStep.type).toEqual('multiple-choice')
+      expect(resultStep.title).toEqual('new Title')
+    })
+
+    it('should delete step inside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      const editedSection = resultState.data.steps[1]
+
+      const steps = resultState.data.steps
+
+      const deletedStep = find(resultState.data.steps[1].steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+
+      expect(editedSection.steps.length).toEqual(originalSection.steps.length - 1)
+      expect(deletedStep).toEqual(null)
+      expect(steps[0].title).toEqual('Language selection')
     })
   })
 

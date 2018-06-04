@@ -252,31 +252,9 @@ const splitValues = (values) => {
 }
 
 const deleteStep = (state, action) => {
-  const stepId = action.stepId
-
-  // First see if the step is in 'steps'
-  let steps = state.steps
-  let stepIndex = findIndex(steps, s => s.id === stepId)
-  if (stepIndex != -1) {
-    return {
-      ...state,
-      steps: filter(steps, s => s.id != stepId)
-    }
-  }
-
-  // Otherwise it means it's in 'quotaCompletedSteps'
-  steps = state.quotaCompletedSteps
-  if (steps) {
-    stepIndex = findIndex(steps, s => s.id === stepId)
-    if (stepIndex != -1) {
-      return {
-        ...state,
-        quotaCompletedSteps: filter(steps, s => s.id != stepId)
-      }
-    }
-  }
-
-  throw new Error(`Bug: couldn't find step ${stepId}`)
+  return changeStep(state, action.stepId, step => {
+    return null
+  })
 }
 
 const moveStep = (state, action) => {
@@ -356,7 +334,7 @@ export const hasSections = (steps: Array<Step>) => {
   })
 }
 
-function changeStep<T: Step>(state, stepId, func: (step: Object) => T) {
+function changeStep<T: Step>(state, stepId, func: (step: Object) => ?T): Object {
   // First try to find the step in 'steps'
   let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')
 
@@ -413,7 +391,7 @@ const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
               ...steps.slice(0, stepIndex),
               func(steps[stepIndex]),
               ...steps.slice(stepIndex + 1)
-            ]
+            ].filter(x => x)
           },
           ...items.slice(sectionIndex + 1)
         ]
@@ -439,7 +417,7 @@ const updateRegularStep = (state, steps, stepIndex, func, key) => {
       ...steps.slice(0, stepIndex),
       func(steps[stepIndex]),
       ...steps.slice(stepIndex + 1)
-    ]
+    ].filter(x => x)
   }
 }
 
