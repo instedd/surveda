@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Tooltip } from '../ui'
+import { Tooltip, EditableTitleLabel } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
 
@@ -51,8 +51,13 @@ class Section extends Component {
       </div>)
   }
 
+  handleTitleSubmit(sectionId, value) {
+    // this.props.questionnaireActions.changeSectionTitle(sectionId, value)
+    return null
+  }
+
   render() {
-    const { title, id, randomize, t } = this.props
+    const { title, id, randomize, t, readOnly } = this.props
     return (
       <div className='section-container'>
         <div className='section-container-header'>
@@ -63,7 +68,9 @@ class Section extends Component {
               {t('Randomize')}
             </label>
           </div>
-          <div className='section-number'>{title}</div>
+          <div className='section-number'>
+            <EditableTitleLabel title={title} entityName='section' onSubmit={(value) => { this.handleTitleSubmit(id, value) }} readOnly={readOnly} emptyText={t('Untitled section')} />
+          </div>
           <Tooltip text={t('Delete section')}>
             <a href='#' className='close-section' onClick={e => this.deleteSection(e, id)}>
               <i className='material-icons'>close</i>
