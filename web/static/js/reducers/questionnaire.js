@@ -144,13 +144,14 @@ const changeChoice = (state, action) => {
   let mobilewebValues = action.choiceChange.mobilewebValues.trim()
 
   if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
-    [smsValues, ivrValues, mobilewebValues] = autoComplete(state, response)
+    [smsValues, ivrValues, mobilewebValues] = autoComplete(state.steps, state.activeLanguage, response)
   }
 
   return changeStep(state, action.stepId, (step) => {
     const previousChoices = step.choices.slice(0, action.choiceChange.index)
     const choice = step.choices[action.choiceChange.index]
     const nextChoices = step.choices.slice(action.choiceChange.index + 1)
+
     return ({
       ...step,
       choices: [
@@ -216,33 +217,40 @@ const autocompleteChoiceSmsValues = (state, action) => {
   })
 }
 
-const autoComplete = (state, value) => {
+const autoComplete = (steps, activeLanguage, value) => {
   let setted = false
 
   let smsValues = ''
   let ivrValues = ''
   let mobilewebValues = ''
 
-  const steps = state.steps
   steps.forEach((step) => {
-    if ((step.type === 'multiple-choice') && !setted) {
-      step.choices.forEach((choice) => {
-        if (choice.value == value && !setted) {
+    if (!setted) {
+      if ((step.type === 'multiple-choice')) {
+        step.choices.forEach((choice) => {
+          if (choice.value.toLowerCase() == value.toLowerCase() && !setted) {
+            setted = true
+
+            if (choice.responses.sms && choice.responses.sms[activeLanguage]) {
+              smsValues = choice.responses.sms[activeLanguage].join(',')
+            }
+
+            if (choice.responses.ivr) {
+              ivrValues = choice.responses.ivr.join(',')
+            }
+
+            if (choice.responses.mobileweb && choice.responses.mobileweb[activeLanguage]) {
+              mobilewebValues = choice.responses.mobileweb[activeLanguage]
+            }
+          }
+        })
+      } else if (step.type === 'section') {
+        // Recursive call to autoComplete function when step is a section
+        [smsValues, ivrValues, mobilewebValues] = autoComplete(step.steps, activeLanguage, value)
+        if (smsValues !== '' || ivrValues !== '' || mobilewebValues !== '') {
           setted = true
-
-          if (choice.responses.sms && choice.responses.sms[state.activeLanguage]) {
-            smsValues = choice.responses.sms[state.activeLanguage].join(',')
-          }
-
-          if (choice.responses.ivr) {
-            ivrValues = choice.responses.ivr.join(',')
-          }
-
-          if (choice.responses.mobileweb && choice.responses.mobileweb[state.activeLanguage]) {
-            mobilewebValues = choice.responses.mobileweb[state.activeLanguage]
-          }
         }
-      })
+      }
     }
   })
   return [smsValues, ivrValues, mobilewebValues]

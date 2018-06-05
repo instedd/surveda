@@ -948,6 +948,102 @@ describe('questionnaire reducer', () => {
           skipLogic: 'some-other-id'
         })
       })
+
+      it('should autocomplete choice options despite lowercase and uppercase differences in choice value', () => {
+        const preState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaire),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'maYbe', 'M,MB, 3', 'May', 'M', 'end'),
+          actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+          actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', '', 'some-id', true)
+        ])
+
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        expect(step.choices.length).toEqual(3)
+        expect(step.choices[2]).toEqual({
+          value: 'Maybe',
+          responses: {
+            ivr: ['May'],
+            sms: {
+              'en': [
+                'M',
+                'MB',
+                '3'
+              ]
+            },
+            mobileweb: {
+              'en': 'M'
+            }
+          },
+          skipLogic: 'some-id'
+        })
+      })
+
+      it('should autocomplete options within the same section', () => {
+        const resultState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWithSection),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'M', 'end'),
+          actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+          actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', '', 'some-id', true)
+        ])
+
+        const step = resultState.data.steps[1].steps[1]
+        expect(step.choices.length).toEqual(3)
+        expect(step.choices[2]).toEqual({
+          value: 'Maybe',
+          responses: {
+            ivr: ['May'],
+            sms: {
+              'en': [
+                'M',
+                'MB',
+                '3'
+              ]
+            },
+            mobileweb: {
+              'en': 'M'
+            }
+          },
+          skipLogic: 'some-id'
+        })
+      })
+
+      it('should autocomplete options for steps of different sections', () => {
+        const preState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith2Sections),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'M', 'end'),
+          actions.addStepToSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+        ])
+
+        const stepOfSection2 = preState.data.steps[2].steps[0]
+
+        const resultState = playActionsFromState(preState, reducer)([
+          actions.addChoice(stepOfSection2.id),
+          actions.changeChoice(stepOfSection2.id, 0, 'Maybe', '', '', '', 'some-id', true)
+        ])
+
+        const step = resultState.data.steps[2].steps[0]
+
+        expect(step.choices[0]).toEqual({
+          value: 'Maybe',
+          responses: {
+            ivr: ['May'],
+            sms: {
+              'en': [
+                'M',
+                'MB',
+                '3'
+              ]
+            },
+            mobileweb: {
+              'en': 'M'
+            }
+          },
+          skipLogic: 'some-id'
+        })
+      })
     })
   })
 
@@ -1761,21 +1857,14 @@ describe('questionnaire reducer', () => {
     it('should validate duplicate variable names of steps of different sections', () => {
       let preState = playActions([
         actions.fetch(1, 1),
-        actions.receive(questionnaireWithSection),
-        actions.addSection()
+        actions.receive(questionnaireWith2Sections),
+        actions.addStepToSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
       ])
 
-      let addedSection = preState.data.steps[preState.data.steps.length - 1]
-
-      preState = playActionsFromState(preState, reducer)([
-        actions.addStepToSection(addedSection.id)
-      ])
-
-      addedSection = find(preState.data.steps, s => s.id === addedSection.id)
-      const addedStep = addedSection.steps[0]
+      const stepOfSection2 = preState.data.steps[2].steps[0]
 
       const resultState = playActionsFromState(preState, reducer)([
-        actions.changeStepStore(addedStep.id, ' Smokes ')
+        actions.changeStepStore(stepOfSection2.id, ' Smokes ')
       ])
 
       expect(resultState.errors).toInclude({
@@ -2666,6 +2755,7 @@ describe('questionnaire reducer', () => {
       expect(isEqual(step.ranges, expected)).toEqual(true)
     })
   })
+
   describe('color setting', () => {
     it('should set primary color', () => {
       const result = playActions([
