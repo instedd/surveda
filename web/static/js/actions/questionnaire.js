@@ -16,6 +16,7 @@ export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const ADD_STEP_TO_SECTION = 'QUESTIONNAIRE_ADD_STEP_TO_SECTION'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
 export const DELETE_SECTION = 'QUESTIONNAIRE_DELETE_SECTION'
+export const CHANGE_SECTION_TITLE = 'QUESTIONNAIRE_CHANGE_SECTION_TITLE'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
 export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
@@ -202,6 +203,12 @@ export const changeStepAudioIdIvr = (stepId, newId, audioSource) => ({
 export const changeStepTitle = (stepId, newTitle) => ({
   type: CHANGE_STEP_TITLE,
   stepId,
+  newTitle
+})
+
+export const changeSectionTitle = (sectionId, newTitle) => ({
+  type: CHANGE_SECTION_TITLE,
+  sectionId,
   newTitle
 })
 

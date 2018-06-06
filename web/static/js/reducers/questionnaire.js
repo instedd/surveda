@@ -56,6 +56,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.AUTOCOMPLETE_STEP_PROMPT_IVR: return autocompleteStepIvrPrompt(state, action)
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.DELETE_SECTION: return deleteSection(state, action)
+    case actions.CHANGE_SECTION_TITLE: return changeSectionTitle(state, action)
     case actions.ADD_CHOICE: return addChoice(state, action)
     case actions.DELETE_CHOICE: return deleteChoice(state, action)
     case actions.CHANGE_CHOICE: return changeChoice(state, action)
@@ -262,7 +263,10 @@ const splitValues = (values) => {
 
 const deleteStep = (state, action) => {
   return changeStep(state, action.stepId, step => {
-    return null
+    return {
+      ...step,
+      delete: true
+    }
   })
 }
 
@@ -288,6 +292,18 @@ const deleteSection = (state, action) => {
       return state
     }
   }
+}
+
+const changeSectionTitle = (state, action) => {
+  return findAndUpdateRegularStep(state.steps, action.sectionId, state, section => {
+    if (section && section.type === 'section') {
+      return {
+        ...section,
+        title: action.newTitle.trim()
+      }
+    }
+    return section
+  }, 'steps')
 }
 
 const moveStep = (state, action) => {
@@ -367,7 +383,7 @@ export const hasSections = (steps: Array<Step>) => {
   })
 }
 
-function changeStep<T: Step>(state, stepId, func: (step: Object) => ?T): Object {
+function changeStep<T: Step>(state, stepId, func: (step: Object) => T): Object {
   // First try to find the step in 'steps'
   let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')
 
@@ -383,7 +399,7 @@ function changeStep<T: Step>(state, stepId, func: (step: Object) => ?T): Object 
   throw new Error(`Bug: couldn't find step ${stepId}`)
 }
 
-const findAndUpdateStep = (steps, stepId, state, func, key) => {
+function findAndUpdateStep<T: Step>(steps, stepId, state, func: (step: Step) => T, key) {
   if (hasSections(steps)) {
     return findAndUpdateStepInSection(steps, stepId, state, func, key)
   } else {
@@ -391,7 +407,7 @@ const findAndUpdateStep = (steps, stepId, state, func, key) => {
   }
 }
 
-const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
+function findAndUpdateStepInSection<T: Step>(items, stepId, state, func: (step: Object) => T, key) {
   let sectionIndex = null
   let stepIndex = null
   items.forEach((item, index) => {
@@ -424,7 +440,7 @@ const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
               ...steps.slice(0, stepIndex),
               func(steps[stepIndex]),
               ...steps.slice(stepIndex + 1)
-            ].filter(x => x)
+            ].filter(x => !x.delete)
           },
           ...items.slice(sectionIndex + 1)
         ]
@@ -435,22 +451,24 @@ const findAndUpdateStepInSection = (items, stepId, state, func, key) => {
   }
 }
 
-const findAndUpdateRegularStep = (steps, stepId, state, func, key) => {
+function findAndUpdateRegularStep<T: Step>(steps, stepId, state, func: Object => T, key) {
   let stepIndex = findIndex(steps, s => s.id == stepId)
 
   if (stepIndex != -1 && stepIndex != null) {
     return updateRegularStep(state, steps, stepIndex, func, key)
   }
+
+  return state
 }
 
-const updateRegularStep = (state, steps, stepIndex, func, key) => {
+function updateRegularStep<T: Step>(state, steps, stepIndex, func: Object => T, key) {
   return {
     ...state,
     [key]: [
       ...steps.slice(0, stepIndex),
       func(steps[stepIndex]),
       ...steps.slice(stepIndex + 1)
-    ].filter(x => x)
+    ].filter(x => !x.delete)
   }
 }
 
@@ -798,7 +816,7 @@ export const newMultipleChoiceStep = () => {
 export const newSection = (): SectionStep => {
   return {
     id: uuidv4(),
-    title: 'Section',
+    title: '',
     randomize: false,
     type: 'section',
     steps: []

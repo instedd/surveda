@@ -52,8 +52,7 @@ class Section extends Component {
   }
 
   handleTitleSubmit(sectionId, value) {
-    // this.props.questionnaireActions.changeSectionTitle(sectionId, value)
-    return null
+    this.props.questionnaireActions.changeSectionTitle(sectionId, value)
   }
 
   render() {

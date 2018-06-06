@@ -534,6 +534,18 @@ describe('questionnaire reducer', () => {
       expect(editedSection.steps[editedSection.steps.length - 1].type).toEqual('multiple-choice')
     })
 
+    it('should edit section title', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeSectionTitle('4108b902-3af4-4c33-bb76-84c8e5029814', ' new Section Title ')
+      ])
+      const resultSection = find(preState.data.steps, s => s.id === '4108b902-3af4-4c33-bb76-84c8e5029814')
+
+      expect(resultSection.title).toEqual('new Section Title')
+      expect(resultSection.type).toEqual('section')
+    })
+
     it('should toggle randomize in a section', () => {
       const preState = playActions([
         actions.fetch(1, 1),

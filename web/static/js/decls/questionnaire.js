@@ -109,6 +109,7 @@ export type Refusal = BaseChoice & {
 
 export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep | FlagStep | SectionStep;
 export type BaseStep = {
+  delete?: boolean,
   id: string,
   title: string
 };
