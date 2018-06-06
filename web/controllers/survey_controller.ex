@@ -347,7 +347,10 @@ defmodule Ask.SurveyController do
       if session do
         {
           Session.current_step_id(session),
-          Session.current_step_index(session),
+          case Session.current_step_index(session) do
+            {section_index, step_index} -> [section_index, step_index]
+            index -> index
+          end
         }
       else
         {nil, nil}
