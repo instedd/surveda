@@ -209,10 +209,11 @@ class SurveySimulation extends Component {
 
   stepItem(step, value, key, className, iconValue) {
     const { t } = this.props
+    const emptyText = step.type === 'section' ? t('Untitled section') : t('Untitled question')
     return (
       <li className={className} key={key}>
         <i className='material-icons left sharp'>{iconValue}</i>
-        <UntitledIfEmpty className='title' text={step.title} emptyText={t('Untitled question')} />
+        <UntitledIfEmpty className='title' text={step.title} emptyText={emptyText} />
         <br />
         <span className='value'>{value}</span>
       </li>
