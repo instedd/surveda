@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
+import { Tooltip, EditableTitleLabel } from '../ui'
 import * as questionnaireActions from '../../actions/questionnaire'
 import * as uiActions from '../../actions/ui'
 
@@ -9,6 +10,7 @@ import { translate } from 'react-i18next'
 
 type Props = {
   children: any,
+  t: any,
   title: string,
   id: string,
   readOnly: boolean,
@@ -26,27 +28,35 @@ class Section extends Component {
 
   questionnaireAddStep(e, sectionId) {
     e.preventDefault()
-
     // Add the step then automatically expand it
     this.props.questionnaireActions.addStepToSectionWithCallback(sectionId).then(step => {
       this.props.uiActions.selectStep(step.id, true)
     })
   }
 
+  deleteSection(e, sectionId) {
+    e.preventDefault()
+    this.props.questionnaireActions.deleteSection(sectionId)
+  }
+
   addStepComponent() {
-    const { readOnly, id } = this.props
+    const { readOnly, id, t } = this.props
 
     return (
       readOnly ? null
-      : <div className='row'>
+      : <div className='row add-step'>
         <div className='col s12'>
-          <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e, id)}>Add Step to Section</a>
+          <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e, id)}>{t('Add Step to Section')}</a>
         </div>
       </div>)
   }
 
+  handleTitleSubmit(sectionId, value) {
+    this.props.questionnaireActions.changeSectionTitle(sectionId, value)
+  }
+
   render() {
-    const { title, id, randomize } = this.props
+    const { title, id, randomize, t, readOnly } = this.props
     return (
       <div className='section-container'>
         <div className='section-container-header'>
@@ -54,13 +64,17 @@ class Section extends Component {
             <label>
               <input type='checkbox' checked={randomize} onChange={() => this.toggleRandomize(id, randomize)} />
               <span className='lever' />
-              Randomize
+              {t('Randomize')}
             </label>
           </div>
-          <div className='section-number'>{title}</div>
-          <a href='#' className='close-section'>
-            <i className='material-icons'>close</i>
-          </a>
+          <div className='section-number'>
+            <EditableTitleLabel title={title} entityName='section' onSubmit={(value) => { this.handleTitleSubmit(id, value) }} readOnly={readOnly} emptyText={t('Untitled section')} />
+          </div>
+          <Tooltip text={t('Delete section')}>
+            <a href='#' className='close-section' onClick={e => this.deleteSection(e, id)}>
+              <i className='material-icons'>close</i>
+            </a>
+          </Tooltip>
         </div>
         {this.props.children}
         {this.addStepComponent()}

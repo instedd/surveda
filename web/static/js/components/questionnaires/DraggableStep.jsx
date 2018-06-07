@@ -7,6 +7,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 
 type Props = {
   step: Step,
+  sectionId: string,
   isDragging: boolean,
   isOver: boolean,
   connectDragSource: Function,
@@ -58,11 +59,15 @@ export const stepSource = {
   },
 
   endDrag(props, monitor, component) {
-    const { step, questionnaireActions } = props
+    const { step, questionnaireActions, sectionId } = props
 
     if (monitor.didDrop()) {
       if (monitor.getDropResult().step == null) {
-        questionnaireActions.moveStepToTop(step.id)
+        if (sectionId !== null) {
+          questionnaireActions.moveStepToTopOfSection(step.id, monitor.getDropResult().sectionId)
+        } else {
+          questionnaireActions.moveStepToTop(step.id)
+        }
       } else if (monitor.getDropResult().step.id !== step.id) {
         questionnaireActions.moveStep(step.id, monitor.getDropResult().step.id)
       }
@@ -86,7 +91,7 @@ export const collectTarget = (connect, monitor) => {
 
 export const stepTarget = {
   drop(props, monitor) {
-    return { step: props.step }
+    return { step: props.step, sectionId: props.sectionId }
   }
 }
 

@@ -123,8 +123,7 @@ const steps = [
   }
 ]
 
-const bareQuestionnaire: Questionnaire = {
-  steps: steps,
+const questionnaireCommonFields = {
   quotaCompletedSteps: null,
   projectId: 1,
   name: 'Foo',
@@ -145,6 +144,11 @@ const bareQuestionnaire: Questionnaire = {
     surveyAlreadyTakenMessage: {}
   },
   valid: true
+}
+
+const bareQuestionnaire: Questionnaire = {
+  ...questionnaireCommonFields,
+  steps: steps
 }
 
 const languageSelection = {
@@ -168,6 +172,8 @@ const quizWithLangSelection = {
 }
 
 const bareQuestionnaireWithSection: Questionnaire = {
+  ...questionnaireCommonFields,
+  name: 'Foo2',
   steps: [
     languageSelection,
     {
@@ -177,27 +183,78 @@ const bareQuestionnaireWithSection: Questionnaire = {
       steps: steps,
       randomize: false
     }
-  ],
-  quotaCompletedSteps: null,
-  projectId: 1,
+  ]
+}
+
+const bareQuestionnaireWith2Sections: Questionnaire = {
+  ...questionnaireCommonFields,
   name: 'Foo2',
-  modes: [
-    'sms', 'ivr'
-  ],
-  id: 1,
-  defaultLanguage: 'en',
-  activeLanguage: 'en',
-  activeMode: 'sms',
-  languages: ['en'],
-  settings: {
-    errorMessage: {},
-    mobileWebSmsMessage: '',
-    mobileWebSurveyIsOverMessage: '',
-    title: {},
-    mobileWebColorStyle: {},
-    surveyAlreadyTakenMessage: {}
-  },
-  valid: true
+  valid: false,
+  steps: [
+    languageSelection,
+    {
+      type: 'section',
+      title: 'Section 1',
+      id: '4108b902-3af4-4c33-bb76-84c8e5029814',
+      steps: steps,
+      randomize: false
+    },
+    {
+      type: 'section',
+      title: 'Section 2',
+      id: '2a16c315-0fd6-457b-96ab-84d4bcd0ba42',
+      steps: [
+        {
+          type: 'multiple-choice',
+          title: 'Do you like this question?',
+          store: 'likes',
+          id: '9bf3a92d-e604-4af0-9f6b-6d42834a05a0',
+          choices: [
+            {
+              value: 'Yes',
+              responses: {
+                'en': {
+                  sms: [
+                    'Yes',
+                    'Y',
+                    '1'
+                  ],
+                  ivr: [
+                    '1'
+                  ]
+                }
+              },
+              skipLogic: null
+            },
+            {
+              value: 'No',
+              responses: {
+                'en': {
+                  sms: [
+                    'No',
+                    'N',
+                    '2'
+                  ],
+                  ivr: [
+                    '2'
+                  ]
+                }
+              },
+              skipLogic: null
+            }
+          ],
+          prompt: {
+            'en': {
+              sms: 'Do you like this question?'
+            },
+            'es': {
+              sms: 'Te gusta esta pregunta?'
+            }
+          }
+        }],
+      randomize: false
+    }
+  ]
 }
 
 // TODO: investigate why Flow ignores the result of `deepFreeze`
@@ -210,6 +267,8 @@ const bareQuestionnaireWithSection: Questionnaire = {
 export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)
 
 export const questionnaireWithSection: Questionnaire = deepFreeze(bareQuestionnaireWithSection)
+
+export const questionnaireWith2Sections: Questionnaire = deepFreeze(bareQuestionnaireWith2Sections)
 
 export const questionnaireWithLangSelection: Questionnaire = deepFreeze(quizWithLangSelection)
 

@@ -130,6 +130,8 @@ export const icon = (stepType: string): string => {
       return 'chat_bubble_outline'
     case 'flag':
       return 'flag'
+    case 'section':
+      return 'view_stream'
     default:
       throw new Error(`unknown step type: ${stepType}`)
   }

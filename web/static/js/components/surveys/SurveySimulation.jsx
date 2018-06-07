@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
 import * as questionnaireActions from '../../actions/questionnaire'
+import { hasSections } from '../../reducers/questionnaire'
 import * as api from '../../api'
 import * as routes from '../../routes'
 import { icon } from '../../step'
@@ -10,6 +11,7 @@ import { Tooltip, ConfirmationModal, Card, UntitledIfEmpty } from '../ui'
 import includes from 'lodash/includes'
 import classNames from 'classnames'
 import { translate } from 'react-i18next'
+import flatten from 'lodash/flatten'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -19,7 +21,9 @@ class SurveySimulation extends Component {
       state: 'pending',
       disposition: 'registered',
       dispositionHistory: ['registered'],
+      sectionHistory: [],
       stepId: null,
+      sectionIndex: null,
       stepIndex: null,
       responses: {},
       timer: null,
@@ -49,22 +53,35 @@ class SurveySimulation extends Component {
   }
 
   refresh() {
-    const { projectId, surveyId } = this.props
+    const { projectId, surveyId, questionnaire } = this.props
 
     api.fetchSurveySimulationStatus(projectId, surveyId)
     .then(status => {
       let dispositionHistory = this.state.dispositionHistory
+      let sectionHistory = this.state.sectionHistory
+      let sectionIndex = null
+      let stepIndex = status.step_index
 
       if (status.disposition != this.state.disposition) {
         dispositionHistory = [...dispositionHistory, status.disposition]
+      }
+
+      if (questionnaire && status.step_index && hasSections(questionnaire.steps)) {
+        sectionIndex = status.step_index[0]
+        stepIndex = status.step_index[1]
+        if (!sectionHistory.includes(sectionIndex)) {
+          sectionHistory = [...sectionHistory, sectionIndex]
+        }
       }
 
       this.setState({
         state: status.state,
         disposition: status.disposition,
         dispositionHistory: dispositionHistory,
+        sectionHistory: sectionHistory,
         stepId: status.step_id,
-        stepIndex: status.step_index,
+        stepIndex: stepIndex,
+        sectionIndex: sectionIndex,
         responses: status.responses,
         errorCount: 0
       })
@@ -101,36 +118,99 @@ class SurveySimulation extends Component {
     const { questionnaire } = this.props
 
     if (!questionnaire) return null
+    let stepList = null
+    if (hasSections(questionnaire.steps)) {
+      stepList = flatten(questionnaire.steps.map((step, index) => this.stepsComponentWhenSections(step, index)))
+    } else {
+      stepList = questionnaire.steps.map((step, index) => this.stepComponent(step, index))
+    }
 
     return (
       <Card>
         <ul className='collection simulation'>
-          {questionnaire.steps.map((step, index) => this.stepComponent(step, index))}
+          {stepList}
         </ul>
       </Card>
     )
   }
 
-  stepComponent(step, index) {
-    const { t } = this.props
+  stepsComponentWhenSections(step, index) {
+    const sectionHistory = this.state.sectionHistory
+    const sectionIndex = this.state.sectionIndex
+    const stepIndex = this.state.stepIndex
+    const stepList = []
     let className = 'collection-item'
     let iconValue = icon(step.type)
+    if (step.type === 'language-selection') {
+      if (index == sectionIndex) {
+        className = className + ' active'
+      } else if (this.state.disposition === 'completed' || index < sectionIndex) {
+        className += ' done'
+        iconValue = 'check_circle'
+      }
+      stepList.push(this.stepItem(step, this.state.responses[step.store], 0, className, iconValue))
+    } else if (step.type === 'section') {
+      // add the section step to the stepList
+      stepList.push(this.stepItem(step, null, index, className, iconValue))
+      let value = null
+      for (let i = 0; i < step.steps.length; i++) {
+        const stepInSection = step.steps[i]
+        value = this.state.responses[stepInSection.store]
+        className = 'collection-item'
+        iconValue = icon(stepInSection.type)
+        if (sectionHistory.includes(index)) {
+          if (index !== sectionIndex || this.state.disposition === 'completed') {
+            // scope: inside a section that has already been executed
+            [className, iconValue] = this.computeClassNameAndIcon(value, className, iconValue)
+          } else if (index == sectionIndex) {
+            // scope: inside the section that is been executed at this moment
+            if (i < stepIndex) {
+              [className, iconValue] = this.computeClassNameAndIcon(value, className, iconValue)
+            } else if (i == stepIndex) {
+              className += ' active'
+            }
+          }
+        }
+        // add each of the steps inside the section to the steplist
+        stepList.push(this.stepItem(stepInSection, value, `${index}${i}`, className, iconValue))
+      }
+    }
+    return stepList
+  }
+
+  computeClassNameAndIcon(value, className, iconValue) {
+    let newClassName = null
+    let newIconValue = null
+    if (value) {
+      newClassName = className + ' done'
+      newIconValue = 'check_circle'
+    } else {
+      newClassName = className + ' skipped'
+      newIconValue = iconValue
+    }
+    return [newClassName, newIconValue]
+  }
+
+  stepComponent(step, index) {
+    let className = 'collection-item'
+    let iconValue = icon(step.type)
+    const stepIndex = this.state.stepIndex
 
     const value = this.state.responses[step.store]
 
-    if (this.state.stepIndex && index < this.state.stepIndex) {
-      if (value) {
-        className += ' done'
-        iconValue = 'check_circle'
-      } else {
-        className += ' skipped'
-      }
+    if ((stepIndex && index < stepIndex) || this.state.disposition === 'completed') {
+      [className, iconValue] = this.computeClassNameAndIcon(value, className, iconValue)
     } else if (this.state.stepId == step.id) {
       className += ' active'
     }
 
+    return this.stepItem(step, value, index, className, iconValue)
+  }
+
+  stepItem(step, value, key, className, iconValue) {
+    const { t } = this.props
     return (
-      <li className={className} key={index}>
+      <li className={className} key={key}>
         <i className='material-icons left sharp'>{iconValue}</i>
         <UntitledIfEmpty className='title' text={step.title} emptyText={t('Untitled question')} />
         <br />

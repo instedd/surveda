@@ -15,9 +15,12 @@ export const TOGGLE_RANDOMIZE_FOR_SECTION = 'QUESTIONNAIRE_TOGGLE_RANDOMIZE_FOR_
 export const ADD_STEP = 'QUESTIONNAIRE_ADD_STEP'
 export const ADD_STEP_TO_SECTION = 'QUESTIONNAIRE_ADD_STEP_TO_SECTION'
 export const DELETE_STEP = 'QUESTIONNAIRE_DELETE_STEP'
+export const DELETE_SECTION = 'QUESTIONNAIRE_DELETE_SECTION'
+export const CHANGE_SECTION_TITLE = 'QUESTIONNAIRE_CHANGE_SECTION_TITLE'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
 export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
+export const MOVE_STEP_TO_TOP_OF_SECTION = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP_OF_SECTION'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
 export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
@@ -150,6 +153,11 @@ export const deleteStep = (stepId) => ({
   stepId
 })
 
+export const deleteSection = (sectionId) => ({
+  type: DELETE_SECTION,
+  sectionId
+})
+
 export const changeStepStore = (stepId, newStore) => ({
   type: CHANGE_STEP_STORE,
   stepId,
@@ -196,6 +204,12 @@ export const changeStepAudioIdIvr = (stepId, newId, audioSource) => ({
 export const changeStepTitle = (stepId, newTitle) => ({
   type: CHANGE_STEP_TITLE,
   stepId,
+  newTitle
+})
+
+export const changeSectionTitle = (sectionId, newTitle) => ({
+  type: CHANGE_SECTION_TITLE,
+  sectionId,
   newTitle
 })
 
@@ -255,6 +269,12 @@ export const moveStep = (sourceStepId, targetStepId) => ({
   type: MOVE_STEP,
   sourceStepId,
   targetStepId
+})
+
+export const moveStepToTopOfSection = (stepId, sectionId) => ({
+  type: MOVE_STEP_TO_TOP_OF_SECTION,
+  stepId,
+  sectionId
 })
 
 export const moveStepToTop = (stepId) => ({

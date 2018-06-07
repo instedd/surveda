@@ -40,7 +40,7 @@ defmodule Ask.FlowTest do
   test "first step (sms mode)" do
     step = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
     assert {:ok, %Flow{}, reply} = step
-    assert Reply.num_digits(reply) == nil # becuase of sms mode
+    assert Reply.num_digits(reply) == nil # because of sms mode
     assert ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO") = reply
   end
 
@@ -972,7 +972,7 @@ defmodule Ask.FlowTest do
       assert flow.current_step == {1,0}
     end
 
-    test "when moving to the next sextion it updates correctly the current_step for progress" do
+    test "when moving to the next section it updates correctly the current_step for progress" do
       quiz = build(:questionnaire, steps: @three_sections)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {0, 4}}

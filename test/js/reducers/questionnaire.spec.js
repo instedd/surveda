@@ -6,7 +6,7 @@ import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
-import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection } from '../fixtures'
+import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection, questionnaireWith2Sections } from '../fixtures'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -534,6 +534,18 @@ describe('questionnaire reducer', () => {
       expect(editedSection.steps[editedSection.steps.length - 1].type).toEqual('multiple-choice')
     })
 
+    it('should edit section title', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeSectionTitle('4108b902-3af4-4c33-bb76-84c8e5029814', ' new Section Title ')
+      ])
+      const resultSection = find(preState.data.steps, s => s.id === '4108b902-3af4-4c33-bb76-84c8e5029814')
+
+      expect(resultSection.title).toEqual('new Section Title')
+      expect(resultSection.type).toEqual('section')
+    })
+
     it('should toggle randomize in a section', () => {
       const preState = playActions([
         actions.fetch(1, 1),
@@ -574,20 +586,133 @@ describe('questionnaire reducer', () => {
       expect(resultSection.id).toEqual('4108b902-3af4-4c33-bb76-84c8e5029814')
       expect(resultSection.title).toEqual('Section 1')
 
-      const resultStep = find(preState.data.steps[1].steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      const resultStep = find(resultSection.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
 
       expect(resultStep.prompt['en'].sms).toEqual('Edited prompt')
     })
 
-    it('should change step type when it`s outside a section', () => {
+    it('should change step title when it`s outside a section', () => {
       const preState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaireWithSection),
-        actions.changeStepType('92283e47-fda4-4ac6-b968-b96fc921dd8d', 'multiple-choice')
+        actions.changeStepTitle('92283e47-fda4-4ac6-b968-b96fc921dd8d', ' new Title ')
       ])
       const resultStep = find(preState.data.steps, s => s.id === '92283e47-fda4-4ac6-b968-b96fc921dd8d')
 
-      expect(resultStep.type).toEqual('multiple-choice')
+      expect(resultStep.title).toEqual('new Title')
+    })
+
+    it('should delete step inside a section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteStep('b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      const editedSection = resultState.data.steps[1]
+
+      const steps = resultState.data.steps
+
+      const deletedStep = find(resultState.data.steps[1].steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+
+      expect(editedSection.steps.length).toEqual(originalSection.steps.length - 1)
+      expect(deletedStep).toEqual(null)
+      expect(steps[0].title).toEqual('Language selection')
+    })
+
+    it('should delete a section and all the steps inside, when there is at least one section left', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections)
+      ])
+
+      const originalSteps = preState.data.steps
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+      ])
+
+      const finalSteps = resultState.data.steps
+
+      const deletedSection = find(resultState.data.steps, s => s.id === '2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+
+      expect(finalSteps.length).toEqual(originalSteps.length - 1)
+      expect(finalSteps[1]).toEqual(originalSteps[1])
+      expect(deletedSection).toEqual(null)
+      expect(finalSteps[0].title).toEqual('Language selection')
+    })
+
+    it('should delete a section and flat all its steps on the questionnaire, when is the last section left', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const originalSection = preState.data.steps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.deleteSection('4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      const finalSteps = resultState.data.steps
+
+      const deletedSection = find(resultState.data.steps, s => s.id === '4108b902-3af4-4c33-bb76-84c8e5029814')
+
+      expect(finalSteps).toEqual([preState.data.steps[0], ...originalSection.steps])
+      expect(deletedSection).toEqual(null)
+      expect(finalSteps[0].title).toEqual('Language selection')
+    })
+
+    it('should move a step under another step inside the same section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStep('17141bea-a81c-4227-bdda-f5f69188b0e7', 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      expect(preState.data.steps[1].steps.length).toEqual(resultState.data.steps[1].steps.length)
+      expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[1].steps[1])
+      expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
+    })
+
+    it('should move a step to the top of the section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStepToTopOfSection('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      expect(preState.data.steps[1].steps.length).toEqual(resultState.data.steps[1].steps.length)
+      expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[1].steps[1])
+      expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
+      expect(preState.data.steps[2].steps).toEqual(resultState.data.steps[2].steps)
+    })
+
+    it('should move a step under another step from one section to another', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStep('17141bea-a81c-4227-bdda-f5f69188b0e7', '9bf3a92d-e604-4af0-9f6b-6d42834a05a0')
+      ])
+
+      expect(preState.data.steps[1].steps.length).toEqual(resultState.data.steps[1].steps.length + 1)
+      expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[2].steps[1])
+      expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
+      expect(preState.data.steps[2].steps.length).toEqual(resultState.data.steps[2].steps.length - 1)
     })
   })
 
@@ -880,6 +1005,102 @@ describe('questionnaire reducer', () => {
             }
           },
           skipLogic: 'some-other-id'
+        })
+      })
+
+      it('should autocomplete choice options despite lowercase and uppercase differences in choice value', () => {
+        const preState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaire),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'maYbe', 'M,MB, 3', 'May', 'M', 'end'),
+          actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+          actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', '', 'some-id', true)
+        ])
+
+        const step = find(preState.data.steps, s => s.id === 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+        expect(step.choices.length).toEqual(3)
+        expect(step.choices[2]).toEqual({
+          value: 'Maybe',
+          responses: {
+            ivr: ['May'],
+            sms: {
+              'en': [
+                'M',
+                'MB',
+                '3'
+              ]
+            },
+            mobileweb: {
+              'en': 'M'
+            }
+          },
+          skipLogic: 'some-id'
+        })
+      })
+
+      it('should autocomplete options within the same section', () => {
+        const resultState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWithSection),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'M', 'end'),
+          actions.addChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15'),
+          actions.changeChoice('b6588daa-cd81-40b1-8cac-ff2e72a15c15', 2, 'Maybe', '', '', '', 'some-id', true)
+        ])
+
+        const step = resultState.data.steps[1].steps[1]
+        expect(step.choices.length).toEqual(3)
+        expect(step.choices[2]).toEqual({
+          value: 'Maybe',
+          responses: {
+            ivr: ['May'],
+            sms: {
+              'en': [
+                'M',
+                'MB',
+                '3'
+              ]
+            },
+            mobileweb: {
+              'en': 'M'
+            }
+          },
+          skipLogic: 'some-id'
+        })
+      })
+
+      it('should autocomplete options for steps of different sections', () => {
+        const preState = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith2Sections),
+          actions.changeChoice('17141bea-a81c-4227-bdda-f5f69188b0e7', 1, 'Maybe', 'M,MB, 3', 'May', 'M', 'end'),
+          actions.addStepToSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+        ])
+
+        const stepOfSection2 = preState.data.steps[2].steps[1]
+
+        const resultState = playActionsFromState(preState, reducer)([
+          actions.addChoice(stepOfSection2.id),
+          actions.changeChoice(stepOfSection2.id, 0, 'Maybe', '', '', '', 'some-id', true)
+        ])
+
+        const step = resultState.data.steps[2].steps[1]
+
+        expect(step.choices[0]).toEqual({
+          value: 'Maybe',
+          responses: {
+            ivr: ['May'],
+            sms: {
+              'en': [
+                'M',
+                'MB',
+                '3'
+              ]
+            },
+            mobileweb: {
+              'en': 'M'
+            }
+          },
+          skipLogic: 'some-id'
         })
       })
     })
@@ -1511,6 +1732,30 @@ describe('questionnaire reducer', () => {
       })
     })
 
+    it('should include range indexes in the skipLogic error path', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[state.data.steps.length - 1].id
+      const i = state.data.steps.length - 1
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '5'),
+        actions.changeRangeSkipLogic(stepId, 'invalid', 0)
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: `steps[${i}].range[0].skipLogic`,
+        lang: null,
+        mode: null,
+        message: [ 'Cannot jump to a previous step or step outside section' ]
+      })
+    })
+
     it('should validate delimiter must be greater than the previous one', () => {
       const state = playActions([
         actions.fetch(1, 1),
@@ -1651,6 +1896,42 @@ describe('questionnaire reducer', () => {
       for (const error of resultState.errors) {
         expect(error.path).toExclude('skipLogic')
       }
+    })
+
+    it('should validate duplicate variable names of steps within the same section', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.changeStepStore('b6588daa-cd81-40b1-8cac-ff2e72a15c15', ' Smokes ')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'steps[1].steps[1].store',
+        lang: null,
+        mode: null,
+        message: ['Variable already used in a previous step']
+      })
+    })
+
+    it('should validate duplicate variable names of steps of different sections', () => {
+      let preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addStepToSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
+      ])
+
+      const stepOfSection2 = preState.data.steps[2].steps[0]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeStepStore(stepOfSection2.id, ' Smokes ')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: 'steps[2].steps[0].store',
+        lang: null,
+        mode: null,
+        message: ['Variable already used in a previous step']
+      })
     })
   })
 
@@ -2533,6 +2814,7 @@ describe('questionnaire reducer', () => {
       expect(isEqual(step.ranges, expected)).toEqual(true)
     })
   })
+
   describe('color setting', () => {
     it('should set primary color', () => {
       const result = playActions([
