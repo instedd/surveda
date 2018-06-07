@@ -667,6 +667,53 @@ describe('questionnaire reducer', () => {
       expect(deletedSection).toEqual(null)
       expect(finalSteps[0].title).toEqual('Language selection')
     })
+
+    it('should move a step under another step inside the same section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStep('17141bea-a81c-4227-bdda-f5f69188b0e7', 'b6588daa-cd81-40b1-8cac-ff2e72a15c15')
+      ])
+
+      expect(preState.data.steps[1].steps.length).toEqual(resultState.data.steps[1].steps.length)
+      expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[1].steps[1])
+      expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
+    })
+
+    it('should move a step to the top of the section', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStepToTopOfSection('b6588daa-cd81-40b1-8cac-ff2e72a15c15', '4108b902-3af4-4c33-bb76-84c8e5029814')
+      ])
+
+      expect(preState.data.steps[1].steps.length).toEqual(resultState.data.steps[1].steps.length)
+      expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[1].steps[1])
+      expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
+      expect(preState.data.steps[2].steps).toEqual(resultState.data.steps[2].steps)
+    })
+
+    it('should move a step under another step from one section to another', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections)
+      ])
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStep('17141bea-a81c-4227-bdda-f5f69188b0e7', '9bf3a92d-e604-4af0-9f6b-6d42834a05a0')
+      ])
+
+      expect(preState.data.steps[1].steps.length).toEqual(resultState.data.steps[1].steps.length + 1)
+      expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[2].steps[1])
+      expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
+      expect(preState.data.steps[2].steps.length).toEqual(resultState.data.steps[2].steps.length - 1)
+    })
   })
 
   describe('steps', () => {
@@ -1029,14 +1076,14 @@ describe('questionnaire reducer', () => {
           actions.addStepToSection('2a16c315-0fd6-457b-96ab-84d4bcd0ba42')
         ])
 
-        const stepOfSection2 = preState.data.steps[2].steps[0]
+        const stepOfSection2 = preState.data.steps[2].steps[1]
 
         const resultState = playActionsFromState(preState, reducer)([
           actions.addChoice(stepOfSection2.id),
           actions.changeChoice(stepOfSection2.id, 0, 'Maybe', '', '', '', 'some-id', true)
         ])
 
-        const step = resultState.data.steps[2].steps[0]
+        const step = resultState.data.steps[2].steps[1]
 
         expect(step.choices[0]).toEqual({
           value: 'Maybe',

@@ -203,7 +203,55 @@ const bareQuestionnaireWith2Sections: Questionnaire = {
       type: 'section',
       title: 'Section 2',
       id: '2a16c315-0fd6-457b-96ab-84d4bcd0ba42',
-      steps: [],
+      steps: [
+        {
+          type: 'multiple-choice',
+          title: 'Do you like this question?',
+          store: 'likes',
+          id: '9bf3a92d-e604-4af0-9f6b-6d42834a05a0',
+          choices: [
+            {
+              value: 'Yes',
+              responses: {
+                'en': {
+                  sms: [
+                    'Yes',
+                    'Y',
+                    '1'
+                  ],
+                  ivr: [
+                    '1'
+                  ]
+                }
+              },
+              skipLogic: null
+            },
+            {
+              value: 'No',
+              responses: {
+                'en': {
+                  sms: [
+                    'No',
+                    'N',
+                    '2'
+                  ],
+                  ivr: [
+                    '2'
+                  ]
+                }
+              },
+              skipLogic: null
+            }
+          ],
+          prompt: {
+            'en': {
+              sms: 'Do you like this question?'
+            },
+            'es': {
+              sms: 'Te gusta esta pregunta?'
+            }
+          }
+        }],
       randomize: false
     }
   ]

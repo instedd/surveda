@@ -45,6 +45,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.ADD_QUOTA_COMPLETED_STEP: return addQuotaCompletedStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
     case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
+    case actions.MOVE_STEP_TO_TOP_OF_SECTION: return moveStepToTopOfSection(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
@@ -308,35 +309,25 @@ const changeSectionTitle = (state, action) => {
 
 const moveStep = (state, action) => {
   const move = (accum, step) => {
-    if (step.id != stepToMove.id) {
+    if (step.id != action.sourceStepId) {
       accum.push(step)
     }
 
-    if (step.id === stepAbove.id) {
+    if (step.id === action.targetStepId) {
       accum.push(stepToMove)
     }
 
     return accum
   }
 
-  // First try with 'steps'
-  let steps = state.steps
-  let stepToMove = steps[findIndex(steps, s => s.id === action.sourceStepId)]
-  let stepAbove = steps[findIndex(steps, s => s.id === action.targetStepId)]
+  // First try with 'quotaCompletedSteps'
+  let steps = state.quotaCompletedSteps
+  let stepToMove = null
+  let stepAbove = null
 
-  if (stepToMove && stepAbove) {
-    return {
-      ...state,
-      steps: reduce(steps, move, [])
-    }
-  }
-
-  // Otherwise try with 'quotaCompletedSteps'
-  steps = state.quotaCompletedSteps
   if (steps) {
     stepToMove = steps[findIndex(steps, s => s.id === action.sourceStepId)]
     stepAbove = steps[findIndex(steps, s => s.id === action.targetStepId)]
-
     if (stepToMove && stepAbove) {
       return {
         ...state,
@@ -345,25 +336,87 @@ const moveStep = (state, action) => {
     }
   }
 
+  // Otherwise we try with 'steps'
+  steps = state.steps
+
+  if (hasSections(steps)) {
+    let indexes = findStepAndSectionIndex(action.sourceStepId, steps)
+
+    let sourceSectionIndex = indexes[0]
+    let sourceStepIndex = indexes[1]
+
+    if (sourceSectionIndex != null && sourceStepIndex != null) {
+      stepToMove = steps[sourceSectionIndex].steps[sourceStepIndex]
+
+      let finalSteps = removeStepFromSection(steps, action.sourceStepId, sourceSectionIndex)
+
+      let indexes2 = findStepAndSectionIndex(action.targetStepId, finalSteps)
+
+      let targetSectionIndex = indexes2[0]
+      let targetStepIndex = indexes2[1]
+
+      if (targetSectionIndex != null && targetStepIndex != null) {
+        stepAbove = finalSteps[targetSectionIndex].steps[targetStepIndex]
+
+        const sectionStep2 = finalSteps[targetSectionIndex]
+        const sectionSteps2 = sectionStep2.steps
+
+        finalSteps = [
+          ...finalSteps.slice(0, targetSectionIndex),
+          {
+            ...sectionStep2,
+            steps: [
+              ...sectionSteps2.slice(0, targetStepIndex),
+              stepAbove,
+              stepToMove,
+              ...sectionSteps2.slice(targetStepIndex + 1)
+            ]
+          },
+          ...finalSteps.slice(targetSectionIndex + 1)
+        ]
+
+        return {
+          ...state,
+          steps: finalSteps
+        }
+      }
+    }
+  } else {
+    stepToMove = steps[findIndex(steps, s => s.id === action.sourceStepId)]
+    stepAbove = steps[findIndex(steps, s => s.id === action.targetStepId)]
+
+    if (stepToMove && stepAbove) {
+      return {
+        ...state,
+        steps: reduce(steps, move, [])
+      }
+    }
+  }
   // If none of the above worked, it probably means one step was dragged
   // from 'steps' to 'quotaCompletedSteps' or the other way around,
   // and we don't care about that case
   return state
 }
 
-const moveStepToTop = (state, action) => {
-  // First try with 'steps'
-  let steps = state.steps
-  let stepToMove = steps[findIndex(steps, s => s.id === action.stepId)]
-  if (stepToMove) {
-    return {
-      ...state,
-      steps: concat([stepToMove], reject(steps, s => s.id === action.stepId))
-    }
+function removeStepFromSection(steps, stepId, sectionId) {
+  const section = steps[sectionId]
+  if (section.type === 'section') {
+    return [
+      ...steps.slice(0, sectionId),
+      {
+        ...section,
+        steps: section.steps.filter(x => x.id !== stepId)
+      },
+      ...steps.slice(sectionId + 1)
+    ]
   }
+  return steps
+}
 
-  // Otherwise try with 'quotaCompletedSteps'
-  steps = state.quotaCompletedSteps
+const moveStepToTop = (state, action) => {
+  // First try with 'quotaCompletedSteps'
+  let steps = state.quotaCompletedSteps
+  let stepToMove = null
   if (steps) {
     stepToMove = steps[findIndex(steps, s => s.id === action.stepId)]
     if (stepToMove) {
@@ -374,7 +427,55 @@ const moveStepToTop = (state, action) => {
     }
   }
 
+  // Otherwise try with 'steps'
+  steps = state.steps
+  if (!hasSections(steps)) {
+    stepToMove = steps[findIndex(steps, s => s.id === action.stepId)]
+    if (stepToMove) {
+      return {
+        ...state,
+        steps: concat([stepToMove], reject(steps, s => s.id === action.stepId))
+      }
+    }
+  } else {
+    return state
+  }
+
   throw new Error(`Couldn't move step ${action.stepId} to the top`)
+}
+
+const moveStepToTopOfSection = (state, action) => {
+  let steps = state.steps
+  let indexes = findStepAndSectionIndex(action.stepId, steps)
+
+  let sourceSectionIndex = indexes[0]
+  let sourceStepIndex = indexes[1]
+
+  if (sourceSectionIndex !== null) {
+    let stepToMove = steps[sourceSectionIndex].steps[sourceStepIndex]
+    let finalSteps = removeStepFromSection(steps, action.stepId, sourceSectionIndex)
+
+    let sectionIndex = findIndex(steps, s => s.id === action.sectionId)
+
+    let sectionStep = finalSteps[sectionIndex]
+
+    if (sectionStep.type === 'section' && stepToMove) {
+      return {
+        ...state,
+        steps: [
+          ...finalSteps.slice(0, sectionIndex),
+          {
+            ...sectionStep,
+            steps: concat([stepToMove], reject(sectionStep.steps, s => s.id === action.stepId))
+          },
+          ...finalSteps.slice(sectionIndex + 1)
+
+        ]
+      }
+    }
+  }
+
+  return state
 }
 
 export const hasSections = (steps: Array<Step>) => {
@@ -408,22 +509,10 @@ function findAndUpdateStep<T: Step>(steps, stepId, state, func: (step: Step) => 
 }
 
 function findAndUpdateStepInSection<T: Step>(items, stepId, state, func: (step: Object) => T, key) {
-  let sectionIndex = null
-  let stepIndex = null
-  items.forEach((item, index) => {
-    if (item.type === 'section') {
-      let indexInSection = findIndex(item.steps, s => s.id == stepId)
-      if (indexInSection != -1) {
-        sectionIndex = index
-        stepIndex = indexInSection
-      }
-    } else {
-      if (item.id == stepId) {
-        sectionIndex = index
-        stepIndex = null
-      }
-    }
-  })
+  let indexes = findStepAndSectionIndex(stepId, items)
+
+  let sectionIndex = indexes[0]
+  let stepIndex = indexes[1]
 
   if (sectionIndex != -1 && sectionIndex != null) {
     if (stepIndex != null) {
@@ -449,6 +538,28 @@ function findAndUpdateStepInSection<T: Step>(items, stepId, state, func: (step: 
       return updateRegularStep(state, items, sectionIndex, func, key)
     }
   }
+}
+
+function findStepAndSectionIndex(stepId, items) {
+  let sectionIndex = null
+  let stepIndex = null
+
+  items.forEach((item, index) => {
+    if (item.type === 'section') {
+      let indexInSection = findIndex(item.steps, s => s.id == stepId)
+      if (indexInSection != -1) {
+        sectionIndex = index
+        stepIndex = indexInSection
+      }
+    } else {
+      if (item.id == stepId) {
+        sectionIndex = index
+        stepIndex = null
+      }
+    }
+  })
+
+  return [sectionIndex, stepIndex]
 }
 
 function findAndUpdateRegularStep<T: Step>(steps, stepId, state, func: Object => T, key) {

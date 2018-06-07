@@ -19,6 +19,7 @@ type Props = {
   readOnly: boolean,
   quotaCompletedSteps?: boolean,
   increaseErrorIndex?: boolean,
+  sectionId?: string,
   selectedSteps: Object
 };
 
@@ -74,6 +75,7 @@ class QuestionnaireSteps extends Component<Props> {
                 readOnly={readOnly}
                 selectedSteps={selectedSteps}
                 quotaCompletedSteps={quotaCompletedSteps}
+                sectionId={item.section.id}
               />
             </Section>
           : <QuestionnaireStepsGroup
@@ -98,11 +100,11 @@ class QuestionnaireSteps extends Component<Props> {
 
 class QuestionnaireStepsGroup extends Component<Props> {
   dummyDropTarget() {
-    const { steps, readOnly, quotaCompletedSteps } = this.props
+    const { steps, readOnly, quotaCompletedSteps, sectionId = null } = this.props
 
     if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
       return (
-        <DraggableStep step={null} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
+        <DraggableStep step={null} sectionId={sectionId} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
           <div style={{borderBottom: 'solid transparent'}} />
         </DraggableStep>
       )
