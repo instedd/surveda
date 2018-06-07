@@ -254,3 +254,19 @@ label {
     }
   }
 }
+.inputShort {
+  line-height: 1.5;
+  font-style: italic;
+  text-align: center;
+  text-transform: uppercase;
+  color: #039be5;
+  display: inline-flex;
+  min-width: 200px;
+  width: auto !important;
+  height: auto !important;
+  margin-bottom: 0 !important;
+}
+.smallIcon {
+  font-size: 16px;
+  margin-left: 5px;
+}

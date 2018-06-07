@@ -68,7 +68,7 @@ class Section extends Component {
             </label>
           </div>
           <div className='section-number'>
-            <EditableTitleLabel title={title} entityName='section' onSubmit={(value) => { this.handleTitleSubmit(id, value) }} readOnly={readOnly} emptyText={t('Untitled section')} />
+            <EditableTitleLabel title={title} entityName='section' onSubmit={(value) => { this.handleTitleSubmit(id, value) }} readOnly={readOnly} emptyText={t('Untitled section')} inputShort />
           </div>
           <Tooltip text={t('Delete section')}>
             <a href='#' className='close-section' onClick={e => this.deleteSection(e, id)}>
