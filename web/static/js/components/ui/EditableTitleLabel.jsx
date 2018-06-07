@@ -9,6 +9,7 @@ export class EditableTitleLabel extends Component {
     emptyText: PropTypes.string.isRequired,
     editing: PropTypes.bool,
     readOnly: PropTypes.bool,
+    inputShort: PropTypes.bool,
     more: PropTypes.node
   }
 
@@ -48,9 +49,11 @@ export class EditableTitleLabel extends Component {
     const { title, emptyText, more } = this.props
 
     let icon = null
+    const iconClasses = this.props.inputShort ? 'material-icons smallIcon' : 'material-icons'
     if ((!title || title.trim() == '') && !this.props.readOnly) {
-      icon = <i className='material-icons'>mode_edit</i>
+      icon = <i className={iconClasses}>mode_edit</i>
     }
+    const classes = this.props.inputShort ? 'inputShort' : null
 
     if (!this.state.editing) {
       return (
@@ -70,6 +73,7 @@ export class EditableTitleLabel extends Component {
           autoFocus
           maxLength='255'
           defaultValue={title}
+          className={classes}
           onKeyDown={e => this.onKeyDown(e)}
           onBlur={e => this.endAndSubmit(e)}
           />
