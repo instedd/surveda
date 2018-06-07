@@ -398,16 +398,16 @@ const moveStep = (state, action) => {
   return state
 }
 
-function removeStepFromSection(steps, stepId, sectionId) {
-  const section = steps[sectionId]
+function removeStepFromSection(steps, stepId, sectionIndex) {
+  const section = steps[sectionIndex]
   if (section.type === 'section') {
     return [
-      ...steps.slice(0, sectionId),
+      ...steps.slice(0, sectionIndex),
       {
         ...section,
         steps: section.steps.filter(x => x.id !== stepId)
       },
-      ...steps.slice(sectionId + 1)
+      ...steps.slice(sectionIndex + 1)
     ]
   }
   return steps
