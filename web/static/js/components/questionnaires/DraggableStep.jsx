@@ -59,11 +59,11 @@ export const stepSource = {
   },
 
   endDrag(props, monitor, component) {
-    const { step, questionnaireActions, sectionId } = props
+    const { step, questionnaireActions } = props
 
     if (monitor.didDrop()) {
       if (monitor.getDropResult().step == null) {
-        if (sectionId !== null) {
+        if (monitor.getDropResult().sectionId !== null) {
           questionnaireActions.moveStepToTopOfSection(step.id, monitor.getDropResult().sectionId)
         } else {
           questionnaireActions.moveStepToTop(step.id)
