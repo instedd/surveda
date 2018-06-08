@@ -255,7 +255,7 @@ class QuestionnaireEditor extends Component<any, State> {
       readOnly ? null
       : <div className='row'>
         <div className='col s12'>
-          <a href='#!' className='btn-flat blue-text' onClick={e => this.questionnaireAddSection(e)}>{t('Add Section')}</a>
+          <a href='#!' className='btn-flat blue-text no-hover' onClick={e => this.questionnaireAddSection(e)}>{t('Add Section')}</a>
           {addStep}
         </div>
       </div>)
