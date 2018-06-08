@@ -159,8 +159,13 @@ defmodule Ask.Runtime.Flow do
     length(steps(flow))
   end
 
-  defp accept_reply(%Flow{current_step: nil, has_sections: true} = flow, :answer, visitor, _mode) do
+  defp accept_reply(%Flow{current_step: nil, has_sections: true, section_order: nil} = flow, :answer, visitor, _mode) do
     flow = %{flow | current_step: {0,0}}
+    {flow, %Reply{}, visitor}
+  end
+
+  defp accept_reply(%Flow{current_step: nil, has_sections: true} = flow, :answer, visitor, _mode) do
+    flow = %{flow | current_step: {Enum.at(flow.section_order, 0),0}}
     {flow, %Reply{}, visitor}
   end
 
