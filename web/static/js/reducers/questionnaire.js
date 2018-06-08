@@ -1305,7 +1305,7 @@ export const stepStoreValues = (questionnaire: Questionnaire) => {
     step.type == 'language-selection'
   )
 
-  return reduce(multipleChoiceSteps, (options, step) => {
+  const reduceStep = (options, step) => {
     options[step.store] = {
       type: step.type,
       values: map(step.choices, (choice) =>
@@ -1313,6 +1313,14 @@ export const stepStoreValues = (questionnaire: Questionnaire) => {
       )
     }
     return options
+  }
+
+  return reduce(multipleChoiceSteps, (options, step) => {
+    if (step.type === 'section') {
+      return reduce(step.steps, reduceStep, options)
+    } else {
+      return reduceStep(options, step)
+    }
   }, {})
 }
 

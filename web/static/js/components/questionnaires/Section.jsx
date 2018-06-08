@@ -46,7 +46,7 @@ class Section extends Component {
       readOnly ? null
       : <div className='row add-step'>
         <div className='col s12'>
-          <a href='#!' className='btn-flat blue-text no-padd' onClick={e => this.questionnaireAddStep(e, id)}>{t('Add Step to Section')}</a>
+          <a href='#!' className='btn-flat blue-text no-padd no-hover' onClick={e => this.questionnaireAddStep(e, id)}>{t('Add Step to Section')}</a>
         </div>
       </div>)
   }

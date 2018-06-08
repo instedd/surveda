@@ -1049,6 +1049,17 @@ defmodule Ask.FlowTest do
       assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3]
     end
 
+    test "when the flow starts it randomizes all the randomizable sections" do
+      quiz = build(:questionnaire, steps: @language_selection ++ @three_sections_all_random)
+      flow = Flow.start(quiz, "sms")
+
+      assert Enum.at(flow.section_order, 0) == 0
+
+      assert Enum.uniq(flow.section_order) == flow.section_order
+
+      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3]
+    end
+
     test "when the section finishes, it follows with the next section by the random order" do
       quiz = build(:questionnaire, steps: @three_sections_random)
       flow = Flow.start(quiz, "sms")
@@ -1066,6 +1077,28 @@ defmodule Ask.FlowTest do
       section_index = Enum.at(flow.section_order, 2)
 
       assert flow.current_step == {section_index, 0}
+    end
+
+    test "when there is no language selection step, it starts with the first section according to the random order" do
+      quiz = build(:questionnaire, steps: @three_sections_random)
+      flow = Flow.start(quiz, "sms")
+
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, _} = flow_state
+
+      assert flow.current_step == {Enum.at(flow.section_order,0), 0}
+    end
+
+    test "when there is no language selection step, it starts with the first section according to a given random order" do
+      quiz = build(:questionnaire, steps: @three_sections_random)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | section_order: [2,0,1]}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, _} = flow_state
+
+      assert flow.current_step == {2, 0}
     end
   end
 

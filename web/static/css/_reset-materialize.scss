@@ -44,11 +44,6 @@ nav {
   box-shadow: none;
 }
 
-.btn-flat,
-.btn-flat:hover {
-  background: none !important;
-}
-
 input[type="checkbox"] + label:before,
 input[type="checkbox"]:checked + label:before {
   border-right-color: black;
@@ -108,7 +103,11 @@ textarea.materialize-textarea {
   margin-bottom: initial;
 }
 
-
+.btn-flat {
+  &:hover {
+    background-color: rgba(0,0,0,.1) !important;
+  }
+}
 
 // Empty questionnaire carousel
 

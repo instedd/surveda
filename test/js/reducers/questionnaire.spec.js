@@ -2492,6 +2492,16 @@ describe('questionnaire reducer', () => {
         Gender: {type: 'multiple-choice', values: ['Male', 'Female']}
       })
     })
+
+    it('should provide valid answers for multiple-choice steps in questionnaires with sections', () => {
+      const questionnaire = deepFreeze(questionnaireWith2Sections)
+
+      expect(stepStoreValues(questionnaire)).toEqual({
+        Smokes: {type: 'multiple-choice', values: ['Yes', 'No']},
+        Exercises: {type: 'multiple-choice', values: ['Yes', 'No']},
+        likes: {type: 'multiple-choice', values: ['Yes', 'No']}
+      })
+    })
   })
 
   describe('quotas', () => {

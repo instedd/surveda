@@ -54,3 +54,8 @@ i {
     vertical-align: middle;
   }
 }
+
+.no-hover:hover,
+.no-hover:focus {
+  background: none !important;
+}
