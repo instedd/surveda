@@ -55,6 +55,49 @@ defmodule Ask.SessionTest do
     assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
   end
 
+  test "applies first pattern that matches when starting", %{quiz: quiz} do
+    patterns = [
+      %{"input" => "22XXXX", "output" => "5XXXX"},
+      %{"input" => "XXXX", "output" => "5XXXX"},
+      %{"input" => "XXXX", "output" => "4XXXX"}
+    ]
+    test_channel = TestChannel.new
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: patterns)
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+
+    {:ok, _, _, _, respondent} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+
+    assert respondent.sanitized_phone_number == "51234"
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "51234"
+  end
+
+  test "sanitized_phone_number remains the same when starting and channel has no patterns", %{quiz: quiz} do
+    test_channel = TestChannel.new
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: [])
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+
+    {:ok, _, _, _, respondent} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+
+    assert respondent.sanitized_phone_number == "1234"
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "1234"
+  end
+
+  test "sanitized_phone_number remains the same when starting and no pattern matches", %{quiz: quiz} do
+    patterns = [
+      %{"input" => "22XXXX", "output" => "5XXXX"},
+      %{"input" => "1234XXXX5", "output" => "5XXXX"},
+      %{"input" => "XXX", "output" => "1XXX"}
+    ]
+    test_channel = TestChannel.new
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: patterns)
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+
+    {:ok, _, _, _, respondent} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+
+    assert respondent.sanitized_phone_number == "1234"
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "1234"
+  end
+
   test "reloading the page should not consume retries in mobileweb mode", %{respondent: respondent, test_channel: test_channel, channel: channel} do
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
     retries = [1, 2, 3]
@@ -291,6 +334,55 @@ defmodule Ask.SessionTest do
     assert result.flow.questionnaire == expected_session.flow.questionnaire
     assert result.flow.mode == expected_session.flow.mode
     assert result.flow.current_step == expected_session.flow.current_step
+  end
+
+  test "applies first pattern that matches when swtiching to fallback", %{quiz: quiz, channel: channel} do
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    patterns = [
+      %{"input" => "22XXXX", "output" => "5XXXX"},
+      %{"input" => "XXXX", "output" => "4XXXX"},
+      %{"input" => "XXXX", "output" => "5XXXX"}
+    ]
+
+    fallback_runtime_channel = TestChannel.new
+    fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr", patterns: patterns)
+    fallback_retries = [5]
+
+    {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
+    {:ok, _, _, _, respondent} = Session.timeout(session)
+
+    assert respondent.sanitized_phone_number == "41234"
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "41234"
+  end
+
+  test "sanitized_phone_number remains the same when switching to fallback and channel has no patterns", %{quiz: quiz, channel: channel} do
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+
+    fallback_runtime_channel = TestChannel.new
+    fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr", patterns: [])
+    fallback_retries = [5]
+
+    {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
+    {:ok, _, _, _, respondent} = Session.timeout(session)
+
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "1234"
+  end
+
+  test "sanitized_phone_number remains the same when switching to fallback and no pattern matches", %{quiz: quiz, channel: channel} do
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    patterns = [
+      %{"input" => "22XXXX", "output" => "5XXXX"},
+      %{"input" => "1234XXXX5", "output" => "5XXXX"},
+      %{"input" => "XXX", "output" => "1XXX"}
+    ]
+    fallback_runtime_channel = TestChannel.new
+    fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr", patterns: patterns)
+    fallback_retries = [5]
+
+    {:ok, session, _, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
+    {:ok, _, _, _, respondent} = Session.timeout(session)
+
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "1234"
   end
 
   test "doesn't switch to fallback if there are queued messages", %{quiz: quiz, respondent: respondent} do

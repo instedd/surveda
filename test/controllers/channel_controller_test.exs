@@ -22,6 +22,7 @@ defmodule Ask.ChannelControllerTest do
                       "name"     => channel.name,
                       "provider" => channel.provider,
                       "settings" => channel.settings,
+                      "patterns" => [],
                       "type"     => channel.type,
                       "user_id"  => channel.user_id,
                       "projects" => [],
@@ -47,6 +48,7 @@ defmodule Ask.ChannelControllerTest do
         "name" => channel1.name,
         "provider" => channel1.provider,
         "settings" => channel1.settings,
+        "patterns" => [],
         "type" => channel1.type,
         "user_id" => channel1.user_id,
         "projects" => [project.id],
@@ -58,6 +60,7 @@ defmodule Ask.ChannelControllerTest do
         "name" => channel2.name,
         "provider" => channel2.provider,
         "settings" => channel2.settings,
+        "patterns" => [],
         "type" => channel2.type,
         "user_id" => channel2.user_id,
         "projects" => [project.id],
@@ -79,6 +82,7 @@ defmodule Ask.ChannelControllerTest do
                                                    "type" => channel.type,
                                                    "provider" => channel.provider,
                                                    "settings" => channel.settings,
+                                                   "patterns" => [],
                                                    "projects" => [],
                                                    "channelBaseUrl" => channel.base_url}
     end
@@ -120,6 +124,18 @@ defmodule Ask.ChannelControllerTest do
       assert_error_sent :forbidden, fn ->
         put conn, channel_path(conn, :update, channel), channel: %{projects: [project1.id, project2.id]}
       end
+    end
+
+    test "update patterns", %{conn: conn, user: user} do
+      channel = insert(:channel, user: user)
+      patterns = [
+        %{"input" => "123XX", "output" => "0XX"},
+        %{"input" => "222XX", "output" => "0XX"}
+      ]
+
+      conn = put conn, channel_path(conn, :update, channel), channel: %{patterns: patterns}
+
+      assert json_response(conn, 200)["data"]["patterns"] == patterns
     end
   end
 end

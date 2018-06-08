@@ -9,6 +9,7 @@ defmodule Ask.Channel do
     field :provider, :string
     field :base_url, :string
     field :settings, :map
+    field :patterns, Ask.Ecto.Type.JSON, default: []
     belongs_to :user, Ask.User
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectChannel, on_replace: :delete
@@ -36,8 +37,9 @@ defmodule Ask.Channel do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id])
+    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id, :patterns])
     |> validate_required([:name, :type, :provider, :settings, :user_id])
+    |> validate_patterns
     |> assoc_constraint(:user)
   end
 
@@ -70,5 +72,56 @@ defmodule Ask.Channel do
     end
 
     Repo.delete(channel)
+  end
+
+  defp validate_patterns(changeset) do
+    changeset
+    |> validate_patterns_not_empty
+    |> validate_equal_number_of_Xs
+    |> validate_valid_characters
+  end
+
+  defp xs_count(pattern) do
+    (String.split(pattern, "X") |> Enum.count) - 1
+  end
+
+  defp valid_characters?(pattern) do
+    Regex.match?(~r/^([0-9]|X|\(|\)|\+|\-| )*$/, pattern)
+  end
+
+  defp validate_patterns_not_empty(changeset) do
+    patterns = get_field(changeset, :patterns, [])
+    empty_pattern? = fn (p) ->
+      (Map.get(p, "input", "") == "") || (Map.get(p, "output", "") == "")
+    end
+    if Enum.any?(patterns, empty_pattern?) do
+      add_error(changeset, :patterns, "Pattern must not be blank")
+    else
+      changeset
+    end
+  end
+
+  defp validate_equal_number_of_Xs(changeset) do
+    patterns = get_field(changeset, :patterns, [])
+    not_equal_xs? = fn (p) ->
+      xs_count(Map.get(p, "input", "")) != xs_count(Map.get(p, "output", ""))
+    end
+    if Enum.any?(patterns, not_equal_xs?) do
+      add_error(changeset, :patterns, "Number of X's doesn't match")
+    else
+      changeset
+    end
+  end
+
+  defp validate_valid_characters(changeset) do
+    patterns = get_field(changeset, :patterns, [])
+    valid_characters_input_output? = fn (p) ->
+      valid_characters?(Map.get(p, "input", "")) && valid_characters?(Map.get(p, "output", ""))
+    end
+    if Enum.all?(patterns, valid_characters_input_output?) do
+      changeset
+    else
+      add_error(changeset, :patterns, "Invalid characters")
+    end
   end
 end

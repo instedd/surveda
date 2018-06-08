@@ -11,6 +11,7 @@ class ChannelTabs extends Component {
     return (
       <Tabs id='channel_tabs'>
         <TabLink key='share' tabId='channel_tabs' to={routes.channelShare(channelId)}>{t('Share')}</TabLink>
+        <TabLink key='patterns' tabId='channel_tabs' to={routes.channelPatterns(channelId)}>{t('Patterns')}</TabLink>
       </Tabs>
     )
   }
@@ -22,7 +23,7 @@ ChannelTabs.propTypes = {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  channelId: ownProps.params.projectId
+  channelId: ownProps.params.channelId
 })
 
 export default translate()(connect(mapStateToProps)(ChannelTabs))

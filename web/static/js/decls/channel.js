@@ -5,5 +5,7 @@ export type Channel = {
   type: string,
   projects: Project[],
   provider: string,
-  settings: {}
+  settings: {},
+  patterns: Array<{input: string, output: string}>,
+  errorsByPath: {}
 }

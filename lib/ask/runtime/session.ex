@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.{Repo, QuotaBucket, Respondent, Schedule}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Broker, Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode}
+  alias Ask.Runtime.{Broker, Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns}
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -135,8 +135,21 @@ defmodule Ask.Runtime.Session do
     next_retry
   end
 
-  defp run_flow(session) do
-    mode_start(%{session | token: Ecto.UUID.generate})
+  defp run_flow(%{current_mode: current_mode, respondent: respondent} = session) do
+    respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent)
+    mode_start(%{session | token: Ecto.UUID.generate, respondent: respondent})
+  end
+
+  defp apply_patterns_if_match(patterns, respondent) do
+    sanitized_number_as_list = Respondent.sanitize_phone_number(respondent.phone_number) |> String.graphemes
+    matching_patterns = ChannelPatterns.matching_patterns(patterns, sanitized_number_as_list)
+    case matching_patterns do
+      [] -> respondent
+      [p | _] ->
+        sanitized_phone_number = ChannelPatterns.apply_pattern(p, sanitized_number_as_list)
+        {:ok, updated_respondent} = respondent |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number}) |> Repo.update
+        updated_respondent
+    end
   end
 
   defp log_prompts(reply, channel, mode, respondent, force \\ false) do

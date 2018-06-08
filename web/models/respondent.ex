@@ -61,7 +61,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats])
+    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats])
     |> validate_required([:phone_number, :state])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end

@@ -17,6 +17,8 @@ defmodule Ask.ChannelView do
       provider: channel.provider,
       projects: channel.projects |> Enum.map(&(&1.id)),
       channelBaseUrl: channel.base_url,
-      settings: channel.settings}
+      settings: channel.settings,
+      patterns: channel.patterns
+    }
   end
 end
