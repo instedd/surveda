@@ -262,7 +262,7 @@ export const addQuotaCompletedStepNoCallback = () => ({
 })
 
 export const addQuotaCompletedStep = () => (dispatch, getState) => {
-  dispatch(addQuotaCompletedStepNoCallback)
+  dispatch(addQuotaCompletedStepNoCallback())
   const q = getState().questionnaire.data
   return Promise.resolve(q.quotaCompletedSteps[q.quotaCompletedSteps.length - 1])
 }
