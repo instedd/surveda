@@ -2505,6 +2505,105 @@ describe('questionnaire reducer', () => {
   })
 
   describe('quotas', () => {
+    it('should add a quota completed step', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleQuotaCompletedSteps(),
+        actions.addQuotaCompletedStepNoCallback()
+      ])
+
+      expect(state.data.quotaCompletedSteps.length).toEqual(2)
+    })
+
+    it('should edit a quota completed message', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleQuotaCompletedSteps(),
+        actions.addQuotaCompletedStepNoCallback()
+      ])
+
+      const quotaCompletedStep = preState.data.quotaCompletedSteps[0]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeStepType(quotaCompletedStep.id, 'numeric'),
+        actions.changeStepTitle(quotaCompletedStep.id, ' new Quota Completed ')
+      ])
+
+      const editedQuotaCompletedStep = resultState.data.quotaCompletedSteps[0]
+
+      expect(resultState.data.quotaCompletedSteps.length).toEqual(2)
+      expect(editedQuotaCompletedStep.type).toEqual('numeric')
+      expect(editedQuotaCompletedStep.title).toEqual('new Quota Completed')
+    })
+
+    it('should edit a quota completed message on a questionnaire with sections', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.toggleQuotaCompletedSteps(),
+        actions.addQuotaCompletedStepNoCallback()
+      ])
+
+      const quotaCompletedStep = preState.data.quotaCompletedSteps[0]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.changeStepType(quotaCompletedStep.id, 'numeric'),
+        actions.changeStepTitle(quotaCompletedStep.id, ' new Quota Completed ')
+      ])
+
+      const editedQuotaCompletedStep = resultState.data.quotaCompletedSteps[0]
+
+      expect(resultState.data.quotaCompletedSteps.length).toEqual(2)
+      expect(editedQuotaCompletedStep.type).toEqual('numeric')
+      expect(editedQuotaCompletedStep.title).toEqual('new Quota Completed')
+    })
+
+    it('should move a step under another step inside the quota completed steps', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.toggleQuotaCompletedSteps(),
+        actions.addQuotaCompletedStepNoCallback(),
+        actions.addQuotaCompletedStepNoCallback()
+      ])
+
+      const quotaCompletedStep1 = preState.data.quotaCompletedSteps[0]
+      const quotaCompletedStep2 = preState.data.quotaCompletedSteps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStep(quotaCompletedStep1.id, quotaCompletedStep2.id)
+      ])
+
+      expect(preState.data.quotaCompletedSteps.length).toEqual(resultState.data.quotaCompletedSteps.length)
+      expect(preState.data.quotaCompletedSteps[0]).toEqual(resultState.data.quotaCompletedSteps[1])
+      expect(preState.data.quotaCompletedSteps[1]).toEqual(resultState.data.quotaCompletedSteps[0])
+    })
+
+    it('should move a step under another step inside the quota completed steps on a questionnaire with sections', () => {
+      const preState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWithSection),
+        actions.toggleQuotaCompletedSteps(),
+        actions.addQuotaCompletedStepNoCallback(),
+        actions.addQuotaCompletedStepNoCallback()
+      ])
+
+      const quotaCompletedStep1 = preState.data.quotaCompletedSteps[0]
+      const quotaCompletedStep2 = preState.data.quotaCompletedSteps[1]
+
+      const resultState = playActionsFromState(preState, reducer)([
+        actions.moveStep(quotaCompletedStep1.id, quotaCompletedStep2.id)
+      ])
+
+      expect(preState.data.quotaCompletedSteps.length).toEqual(resultState.data.quotaCompletedSteps.length)
+      expect(preState.data.quotaCompletedSteps[0]).toEqual(resultState.data.quotaCompletedSteps[1])
+      expect(preState.data.quotaCompletedSteps[1]).toEqual(resultState.data.quotaCompletedSteps[0])
+    })
+  })
+
+  describe('error message', () => {
     it('should set errorMessage for the first time', () => {
       const smsText = '  Thanks for participating in the poll  '
       const ivrText = {text: '  Thank you very much  ', audioSource: 'tts'}

@@ -304,7 +304,7 @@ const changeSectionTitle = (state, action) => {
       }
     }
     return section
-  }, 'steps')
+  }, 'steps') || state
 }
 
 const moveStep = (state, action) => {
@@ -568,8 +568,6 @@ function findAndUpdateRegularStep<T: Step>(steps, stepId, state, func: Object =>
   if (stepIndex != -1 && stepIndex != null) {
     return updateRegularStep(state, steps, stepIndex, func, key)
   }
-
-  return state
 }
 
 function updateRegularStep<T: Step>(state, steps, stepIndex, func: Object => T, key) {

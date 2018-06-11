@@ -257,10 +257,12 @@ export const addStepToSectionWithCallback = (sectionId) => (dispatch, getState) 
   return Promise.resolve(steps[steps.length - 1])
 }
 
+export const addQuotaCompletedStepNoCallback = () => ({
+  type: ADD_QUOTA_COMPLETED_STEP
+})
+
 export const addQuotaCompletedStep = () => (dispatch, getState) => {
-  dispatch({
-    type: ADD_QUOTA_COMPLETED_STEP
-  })
+  dispatch(addQuotaCompletedStepNoCallback)
   const q = getState().questionnaire.data
   return Promise.resolve(q.quotaCompletedSteps[q.quotaCompletedSteps.length - 1])
 }
