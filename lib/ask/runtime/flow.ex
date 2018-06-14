@@ -112,6 +112,23 @@ defmodule Ask.Runtime.Flow do
       {get_section_index(flow) + 1, 0}
     end
   end
+  def next_step(next_id, %Flow{has_sections: true} = flow) do
+    section_index = get_section_index(flow)
+    {:ok, steps} =
+      flow
+      |> steps
+      |> Enum.at(section_index)
+      |> Map.fetch("steps")
+
+    next_step_index = steps
+      |> Enum.find_index(fn istep -> istep["id"] == next_id end)
+
+    if (!next_step_index || get_step_index(flow) > next_step_index) do
+      raise "Skip logic: invalid step id."
+    else
+      {section_index, next_step_index}
+    end
+  end
   def next_step(next_id, flow) do
     next_step_index =
       flow

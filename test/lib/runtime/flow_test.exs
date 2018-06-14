@@ -1016,6 +1016,42 @@ defmodule Ask.FlowTest do
       assert flow.current_step == {1,0}
     end
 
+    test "When skip logic is an id from a step inside the section, it moves to that one" do
+      quiz = build(:questionnaire, steps: @three_sections_skip_logic)
+      flow = Flow.start(quiz, "sms")
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {0,0}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["What is the probability that a number has more prime factors than the sum of its digits?"]
+      assert flow.current_step == {0,4}
+    end
+
+    test "When skip logic is an id from a previous step inside the section, it raises an error" do
+      quiz = build(:questionnaire, steps: @three_sections_skip_logic)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | current_step: {0, 2}}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {0,2}
+
+      assert_raise RuntimeError, fn ->
+        flow |> Flow.step(@sms_visitor, Flow.Message.reply("Yes"))
+      end
+    end
+
     test "when it's on the last step of the last section, the survey finishes correctly" do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")

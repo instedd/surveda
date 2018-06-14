@@ -933,7 +933,7 @@ defmodule Ask.DummySteps do
               store: "end_section",
               choices: [
                 choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end_section"),
-                choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+                choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: "ddd")
               ]
             )] ++ @skip_logic
         ),
