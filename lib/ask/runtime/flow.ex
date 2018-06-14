@@ -105,7 +105,13 @@ defmodule Ask.Runtime.Flow do
   def next_step(nil, %Flow{has_sections: true} = flow), do: advance_step_in_section(flow)
   def next_step(nil, flow), do: flow.current_step + 1
   def next_step("end", flow), do: flow |> end_flow
-  def next_step("end_section", flow), do: {get_section_index(flow) + 1, 0}
+  def next_step("end_section", flow) do
+    if flow.section_order do
+      {next_section(get_section_index(flow), flow.section_order), 0}
+    else
+      {get_section_index(flow) + 1, 0}
+    end
+  end
   def next_step(next_id, flow) do
     next_step_index =
       flow

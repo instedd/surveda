@@ -1060,6 +1060,26 @@ defmodule Ask.FlowTest do
       assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3]
     end
 
+    test "When skip logic is 'end section', it moves to the next one according to the random order" do
+      quiz = build(:questionnaire, steps: @three_sections_skip_logic)
+      flow = Flow.start(quiz, "sms")
+      flow = %{flow | section_order: [0,2,1]}
+      flow_state = flow |> Flow.step(@sms_visitor)
+
+      assert {:ok, flow, reply} = flow_state
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {0,0}
+
+      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      assert {:ok, flow, reply} = step
+      prompts = Reply.prompts(reply)
+
+      assert prompts == ["Is this the last question?", "Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert flow.current_step == {2,1}
+    end
+
     test "when the section finishes, it follows with the next section by the random order" do
       quiz = build(:questionnaire, steps: @three_sections_random)
       flow = Flow.start(quiz, "sms")
