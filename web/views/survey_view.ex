@@ -75,6 +75,7 @@ defmodule Ask.SurveyView do
         [%{"store" => store, "value" => value} | conditions]
       end)
     %{
+      "id" => bucket.id,
       "condition" => condition,
       "quota" => bucket.quota,
       "count" => bucket.count
