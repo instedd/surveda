@@ -62,7 +62,7 @@ class Section extends Component {
         <div className='section-container-header'>
           <div className='switch'>
             <label>
-              <input type='checkbox' checked={randomize} onChange={() => this.toggleRandomize(id, randomize)} />
+              <input type='checkbox' checked={randomize} onChange={() => this.toggleRandomize(id, randomize)} disabled={readOnly} />
               <span className='lever' />
               {t('Randomize')}
             </label>

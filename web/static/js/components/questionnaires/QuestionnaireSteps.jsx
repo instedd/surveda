@@ -64,7 +64,7 @@ class QuestionnaireSteps extends Component<Props> {
       <div>
         { groups.map((item, index) => (
           item.section != null
-            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.id} id={item.section.id}>
+            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.id} id={item.section.id} readOnly={readOnly}>
               <QuestionnaireStepsGroup
                 steps={item.groupSteps}
                 errorPath={`${errorPath}[${index}].steps`}
