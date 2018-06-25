@@ -168,7 +168,7 @@ class SurveyWizardRespondentsStep extends Component {
         this.addMoreRespondents(group.id, file)
       }
 
-      if (!survey.state == 'terminated') {
+      if (survey.state !== 'terminated') {
         if (uploading) {
           addMoreRespondents = <Preloader size='small' className='tiny' />
         } else {
