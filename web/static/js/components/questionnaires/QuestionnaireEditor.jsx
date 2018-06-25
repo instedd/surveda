@@ -180,7 +180,7 @@ class QuestionnaireEditor extends Component<any, State> {
     this.props.questionnaireActions.removeLanguage(lang)
   }
 
-  modeComponent(mode, label, icon, enabled) {
+  modeComponent(mode, label, icon, enabled, readOnly) {
     if (!enabled) return null
 
     const { questionnaire, errors } = this.props
@@ -194,8 +194,12 @@ class QuestionnaireEditor extends Component<any, State> {
 
     let removeModeControl = null
     if (!isActive) {
-      removeModeControl = <span className='remove-mode' onClick={(e) => this.removeMode(e, mode)}>
-        <i className='material-icons'>highlight_off</i>
+      removeModeControl = !readOnly
+        ? <span className='remove-mode' onClick={(e) => this.removeMode(e, mode)}>
+          <i className='material-icons'>highlight_off</i>
+        </span>
+      : <span className='remove-mode'>
+        <i className='material-icons'>{icon}</i>
       </span>
     }
 
@@ -305,11 +309,11 @@ class QuestionnaireEditor extends Component<any, State> {
                 <div className='col s12'>
                   <p className='grey-text'>{t('Modes')}</p>
                   <ul className='modes-list'>
-                    { this.modeComponent('sms', t('SMS'), 'sms', sms) }
-                    { this.modeComponent('ivr', t('Phone call'), 'phone', ivr) }
-                    { this.modeComponent('mobileweb', t('Mobile web'), 'phonelink', mobileweb) }
+                    { this.modeComponent('sms', t('SMS'), 'sms', sms, readOnly) }
+                    { this.modeComponent('ivr', t('Phone call'), 'phone', ivr, readOnly) }
+                    { this.modeComponent('mobileweb', t('Mobile web'), 'phonelink', mobileweb, readOnly) }
                   </ul>
-                  { this.addModeComponent(sms, ivr, mobileweb) }
+                  { !readOnly ? this.addModeComponent(sms, ivr, mobileweb) : null }
                 </div>
               </div>
             </PositionFixer>
