@@ -1372,37 +1372,47 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 
 const csvStepsTranslations = (steps, context, defaultLang) => {
   steps.forEach(step => {
-    if (step.type !== 'language-selection') {
-      // Sms Prompt
-      let defaultSms = getStepPromptSms(step, defaultLang)
-      addToCsvForTranslation(defaultSms, context, lang => getStepPromptSms(step, lang))
-
-      // Ivr Prompt
-      let defaultIvr = getStepPromptIvrText(step, defaultLang)
-      addToCsvForTranslation(defaultIvr, context, lang => getStepPromptIvrText(step, lang))
-
-      // Mobile Web Prompt
-      let defaultMobileWeb = getStepPromptMobileWeb(step, defaultLang)
-      addToCsvForTranslation(defaultMobileWeb, context, lang => getStepPromptMobileWeb(step, lang))
-
-      // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
-      if (step.type === 'multiple-choice') {
-        step.choices.forEach(choice => {
-          // Response sms
-          const defaultResponseSms = getChoiceResponseSmsJoined(choice, defaultLang)
-          addToCsvForTranslation(defaultResponseSms, context, lang =>
-            getChoiceResponseSmsJoined(choice, lang)
-          )
-
-          // Response mobile web
-          const defaultResponseMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLang)
-          addToCsvForTranslation(defaultResponseMobileWeb, context, lang =>
-            getChoiceResponseMobileWebJoined(choice, lang)
-          )
-        })
-      }
+    if (step.type === 'section') {
+      step.steps.forEach(sectionStep => {
+        stepTranslations(sectionStep, context, defaultLang)
+      })
+    } else {
+      stepTranslations(step, context, defaultLang)
     }
   })
+}
+
+const stepTranslations = (step, context, defaultLang) => {
+  if (step.type !== 'language-selection') {
+    // Sms Prompt
+    let defaultSms = getStepPromptSms(step, defaultLang)
+    addToCsvForTranslation(defaultSms, context, lang => getStepPromptSms(step, lang))
+
+    // Ivr Prompt
+    let defaultIvr = getStepPromptIvrText(step, defaultLang)
+    addToCsvForTranslation(defaultIvr, context, lang => getStepPromptIvrText(step, lang))
+
+    // Mobile Web Prompt
+    let defaultMobileWeb = getStepPromptMobileWeb(step, defaultLang)
+    addToCsvForTranslation(defaultMobileWeb, context, lang => getStepPromptMobileWeb(step, lang))
+
+    // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
+    if (step.type === 'multiple-choice') {
+      step.choices.forEach(choice => {
+        // Response sms
+        const defaultResponseSms = getChoiceResponseSmsJoined(choice, defaultLang)
+        addToCsvForTranslation(defaultResponseSms, context, lang =>
+          getChoiceResponseSmsJoined(choice, lang)
+        )
+
+        // Response mobile web
+        const defaultResponseMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLang)
+        addToCsvForTranslation(defaultResponseMobileWeb, context, lang =>
+          getChoiceResponseMobileWebJoined(choice, lang)
+        )
+      })
+    }
+  }
 }
 
 const addMessageToCsvForTranslation = (m, defaultLang, context) => {
@@ -1667,7 +1677,16 @@ const uploadCsvForTranslation = (state, action) => {
 }
 
 const translateSteps = (steps, defaultLanguage, lookup) => {
-  return steps.map(step => translateStep(step, defaultLanguage, lookup))
+  return steps.map(step => {
+    if (step.type === 'section') {
+      return {
+        ...step,
+        steps: step.steps.map(sectionStep => translateStep(sectionStep, defaultLanguage, lookup))
+      }
+    } else {
+      return translateStep(step, defaultLanguage, lookup)
+    }
+  })
 }
 
 const translateStep = (step, defaultLanguage, lookup): Step => {

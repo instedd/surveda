@@ -168,7 +168,8 @@ const languageSelection = {
 
 const quizWithLangSelection = {
   ...bareQuestionnaire,
-  steps: [languageSelection, ...steps]
+  steps: [languageSelection, ...steps],
+  languages: ['en', 'es']
 }
 
 const bareQuestionnaireWithSection: Questionnaire = {
@@ -189,6 +190,7 @@ const bareQuestionnaireWithSection: Questionnaire = {
 const bareQuestionnaireWith2Sections: Questionnaire = {
   ...questionnaireCommonFields,
   name: 'Foo2',
+  languages: ['en', 'es'],
   valid: false,
   steps: [
     languageSelection,

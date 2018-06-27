@@ -2924,6 +2924,174 @@ describe('questionnaire reducer', () => {
     })
   })
 
+  describe('csv for translation with sections', () => {
+    it('should work', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addLanguage('fr'),
+        actions.setSmsQuestionnaireMsg('errorMessage', 'Done'),
+        actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done!', audioSource: 'tts'}),
+        actions.setDisplayedTitle('Some title'),
+        actions.setSurveyAlreadyTakenMessage('Taken'),
+        actions.setSmsQuestionnaireMsg('thankYouMessage', 'Thank you')
+      ])
+
+      const csv = csvForTranslation(state.data)
+
+      const expected = [
+        ['English', 'Spanish', 'French'],
+        ['Do you smoke?', 'Fumas?', ''],
+        ['Do you really smoke?', '', ''],
+        ['Yes, Y, 1', 'Sí, S, 1', ''],
+        ['Of course', 'Por supuesto', ''],
+        ['No, N, 2', 'No, N, 2', ''],
+        ['Not at all', 'Para nada', ''],
+        ['Do you exercise?', 'Ejercitas?', ''],
+        ['Do you like this question?', 'Te gusta esta pregunta?', ''],
+        ['Done', '', ''],
+        ['Done!', '', ''],
+        ['Thank you', '', ''],
+        ['Some title', '', ''],
+        ['Taken', '', '']
+      ]
+
+      expect(csv.length).toEqual(expected.length)
+      expected.forEach((row, index) => expect(csv[index]).toEqual(row))
+    })
+
+    it('should not duplicate sms and ivr error msg (#421)', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addLanguage('fr'),
+        actions.setSmsQuestionnaireMsg('errorMessage', 'Done'),
+        actions.setIvrQuestionnaireMsg('errorMessage', {text: 'Done', audioSource: 'tts'})
+      ])
+
+      const csv = csvForTranslation(state.data)
+
+      const expected = [
+        ['English', 'Spanish', 'French'],
+        ['Do you smoke?', 'Fumas?', ''],
+        ['Do you really smoke?', '', ''],
+        ['Yes, Y, 1', 'Sí, S, 1', ''],
+        ['Of course', 'Por supuesto', ''],
+        ['No, N, 2', 'No, N, 2', ''],
+        ['Not at all', 'Para nada', ''],
+        ['Do you exercise?', 'Ejercitas?', ''],
+        ['Do you like this question?', 'Te gusta esta pregunta?', ''],
+        ['Done', '', '']
+      ]
+
+      expect(csv.length).toEqual(expected.length)
+      expected.forEach((row, index) => expect(csv[index]).toEqual(row))
+    })
+
+    it('should upload csv', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addLanguage('es'),
+        actions.setDisplayedTitle('Some title'),
+        actions.setSurveyAlreadyTakenMessage('Already taken'),
+        actions.uploadCsvForTranslation(
+          [
+            ['  English  ', '  Spanish  '],
+            ['  Do you smoke?  ', '  Cxu vi fumas?  '],
+            ['  Do you exercise?  ', '  Cxu vi ekzercas?  '],
+            ['  Yes, Y, 1  ', '  Jes, J, 1  '],
+            ['  Some title  ', '  Algun titulo  '],
+            ['  Already taken  ', '  Ya tomado ']
+          ]
+        )
+      ])
+
+      expect(state.data.steps[1].steps[0].prompt.es.sms).toEqual('Cxu vi fumas?')
+      expect(state.data.steps[1].steps[1].prompt.es.sms).toEqual('Cxu vi ekzercas?')
+
+      expect(state.data.steps[1].steps[0].choices[0].responses.sms.es).toEqual(['Jes', 'J', '1'])
+      expect(state.data.steps[1].steps[0].choices[1].responses.sms.es).toEqual(['No', 'N', '2']) // original preserved
+
+      expect(state.data.steps[1].steps[0].prompt.es.ivr.text).toEqual('Cxu vi fumas?')
+
+      expect(state.data.settings.title.es).toEqual('Algun titulo')
+      expect(state.data.settings.surveyAlreadyTakenMessage.es).toEqual('Ya tomado')
+    })
+
+    it('changes numeric limits without min and max', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[1].steps[state.data.steps[1].steps.length - 1].id
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '1,3,5')
+      ])
+
+      const step = resultState.data.steps[1].steps[state.data.steps[1].steps.length - 1]
+      const expected = [
+        { from: null, to: 0, skipLogic: null },
+        { from: 1, to: 2, skipLogic: null },
+        { from: 3, to: 4, skipLogic: null },
+        { from: 5, to: null, skipLogic: null }
+      ]
+
+      expect(isEqual(step.ranges, expected)).toEqual(true)
+    })
+
+    it('changes numeric limits without min and max, with zero in delimiter', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[1].steps[state.data.steps[1].steps.length - 1].id
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, '', '', '0,3,5')
+      ])
+
+      const step = resultState.data.steps[1].steps[state.data.steps[1].steps.length - 1]
+      const expected = [
+        { from: null, to: -1, skipLogic: null },
+        { from: 0, to: 2, skipLogic: null },
+        { from: 3, to: 4, skipLogic: null },
+        { from: 5, to: null, skipLogic: null }
+      ]
+
+      expect(isEqual(step.ranges, expected)).toEqual(true)
+    })
+
+    it('changes numeric limits with zeros', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaireWith2Sections),
+        actions.addStep()
+      ])
+
+      const stepId = state.data.steps[1].steps[state.data.steps[1].steps.length - 1].id
+
+      const resultState = playActionsFromState(state, reducer)([
+        actions.changeStepType(stepId, 'numeric'),
+        actions.changeNumericRanges(stepId, 0, 1, '')
+      ])
+
+      const step = resultState.data.steps[1].steps[state.data.steps[1].steps.length - 1]
+      const expected = [
+        { from: 0, to: 1, skipLogic: null }
+      ]
+
+      expect(isEqual(step.ranges, expected)).toEqual(true)
+    })
+  })
+
   describe('color setting', () => {
     it('should set primary color', () => {
       const result = playActions([
