@@ -99,7 +99,13 @@ class ChannelNew extends Component {
         return (
           <div className='row white'>
             <div className='col l6 offset-l3 m12'>
-              <ChannelUI baseUrl={baseUrl} accessToken={accessToken} channelId='new' />
+              <ChannelUI
+                baseUrl={baseUrl}
+                accessToken={accessToken}
+                channelId='new'
+                onCreated={c => this.onCreated(c)}
+                onCancel={() => this.onCancel()}
+              />
             </div>
           </div>
         )
