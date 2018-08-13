@@ -375,7 +375,7 @@
     "SMS channel": "Canal SMS",
     "SMS channels": "Canaux SMS",
     "SMS for mobile web channel": "Canal SMS pour Mobile Web",
-    "SMS is too long. Use SHIFT+ENTER to split in multiple parts": "Le SMS est trop long. Utilisez MAJ + ENTRÉE pour le partager en plusieurs parties",
+    "Use SHIFT+ENTER to split in multiple parts": "Utilisez MAJ + ENTRÉE pour le partager en plusieurs parties",
     "SMS message": "Message SMS",
     "SMS prompt must not be blank": "L'invite des SMS ne peut rester vide",
     "SMS re-contact attempts": "Tentatives de nouvelle prise de contact par SMS",

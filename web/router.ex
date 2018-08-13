@@ -50,6 +50,11 @@ defmodule Ask.Router do
     plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
+  pipeline :mp3_api do
+    plug TrailingFormatPlug
+    plug :accepts, ["mp3"]
+  end
+
   if Mix.env == :dev do
     scope "/dev" do
       pipe_through [:browser]
@@ -140,7 +145,11 @@ defmodule Ask.Router do
     end
   end
 
-  get "/audio/:id", Ask.AudioDeliveryController, :show
+  scope "/audio" do
+    pipe_through :mp3_api
+    get "/:id", Ask.AudioDeliveryController, :show
+  end
+
   get "/callbacks/:provider", Ask.CallbackController, :callback
   post "/callbacks/:provider", Ask.CallbackController, :callback
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback

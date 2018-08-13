@@ -15,6 +15,11 @@ label {
   display: block;
 }
 
+.draft-small-text-below {
+  @extend .grey-text, .lighten-2;
+  font-size: 14px;
+}
+
 .dropfile {
   @include  transition(border-color ease-in-out .2s);
   @extend .grey-text;

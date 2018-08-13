@@ -1,6 +1,5 @@
 // @flow
-import * as characterCounter from '../characterCounter'
-import { getStepPrompt, splitSmsText, newStepPrompt, newIvrPrompt } from '../step'
+import { getStepPrompt, newStepPrompt, newIvrPrompt } from '../step'
 import { hasSections } from './questionnaire'
 
 const k = (...args: any) => args
@@ -155,11 +154,6 @@ const validateSmsLangPrompt = (prompt: Prompt, context: ValidationContext, lang:
   if (isBlank(prompt.sms)) {
     addError(context, `${path}.sms`, k('SMS prompt must not be blank'), lang, 'sms')
     return
-  }
-
-  const parts = splitSmsText(prompt.sms || '')
-  if (parts.some(p => characterCounter.limitExceeded(p))) {
-    addError(context, `${path}.sms`, 'limit exceeded', lang, 'sms')
   }
 }
 
@@ -453,19 +447,6 @@ const validateMobileWebSmsMessage = (data, context) => {
   if (isBlank(data.settings.mobileWebSmsMessage)) {
     addError(context, 'mobileWebSmsMessage', k('Mobile web SMS message must not be blank'), null, 'mobileweb')
     return
-  }
-
-  const parts = splitSmsText(data.settings.mobileWebSmsMessage || '')
-  const exceeds = parts.some((p, i) => {
-    // The last part gets appended the link, which we assume will have
-    // at most 20 ASCII chars
-    if (i == parts.length - 1) {
-      p = `${p}${'a'.repeat(20)}`
-    }
-    return characterCounter.limitExceeded(p)
-  })
-  if (exceeds) {
-    addError(context, 'mobileWebSmsMessage', 'limit exceeded', null, 'mobileweb')
   }
 }
 

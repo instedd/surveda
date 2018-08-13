@@ -1163,7 +1163,7 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it('should include an error error if SMS prompt exceeds the character limit', () => {
+    it('should not include an error error if SMS prompt exceeds the character limit', () => {
       const smsPropmpt = new Array(200).join('a')
 
       const resultState = playActions([
@@ -1172,7 +1172,7 @@ describe('questionnaire reducer', () => {
         actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', smsPropmpt)
       ])
 
-      expect(resultState.errors).toInclude({
+      expect(resultState.errors).toExclude({
         path: "steps[0].prompt['en'].sms",
         lang: 'en',
         mode: 'sms',
@@ -1180,7 +1180,7 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it('should include an error if a part of the SMS prompt exceeds the character limit', () => {
+    it('should not include an error if a part of the SMS prompt exceeds the character limit', () => {
       const smsPrompt = new Array(200).join('a') + smsSplitSeparator + new Array(30).join('b')
       const resultState = playActions([
         actions.fetch(1, 1),
@@ -1188,7 +1188,7 @@ describe('questionnaire reducer', () => {
         actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', smsPrompt)
       ])
 
-      expect(resultState.errors).toInclude({
+      expect(resultState.errors).toExclude({
         path: "steps[0].prompt['en'].sms",
         lang: 'en',
         mode: 'sms',
@@ -1209,7 +1209,7 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it('should include an error if mobile web sms message prompt exceeds the character limit', () => {
+    it('should not include an error if mobile web sms message prompt exceeds the character limit', () => {
       const prompt = 'a'.repeat(141)
 
       const resultState = playActions([
@@ -1219,7 +1219,7 @@ describe('questionnaire reducer', () => {
         actions.setMobileWebSmsMessage(prompt)
       ])
 
-      expect(resultState.errors).toInclude({
+      expect(resultState.errors).toExclude({
         path: 'mobileWebSmsMessage',
         lang: null,
         mode: 'mobileweb',

@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## Pine 0.16.2
+
+### Features
+
+* Make all audio URLs end with .mp3 extension (fixes issue with Africa's Talking service) [#1426](https://github.com/instedd/ask/issues/1426)
+* Allow SMS prompts with more than 160 chars [#1427](https://github.com/instedd/ask/issues/1427)
+
 ## Pine 0.16.1
 
 ### Bugfixes
