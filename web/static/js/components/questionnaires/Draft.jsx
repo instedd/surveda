@@ -201,7 +201,7 @@ class Draft extends React.Component {
 
   render() {
     const { editorState } = this.state
-    const { label, errors, readOnly } = this.props
+    const { label, errors, readOnly, textBelow } = this.props
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
@@ -218,6 +218,16 @@ class Draft extends React.Component {
       const errorMessage = errors.join(', ')
       errorComponent = <div className='error'>{errorMessage}</div>
       className = `${className} invalid`
+    }
+
+    let textBelowComponent = null
+    if (textBelow) {
+      textBelowComponent =
+        <div>
+          <span className='draft-small-text-below'>
+            {textBelow}
+          </span>
+        </div>
     }
 
     let autocompleteComponents = null
@@ -273,6 +283,7 @@ class Draft extends React.Component {
           />
         </div>
         {errorComponent}
+        {textBelowComponent}
         {characterCounter}
         {autocompleteComponents}
         {styleControls}
@@ -284,6 +295,7 @@ class Draft extends React.Component {
 Draft.propTypes = {
   label: PropTypes.string,
   errors: PropTypes.any,
+  textBelow: PropTypes.any,
   onBlur: PropTypes.func,
   autocomplete: PropTypes.bool,
   autocompleteGetData: PropTypes.func,

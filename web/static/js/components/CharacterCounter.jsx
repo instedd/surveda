@@ -9,12 +9,10 @@ class CharacterCounter extends Component {
 
     text += 'a'.repeat(fixedLength)
 
-    const errorClass = characterCounter.limitExceeded(text) ? ' text-error' : ''
-
     const counter = characterCounter.count(text)
     return (
       <div>
-        <span className={'character-counter' + errorClass}>
+        <span className={'character-counter'}>
           {counter.count - fixedLength}/{counter.limit - fixedLength}
         </span>
       </div>

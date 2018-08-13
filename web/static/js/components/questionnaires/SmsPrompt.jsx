@@ -2,7 +2,6 @@ import React, { Component, PropTypes } from 'react'
 import Draft from './Draft'
 import { splitSmsText, joinSmsPieces } from '../../step'
 import {limitExceeded} from '../../characterCounter'
-import filter from 'lodash/filter'
 import map from 'lodash/map'
 import { translate } from 'react-i18next'
 
@@ -54,18 +53,11 @@ class SmsPrompt extends Component {
   renderSmsInput(total, index, value) {
     let { inputErrors, readOnly, fixedEndLength, label, t } = this.props
 
-    const shouldDisplayReducerErrors = (value == this.props.originalValue)
-    const reducerErrors = filter(inputErrors, (err) => err !== t('limit exceeded'))
+    const shouldDisplayErrors = value == this.props.originalValue
 
-    let errors = []
-    if (shouldDisplayReducerErrors) {
-      errors.push(...reducerErrors)
-    }
+    let textBelow = ''
     if (limitExceeded(value)) {
-      errors.push(k('SMS is too long. Use SHIFT+ENTER to split in multiple parts'))
-    }
-    if (errors.length == 0) {
-      errors = null
+      textBelow = k('Use SHIFT+ENTER to split in multiple parts')
     }
 
     if (!label) label = t('SMS message')
@@ -89,7 +81,8 @@ class SmsPrompt extends Component {
           label={labelComponent}
           value={value}
           readOnly={readOnly}
-          errors={map(errors, (error) => t(...error))}
+          errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
+          textBelow={textBelow}
           onSplit={caretIndex => this.splitPiece(caretIndex, index)}
           onBlur={e => this.onBlur()}
           characterCounter
