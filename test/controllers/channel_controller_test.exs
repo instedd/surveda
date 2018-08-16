@@ -161,7 +161,9 @@ defmodule Ask.ChannelControllerTest do
         "provider" => channel.provider,
         "settings" => channel.settings,
         "channelBaseUrl" => channel.base_url,
-        "projects" => []}
+        "projects" => [],
+        "patterns" => []
+      }
     end
 
     test "cannot create channel if the authorization doesn't exist", %{conn: conn} do
