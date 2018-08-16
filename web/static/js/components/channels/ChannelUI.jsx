@@ -6,11 +6,11 @@ type Props = {
   accessToken: string,
   channelId: number | 'new',
   onCreated?: Function,
+  onUpdated?: Function,
   onCancel?: Function
 };
 
-class ChannelUI extends Component {
-  props: Props;
+class ChannelUI extends Component<Props> {
   onMessage: Function;
 
   constructor() {
@@ -30,6 +30,11 @@ class ChannelUI extends Component {
         case 'created':
           const { onCreated } = this.props
           onCreated && onCreated(event.data.channel)
+          break
+
+        case 'updated':
+          const { onUpdated } = this.props
+          onUpdated && onUpdated()
           break
 
         case 'cancel':

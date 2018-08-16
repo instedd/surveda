@@ -2,35 +2,74 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
+import * as routes from '../../routes'
+import * as api from '../../api'
 import * as channelActions from '../../actions/channel'
+import ChannelUI from './ChannelUI'
+import { translate } from 'react-i18next'
 
 type Props = {
   channelId: number,
-  channelActions: Object
+  channel: Object,
+  channelActions: Object,
+  router: any,
+  t: Function
 };
 
-class ChannelSettings extends Component {
-  props: Props;
+type State = {
+  accessToken?: string
+};
+
+class ChannelSettings extends Component<Props, State> {
+  constructor() {
+    super()
+    this.state = {accessToken: ''}
+  }
 
   componentDidMount() {
     const { channelActions, channelId } = this.props
     channelActions.fetchChannelIfNeeded(channelId)
       .then(channel => {
-        console.log(channel.a)
+        api.getUIToken(channel.provider, channel.channelBaseUrl)
+          .then(accessToken => this.setState({accessToken}))
       })
   }
 
+  backToChannelIndex() {
+    const { router } = this.props
+    router.push(routes.channels)
+  }
+
   render() {
-    return <div>Settings</div>
+    const { channel, t } = this.props
+    const { accessToken } = this.state
+    if (!channel || !accessToken) {
+      return <div>{t('Loading...')}</div>
+    } else {
+      return (
+        <div className='row white'>
+          <div className='col l6 offset-l3 m12'>
+            <ChannelUI
+              baseUrl={channel.channelBaseUrl}
+              accessToken={accessToken}
+              channelId={channel.settings.verboiceChannelId}
+              onCancel={() => this.backToChannelIndex()}
+              onUpdated={() => this.backToChannelIndex()}
+            />
+          </div>
+        </div>
+      )
+    }
   }
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  channelId: parseInt(ownProps.params.channelId)
+  channelId: parseInt(ownProps.params.channelId),
+  channel: state.channel.data
 })
 
 const mapDispatchToProps = (dispatch) => ({
   channelActions: bindActionCreators(channelActions, dispatch)
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(ChannelSettings)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(ChannelSettings))
