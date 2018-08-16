@@ -12,9 +12,12 @@ type Config = {
 };
 
 const defaultConfig = {
+  available_languages_for_numbers: ['en'],
   user_settings: {
     language: 'en'
-  }
+  },
+  nuntium: [],
+  verboice: []
 }
 
 export const config: Config = window.appConfig || defaultConfig

@@ -8,6 +8,7 @@ import * as channelActions from '../../actions/channels'
 import { bindActionCreators } from 'redux'
 import * as api from '../../api'
 import ChannelUI from './ChannelUI'
+import { translate } from 'react-i18next'
 
 type Props = {
   location: {
@@ -17,16 +18,16 @@ type Props = {
     }
   },
   router: any,
-  channelActions: Object
+  channelActions: Object,
+  t: Function
 };
 
-class ChannelNew extends Component {
-  props: Props;
-  state: {
-    state: 'editing' | 'created',
-    accessToken?: string,
-  };
+type State = {
+  state: 'editing' | 'created',
+  accessToken?: string
+};
 
+class ChannelNew extends Component<Props, State> {
   constructor() {
     super()
     this.state = { state: 'editing' }
@@ -72,6 +73,7 @@ class ChannelNew extends Component {
   }
 
   render() {
+    const { t } = this.props
     const { state } = this.state
 
     switch (state) {
@@ -92,7 +94,7 @@ class ChannelNew extends Component {
         (state: 'editing')
         const { accessToken } = this.state
         if (!accessToken) {
-          return null
+          return <div>{t('Loading...')}</div>
         }
 
         const { baseUrl } = this.channelProvider()
@@ -117,4 +119,4 @@ const mapDispatchToProps = (dispatch) => ({
   channelActions: bindActionCreators(channelActions, dispatch)
 })
 
-export default withRouter(connect(null, mapDispatchToProps)(ChannelNew))
+export default translate()(withRouter(connect(null, mapDispatchToProps)(ChannelNew)))
