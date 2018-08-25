@@ -40,6 +40,10 @@ class ChannelSettings extends Component<Props, State> {
     router.push(routes.channels)
   }
 
+  idForChannel(channel) {
+    return channel.settings[`${channel.provider}ChannelId`]
+  }
+
   render() {
     const { channel, t } = this.props
     const { accessToken } = this.state
@@ -52,7 +56,7 @@ class ChannelSettings extends Component<Props, State> {
             <ChannelUI
               baseUrl={channel.channelBaseUrl}
               accessToken={accessToken}
-              channelId={channel.settings.verboiceChannelId}
+              channelId={this.idForChannel(channel)}
               onCancel={() => this.backToChannelIndex()}
               onUpdated={() => this.backToChannelIndex()}
             />

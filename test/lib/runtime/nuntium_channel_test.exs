@@ -97,4 +97,58 @@ defmodule Ask.Runtime.NuntiumChannelTest do
       total_sent_sms: 2
     }
   end
+
+  @channel_foo %{"id" => 1, "name" => "foo"}
+  @channel_bar %{"id" => 2, "name" => "bar"}
+  @base_url "http://test.com"
+
+  describe "channel sync" do
+    test "create channels" do
+      user = insert(:user)
+      user_id = user.id
+      account = "test_account"
+      nuntium_channels = [{account, @channel_foo}, {account, @channel_bar}]
+      NuntiumChannel.sync_channels(user_id, @base_url, nuntium_channels)
+      channels = Ask.Channel |> order_by([c], c.name) |> Repo.all
+
+      assert [
+        %Ask.Channel{
+          user_id: ^user_id,
+          base_url: @base_url,
+          provider: "nuntium",
+          type: "sms",
+          name: "bar - test_account",
+          settings: %{
+            "nuntium_account" => "test_account",
+            "nuntium_channel" => "bar",
+            "nuntium_channel_id" => 2
+          }
+        },
+        %Ask.Channel{
+          user_id: ^user_id,
+          base_url: @base_url,
+          provider: "nuntium",
+          type: "sms",
+          name: "foo - test_account",
+          settings: %{
+            "nuntium_account" => "test_account",
+            "nuntium_channel" => "foo",
+            "nuntium_channel_id" => 1
+          }
+        }
+      ] = channels
+    end
+  end
+
+  describe "create channel" do
+    test "create channel" do
+      user = insert(:user)
+      user_id = user.id
+      NuntiumChannel.create_channel(user, @base_url, @channel_foo)
+      channels = Ask.Channel |> Repo.all
+      assert [
+        %Ask.Channel{user_id: ^user_id, provider: "nuntium", base_url: @base_url, type: "sms", name: "foo", settings: %{"nuntium_channel" => "foo", "nuntium_channel_id" => 1}}
+      ] = channels
+    end
+  end
 end
