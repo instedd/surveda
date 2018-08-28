@@ -1,0 +1,79 @@
+version: '2'
+services:
+  db-migrate:
+    image: instedd/verboice:824-africas-talking
+    environment:
+      BROKER_HOST: broker
+      BROKER_PORT: '9999'
+      DATABASE_URL: mysql2://verboice:YOUR_VERBOICE_DB_PASSWORD@mysql.db/verboice
+      GUISSO_CLIENT_ID: YOUR_VERBOICE_CLIENT_ID_IN_GUISSO
+      GUISSO_CLIENT_SECRET: YOUR_VERBOICE_CLIENT_SECRET_IN_GUISSO
+      GUISSO_ENABLED: 'true'
+      GUISSO_URL: https://login.surveda-xx.org
+    command:
+    - /app/migrate
+    labels:
+      io.rancher.container.pull_image: always
+      io.rancher.container.start_once: 'true'
+  asterisk-bridge:
+    privileged: true
+    image: instedd/host_bridge
+    environment:
+      INPUT_PORT: '5038'
+    labels:
+      io.rancher.container.pull_image: always
+  web:
+    image: instedd/verboice:824-africas-talking
+    environment:
+      BROKER_HOST: broker
+      BROKER_PORT: '9999'
+      DATABASE_URL: mysql2://verboice:YOUR_VERBOICE_DB_PASSWORD@mysql.db/verboice
+      GUISSO_CLIENT_ID: YOUR_VERBOICE_CLIENT_ID_IN_GUISSO
+      GUISSO_CLIENT_SECRET: YOUR_VERBOICE_CLIENT_SECRET_IN_GUISSO
+      GUISSO_ENABLED: 'true'
+      GUISSO_URL: https://login.surveda-xx.org
+      INSTEDD_THEME: https://a4b5cff76c528f65ea0a-27a040455636240d133755398736da07.ssl.cf2.rackcdn.com
+    volumes:
+    - verboice-data:/app/data
+    labels:
+      io.rancher.container.pull_image: always
+  asterisk:
+    image: instedd/verboice-asterisk
+    environment:
+      AUTOCONFIG: ''
+      BROKER_HOST: broker
+    network_mode: host
+    volumes:
+    - verboice-asterisk-config:/etc/asterisk/verboice
+    - verboice-sounds:/var/lib/asterisk/sounds/verboice
+    - verboice-data:/data
+    ports:
+    - 5060:5060/udp
+    labels:
+      io.rancher.container.dns: 'true'
+      io.rancher.sidekicks: asterisk-bridge
+      io.rancher.container.pull_image: always
+  broker:
+    image: instedd/verboice-broker:824-africas-talking
+    environment:
+      AMI_HOST: asterisk-bridge.asterisk
+      BROKER_BIND: any
+      BROKER_HOST: broker
+      CRYPT_SECRET: super_secret
+      DB_HOST: mysql.db
+      DB_NAME: verboice
+      DB_PASS: YOUR_VERBOICE_DB_PASSWORD
+      DB_USER: verboice
+      ASTERISK_RECORD_DIR: /data/call_logs/
+      BASE_URL: https://verboice.surveda-xx.org
+      BROKER_HTTPD_BASE_URL: https://verboice.surveda-xx.org/
+      TWILIO_CALLBACK_URL: https://verboice.surveda-xx.org/twilio
+    stdin_open: true
+    volumes:
+    - verboice-asterisk-config:/usr/local/etc/asterisk
+    - verboice-sounds:/usr/local/var/lib/asterisk/sounds/verboice
+    - verboice-data:/data
+    tty: true
+    pid: host
+    labels:
+      io.rancher.container.pull_image: always

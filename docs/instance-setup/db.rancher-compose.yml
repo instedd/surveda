@@ -1,0 +1,8 @@
+version: '2'
+services:
+  mysql:
+    scale: 1
+    start_on_create: true
+  mysql-backup:
+    scale: 1
+    start_on_create: true

@@ -1,0 +1,17 @@
+version: '2'
+services:
+  db-migrate:
+    scale: 1
+    start_on_create: true
+  asterisk-bridge:
+    scale: 1
+    start_on_create: true
+  web:
+    scale: 1
+    start_on_create: true
+  asterisk:
+    scale: 1
+    start_on_create: true
+  broker:
+    scale: 1
+    start_on_create: true

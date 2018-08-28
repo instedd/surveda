@@ -1,0 +1,25 @@
+version: '2'
+services:
+  mysql:
+    image: instedd/ask-mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ** REALLY SECURE PASSWORD **
+    volumes:
+    - mysql-data:/var/lib/mysql
+    labels:
+      io.rancher.container.pull_image: always
+  mysql-backup:
+    image: schickling/mysql-backup-s3
+    environment:
+      MULTI_FILES: 'yes'
+      MYSQL_HOST: mysql
+      MYSQL_PASSWORD: ** Copy MYSQL_ROOT_PASSWORD from `mysql` service **
+      MYSQL_USER: root
+      S3_ACCESS_KEY_ID: AKIAIF6RBZ5PIUQEQHJA
+      S3_BUCKET: instedd-backups
+      S3_PREFIX: surveda-#{country_code}
+      S3_REGION: us-east-1
+      S3_SECRET_ACCESS_KEY: ** Copy AKIAIF6RBZ5PIUQEQHJA secret key from other container **
+      SCHEDULE: '@daily'
+    labels:
+      io.rancher.container.pull_image: always
