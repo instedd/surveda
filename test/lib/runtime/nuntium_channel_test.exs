@@ -98,8 +98,8 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     }
   end
 
-  @channel_foo %{"id" => 1, "name" => "foo"}
-  @channel_bar %{"id" => 2, "name" => "bar"}
+  @channel_foo %{"name" => "foo"}
+  @channel_bar %{"name" => "bar"}
   @base_url "http://test.com"
 
   describe "channel sync" do
@@ -121,7 +121,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
           settings: %{
             "nuntium_account" => "test_account",
             "nuntium_channel" => "bar",
-            "nuntium_channel_id" => 2
+            "nuntium_channel_id" => "bar"
           }
         },
         %Ask.Channel{
@@ -133,7 +133,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
           settings: %{
             "nuntium_account" => "test_account",
             "nuntium_channel" => "foo",
-            "nuntium_channel_id" => 1
+            "nuntium_channel_id" => "foo"
           }
         }
       ] = channels
@@ -144,10 +144,10 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     test "create channel" do
       user = insert(:user)
       user_id = user.id
-      NuntiumChannel.create_channel(user, @base_url, @channel_foo)
+      NuntiumChannel.create_channel(user, @base_url, Map.put(@channel_foo, "account", "test_account"))
       channels = Ask.Channel |> Repo.all
       assert [
-        %Ask.Channel{user_id: ^user_id, provider: "nuntium", base_url: @base_url, type: "sms", name: "foo", settings: %{"nuntium_channel" => "foo", "nuntium_channel_id" => 1}}
+        %Ask.Channel{user_id: ^user_id, provider: "nuntium", base_url: @base_url, type: "sms", name: "foo - test_account", settings: %{"nuntium_channel" => "foo", "nuntium_channel_id" => "foo", "nuntium_account" => "test_account" } }
       ] = channels
     end
   end
