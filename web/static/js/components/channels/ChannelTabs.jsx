@@ -1,18 +1,39 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
 import {Tabs, TabLink} from '../ui'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
+import * as channelActions from '../../actions/channel'
+import { config } from '../../config'
+import some from 'lodash/some'
 
 class ChannelTabs extends Component {
+  componentDidMount() {
+    const { channelActions, channelId } = this.props
+    channelActions.fetchChannelIfNeeded(channelId)
+  }
+
+  activeChannelUI(channel) {
+    return some(config[channel.provider], provider => (provider.baseUrl == channel.channelBaseUrl) && provider.channel_ui)
+  }
+
   render() {
-    const { channelId, t } = this.props
+    const { channel, channelId, t } = this.props
+
+    if (!channel) {
+      return <div />
+    }
+
+    const settingsTab = this.activeChannelUI(channel)
+      ? <TabLink key='settings' tabId='channel_tabs' to={routes.channelSettings(channelId)}>{t('Settings')}</TabLink>
+      : null
 
     return (
       <Tabs id='channel_tabs'>
         <TabLink key='share' tabId='channel_tabs' to={routes.channelShare(channelId)}>{t('Share')}</TabLink>
         <TabLink key='patterns' tabId='channel_tabs' to={routes.channelPatterns(channelId)}>{t('Patterns')}</TabLink>
-        <TabLink key='settings' tabId='channel_tabs' to={routes.channelSettings(channelId)}>{t('Settings')}</TabLink>
+        {settingsTab}
       </Tabs>
     )
   }
@@ -20,11 +41,18 @@ class ChannelTabs extends Component {
 
 ChannelTabs.propTypes = {
   t: PropTypes.func,
-  channelId: PropTypes.any
+  channelId: PropTypes.any,
+  channelActions: Object,
+  channel: Object
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  channelId: ownProps.params.channelId
+  channelId: ownProps.params.channelId,
+  channel: state.channel.data
 })
 
-export default translate()(connect(mapStateToProps)(ChannelTabs))
+const mapDispatchToProps = (dispatch) => ({
+  channelActions: bindActionCreators(channelActions, dispatch)
+})
+
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(ChannelTabs))

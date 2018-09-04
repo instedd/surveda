@@ -141,20 +141,24 @@ class ChannelIndex extends Component<any> {
 
     const nuntiumProviderUI = (index, multiple) => {
       let name = 'Nuntium'
-      const { t } = this.props
+      const { t, authorizations } = this.props
       if (multiple) name = `${name} (${config.nuntium[index].friendlyName})`
+
+      const newChannelIcon = authActions.hasInAuthorizations(authorizations, 'nuntium', index) && config.nuntium[index].channel_ui
+        ? (<span onClick={() => newChannel('nuntium', index)}>
+          <i className='material-icons arrow-right'>chevron_right</i>
+        </span>)
+        : null
 
       return (
         <li key={`nuntium-${index}`} className='collection-item icon nuntium'>
           <h5>{name}</h5>
           {providerSwitch('nuntium', index)}
-          <span onClick={() => newChannel('nuntium', index)}>
-            <i className='material-icons arrow-right'>chevron_right</i>
-          </span>
+          { newChannelIcon }
           <span className='channel-description'>
             <b>{t('SMS channels')}</b>
             <br />
-            {t('Clickatell, DTAC, I-POP, Multimodem iSms and 8 more')}
+            {t("Twilio, SMPP, Chikka, QST Server, Africa's Talking and 8 more")}
           </span>
         </li>
       )
@@ -164,6 +168,14 @@ class ChannelIndex extends Component<any> {
       let name = 'Verboice'
       if (multiple) name = `${name} (${config.verboice[index].friendlyName})`
 
+      const { authorizations } = this.props
+
+      const newChannelIcon = authActions.hasInAuthorizations(authorizations, 'verboice', index) && config.verboice[index].channel_ui
+        ? (<span onClick={() => newChannel('verboice', index)}>
+          <i className='material-icons arrow-right'>chevron_right</i>
+        </span>)
+        : null
+
       return (
         <li key={`verboice-${index}`} className={`collection-item icon verboice`}>
           <h5>{name}</h5>
@@ -171,11 +183,9 @@ class ChannelIndex extends Component<any> {
           <span className='channel-description'>
             <b>{t('Voice channels')}</b>
             <br />
-            {t('Callcentric, SIP client, SIP server, Skype, Twillio')}
+            {t("Callcentric, SIP client, SIP server, Skype, Twilio, Africa's Talking, Nexmo")}
           </span>
-          <span onClick={() => newChannel('verboice', index)}>
-            <i className='material-icons arrow-right'>chevron_right</i>
-          </span>
+          { newChannelIcon }
         </li>
       )
     }

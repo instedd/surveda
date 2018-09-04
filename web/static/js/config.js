@@ -2,7 +2,8 @@
 
 type ProviderConfig = {
   friendlyName: string,
-  baseUrl: string
+  baseUrl: string,
+  channel_ui: boolean
 }
 
 type Config = {
