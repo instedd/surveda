@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## Quercus 0.17
+
+### Features
+
+* Step sections with support for randomization of section order at runtime [#1398](https://github.com/instedd/ask/issues/1398), [#1399](https://github.com/instedd/ask/issues/1399)
+* Phone number mapping per channel [#1397](https://github.com/instedd/ask/issues/1397)
+
 ## Pine 0.16.2
 
 ### Features
