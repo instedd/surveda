@@ -10,7 +10,7 @@ import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from '../ui'
 import { stopSurvey } from '../../api'
 import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
-import { referenceColorClasses, referenceColors } from '../../referenceColors'
+import { referenceColorClasses, referenceColors, referenceColorClassForUnassigned, referenceColorForUnassigned } from '../../referenceColors'
 import classNames from 'classnames/bind'
 import { Stats, Forecasts } from '@instedd/surveda-d3-components'
 import { translate } from 'react-i18next'
@@ -143,6 +143,8 @@ class SurveyShow extends Component<any, State> {
 
     let colors = referenceColors(reference.length)
 
+    const hasQuotas = survey.quotas.vars.length > 0
+
     let forecastsReferences = reference.map((r, i) => {
       const name = r.name ? r.name : ''
       const modes = r.modes ? modeLabel(r.modes) : ''
@@ -154,6 +156,17 @@ class SurveyShow extends Component<any, State> {
         id: r.id
       }
     })
+
+    if (hasQuotas) {
+      forecastsReferences = [
+        {
+          label: 'unassigned',
+          color: referenceColorForUnassigned(),
+          id: ''
+        },
+        ...forecastsReferences
+      ]
+    }
 
     // TODO: we should be doing this when receiving properties, not at render
     let forecasts = forecastsReferences.map(d => {
@@ -236,7 +249,7 @@ class SurveyShow extends Component<any, State> {
         </div>
         <div className='row'>
           <div className='col s12'>
-            {this.dispositions(respondentsByDisposition, reference)}
+            {this.dispositions(respondentsByDisposition, reference, hasQuotas)}
           </div>
         </div>
       </div>
@@ -260,17 +273,34 @@ class SurveyShow extends Component<any, State> {
     this.setState(newState)
   }
 
-  groupRows(group, groupStats, reference) {
+  referenceIds(reference) {
+    return Object.keys(reference).map((refKey) => reference[refKey].id)
+  }
+
+  groupRows(group, groupStats, reference, hasQuotas) {
     let details = groupStats.detail
     let detailsKeys = Object.keys(details)
-    let referenceIds = Object.keys(reference)
-    let colorClasses = referenceColorClasses(referenceIds.length)
+    const defaultZeroValue = '-'
+    let colorClasses = referenceColorClasses(this.referenceIds(reference).length)
+    let referenceIds = hasQuotas ? ['', ...this.referenceIds(reference)] : this.referenceIds(reference)
+
+    const colorClassFor = (referenceId, index) => {
+      if (hasQuotas) {
+        if (referenceId) {
+          return colorClasses[index - 1]
+        } else {
+          return referenceColorClassForUnassigned()
+        }
+      } else {
+        return colorClasses[index]
+      }
+    }
 
     const groupStatsbyReference = (referenceIds, detailsKeys, colorClasses, details) => {
       if (referenceIds.length > 1) {
         return referenceIds.map((referenceId, i) => {
           const totals = detailsKeys.map((detail) => details[detail].byReference[referenceId] || 0)
-          return <td key={referenceId} className={classNames('right-align', colorClasses[i])}>{sum(totals)}</td>
+          return <td key={referenceId} className={classNames('right-align', colorClassFor(referenceId, i))}>{sum(totals) || defaultZeroValue}</td>
         })
       }
     }
@@ -278,7 +308,7 @@ class SurveyShow extends Component<any, State> {
       <tr key={group}>
         <td>{dispositionGroupLabel(group)}</td>
         {groupStatsbyReference(referenceIds, detailsKeys, colorClasses, details)}
-        <td className='right-align'>{groupStats.count}</td>
+        <td className='right-align'>{groupStats.count || defaultZeroValue}</td>
         <td className='right-align'>{this.round(groupStats.percent)}%</td>
         <td className='expand-column'>
           <a className='link' onClick={e => this.expandGroup(group)}>
@@ -296,14 +326,9 @@ class SurveyShow extends Component<any, State> {
         let referenceColumns = null
         if (referenceIds.length > 1) {
           referenceColumns = referenceIds.map((referenceId, i) => {
-            let value = null
-            if (detail == 'registered') {
-              value = '-'
-            } else {
-              value = byReference[referenceId] || 0
-            }
+            const value = byReference[referenceId] || defaultZeroValue
 
-            return <td key={referenceId} className={classNames('right-align', colorClasses[i])}>{value}</td>
+            return <td key={referenceId} className={classNames('right-align', colorClassFor(referenceId, i))}>{value}</td>
           })
         }
 
@@ -322,10 +347,10 @@ class SurveyShow extends Component<any, State> {
     return [groupRow, rows]
   }
 
-  dispositions(respondentsByDisposition, reference) {
+  dispositions(respondentsByDisposition, reference, hasQuotas) {
     const { t } = this.props
     const dispositionsGroup = ['responsive', 'contacted', 'uncontacted']
-    let referenceIds = Object.keys(reference)
+    let referenceIds = hasQuotas ? ['', ...this.referenceIds(reference)] : this.referenceIds(reference)
     return (
       <div className='card overflow'>
         <div className='card-table-title'>
@@ -336,7 +361,7 @@ class SurveyShow extends Component<any, State> {
             <thead>
               <tr>
                 <th>{t('Status')}</th>
-                {referenceIds.length > 1 ? referenceIds.map((referenceId) => (<th key={referenceId} className='right-align' />)) : []}
+                {referenceIds.length > 1 ? referenceIds.map((referenceId) => (<th key={referenceId || 'unassigned'} className='right-align' />)) : []}
                 <th className='right-align'>{t('Quantity')}</th>
                 <th className='right-align'>
                   {t('Percent')}
@@ -347,7 +372,7 @@ class SurveyShow extends Component<any, State> {
               {
                 dispositionsGroup.map(group => {
                   let groupStats = respondentsByDisposition[group]
-                  return this.groupRows(group, groupStats, reference)
+                  return this.groupRows(group, groupStats, reference, hasQuotas)
                 })
               }
             </tbody>

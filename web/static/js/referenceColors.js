@@ -38,3 +38,16 @@ export function referenceColors(totalNeeded: number) {
     style.getPropertyValue(variableName).trim()
   )
 }
+
+export function referenceColorClassForUnassigned() {
+  return 'referenceColorUnassigned'
+}
+
+export function referenceColorForUnassigned() {
+  const rootElement = document.getElementById('root')
+  if (!rootElement) {
+    return ''
+  }
+  let style = getComputedStyle(rootElement)
+  return style.getPropertyValue('--reference-color-unassigned')
+}

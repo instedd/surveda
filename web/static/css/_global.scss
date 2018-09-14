@@ -144,6 +144,7 @@
   --reference-color13: #f44336;
   --reference-color14: #e91e63;
   --reference-color15: #9c27b0;
+  --reference-color-unassigned: #999999;
   --single-reference-stroke-color: #4faf55;
 }
 
@@ -163,6 +164,7 @@ div.card-table td.referenceColor12 { color: var(--reference-color12) !important;
 div.card-table td.referenceColor13 { color: var(--reference-color13) !important; }
 div.card-table td.referenceColor14 { color: var(--reference-color14) !important; }
 div.card-table td.referenceColor15 { color: var(--reference-color15) !important; }
+div.card-table td.referenceColorUnassigned { color: var(--reference-color-unassigned) !important; }
 
 .referenceBackgroundColor0 { background-color: var(--reference-color0); }
 .referenceBackgroundColor1 { background-color: var(--reference-color1); }
