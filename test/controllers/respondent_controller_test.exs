@@ -321,7 +321,7 @@ defmodule Ask.RespondentControllerTest do
       t = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
-      survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire])
+      survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire], count_partial_results: true)
       insert_list(10, :respondent, survey: survey, state: "pending", disposition: "registered")
       insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
       insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
@@ -686,6 +686,38 @@ defmodule Ask.RespondentControllerTest do
         "total_respondents" => 5,
         "target" => 10
       }}
+    end
+
+    test "completion percentage considers partial and interim partial respondents when quotas are present and survey counts partial results", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, quota_vars: ["gender"], questionnaires: [questionnaire], count_partial_results: true)
+      insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 5, count: 2)
+      insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 5, count: 3)
+      insert_list(2, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
+      insert_list(2, :respondent, survey: survey, questionnaire: questionnaire, disposition: "interim partial")
+      insert_list(1, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed")
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      data = json_response(conn, 200)["data"]
+
+      assert data["completion_percentage"] == 50.0
+    end
+
+    test "completion percentage doesn't consider partial and interim partial respondents when quotas are present and survey doesn't count partial results", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, quota_vars: ["gender"], questionnaires: [questionnaire])
+      insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 5, count: 2)
+      insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 5, count: 3)
+      insert_list(2, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
+      insert_list(2, :respondent, survey: survey, questionnaire: questionnaire, disposition: "interim partial")
+      insert_list(1, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed")
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      data = json_response(conn, 200)["data"]
+
+      assert data["completion_percentage"] == 10.0
     end
   end
 
