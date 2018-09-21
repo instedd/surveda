@@ -3,7 +3,7 @@ defmodule Ask.RespondentControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{QuotaBucket, Survey, Response, Respondent, ShortLink, Stats, ActivityLog}
+  alias Ask.{QuotaBucket, Survey, SurveyLogEntry, Response, Respondent, ShortLink, Stats, ActivityLog}
 
   describe "normal" do
     setup :user
@@ -1189,22 +1189,41 @@ defmodule Ask.RespondentControllerTest do
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
       channel = insert(:channel, name: "test_channel")
       for _ <- 1..200 do
-        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_2, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_1, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
         insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
       end
 
       conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
 
+      respondent_1_interactions_ids = Repo.all(
+        from entry in SurveyLogEntry,
+          join: r in Respondent, on: entry.respondent_id == r.id,
+          where: r.id == ^respondent_1.id,
+          order_by: entry.id,
+          select: entry.id
+      )
+
+      respondent_2_interactions_ids = Repo.all(
+        from entry in SurveyLogEntry,
+          join: r in Respondent, on: entry.respondent_id == r.id,
+          where: r.id == ^respondent_2.id,
+          order_by: entry.id,
+          select: entry.id
+      )
+
       expected_list = List.flatten(
-        ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
-        for _ <- 1..200 do
-          "1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
+        ["ID,Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
+        for i <- 0..199 do
+          interaction_id = respondent_1_interactions_ids |> Enum.at(i)
+          "#{interaction_id},1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
         end,
-        for _ <- 1..200 do
-          ["5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
-          "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"]
+        for i <- 0..199 do
+          interaction_id_sms = respondent_2_interactions_ids |> Enum.at(2*i)
+          interaction_id_web = respondent_2_interactions_ids |> Enum.at(2*i+1)
+          ["#{interaction_id_sms},5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+          "#{interaction_id_web},5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"]
         end,
       ])
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
@@ -1370,25 +1389,44 @@ defmodule Ask.RespondentControllerTest do
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
       channel = insert(:channel, name: "test_channel")
       for _ <- 1..200 do
-        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_1, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_2, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_2, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_1, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
         insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
       end
 
       {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"}))
+
+      respondent_1_interactions_ids = Repo.all(
+        from entry in SurveyLogEntry,
+          join: r in Respondent, on: entry.respondent_id == r.id,
+          where: r.id == ^respondent_1.id,
+          order_by: entry.id,
+          select: entry.id
+      )
+
+      respondent_2_interactions_ids = Repo.all(
+        from entry in SurveyLogEntry,
+          join: r in Respondent, on: entry.respondent_id == r.id,
+          where: r.id == ^respondent_2.id,
+          order_by: entry.id,
+          select: entry.id
+      )
 
       conn = get conn, short_link_path(conn, :access, link.hash)
       # conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
 
       expected_list = List.flatten(
-        ["Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
-        for _ <- 1..200 do
-          "1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
+        ["ID,Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
+        for i <- 0..199 do
+          interaction_id = respondent_1_interactions_ids |> Enum.at(i)
+          "#{interaction_id},1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
         end,
-        for _ <- 1..200 do
-          ["5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
-          "5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"]
+        for i <- 0..199 do
+          interaction_id_sms = respondent_2_interactions_ids |> Enum.at(2*i)
+          interaction_id_web = respondent_2_interactions_ids |> Enum.at(2*i+1)
+          ["#{interaction_id_sms},5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
+          "#{interaction_id_web},5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"]
         end,
       ])
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)

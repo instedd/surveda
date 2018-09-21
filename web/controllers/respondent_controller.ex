@@ -792,10 +792,10 @@ defmodule Ask.RespondentController do
         |> Survey.adjust_timezone(survey)
         |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
 
-        [e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
+        [e.id, e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
       end)
 
-    header = ["Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
+    header = ["ID", "Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_interactions")
