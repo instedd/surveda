@@ -20,6 +20,9 @@
   Create a security group `surveda-xx-host` that allows SSH (TCP port 22), HTTP (TCP port 80), HTTPS (TCP port 443), UDP (port 500), UDP (port 4500), UDP port 5060 (label it `SIP`), UDP ports 10000-20000 (label it `RDP`), All ICMP IPv4 (ICMP ports 0-65535), All ICMP IPv6 (IPV6 ICMP, All ports) - all of them from Any Source (`0.0.0.0/0, ::/0`).
   Use any key pair that is avaialable, or create a new one. You'll add your private key in a moment, but for that you'll need this keypair.
 
+1. **Add an Elastic IP to the server**
+  **TODO** Detail how to assign an Elastic IP to the server. We usually have to connect cloud instances with telco's servers, so we need to specify them which IPs to allow on their firewalls - so we want those to be Elastic IPs.
+
 1. **Connect to the server & copy your SSH keys**
   Go to Instances list, select your new instance, copy its IP address. `chmod 600 ~/Downloads/your-keypair.pem` and then `ssh ubuntu@${INSTANCE_IP} -i ~/Downloads/your-keypair.pem` to connect.
   Copy your computer's `~/.ssh/id_ed25519.pub`'s content (if you only have a `~/.ssh/id_rsa.pub`, you should DEFINITELY create an ED25519 one) into the server's `~/.ssh/authorized_keys`. Logout, `ssh` once again without using the `.pem` key, and remove the initial public key that was in the server's `~/.ssh/authorized_keys`.
