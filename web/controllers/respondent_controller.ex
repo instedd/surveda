@@ -256,7 +256,7 @@ defmodule Ask.RespondentController do
 
         counts |> Map.put(disposition, %{by_reference: by_reference, count: disposition_total_count})
       end)
-    dispositions = ["registered", "queued", "failed", "contacted", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
+    dispositions = ["registered", "queued", "failed", "contacted", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "interim partial", "partial", "completed"]
     respondent_counts =
       dispositions
       |> Enum.reduce(respondent_counts, fn (disposition, respondent_counts) ->
@@ -271,7 +271,7 @@ defmodule Ask.RespondentController do
     groups = %{
       uncontacted: ["registered", "queued", "failed"],
       contacted: ["contacted", "unresponsive"],
-      responsive: ["started", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
+      responsive: ["started", "ineligible", "rejected", "breakoff", "refused", "interim partial", "partial", "completed"]
     }
 
     groups

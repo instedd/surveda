@@ -99,6 +99,7 @@ defmodule Ask.RespondentControllerTest do
             "ineligible" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
             "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
             "rejected" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "interim partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
           },
         },
       }
@@ -111,6 +112,19 @@ defmodule Ask.RespondentControllerTest do
                  %{"date" => "2016-01-02", "percent" => 50.0}
                ]
              }
+    end
+
+    test "respondents_by_disposition includes interim partial results", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      string_questionnaire_id = to_string(questionnaire.id)
+      survey = insert(:survey, project: project, cutoff: 10, questionnaires: [questionnaire])
+      insert_list(5, :respondent, survey: survey, questionnaire: questionnaire, disposition: "interim partial")
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      data = json_response(conn, 200)["data"]
+
+      assert data["respondents_by_disposition"]["responsive"]["detail"]["interim partial"] == %{"count" => 5, "percent" => 100, "by_reference" => %{string_questionnaire_id => 5}}
     end
 
     test "cumulative percentages for a running survey with two questionnaires and two modes", %{conn: conn, user: user} do
@@ -302,6 +316,7 @@ defmodule Ask.RespondentControllerTest do
             "ineligible" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
             "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
             "rejected" => %{"count" => 1, "percent" => 100*1/total, "by_reference" => %{"#{bucket_2.id}" => 1}},
+            "interim partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
           },
         },
       }
@@ -315,6 +330,21 @@ defmodule Ask.RespondentControllerTest do
                    %{"date" => "2016-01-02", "percent" => 25.0}
                  ]
                }
+    end
+
+    test "respondents_by_disposition for a given survey with quotas includes interim partial results", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 10, quota_vars: ["gender"], questionnaires: [questionnaire])
+      bucket_1 = insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 4, count: 2)
+      bucket_2 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
+      insert_list(2, :respondent, survey: survey, questionnaire: questionnaire, disposition: "interim partial", quota_bucket: bucket_1)
+      insert_list(2, :respondent, survey: survey, questionnaire: questionnaire, disposition: "interim partial", quota_bucket: bucket_2)
+
+      conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
+      data = json_response(conn, 200)["data"]
+
+      assert data["respondents_by_disposition"]["responsive"]["detail"]["interim partial"] == %{"count" => 4, "percent" => 100, "by_reference" => %{ "#{bucket_1.id}" => 2, "#{bucket_2.id}" => 2}}
     end
 
     test "lists stats for a given survey, with dispositions", %{conn: conn, user: user} do
@@ -362,6 +392,7 @@ defmodule Ask.RespondentControllerTest do
             "ineligible" => %{"count" => 3, "percent" => 100*3/total, "by_reference" => %{string_questionnaire_id => 3}},
             "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
             "rejected" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+            "interim partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
           },
         },
       }
@@ -496,6 +527,7 @@ defmodule Ask.RespondentControllerTest do
               "ineligible" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
               "refused" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
               "rejected" => %{"count" => 0, "percent" => 0.0, "by_reference" => %{}},
+              "interim partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
             },
           },
         },
@@ -573,7 +605,8 @@ defmodule Ask.RespondentControllerTest do
               "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
               "refused" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
               "rejected" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "interim partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
             },
             "percent" => 0.0
           },
@@ -669,7 +702,8 @@ defmodule Ask.RespondentControllerTest do
               "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
               "refused" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
               "rejected" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
-              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
+              "started" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
+              "interim partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0}
             },
             "percent" => 40.0
           },

@@ -67,7 +67,7 @@ export const dispositionLabel = (disposition) => {
       return i18n.t('Refused')
     case 'partial':
       return i18n.t('Partial')
-    case 'interim partial':
+    case 'interimPartial':
       return i18n.t('Interim Partial')
     case 'ineligible':
       return i18n.t('Ineligible')
