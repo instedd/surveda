@@ -29,11 +29,22 @@ class ChannelSettings extends Component<Props, State> {
   componentDidMount() {
     const { channelActions, channelId } = this.props
     channelActions.fetchChannelIfNeeded(channelId)
-      .then(channel => {
-        api.getUIToken(channel.provider, channel.channelBaseUrl)
-          .then(accessToken => this.setState({accessToken}))
-      })
+      .then(channel => this.updateChannel(channel))
   }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.channel !== prevProps.channel) {
+      this.updateChannel(this.props.channel)
+    }
+  }
+
+  updateChannel(channel) {
+    if (!channel) return
+
+    api.getUIToken(channel.provider, channel.channelBaseUrl)
+      .then(accessToken => this.setState({accessToken}))
+  }
+
 
   backToChannelIndex() {
     const { router } = this.props

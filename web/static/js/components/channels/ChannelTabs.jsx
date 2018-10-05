@@ -42,8 +42,8 @@ class ChannelTabs extends Component {
 ChannelTabs.propTypes = {
   t: PropTypes.func,
   channelId: PropTypes.any,
-  channelActions: Object,
-  channel: Object
+  channelActions: PropTypes.object,
+  channel: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => ({
