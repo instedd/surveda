@@ -5,6 +5,7 @@ type Props = {
   baseUrl: string,
   accessToken: string,
   channelId: number | 'new',
+  params?: ?{[key: string]: string},
   onCreated?: Function,
   onUpdated?: Function,
   onCancel?: Function
@@ -56,12 +57,22 @@ class ChannelUI extends Component<Props> {
     window.removeEventListener('message', this.onMessage)
   }
 
+  extraParams() {
+    const { params } = this.props
+
+    if (!params) return ''
+
+    return Object.keys(params)
+      .map(key => `&${key}=${encodeURIComponent(params[key])}`)
+      .join()
+  }
+
   render() {
     const { baseUrl, accessToken, channelId } = this.props
 
     return (
       <iframe style={{border: '0px', width: '100%'}}
-        ref='iframe' src={`${baseUrl}/channels_ui/${channelId}?access_token=${accessToken}`} />
+        ref='iframe' src={`${baseUrl}/channels_ui/${channelId}?access_token=${accessToken}${this.extraParams()}`} />
     )
   }
 }

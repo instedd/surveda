@@ -45,7 +45,6 @@ class ChannelSettings extends Component<Props, State> {
       .then(accessToken => this.setState({accessToken}))
   }
 
-
   backToChannelIndex() {
     const { router } = this.props
     router.push(routes.channels)
@@ -53,6 +52,12 @@ class ChannelSettings extends Component<Props, State> {
 
   idForChannel(channel) {
     return channel.settings[`${channel.provider}ChannelId`]
+  }
+
+  paramsForChannel(channel) {
+    if (channel.provider == 'nuntium') {
+      return {account: channel.settings.nuntiumAccount}
+    }
   }
 
   render() {
@@ -68,6 +73,7 @@ class ChannelSettings extends Component<Props, State> {
               baseUrl={channel.channelBaseUrl}
               accessToken={accessToken}
               channelId={this.idForChannel(channel)}
+              params={this.paramsForChannel(channel)}
               onCancel={() => this.backToChannelIndex()}
               onUpdated={() => this.backToChannelIndex()}
             />
