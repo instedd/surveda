@@ -80,6 +80,7 @@ defmodule Ask.Config do
         client_secret: read_env!(env_var_name, index, "CLIENT_SECRET"),
         app_id: read_env!(env_var_name, index, "APP_ID"),
       ],
+      channel_ui: read_env!(env_var_name, index, "CHANNEL_UI") == "true"
     ]
   end
 
@@ -94,6 +95,7 @@ defmodule Ask.Config do
           client_secret: read_env!(env_var_name, "CLIENT_SECRET"),
           app_id: read_env!(env_var_name, "APP_ID"),
         ],
+        channel_ui: read_env!(env_var_name, "CHANNEL_UI") == "true"
       ]
     else
       nil
