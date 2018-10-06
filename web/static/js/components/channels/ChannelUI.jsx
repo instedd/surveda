@@ -4,7 +4,7 @@ import React, { Component } from 'react'
 type Props = {
   baseUrl: string,
   accessToken: string,
-  channelId: number | 'new',
+  channelId: any,
   params?: ?{[key: string]: string},
   onCreated?: Function,
   onUpdated?: Function,

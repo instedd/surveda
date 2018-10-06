@@ -159,8 +159,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   defp channel_changeset(channel, base_url, api_channel) do
     settings = %{
       "nuntium_account" => api_channel["account"],
-      "nuntium_channel" => api_channel["name"],
-      "nuntium_channel_id" => api_channel["name"]
+      "nuntium_channel" => api_channel["name"]
     }
 
     Channel.changeset(channel, %{
@@ -213,8 +212,7 @@ defmodule Ask.Runtime.NuntiumChannel do
             base_url: base_url,
             settings: %{
               "nuntium_channel" => nuntium_channel["name"],
-              "nuntium_account" => account,
-              "nuntium_channel_id" => nuntium_channel["name"]
+              "nuntium_account" => account
             }})
         |> Repo.insert
       end

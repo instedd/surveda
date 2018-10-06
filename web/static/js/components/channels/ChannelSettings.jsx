@@ -51,7 +51,12 @@ class ChannelSettings extends Component<Props, State> {
   }
 
   idForChannel(channel) {
-    return channel.settings[`${channel.provider}ChannelId`]
+    switch (channel.provider) {
+      case 'nuntium':
+        return channel.settings.nuntiumChannel
+      case 'verboice':
+        return channel.settings.verboiceChannelId
+    }
   }
 
   paramsForChannel(channel) {
