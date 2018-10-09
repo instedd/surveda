@@ -1,5 +1,17 @@
 # InSTEDD Surveda Changelog
 
+## Spruce 0.19
+
+### Features
+
+* Add ID column in the interactions file [#1402](https://github.com/instedd/ask/issues/1402)
+* Include interim partials in the dashboard [#1430](https://github.com/instedd/ask/issues/1430)
+
+### Bugfixes
+
+* Fix: target complete % is invalid when "interim partial" is involved [#1424](https://github.com/instedd/ask/issues/1424)
+* Fix: quantity totals are invalid when quotas are used [#1425](https://github.com/instedd/ask/issues/1425)
+
 ## Redwood 0.18
 
 ### Features
