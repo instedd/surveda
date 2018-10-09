@@ -149,6 +149,28 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
   end
 
+  def create_channel(user, base_url, api_channel) do
+    user
+    |> Ecto.build_assoc(:channels)
+    |> channel_changeset(base_url, api_channel)
+    |> Repo.insert!()
+  end
+
+  defp channel_changeset(channel, base_url, api_channel) do
+    settings = %{
+      "nuntium_account" => api_channel["account"],
+      "nuntium_channel" => api_channel["name"]
+    }
+
+    Channel.changeset(channel, %{
+      name: "#{api_channel["name"]} - #{api_channel["account"]}",
+      type: "sms",
+      provider: "nuntium",
+      base_url: base_url,
+      settings: settings
+    })
+  end
+
   defp collect_remote_channels(client, accounts, all_channels \\ []) do
     case accounts do
       [account | accounts] ->
@@ -164,7 +186,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
   end
 
-  defp sync_channels(user_id, base_url, nuntium_channels) do
+  def sync_channels(user_id, base_url, nuntium_channels) do
     user = Ask.User |> Repo.get!(user_id)
     channels = user
     |> assoc(:channels)

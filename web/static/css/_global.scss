@@ -1467,3 +1467,22 @@ a.disabled {
   left: 70px;
   font-size: 12px;
 }
+
+// -------------- Channels -------------
+
+.big-done {
+  width: 100%;
+
+  .material-icons.check {
+    @extend .green-text;
+    font-size: 100px;
+    border: 6px solid color('grey', 'lighten-2');
+    border-radius: 50%;
+    padding: 30px;
+  }
+
+  a {
+    @extend .grey-text;
+    text-transform: uppercase;
+  }
+}

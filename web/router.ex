@@ -114,6 +114,7 @@ defmodule Ask.Router do
       resources "/audios", AudioController, only: [:create, :show]
       resources "/authorizations", OAuthClientController, only: [:index, :delete]
       get "/authorizations/synchronize", OAuthClientController, :synchronize
+      get "/authorizations/ui_token", OAuthClientController, :ui_token
       get "/accept_invitation", InviteController, :accept_invitation, as: :accept_invitation
       get "/invite", InviteController, :invite, as: :invite
       get "/send_invitation", InviteController, :send_invitation, as: :send_invitation

@@ -30,16 +30,18 @@ config :ask, :channel,
 config :ask, Nuntium,
   base_url: "http://nuntium.com",
   guisso: [
-    base_url: "http://nuntium.com",
-    client_id: "A_NO_SO_SECRET_CLIENT_ID",
+    base_url: "http://localhost:7654",
+    client_id: "NUNTIUM_CLIENT_ID",
+    client_secret: "NUNTIUM_CLIENT_SECRET",
     app_id: "AN_APP_ID"
   ]
 
 config :ask, Verboice,
   base_url: "http://verboice.com",
   guisso: [
-    base_url: "http://verboice.com",
-    client_id: "A_NO_SO_SECRET_CLIENT_ID",
+    base_url: "http://localhost:7654",
+    client_id: "VERBOICE_CLIENT_ID",
+    client_secret: "VERBOICE_CLIENT_SECRET",
     app_id: "AN_APP_ID"
   ]
 

@@ -77,6 +77,32 @@ defmodule Ask.OAuthClientController do
     render conn, "callback.html"
   end
 
+  def ui_token(conn, %{"provider" => provider, "base_url" => base_url}) do
+    user = get_current_user(conn)
+    token = Ask.OAuthTokenServer.get_token(provider, base_url, user.id)
+
+    provider_type =
+      case provider do
+        "verboice" -> Verboice
+        "nuntium" -> Nuntium
+      end
+    guisso_config = Ask.Config.provider_config(provider_type, base_url)[:guisso]
+
+    # Construct the OAuth client to exchange the token
+    client =
+      OAuth2.Client.new(
+        strategy: Guisso.OAuth.Strategy.TokenExchange,
+        client_id: guisso_config[:client_id],
+        client_secret: guisso_config[:client_secret],
+        token_url: "#{guisso_config[:base_url]}/oauth2/token"
+      )
+
+    # Get the token from Guisso server
+    client = OAuth2.Client.get_token!(client, access_token: token.access_token)
+
+    render conn, "ui_token.json", token: client.token
+  end
+
   defp get_current_user(conn) do
     user = User.Helper.current_user(conn)
     Repo.get(Ask.User, user.id)

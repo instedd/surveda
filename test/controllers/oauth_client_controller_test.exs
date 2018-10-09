@@ -127,4 +127,45 @@ defmodule Ask.OAuthClientControllerTest do
 
     assert 1 = channels |> Enum.count
   end
+
+  describe "temporary token" do
+    setup do
+      Ask.OAuthTokenServer.start_link
+      Ask.Config.start_link
+      bypass = Bypass.open(port: 7654)
+      {:ok, bypass: bypass}
+    end
+
+    test "obtain a temporary token for verboice", %{conn: conn, user: user, bypass: bypass} do
+      token = insert(:oauth_token, user: user, provider: "verboice", base_url: "http://verboice.com")
+
+      Bypass.expect bypass, "POST", "/oauth2/token", fn conn ->
+        conn = Plug.Parsers.call(conn, Plug.Parsers.init(parsers: [:urlencoded]))
+        assert "token_exchange" == conn.params["grant_type"]
+        assert "VERBOICE_CLIENT_ID" == conn.params["client_id"]
+        assert "VERBOICE_CLIENT_SECRET" == conn.params["client_secret"]
+        assert token.access_token["access_token"] == conn.params["access_token"]
+        Plug.Conn.resp(conn, 200, ~s<{"access_token": "itBqib2Mfocq1urnhmP1gtr7TtpMpDUEnAKTYoXfFRk", "token_type": "bearer", "expires_in": 899}>)
+      end
+
+      conn = get conn, o_auth_client_path(conn, :ui_token, provider: "verboice", base_url: "http://verboice.com")
+      assert json_response(conn, 200) == "itBqib2Mfocq1urnhmP1gtr7TtpMpDUEnAKTYoXfFRk"
+    end
+
+    test "obtain a temporary token for nuntium", %{conn: conn, user: user, bypass: bypass} do
+      token = insert(:oauth_token, user: user, provider: "nuntium", base_url: "http://nuntium.com")
+
+      Bypass.expect bypass, "POST", "/oauth2/token", fn conn ->
+        conn = Plug.Parsers.call(conn, Plug.Parsers.init(parsers: [:urlencoded]))
+        assert "token_exchange" == conn.params["grant_type"]
+        assert "NUNTIUM_CLIENT_ID" == conn.params["client_id"]
+        assert "NUNTIUM_CLIENT_SECRET" == conn.params["client_secret"]
+        assert token.access_token["access_token"] == conn.params["access_token"]
+        Plug.Conn.resp(conn, 200, ~s<{"access_token": "itBqib2Mfocq1urnhmP1gtr7TtpMpDUEnAKTYoXfFRk", "token_type": "bearer", "expires_in": 899}>)
+      end
+
+      conn = get conn, o_auth_client_path(conn, :ui_token, provider: "nuntium", base_url: "http://nuntium.com")
+      assert json_response(conn, 200) == "itBqib2Mfocq1urnhmP1gtr7TtpMpDUEnAKTYoXfFRk"
+    end
+  end
 end

@@ -9,4 +9,8 @@ defmodule Ask.OAuthClientView do
       }
     end)}
   end
+
+  def render("ui_token.json", %{token: token}) do
+    token.access_token
+  end
 end

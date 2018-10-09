@@ -153,28 +153,39 @@ defmodule Ask.Runtime.VerboiceChannel do
           |> Ecto.build_assoc(:channels)
         end
 
-      settings = %{
-        "verboice_channel" => api_channel["name"],
-        "verboice_channel_id" => api_channel["id"]
-      }
-
-      settings =
-        if api_channel["shared_by"] do
-          settings |> Map.put("shared_by", api_channel["shared_by"])
-        else
-          settings
-        end
-
       channel
-      |> Channel.changeset(%{
-        name: api_channel["name"],
-        type: "ivr",
-        provider: "verboice",
-        base_url: base_url,
-        settings: settings
-      })
+      |> channel_changeset(base_url, api_channel)
       |> Repo.insert_or_update!()
     end)
+  end
+
+  def create_channel(user, base_url, api_channel) do
+    user
+    |> Ecto.build_assoc(:channels)
+    |> channel_changeset(base_url, api_channel)
+    |> Repo.insert!()
+  end
+
+  defp channel_changeset(channel, base_url, api_channel) do
+    settings = %{
+      "verboice_channel" => api_channel["name"],
+      "verboice_channel_id" => api_channel["id"]
+    }
+
+    settings =
+      if api_channel["shared_by"] do
+        settings |> Map.put("shared_by", api_channel["shared_by"])
+      else
+        settings
+      end
+
+    Channel.changeset(channel, %{
+      name: api_channel["name"],
+      type: "ivr",
+      provider: "verboice",
+      base_url: base_url,
+      settings: settings
+    })
   end
 
   defp match_channel(%{settings: %{"verboice_channel_id" => id}}, %{"id" => id}), do: true

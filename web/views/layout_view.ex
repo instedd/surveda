@@ -47,6 +47,7 @@ defmodule Ask.LayoutView do
     %{
       baseUrl: app_env[:base_url],
       friendlyName: app_env[:friendly_name],
+      channel_ui: app_env[:channel_ui],
       guisso: %{
         baseUrl: app_env[:guisso][:base_url],
         clientId: app_env[:guisso][:client_id],

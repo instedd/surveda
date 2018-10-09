@@ -1,7 +1,24 @@
-const defaultConfig = {
-  user_settings: {
-    language: 'en'
-  }
+// @flow
+
+type ProviderConfig = {
+  friendlyName: string,
+  baseUrl: string,
+  channel_ui: boolean
 }
 
-export const config = window.appConfig || defaultConfig
+type Config = {
+  nuntium: ProviderConfig[],
+  verboice: ProviderConfig[],
+  available_languages_for_numbers: string[]
+};
+
+const defaultConfig = {
+  available_languages_for_numbers: ['en'],
+  user_settings: {
+    language: 'en'
+  },
+  nuntium: [],
+  verboice: []
+}
+
+export const config: Config = window.appConfig || defaultConfig

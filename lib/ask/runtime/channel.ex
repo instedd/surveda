@@ -13,5 +13,6 @@ defmodule Ask.Runtime.ChannelProvider do
   @callback oauth2_authorize(code :: String.t, redirect_uri :: String.t, base_url :: String.t) :: OAuth2.AccessToken.t
   @callback oauth2_refresh(access_token :: OAuth2.AccessToken.t, base_url :: String.t) :: OAuth2.AccessToken.t
   @callback sync_channels(user_id :: integer, base_url :: String.t) :: :ok
+  @callback create_channel(user :: Ask.User.t, base_url :: String.t, api_channel :: map) :: Ask.Channel
   @callback callback(conn :: Plug.Conn.t, params :: map()) :: Plug.Conn.t
 end

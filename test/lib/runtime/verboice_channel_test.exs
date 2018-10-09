@@ -193,6 +193,18 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     end
   end
 
+  describe "create channel" do
+    test "create channel" do
+      user = insert(:user)
+      user_id = user.id
+      VerboiceChannel.create_channel(user, "http://test.com", @channel_foo)
+      channels = Ask.Channel |> Repo.all
+      assert [
+        %Ask.Channel{user_id: ^user_id, provider: "verboice", base_url: "http://test.com", type: "ivr", name: "foo", settings: %{"verboice_channel" => "foo", "verboice_channel_id" => 1}}
+      ] = channels
+    end
+  end
+
   describe "process_call_response" do
     test "creates new state" do
       new_state = VerboiceChannel.process_call_response({:ok, %{"call_id" => 123}})

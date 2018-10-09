@@ -269,6 +269,10 @@ export const updateChannel = (channel) => {
   return apiPutJSON(`/channels/${channel.id}`, channelSchema, { channel })
 }
 
+export const createChannel = (provider, baseUrl, channel) => {
+  return apiPostJSON(`channels`, channelSchema, { provider, baseUrl, channel })
+}
+
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
     questionnaireSchema, { questionnaire })
@@ -304,6 +308,11 @@ export const deleteAuthorization = (provider, baseUrl, keepChannels = false) => 
 
 export const synchronizeChannels = () => {
   return apiFetch(`authorizations/synchronize`)
+}
+
+export const getUIToken = (provider, baseUrl) => {
+  return apiFetch(`authorizations/ui_token?provider=${provider}&base_url=${encodeURIComponent(baseUrl)}`)
+    .then(response => response.json())
 }
 
 export const autocompleteVars = (projectId, text) => {

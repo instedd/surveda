@@ -138,4 +138,38 @@ defmodule Ask.ChannelControllerTest do
       assert json_response(conn, 200)["data"]["patterns"] == patterns
     end
   end
+
+  describe "create" do
+    test "create channel", %{conn: conn, user: user} do
+      user_id = user.id
+      insert(:oauth_token, user: user)
+      conn = post conn, channel_path(conn, :create), provider: "test", base_url: "http://test.com", channel: %{"id" => 123}
+
+      channel = user
+      |> assoc(:channels)
+      |> Repo.one!()
+
+      assert %Ask.Channel{
+        user_id: ^user_id, provider: "test", base_url: "http://test.com", type: "ivr", name: "test", settings: %{"id" => 123}
+      } = channel
+
+      assert json_response(conn, 200)["data"] == %{
+        "id" => channel.id,
+        "user_id" => user.id,
+        "name" => channel.name,
+        "type" => channel.type,
+        "provider" => channel.provider,
+        "settings" => channel.settings,
+        "channelBaseUrl" => channel.base_url,
+        "projects" => [],
+        "patterns" => []
+      }
+    end
+
+    test "cannot create channel if the authorization doesn't exist", %{conn: conn} do
+      assert_error_sent :forbidden, fn ->
+        post conn, channel_path(conn, :create), provider: "test", base_url: "http://test.com", channel: %{"id" => 123}
+      end
+    end
+  end
 end

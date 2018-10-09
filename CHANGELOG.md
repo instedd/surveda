@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Redwood 0.18
+
+### Features
+
+* Embedded UI to create and edit Verboice and Nuntium channels [#1185](https://github.com/instedd/ask/issues/1185)
+
 ## Quercus 0.17
 
 ### Features
