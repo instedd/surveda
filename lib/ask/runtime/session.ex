@@ -195,6 +195,10 @@ defmodule Ask.Runtime.Session do
     log_response({:reply, response}, channel, mode, respondent, disposition)
   end
 
+  defp log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
+    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", new_disposition)
+  end
+
   defp handle_setup_response(setup_response) do
     case setup_response do
       {:ok, new_state} ->
@@ -347,16 +351,22 @@ defmodule Ask.Runtime.Session do
   end
 
   def sync_step(session, response, current_mode, want_log_response \\ true) do
+    if want_log_response do
+      log_response(response, current_mode.channel, session.flow.mode, session.respondent, session.respondent.disposition)
+    end
+
     step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode))
     respondent = session.respondent
 
-    if want_log_response do
-      case step_answer do
-        {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        {:no_retries_left, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        _ -> :ok
-      end
+    reply = case step_answer do
+      {:end, _, reply} -> reply
+      {:ok, _flow, reply} -> reply
+      {:no_retries_left, _flow, reply} -> reply
+      _ -> %Reply{}
+    end
+
+    if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
+      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, respondent.disposition, reply.disposition)
     end
 
     respondent = store_responses_and_assign_bucket(respondent, step_answer, session)

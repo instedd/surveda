@@ -495,6 +495,40 @@ defmodule Ask.DummySteps do
         )
       ]
 
+      @flag_step_after_multiple_choice [
+        multiple_choice_step(
+          id: "bbb",
+          title: "Do you exercise?",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "interim partial"
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(
+            sms: sms_prompt("Is this the last question?"),
+            ivr: tts_prompt("Is this the last question?")
+          ),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
+      ]
+
       @flag_steps_ineligible_skip_logic [
         multiple_choice_step(
           id: "aaa",
