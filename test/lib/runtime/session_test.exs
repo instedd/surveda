@@ -904,7 +904,7 @@ defmodule Ask.SessionTest do
 
       disposition_changed_entry = entries |> Enum.at(response_index + 1)
       assert disposition_changed_entry.action_type == "disposition changed"
-      assert disposition_changed_entry.action_data == "interim partial"
+      assert disposition_changed_entry.action_data == "Interim partial"
       assert disposition_changed_entry.disposition == "started"
 
       prompt_entry = entries |> Enum.at(response_index + 2)
@@ -933,7 +933,7 @@ defmodule Ask.SessionTest do
       third_entry = entries |> Enum.at(2)
       assert third_entry.action_type == "disposition changed"
       assert third_entry.disposition == "queued"
-      assert third_entry.action_data == "contacted"
+      assert third_entry.action_data == "Contacted"
       fourth_entry = entries |> Enum.at(3)
       assert fourth_entry.action_type == "prompt"
       assert fourth_entry.disposition == "contacted"

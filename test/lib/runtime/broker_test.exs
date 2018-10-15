@@ -1765,7 +1765,7 @@ defmodule Ask.BrokerTest do
     assert do_you_smoke.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -1775,7 +1775,7 @@ defmodule Ask.BrokerTest do
     assert do_smoke.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -1872,7 +1872,7 @@ defmodule Ask.BrokerTest do
     assert answer.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -1887,7 +1887,7 @@ defmodule Ask.BrokerTest do
     assert do_smoke.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -2065,7 +2065,7 @@ defmodule Ask.BrokerTest do
     assert do_you_smoke.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -2075,7 +2075,7 @@ defmodule Ask.BrokerTest do
     assert do_smoke.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -2204,7 +2204,7 @@ defmodule Ask.BrokerTest do
     assert do_you_smoke.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -2214,7 +2214,7 @@ defmodule Ask.BrokerTest do
     assert do_smoke.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -2336,7 +2336,7 @@ defmodule Ask.BrokerTest do
     assert answer.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -2351,7 +2351,7 @@ defmodule Ask.BrokerTest do
     assert do_smoke.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -2525,7 +2525,7 @@ defmodule Ask.BrokerTest do
     assert do_you_smoke.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -2535,7 +2535,7 @@ defmodule Ask.BrokerTest do
     assert foo.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -2555,7 +2555,7 @@ defmodule Ask.BrokerTest do
     assert dont_smoke.disposition == "started"
 
     assert disposition_changed_to_rejected.survey_id == survey.id
-    assert disposition_changed_to_rejected.action_data == "rejected"
+    assert disposition_changed_to_rejected.action_data == "Rejected"
     assert disposition_changed_to_rejected.action_type == "disposition changed"
     assert disposition_changed_to_rejected.disposition == "started"
 
@@ -2662,9 +2662,9 @@ defmodule Ask.BrokerTest do
     assert answer.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
-    assert disposition_changed_to_contacted.action_data == "contacted"
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -2677,7 +2677,7 @@ defmodule Ask.BrokerTest do
     assert foo.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
@@ -2697,7 +2697,7 @@ defmodule Ask.BrokerTest do
     assert dont_smoke.disposition == "started"
 
     assert disposition_changed_to_rejected.survey_id == survey.id
-    assert disposition_changed_to_rejected.action_data == "rejected"
+    assert disposition_changed_to_rejected.action_data == "Rejected"
     assert disposition_changed_to_rejected.action_type == "disposition changed"
     assert disposition_changed_to_rejected.disposition == "started"
 
@@ -3482,7 +3482,7 @@ defmodule Ask.BrokerTest do
     assert do_you_smoke.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
-    assert disposition_changed_to_contacted.action_data == "contacted"
+    assert disposition_changed_to_contacted.action_data == "Contacted"
     assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
@@ -3492,7 +3492,7 @@ defmodule Ask.BrokerTest do
     assert response1.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
-    assert disposition_changed_to_started.action_data == "started"
+    assert disposition_changed_to_started.action_data == "Started"
     assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
