@@ -8,7 +8,7 @@ defmodule Ask.SurveyLogEntry do
     field :respondent_hashed_number, :string
     belongs_to :channel, Ask.Channel
     field :disposition, :string
-    field :action_type, :string # One of "prompt", "contact" or "response"
+    field :action_type, :string # One of "prompt", "contact", "response" or "disposition changed"
     field :action_data, :string
     field :timestamp, Ecto.DateTime
 
