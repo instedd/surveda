@@ -503,8 +503,12 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
+    new_disposition = Flow.failed_disposition_from(respondent.disposition)
+
+    Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+
     respondent
-    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from(respondent.disposition)})
+    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition})
     |> Repo.update!
     |> RespondentDispositionHistory.create(old_disposition, mode)
   end

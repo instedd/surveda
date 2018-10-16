@@ -195,7 +195,7 @@ defmodule Ask.Runtime.Session do
     log_response({:reply, response}, channel, mode, respondent, disposition)
   end
 
-  defp log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
+  def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
     SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
   end
 

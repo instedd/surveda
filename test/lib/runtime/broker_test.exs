@@ -645,6 +645,7 @@ defmodule Ask.BrokerTest do
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -676,6 +677,14 @@ defmodule Ask.BrokerTest do
 
     Broker.handle_info(:poll, nil)
 
+    :ok = logger |> GenServer.stop
+    [_, _, disposition_changed_to_unresponsive] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert disposition_changed_to_unresponsive.survey_id == survey.id
+    assert disposition_changed_to_unresponsive.action_data == "Unresponsive"
+    assert disposition_changed_to_unresponsive.action_type == "disposition changed"
+    assert disposition_changed_to_unresponsive.disposition == "contacted"
+
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "unresponsive"
@@ -688,6 +697,7 @@ defmodule Ask.BrokerTest do
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -713,6 +723,14 @@ defmodule Ask.BrokerTest do
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
     Broker.handle_info(:poll, nil)
+
+    :ok = logger |> GenServer.stop
+    [disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert disposition_changed_to_failed.survey_id == survey.id
+    assert disposition_changed_to_failed.action_data == "Failed"
+    assert disposition_changed_to_failed.action_type == "disposition changed"
+    assert disposition_changed_to_failed.disposition == "queued"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -829,6 +847,7 @@ defmodule Ask.BrokerTest do
     Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -872,6 +891,15 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "breakoff"
+
+    :ok = logger |> GenServer.stop
+
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Breakoff"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end
@@ -927,9 +955,10 @@ defmodule Ask.BrokerTest do
   end
 
   test "started respondents are marked as breakoff after all retries are met (IVR)" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -954,13 +983,23 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "failed"
     assert respondent.disposition == "breakoff"
 
+    :ok = logger |> GenServer.stop
+
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Breakoff"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "started"
+
     :ok = broker |> GenServer.stop
   end
 
   test "interim partial respondents are kept as partial after all retries are met (IVR)" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -984,6 +1023,70 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
     assert respondent.disposition == "partial"
+
+    :ok = logger |> GenServer.stop
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Partial"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "interim partial"
+
+    :ok = broker |> GenServer.stop
+  end
+
+  test "interim partial respondents are kept as partial after 8 hours (SMS)" do
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@flag_step_after_multiple_choice)
+
+    {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "queued"
+
+    Broker.delivery_confirm(respondent, "Do you smoke?")
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "contacted"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+    assert respondent.disposition == "interim partial"
+
+    Broker.delivery_confirm(respondent, "Do you exercise?")
+
+    now = Timex.now
+
+    Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "stalled"
+    assert respondent.disposition == "interim partial"
+
+    # After eight hours it should be marked as failed
+    eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
+    (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
+
+    Broker.handle_info(:poll, nil)
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "failed"
+    assert respondent.disposition == "partial"
+
+    :ok = logger |> GenServer.stop
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Partial"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "interim partial"
 
     :ok = broker |> GenServer.stop
   end
@@ -1026,9 +1129,10 @@ defmodule Ask.BrokerTest do
   end
 
   test "contacted respondents are marked as unresponsive after all retries are met (IVR)" do
-    [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1049,6 +1153,14 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "failed"
     assert respondent.disposition == "unresponsive"
 
+    :ok = logger |> GenServer.stop
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Unresponsive"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "contacted"
+
     :ok = broker |> GenServer.stop
   end
 
@@ -1056,7 +1168,7 @@ defmodule Ask.BrokerTest do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, broker} = Broker.start_link
-    {:ok, _} = SurveyLogger.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1069,10 +1181,12 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
 
+    :ok = logger |> GenServer.stop
+
     [{"contact", nc}, {"disposition changed", nd}, {"prompt", np}] = Repo.all(from s in SurveyLogEntry, select: {s.action_type, count("*")}, group_by: s.action_type)
     assert nc == 5
     assert np == 3
-    assert nd == 1
+    assert nd == 2
 
     :ok = broker |> GenServer.stop
   end
@@ -3474,7 +3588,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [do_you_smoke, disposition_changed_to_contacted, response1, disposition_changed_to_started, response2, response3] = (Repo.get(Respondent, respondent.id) |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [do_you_smoke, disposition_changed_to_contacted, response1, disposition_changed_to_started, response2, response3, disposition_changed_to_breakoff] = (Repo.get(Respondent, respondent.id) |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -3505,6 +3619,11 @@ defmodule Ask.BrokerTest do
     assert response3.action_data == "fooo (1734) 5##.#### bar"
     assert response3.action_type == "response"
     assert response3.disposition == "started"
+
+    assert disposition_changed_to_breakoff.survey_id == survey.id
+    assert disposition_changed_to_breakoff.action_data == "Breakoff"
+    assert disposition_changed_to_breakoff.action_type == "disposition changed"
+    assert disposition_changed_to_breakoff.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end
