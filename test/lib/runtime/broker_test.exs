@@ -41,6 +41,54 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
   end
 
+  test "adds a single disposition-changed survey-log-entry when respondent finishes and disposition was already completed" do
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@completed_flag_step_after_multiple_choice)
+
+    {:ok, logger} = SurveyLogger.start_link
+    {:ok, broker} = Broker.start_link
+    Broker.poll
+
+    respondent = Repo.get(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Do you exercise?")
+
+    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+
+    :ok = logger |> GenServer.stop
+    assert [do_you_exercise, disposition_changed_to_contacted, do_exercise, disposition_changed_to_started, disposition_changed_to_completed, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert do_you_exercise.survey_id == survey.id
+    assert do_you_exercise.action_data == "Do you exercise?"
+    assert do_you_exercise.action_type == "prompt"
+    assert do_you_exercise.disposition == "queued"
+
+    assert disposition_changed_to_contacted.survey_id == survey.id
+    assert disposition_changed_to_contacted.action_data == "Contacted"
+    assert disposition_changed_to_contacted.action_type == "disposition changed"
+    assert disposition_changed_to_contacted.disposition == "queued"
+
+    assert do_exercise.survey_id == survey.id
+    assert do_exercise.action_data == "Yes"
+    assert do_exercise.action_type == "response"
+    assert do_exercise.disposition == "contacted"
+
+    assert disposition_changed_to_started.survey_id == survey.id
+    assert disposition_changed_to_started.action_data == "Started"
+    assert disposition_changed_to_started.action_type == "disposition changed"
+    assert disposition_changed_to_started.disposition == "contacted"
+
+    assert disposition_changed_to_completed.survey_id == survey.id
+    assert disposition_changed_to_completed.action_data == "Completed"
+    assert disposition_changed_to_completed.action_type == "disposition changed"
+    assert disposition_changed_to_completed.disposition == "started"
+
+    assert thank_you.survey_id == survey.id
+    assert thank_you.action_data == "Thank you"
+    assert thank_you.action_type == "prompt"
+    assert thank_you.disposition == "completed"
+
+    :ok = broker |> GenServer.stop
+  end
+
   test "set the respondent as completed (disposition) when the questionnaire is empty" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
@@ -1871,7 +1919,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [do_you_smoke, disposition_changed_to_contacted, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [do_you_smoke, disposition_changed_to_contacted, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you, disposition_changed_to_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -1928,6 +1976,11 @@ defmodule Ask.BrokerTest do
     assert thank_you.action_type == "prompt"
     assert thank_you.disposition == "started"
 
+    assert disposition_changed_to_completed.survey_id == survey.id
+    assert disposition_changed_to_completed.action_data == "Completed"
+    assert disposition_changed_to_completed.action_type == "disposition changed"
+    assert disposition_changed_to_completed.disposition == "started"
+
     :ok = broker |> GenServer.stop
   end
 
@@ -1973,7 +2026,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [enqueueing, answer, disposition_changed_to_contacted, do_you_smoke, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [enqueueing, answer, disposition_changed_to_contacted, do_you_smoke, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, thank_you, disposition_changed_to_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert enqueueing.survey_id == survey.id
     assert enqueueing.action_data == "Enqueueing call"
@@ -2040,6 +2093,11 @@ defmodule Ask.BrokerTest do
     assert thank_you.action_type == "prompt"
     assert thank_you.disposition == "started"
 
+    assert disposition_changed_to_completed.survey_id == survey.id
+    assert disposition_changed_to_completed.action_data == "Completed"
+    assert disposition_changed_to_completed.action_type == "disposition changed"
+    assert disposition_changed_to_completed.disposition == "started"
+
     :ok = broker |> GenServer.stop
   end
 
@@ -2047,6 +2105,7 @@ defmodule Ask.BrokerTest do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
@@ -2094,6 +2153,15 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
     assert respondent.session == nil
     assert respondent.completed_at in interval
+
+    :ok = logger |> GenServer.stop
+
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Completed"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "interim partial"
 
     :ok = broker |> GenServer.stop
   end
@@ -2171,7 +2239,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [do_you_smoke, disposition_changed_to_contacted, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [do_you_smoke, disposition_changed_to_contacted, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, disposition_changed_to_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -2222,6 +2290,11 @@ defmodule Ask.BrokerTest do
     assert eleven.action_data == "11"
     assert eleven.action_type == "response"
     assert eleven.disposition == "started"
+
+    assert disposition_changed_to_completed.survey_id == survey.id
+    assert disposition_changed_to_completed.action_data == "Completed"
+    assert disposition_changed_to_completed.action_type == "disposition changed"
+    assert disposition_changed_to_completed.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end
@@ -2310,7 +2383,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [do_you_smoke, disposition_changed_to_contacted, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, bye] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [do_you_smoke, disposition_changed_to_contacted, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, bye, disposition_changed_to_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
@@ -2366,6 +2439,11 @@ defmodule Ask.BrokerTest do
     assert bye.action_data == "Bye"
     assert bye.action_type == "prompt"
     assert bye.disposition == "started"
+
+    assert disposition_changed_to_completed.survey_id == survey.id
+    assert disposition_changed_to_completed.action_data == "Completed"
+    assert disposition_changed_to_completed.action_type == "disposition changed"
+    assert disposition_changed_to_completed.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end
@@ -2437,7 +2515,7 @@ defmodule Ask.BrokerTest do
 
     :ok = logger |> GenServer.stop
 
-    assert [enqueueing, answer, disposition_changed_to_contacted, do_you_smoke, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    assert [enqueueing, answer, disposition_changed_to_contacted, do_you_smoke, do_smoke, disposition_changed_to_started, do_you_exercise, do_exercise, second_perfect_number, ninety_nine, question_number, eleven, disposition_changed_to_completed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert enqueueing.survey_id == survey.id
     assert enqueueing.action_data == "Enqueueing call"
@@ -2498,6 +2576,11 @@ defmodule Ask.BrokerTest do
     assert eleven.action_data == "11"
     assert eleven.action_type == "response"
     assert eleven.disposition == "started"
+
+    assert disposition_changed_to_completed.survey_id == survey.id
+    assert disposition_changed_to_completed.action_data == "Completed"
+    assert disposition_changed_to_completed.action_type == "disposition changed"
+    assert disposition_changed_to_completed.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end

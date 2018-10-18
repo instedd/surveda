@@ -539,6 +539,14 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :end, reply_disposition) do
+    [session, mode] = case respondent.session do
+      nil -> [nil, nil]
+      session ->
+        session = session |> Session.load
+        mode = session.current_mode |> SessionMode.mode
+        [session, mode]
+    end
+
     old_disposition = respondent.disposition
 
     new_disposition =
@@ -546,13 +554,10 @@ defmodule Ask.Runtime.Broker do
       |> Flow.resulting_disposition(reply_disposition)
       |> Flow.resulting_disposition("completed")
 
-    mode =
-      if respondent.session do
-        session = respondent.session |> Session.load
-        session.current_mode |> SessionMode.mode
-      else
-        nil
-      end
+    # If reply_disposition == "completed", change of disposition has already been logged during Session.sync_step
+    if session && new_disposition != old_disposition && reply_disposition != "completed" do
+      Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+    end
 
     respondent
     |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
