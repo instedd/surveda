@@ -3697,9 +3697,10 @@ defmodule Ask.BrokerTest do
   end
 
   test "when channel fails a survey log entry is created" do
-    [_survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3712,6 +3713,25 @@ defmodule Ask.BrokerTest do
     [queued_history, failed_history] = disposition_histories
     assert queued_history.disposition == "queued"
     assert failed_history.disposition == "failed"
+
+    :ok = logger |> GenServer.stop
+
+    [enqueueing, channel_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert enqueueing.survey_id == survey.id
+    assert enqueueing.action_data == "Enqueueing call"
+    assert enqueueing.action_type == "contact"
+    assert enqueueing.disposition == "queued"
+
+    assert channel_failed.survey_id == survey.id
+    assert channel_failed.action_data == "The channel failed"
+    assert channel_failed.action_type == "contact"
+    assert channel_failed.disposition == "queued"
+
+    assert disposition_changed_to_failed.survey_id == survey.id
+    assert disposition_changed_to_failed.action_data == "Failed"
+    assert disposition_changed_to_failed.action_type == "disposition changed"
+    assert disposition_changed_to_failed.disposition == "queued"
 
     :ok = broker |> GenServer.stop
   end
