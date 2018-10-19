@@ -44,6 +44,9 @@ defmodule Ask.Runtime.Session do
         end
         {:end, reply, respondent}
       {:ok, flow, reply} ->
+        if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
+          log_disposition_changed(respondent, channel, flow.mode, respondent.disposition, reply.disposition)
+        end
         log_prompts(reply, channel, flow.mode, respondent)
         respondent = runtime_channel |> Channel.ask(respondent, token, reply)
         {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}

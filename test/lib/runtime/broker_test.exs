@@ -538,12 +538,21 @@ defmodule Ask.BrokerTest do
   test "mark disposition as partial" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
 
-    {:ok, _} = Broker.start_link
+    {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
+
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "active"
+
+    Broker.delivery_confirm(respondent, "Do you exercise?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -558,6 +567,22 @@ defmodule Ask.BrokerTest do
     assert history.respondent_id == respondent.id
     assert history.disposition == "interim partial"
     assert history.mode == "sms"
+
+    :ok = logger |> GenServer.stop
+
+    [disposition_changed_to_interim_partial, do_you_exercise] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert disposition_changed_to_interim_partial.survey_id == survey.id
+    assert disposition_changed_to_interim_partial.action_data == "Interim partial"
+    assert disposition_changed_to_interim_partial.action_type == "disposition changed"
+    assert disposition_changed_to_interim_partial.disposition == "queued"
+
+    assert do_you_exercise.survey_id == survey.id
+    assert do_you_exercise.action_data == "Do you exercise?"
+    assert do_you_exercise.action_type == "prompt"
+    assert do_you_exercise.disposition == "interim partial"
+
+    :ok = broker |> GenServer.stop
   end
 
   test "mark disposition as ineligible on end" do
