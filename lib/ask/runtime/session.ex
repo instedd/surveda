@@ -373,6 +373,7 @@ defmodule Ask.Runtime.Session do
       {:end, _, reply} -> reply
       {:ok, _flow, reply} -> reply
       {:no_retries_left, _flow, reply} -> reply
+      {:stopped, _flow, reply} -> reply
       _ -> %Reply{}
     end
 
@@ -425,8 +426,7 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(session, {:stopped, _, reply}, current_mode) do
-    log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, session.respondent, reply.disposition)
+  defp handle_step_answer(session, {:stopped, _, reply}, _current_mode) do
     {:stopped, reply, session.respondent}
   end
 

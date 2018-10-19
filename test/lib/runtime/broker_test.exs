@@ -587,9 +587,10 @@ defmodule Ask.BrokerTest do
   end
 
   test "mark disposition as refused on end" do
-    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
+    [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
 
-    {:ok, _} = Broker.start_link
+    {:ok, broker} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
@@ -609,12 +610,44 @@ defmodule Ask.BrokerTest do
     history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "refused"
+
+    :ok = logger |> GenServer.stop
+
+    [do_exercise, disposition_changed_to_started, disposition_changed_to_refused, bye, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert do_exercise.survey_id == survey.id
+    assert do_exercise.action_data == "Yes"
+    assert do_exercise.action_type == "response"
+    assert do_exercise.disposition == "queued"
+
+    assert disposition_changed_to_started.survey_id == survey.id
+    assert disposition_changed_to_started.action_data == "Started"
+    assert disposition_changed_to_started.action_type == "disposition changed"
+    assert disposition_changed_to_started.disposition == "queued"
+
+    assert disposition_changed_to_refused.survey_id == survey.id
+    assert disposition_changed_to_refused.action_data == "Refused"
+    assert disposition_changed_to_refused.action_type == "disposition changed"
+    assert disposition_changed_to_refused.disposition == "started"
+
+    assert bye.survey_id == survey.id
+    assert bye.action_data == "Bye"
+    assert bye.action_type == "prompt"
+    assert bye.disposition == "refused"
+
+    assert thank_you.survey_id == survey.id
+    assert thank_you.action_data == "Thank you"
+    assert thank_you.action_type == "prompt"
+    assert thank_you.disposition == "refused"
+
+    :ok = broker |> GenServer.stop
   end
 
   test "mark disposition as refused and respondent as failed when the respondent sends 'STOP'" do
-    [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
+    [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
 
     {:ok, _} = Broker.start_link
+    {:ok, logger} = SurveyLogger.start_link
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
@@ -634,6 +667,14 @@ defmodule Ask.BrokerTest do
     history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
     assert history.disposition == "refused"
+
+    :ok = logger |> GenServer.stop
+    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
+
+    assert last_entry.survey_id == survey.id
+    assert last_entry.action_data == "Refused"
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == "started"
   end
 
   test "mark disposition as completed when partial on end" do

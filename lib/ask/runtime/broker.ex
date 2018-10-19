@@ -554,8 +554,8 @@ defmodule Ask.Runtime.Broker do
       |> Flow.resulting_disposition(reply_disposition)
       |> Flow.resulting_disposition("completed")
 
-    # If reply_disposition == "completed", change of disposition has already been logged during Session.sync_step
-    if session && new_disposition != old_disposition && reply_disposition != "completed" do
+    # If new_disposition == reply_disposition, change of disposition has already been logged during Session.sync_step
+    if session && new_disposition != old_disposition && new_disposition != reply_disposition do
       Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
     end
 
