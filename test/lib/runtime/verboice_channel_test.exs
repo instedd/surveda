@@ -244,15 +244,22 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
+      assert enqueueing.disposition == "queued"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "some random reason (42)"
       assert call_failed.action_type == "contact"
+      assert call_failed.disposition == "queued"
+
+      assert disposition_changed_to_failed.survey_id == survey.id
+      assert disposition_changed_to_failed.action_data == "Failed"
+      assert disposition_changed_to_failed.action_type == "disposition changed"
+      assert disposition_changed_to_failed.disposition == "queued"
 
       :ok = broker |> GenServer.stop
     end
@@ -282,15 +289,22 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
+      assert enqueueing.disposition == "queued"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "(42)"
       assert call_failed.action_type == "contact"
+      assert call_failed.disposition == "queued"
+
+      assert disposition_changed_to_failed.survey_id == survey.id
+      assert disposition_changed_to_failed.action_data == "Failed"
+      assert disposition_changed_to_failed.action_type == "disposition changed"
+      assert disposition_changed_to_failed.disposition == "queued"
 
       :ok = broker |> GenServer.stop
     end
@@ -321,15 +335,22 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
+      assert enqueueing.disposition == "queued"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "some random reason"
       assert call_failed.action_type == "contact"
+      assert call_failed.disposition == "queued"
+
+      assert disposition_changed_to_failed.survey_id == survey.id
+      assert disposition_changed_to_failed.action_data == "Failed"
+      assert disposition_changed_to_failed.action_type == "disposition changed"
+      assert disposition_changed_to_failed.disposition == "queued"
 
       :ok = broker |> GenServer.stop
     end
@@ -360,15 +381,22 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
+      assert enqueueing.disposition == "queued"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "failed"
       assert call_failed.action_type == "contact"
+      assert enqueueing.disposition == "queued"
+
+      assert disposition_changed_to_failed.survey_id == survey.id
+      assert disposition_changed_to_failed.action_data == "Failed"
+      assert disposition_changed_to_failed.action_type == "disposition changed"
+      assert disposition_changed_to_failed.disposition == "queued"
 
       :ok = broker |> GenServer.stop
     end
@@ -399,15 +427,22 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
+      assert enqueueing.disposition == "queued"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "no-answer: another reason (foo)"
       assert call_failed.action_type == "contact"
+      assert call_failed.disposition == "queued"
+
+      assert disposition_changed_to_failed.survey_id == survey.id
+      assert disposition_changed_to_failed.action_data == "Failed"
+      assert disposition_changed_to_failed.action_type == "disposition changed"
+      assert disposition_changed_to_failed.disposition == "queued"
 
       :ok = broker |> GenServer.stop
     end
@@ -438,15 +473,22 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
+      assert enqueueing.disposition == "queued"
 
       assert call_failed.survey_id == survey.id
       assert call_failed.action_data == "busy: yet another reason (bar)"
       assert call_failed.action_type == "contact"
+      assert call_failed.disposition == "queued"
+
+      assert disposition_changed_to_failed.survey_id == survey.id
+      assert disposition_changed_to_failed.action_data == "Failed"
+      assert disposition_changed_to_failed.action_type == "disposition changed"
+      assert disposition_changed_to_failed.disposition == "queued"
 
       :ok = broker |> GenServer.stop
     end

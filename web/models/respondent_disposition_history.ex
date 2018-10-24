@@ -1,5 +1,6 @@
 defmodule Ask.RespondentDispositionHistory do
   use Ask.Web, :model
+  alias Ask.{RespondentDispositionHistory, Repo}
 
   schema "respondent_disposition_history" do
     field :disposition, :string
@@ -16,5 +17,16 @@ defmodule Ask.RespondentDispositionHistory do
     struct
     |> cast(params, [:disposition, :mode])
     |> validate_required([:disposition])
+  end
+
+  def create(respondent, old_disposition, mode) do
+    if respondent.disposition && respondent.disposition != old_disposition do
+      %RespondentDispositionHistory{
+        respondent: respondent,
+        disposition: respondent.disposition,
+        mode: mode}
+      |> Repo.insert!
+    end
+    respondent
   end
 end

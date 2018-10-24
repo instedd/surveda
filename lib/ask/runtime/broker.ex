@@ -114,7 +114,6 @@ defmodule Ask.Runtime.Broker do
           mode -> mode
         end
       Session.delivery_confirm(session, title, session_mode)
-      update_respondent_disposition(session, "contacted")
     end
   end
 
@@ -237,7 +236,7 @@ defmodule Ask.Runtime.Broker do
     respondent = respondent
     |> Respondent.changeset(%{questionnaire_id: questionnaire.id, mode: mode, disposition: "queued"})
     |> Repo.update!
-    |> create_disposition_history(respondent.disposition, primary_mode)
+    |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
 
     primary_channel = RespondentGroup.primary_channel(group, mode)
     fallback_channel = RespondentGroup.fallback_channel(group, mode)
@@ -336,16 +335,6 @@ defmodule Ask.Runtime.Broker do
   def sync_step_internal(session, reply, session_mode) do
     transaction_result = Repo.transaction(fn ->
       try do
-        session = cond do
-          reply == Flow.Message.no_reply ->
-            # no_reply is produced, for example, from a timeout in Verboice
-            session
-          reply == Flow.Message.answer ->
-            update_respondent_disposition(session, "contacted")
-          true ->
-            update_respondent_disposition(session, "started")
-        end
-
         reply = mask_phone_number(session.respondent, reply)
         handle_session_step(Session.sync_step(session, reply, session_mode))
       rescue
@@ -514,10 +503,14 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
+    new_disposition = Flow.failed_disposition_from(respondent.disposition)
+
+    Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+
     respondent
-    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: Flow.failed_disposition_from(respondent.disposition)})
+    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition})
     |> Repo.update!
-    |> create_disposition_history(old_disposition, mode)
+    |> RespondentDispositionHistory.create(old_disposition, mode)
   end
 
   defp update_respondent(respondent, :stopped, disposition) do
@@ -546,6 +539,14 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, :end, reply_disposition) do
+    [session, mode] = case respondent.session do
+      nil -> [nil, nil]
+      session ->
+        session = session |> Session.load
+        mode = session.current_mode |> SessionMode.mode
+        [session, mode]
+    end
+
     old_disposition = respondent.disposition
 
     new_disposition =
@@ -553,34 +554,16 @@ defmodule Ask.Runtime.Broker do
       |> Flow.resulting_disposition(reply_disposition)
       |> Flow.resulting_disposition("completed")
 
-    mode =
-      if respondent.session do
-        session = respondent.session |> Session.load
-        session.current_mode |> SessionMode.mode
-      else
-        nil
-      end
+    # If new_disposition == reply_disposition, change of disposition has already been logged during Session.sync_step
+    if session && new_disposition != old_disposition && new_disposition != reply_disposition do
+      Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+    end
 
     respondent
     |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil})
     |> Repo.update!
-    |> create_disposition_history(old_disposition, mode)
+    |> RespondentDispositionHistory.create(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
-  end
-
-  def update_respondent_disposition(session, disposition) do
-    respondent = session.respondent
-    old_disposition = respondent.disposition
-    if Flow.should_update_disposition(old_disposition, disposition) do
-      respondent = respondent
-      |> Respondent.changeset(%{disposition: disposition})
-      |> Repo.update!
-      |> create_disposition_history(old_disposition, session.current_mode |> SessionMode.mode)
-
-      %{session | respondent: respondent}
-    else
-      session
-    end
   end
 
   defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state) do
@@ -589,7 +572,7 @@ defmodule Ask.Runtime.Broker do
       respondent
       |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at})
       |> Repo.update!
-      |> create_disposition_history(old_disposition, session.current_mode |> SessionMode.mode)
+      |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
       |> update_quota_bucket(old_disposition, session.count_partial_results)
     else
       update_respondent(respondent, {:ok, session, timeout}, nil)
@@ -600,17 +583,6 @@ defmodule Ask.Runtime.Broker do
     timeout_at = Timex.shift(Timex.now, minutes: timeout)
     (respondent |> Repo.preload(:survey)).survey
     |> Survey.next_available_date_time(timeout_at)
-  end
-
-  defp create_disposition_history(respondent, old_disposition, mode) do
-    if respondent.disposition && respondent.disposition != old_disposition do
-      %RespondentDispositionHistory{
-        respondent: respondent,
-        disposition: respondent.disposition,
-        mode: mode}
-      |> Repo.insert!
-    end
-    respondent
   end
 
   defp update_quota_bucket(respondent, old_disposition, count_partial_results) do

@@ -1,9 +1,9 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, QuotaBucket, Respondent, Schedule}
+  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Broker, Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns}
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -44,6 +44,9 @@ defmodule Ask.Runtime.Session do
         end
         {:end, reply, respondent}
       {:ok, flow, reply} ->
+        if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
+          log_disposition_changed(respondent, channel, flow.mode, respondent.disposition, reply.disposition)
+        end
         log_prompts(reply, channel, flow.mode, respondent)
         respondent = runtime_channel |> Channel.ask(respondent, token, reply)
         {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
@@ -195,6 +198,10 @@ defmodule Ask.Runtime.Session do
     log_response({:reply, response}, channel, mode, respondent, disposition)
   end
 
+  def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
+    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
+  end
+
   defp handle_setup_response(setup_response) do
     case setup_response do
       {:ok, new_state} ->
@@ -340,6 +347,7 @@ defmodule Ask.Runtime.Session do
 
   def delivery_confirm(session, title, current_mode) do
     log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
+    update_respondent_disposition(session, "contacted", current_mode)
   end
 
   def sync_step(session, response) do
@@ -347,16 +355,33 @@ defmodule Ask.Runtime.Session do
   end
 
   def sync_step(session, response, current_mode, want_log_response \\ true) do
+    if want_log_response do
+      log_response(response, current_mode.channel, session.flow.mode, session.respondent, session.respondent.disposition)
+    end
+
+    session = cond do
+      response == Flow.Message.no_reply ->
+        # no_reply is produced, for example, from a timeout in Verboice
+        session
+      response == Flow.Message.answer ->
+        update_respondent_disposition(session, "contacted", current_mode)
+      true ->
+        update_respondent_disposition(session, "started", current_mode)
+    end
+
     step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode))
     respondent = session.respondent
 
-    if want_log_response do
-      case step_answer do
-        {:end, _, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        {:ok, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        {:no_retries_left, _flow, reply} -> log_response(response, current_mode.channel, session.flow.mode, respondent, Reply.disposition(reply))
-        _ -> :ok
-      end
+    reply = case step_answer do
+      {:end, _, reply} -> reply
+      {:ok, _flow, reply} -> reply
+      {:no_retries_left, _flow, reply} -> reply
+      {:stopped, _flow, reply} -> reply
+      _ -> %Reply{}
+    end
+
+    if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
+      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, respondent.disposition, reply.disposition)
     end
 
     respondent = store_responses_and_assign_bucket(respondent, step_answer, session)
@@ -373,7 +398,7 @@ defmodule Ask.Runtime.Session do
   defp handle_step_answer(session, {:ok, flow, reply}, current_mode) do
     case falls_in_quota_already_completed?(session.respondent, flow) do
       true ->
-        session = Broker.update_respondent_disposition(session, "rejected")
+        session = update_respondent_disposition(session, "rejected", current_mode)
 
         if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
@@ -404,8 +429,7 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(session, {:stopped, _, reply}, current_mode) do
-    log_response({:reply, "STOP"}, current_mode.channel, session.flow.mode, session.respondent, reply.disposition)
+  defp handle_step_answer(session, {:stopped, _, reply}, _current_mode) do
     {:stopped, reply, session.respondent}
   end
 
@@ -548,6 +572,23 @@ defmodule Ask.Runtime.Session do
       true ->
         bucket = (respondent |> Repo.preload(:quota_bucket)).quota_bucket
         bucket.count >= bucket.quota
+    end
+  end
+
+  defp update_respondent_disposition(session, disposition, current_mode) do
+    respondent = session.respondent
+    old_disposition = respondent.disposition
+    if Flow.should_update_disposition(old_disposition, disposition) do
+      respondent = respondent
+      |> Respondent.changeset(%{disposition: disposition})
+      |> Repo.update!
+
+      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, old_disposition, disposition)
+      RespondentDispositionHistory.create(respondent, old_disposition, session.current_mode |> SessionMode.mode)
+
+      %{session | respondent: respondent}
+    else
+      session
     end
   end
 end

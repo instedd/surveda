@@ -1,12 +1,12 @@
 defmodule Ask.SessionTest do
-  use Ask.ModelCase
+  use Ask.ConnCase
   use Ask.DummySteps
   import Ask.Factory
   alias Ask.Runtime.Session
   alias Ask.Runtime.SessionModeProvider
   alias Ask.TestChannel
-  alias Ask.Runtime.{Flow, Reply, ReplyHelper}
-  alias Ask.{Survey, Respondent, QuotaBucket, Questionnaire, Schedule}
+  alias Ask.Runtime.{Flow, Reply, ReplyHelper, SurveyLogger}
+  alias Ask.{Survey, SurveyLogEntry, Respondent, QuotaBucket, Questionnaire, Schedule}
   require Ask.Runtime.ReplyHelper
 
   setup do
@@ -881,5 +881,63 @@ defmodule Ask.SessionTest do
     {:end, %{disposition: disposition}, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
     assert disposition == "interim partial"
+  end
+
+  describe "creates survey log entries when disposition changes" do
+    test "log disposition_changed after logging the response", %{respondent: respondent} do
+      {:ok, survey_logger} = SurveyLogger.start_link
+      quiz = insert(:questionnaire, steps: @flag_step_after_multiple_choice)
+      ivr_channel = insert(:channel, settings: TestChannel.new |> TestChannel.settings, type: "ivr")
+      # respondent is updated to "queued" in order to ensure a valid disposition transition "queued" -> "interim partial"
+      respondent = respondent |> Respondent.changeset(%{disposition: "started"}) |> Repo.update!
+      {:ok, session, _, _, _} = Session.start(quiz, respondent, ivr_channel, "ivr", Schedule.always())
+      Session.sync_step(session, Flow.Message.reply("1"))
+
+      survey_logger |> GenServer.stop
+      entries = SurveyLogEntry |> Repo.all
+      response_index = entries |> Enum.find_index(fn e -> e.action_type == "response" end)
+
+      response_entry = entries |> Enum.at(response_index)
+      assert response_entry.action_type == "response"
+      assert response_entry.disposition == "started"
+      assert response_entry.action_data == "1"
+
+      disposition_changed_entry = entries |> Enum.at(response_index + 1)
+      assert disposition_changed_entry.action_type == "disposition changed"
+      assert disposition_changed_entry.action_data == "Interim partial"
+      assert disposition_changed_entry.disposition == "started"
+
+      prompt_entry = entries |> Enum.at(response_index + 2)
+      assert prompt_entry.action_type == "prompt"
+      assert prompt_entry.action_data == "Is this the last question?"
+      assert prompt_entry.disposition == "interim partial"
+    end
+
+    test "log disposition_changed after answering a call", %{respondent: respondent} do
+      {:ok, survey_logger} = SurveyLogger.start_link
+      quiz = insert(:questionnaire, steps: @flag_step_after_multiple_choice)
+      ivr_channel = insert(:channel, settings: TestChannel.new |> TestChannel.settings, type: "ivr")
+      # respondent disposition is updated to "queued",
+      # representing a respondent that has already been started.
+      respondent = respondent |> Respondent.changeset(%{disposition: "queued"}) |> Repo.update!
+      {:ok, session, _, _, _} = Session.start(quiz, respondent, ivr_channel, "ivr", Schedule.always())
+
+      Session.sync_step(session, Flow.Message.answer())
+
+      survey_logger |> GenServer.stop
+      entries = SurveyLogEntry |> Repo.all
+
+      second_entry = entries |> Enum.at(1)
+      assert second_entry.action_type == "contact"
+      assert second_entry.action_data == "Answer"
+      third_entry = entries |> Enum.at(2)
+      assert third_entry.action_type == "disposition changed"
+      assert third_entry.disposition == "queued"
+      assert third_entry.action_data == "Contacted"
+      fourth_entry = entries |> Enum.at(3)
+      assert fourth_entry.action_type == "prompt"
+      assert fourth_entry.disposition == "contacted"
+      assert fourth_entry.action_data == "Do you exercise?"
+    end
   end
 end
