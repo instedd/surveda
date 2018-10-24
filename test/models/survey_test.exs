@@ -66,4 +66,10 @@ defmodule Ask.SurveyTest do
     survey = %Survey{state: "foo"}
     assert length(survey |> Survey.packages) == 0
   end
+
+  test "changeset with description" do
+    changeset = %Survey{} |> Survey.changeset(%{project_id: 5, description: "initial survey"})
+    assert changeset.valid?
+    assert changeset.changes.description == "initial survey"
+  end
 end
