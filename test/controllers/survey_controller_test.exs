@@ -671,6 +671,44 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "set_description" do
+    test "set description of a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      conn = post conn, project_survey_survey_path(conn, :set_description, project, survey), description: "new description"
+
+      assert response(conn, 204)
+      assert Repo.get(Survey, survey.id).description == "new description"
+    end
+
+    test "rejects set_description if the survey doesn't belong to the current user", %{conn: conn} do
+      survey = insert(:survey)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_description, survey.project, survey), description: "new description"
+      end
+    end
+
+    test "rejects set_description for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_description, survey.project, survey), description: "new description"
+      end
+    end
+
+    test "rejects set_description if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_description, survey.project, survey), description: "new description"
+      end
+    end
+  end
+
   describe "delete" do
     test "deletes chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -1693,6 +1731,16 @@ defmodule Ask.SurveyControllerTest do
       log = ActivityLog |> Repo.one!()
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "rename", remote_ip: "192.168.0.128", metadata: %{"old_survey_name" => survey.name, "new_survey_name" => "new name"}})
+    end
+
+    test "generates change_description log with set_description action", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      post conn, project_survey_survey_path(conn, :set_description, project, survey), description: "new description"
+      log = ActivityLog |> Repo.one!()
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "change_description", remote_ip: "192.168.0.128", metadata: %{"old_survey_description" => survey.description, "new_survey_description" => "new description"}})
     end
   end
 

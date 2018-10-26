@@ -165,6 +165,33 @@ defmodule Ask.SurveyController do
     end
   end
 
+  def set_description(conn, %{"project_id" => project_id, "survey_id" => survey_id, "description" => description}) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
+
+    survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+
+    result =
+      Multi.new()
+      |> Multi.update(:set_description, Survey.changeset(survey, %{description: description}))
+      |> Multi.insert(:change_description_log, ActivityLog.change_survey_description(project, conn, survey, survey.description, description))
+      |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
   defp update_questionnaires(changeset, %{"questionnaire_ids" => questionnaires_params}) do
     questionnaires_changeset = Enum.map(questionnaires_params, fn ch ->
       Repo.get!(Questionnaire, ch) |> change
