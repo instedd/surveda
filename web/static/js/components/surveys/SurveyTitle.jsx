@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import { EditableTitleLabel } from '../ui'
+import { EditableTitleLabel, EditableDescriptionLabel } from '../ui'
 import * as surveyActions from '../../actions/survey'
 import { translate } from 'react-i18next'
 
@@ -15,18 +15,30 @@ class SurveyTitle extends Component {
     readOnly: PropTypes.bool
   }
 
-  handleSubmit(newName) {
+  handleSubmitTitle(newName) {
     const { dispatch, survey } = this.props
     if (survey.name == newName) return
 
     dispatch(surveyActions.changeName(newName))
   }
 
+  handleSubmitDescription(newDescription) {
+    const { dispatch, survey } = this.props
+    if (survey.description == newDescription) return
+
+    dispatch(surveyActions.changeDescription(newDescription))
+  }
+
   render() {
     const { survey, readOnly, t } = this.props
     if (survey == null) return null
 
-    return <EditableTitleLabel title={survey.name} emptyText={t('Untitled survey')} onSubmit={(value) => { this.handleSubmit(value) }} readOnly={readOnly} />
+    return (
+      <div className='survey-title-container'>
+        <EditableTitleLabel title={survey.name} emptyText={t('Untitled survey')} onSubmit={(value) => { this.handleSubmitTitle(value) }} readOnly={readOnly} />
+        <EditableDescriptionLabel description={survey.description} emptyText={t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
+      </div>
+    )
   }
 }
 

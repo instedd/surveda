@@ -253,6 +253,10 @@ export const setSurveyName = (projectId, surveyId, name) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_name`, null, { name })
 }
 
+export const setSurveyDescription = (projectId, surveyId, description) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_description`, null, { description })
+}
+
 export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }

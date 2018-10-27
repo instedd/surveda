@@ -19,6 +19,7 @@ const k = (...args: any) => args
 export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
+    case actions.CHANGE_DESCRIPTION: return changeDescription(state, action)
     case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
     case actions.TOGGLE_COUNT_PARTIAL_RESULTS: return toggleCountPartialResults(state, action)
     case actions.CHANGE_QUOTA: return quotaChange(state, action)
@@ -63,6 +64,7 @@ const dirtyPredicate = (action, oldData, newData) => {
     case actions.REFRESH_LINK: return false
     case actions.DELETE_LINK: return false
     case actions.CHANGE_NAME: return false
+    case actions.CHANGE_DESCRIPTION: return false
     default: return true
   }
 }
@@ -125,6 +127,13 @@ const changeName = (state, action) => {
   return {
     ...state,
     name: action.newName
+  }
+}
+
+const changeDescription = (state, action) => {
+  return {
+    ...state,
+    description: action.newDescription
   }
 }
 

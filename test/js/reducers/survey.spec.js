@@ -862,4 +862,13 @@ describe('survey reducer', () => {
     ])
     expect(state2.data.countPartialResults).toEqual(false)
   })
+
+  it('should change description', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.descriptionChanged('initial description')
+    ])
+    expect(result.data.description).toEqual('initial description')
+  })
 })

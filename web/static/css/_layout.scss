@@ -160,8 +160,11 @@ header {
   input#questionnaire_name {
     margin: 0;
   }
-  .title {
+  .title, .description {
     max-width: 100%;
+    display: inline-block;
+  }
+  div.survey-title-container {
     display: inline-block;
   }
   span.title-options {

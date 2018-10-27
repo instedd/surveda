@@ -9,6 +9,7 @@ export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
 export const CHANGE_COMPARISON_RATIO = 'SURVEY_CHANGE_COMPARISON_RATIO'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
+export const CHANGE_DESCRIPTION = 'SURVEY_CHANGE_DESCRIPTION'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
@@ -129,6 +130,21 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
   dispatch({
     type: CHANGE_NAME,
     newName
+  })
+}
+
+export const changeDescription = (newDescription: string) => (dispatch: Function, getState: () => Store) => {
+  const survey = getState().survey.data
+  if (!survey) return
+  api.setSurveyDescription(survey.projectId, survey.id, newDescription)
+
+  dispatch(descriptionChanged(newDescription))
+}
+
+export const descriptionChanged = (newDescription: string) => {
+  return ({
+    type: CHANGE_DESCRIPTION,
+    newDescription
   })
 }
 
