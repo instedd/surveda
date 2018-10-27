@@ -185,6 +185,13 @@ class SurveyCard extends PureComponent<any> {
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
 
+    let description = null
+    if (survey.description) {
+      description = <div>
+        {survey.description}
+      </div>
+    }
+
     return (
       <div className='col s12 m6 l4'>
         <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
@@ -199,6 +206,7 @@ class SurveyCard extends PureComponent<any> {
               <div className='card-status'>
                 <span className='card-title truncate' title={survey.name}>
                   <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
+                  {description}
                   {deleteButton}
                 </span>
                 <SurveyStatus survey={survey} short />

@@ -6,6 +6,7 @@ export type Survey = {
   questionnaires?: {[id: string]: Questionnaire},
   channels: number[],
   name: string,
+  description: ?string,
   cutoff: ?number,
   countPartialResults: boolean,
   mode: string[][],

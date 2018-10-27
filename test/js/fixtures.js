@@ -278,6 +278,7 @@ const bareSurvey: Survey = {
   id: 1,
   projectId: 1,
   name: 'Foo',
+  description: null,
   cutoff: 123,
   countPartialResults: false,
   state: 'ready',
