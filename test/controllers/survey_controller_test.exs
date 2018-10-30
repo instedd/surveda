@@ -1740,7 +1740,7 @@ defmodule Ask.SurveyControllerTest do
       post conn, project_survey_survey_path(conn, :set_description, project, survey), description: "new description"
       log = ActivityLog |> Repo.one!()
 
-      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "change_description", remote_ip: "192.168.0.128", metadata: %{"old_survey_description" => survey.description, "new_survey_description" => "new description"}})
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "change_description", remote_ip: "192.168.0.128", metadata: %{"old_survey_description" => survey.description, "new_survey_description" => "new description", "survey_name" => survey.name}})
     end
   end
 

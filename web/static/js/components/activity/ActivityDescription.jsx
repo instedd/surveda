@@ -48,6 +48,13 @@ class ActivityDescription extends Component {
             } else {
               return t('Named survey as <i>{{newSurveyName}}</i>', {newSurveyName: newSurveyName})
             }
+          case 'change_description':
+            const {oldSurveyDescription} = metadata
+            if (oldSurveyDescription) {
+              return t('Changed description of <i>{{surveyName}}</i> survey', {surveyName: surveyName})
+            } else {
+              return t('Set description of <i>{{surveyName}}</i> survey', {surveyName: surveyName})
+            }
           case 'edit':
             return t('Edited <i>{{surveyName}}</i> survey', {surveyName: surveyName})
           case 'delete':

@@ -149,6 +149,7 @@ defmodule Ask.ActivityLog do
 
   def change_survey_description(project, conn, survey, old_survey_description, new_survey_description) do
     create("change_description", project, conn, survey, %{
+      survey_name: survey.name,
       old_survey_description: old_survey_description,
       new_survey_description: new_survey_description
     })
