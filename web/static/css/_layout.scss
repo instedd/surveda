@@ -157,15 +157,45 @@ header {
       margin-left: 15px;
     }
   }
-  input#questionnaire_name {
-    margin: 0;
-  }
-  .title, .description {
+  .title {
     max-width: 100%;
     display: inline-block;
   }
-  div.survey-title-container {
+  input#questionnaire_name {
+    margin: 0;
+  }
+  .survey-title-container {
     display: inline-block;
+    position: relative;
+    min-width: 100%;
+    min-height: 80px;
+    input {
+      position: absolute;
+      top: 0px;
+      left: 0;
+      width: 100%;
+      margin: 0;
+    }
+    .title {
+      max-width: 100%;
+      + input {
+        height: 30px;
+        top: 50px;
+        left: 0;
+        min-width: 100%;
+      }
+    }
+    .description {
+      line-height: 20px;
+      max-width: 100%;
+      position: absolute;
+      top: 50px;
+      .page-description {
+        font-size: 15px;
+        font-style: italic;
+        @extend .grey-text, .lighten-2;
+      }
+    }
   }
   span.title-options {
     vertical-align: middle;

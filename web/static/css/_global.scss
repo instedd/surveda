@@ -1,6 +1,16 @@
 
 // --------- NCD classes ---------------
 
+.clearfix {
+  &:after {
+    content: '';
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // ------- Surveys -------------------------------------------------------------
 
@@ -215,11 +225,13 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
     }
   }
   .card-title {
+    font-weight: 400;
     position: absolute;
     padding-right: 20px;
     width: 85%;
     height: 40px;
-    top: 0;
+    top: 30px;
+    margin-bottom: 0;
     display: block;
 
     a {
@@ -228,15 +240,21 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
       right: -5px;
     }
   }
+  .card-description {
+    height: 46px;
+    overflow-y: hidden;
+    word-break: break-all;
+    margin-bottom: 20px;
+  }
   .card-content {
-    padding: 30px 0;
+    padding: 30px 0 0;
     > div {
       padding-left: 30px;
       padding-right: 30px;
     }
     .card-status {
       border-top: 1px solid color("grey","lighten-3");
-      padding-top: 50px;
+      padding-top: 58px;
       position: relative;
       padding-bottom: 20px;
     }

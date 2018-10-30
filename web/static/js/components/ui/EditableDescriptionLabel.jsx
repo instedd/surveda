@@ -44,16 +44,11 @@ export class EditableDescriptionLabel extends Component {
 
   render() {
     const {description, emptyText} = this.props
-    let icon = null
-    if ((!description || description.trim() == '') && !this.props.readOnly) {
-      icon = <i className='material-icons'>mode_edit</i>
-    }
     if (!this.state.editing) {
       return (
         <div className='description'>
-          <a className={classNames({'page-title': true, 'truncate': (description && description.trim() != '')})} onClick={e => this.handleClick(e)}>
+          <a className={classNames({'page-description': true, 'truncate': (description && description.trim() != '')})} onClick={e => this.handleClick(e)}>
             <UntitledIfEmpty text={description} emptyText={emptyText} />
-            {icon}
           </a>
         </div>
       )
