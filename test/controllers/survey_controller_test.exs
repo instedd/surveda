@@ -1161,87 +1161,100 @@ defmodule Ask.SurveyControllerTest do
     assert DateTime.compare(project.updated_at, datetime) == :gt
   end
 
-  test "stops survey", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, state: "running")
-    test_channel = TestChannel.new(false)
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    group = create_group(survey, channel)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-    r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
-    insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
-    channel_state = %{"call_id" => 123}
-    session = %Session{
-      current_mode: SessionModeProvider.new("sms", channel, []),
-      channel_state: channel_state,
-      respondent: r1,
-      flow: %Flow{questionnaire: questionnaire},
-      schedule: survey.schedule,
-    }
-    session = Session.dump(session)
-    r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
+  describe "stopping survey" do
+    test "stops survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, state: "running")
+      test_channel = TestChannel.new(false)
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      group = create_group(survey, channel)
+      insert_list(10, :respondent, survey: survey, state: "pending")
+      r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
+      insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+      channel_state = %{"call_id" => 123}
+      session = %Session{
+        current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
+        respondent: r1,
+        flow: %Flow{questionnaire: questionnaire},
+        schedule: survey.schedule,
+      }
+      session = Session.dump(session)
+      r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
-    assert json_response(conn, 200)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.cancelled?(survey)
-    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
-    assert_receive [:cancel_message, ^test_channel, ^channel_state]
-  end
+      assert json_response(conn, 200)
+      survey = Repo.get(Survey, survey.id)
+      assert Survey.cancelled?(survey)
+      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+    end
 
-  test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey  = insert(:survey, project: project, state: "running")
-    survey2 = insert(:survey, project: project, state: "running")
-    test_channel = TestChannel.new(false)
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    group = create_group(survey, channel)
-    r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
-    insert_list(3, :respondent, survey: survey, state: "stalled", respondent_group: group, timeout_at: Timex.now)
-    insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
-    insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
-    channel_state = %{"call_id" => 123}
-    session = %Session{
-      current_mode: SessionModeProvider.new("sms", channel, []),
-      channel_state: channel_state,
-      respondent: r1,
-      flow: %Flow{questionnaire: questionnaire},
-      schedule: survey.schedule,
-    }
-    session = Session.dump(session)
-    r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
+    test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey  = insert(:survey, project: project, state: "running")
+      survey2 = insert(:survey, project: project, state: "running")
+      test_channel = TestChannel.new(false)
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      group = create_group(survey, channel)
+      r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
+      insert_list(3, :respondent, survey: survey, state: "stalled", respondent_group: group, timeout_at: Timex.now)
+      insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
+      insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
+      channel_state = %{"call_id" => 123}
+      session = %Session{
+        current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
+        respondent: r1,
+        flow: %Flow{questionnaire: questionnaire},
+        schedule: survey.schedule,
+      }
+      session = Session.dump(session)
+      r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
-    assert json_response(conn, 200)
-    assert Repo.get(Survey, survey2.id).state == "running"
-    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
-    assert_receive [:cancel_message, ^test_channel, ^channel_state]
-  end
+      assert json_response(conn, 200)
+      assert Repo.get(Survey, survey2.id).state == "running"
+      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+    end
 
-  test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "terminated", exit_code: 0, exit_message: "Successfully completed")
+    test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "terminated", exit_code: 0, exit_message: "Successfully completed")
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
-    assert json_response(conn, 200)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
-  end
+      assert json_response(conn, 200)
+      survey = Repo.get(Survey, survey.id)
+      assert Survey.completed?(survey)
+    end
 
-  test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
+    test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
 
-    conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
+      conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
 
-    assert json_response(conn, 200)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.cancelled?(survey)
+      assert json_response(conn, 200)
+      survey = Repo.get(Survey, survey.id)
+      assert Survey.cancelled?(survey)
+    end
+
+    test "doesn't stop survey if it is locked", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", locked: true)
+
+      conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
+
+      assert response(conn, 422)
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+    end
   end
 
   describe "download links" do

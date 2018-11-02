@@ -582,8 +582,8 @@ defmodule Ask.SurveyController do
     survey = Repo.get!(Survey, id)
     |> Repo.preload([:quota_buckets])
 
-    case survey.state do
-      "terminated" ->
+    case [survey.state, survey.locked] do
+      ["terminated", false] ->
         # Cancelling a cancelled survey is idempotent.
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey is cancelled
@@ -593,7 +593,7 @@ defmodule Ask.SurveyController do
         # UI open with the cancel button, and meanwhile the survey finished
         conn
           |> render("show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
-      "running" ->
+      ["running", false] ->
         project = conn
           |> load_project_for_change(survey.project_id)
 
@@ -617,10 +617,10 @@ defmodule Ask.SurveyController do
             |> put_status(:unprocessable_entity)
             |> render(Ask.ChangesetView, "error.json", changeset: changeset)
         end
-      _ ->
-        # Cancelling a pending survey or a survey in any other state should
-        # result in an error.
-        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state"
+      [_, _] ->
+        # Cancelling a pending survey or a survey in any other state or that it
+        # is locked, should result in an error.
+        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state or locked"
         conn
           |> put_status(:unprocessable_entity)
           |> render("show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
