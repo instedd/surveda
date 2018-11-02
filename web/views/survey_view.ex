@@ -21,6 +21,7 @@ defmodule Ask.SurveyView do
       mode: survey.mode,
       project_id: survey.project_id,
       state: survey.state,
+      locked: survey.locked,
       exit_code: survey.exit_code,
       exit_message: survey.exit_message,
       cutoff: survey.cutoff,

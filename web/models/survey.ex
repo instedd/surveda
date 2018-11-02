@@ -13,6 +13,7 @@ defmodule Ask.Survey do
     field :description, :string
     field :mode, JSON
     field :state, :string, default: "not_ready" # not_ready, ready, pending, running, terminated
+    field :locked, :boolean, default: false
     field :exit_code, :integer
     field :exit_message, :string
     field :cutoff, :integer
