@@ -67,30 +67,37 @@ defmodule Ask.RespondentGroupController do
     group = survey
     |> assoc(:respondent_groups)
     |> Repo.get!(id)
+    |> Repo.preload(:respondent_group_channels)
 
     project |> Project.touch!
 
-    process_file(conn, survey, file, fn rows ->
-      {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+    case survey.locked do
+      false ->
+        process_file(conn, survey, file, fn rows ->
+          {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
 
-      rows = rows
-      |> remove_duplicates_with_respect_to(group)
+          rows = rows
+          |> remove_duplicates_with_respect_to(group)
 
-      rows
-      |> to_entries(project, survey, group, local_time)
-      |> insert_all
+          rows
+          |> to_entries(project, survey, group, local_time)
+          |> insert_all
 
-      new_count = group.respondents_count + length(rows)
-      new_sample = merge_sample(group.sample, rows)
+          new_count = group.respondents_count + length(rows)
+          new_sample = merge_sample(group.sample, rows)
 
-      group = group
-      |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
-      |> Repo.update!
-      |> Repo.preload(:respondent_group_channels)
+          group = group
+          |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
+          |> Repo.update!
 
-      conn
-      |> render("show.json", respondent_group: group)
-    end)
+          conn
+          |> render("show.json", respondent_group: group)
+        end)
+      true ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render("show.json", respondent_group: group)
+      end
   end
 
   def replace(conn, %{"respondent_group_id" => id, "file" => file}) do
