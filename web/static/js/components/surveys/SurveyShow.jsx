@@ -124,11 +124,21 @@ class SurveyShow extends Component<any, State> {
     let stopComponent = null
     if (!readOnly && survey.state == 'running') {
       stopComponent = (
-        <Tooltip text={t('Stop survey')}>
-          <a className='btn-floating btn-large waves-effect waves-light red right mtop' onClick={() => this.stopSurvey()}>
-            <i className='material-icons'>stop</i>
-          </a>
-        </Tooltip>
+        <div className='stop-container'>
+          <Tooltip text={t('Stop survey')}>
+            <a className='btn-floating btn-large waves-effect waves-light red right' onClick={() => this.stopSurvey()}>
+              <i className='material-icons'>stop</i>
+            </a>
+          </Tooltip>
+          <div className='switch right'>
+            <label>
+              <i className='material-icons white-text'>lock_open</i>
+              <input type='checkbox' />
+              <span className='lever' />
+              <i className='material-icons white-text'>lock</i>
+            </label>
+          </div>
+        </div>
       )
     }
 
