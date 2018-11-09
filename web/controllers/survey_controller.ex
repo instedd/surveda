@@ -627,6 +627,55 @@ defmodule Ask.SurveyController do
       end
   end
 
+  def update_locked_status(conn, %{"project_id" => project_id, "survey_id" => survey_id, "survey" => survey_params}) do
+    project =
+      conn
+      |> load_project_for_owner(project_id)
+
+    survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+
+    survey = survey
+    |> Repo.preload([:quota_buckets])
+    |> Repo.preload(:questionnaires)
+    |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
+
+    case survey.state do
+      "running" ->
+        [survey_changeset, activity_log] = case survey_params["locked"] do
+          "true" -> true
+            [Survey.changeset(survey, %{locked: true}), ActivityLog.lock_survey(project, conn, survey)]
+          "false" -> false
+            [Survey.changeset(survey, %{locked: false}), ActivityLog.unlock_survey(project, conn, survey)]
+          _ ->
+            [Survey.changeset(%Survey{}), ActivityLog.changeset(%ActivityLog{})]
+        end
+
+        multi =
+          Multi.new()
+          |> Multi.update(:survey, survey_changeset)
+          |> Multi.insert(:locked_status_log, activity_log)
+          |> Repo.transaction()
+
+        case multi do
+          {:ok, %{survey: survey}} ->
+            project |> Project.touch!
+            render(conn, "show.json", survey: survey)
+          {:error, _, changeset, _} ->
+            Logger.warn "Error when updating locked status: #{inspect changeset}"
+            conn
+              |> put_status(:unprocessable_entity)
+              |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        end
+      _ ->
+        conn
+          |> put_status(:unprocessable_entity)
+          |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
+    end
+  end
+
   defp prepare_channels(_, []), do: :ok
   defp prepare_channels(conn, [channel | rest]) do
     runtime_channel = Ask.Channel.runtime_channel(channel)

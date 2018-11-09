@@ -19,7 +19,7 @@ defmodule Ask.ActivityLog do
     ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
 
   def valid_actions("survey"), do:
-    ["create", "edit", "rename", "change_description", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
+    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
   def valid_actions("questionnaire"), do:
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings"]
@@ -152,6 +152,18 @@ defmodule Ask.ActivityLog do
       survey_name: survey.name,
       old_survey_description: old_survey_description,
       new_survey_description: new_survey_description
+    })
+  end
+
+  def lock_survey(project, conn, survey) do
+    create("lock", project, conn, survey, %{
+      survey_name: survey.name
+    })
+  end
+
+  def unlock_survey(project, conn, survey) do
+    create("unlock", project, conn, survey, %{
+      survey_name: survey.name
     })
   end
 

@@ -112,6 +112,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -159,6 +160,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -227,6 +229,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -291,6 +294,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -1257,6 +1261,54 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "update locked status" do
+    test "locks survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
+
+      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+
+      assert response(conn, 200)
+      assert json_response(conn, 200)["data"]["locked"]
+    end
+
+    test "doesn't update locked status if user is editor", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "editor")
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
+
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+      end
+    end
+
+    test "doesn't update locked status if parameter is invalid", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
+
+      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "invalid"}
+      survey = Repo.get(Survey, survey.id)
+
+      assert response(conn, 422)
+      assert not survey.locked
+    end
+
+    test "doesn't update locked status if survey state is not running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      ["not_ready", "ready", "pending", "terminated"] |> Enum.each(fn state ->
+        survey = insert(:survey, project: project, state: state, locked: false, questionnaires: [questionnaire])
+        conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+        survey = Repo.get(Survey, survey.id)
+
+        assert response(conn, 422)
+        assert not survey.locked
+      end)
+    end
+  end
+
   describe "download links" do
     test "results link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -1754,6 +1806,28 @@ defmodule Ask.SurveyControllerTest do
       log = ActivityLog |> Repo.one!()
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "change_description", remote_ip: "192.168.0.128", metadata: %{"old_survey_description" => survey.description, "new_survey_description" => "new description", "survey_name" => survey.name}})
+    end
+
+    test "generates lock log", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
+
+      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+      log = ActivityLog |> Repo.one!()
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "lock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates unlock log", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: true, questionnaires: [questionnaire])
+
+      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "false"}
+      log = ActivityLog |> Repo.one!()
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "unlock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
     end
   end
 
