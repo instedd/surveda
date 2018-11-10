@@ -155,6 +155,7 @@ class SurveyWizardRespondentsStep extends Component {
 
       const addMoreClck = (e) => {
         e.preventDefault()
+        if (survey.locked) return
         $(`#${addMoreInputId}`).click()
       }
 
@@ -172,9 +173,12 @@ class SurveyWizardRespondentsStep extends Component {
         if (uploading) {
           addMoreRespondents = <Preloader size='small' className='tiny' />
         } else {
+          const addMoreClassName = survey.locked ? 'grey-text' : 'null'
           addMoreRespondents = [
             <input key='x' id={addMoreInputId} type='file' accept='.csv' style={{display: 'none'}} onChange={e => addMore(e)} />,
-            <a key='y' href='#' onClick={addMoreClck} className='blue-text'>{t('Add more respondents')}</a>
+            <a key='y' href='#' onClick={addMoreClck} className={`blue-text ${addMoreClassName}`}>
+              {t('Add more respondents')}
+            </a>
           ]
         }
       }

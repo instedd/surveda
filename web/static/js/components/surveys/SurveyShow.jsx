@@ -127,6 +127,7 @@ class SurveyShow extends Component<any, State> {
     const readOnly = !project || project.readOnly
 
     let stopComponent = null
+    let switchComponent = null
     if (!readOnly && survey.state == 'running') {
       let lockOpenClass, lockClass
       if (survey.locked) {
@@ -136,6 +137,16 @@ class SurveyShow extends Component<any, State> {
         lockOpenClass = 'white-text'
         lockClass = 'grey-text'
       }
+      if (project.level == 'owner' || project.level == 'admin') {
+        switchComponent = <div className='switch right'>
+          <label>
+            <i className={`material-icons ${lockOpenClass}`}>lock_open</i>
+            <input type='checkbox' checked={survey.locked} onChange={e => this.toggleLock(e)} />
+            <span className='lever' />
+            <i className={`material-icons ${lockClass}`}>lock</i>
+          </label>
+        </div>
+      }
       stopComponent = (
         <div className='stop-container'>
           <Tooltip text={t('Stop survey')}>
@@ -143,14 +154,7 @@ class SurveyShow extends Component<any, State> {
               <i className='material-icons'>stop</i>
             </a>
           </Tooltip>
-          <div className='switch right'>
-            <label>
-              <i className={`material-icons ${lockOpenClass}`}>lock_open</i>
-              <input type='checkbox' checked={survey.locked} onChange={e => this.toggleLock(e)} />
-              <span className='lever' />
-              <i className={`material-icons ${lockClass}`}>lock</i>
-            </label>
-          </div>
+          { switchComponent }
         </div>
       )
     }
