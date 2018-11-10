@@ -257,6 +257,10 @@ export const setSurveyDescription = (projectId, surveyId, description) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_description`, null, { description })
 }
 
+export const updateSurveyLockedStatus = (projectId, surveyId, locked) => {
+  return apiPutJSON(`projects/${projectId}/surveys/${surveyId}/update_locked_status`, surveySchema, { locked })
+}
+
 export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
 }

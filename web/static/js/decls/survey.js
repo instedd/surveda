@@ -12,6 +12,7 @@ export type Survey = {
   mode: string[][],
   modeComparison: boolean,
   state: string,
+  locked: boolean,
   exitCode: ?number,
   exitMessage: ?string,
   questionnaireComparison: boolean,

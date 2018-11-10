@@ -871,4 +871,13 @@ describe('survey reducer', () => {
     ])
     expect(result.data.description).toEqual('initial description')
   })
+
+  it('should toggle lock', () => {
+    const result = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.updateLock(true)
+    ])
+    expect(result.data.locked).toEqual(true)
+  })
 })

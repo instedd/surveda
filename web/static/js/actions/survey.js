@@ -21,6 +21,7 @@ export const CHANGE_MODE_COMPARISON = 'SURVEY_CHANGE_MODE_COMPARISON'
 export const CHANGE_QUESTIONNAIRE_COMPARISON = 'SURVEY_CHANGE_QUESTIONNAIRE_COMPARISON'
 export const UPDATE_RESPONDENTS_COUNT = 'SURVEY_UPDATE_RESPONDENTS_COUNT'
 export const SET_STATE = 'SURVEY_SURVEY_SET_STATE'
+export const UPDATE_LOCK = 'SURVEY_UPDATE_LOCK'
 export const FETCH = 'SURVEY_FETCH'
 export const RECEIVE = 'SURVEY_RECEIVE'
 export const SAVING = 'SURVEY_SAVING'
@@ -120,6 +121,19 @@ const optionsFrom = (storeVars: QuotaVar[], questionnaire: Questionnaire) => {
 export const setState = (state: string) => ({
   type: SET_STATE,
   state
+})
+
+export const toggleLock = () => (dispatch: Function, getState: () => Store) => {
+  const survey = getState().survey.data
+  if (!survey) return
+  const newLockValue = !survey.locked
+  api.updateSurveyLockedStatus(survey.projectId, survey.id, newLockValue)
+  dispatch(updateLock(newLockValue))
+}
+
+export const updateLock = (newLockValue: boolean) => ({
+  type: UPDATE_LOCK,
+  newLockValue
 })
 
 export const changeName = (newName: string) => (dispatch: Function, getState: () => Store) => {

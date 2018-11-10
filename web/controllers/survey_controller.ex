@@ -627,7 +627,7 @@ defmodule Ask.SurveyController do
       end
   end
 
-  def update_locked_status(conn, %{"project_id" => project_id, "survey_id" => survey_id, "survey" => survey_params}) do
+  def update_locked_status(conn, %{"project_id" => project_id, "survey_id" => survey_id, "locked" => locked}) do
     project =
       conn
       |> load_project_for_owner(project_id)
@@ -644,10 +644,10 @@ defmodule Ask.SurveyController do
 
     case survey.state do
       "running" ->
-        [survey_changeset, activity_log] = case survey_params["locked"] do
-          "true" -> true
+        [survey_changeset, activity_log] = case locked do
+          true ->
             [Survey.changeset(survey, %{locked: true}), ActivityLog.lock_survey(project, conn, survey)]
-          "false" -> false
+          false ->
             [Survey.changeset(survey, %{locked: false}), ActivityLog.unlock_survey(project, conn, survey)]
           _ ->
             [Survey.changeset(%Survey{}), ActivityLog.changeset(%ActivityLog{})]

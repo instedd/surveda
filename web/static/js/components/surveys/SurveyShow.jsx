@@ -111,6 +111,11 @@ class SurveyShow extends Component<any, State> {
       : questionnaires[Object.keys(questionnaires)[0]].name
   }
 
+  toggleLock(e) {
+    const { dispatch } = this.props
+    dispatch(actions.toggleLock())
+  }
+
   render() {
     const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t } = this.props
     const { stopUnderstood } = this.state
@@ -133,7 +138,7 @@ class SurveyShow extends Component<any, State> {
           <div className='switch right'>
             <label>
               <i className='material-icons white-text'>lock_open</i>
-              <input type='checkbox' />
+              <input type='checkbox' checked={survey.locked} onChange={e => this.toggleLock(e)} />
               <span className='lever' />
               <i className='material-icons white-text'>lock</i>
             </label>

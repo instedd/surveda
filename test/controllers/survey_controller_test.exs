@@ -1267,7 +1267,7 @@ defmodule Ask.SurveyControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
-      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
 
       assert response(conn, 200)
       assert json_response(conn, 200)["data"]["locked"]
@@ -1279,7 +1279,7 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
       assert_error_sent :forbidden, fn ->
-        put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+        put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
       end
     end
 
@@ -1288,7 +1288,7 @@ defmodule Ask.SurveyControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
-      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "invalid"}
+      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: "foo"
       survey = Repo.get(Survey, survey.id)
 
       assert response(conn, 422)
@@ -1300,7 +1300,7 @@ defmodule Ask.SurveyControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       ["not_ready", "ready", "pending", "terminated"] |> Enum.each(fn state ->
         survey = insert(:survey, project: project, state: state, locked: false, questionnaires: [questionnaire])
-        conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+        conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
         survey = Repo.get(Survey, survey.id)
 
         assert response(conn, 422)
@@ -1813,7 +1813,7 @@ defmodule Ask.SurveyControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
-      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "true"}
+      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
       log = ActivityLog |> Repo.one!()
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "lock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
@@ -1824,7 +1824,7 @@ defmodule Ask.SurveyControllerTest do
       questionnaire = insert(:questionnaire, project: project)
       survey = insert(:survey, project: project, state: "running", locked: true, questionnaires: [questionnaire])
 
-      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), survey: %{"locked" => "false"}
+      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: false
       log = ActivityLog |> Repo.one!()
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "unlock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})

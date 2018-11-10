@@ -282,6 +282,7 @@ const bareSurvey: Survey = {
   cutoff: 123,
   countPartialResults: false,
   state: 'ready',
+  locked: false,
   exitCode: 0,
   exitMessage: null,
   questionnaireIds: [1],
