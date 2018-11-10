@@ -129,15 +129,15 @@ class SurveyShow extends Component<any, State> {
     let stopComponent = null
     let switchComponent = null
     if (!readOnly && survey.state == 'running') {
-      let lockOpenClass, lockClass
-      if (survey.locked) {
-        lockOpenClass = 'grey-text'
-        lockClass = 'white-text'
-      } else {
-        lockOpenClass = 'white-text'
-        lockClass = 'grey-text'
-      }
       if (project.level == 'owner' || project.level == 'admin') {
+        let lockOpenClass, lockClass
+        if (survey.locked) {
+          lockOpenClass = 'grey-text'
+          lockClass = 'white-text'
+        } else {
+          lockOpenClass = 'white-text'
+          lockClass = 'grey-text'
+        }
         switchComponent = <div className='switch right'>
           <label>
             <i className={`material-icons ${lockOpenClass}`}>lock_open</i>

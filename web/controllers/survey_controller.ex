@@ -618,7 +618,7 @@ defmodule Ask.SurveyController do
             |> render(Ask.ChangesetView, "error.json", changeset: changeset)
         end
       [_, _] ->
-        # Cancelling a pending survey or a survey in any other state or that it
+        # Cancelling a pending survey, a survey in any other state or that it
         # is locked, should result in an error.
         Logger.warn "Error when stopping survey #{inspect survey}: Wrong state or locked"
         conn
