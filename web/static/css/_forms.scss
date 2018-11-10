@@ -316,6 +316,9 @@ label {
   position: absolute;
   margin-top: -9.2rem;
   right: 0;
+  a[disabled] {
+    background-color: #999999 !important;
+  };
   .switch {
     margin-right: 1rem;
   }

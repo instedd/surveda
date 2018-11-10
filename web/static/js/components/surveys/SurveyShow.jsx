@@ -128,19 +128,27 @@ class SurveyShow extends Component<any, State> {
 
     let stopComponent = null
     if (!readOnly && survey.state == 'running') {
+      let lockOpenClass, lockClass
+      if (survey.locked) {
+        lockOpenClass = 'grey-text'
+        lockClass = 'white-text'
+      } else {
+        lockOpenClass = 'white-text'
+        lockClass = 'grey-text'
+      }
       stopComponent = (
         <div className='stop-container'>
           <Tooltip text={t('Stop survey')}>
-            <a className='btn-floating btn-large waves-effect waves-light red right' onClick={() => this.stopSurvey()}>
+            <a className='btn-floating btn-large waves-effect waves-light red right' onClick={() => this.stopSurvey()} disabled={survey.locked}>
               <i className='material-icons'>stop</i>
             </a>
           </Tooltip>
           <div className='switch right'>
             <label>
-              <i className='material-icons white-text'>lock_open</i>
+              <i className={`material-icons ${lockOpenClass}`}>lock_open</i>
               <input type='checkbox' checked={survey.locked} onChange={e => this.toggleLock(e)} />
               <span className='lever' />
-              <i className='material-icons white-text'>lock</i>
+              <i className={`material-icons ${lockClass}`}>lock</i>
             </label>
           </div>
         </div>
