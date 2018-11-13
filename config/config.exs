@@ -60,6 +60,8 @@ end
 
 config :ask, version: version
 
+config :ask, intercom_app_id: System.get_env("INTERCOM_APP_ID")
+
 sentry_enabled = String.length(System.get_env("SENTRY_DSN") || "") > 0
 
 config :sentry,

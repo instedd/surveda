@@ -5,6 +5,7 @@ import { config } from '../../config'
 import { IntlProvider } from 'react-intl'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../../i18next'
+import Intercom from 'react-intercom'
 
 class App extends Component {
   render() {
@@ -18,6 +19,16 @@ class App extends Component {
             <main>
               {body || children}
               <Footer />
+              {
+                config.intercom_app_id ? (
+                  <Intercom
+                    appID={config.intercom_app_id}
+                    user_id={config.user}
+                    email={config.user}
+                    name={config.user}
+                  />
+                ) : null
+              }
             </main>
             <form ref='logoutForm' method='post' action='/sessions'>
               <input type='hidden' name='_csrf_token' value={config.csrf_token} />
@@ -30,6 +41,9 @@ class App extends Component {
   }
 
   logout() {
+    if (window.Intercom != null) {
+      window.Intercom('shutdown')
+    }
     this.refs.logoutForm.submit()
   }
 }

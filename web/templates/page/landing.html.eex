@@ -1,3 +1,7 @@
+<script>
+  <%= raw(config_intercom(@conn)) %>
+</script>
+
 <body class="welcome">
   <div class='wrapper'>
     <header>
