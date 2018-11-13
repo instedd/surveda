@@ -35,6 +35,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.CHANGE_MODE_COMPARISON: return changeModeComparison(state, action)
     case actions.CHANGE_QUESTIONNAIRE_COMPARISON: return changeQuestionnaireComparison(state, action)
     case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
+    case actions.UPDATE_LOCK: return updateLock(state, action)
     case actions.SET_STATE: return setState(state, action)
     case actions.SET_TIMEZONE: return setTimezone(state, action)
     case actions.SET_QUOTA_VARS: return setQuotaVars(state, action)
@@ -65,6 +66,7 @@ const dirtyPredicate = (action, oldData, newData) => {
     case actions.DELETE_LINK: return false
     case actions.CHANGE_NAME: return false
     case actions.CHANGE_DESCRIPTION: return false
+    case actions.UPDATE_LOCK: return false
     default: return true
   }
 }
@@ -503,6 +505,13 @@ const updateRespondentsCount = (state, action) => {
   return {
     ...state,
     respondentsCount: action.respondentsCount
+  }
+}
+
+const updateLock = (state, action) => {
+  return {
+    ...state,
+    locked: action.newLockValue
   }
 }
 

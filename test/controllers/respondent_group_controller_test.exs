@@ -507,6 +507,20 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Enum.at(respondents, 2).sanitized_phone_number == "5491124213125"
       assert Enum.at(respondents, 2).respondent_group_id == group.id
     end
+
+    test "doesn't add more respondents if survey is locked", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", locked: true)
+      group = insert(:respondent_group, survey: survey, respondents_count: 2, sample: ["9988776655", "(549) 11 4234 2343"])
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "9988776655", sanitized_phone_number: "9988776655")
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_add_path(conn, :add, project.id, survey.id, group.id), file: file
+      assert response(conn, 422)
+      respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      assert length(respondents) == 1
+    end
   end
 
   describe "replace" do

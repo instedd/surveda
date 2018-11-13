@@ -36,7 +36,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id)
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -49,7 +49,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "running")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -62,7 +62,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "completed")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -75,7 +75,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, %{"since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
       ]
     end
 
@@ -112,6 +112,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -159,6 +160,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -227,6 +229,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -291,6 +294,7 @@ defmodule Ask.SurveyControllerTest do
         "cutoff" => nil,
         "count_partial_results" => false,
         "state" => "not_ready",
+        "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
         "schedule" => %{
@@ -1161,87 +1165,148 @@ defmodule Ask.SurveyControllerTest do
     assert DateTime.compare(project.updated_at, datetime) == :gt
   end
 
-  test "stops survey", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey = insert(:survey, project: project, state: "running")
-    test_channel = TestChannel.new(false)
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    group = create_group(survey, channel)
-    insert_list(10, :respondent, survey: survey, state: "pending")
-    r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
-    insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
-    channel_state = %{"call_id" => 123}
-    session = %Session{
-      current_mode: SessionModeProvider.new("sms", channel, []),
-      channel_state: channel_state,
-      respondent: r1,
-      flow: %Flow{questionnaire: questionnaire},
-      schedule: survey.schedule,
-    }
-    session = Session.dump(session)
-    r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
+  describe "stopping survey" do
+    test "stops survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = insert(:survey, project: project, state: "running")
+      test_channel = TestChannel.new(false)
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      group = create_group(survey, channel)
+      insert_list(10, :respondent, survey: survey, state: "pending")
+      r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
+      insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+      channel_state = %{"call_id" => 123}
+      session = %Session{
+        current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
+        respondent: r1,
+        flow: %Flow{questionnaire: questionnaire},
+        schedule: survey.schedule,
+      }
+      session = Session.dump(session)
+      r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
-    assert json_response(conn, 200)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.cancelled?(survey)
-    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
-    assert_receive [:cancel_message, ^test_channel, ^channel_state]
+      assert json_response(conn, 200)
+      survey = Repo.get(Survey, survey.id)
+      assert Survey.cancelled?(survey)
+      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+    end
+
+    test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey  = insert(:survey, project: project, state: "running")
+      survey2 = insert(:survey, project: project, state: "running")
+      test_channel = TestChannel.new(false)
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      group = create_group(survey, channel)
+      r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
+      insert_list(3, :respondent, survey: survey, state: "stalled", respondent_group: group, timeout_at: Timex.now)
+      insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
+      insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
+      channel_state = %{"call_id" => 123}
+      session = %Session{
+        current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
+        respondent: r1,
+        flow: %Flow{questionnaire: questionnaire},
+        schedule: survey.schedule,
+      }
+      session = Session.dump(session)
+      r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
+
+      conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+      assert json_response(conn, 200)
+      assert Repo.get(Survey, survey2.id).state == "running"
+      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+    end
+
+    test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "terminated", exit_code: 0, exit_message: "Successfully completed")
+
+      conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+
+      assert json_response(conn, 200)
+      survey = Repo.get(Survey, survey.id)
+      assert Survey.completed?(survey)
+    end
+
+    test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
+
+      conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
+
+      assert json_response(conn, 200)
+      survey = Repo.get(Survey, survey.id)
+      assert Survey.cancelled?(survey)
+    end
+
+    test "doesn't stop survey if it is locked", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running", locked: true)
+
+      conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
+
+      assert response(conn, 422)
+      survey = Repo.get(Survey, survey.id)
+      assert survey.state == "running"
+    end
   end
 
-  test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    questionnaire = insert(:questionnaire, name: "test", project: project)
-    survey  = insert(:survey, project: project, state: "running")
-    survey2 = insert(:survey, project: project, state: "running")
-    test_channel = TestChannel.new(false)
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-    group = create_group(survey, channel)
-    r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
-    insert_list(3, :respondent, survey: survey, state: "stalled", respondent_group: group, timeout_at: Timex.now)
-    insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
-    insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
-    channel_state = %{"call_id" => 123}
-    session = %Session{
-      current_mode: SessionModeProvider.new("sms", channel, []),
-      channel_state: channel_state,
-      respondent: r1,
-      flow: %Flow{questionnaire: questionnaire},
-      schedule: survey.schedule,
-    }
-    session = Session.dump(session)
-    r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
+  describe "update locked status" do
+    test "locks survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
 
-    assert json_response(conn, 200)
-    assert Repo.get(Survey, survey2.id).state == "running"
-    assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
-    assert_receive [:cancel_message, ^test_channel, ^channel_state]
-  end
+      assert response(conn, 200)
+      assert json_response(conn, 200)["data"]["locked"]
+    end
 
-  test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "terminated", exit_code: 0, exit_message: "Successfully completed")
+    test "doesn't update locked status if user is editor", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "editor")
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
-    conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      assert_error_sent :forbidden, fn ->
+        put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
+      end
+    end
 
-    assert json_response(conn, 200)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
-  end
+    test "doesn't update locked status if parameter is invalid", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
 
-  test "stopping cancelled survey still works (#736)", %{conn: conn, user: user} do
-    project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "terminated", exit_code: 1)
+      conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: "foo"
+      survey = Repo.get(Survey, survey.id)
 
-    conn = post conn, project_survey_survey_path(conn, :stop, project, survey)
+      assert response(conn, 422)
+      assert not survey.locked
+    end
 
-    assert json_response(conn, 200)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.cancelled?(survey)
+    test "doesn't update locked status if survey state is not running", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      ["not_ready", "ready", "pending", "terminated"] |> Enum.each(fn state ->
+        survey = insert(:survey, project: project, state: state, locked: false, questionnaires: [questionnaire])
+        conn = put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
+        survey = Repo.get(Survey, survey.id)
+
+        assert response(conn, 422)
+        assert not survey.locked
+      end)
+    end
   end
 
   describe "download links" do
@@ -1741,6 +1806,28 @@ defmodule Ask.SurveyControllerTest do
       log = ActivityLog |> Repo.one!()
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "change_description", remote_ip: "192.168.0.128", metadata: %{"old_survey_description" => survey.description, "new_survey_description" => "new description", "survey_name" => survey.name}})
+    end
+
+    test "generates lock log", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: false, questionnaires: [questionnaire])
+
+      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: true
+      log = ActivityLog |> Repo.one!()
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "lock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+
+    test "generates unlock log", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, state: "running", locked: true, questionnaires: [questionnaire])
+
+      put conn, project_survey_update_locked_status_path(conn, :update_locked_status, project, survey), locked: false
+      log = ActivityLog |> Repo.one!()
+
+      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "unlock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
     end
   end
 
