@@ -57,17 +57,6 @@ export const clearInvalidsRespondentsForGroup = () => ({
   type: CLEAR_INVALID_RESPONDENTS_FOR_GROUP
 })
 
-// TODO (ary): after performing these actions we invoke surveyActions.save()
-// so that we get the survey.state from the server. This isn't strictly
-// necessary because we can (and probably should) compute this on the
-// client side to show/hide the launch button (in fact, we already compute
-// this info on the client side!). Previously all changes in the SurveyForm
-// affected a survey directly, but now a change can go to a single RespondentGroup
-// and this can affect a Survey, but we don't get a Survey back from updating
-// a RespondentGroup. My suggestion is to not rely on the server info and
-// only rely on the client side one (in any case the server already computes
-// this info and won't allow launching a non-ready survey)
-
 export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, getState) => {
   dispatch(uploadingRespondentGroup())
   handleRespondentGroupUpload(dispatch,
@@ -91,6 +80,12 @@ export const replaceRespondents = (projectId, surveyId, groupId, file) => (dispa
   )
 }
 
+// Until now, no call to handleRespondentGroupUpload (uploadRespondentGroup,
+// addMoreREspondentsToGroup and replaceRespondents) requires a
+// surveyActions.save().
+// In order to fix #1429, the explicit call to surveyActions.save() was removed
+// from handleRespondentGroupUpload, as it was suggested in a previous comment
+
 const handleRespondentGroupUpload = (dispatch, promise, groupId = null) => {
   promise.then(response => {
     const group = response.entities.respondentGroups[response.result]
@@ -106,7 +101,6 @@ const handleRespondentGroupUpload = (dispatch, promise, groupId = null) => {
       }
     })
   })
-  .then(() => dispatch(surveyActions.save()))
 }
 
 export const uploadingRespondentGroup = () => ({
