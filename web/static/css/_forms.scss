@@ -321,6 +321,15 @@ label {
   };
   .switch {
     margin-right: 1rem;
+    label input[type=checkbox] {
+      &:checked + .lever {
+        background-color: desaturate(#F44336, 25%);
+
+        &:after {
+          background-color: #F44336;
+        }
+      }
+    }
   }
   i {
     vertical-align: middle;
