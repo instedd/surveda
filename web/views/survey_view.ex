@@ -15,6 +15,8 @@ defmodule Ask.SurveyView do
     config
   end
   def render("survey.json", %{survey: survey}) do
+    started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: nil
+
     %{id: survey.id,
       name: survey.name,
       description: survey.description,
@@ -26,12 +28,13 @@ defmodule Ask.SurveyView do
       exit_message: survey.exit_message,
       cutoff: survey.cutoff,
       schedule: survey.schedule,
+      started_at: started_at,
       next_schedule_time: next_schedule_time(survey),
       updated_at: survey.updated_at,
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
-    started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: ""
+    started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: nil
 
     map = %{id: survey.id,
       name: survey.name,
