@@ -16,7 +16,7 @@ class SurveyStatus extends PureComponent {
   constructor(props) {
     super(props)
     this.bindedFormatter = this.formatter.bind(this)
-    this.bindedAgoFormatter = this.agoFormatter.bind(this)
+    this.bindedStartedFormatter = this.startedFormatter.bind(this)
   }
 
   formatter(number, unit, suffix, date, defaultFormatter) {
@@ -40,19 +40,19 @@ class SurveyStatus extends PureComponent {
     }
   }
 
-  agoFormatter(number, unit, suffix, date, defaultFormatter) {
+  startedFormatter(number, unit, suffix, date, defaultFormatter) {
     const { t, survey } = this.props
 
     if (unit == 'second') {
-      return t('{{count}} second ago', {count: number})
+      return t('Started {{count}} second ago', {count: number})
     } else if (unit == 'minute') {
-      return t('{{count}} minute ago', {count: number})
+      return t('Started {{count}} minute ago', {count: number})
     } else if (unit == 'hour') {
-      return t('{{count}} hour ago', {count: number})
+      return t('Started {{count}} hour ago', {count: number})
     } else if (unit == 'day') {
-      return t('{{count}} day ago', {count: number})
+      return t('Started {{count}} day ago', {count: number})
     } else {
-      return t('on {{date}}', {date: dateformat(survey.startedAt, 'mmm d, yyyy HH:MM (Z)')})
+      return t('Started {{date}}', {date: dateformat(survey.startedAt, 'mmm d, yyyy HH:MM (Z)')})
     }
   }
 
@@ -62,15 +62,6 @@ class SurveyStatus extends PureComponent {
       return <Trans>Scheduled at {{hour}}</Trans>
     } else {
       return <Trans>Next contact <TimeAgo date={date} formatter={this.bindedFormatter} /> at {{hour}}</Trans>
-    }
-  }
-
-  startOrCompletionDescription(date) {
-    const { survey } = this.props
-    if (survey.state == 'running') {
-      return <Trans>Started <TimeAgo date={date} live={false} formatter={this.bindedAgoFormatter} /></Trans>
-    } else if (survey.state == 'terminated') {
-      return <Trans>Completed <TimeAgo date={date} live={false} formatter={this.bindedAgoFormatter} /></Trans>
     }
   }
 
@@ -115,7 +106,7 @@ class SurveyStatus extends PureComponent {
           text = this.nextCallDescription(survey, date)
         } else {
           icon = 'play_arrow'
-          text = this.startOrCompletionDescription(survey.startedAt)
+          text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
         }
         color = 'green-text'
         break
@@ -124,7 +115,7 @@ class SurveyStatus extends PureComponent {
         switch (survey.exitCode) {
           case 0:
             icon = 'done'
-            text = this.startOrCompletionDescription(survey.startedAt)
+            text = t('Completed', {context: 'survey'})
             break
 
           case 1:
