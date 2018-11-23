@@ -70,7 +70,7 @@ class SaveStatus extends Component {
         )
       } else {
         return (
-          <div className='right grey-text'><TimeAgo minPeriod='60' date={saveStatus.updatedAt + '+0000'} formatter={this.bindedFormatter} /></div>
+          <div className='right grey-text'><TimeAgo minPeriod='60' date={saveStatus.updatedAt} formatter={this.bindedFormatter} /></div>
         )
       }
     } else {
