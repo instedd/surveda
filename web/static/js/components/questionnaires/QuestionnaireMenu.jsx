@@ -127,22 +127,31 @@ class QuestionnaireMenu extends Component {
   importZip(e) {
     e.preventDefault()
 
+    const props = this.props
+
     let files = e.target.files
     if (files.length != 1) return
 
     const { questionnaire } = this.props
     const importModal = this.refs.importModal
 
-    api.importQuestionnaireZip(questionnaire.projectId, questionnaire.id, files)
-    .then(response => {
-      const questionnaire = response.entities.questionnaires[response.result]
+    const onreadystatechange = function(questionnaire) {
       // Make sure to deselect any step before receiving the questionnaire
-      this.props.uiActions.deselectStep()
-      this.props.uiActions.deselectQuotaCompletedStep()
-      this.props.questionnaireActions.receive(questionnaire)
-      this.props.questionnaireActions.setDirty()
+      props.uiActions.deselectStep()
+      props.uiActions.deselectQuotaCompletedStep()
+      props.questionnaireActions.receive(questionnaire)
+      props.questionnaireActions.setDirty()
       importModal.close()
-    })
+    }
+
+    const onprogress = function(pe) {
+      if (pe.lengthComputable) {
+        console.log(pe.total)
+        console.log(pe.loaded)
+      }
+    }
+
+    api.importQuestionnaireZip(questionnaire.projectId, questionnaire.id, files, onreadystatechange, onprogress)
 
     // Make sure to clear the input's value so a same file
     // can be uploaded multiple times
