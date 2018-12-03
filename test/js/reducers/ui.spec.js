@@ -12,6 +12,8 @@ describe('ui reducer', () => {
     expect(initialState).toEqual({
       data: {
         questionnaireEditor: {
+          importPercentage: 0,
+          importingQuestionnaire: false,
           uploadingAudio: null,
           steps: {
             currentStepId: null,
@@ -45,6 +47,22 @@ describe('ui reducer', () => {
       actions.finishAudioUpload()
     ])
     assert(!result.data.questionnaireEditor.uploadingAudio)
+  })
+
+  it('should start importing questionnaire', () => {
+    const playActions = playActionsFromState(initialState, reducer)
+    const result = playActions([
+      actions.importQuestionnaire()
+    ])
+    assert(result.data.questionnaireEditor.importingQuestionnaire)
+  })
+
+  it('should update import percentage', () => {
+    const playActions = playActionsFromState(initialState, reducer)
+    const result = playActions([
+      actions.updateImportPercentage(50)
+    ])
+    expect(result.data.questionnaireEditor.importPercentage).toEqual(50)
   })
 
   describe('survey modes', () => {

@@ -9,6 +9,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import * as userSettingsActions from '../../actions/userSettings'
 import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
+import QuestionnaireImport from './QuestionnaireImport'
 import LanguagesList from './LanguagesList'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
@@ -272,10 +273,16 @@ class QuestionnaireEditor extends Component<any, State> {
   }
 
   render() {
-    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps, t } = this.props
+    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps, importingQuestionnaire, importPercentage, t } = this.props
 
     if (questionnaire == null || project == null || userSettings.settings == null) {
       return <div>Loading...</div>
+    }
+
+    if (importingQuestionnaire) {
+      return (
+        <QuestionnaireImport percentage={importPercentage} sqSize={174} strokeWidth={6} />
+      )
     }
 
     const settings = userSettings.settings
@@ -401,7 +408,9 @@ QuestionnaireEditor.propTypes = {
   errorsByPath: PropTypes.object,
   location: PropTypes.object,
   selectedSteps: PropTypes.object,
-  selectedQuotaCompletedSteps: PropTypes.object
+  selectedQuotaCompletedSteps: PropTypes.object,
+  importingQuestionnaire: PropTypes.bool,
+  importPercentage: PropTypes.number
 }
 
 const mapStateToProps = (state, ownProps) => ({
@@ -417,7 +426,9 @@ const mapStateToProps = (state, ownProps) => ({
   errors: state.questionnaire.errors,
   errorsByPath: state.questionnaire.errorsByPath || {},
   selectedSteps: state.ui.data.questionnaireEditor.steps,
-  selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps
+  selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps,
+  importingQuestionnaire: state.ui.data.questionnaireEditor.importingQuestionnaire,
+  importPercentage: state.ui.data.questionnaireEditor.importPercentage
 })
 
 const mapDispatchToProps = (dispatch) => ({
