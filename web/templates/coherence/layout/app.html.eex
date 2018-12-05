@@ -10,6 +10,10 @@
     <title>InSTEDD Surveda</title>
   </head>
 
+  <script>
+    <%= raw(config_intercom(@conn)) %>
+  </script>
+
   <body class="welcome login">
     <div class='wrapper'>
       <header>

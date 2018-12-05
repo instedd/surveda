@@ -1,7 +1,6 @@
 defmodule Ask.LayoutView do
   use Ask.Web, :view
   alias Ask.Config
-
   alias Ask.{User, Repo}
 
   def config(conn) do
@@ -32,7 +31,8 @@ defmodule Ask.LayoutView do
       sentryDsn: sentry_dsn,
       available_languages_for_numbers: Ask.NumberTranslator.langs(),
       nuntium: Config.provider_config(Nuntium) |> guisso_configs,
-      verboice: Config.provider_config(Verboice) |> guisso_configs
+      verboice: Config.provider_config(Verboice) |> guisso_configs,
+      intercom_app_id: Ask.Intercom.intercom_app_id()
     }
 
     {:ok, config_json} = client_config |> Poison.encode
