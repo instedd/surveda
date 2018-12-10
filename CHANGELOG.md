@@ -11,6 +11,12 @@
 
 * Some dispositions were not being logged in the interactions file [#1413](https://github.com/instedd/ask/issues/1413)
 
+## Spruce 0.19.1
+
+### Bugfixes
+
+* Timezone database was not updating automatically
+
 ## Spruce 0.19
 
 ### Features
