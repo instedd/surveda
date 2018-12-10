@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Spruce 0.19.1
+
+### Bugfixes
+
+* Timezone database was not updating automatically
+
 ## Spruce 0.19
 
 ### Features
