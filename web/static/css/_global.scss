@@ -243,7 +243,7 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
   .card-description {
     height: 46px;
     overflow-y: hidden;
-    word-break: break-all;
+    word-break: break-word;
     margin-bottom: 20px;
   }
   .card-content {

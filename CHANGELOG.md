@@ -1,5 +1,16 @@
 # InSTEDD Surveda Changelog
 
+## Tanoak 0.20
+
+### Features
+
+* Allow to lock surveys [#1438](https://github.com/instedd/ask/issues/1438)
+* Survey descriptions [#1436](https://github.com/instedd/ask/issues/1436)
+
+### Bugfixes
+
+* Some dispositions were not being logged in the interactions file [#1413](https://github.com/instedd/ask/issues/1413)
+
 ## Spruce 0.19
 
 ### Features
