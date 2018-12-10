@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Tanoak 0.20.1
+
+### Bugfixes
+
+* Timezone database was not updating automatically
+
 ## Tanoak 0.20
 
 ### Features
