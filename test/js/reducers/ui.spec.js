@@ -12,9 +12,12 @@ describe('ui reducer', () => {
     expect(initialState).toEqual({
       data: {
         questionnaireEditor: {
-          importPercentage: 0,
-          importingQuestionnaire: false,
           uploadingAudio: null,
+          upload: {
+            uploadId: null,
+            progress: 0,
+            error: null
+          },
           steps: {
             currentStepId: null,
             currentStepIsNew: false
@@ -29,8 +32,7 @@ describe('ui reducer', () => {
           fallbackModeSelected: null,
           allowBlockedDays: false
         }
-      },
-      errors: {}
+      }
     })
   })
 
@@ -49,20 +51,46 @@ describe('ui reducer', () => {
     assert(!result.data.questionnaireEditor.uploadingAudio)
   })
 
-  it('should start importing questionnaire', () => {
-    const playActions = playActionsFromState(initialState, reducer)
-    const result = playActions([
-      actions.importQuestionnaire()
-    ])
-    assert(result.data.questionnaireEditor.importingQuestionnaire)
-  })
+  describe('uploading questionnaire', () => {
+    it('should start upload', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([
+        actions.uploadStarted(4)
+      ])
+      expect(result.data.questionnaireEditor.upload.uploadId).toEqual(4)
+    })
 
-  it('should update import percentage', () => {
-    const playActions = playActionsFromState(initialState, reducer)
-    const result = playActions([
-      actions.updateImportPercentage(50)
-    ])
-    expect(result.data.questionnaireEditor.importPercentage).toEqual(50)
+    it('should update progress', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([
+        actions.uploadProgress(50000, 25000)
+      ])
+      expect(result.data.questionnaireEditor.upload.progress).toEqual(50)
+    })
+
+    it('should finish upload', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([
+        actions.uploadStarted(4),
+        actions.uploadProgress(50000, 25000),
+        actions.uploadFinished()
+      ])
+      expect(result.data.questionnaireEditor.upload.uploadId).toEqual(null)
+      expect(result.data.questionnaireEditor.upload.progress).toEqual(0)
+      expect(result.data.questionnaireEditor.upload.error).toEqual(null)
+    })
+
+    it('should add error', () => {
+      const playActions = playActionsFromState(initialState, reducer)
+      const result = playActions([
+        actions.uploadStarted(4),
+        actions.uploadProgress(50000, 25000),
+        actions.uploadErrored('Timeout')
+      ])
+      expect(result.data.questionnaireEditor.upload.uploadId).toEqual(4)
+      expect(result.data.questionnaireEditor.upload.progress).toEqual(50)
+      expect(result.data.questionnaireEditor.upload.error).toEqual('Timeout')
+    })
   })
 
   describe('survey modes', () => {

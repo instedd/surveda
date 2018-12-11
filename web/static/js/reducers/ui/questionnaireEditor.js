@@ -2,6 +2,11 @@ import * as actions from '../../actions/ui'
 
 const initialState = {
   uploadingAudio: null,
+  upload: {
+    uploadId: null,
+    progress: 0,
+    error: null
+  },
   steps: {
     currentStepId: null,
     currentStepIsNew: false
@@ -9,18 +14,17 @@ const initialState = {
   quotaCompletedSteps: {
     currentStepId: null,
     currentStepIsNew: false
-  },
-  importingQuestionnaire: false,
-  importPercentage: 0
+  }
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
     case actions.UPLOAD_AUDIO: return uploadingAudio(state, action)
     case actions.FINISH_AUDIO_UPLOAD: return finishAudioUpload(state, action)
-    case actions.IMPORT_QUESTIONNAIRE: return importingQuestionnaire(state, action)
-    case actions.UPDATE_IMPORT_PERCENTAGE: return updateImportPercentage(state, action)
-    case actions.FINISH_QUESTIONNAIRE_IMPORT: return finishQuestionnaireImport(state, action)
+    case actions.UPLOAD_STARTED: return uploadStarted(state, action)
+    case actions.UPLOAD_PROGRESS: return uploadProgress(state, action)
+    case actions.UPLOAD_FINISHED: return uploadFinished(state, action)
+    case actions.UPLOAD_ERRORED: return uploadErrored(state, action)
     case actions.QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP: return selectQuotaCompletedStep(state, action)
     case actions.QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP: return deselectQuotaCompletedStep(state, action)
     case actions.QUESTIONNAIRE_SELECT_STEP: return selectStep(state, action)
@@ -43,24 +47,45 @@ const finishAudioUpload = (state, action) => {
   }
 }
 
-const importingQuestionnaire = (state, action) => {
+const uploadStarted = (state, action) => {
   return {
     ...state,
-    importingQuestionnaire: true
+    upload: {
+      ...state.upload,
+      uploadId: action.uploadId
+    }
   }
 }
 
-const updateImportPercentage = (state, action) => {
+const uploadProgress = (state, action) => {
   return {
     ...state,
-    importPercentage: action.importPercentage
+    upload: {
+      ...state.upload,
+      progress: Math.floor(action.loaded / action.total * 100)
+    }
   }
 }
 
-const finishQuestionnaireImport = (state, action) => {
+const uploadFinished = (state, action) => {
   return {
     ...state,
-    importingQuestionnaire: false
+    upload: {
+      ...state.upload,
+      uploadId: null,
+      progress: 0,
+      error: null
+    }
+  }
+}
+
+const uploadErrored = (state, action) => {
+  return {
+    ...state,
+    upload: {
+      ...state.upload,
+      error: action.description
+    }
   }
 }
 

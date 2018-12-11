@@ -1,6 +1,7 @@
 import { normalize, Schema, arrayOf } from 'normalizr'
 import { camelizeKeys, decamelizeKeys } from 'humps'
 import 'isomorphic-fetch'
+import { upload } from './uploadManager'
 
 const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
@@ -398,26 +399,16 @@ export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }
 
-const importQuestionnaireXHR = (projectId, questionnaireId, files, onreadystatechange, onprogress) => {
-  const formData = new FormData()
-  formData.append('file', files[0])
-  const xhr = new XMLHttpRequest()
-  xhr.open('POST', `/api/v1/projects/${projectId}/questionnaires/${questionnaireId}/import_zip`, true)
-  xhr.onreadystatechange = function() {
-    if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-      const questionnaireSchema = new Schema('questionnaires')
-      let response = JSON.parse(this.response)
-      response = normalize(camelizeKeys(response.data), questionnaireSchema)
-      const questionnaire = response.entities.questionnaires[response.result]
-      onreadystatechange(questionnaire)
-    }
+export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompleted, onProgress, onError) => {
+  const url = `/api/v1/projects/${projectId}/questionnaires/${questionnaireId}/import_zip`
+  const apiOnCompleted = (response) => {
+    const questionnaireSchema = new Schema('questionnaires')
+    response = JSON.parse(response)
+    response = normalize(camelizeKeys(response.data), questionnaireSchema)
+    const questionnaire = response.entities.questionnaires[response.result]
+    onCompleted(questionnaire)
   }
-  xhr.upload.addEventListener('progress', onprogress)
-  xhr.send(formData)
-}
-
-export const importQuestionnaireZip = (projectId, questionnaireId, files, onreadystatechange, onprogress) => {
-  return importQuestionnaireXHR(projectId, questionnaireId, files, onreadystatechange, onprogress)
+  return upload(file, url, apiOnCompleted, onProgress, onError)
 }
 
 export const simulateQuestionnaire = (projectId, questionnaireId, phoneNumber, mode, channelId) => {

@@ -1,8 +1,13 @@
+import * as api from '../api'
+import * as questionnaireActions from './questionnaire'
+import { cancel } from '../uploadManager'
+
 export const UPLOAD_AUDIO = 'UPLOAD_AUDIO'
 export const FINISH_AUDIO_UPLOAD = 'FINISH_AUDIO_UPLOAD'
-export const IMPORT_QUESTIONNAIRE = 'IMPORT_QUESTIONNAIRE'
-export const UPDATE_IMPORT_PERCENTAGE = 'UPDATE_IMPORT_PERCENTAGE'
-export const FINISH_QUESTIONNAIRE_IMPORT = 'FINISH_QUESTIONNAIRE_IMPORT'
+export const UPLOAD_STARTED = 'QUESTIONNAIRE_UPLOAD_STARTED'
+export const UPLOAD_FINISHED = 'QUESTIONNAIRE_UPLOAD_FINISHED'
+export const UPLOAD_PROGRESS = 'QUESTIONNAIRE_UPLOAD_PROGRESS'
+export const UPLOAD_ERRORED = 'QUESTIONNAIRE_UPLOAD_ERRORED'
 export const SURVEY_COMPARISON_SELECT_PRIMARY = 'SURVEY_COMPARISON_SELECT_PRIMARY'
 export const SURVEY_COMPARISON_SELECT_FALLBACK = 'SURVEY_COMPARISON_SELECT_FALLBACK'
 export const SURVEY_ADD_COMPARISON_MODE = 'SURVEY_ADD_COMPARISON_MODE'
@@ -22,17 +27,51 @@ export const finishAudioUpload = (stepId) => ({
   stepId
 })
 
-export const importQuestionnaire = () => ({
-  type: IMPORT_QUESTIONNAIRE
+export const importQuestionnaire = (projectId, questionnaireId, file) => (dispatch, getState) => {
+  const onProgress = (total, loaded) => {
+    dispatch(uploadProgress(total, loaded))
+  }
+
+  const onCompleted = (questionnaire) => {
+    dispatch(deselectStep())
+    dispatch(deselectQuotaCompletedStep())
+    dispatch(questionnaireActions.receive(questionnaire))
+    dispatch(questionnaireActions.setDirty())
+    dispatch(uploadFinished())
+  }
+
+  const onError = (description) => {
+    dispatch(uploadErrored(description))
+  }
+
+  const uploadId = api.importQuestionnaireZip(projectId, questionnaireId, file, onCompleted, onProgress, onError)
+
+  dispatch(uploadStarted(uploadId))
+}
+
+export const uploadStarted = (uploadId) => ({
+  type: UPLOAD_STARTED,
+  uploadId
 })
 
-export const updateImportPercentage = (importPercentage) => ({
-  type: UPDATE_IMPORT_PERCENTAGE,
-  importPercentage
+export const uploadProgress = (total, loaded) => ({
+  type: UPLOAD_PROGRESS,
+  total,
+  loaded
 })
 
-export const finishQuestionnaireImport = () => ({
-  type: FINISH_QUESTIONNAIRE_IMPORT
+export const uploadFinished = () => ({
+  type: UPLOAD_FINISHED
+})
+
+export const uploadCancelled = (uploadId) => (dispatch, getState) => {
+  cancel(uploadId)
+  dispatch(uploadFinished())
+}
+
+export const uploadErrored = (description) => ({
+  type: UPLOAD_ERRORED,
+  description
 })
 
 export const comparisonPrimarySelected = (mode: string) => ({
