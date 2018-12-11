@@ -345,3 +345,15 @@ label {
   fill: none;
 }
 
+.questionnaire-import-error {
+  i {
+    color: #ff5722;
+    font-size: 144px;
+  }
+  .error-description {
+    color: #ff5722;
+  }
+  .back-link {
+    text-transform: uppercase;
+  }
+}

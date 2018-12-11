@@ -8,8 +8,7 @@ import { csvForTranslation, csvTranslationFilename } from '../../reducers/questi
 import csvString from 'csv-string'
 import * as language from '../../language'
 import * as routes from '../../routes'
-import * as api from '../../api'
-import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem } from '../ui'
 import withQuestionnaire from './withQuestionnaire'
 import { translate } from 'react-i18next'
 
@@ -127,31 +126,12 @@ class QuestionnaireMenu extends Component {
   importZip(e) {
     e.preventDefault()
 
-    const props = this.props
-
     let files = e.target.files
     if (files.length != 1) return
 
-    const { questionnaire } = this.props
+    const { questionnaire, uiActions } = this.props
 
-    props.uiActions.importQuestionnaire()
-    const onreadystatechange = function(questionnaire) {
-      // Make sure to deselect any step before receiving the questionnaire
-      props.uiActions.deselectStep()
-      props.uiActions.deselectQuotaCompletedStep()
-      props.questionnaireActions.receive(questionnaire)
-      props.questionnaireActions.setDirty()
-      props.uiActions.finishQuestionnaireImport()
-      // importModal.close()
-    }
-
-    const onprogress = function(pe) {
-      if (pe.lengthComputable) {
-        props.uiActions.updateImportPercentage(Math.round(pe.loaded / pe.total * 100))
-      }
-    }
-
-    api.importQuestionnaireZip(questionnaire.projectId, questionnaire.id, files, onreadystatechange, onprogress)
+    uiActions.importQuestionnaire(questionnaire.projectId, questionnaire.id, files[0])
 
     // Make sure to clear the input's value so a same file
     // can be uploaded multiple times
@@ -174,7 +154,6 @@ class QuestionnaireMenu extends Component {
         </DropdownItem>
         { !readOnly
           ? <DropdownItem>
-            <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
             <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
             <a href='#' onClick={e => this.openImportZipDialog(e)}>
               <i className='material-icons'>file_upload</i>

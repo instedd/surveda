@@ -10,6 +10,7 @@ import * as userSettingsActions from '../../actions/userSettings'
 import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import QuestionnaireImport from './QuestionnaireImport'
+import QuestionnaireImportError from './QuestionnaireImportError'
 import LanguagesList from './LanguagesList'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
@@ -273,16 +274,16 @@ class QuestionnaireEditor extends Component<any, State> {
   }
 
   render() {
-    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps, importingQuestionnaire, importPercentage, t } = this.props
+    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps, uploadId, uploadError, uploadProgress, t } = this.props
 
     if (questionnaire == null || project == null || userSettings.settings == null) {
       return <div>Loading...</div>
     }
 
-    if (importingQuestionnaire) {
-      return (
-        <QuestionnaireImport percentage={importPercentage} sqSize={174} strokeWidth={6} />
-      )
+    if (uploadError) {
+      return <QuestionnaireImportError description={uploadError} />
+    } else if (uploadId) {
+      return <QuestionnaireImport percentage={uploadProgress} />
     }
 
     const settings = userSettings.settings
@@ -409,8 +410,9 @@ QuestionnaireEditor.propTypes = {
   location: PropTypes.object,
   selectedSteps: PropTypes.object,
   selectedQuotaCompletedSteps: PropTypes.object,
-  importingQuestionnaire: PropTypes.bool,
-  importPercentage: PropTypes.number
+  uploadId: PropTypes.number,
+  uploadError: PropTypes.string,
+  uploadProgress: PropTypes.number
 }
 
 const mapStateToProps = (state, ownProps) => ({
@@ -427,8 +429,9 @@ const mapStateToProps = (state, ownProps) => ({
   errorsByPath: state.questionnaire.errorsByPath || {},
   selectedSteps: state.ui.data.questionnaireEditor.steps,
   selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps,
-  importingQuestionnaire: state.ui.data.questionnaireEditor.importingQuestionnaire,
-  importPercentage: state.ui.data.questionnaireEditor.importPercentage
+  uploadId: state.ui.data.questionnaireEditor.upload.uploadId,
+  uploadError: state.ui.data.questionnaireEditor.upload.error,
+  uploadProgress: state.ui.data.questionnaireEditor.upload.progress
 })
 
 const mapDispatchToProps = (dispatch) => ({
