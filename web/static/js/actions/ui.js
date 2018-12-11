@@ -44,7 +44,11 @@ export const importQuestionnaire = (projectId, questionnaireId, file) => (dispat
     dispatch(uploadErrored(description))
   }
 
-  const uploadId = api.importQuestionnaireZip(projectId, questionnaireId, file, onCompleted, onProgress, onError)
+  const onAbort = () => {
+    dispatch(uploadFinished())
+  }
+
+  const uploadId = api.importQuestionnaireZip(projectId, questionnaireId, file, onCompleted, onProgress, onAbort, onError)
 
   dispatch(uploadStarted(uploadId))
 }
@@ -64,9 +68,8 @@ export const uploadFinished = () => ({
   type: UPLOAD_FINISHED
 })
 
-export const uploadCancelled = (uploadId) => (dispatch, getState) => {
+export const uploadCancelled = (uploadId) => {
   cancel(uploadId)
-  dispatch(uploadFinished())
 }
 
 export const uploadErrored = (description) => ({

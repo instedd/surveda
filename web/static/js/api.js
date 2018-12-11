@@ -399,7 +399,7 @@ export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }
 
-export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompleted, onProgress, onError) => {
+export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompleted, onProgress, onAbort, onError) => {
   const url = `/api/v1/projects/${projectId}/questionnaires/${questionnaireId}/import_zip`
   const apiOnCompleted = (response) => {
     const questionnaireSchema = new Schema('questionnaires')
@@ -408,7 +408,7 @@ export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompl
     const questionnaire = response.entities.questionnaires[response.result]
     onCompleted(questionnaire)
   }
-  return upload(file, url, apiOnCompleted, onProgress, onError)
+  return upload(file, url, apiOnCompleted, onProgress, onAbort, onError)
 }
 
 export const simulateQuestionnaire = (projectId, questionnaireId, phoneNumber, mode, channelId) => {

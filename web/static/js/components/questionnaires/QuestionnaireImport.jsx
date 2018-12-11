@@ -9,9 +9,9 @@ class QuestionnaireImport extends Component {
   }
 
   onCancel() {
-    const { dispatch, uploadId } = this.props
+    const { uploadId } = this.props
     if (uploadId) {
-      dispatch(uiActions.uploadCancelled(uploadId))
+      uiActions.uploadCancelled(uploadId)
     }
   }
 
@@ -57,8 +57,7 @@ class QuestionnaireImport extends Component {
 
 QuestionnaireImport.propTypes = {
   percentage: PropTypes.number,
-  uploadId: PropTypes.number,
-  dispatch: PropTypes.func.isRequired
+  uploadId: PropTypes.number
 }
 
 const mapStateToProps = (state, ownProps) => ({
