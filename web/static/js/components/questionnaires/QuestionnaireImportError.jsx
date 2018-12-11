@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import * as uiActions from '../../actions/ui'
 import { connect } from 'react-redux'
+import { translate } from 'react-i18next'
 
 class QuestionnaireImportError extends Component {
   constructor(props) {
@@ -14,7 +15,7 @@ class QuestionnaireImportError extends Component {
   }
 
   render() {
-    const { description } = this.props
+    const { description, t } = this.props
     return (
       <div className='center-align questionnaire-import-error'>
         <i className='material-icons'>warning</i>
@@ -23,7 +24,7 @@ class QuestionnaireImportError extends Component {
         </h5>
         <br />
         <a href='#!' onClick={this.backToQuestionnaire} className='back-link grey-text lighten-1'>
-          Back to questionnaire
+          { t('Back to questionnaire') }
         </a>
       </div>
     )
@@ -32,7 +33,8 @@ class QuestionnaireImportError extends Component {
 
 QuestionnaireImportError.propTypes = {
   description: PropTypes.string,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
+  t: PropTypes.func
 }
 
-export default connect()(QuestionnaireImportError)
+export default translate()(connect()(QuestionnaireImportError))

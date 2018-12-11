@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import * as uiActions from '../../actions/ui'
 import { connect } from 'react-redux'
+import { translate } from 'react-i18next'
 
 class QuestionnaireImport extends Component {
   constructor(props) {
@@ -16,12 +17,13 @@ class QuestionnaireImport extends Component {
   }
 
   render() {
+    const { t, percentage } = this.props
     const sqSize = 174
     const strokeWidth = 6
     const radius = (sqSize - strokeWidth) / 2
     const viewBox = `0 0 ${sqSize} ${sqSize}`
     const dashArray = radius * Math.PI * 2
-    const dashOffset = dashArray - dashArray * this.props.percentage / 100
+    const dashOffset = dashArray - dashArray * percentage / 100
 
     return (
       <div className='center-align'>
@@ -44,7 +46,7 @@ class QuestionnaireImport extends Component {
             }} />
         </svg>
         <h5 className='grey-text lighten-1'>
-          Uploading questionnaire
+          { t('Uploading questionnaire') }
         </h5>
         <br />
         <a href='#!' onClick={this.onCancel} className='btn-large red'>
@@ -57,11 +59,12 @@ class QuestionnaireImport extends Component {
 
 QuestionnaireImport.propTypes = {
   percentage: PropTypes.number,
-  uploadId: PropTypes.number
+  uploadId: PropTypes.number,
+  t: PropTypes.func
 }
 
 const mapStateToProps = (state, ownProps) => ({
   uploadId: state.ui.data.questionnaireEditor.upload.uploadId
 })
 
-export default connect(mapStateToProps)(QuestionnaireImport)
+export default translate()(connect(mapStateToProps)(QuestionnaireImport))
