@@ -24,7 +24,7 @@ class SmsSettings extends Component {
   scrollIfNeeded() {
     if (this.state.editing) {
       const elem = $(this.refs.self)
-      $('body').animate({scrollTop: elem.offset().top}, 500)
+      $('html, body').animate({scrollTop: elem.offset().top}, 500)
     }
   }
 

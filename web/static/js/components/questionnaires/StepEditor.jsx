@@ -50,7 +50,7 @@ class StepEditor extends Component<Props> {
     if (step.id != this.lastStepId) {
       const elem = $(`#step-id-${step.id}`)
       if (elem.length > 0) {
-        $('body').animate({scrollTop: elem.offset().top}, 500)
+        $('html, body').animate({scrollTop: elem.offset().top}, 500)
       }
     }
     this.lastStepId = step.id
