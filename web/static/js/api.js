@@ -1,6 +1,7 @@
 import { normalize, Schema, arrayOf } from 'normalizr'
 import { camelizeKeys, decamelizeKeys } from 'humps'
 import 'isomorphic-fetch'
+import { upload } from './uploadManager'
 
 const projectSchema = new Schema('projects')
 const surveySchema = new Schema('surveys')
@@ -398,9 +399,16 @@ export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }
 
-export const importQuestionnaireZip = (projectId, questionnaireId, files) => {
-  return apiPostFile(`projects/${projectId}/questionnaires/${questionnaireId}/import_zip`,
-    questionnaireSchema, files[0])
+export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompleted, onProgress, onAbort, onError) => {
+  const url = `/api/v1/projects/${projectId}/questionnaires/${questionnaireId}/import_zip`
+  const apiOnCompleted = (response) => {
+    const questionnaireSchema = new Schema('questionnaires')
+    response = JSON.parse(response)
+    response = normalize(camelizeKeys(response.data), questionnaireSchema)
+    const questionnaire = response.entities.questionnaires[response.result]
+    onCompleted(questionnaire)
+  }
+  return upload(file, url, apiOnCompleted, onProgress, onAbort, onError)
 }
 
 export const simulateQuestionnaire = (projectId, questionnaireId, phoneNumber, mode, channelId) => {

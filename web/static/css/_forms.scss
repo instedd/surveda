@@ -335,3 +335,25 @@ label {
     vertical-align: middle;
   }
 }
+
+// ------------ Questionnaire Import --------------
+
+.circle-progress {
+  stroke: #4caf50;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.questionnaire-import-error {
+  i {
+    color: #ff5722;
+    font-size: 144px;
+  }
+  .error-description {
+    color: #ff5722;
+  }
+  .back-link {
+    text-transform: uppercase;
+  }
+}

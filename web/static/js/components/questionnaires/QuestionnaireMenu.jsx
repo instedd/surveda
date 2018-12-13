@@ -8,8 +8,7 @@ import { csvForTranslation, csvTranslationFilename } from '../../reducers/questi
 import csvString from 'csv-string'
 import * as language from '../../language'
 import * as routes from '../../routes'
-import * as api from '../../api'
-import { ConfirmationModal, Dropdown, DropdownItem } from '../ui'
+import { Dropdown, DropdownItem } from '../ui'
 import withQuestionnaire from './withQuestionnaire'
 import { translate } from 'react-i18next'
 
@@ -130,42 +129,13 @@ class QuestionnaireMenu extends Component {
     let files = e.target.files
     if (files.length != 1) return
 
-    const { questionnaire } = this.props
-    const importModal = this.refs.importModal
+    const { questionnaire, uiActions } = this.props
 
-    api.importQuestionnaireZip(questionnaire.projectId, questionnaire.id, files)
-    .then(response => {
-      const questionnaire = response.entities.questionnaires[response.result]
-      // Make sure to deselect any step before receiving the questionnaire
-      this.props.uiActions.deselectStep()
-      this.props.uiActions.deselectQuotaCompletedStep()
-      this.props.questionnaireActions.receive(questionnaire)
-      this.props.questionnaireActions.setDirty()
-      importModal.close()
-    })
+    uiActions.importQuestionnaire(questionnaire.projectId, questionnaire.id, files[0])
 
     // Make sure to clear the input's value so a same file
     // can be uploaded multiple times
     e.target.value = null
-
-    importModal.open({
-      modalText: <div>
-        <p>Your questionnaire is being imported, please wait...</p>
-        <div className='center-align'>
-          <div className='preloader-wrapper active center'>
-            <div className='spinner-layer spinner-blue-only'>
-              <div className='circle-clipper left'>
-                <div className='circle' />
-              </div><div className='gap-patch'>
-                <div className='circle' />
-              </div><div className='circle-clipper right'>
-                <div className='circle' />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    })
   }
 
   render() {
@@ -184,7 +154,6 @@ class QuestionnaireMenu extends Component {
         </DropdownItem>
         { !readOnly
           ? <DropdownItem>
-            <ConfirmationModal modalId='importModal' ref='importModal' header='Importing questionnaire' initOptions={{dismissible: false}} />
             <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
             <a href='#' onClick={e => this.openImportZipDialog(e)}>
               <i className='material-icons'>file_upload</i>
