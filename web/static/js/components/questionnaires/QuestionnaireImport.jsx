@@ -59,7 +59,7 @@ class QuestionnaireImport extends Component {
 
 QuestionnaireImport.propTypes = {
   percentage: PropTypes.number,
-  uploadId: PropTypes.number,
+  uploadId: PropTypes.string,
   t: PropTypes.func
 }
 

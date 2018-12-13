@@ -20,7 +20,7 @@ class QuestionnaireImportError extends Component {
       <div className='center-align questionnaire-import-error'>
         <i className='material-icons'>warning</i>
         <h5 className='error-description'>
-          { description }
+          { t(description) }
         </h5>
         <br />
         <a href='#!' onClick={this.backToQuestionnaire} className='back-link grey-text lighten-1'>
@@ -32,7 +32,7 @@ class QuestionnaireImportError extends Component {
 }
 
 QuestionnaireImportError.propTypes = {
-  description: PropTypes.string,
+  description: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
   dispatch: PropTypes.func.isRequired,
   t: PropTypes.func
 }

@@ -410,8 +410,8 @@ QuestionnaireEditor.propTypes = {
   location: PropTypes.object,
   selectedSteps: PropTypes.object,
   selectedQuotaCompletedSteps: PropTypes.object,
-  uploadId: PropTypes.number,
-  uploadError: PropTypes.string,
+  uploadId: PropTypes.string,
+  uploadError: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
   uploadProgress: PropTypes.number
 }
 
