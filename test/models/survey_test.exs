@@ -72,4 +72,39 @@ defmodule Ask.SurveyTest do
     assert changeset.valid?
     assert changeset.changes.description == "initial survey"
   end
+
+  test "enumerates channels of running surveys" do
+    surveys =
+      [
+        insert(:survey, state: "pending"),
+        insert(:survey, state: "running")
+      ]
+
+    channels = [
+      insert(:channel),
+      insert(:channel)
+    ]
+
+    (0..1)
+    |> Enum.each(fn index ->
+      insert(
+        :respondent_group,
+        survey: surveys |> Enum.at(index),
+        respondent_group_channels:
+          [
+            insert(
+              :respondent_group_channel,
+              channel: channels |> Enum.at(index)
+            )
+          ]
+      )
+    end)
+
+    running_channels =
+      Survey.running_channels()
+      |> Enum.map(fn c -> c.id end)
+      |> Enum.sort
+
+    assert running_channels == [Enum.at(channels, 1).id]
+  end
 end

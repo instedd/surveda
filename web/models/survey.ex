@@ -2,7 +2,20 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
-  alias Ask.{Schedule, ShortLink, Repo, Respondent, RespondentGroup, QuotaBucket, Questionnaire, SurveyQuestionnaire, Project, FloipEndpoint}
+  alias Ask.{
+    Schedule,
+    ShortLink,
+    Repo,
+    Respondent,
+    RespondentGroup,
+    Channel,
+    RespondentGroupChannel,
+    QuotaBucket,
+    Questionnaire,
+    SurveyQuestionnaire,
+    Project,
+    FloipEndpoint
+  }
   alias Ask.Runtime.Broker
   alias Ask.Ecto.Type.JSON
 
@@ -321,4 +334,18 @@ defmodule Ask.Survey do
   def link_name(%{id: id}, :incentives), do: "survey/#{id}/incentives"
   def link_name(%{id: id}, :disposition_history), do: "survey/#{id}/disposition_history"
   def link_name(%{id: id}, :interactions), do: "survey/#{id}/interactions"
+
+  def running_channels() do
+    query = from s in Survey,
+      where: s.state == "running",
+      join: group in RespondentGroup,
+      on: s.id == group.survey_id,
+      join: rgc in RespondentGroupChannel,
+      on: group.id == rgc.respondent_group_id,
+      join: c in Channel,
+      on: rgc.channel_id == c.id,
+      select: c
+
+    query |> Repo.all
+  end
 end
