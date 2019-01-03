@@ -1,7 +1,8 @@
 defmodule ChannelStatusServerTest do
   use Ask.ModelCase
   use Ask.LogHelper
-  alias Ask.ChannelStatusServer
+  use Ask.TestHelpers
+  alias Ask.{ChannelStatusServer, TestChannel}
 
 
   @channel_id 10
@@ -15,14 +16,40 @@ defmodule ChannelStatusServerTest do
     #end
   end
 
-  test "getChannelStatus initially returns :unknown" do
-    {:ok, pid} = ChannelStatusServer.start_link
-    assert ChannelStatusServer.getChannelStatus(pid, @channel_id) == :unknown
+  test "get_channel_status initially returns :unknown" do
+    {:ok, _} = ChannelStatusServer.start_link
+    assert ChannelStatusServer.get_channel_status(@channel_id) == :unknown
   end
 
   test "update" do
-    {:ok, pid} = ChannelStatusServer.start_link
-    ChannelStatusServer.update(pid, @channel_id, :my_status)
-    assert ChannelStatusServer.getChannelStatus(pid, @channel_id) == :my_status
+    {:ok, _} = ChannelStatusServer.start_link
+    ChannelStatusServer.update(@channel_id, :my_status)
+    assert ChannelStatusServer.get_channel_status(@channel_id) == :my_status
+  end
+
+  test "poll" do
+    {:ok, _} = ChannelStatusServer.start_link
+
+    user = insert(:user)
+
+    surveys = [
+      insert(:survey, state: "pending"),
+      insert(:survey, state: "running")
+    ]
+
+    channels = [
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1)),
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2))
+    ]
+
+    setup_surveys_with_channels(surveys, channels)
+
+    ChannelStatusServer.poll()
+
+    runtime_channel_1 = TestChannel.new(channels |> Enum.at(0))
+    runtime_channel_2 = TestChannel.new(channels |> Enum.at(1))
+
+    refute_receive [:check_status, ^runtime_channel_1], 1000
+    assert_receive [:check_status, ^runtime_channel_2], 1000
   end
 end

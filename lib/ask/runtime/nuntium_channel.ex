@@ -276,6 +276,9 @@ defmodule Ask.Runtime.NuntiumChannel do
       respondent
     end
 
+    def check_status(_channel) do
+    end
+
     def has_delivery_confirmation?(_), do: true
     def has_queued_message?(_, _), do: false
     def message_expired?(_, _), do: false

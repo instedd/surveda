@@ -1,6 +1,6 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :has_queued_message, :delivery, :message_expired]
+  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id]
 
   def new() do
     %Ask.TestChannel{pid: self()}
@@ -19,7 +19,8 @@ defmodule Ask.TestChannel do
       pid: channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term,
       has_queued_message: channel.settings["has_queued_message"] |> String.to_atom,
       delivery: channel.settings["delivery"] |> String.to_atom,
-      message_expired: channel.settings["message_expired"] |> String.to_atom
+      message_expired: channel.settings["message_expired"] |> String.to_atom,
+      test_id: channel.settings["test_id"]
     }
   end
 
@@ -27,12 +28,13 @@ defmodule Ask.TestChannel do
     %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, delivery: delivery}
   end
 
-  def settings(channel) do
+  def settings(channel, test_id \\ nil) do
     %{
       "pid" => channel.pid |> :erlang.term_to_binary |> Base.encode64,
       "has_queued_message" => Atom.to_string(channel.has_queued_message),
       "delivery" => Atom.to_string(channel.delivery),
-      "message_expired" => Atom.to_string(channel.message_expired)
+      "message_expired" => Atom.to_string(channel.message_expired),
+      "test_id" => test_id
     }
   end
 
@@ -94,6 +96,11 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def cancel_message(channel, channel_state) do
     send channel.pid, [:cancel_message, channel, channel_state]
+    :ok
+  end
+
+  def check_status(channel) do
+    send channel.pid, [:check_status, channel]
     :ok
   end
 end

@@ -2,7 +2,10 @@ defmodule Ask.ChannelStatusServer do
   use GenServer
   require Logger
 
+  alias Ask.Survey
+
   @server_ref {:global, __MODULE__}
+  # @poll_interval :timer.seconds(1)
 
   def server_ref, do: @server_ref
 
@@ -11,25 +14,36 @@ defmodule Ask.ChannelStatusServer do
   end
 
   def init(state) do
-    :timer.send_interval(1000, :timer)
     log_info "started."
     {:ok, state}
   end
 
-  def handle_info(:timer, state) do
-    {:noreply, state}
+  def poll() do
+    GenServer.cast(@server_ref, :poll)
   end
 
-  def getChannelStatus(pid, channel_id) do
-    GenServer.call(pid, {:get_channel_status, channel_id})
+  def get_channel_status(channel_id) do
+    GenServer.call(@server_ref, {:get_channel_status, channel_id})
   end
 
-  def update(pid, channel_id, channel_status) do
-    GenServer.cast(pid, {:update, {channel_id, channel_status}})
+  def update(channel_id, channel_status) do
+    GenServer.cast(@server_ref, {:update, {channel_id, channel_status}})
   end
 
   def handle_call({:get_channel_status, channel_id}, _from, state) do
     {:reply, state[channel_id] || :unknown, state}
+  end
+
+  def handle_cast(:poll, state) do
+    Survey.running_channels()
+    |> Enum.each(fn c ->
+      runtime_channel = Ask.Channel.runtime_channel(c)
+      spawn(fn ->
+        Ask.Runtime.Channel.check_status(runtime_channel)
+      end)
+    end)
+
+    {:noreply, state}
   end
 
   def handle_cast({:update, {channel_id, channel_status}}, state) do
@@ -39,8 +53,4 @@ defmodule Ask.ChannelStatusServer do
   defp log_info(message) do
     Logger.info("ChannelStatusServer: #{message}")
   end
-
-  # defp log_error(message) do
-  #   Logger.error("ChanelStatusServer: #{message}")
-  # end
 end

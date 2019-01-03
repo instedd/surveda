@@ -397,5 +397,8 @@ defmodule Ask.Runtime.VerboiceChannel do
     def cancel_message(_, _) do
       :ok
     end
+
+    def check_status(_channel) do
+    end
   end
 end
