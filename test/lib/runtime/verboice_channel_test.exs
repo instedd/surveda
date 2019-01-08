@@ -529,4 +529,23 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert timeout.action_type == "contact"
     end
   end
+
+  test "check status" do
+    assert VerboiceChannel.check_status(%{
+      "status" => %{
+        "ok" => true,
+        "messages" => nil
+      }
+    }) == :up
+
+    assert VerboiceChannel.check_status(%{
+      "status" => %{
+        "ok" => false,
+        "messages" => ["NOT FOUND"]
+      }
+    }) == {:down, ["NOT FOUND"]}
+
+    # :status should be :up when not receiving status information
+    assert VerboiceChannel.check_status(%{}) == :up
+  end
 end

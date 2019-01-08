@@ -290,8 +290,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
 
       case client |> Nuntium.Client.get_channel(runtime_channel.settings["nuntium_account"], runtime_channel.settings["nuntium_channel"]) do
-        {:ok, channel} ->
-          NuntiumChannel.check_status(channel)
+        {:ok, channel} -> NuntiumChannel.check_status(channel)
         error -> error
       end
     end

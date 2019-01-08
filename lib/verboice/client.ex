@@ -37,6 +37,14 @@ defmodule Verboice.Client do
     |> parse_response
   end
 
+  def get_channel(client, channel_id) do
+    url = URI.merge(client.base_url, "/api/channels/all/#{channel_id}") |> URI.to_string
+
+    client.oauth2_client
+    |> OAuth2.Client.get(url)
+    |> parse_response
+  end
+
   defp parse_response(response) do
     case response do
       {:ok, response = %{status_code: 200}} ->

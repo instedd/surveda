@@ -337,6 +337,26 @@ defmodule Ask.Runtime.VerboiceChannel do
     end
   end
 
+  def check_status(
+    %{
+      "status" => %{
+        "ok" => true,
+        "messages" => nil
+      }
+    }
+  ), do: :up
+
+  def check_status(
+    %{
+      "status" => %{
+        "ok" => false,
+        "messages" => messages
+      }
+    }
+  ), do: {:down, messages}
+
+  def check_status(_), do: :up
+
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def has_delivery_confirmation?(_), do: false
     def ask(_, _, _, _), do: throw(:not_implemented)
@@ -398,7 +418,11 @@ defmodule Ask.Runtime.VerboiceChannel do
       :ok
     end
 
-    def check_status(_channel) do
+    def check_status(channel) do
+      case channel.client |> Verboice.Client.get_channel(channel.channel_id) do
+        {:ok, channel} -> VerboiceChannel.check_status(channel)
+        error -> error
+      end
     end
   end
 end
