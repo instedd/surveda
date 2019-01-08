@@ -6,7 +6,7 @@ defprotocol Ask.Runtime.Channel do
   def has_queued_message?(channel, channel_state)
   def cancel_message(channel, channel_state)
   def message_expired?(channel, channel_state)
-  def check_status(channel) # :up | {:down, message} | {:error, message}
+  def check_status(channel) # :up | {:down, messages} | {:error, messages}
 end
 
 defmodule Ask.Runtime.ChannelProvider do

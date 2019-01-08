@@ -46,6 +46,13 @@ defmodule Nuntium.Client do
     |> parse_response
   end
 
+  def get_channel(client, account, channel_name) do
+    url = "#{client.base_url}/api/channels/#{channel_name}.json?#{URI.encode_query([account: account])}"
+    client.oauth2_client
+    |> OAuth2.Client.get(url)
+    |> parse_response
+  end
+
   defp parse_response(response) do
     case response do
       {:ok, response = %{status_code: 200}} ->

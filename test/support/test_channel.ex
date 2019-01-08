@@ -101,6 +101,6 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def check_status(channel) do
     send channel.pid, [:check_status, channel]
-    :ok
+    :up
   end
 end
