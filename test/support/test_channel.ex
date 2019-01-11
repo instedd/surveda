@@ -1,17 +1,17 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id]
+  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id, :status]
 
   def new() do
-    %Ask.TestChannel{pid: self()}
+    %Ask.TestChannel{pid: self(), status: :up}
   end
 
   def new(:expired) do
-    %Ask.TestChannel{pid: self(), message_expired: true, delivery: false}
+    %Ask.TestChannel{pid: self(), message_expired: true, delivery: false, status: :up}
   end
 
   def new(has_queued_message) when is_boolean(has_queued_message) do
-    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message}
+    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, status: :up}
   end
 
   def new(channel) do
@@ -20,21 +20,27 @@ defmodule Ask.TestChannel do
       has_queued_message: channel.settings["has_queued_message"] |> String.to_atom,
       delivery: channel.settings["delivery"] |> String.to_atom,
       message_expired: channel.settings["message_expired"] |> String.to_atom,
-      test_id: channel.settings["test_id"]
+      test_id: channel.settings["test_id"],
+      status: case channel.settings["status"] do
+        "up" -> :up
+        "down" -> {:down, []}
+        _ -> :up
+      end
     }
   end
 
   def new(has_queued_message, delivery) do
-    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, delivery: delivery}
+    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, delivery: delivery, status: :up}
   end
 
-  def settings(channel, test_id \\ nil) do
+  def settings(channel, test_id \\ nil, status \\ nil) do
     %{
       "pid" => channel.pid |> :erlang.term_to_binary |> Base.encode64,
       "has_queued_message" => Atom.to_string(channel.has_queued_message),
       "delivery" => Atom.to_string(channel.delivery),
       "message_expired" => Atom.to_string(channel.message_expired),
-      "test_id" => test_id
+      "test_id" => test_id,
+      "status" => Atom.to_string(status || :up)
     }
   end
 
@@ -101,6 +107,6 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def check_status(channel) do
     send channel.pid, [:check_status, channel]
-    :up
+    channel.status
   end
 end

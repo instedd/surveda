@@ -16,12 +16,14 @@ defmodule ChannelStatusServerTest do
 
     surveys = [
       insert(:survey, state: "pending"),
+      insert(:survey, state: "running"),
       insert(:survey, state: "running")
     ]
 
     channels = [
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1)),
-      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2))
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2)),
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 3, :down))
     ]
 
     setup_surveys_with_channels(surveys, channels)
@@ -30,10 +32,13 @@ defmodule ChannelStatusServerTest do
 
     runtime_channel_1 = TestChannel.new(channels |> Enum.at(0))
     runtime_channel_2 = TestChannel.new(channels |> Enum.at(1))
+    runtime_channel_3 = TestChannel.new(channels |> Enum.at(2))
 
     refute_receive [:check_status, ^runtime_channel_1], 1000
     assert_receive [:check_status, ^runtime_channel_2], 1000
+    assert_receive [:check_status, ^runtime_channel_3], 1000
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(0)).id) == :unknown
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(1)).id) == :up
+    assert ChannelStatusServer.get_channel_status((channels |> Enum.at(2)).id) == {:down, []}
   end
 end
