@@ -2,7 +2,8 @@ defmodule ChannelStatusServerTest do
   use Ask.ModelCase
   use Ask.LogHelper
   use Ask.TestHelpers
-  alias Ask.{ChannelStatusServer, TestChannel}
+  alias Ask.TestChannel
+  alias Ask.Runtime.ChannelStatusServer
 
   test "get_channel_status initially returns :unknown" do
     {:ok, _} = ChannelStatusServer.start_link

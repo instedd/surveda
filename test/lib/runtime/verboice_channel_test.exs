@@ -4,7 +4,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Timex
 
   alias Ask.{Respondent, BrokerStub, Survey}
-  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer}
 
   require Ask.Runtime.ReplyHelper
 
@@ -16,6 +16,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
+    ChannelStatusServer.start_link
     respondent = insert(:respondent, phone_number: "123", state: "active")
     {
       :ok,

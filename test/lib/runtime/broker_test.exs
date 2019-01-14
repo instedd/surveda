@@ -2,9 +2,14 @@ defmodule Ask.BrokerTest do
   use Ask.ModelCase
   use Ask.DummySteps
   use Timex
-  alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper}
+  alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder}
   require Ask.Runtime.ReplyHelper
+
+  setup do
+    {:ok, channel_status_server} = ChannelStatusServer.start_link
+    {:ok, channel_status_server: channel_status_server}
+  end
 
   test "does nothing with 'not_ready' survey" do
     survey = insert(:survey, %{schedule: Schedule.always()})
@@ -3833,6 +3838,31 @@ defmodule Ask.BrokerTest do
       assert Flow.Message.reply(masked_response)
         == Broker.mask_phone_number(respondent, Flow.Message.reply(response))
     end)
+  end
+
+  test "doesn't poll if at least a channel is down", %{channel_status_server: channel_status_server} do
+    quiz = insert(:questionnaire, steps: @dummy_steps, quota_completed_steps: nil)
+    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["sms"]]})
+    channel_1 = insert(:channel, settings: TestChannel.new |> TestChannel.settings(1, :up), type: "sms")
+    channel_2 = insert(:channel, settings: TestChannel.new |> TestChannel.settings(2, :down), type: "sms")
+    test_channel_1 = channel_1 |> TestChannel.new
+    test_channel_2 = channel_2 |> TestChannel.new
+    group_1 = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+    group_2 = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+    insert(:respondent, survey: survey, respondent_group: group_1)
+    insert(:respondent, survey: survey, respondent_group: group_2)
+    insert(:respondent_group_channel, channel: channel_1, respondent_group: group_1, mode: "sms")
+    insert(:respondent_group_channel, channel: channel_2, respondent_group: group_2, mode: "sms")
+
+    {:ok, broker} = Broker.start_link
+    ChannelStatusServer.poll(channel_status_server)
+    Broker.poll
+
+    refute_received [:ask, ^test_channel_1, _, _, _]
+    refute_received [:ask, ^test_channel_2, _, _, _]
+
+    :ok = broker |> GenServer.stop
+    :ok = channel_status_server |> GenServer.stop
   end
 
   def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do

@@ -94,4 +94,21 @@ defmodule Ask.SurveyTest do
 
     assert running_channels == [Enum.at(channels, 1).id]
   end
+
+  test "enumerates channels of a survey" do
+    survey = insert(:survey)
+    channel_1 = insert(:channel)
+    channel_2 = insert(:channel)
+    channel_3 = insert(:channel)
+    group_1 = insert(:respondent_group, survey: survey)
+    group_2 = insert(:respondent_group, survey: survey)
+    insert(:respondent_group_channel, channel: channel_1, respondent_group: group_1, mode: "sms")
+    insert(:respondent_group_channel, channel: channel_2, respondent_group: group_1, mode: "sms")
+    insert(:respondent_group_channel, channel: channel_3, respondent_group: group_2, mode: "sms")
+    survey = survey |> Ask.Repo.preload(respondent_groups: [respondent_group_channels: :channel])
+
+    survey_channels_ids = Survey.survey_channels(survey) |> Enum.map(&(&1.id))
+
+    assert survey_channels_ids == [channel_1.id, channel_2.id, channel_3.id]
+  end
 end

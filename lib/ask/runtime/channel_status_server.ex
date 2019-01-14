@@ -1,4 +1,4 @@
-defmodule Ask.ChannelStatusServer do
+defmodule Ask.Runtime.ChannelStatusServer do
   use GenServer
   require Logger
 
@@ -56,7 +56,7 @@ defmodule Ask.ChannelStatusServer do
     {:noreply, state |> Map.put(channel_id, channel_status)}
   end
 
-  defp log_info(message) do
+  def log_info(message) do
     Logger.info("ChannelStatusServer: #{message}")
   end
 end

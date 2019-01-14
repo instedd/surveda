@@ -348,4 +348,10 @@ defmodule Ask.Survey do
 
     query |> Repo.all
   end
+
+  def survey_channels(s) do
+    (s.respondent_groups |> Enum.reduce([], fn group, channels ->
+      (group.respondent_group_channels |> Enum.map(&(&1.channel))) ++ channels
+    end)) |> Enum.sort_by(&(&1.id))
+  end
 end

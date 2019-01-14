@@ -5,7 +5,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto
   require Ask.RespondentStats
   alias Ask.{Repo, Survey, Respondent, RespondentStats, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule}
-  alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider}
+  alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer}
   alias Ask.QuotaBucket
 
   @poll_interval :timer.minutes(1)
@@ -60,7 +60,11 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp all_running_surveys do
-    Repo.all(from s in Survey, where: s.state == "running")
+    Repo.all(from s in Survey, where: s.state == "running",
+      preload: [
+        respondent_groups: [respondent_group_channels: :channel]
+      ]
+    )
   end
 
   defp mark_stalled_for_eight_hours_respondents_as_failed do
@@ -132,43 +136,53 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp poll_survey(survey) do
-    try do
-      by_state = respondents_by_state(survey)
-      %{
-        "active" => active,
-        "pending" => pending,
-        "completed" => completed,
-        "stalled" => stalled,
-      } = by_state
+    channels = survey |> Survey.survey_channels
+    channel_is_down = channels |> Enum.any?(fn c ->
+      status = c.id |> ChannelStatusServer.get_channel_status
+      (status != :up && status != :unknown)
+    end)
+    case channel_is_down do
+      false ->
+        try do
+          by_state = respondents_by_state(survey)
+          %{
+            "active" => active,
+            "pending" => pending,
+            "completed" => completed,
+            "stalled" => stalled,
+          } = by_state
 
-      reached_quotas = reached_quotas?(survey)
-      survey_completed = survey.cutoff <= completed || reached_quotas
-      batch_size = batch_size(survey, by_state)
-      Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, stalled=#{stalled}, batch_size=#{batch_size})"
+          reached_quotas = reached_quotas?(survey)
+          survey_completed = survey.cutoff <= completed || reached_quotas
+          batch_size = batch_size(survey, by_state)
+          Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, stalled=#{stalled}, batch_size=#{batch_size})"
 
-      cond do
-        (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
-          Logger.info "Survey #{survey.id} completed"
-          complete(survey)
+          cond do
+            (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
+              Logger.info "Survey #{survey.id} completed"
+              complete(survey)
 
-        (active + stalled) < batch_size && pending > 0 && !survey_completed ->
-          count = batch_size - (active + stalled)
-          Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
-          start_some(survey, count)
+            (active + stalled) < batch_size && pending > 0 && !survey_completed ->
+              count = batch_size - (active + stalled)
+              Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
+              start_some(survey, count)
 
-        true -> :ok
-      end
-    rescue
-      e ->
-        if Mix.env == :test do
-          IO.inspect e
-          IO.inspect System.stacktrace()
-          raise e
+            true -> :ok
+          end
+        rescue
+          e ->
+            if Mix.env == :test do
+              IO.inspect e
+              IO.inspect System.stacktrace()
+              raise e
+            end
+            Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
+            Sentry.capture_exception(e, [
+              stacktrace: System.stacktrace(),
+              extra: %{survey_id: survey.id}])
         end
-        Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
-        Sentry.capture_exception(e, [
-          stacktrace: System.stacktrace(),
-          extra: %{survey_id: survey.id}])
+      true ->
+        ChannelStatusServer.log_info "Survey #{survey.id} was not polled because a channel is down"
     end
   end
 
