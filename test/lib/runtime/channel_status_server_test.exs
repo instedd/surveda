@@ -12,6 +12,7 @@ defmodule ChannelStatusServerTest do
 
   test "poll" do
     {:ok, pid} = ChannelStatusServer.start_link
+    Process.register self(), :mail_target
 
     user = insert(:user)
 
@@ -41,5 +42,34 @@ defmodule ChannelStatusServerTest do
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(0)).id) == :unknown
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(1)).id) == :up
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(2)).id) == {:down, []}
+  end
+
+  test "sends email when a channel is down and its status was previously :unknown" do
+    {:ok, pid} = ChannelStatusServer.start_link
+    Process.register self(), :mail_target
+    user = insert(:user)
+    survey = insert(:survey, state: "running")
+    channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1, :down))
+    email = Ask.Email.channel_down(user.email, channel, [])
+
+    setup_surveys_with_channels([survey], [channel])
+    ChannelStatusServer.poll(pid)
+
+    assert_receive [:email, ^email]
+  end
+
+  test "doesn't send email when a channel is down but was already down" do
+    {:ok, pid} = ChannelStatusServer.start_link
+    Process.register self(), :mail_target
+    user = insert(:user)
+    survey = insert(:survey, state: "running")
+    channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1, :down))
+    email = Ask.Email.channel_down(user.email, channel, [])
+
+    setup_surveys_with_channels([survey], [channel])
+    ChannelStatusServer.poll(pid)
+    assert_receive [:email, ^email]
+    ChannelStatusServer.poll(pid)
+    refute_receive [:email, ^email]
   end
 end

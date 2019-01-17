@@ -2,7 +2,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
   use GenServer
   require Logger
 
-  alias Ask.Survey
+  alias Ask.{Repo, Survey}
 
   @server_ref {:global, __MODULE__}
   @poll_interval :timer.minutes(5)
@@ -32,16 +32,25 @@ defmodule Ask.Runtime.ChannelStatusServer do
   end
 
   def handle_call({:get_channel_status, channel_id}, _from, state) do
-    {:reply, state[channel_id] || :unknown, state}
+    {:reply, get_status_from_state(channel_id, state), state}
   end
 
   def handle_info(:poll, state) do
     try do
       Survey.running_channels()
+      |> Repo.preload(:user)
       |> Enum.each(fn c ->
         runtime_channel = Ask.Channel.runtime_channel(c)
+        previous_status = get_status_from_state(c.id, state)
         spawn(fn ->
           status = Ask.Runtime.Channel.check_status(runtime_channel)
+          case status do
+            {:down, messages} ->
+              if (previous_status == :up) || (previous_status == :unknown) do
+                Ask.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver
+              end
+            _ -> nil
+          end
           update_channel_status(c.id, status)
         end)
       end)
@@ -54,6 +63,10 @@ defmodule Ask.Runtime.ChannelStatusServer do
 
   def handle_cast({:update, {channel_id, channel_status}}, state) do
     {:noreply, state |> Map.put(channel_id, channel_status)}
+  end
+
+  def get_status_from_state(channel_id, state) do
+    state[channel_id] || :unknown
   end
 
   def log_info(message) do

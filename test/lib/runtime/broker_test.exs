@@ -3841,6 +3841,7 @@ defmodule Ask.BrokerTest do
   end
 
   test "doesn't poll if at least a channel is down", %{channel_status_server: channel_status_server} do
+    Process.register self(), :mail_target
     quiz = insert(:questionnaire, steps: @dummy_steps, quota_completed_steps: nil)
     survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [["sms"]]})
     channel_1 = insert(:channel, settings: TestChannel.new |> TestChannel.settings(1, :up), type: "sms")
