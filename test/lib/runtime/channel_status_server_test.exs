@@ -41,7 +41,9 @@ defmodule ChannelStatusServerTest do
     assert_receive [:check_status, ^runtime_channel_3], 1000
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(0)).id) == :unknown
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(1)).id) == :up
-    assert ChannelStatusServer.get_channel_status((channels |> Enum.at(2)).id) == {:down, []}
+    %{status: status, messages: [], timestamp: t, name: "test"} = ChannelStatusServer.get_channel_status((channels |> Enum.at(2)).id)
+    assert status == :down
+    assert t
   end
 
   test "sends email when a channel is down and its status was previously :unknown" do

@@ -31,6 +31,7 @@ defmodule Ask.SurveyView do
       started_at: started_at,
       next_schedule_time: next_schedule_time(survey),
       updated_at: survey.updated_at,
+      down_channels: survey.down_channels
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
@@ -62,6 +63,7 @@ defmodule Ask.SurveyView do
       links: render_many(survey.links, Ask.SurveyView, "link.json", as: :link),
       comparisons: survey.comparisons || [],
       next_schedule_time: next_schedule_time(survey),
+      down_channels: survey.down_channels
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

@@ -5,6 +5,8 @@ import { formatTimezone } from '../timezones/util'
 import classNames from 'classnames/bind'
 import { translate, Trans } from 'react-i18next'
 import dateformat from 'dateformat'
+import map from 'lodash/map'
+import min from 'lodash/min'
 
 class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -17,6 +19,7 @@ class SurveyStatus extends PureComponent {
     super(props)
     this.bindedFormatter = this.formatter.bind(this)
     this.bindedStartedFormatter = this.startedFormatter.bind(this)
+    this.bindedDownChannelsFormatter = this.downChannelsFormatter.bind(this)
   }
 
   formatter(number, unit, suffix, date, defaultFormatter) {
@@ -56,12 +59,43 @@ class SurveyStatus extends PureComponent {
     }
   }
 
+  downChannelsFormatter(number, unit, suffix, date, defaultFormatter) {
+    const { t } = this.props
+
+    switch (unit) {
+      case 'second':
+        return t('for {{count}} second', {count: number})
+      case 'minute':
+        return t('for {{count}} minute', {count: number})
+      case 'hour':
+        return t('for {{count}} hour', {count: number})
+      case 'day':
+        return t('for {{count}} day', {count: number})
+      case 'week':
+        return t('for {{count}} week', {count: number})
+      case 'month':
+        return t('for {{count}} month', {count: number})
+      case 'year':
+        return t('for {{count}} year', {count: number})
+    }
+  }
+
   nextCallDescription(survey, date) {
     const hour = this.hourDescription(survey, date)
     if (this.props.short) {
       return <Trans>Scheduled at {{hour}}</Trans>
     } else {
       return <Trans>Next contact <TimeAgo date={date} formatter={this.bindedFormatter} /> at {{hour}}</Trans>
+    }
+  }
+
+  downChannelsDescription(channelNames, timestamp) {
+    const names = channelNames.join(', ')
+    if (channelNames.length > 1) {
+      return <Trans>Channels {{names}} have been down <TimeAgo date={timestamp} formatter={this.bindedDownChannelsFormatter} /></Trans>
+    } else {
+      const name = channelNames[0]
+      return <Trans>Channel {{name}} has been down <TimeAgo date={timestamp} formatter={this.bindedDownChannelsFormatter} /></Trans>
     }
   }
 
@@ -100,16 +134,25 @@ class SurveyStatus extends PureComponent {
         break
 
       case 'running':
-        if (survey.nextScheduleTime) {
-          icon = 'access_time'
-          const date = new Date(survey.nextScheduleTime)
-          text = this.nextCallDescription(survey, date)
+        if (survey.downChannels.length > 0) {
+          const channelNames = map(survey.downChannels, (channel) => channel.name)
+          const timestamp = min(map(survey.downChannels, (channel) => channel.timestamp))
+          icon = 'cancel'
+          text = this.downChannelsDescription(channelNames, timestamp)
+          color = 'text-error'
+          break
         } else {
-          icon = 'play_arrow'
-          text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
+          if (survey.nextScheduleTime) {
+            icon = 'access_time'
+            const date = new Date(survey.nextScheduleTime)
+            text = this.nextCallDescription(survey, date)
+          } else {
+            icon = 'play_arrow'
+            text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
+          }
+          color = 'green-text'
+          break
         }
-        color = 'green-text'
-        break
 
       case 'terminated':
         switch (survey.exitCode) {

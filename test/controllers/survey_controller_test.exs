@@ -4,7 +4,7 @@ defmodule Ask.SurveyControllerTest do
   use Ask.DummySteps
 
   alias Ask.{Survey, Project, RespondentGroup, Respondent, Response, Channel, SurveyQuestionnaire, RespondentDispositionHistory, TestChannel, RespondentGroupChannel, ShortLink, ActivityLog}
-  alias Ask.Runtime.{Flow, Session}
+  alias Ask.Runtime.{Flow, Session, ChannelStatusServer}
   alias Ask.Runtime.SessionModeProvider
 
   @valid_attrs %{name: "some content", description: "initial survey"}
@@ -37,7 +37,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id)
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
       ]
     end
 
@@ -50,7 +50,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "running")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
       ]
     end
 
@@ -63,21 +63,41 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "completed")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
       ]
     end
 
     test "list surveys with filter by update timestamp", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       insert(:survey, project: project)
-      survey = insert(:survey, project: project, updated_at: Timex.shift(Timex.now, hours: 2, minutes: 3), state: "running" )
+      survey = insert(:survey, project: project, updated_at: Timex.shift(Timex.now, hours: 2, minutes: 3), state: "running")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :index, project.id, %{"since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at)}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
       ]
+    end
+
+    test "list surveys with down_channels", %{conn: conn, user: user} do
+      {:ok, pid} = ChannelStatusServer.start_link
+      Process.register self(), :mail_target
+
+      project = create_project_for_user(user)
+      survey_1 = insert(:survey, project: project, state: "running")
+      survey_2 = insert(:survey, project: project, state: "running")
+      up_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1))
+      down_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2, :down))
+      setup_surveys_with_channels([survey_1, survey_2], [up_channel, down_channel])
+      ChannelStatusServer.poll(pid)
+
+      conn = get conn, project_survey_path(conn, :index, project.id)
+
+      [survey_1, survey_2] = json_response(conn, 200)["data"]
+      assert survey_1["down_channels"] == []
+      [%{"status" => "down", "messages" => [], "timestamp" => t, "name" => "test"}] = survey_2["down_channels"]
+      assert t
     end
 
     test "returns 404 when the project does not exist", %{conn: conn} do
@@ -138,6 +158,7 @@ defmodule Ask.SurveyControllerTest do
         "links" => [],
         "comparisons" => [],
         "next_schedule_time" => nil,
+        "down_channels" => []
       }
     end
 
@@ -206,7 +227,8 @@ defmodule Ask.SurveyControllerTest do
         },
         "links" => [],
         "comparisons" => [],
-        "next_schedule_time" => nil
+        "next_schedule_time" => nil,
+        "down_channels" => []
       }
     end
 
@@ -272,6 +294,7 @@ defmodule Ask.SurveyControllerTest do
         ],
         "comparisons" => [],
         "next_schedule_time" => nil,
+        "down_channels" => []
       }
     end
 
@@ -329,7 +352,31 @@ defmodule Ask.SurveyControllerTest do
         ],
         "comparisons" => [],
         "next_schedule_time" => nil,
+        "down_channels" => []
       }
+    end
+
+    test "shows channels status when survey is running", %{conn: conn, user: user} do
+      {:ok, pid} = ChannelStatusServer.start_link
+      Process.register self(), :mail_target
+
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      survey = Survey |> Repo.get(survey.id)
+
+      up_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1))
+      down_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2, :down))
+      group_1 = insert(:respondent_group, survey: survey)
+      group_2 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, channel: up_channel, respondent_group: group_1, mode: "sms")
+      insert(:respondent_group_channel, channel: down_channel, respondent_group: group_2, mode: "sms")
+      ChannelStatusServer.poll(pid)
+
+      conn = get conn, project_survey_path(conn, :show, project, survey)
+
+      data = json_response(conn, 200)["data"]
+      [%{"status" => "down", "messages" => [], "timestamp" => t, "name" => "test"}] = data["down_channels"]
+      assert t
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do

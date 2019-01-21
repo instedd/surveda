@@ -44,14 +44,15 @@ defmodule Ask.Runtime.ChannelStatusServer do
         previous_status = get_status_from_state(c.id, state)
         spawn(fn ->
           status = Ask.Runtime.Channel.check_status(runtime_channel)
+          timestamp = Timex.now
           case status do
             {:down, messages} ->
               if (previous_status == :up) || (previous_status == :unknown) do
                 Ask.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver
+                update_channel_status(c.id, status |> to_map_or_symbol(c.name, timestamp))
               end
-            _ -> nil
+            _ -> update_channel_status(c.id, status |> to_map_or_symbol(c.name, timestamp))
           end
-          update_channel_status(c.id, status)
         end)
       end)
 
@@ -60,6 +61,15 @@ defmodule Ask.Runtime.ChannelStatusServer do
       :timer.send_after(@poll_interval, :poll)
     end
   end
+
+  def to_map_or_symbol({:down, messages}, name, timestamp) do
+    %{status: :down, messages: messages, name: name, timestamp: timestamp}
+  end
+  def to_map_or_symbol({:error, messages}, name, timestamp) do
+    %{status: :error, messages: messages, name: name, timestamp: timestamp}
+  end
+  def to_map_or_symbol(:up, _, _), do: :up
+  def to_map_or_symbol(:unknown, _, _), do: :unknown
 
   def handle_cast({:update, {channel_id, channel_status}}, state) do
     {:noreply, state |> Map.put(channel_id, channel_status)}

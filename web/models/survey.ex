@@ -16,7 +16,7 @@ defmodule Ask.Survey do
     Project,
     FloipEndpoint
   }
-  alias Ask.Runtime.Broker
+  alias Ask.Runtime.{Broker, ChannelStatusServer}
   alias Ask.Ecto.Type.JSON
 
   @max_int 2147483647
@@ -43,6 +43,7 @@ defmodule Ask.Survey do
     field :simulation, :boolean, default: false
     field :links, :any, virtual: true
     field :floip_package_id, :string
+    field :down_channels, JSON, virtual: true, default: []
 
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
@@ -353,5 +354,14 @@ defmodule Ask.Survey do
     (s.respondent_groups |> Enum.reduce([], fn group, channels ->
       (group.respondent_group_channels |> Enum.map(&(&1.channel))) ++ channels
     end)) |> Enum.sort_by(&(&1.id))
+  end
+
+  def with_down_channels(%Survey{} = survey) do
+    channels = survey |> survey_channels
+    down_channels = channels
+      |> Enum.map(&(&1.id |> ChannelStatusServer.get_channel_status))
+      |> Enum.filter(&(&1 != :up && &1 != :unknown))
+
+    %{survey | down_channels: down_channels}
   end
 end
