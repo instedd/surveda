@@ -87,17 +87,22 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey_1 = insert(:survey, project: project, state: "running")
       survey_2 = insert(:survey, project: project, state: "running")
+      survey_3 = insert(:survey, project: project, state: "running")
       up_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1))
       down_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2, :down))
-      setup_surveys_with_channels([survey_1, survey_2], [up_channel, down_channel])
+      error_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 3, :error))
+      setup_surveys_with_channels([survey_1, survey_2, survey_3], [up_channel, down_channel, error_channel])
       ChannelStatusServer.poll(pid)
 
       conn = get conn, project_survey_path(conn, :index, project.id)
 
-      [survey_1, survey_2] = json_response(conn, 200)["data"]
+      [survey_1, survey_2, survey_3] = json_response(conn, 200)["data"]
       assert survey_1["down_channels"] == []
-      [%{"status" => "down", "messages" => [], "timestamp" => t, "name" => "test"}] = survey_2["down_channels"]
-      assert t
+      [%{"status" => "down", "messages" => [], "timestamp" => t1, "name" => "test"}] = survey_2["down_channels"]
+      assert t1
+      [%{"status" => "error", "code" => code, "timestamp" => t2, "name" => "test"}] = survey_3["down_channels"]
+      assert t2
+      assert code
     end
 
     test "returns 404 when the project does not exist", %{conn: conn} do
@@ -366,17 +371,24 @@ defmodule Ask.SurveyControllerTest do
 
       up_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 1))
       down_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 2, :down))
+      error_channel = TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new, 3, :error))
       group_1 = insert(:respondent_group, survey: survey)
       group_2 = insert(:respondent_group, survey: survey)
+      group_3 = insert(:respondent_group, survey: survey)
       insert(:respondent_group_channel, channel: up_channel, respondent_group: group_1, mode: "sms")
       insert(:respondent_group_channel, channel: down_channel, respondent_group: group_2, mode: "sms")
+      insert(:respondent_group_channel, channel: error_channel, respondent_group: group_3, mode: "sms")
       ChannelStatusServer.poll(pid)
 
       conn = get conn, project_survey_path(conn, :show, project, survey)
 
       data = json_response(conn, 200)["data"]
-      [%{"status" => "down", "messages" => [], "timestamp" => t, "name" => "test"}] = data["down_channels"]
-      assert t
+      [
+        %{"status" => "down", "messages" => [], "timestamp" => t1, "name" => "test"},
+        %{"status" => "error", "code" => "some code", "timestamp" => t2, "name" => "test"}
+      ] = data["down_channels"]
+      assert t1
+      assert t2
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do

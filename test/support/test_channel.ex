@@ -24,6 +24,7 @@ defmodule Ask.TestChannel do
       status: case channel.settings["status"] do
         "up" -> :up
         "down" -> {:down, []}
+        "error" -> {:error, "some code"}
         _ -> :up
       end
     }
