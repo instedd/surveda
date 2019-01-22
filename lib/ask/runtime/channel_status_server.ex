@@ -36,6 +36,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
   end
 
   def handle_info(:poll, state) do
+    log_info "polling"
     try do
       Survey.running_channels()
       |> Repo.preload(:user)
