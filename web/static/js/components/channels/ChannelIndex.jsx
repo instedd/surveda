@@ -219,13 +219,15 @@ class ChannelIndex extends Component<any> {
         : (
           <CardTable title={tableTitle} footer={footer} highlight className='noclick'>
             <colgroup>
-              <col width='70%' />
-              <col width='30%' />
+              <col width='67%' />
+              <col width='28%' />
+              <col width='5%' />
             </colgroup>
             <thead>
               <tr>
                 <SortableHeader text={t('Name')} property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
                 <SortableHeader text={t('Provider')} property='provider' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -239,6 +241,11 @@ class ChannelIndex extends Component<any> {
                     <UntitledIfEmpty text={this.channelDisplayName(channel)} emptyText={t('Untitled channel')} />
                   </td>
                   <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
+                  <td className='tdError'>
+                    {channel.statusInfo.status == 'down' || channel.statusInfo.status == 'error'
+                    ? <span className='questionnaire-error' />
+                    : null}
+                  </td>
                 </tr>)
               }) }
             </tbody>

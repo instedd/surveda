@@ -18,7 +18,8 @@ defmodule Ask.ChannelView do
       projects: channel.projects |> Enum.map(&(&1.id)),
       channelBaseUrl: channel.base_url,
       settings: channel.settings,
-      patterns: channel.patterns
+      patterns: channel.patterns,
+      status_info: channel.status
     }
   end
 end

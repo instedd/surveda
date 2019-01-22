@@ -2,6 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { UntitledIfEmpty } from '../ui'
 import { translate } from 'react-i18next'
+import ChannelStatus from './ChannelStatus'
 import classNames from 'classnames/bind'
 
 class ChannelTitle extends Component {
@@ -14,8 +15,11 @@ class ChannelTitle extends Component {
     const { channel, t } = this.props
     if (channel == null) return null
 
-    return <div className={classNames({'page-title': true, 'truncate': (channel.name && channel.name.trim() != '')})}>
-      <UntitledIfEmpty text={channel.name} emptyText={t('Untitled channel')} />
+    return <div className='channel-title'>
+      <ChannelStatus channel={channel} />
+      <div className={classNames({'page-title': true, 'truncate': (channel.name && channel.name.trim() != '')})}>
+        <UntitledIfEmpty text={channel.name} emptyText={t('Untitled channel')} />
+      </div>
     </div>
   }
 }
