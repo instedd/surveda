@@ -2,8 +2,21 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
-  alias Ask.{Schedule, ShortLink, Repo, Respondent, RespondentGroup, QuotaBucket, Questionnaire, SurveyQuestionnaire, Project, FloipEndpoint}
-  alias Ask.Runtime.Broker
+  alias Ask.{
+    Schedule,
+    ShortLink,
+    Repo,
+    Respondent,
+    RespondentGroup,
+    Channel,
+    RespondentGroupChannel,
+    QuotaBucket,
+    Questionnaire,
+    SurveyQuestionnaire,
+    Project,
+    FloipEndpoint
+  }
+  alias Ask.Runtime.{Broker, ChannelStatusServer}
   alias Ask.Ecto.Type.JSON
 
   @max_int 2147483647
@@ -30,6 +43,7 @@ defmodule Ask.Survey do
     field :simulation, :boolean, default: false
     field :links, :any, virtual: true
     field :floip_package_id, :string
+    field :down_channels, JSON, virtual: true, default: []
 
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
@@ -321,4 +335,33 @@ defmodule Ask.Survey do
   def link_name(%{id: id}, :incentives), do: "survey/#{id}/incentives"
   def link_name(%{id: id}, :disposition_history), do: "survey/#{id}/disposition_history"
   def link_name(%{id: id}, :interactions), do: "survey/#{id}/interactions"
+
+  def running_channels() do
+    query = from s in Survey,
+      where: s.state == "running",
+      join: group in RespondentGroup,
+      on: s.id == group.survey_id,
+      join: rgc in RespondentGroupChannel,
+      on: group.id == rgc.respondent_group_id,
+      join: c in Channel,
+      on: rgc.channel_id == c.id,
+      select: c
+
+    query |> Repo.all
+  end
+
+  def survey_channels(s) do
+    (s.respondent_groups |> Enum.reduce([], fn group, channels ->
+      (group.respondent_group_channels |> Enum.map(&(&1.channel))) ++ channels
+    end)) |> Enum.sort_by(&(&1.id))
+  end
+
+  def with_down_channels(%Survey{} = survey) do
+    channels = survey |> survey_channels
+    down_channels = channels
+      |> Enum.map(&(&1.id |> ChannelStatusServer.get_channel_status))
+      |> Enum.filter(&(&1 != :up && &1 != :unknown))
+
+    %{survey | down_channels: down_channels}
+  end
 end

@@ -40,6 +40,32 @@ defmodule Ask.Email do
       })
   end
 
+  def channel_down(email, channel, messages) do
+    url = Ask.Endpoint.url <> "/channels/#{channel.id}/settings"
+    %Email{}
+    |> to({"", email})
+    |> from({"InSTEDD Surveda", "noreply@instedd.org"})
+    |> subject("Channel is down")
+    |> render_body(:channel_down, %{
+      channel_name: channel.name,
+      errors: messages,
+      url: url
+    })
+  end
+
+  def channel_error(email, channel, code) do
+    url = Ask.Endpoint.url <> "/channels/#{channel.id}/settings"
+    %Email{}
+    |> to({"", email})
+    |> from({"InSTEDD Surveda", "noreply@instedd.org"})
+    |> subject("Error when connecting with channel")
+    |> render_body(:channel_error, %{
+      channel_name: channel.name,
+      code: code,
+      url: url
+    })
+  end
+
   defp project_name(""), do: "a Surveda project"
   defp project_name(nil), do: "a Surveda project"
   defp project_name(name), do: "#{name}"

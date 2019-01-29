@@ -33,7 +33,9 @@ defmodule Ask.SurveyController do
       end
 
     surveys = Repo.all(from s in Survey,
+      preload: [respondent_groups: [respondent_group_channels: :channel]],
       where: ^dynamic)
+      |> Enum.map(&(&1 |> Survey.with_down_channels))
 
     render(conn, "index.json", surveys: surveys)
   end
@@ -83,7 +85,9 @@ defmodule Ask.SurveyController do
     |> Repo.get!(id)
     |> Repo.preload([:quota_buckets])
     |> Repo.preload(:questionnaires)
+    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> Survey.with_links(user_level(project_id, current_user(conn).id))
+    |> Survey.with_down_channels
 
     render(conn, "show.json", survey: survey)
   end

@@ -26,6 +26,7 @@ defmodule Ask do
         worker(Ask.Runtime.Broker, []),
         worker(Ask.FloipPusher, []),
         worker(Ask.JsonSchema, []),
+        worker(Ask.Runtime.ChannelStatusServer, []),
         worker(Ask.Config, [])
       | children]
     else

@@ -9,6 +9,26 @@ defmodule Ask.TestHelpers do
         insert(:project_membership, user: user, project: project, level: level)
         project
       end
+
+      def setup_surveys_with_channels(surveys, channels) do
+        respondent_groups =
+          Enum.zip(surveys, channels)
+          |> Enum.map(fn {s, c} ->
+            insert(
+              :respondent_group,
+              survey: s,
+              respondent_group_channels:
+                [
+                  insert(
+                    :respondent_group_channel,
+                    channel: c
+                  )
+                ]
+            )
+          end)
+
+        respondent_groups
+      end
     end
   end
 end

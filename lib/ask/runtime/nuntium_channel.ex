@@ -226,6 +226,16 @@ defmodule Ask.Runtime.NuntiumChannel do
     channel.settings["nuntium_channel"] == nuntium_channel["name"]
   end
 
+  def check_status(%{ "enabled" => enabled, "connected" => connected }) do
+    if enabled && connected do
+      :up
+    else
+      {:down, []}
+    end
+  end
+  def check_status(%{ "enabled" => true }), do: :up
+  def check_status(_any_other), do: {:down, []}
+
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
     def prepare(channel, callback_url) do
       # Update the Nuntium app to setup the callback URL
@@ -274,6 +284,15 @@ defmodule Ask.Runtime.NuntiumChannel do
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
 
       respondent
+    end
+
+    def check_status(runtime_channel) do
+      client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
+
+      case client |> Nuntium.Client.get_channel(runtime_channel.settings["nuntium_account"], runtime_channel.settings["nuntium_channel"]) do
+        {:ok, channel} -> NuntiumChannel.check_status(channel)
+        error -> error
+      end
     end
 
     def has_delivery_confirmation?(_), do: true

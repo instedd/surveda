@@ -4,7 +4,10 @@ import { Tooltip } from '../ui'
 import { formatTimezone } from '../timezones/util'
 import classNames from 'classnames/bind'
 import { translate, Trans } from 'react-i18next'
+import DownChannelsStatus from '../channels/DownChannelsStatus'
 import dateformat from 'dateformat'
+import map from 'lodash/map'
+import min from 'lodash/min'
 
 class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -100,16 +103,24 @@ class SurveyStatus extends PureComponent {
         break
 
       case 'running':
-        if (survey.nextScheduleTime) {
-          icon = 'access_time'
-          const date = new Date(survey.nextScheduleTime)
-          text = this.nextCallDescription(survey, date)
+        if (survey.downChannels.length > 0) {
+          icon = 'cancel'
+          const timestamp = min(map(survey.downChannels, (channel) => channel.timestamp))
+          text = <DownChannelsStatus channels={survey.downChannels} timestamp={timestamp} />
+          color = 'text-error'
+          break
         } else {
-          icon = 'play_arrow'
-          text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
+          if (survey.nextScheduleTime) {
+            icon = 'access_time'
+            const date = new Date(survey.nextScheduleTime)
+            text = this.nextCallDescription(survey, date)
+          } else {
+            icon = 'play_arrow'
+            text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
+          }
+          color = 'green-text'
+          break
         }
-        color = 'green-text'
-        break
 
       case 'terminated':
         switch (survey.exitCode) {

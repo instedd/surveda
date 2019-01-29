@@ -4,7 +4,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Timex
 
   alias Ask.{Respondent, BrokerStub, Survey}
-  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer}
 
   require Ask.Runtime.ReplyHelper
 
@@ -16,6 +16,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
+    ChannelStatusServer.start_link
     respondent = insert(:respondent, phone_number: "123", state: "active")
     {
       :ok,
@@ -528,5 +529,24 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert timeout.action_data == "Call expired, will be retried in next schedule window"
       assert timeout.action_type == "contact"
     end
+  end
+
+  test "check status" do
+    assert VerboiceChannel.check_status(%{
+      "status" => %{
+        "ok" => true,
+        "messages" => nil
+      }
+    }) == :up
+
+    assert VerboiceChannel.check_status(%{
+      "status" => %{
+        "ok" => false,
+        "messages" => ["NOT FOUND"]
+      }
+    }) == {:down, ["NOT FOUND"]}
+
+    # :status should be :up when not receiving status information
+    assert VerboiceChannel.check_status(%{}) == :up
   end
 end

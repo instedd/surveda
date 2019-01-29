@@ -1,0 +1,3 @@
+Error when connecting with <b><%= @channel_name %></b> channel
+
+Follow this link to go to the channel: <%= @url %>

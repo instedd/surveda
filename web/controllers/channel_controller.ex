@@ -18,6 +18,7 @@ defmodule Ask.ChannelController do
     |> assoc(:channels)
     |> Repo.all
     |> Repo.preload(:projects)
+    |> Enum.map(&(&1 |> Channel.with_status))
 
     render(conn, "index.json", channels: channels)
   end
@@ -27,6 +28,7 @@ defmodule Ask.ChannelController do
     |> Repo.get!(id)
     |> authorize_channel(conn)
     |> Repo.preload(:projects)
+    |> Channel.with_status
 
     render(conn, "show.json", channel: channel)
   end

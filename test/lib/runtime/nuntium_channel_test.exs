@@ -149,4 +149,10 @@ defmodule Ask.Runtime.NuntiumChannelTest do
       ] = channels
     end
   end
+
+  test "check status" do
+    assert NuntiumChannel.check_status(%{"enabled" => true, "connected" => true}) == :up
+    assert NuntiumChannel.check_status(%{"enabled" => true, "connected" => false}) == {:down, []}
+    assert NuntiumChannel.check_status(%{"enabled" => true}) == :up
+  end
 end

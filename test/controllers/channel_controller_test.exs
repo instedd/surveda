@@ -7,6 +7,7 @@ defmodule Ask.ChannelControllerTest do
     conn = conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
+    {:ok, _} = Ask.Runtime.ChannelStatusServer.start_link
     {:ok, conn: conn, user: user}
   end
 
@@ -26,7 +27,9 @@ defmodule Ask.ChannelControllerTest do
                       "type"     => channel.type,
                       "user_id"  => channel.user_id,
                       "projects" => [],
-                      "channelBaseUrl" => channel.base_url}
+                      "channelBaseUrl" => channel.base_url,
+                      "status_info" => %{"status" => "unknown"}
+                    }
       insert(:channel)
       conn = get conn, channel_path(conn, :index)
       assert json_response(conn, 200)["data"] == [channel_map]
@@ -52,7 +55,8 @@ defmodule Ask.ChannelControllerTest do
         "type" => channel1.type,
         "user_id" => channel1.user_id,
         "projects" => [project.id],
-        "channelBaseUrl" => channel1.base_url
+        "channelBaseUrl" => channel1.base_url,
+        "status_info" => nil
       }
 
       channel_map2 = %{
@@ -64,7 +68,8 @@ defmodule Ask.ChannelControllerTest do
         "type" => channel2.type,
         "user_id" => channel2.user_id,
         "projects" => [project.id],
-        "channelBaseUrl" => channel2.base_url
+        "channelBaseUrl" => channel2.base_url,
+        "status_info" => nil
       }
 
       conn = get(conn, project_channel_path(conn, :index, project.id))
@@ -84,7 +89,9 @@ defmodule Ask.ChannelControllerTest do
                                                    "settings" => channel.settings,
                                                    "patterns" => [],
                                                    "projects" => [],
-                                                   "channelBaseUrl" => channel.base_url}
+                                                   "channelBaseUrl" => channel.base_url,
+                                                   "status_info" => %{"status" => "unknown"}
+                                                 }
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
@@ -162,7 +169,8 @@ defmodule Ask.ChannelControllerTest do
         "settings" => channel.settings,
         "channelBaseUrl" => channel.base_url,
         "projects" => [],
-        "patterns" => []
+        "patterns" => [],
+        "status_info" => nil
       }
     end
 

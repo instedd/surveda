@@ -46,4 +46,4 @@ config :ask, Verboice,
   ]
 
 config :ask, Ask.Mailer,
-  adapter: Swoosh.Adapters.Test
+  adapter: Ask.Swoosh.Adapters.Test

@@ -2,6 +2,7 @@ defmodule Ask.Channel do
   use Ask.Web, :model
 
   alias Ask.Repo
+  alias Ask.Runtime.ChannelStatusServer
 
   schema "channels" do
     field :name, :string
@@ -10,6 +11,7 @@ defmodule Ask.Channel do
     field :base_url, :string
     field :settings, :map
     field :patterns, Ask.Ecto.Type.JSON, default: []
+    field :status, Ask.Ecto.Type.JSON, virtual: true
     belongs_to :user, Ask.User
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectChannel, on_replace: :delete
@@ -72,6 +74,16 @@ defmodule Ask.Channel do
     end
 
     Repo.delete(channel)
+  end
+
+  def with_status(channel) do
+    status = channel.id |> ChannelStatusServer.get_channel_status
+    status = case status do
+      :up -> %{status: "up"}
+      :unknown -> %{status: "unknown"}
+      down_or_error -> down_or_error
+    end
+    %{channel | status: status}
   end
 
   defp validate_patterns(changeset) do

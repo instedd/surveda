@@ -1504,3 +1504,18 @@ a.disabled {
     text-transform: uppercase;
   }
 }
+
+.channel-title {
+  display: inline-block;
+}
+
+.channel-status {
+  position: absolute;
+  right: 0px;
+  background-color: #FF5722;
+  border-radius: 25px;
+  line-height: 1;
+  height: auto;
+  padding: 5px 10px;
+  margin-top: 20px;
+}
