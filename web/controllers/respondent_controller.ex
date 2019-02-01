@@ -771,6 +771,7 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     tz_offset = Survey.timezone_offset(survey)
+    offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
     csv_rows = (from e in SurveyLogEntry,
       where: e.survey_id == ^survey.id,
@@ -787,12 +788,9 @@ defmodule Ask.RespondentController do
 
         disposition = disposition_label(e.disposition)
         action_type = action_type_label(e.action_type)
+        timestamp = Ask.TimeUtil.format(e.timestamp, offset_seconds, tz_offset)
 
-        timestamp = e.timestamp
-        |> Survey.adjust_timezone(survey)
-        |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
-
-        [e.id, e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
+        [Integer.to_string(e.id), e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
       end)
 
     header = ["ID", "Respondent ID", "Mode", "Channel", "Disposition", "Action Type", "Action Data", "Timestamp"]

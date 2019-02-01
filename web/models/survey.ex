@@ -276,6 +276,10 @@ defmodule Ask.Survey do
     Schedule.timezone_offset(survey.schedule)
   end
 
+  def timezone_offset_in_seconds(%Survey{} = survey) do
+    Schedule.timezone_offset_in_seconds(survey.schedule)
+  end
+
   def completed?(survey) do
     survey.state == "terminated" && survey.exit_code == 0
   end

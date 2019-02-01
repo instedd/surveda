@@ -221,11 +221,14 @@ defmodule Ask.Schedule do
     |> Timex.Timezone.convert(schedule.timezone)
   end
 
-  def timezone_offset(%Schedule{} = schedule) do
-    offset = schedule.timezone
+  def timezone_offset_in_seconds(%Schedule{} = schedule) do
+    schedule.timezone
     |> Timex.Timezone.get
     |> Timex.Timezone.total_offset
+  end
 
+  def timezone_offset(%Schedule{} = schedule) do
+    offset = timezone_offset_in_seconds(schedule)
     hours = round(offset / 60 / 60)
     cond do
       hours == 0 -> "UTC"
