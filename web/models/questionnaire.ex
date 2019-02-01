@@ -102,11 +102,22 @@ defmodule Ask.Questionnaire do
   end
 
   def all_steps(%Questionnaire{steps: steps, quota_completed_steps: nil}) do
-    steps
+    get_steps(steps)
   end
 
   def all_steps(%Questionnaire{steps: steps, quota_completed_steps: quota_completed_steps}) do
-    steps ++ quota_completed_steps
+    get_steps(steps) ++ quota_completed_steps
+  end
+
+  defp get_steps(steps) do
+    result = steps |> Enum.flat_map(fn (item) ->
+      case item["type"] do
+        "section" ->
+          item["steps"]
+        _ -> [item]
+      end
+    end)
+    result
   end
 
   def update_activity_logs(multi, conn, project, changeset) do

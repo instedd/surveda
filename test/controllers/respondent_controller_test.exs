@@ -796,6 +796,49 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_total_call_time == "0"
     end
 
+    test "download results csv with sections", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @three_sections)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
+      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
+      insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+      insert(:response, respondent: respondent_1, field_name: "Refresh", value: "No")
+      insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "4")
+      insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+      respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], stats: %Stats{total_sent_sms: 1})
+      insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+      conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
+      csv = response(conn, 200)
+
+      [line1, line2, line3, _] = csv |> String.split("\r\n")
+      assert line1 == "Respondent ID,Date,Modes,Smokes,Exercises,Refresh,Probability,Last,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS,Total call time"
+
+      [line_2_hashed_number, _, line_2_modes, line_2_smoke, line_2_exercises, line_2_refresh, _, _, line_2_perfect_number, _, line_2_disp, line_2_total_sent_sms, line_2_total_received_sms, line_2_total_call_time] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+      assert line_2_hashed_number == respondent_1.hashed_number
+      assert line_2_modes == "SMS, Phone call"
+      assert line_2_smoke == "Yes"
+      assert line_2_exercises == "No"
+      assert line_2_perfect_number == "4"
+      assert line_2_refresh == "No"
+      assert line_2_disp == "Partial"
+      assert line_2_total_sent_sms == "3"
+      assert line_2_total_received_sms == "4"
+      assert line_2_total_call_time == "12"
+
+      [line_3_hashed_number, _, line_3_modes, line_3_smoke, line_3_exercises, line_3_refresh, _, _, _, _, line_3_disp, line_3_total_sent_sms, line_3_total_received_sms, line_3_total_call_time] = [line3]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      assert line_3_hashed_number == respondent_2.hashed_number
+      assert line_3_modes == "Mobile Web"
+      assert line_3_smoke == "No"
+      assert line_3_exercises == ""
+      assert line_3_refresh == ""
+      assert line_3_disp == "Registered"
+      assert line_3_total_sent_sms == "1"
+      assert line_3_total_received_sms == "0"
+      assert line_3_total_call_time == "0"
+    end
+
     test "download results csv with filter by disposition", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
