@@ -447,7 +447,7 @@ defmodule Ask.DummySteps do
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: "end")
           ]
         )
       ]
@@ -949,6 +949,33 @@ defmodule Ask.DummySteps do
           title: "Third section",
           randomize: true,
           steps: @dummy_steps_with_flag
+        )
+      ]
+
+      @three_sections_random_except_last_one [
+        section(
+          id: "section 1",
+          title: "First section",
+          randomize: true,
+          steps: @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: true,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "Third section",
+          randomize: true,
+          steps: @dummy_steps_with_flag
+        ),
+        section(
+          id: "section 4",
+          title: "FOURTH section",
+          randomize: false,
+          steps: @explanation_steps_minimal
         )
       ]
 
