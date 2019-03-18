@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## Ulmus 0.21.1
+
+### Bugfixes
+
+* Survey results file does not include answers inside sections [#1454](https://github.com/instedd/surveda/issues/1454)
+* Surveys with sections were failing if the last step's skip logic was `end_survey`.
+
 ## Ulmus 0.21
 
 ### Features
