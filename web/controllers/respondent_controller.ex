@@ -683,19 +683,19 @@ defmodule Ask.RespondentController do
     end)
 
     # Add header to csv_rows
-    header = ["Respondent ID", "Date", "Modes", "Sample File"]
+    header = ["respondent_id", "date", "modes", "sample_file"]
     header = header ++ all_fields
     header = if has_comparisons do
-      header ++ ["Variant"]
+      header ++ ["variant"]
     else
       header
     end
-    header = header ++ ["Disposition"]
+    header = header ++ ["disposition"]
     header = header ++ Enum.map(stats, fn stat ->
       case stat do
-        :total_sent_sms -> "Total sent SMS"
-        :total_received_sms -> "Total received SMS"
-        :total_call_time -> "Total call time"
+        :total_sent_sms -> "total_sent_sms"
+        :total_received_sms -> "total_received_sms"
+        :total_call_time -> "total_call_time"
       end
     end)
 

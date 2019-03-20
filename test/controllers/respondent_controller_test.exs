@@ -774,7 +774,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, line3, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS,Total call time"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,disposition,total_sent_sms,total_received_sms,total_call_time"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, _, _, line_2_disp, line_2_total_sent_sms, line_2_total_received_sms, line_2_total_call_time] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -818,7 +818,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, line3, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Refresh,Probability,Last,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS,Total call time"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Refresh,Probability,Last,Perfect Number,Question,disposition,total_sent_sms,total_received_sms,total_call_time"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, line_2_refresh, _, _, line_2_perfect_number, _, line_2_disp, line_2_total_sent_sms, line_2_total_received_sms, line_2_total_call_time] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -862,7 +862,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,disposition,total_sent_sms,total_received_sms"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, _, _, line_2_disp, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -890,7 +890,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,disposition,total_sent_sms,total_received_sms"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, _, _, line_2_disp, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -917,7 +917,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,disposition,total_sent_sms,total_received_sms"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, _, _, line_2_disp, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -954,7 +954,7 @@ defmodule Ask.RespondentControllerTest do
       assert !String.contains?(group_2.name, [" ", ",", "*", ":","?", "\\", "|", "/", "<", ">"])
 
       [line1, line2, line3, line4, line5, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS,Total call time"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,disposition,total_sent_sms,total_received_sms,total_call_time"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, _, _, _, _, _, _, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -1164,7 +1164,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, line3, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Variant,Disposition,Total sent SMS,Total received SMS"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,variant,disposition,total_sent_sms,total_received_sms"
 
       [line_2_hashed_number, _, _, _,line_2_smoke, _, line_2_number, _, line_2_variant, line_2_disp, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
       assert line_2_hashed_number == respondent_1.hashed_number |> to_string
@@ -1276,7 +1276,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,language,Disposition,Total sent SMS,Total received SMS"
+      assert line1 == "respondent_id,date,modes,sample_file,language,disposition,total_sent_sms,total_received_sms"
 
       [line_2_hashed_number, _, _, _,line_2_language, _, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
       assert line_2_hashed_number == respondent_1.hashed_number
@@ -1397,7 +1397,7 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, line3, _] = csv |> String.split("\r\n")
-      assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS"
+      assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect Number,Question,disposition,total_sent_sms,total_received_sms"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, _, _, line_2_disp,_ ,_] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
