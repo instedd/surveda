@@ -95,7 +95,7 @@ class ActivityDescription extends Component {
         }
       case 'questionnaire':
         const questionnaireName = metadata['questionnaireName'] || t('Untitled questionnaire')
-        const sectionTitle = metadata['sectionTitle'] || t('Untitled questionnaire section');
+        const sectionTitle = metadata['sectionTitle'] || t('Untitled questionnaire section')
         const stepTitle = metadata['stepTitle'] || t('Untitled question')
         switch (activity.action) {
           case 'create':

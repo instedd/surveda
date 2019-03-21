@@ -185,19 +185,18 @@ defmodule Ask.Questionnaire do
     new_steps = get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1})
     old_steps = if changeset.data.quota_completed_steps, do: changeset.data.quota_completed_steps |> Map.new(&{&1["id"], &1}), else: %{}
 
-    delta(multi, conn, project, changeset, new_steps, old_steps)
+    delta(multi, conn, project, changeset.data, new_steps, old_steps)
   end
 
   defp delta_steps(multi, conn, project, changeset) do
     new_steps = get_change(changeset, :steps) |> Map.new(&{&1["id"], &1})
     old_steps = changeset.data.steps |> Map.new(&{&1["id"], &1})
 
-    delta(multi, conn, project, changeset, new_steps, old_steps)
+    delta(multi, conn, project, changeset.data, new_steps, old_steps)
   end
 
-  defp delta(multi, conn, project, changeset, new_steps, old_steps) do
-    questionnaire = changeset.data
-    questionnaire_name = get_field(changeset, :name)
+  defp delta(multi, conn, project, questionnaire, new_steps, old_steps) do
+    questionnaire_name = questionnaire.name
 
     new_step_ids = new_steps |> Map.keys()
     old_step_ids = old_steps |> Map.keys()
@@ -235,6 +234,7 @@ defmodule Ask.Questionnaire do
       new_step = new_steps[step_id]
       old_step = old_steps[step_id]
 
+
       multi = if new_step["title"] != old_step["title"] do
         if new_step["type"] == "section" do
           Multi.insert(multi, {:rename_section_log, step_id}, ActivityLog.rename_questionnaire_section(project, conn, questionnaire, questionnaire_name, step_id, old_step["title"], new_step["title"]))
@@ -246,10 +246,11 @@ defmodule Ask.Questionnaire do
       end
 
       if Map.delete(new_step, "title") != Map.delete(old_step, "title") do
-        if new_step["type"] == "section" do 
-          # TODO: Here is where it goes when the internal steps of a section are edited, but this doesn't takes consideration in new internal steps of the sections, so here we should check the internal steps too
+        if new_step["type"] == "section" && !is_nil(new_step["steps"]) do
+          current_new_steps = new_step["steps"] |> Map.new(&{&1["id"], &1})
+          current_old_steps = old_step["steps"] |> Map.new(&{&1["id"], &1})
 
-          Multi.insert(multi, {:edit_section_log, step_id}, ActivityLog.edit_questionnaire_section(project, conn, questionnaire, questionnaire_name, step_id, new_step["title"]))
+          delta(multi, conn, project, questionnaire, current_new_steps, current_old_steps)
         else
           Multi.insert(multi, {:edit_step_log, step_id}, ActivityLog.edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, new_step["title"]))
         end
