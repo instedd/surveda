@@ -22,7 +22,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
 
   def valid_actions("questionnaire"), do:
-    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings"]
+    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section"]
 
   def valid_actions(_), do: []
 
@@ -201,6 +201,22 @@ defmodule Ask.ActivityLog do
 
   def remove_questionnaire_language(project, conn, questionnaire, questionnaire_name, removed_language) do
     create("remove_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: removed_language})
+  end
+
+  def create_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, section_title) do
+    create("create_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, section_title: section_title})
+  end
+
+  def rename_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, old_section_title, new_section_title) do
+    create("rename_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, old_section_title: old_section_title, new_section_title: new_section_title})
+  end
+
+  def delete_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, section_title) do
+    create("delete_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, section_title: section_title})
+  end
+
+  def edit_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, section_title) do
+    create("edit_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, section_title: section_title})
   end
 
   def create_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
