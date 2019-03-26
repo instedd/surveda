@@ -146,7 +146,7 @@ button.btn-floating {
 .fixed-action-btn {
   &.active {
     ul {
-     visibility: visible;
+      visibility: visible;
     }
   }
 
@@ -223,12 +223,13 @@ button.btn-floating {
     right: 0;
     text-align: center;
     position: absolute;
-    bottom: 64px;
+    bottom: 0;
     margin: 0;
     visibility: hidden;
 
     li {
-      margin-bottom: 15px;
+      margin-bottom: 50px;
+      padding-right: 8px;
     }
 
     a.btn-floating {

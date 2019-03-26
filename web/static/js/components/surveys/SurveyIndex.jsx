@@ -7,6 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import { Button } from 'react-materialize'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -46,10 +47,10 @@ class SurveyIndex extends Component<any> {
   }
 
   newSurvey() {
-    const { dispatch, projectId, router } = this.props
-    dispatch(surveyActions.createSurvey(projectId)).then(survey =>
-      router.push(routes.surveyEdit(projectId, survey))
-    )
+    // const { dispatch, projectId, router } = this.props
+    // dispatch(surveyActions.createSurvey(projectId)).then(survey =>
+    //   router.push(routes.surveyEdit(projectId, survey))
+    // )
   }
 
   deleteSurvey = (survey: Survey) => {
@@ -100,7 +101,14 @@ class SurveyIndex extends Component<any> {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text='Add survey' onClick={() => this.newSurvey()} />
+        <AddButton fab text='Add survey' onClick={() => this.newSurvey()}>
+          <Link className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+            <i className='material-icons black-text'>add</i>
+          </Link>
+          <Link className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+            <i className='material-icons black-text'>assignment_turned_in</i>
+          </Link>
+        </AddButton>
       )
     }
 
