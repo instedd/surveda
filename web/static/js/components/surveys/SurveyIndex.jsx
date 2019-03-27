@@ -6,16 +6,19 @@ import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
+import * as folderActions from '../../actions/folder'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
 import { Button } from 'react-materialize'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from './SurveyStatus'
+import CreateFolderForm from './CreateFolderForm'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
 
 class SurveyIndex extends Component<any> {
+  state = {}
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
@@ -29,7 +32,11 @@ class SurveyIndex extends Component<any> {
     respondentsStats: PropTypes.object.isRequired
   }
 
-  componentWillMount() {
+  componentWillMount () {
+    this.initialFetch()
+  }
+
+  initialFetch () {
     const { dispatch, projectId } = this.props
 
     // Fetch project for title
@@ -46,11 +53,34 @@ class SurveyIndex extends Component<any> {
     dispatch(channelsActions.fetchChannels())
   }
 
+  componentDidMount () {
+    setTimeout(() => this.newFolder(), 3000);
+  }
+
   newSurvey() {
-    // const { dispatch, projectId, router } = this.props
-    // dispatch(surveyActions.createSurvey(projectId)).then(survey =>
-    //   router.push(routes.surveyEdit(projectId, survey))
-    // )
+    const { dispatch, projectId, router } = this.props
+    dispatch(surveyActions.createSurvey(projectId)).then(survey =>
+      router.push(routes.surveyEdit(projectId, survey))
+    )
+  }
+
+  changeFolderName (name) {
+    console.log(name, this.state)
+    this.setState({folderName: name})
+  }
+
+  newFolder() {
+    const createFolderConfirmationModal: ConfirmationModal = this.refs.createFolderConfirmationModal
+    const { t, dispatch, projectId } = this.props
+    const modalText = <CreateFolderForm projectId={projectId} onChangeName={name => this.changeFolderName(name)} onCreate={() => { createFolderConfirmationModal.close(); this.initialFetch() }}/>
+    createFolderConfirmationModal.open({
+      modalText: modalText,
+      onConfirm: () => {
+        const { folderName } = this.state
+        console.log(this.state)
+        dispatch(folderActions.createFolder(projectId, folderName))
+      }
+    })
   }
 
   deleteSurvey = (survey: Survey) => {
@@ -83,7 +113,7 @@ class SurveyIndex extends Component<any> {
   }
 
   render() {
-    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    const { loadingFolder, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
 
     if (!surveys) {
       return (
@@ -101,12 +131,12 @@ class SurveyIndex extends Component<any> {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton fab text='Add survey' onClick={() => this.newSurvey()}>
-          <Link className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
-            <i className='material-icons black-text'>add</i>
-          </Link>
-          <Link className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+        <AddButton fab text='Add survey'>
+          <Link onClick={() => this.newSurvey()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
             <i className='material-icons black-text'>assignment_turned_in</i>
+          </Link>
+          <Link onClick={() => this.newFolder()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+            <i className='material-icons black-text'>folder</i>
           </Link>
         </AddButton>
       )
@@ -126,6 +156,7 @@ class SurveyIndex extends Component<any> {
           { footer }
         </div>
         }
+        <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
@@ -159,7 +190,8 @@ const mapStateToProps = (state, ownProps) => {
     respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
-    totalCount
+    totalCount,
+    loadingFolder: state.folder.loading
   }
 }
 

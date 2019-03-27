@@ -32,7 +32,7 @@ export class ConfirmationModal extends Component<Props, Props> {
         newState[variable] = nextProps[variable]
       }
     }
-    this.setState(newState)
+    this.setState({ disabled: false, ...newState })
   }
 
   open(props: ?$Shape<Props>) {
@@ -51,7 +51,7 @@ export class ConfirmationModal extends Component<Props, Props> {
   }
 
   render() {
-    const { showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false, initOptions } = this.state
+    const { disabled, showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false, initOptions } = this.state
     let { noText } = this.state
     if (!noText) noText = 'No'
 
@@ -63,7 +63,7 @@ export class ConfirmationModal extends Component<Props, Props> {
       cancelLink = <I18n>
         {
           t => (
-            <a href='#!' onClick={onCancelClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{t('Cancel')}</a>
+            <a href='#!' disabled={disabled} onClick={onCancelClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{t('Cancel')}</a>
           )
         }
       </I18n>
@@ -75,7 +75,7 @@ export class ConfirmationModal extends Component<Props, Props> {
         e.preventDefault()
         onNo()
       }
-      noLink = <a href='#!' onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{noText}</a>
+      noLink = <a href='#!' disabled={disabled} onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{noText}</a>
     }
 
     const onConfirmClick = (e) => {
@@ -100,7 +100,7 @@ export class ConfirmationModal extends Component<Props, Props> {
         <div className='modal-footer'>
           {cancelLink}
           {noLink}
-          <a href='#!' className='modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
+          <a disabled={disabled} href='#!' className='modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
         </div>
       )
     }

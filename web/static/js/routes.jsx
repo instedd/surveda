@@ -103,6 +103,7 @@ export const respondentsDispositionHistoryCSV = (projectId, surveyId) => `/api/v
 export const respondentsIncentivesCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/incentives?_format=csv`
 export const respondentsInteractionsCSV = (projectId, surveyId) => `/api/v1${surveyRespondents(projectId, surveyId)}/interactions?_format=csv`
 export const surveyEdit = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
+export const surveyFolderNew = (projectId, surveyId) => `${survey(projectId, surveyId)}/folders/new`
 export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const activityIndex = (projectId) => `${project(projectId)}/activity`
