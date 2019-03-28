@@ -14,12 +14,13 @@ class CreateFolderForm extends Component<any> {
   }
 
   onChangeName(e){
-    console.log(e.target.value)
     this.props.onChangeName(e.target.value)
     this.setState({ name: e.target.value })
   }
 
-  onSubmit () {
+  onSubmit (e) {
+    e.preventDefault()
+
     const { dispatch, projectId, onCreate } = this.props
     const { name } = this.state
     dispatch(actions.createFolder(projectId, name))

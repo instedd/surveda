@@ -7,7 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter, FABButton } from '../ui'
 import { Button } from 'react-materialize'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
@@ -53,10 +53,6 @@ class SurveyIndex extends Component<any> {
     dispatch(channelsActions.fetchChannels())
   }
 
-  componentDidMount () {
-    setTimeout(() => this.newFolder(), 3000);
-  }
-
   newSurvey() {
     const { dispatch, projectId, router } = this.props
     dispatch(surveyActions.createSurvey(projectId)).then(survey =>
@@ -65,7 +61,6 @@ class SurveyIndex extends Component<any> {
   }
 
   changeFolderName (name) {
-    console.log(name, this.state)
     this.setState({folderName: name})
   }
 
@@ -77,7 +72,6 @@ class SurveyIndex extends Component<any> {
       modalText: modalText,
       onConfirm: () => {
         const { folderName } = this.state
-        console.log(this.state)
         dispatch(folderActions.createFolder(projectId, folderName))
       }
     })
@@ -131,14 +125,14 @@ class SurveyIndex extends Component<any> {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton fab text='Add survey'>
+        <FABButton icon={'add'} hoverEnabled={false} text='Add survey'>
           <Link onClick={() => this.newSurvey()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
             <i className='material-icons black-text'>assignment_turned_in</i>
           </Link>
           <Link onClick={() => this.newFolder()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
             <i className='material-icons black-text'>folder</i>
           </Link>
-        </AddButton>
+        </FABButton>
       )
     }
 
