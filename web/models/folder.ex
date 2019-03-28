@@ -4,6 +4,7 @@ defmodule Ask.Folder do
   schema "folders" do
     field :name, :string
 
+    belongs_to :project, Project
     timestamps()
   end
 
@@ -12,7 +13,7 @@ defmodule Ask.Folder do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name])
-    |> validate_required([:name])
+    |> cast(params, [:name, :project_id])
+    |> validate_required([:name, :project_id])
   end
 end
