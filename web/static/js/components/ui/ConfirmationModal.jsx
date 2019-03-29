@@ -78,11 +78,11 @@ export class ConfirmationModal extends Component<Props, Props> {
       noLink = <a href='#!' disabled={disabled} onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{noText}</a>
     }
 
-    const onConfirmClick = (e) => {
+    const onConfirmClick = async (e) => {
       e.preventDefault()
-      if (onConfirm) {
-        onConfirm()
-      }
+      if (!onConfirm) return;
+      const res = await onConfirm()
+      res !== false && this.refs.modal.close()
     }
 
     var content
@@ -100,7 +100,7 @@ export class ConfirmationModal extends Component<Props, Props> {
         <div className='modal-footer'>
           {cancelLink}
           {noLink}
-          <a disabled={disabled} href='#!' className='modal-action modal-close waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
+          <a disabled={disabled} href='#!' className='modal-action waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
         </div>
       )
     }

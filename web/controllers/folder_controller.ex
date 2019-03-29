@@ -1,4 +1,4 @@
-defmodule Ask.FoldersController do
+defmodule Ask.FolderController do
   use Ask.Web, :api_controller
 
   alias Ask.{Folder}
@@ -30,6 +30,6 @@ defmodule Ask.FoldersController do
     |> Repo.all
 
     conn
-    |> render(Ask.FoldersView, "index.json", folders: folders)
+    |> render("index.json", folders: folders)
   end
 end

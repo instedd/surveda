@@ -12,7 +12,7 @@ export class FABButton extends Component {
           <i className='material-icons'>{icon}</i>
         </Link>
         <ul>
-          {children.map(c => (<li>{c}</li>))}
+          {children.map((c, i) => (<li key={`fab-button-${i}`}>{c}</li>))}
         </ul>
       </div>
     )

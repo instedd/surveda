@@ -7,8 +7,9 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter, FABButton } from '../ui'
+import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
 import { Button } from 'react-materialize'
+import FolderCard from '../projects/FolderCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -51,6 +52,7 @@ class SurveyIndex extends Component<any> {
       }
     })
     dispatch(channelsActions.fetchChannels())
+    dispatch(folderActions.fetchFolders(projectId))
   }
 
   newSurvey() {
@@ -70,9 +72,10 @@ class SurveyIndex extends Component<any> {
     const modalText = <CreateFolderForm projectId={projectId} onChangeName={name => this.changeFolderName(name)} onCreate={() => { createFolderConfirmationModal.close(); this.initialFetch() }}/>
     createFolderConfirmationModal.open({
       modalText: modalText,
-      onConfirm: () => {
+      onConfirm: async () => {
         const { folderName } = this.state
-        dispatch(folderActions.createFolder(projectId, folderName))
+        const res = await dispatch(folderActions.createFolder(projectId, folderName))
+        if (res.errors) return false;
       }
     })
   }
@@ -107,9 +110,8 @@ class SurveyIndex extends Component<any> {
   }
 
   render() {
-    const { loadingFolder, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
-
-    if (!surveys) {
+    const { folders, loadingFolder, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
       return (
         <div>{t('Loading surveys...')}</div>
       )
@@ -126,12 +128,17 @@ class SurveyIndex extends Component<any> {
     if (!readOnly) {
       addButton = (
         <FABButton icon={'add'} hoverEnabled={false} text='Add survey'>
-          <Link onClick={() => this.newSurvey()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
-            <i className='material-icons black-text'>assignment_turned_in</i>
-          </Link>
-          <Link onClick={() => this.newFolder()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
-            <i className='material-icons black-text'>folder</i>
-          </Link>
+          <Tooltip text="Test" position="left">
+            <Button onClick={() => this.newSurvey()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+              <i className='material-icons black-text'>assignment_turned_in</i>
+            </Button>
+          </Tooltip>
+          <Tooltip text="Test" position="left">
+            <Button onClick={() => this.newFolder()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+              <i className='material-icons black-text'>folder</i>
+            </Button>
+          </Tooltip>
+
         </FABButton>
       )
     }
@@ -139,16 +146,23 @@ class SurveyIndex extends Component<any> {
     return (
       <div>
         {addButton}
-        { surveys.length == 0
+        { (surveys && surveys.length == 0 && folders && folders.length === 0)
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
-        : <div className='row'>
-          { surveys.map(survey => {
-            return (
-              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
-            )
-          }) }
-          { footer }
-        </div>
+        : (
+          <div>
+            <div className='row'>
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder}/>)}
+            </div>
+            <div className='row'>
+              { surveys && surveys.map(survey => {
+                return (
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
+                )
+              }) }
+            </div>
+            { footer }
+          </div>
+        )
         }
         <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
@@ -185,7 +199,10 @@ const mapStateToProps = (state, ownProps) => {
     startIndex,
     endIndex,
     totalCount,
-    loadingFolder: state.folder.loading
+    loadingSurveys: state.surveys.fetching,
+    loadingFolder: state.folder.loading,
+    loadingFolders: state.folder.loadingFetch,
+    folders: state.folder.folders && Object.values(state.folder.folders)
   }
 }
 

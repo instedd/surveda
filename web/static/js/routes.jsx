@@ -92,6 +92,7 @@ export default (
 export const root = '/'
 export const projects = '/projects'
 export const project = (id) => `${projects}/${id}`
+export const folder = (projectId, folderId) => `${project(projectId)}/folders/${folderId}`
 export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
 export const surveySimulation = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}/simulation`

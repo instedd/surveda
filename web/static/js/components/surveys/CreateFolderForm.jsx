@@ -24,20 +24,28 @@ class CreateFolderForm extends Component<any> {
     const { dispatch, projectId, onCreate } = this.props
     const { name } = this.state
     dispatch(actions.createFolder(projectId, name))
-      .then(() => onCreate())
+      .then(res => {
+        if (res.errors) return;
+        onCreate()
+      })
   }
 
   render () {
-    const { t, loading } = this.props
+    const { t, loading, errors } = this.props
     const { name } = this.state
 
     return (
       <form onSubmit={e => this.onSubmit(e)}>
+
         <p>
           <Trans>
             Please write the name of the folder you want to create
           </Trans>
         </p>
+
+        <ul className="red-text">
+          {(errors['name'] || []).map(error => <li>Name: {error}</li>)}
+        </ul>
         <Input disabled={loading} placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)}/>
       </form>
     )
@@ -52,7 +60,8 @@ CreateFolderForm.defaultProps = {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...ownProps,
-    loading: state.folder.loading
+    loading: state.folder.loading,
+    errors: state.folder.errors || {}
   }
 }
 

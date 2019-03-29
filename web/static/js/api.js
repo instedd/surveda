@@ -4,6 +4,7 @@ import 'isomorphic-fetch'
 import { upload } from './uploadManager'
 
 const projectSchema = new Schema('projects')
+const folderSchema = new Schema('folders')
 const surveySchema = new Schema('surveys')
 const questionnaireSchema = new Schema('questionnaires')
 const respondentSchema = new Schema('respondents')
@@ -144,6 +145,10 @@ export const fetchProjects = (options) => {
   return apiFetchJSON(`projects?archived=${options['archived']}`, arrayOf(projectSchema))
 }
 
+export const fetchFolders = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/folders`, arrayOf(folderSchema))
+}
+
 export const fetchSurveys = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/surveys`, arrayOf(surveySchema))
 }
@@ -170,6 +175,10 @@ export const createProject = (project) => {
 
 export const leaveProject = (projectId) => {
   return apiPostJSON(`projects/${projectId}/leave`, projectSchema)
+}
+
+export const createFolder = (projectId, name) => {
+  return apiPostJSON(`projects/${projectId}/folders`, folderSchema, {folder: {name}})
 }
 
 export const createSurvey = (projectId) => {
