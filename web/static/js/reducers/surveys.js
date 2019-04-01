@@ -25,7 +25,8 @@ const initialState = {
   page: {
     index: 0,
     size: 15
-  }
+  },
+  folderId: null
 }
 
 export default collectionReducer(actions, itemsReducer, projectFilterProvider, initialState)

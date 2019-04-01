@@ -5,9 +5,8 @@ import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 
-const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnairesLink, t }) => {
-  let projectLink
-  let questionnairesLink
+const Header = ({ tabs, logout, user, project, folder, showProjectLink, showQuestionnairesLink, t }) => {
+  let projectLink, questionnairesLink, folderLink;
 
   if (showProjectLink) {
     projectLink = (
@@ -27,6 +26,14 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
     )
   }
 
+  if (folder) {
+    folderLink = (
+      <li className='breadcrumb-item'>
+        <Link to={routes.folder(folder.projectId, folder.id)} className=''>{folder.name}</Link>
+      </li>
+    )
+  }
+
   return (
     <header>
       <nav id='TopNav'>
@@ -39,6 +46,7 @@ const Header = ({ tabs, logout, user, project, showProjectLink, showQuestionnair
                 </li>
                 { projectLink }
                 { questionnairesLink }
+                { folderLink }
                 <li className='channels-tab'>
                   <Link to={routes.channels}>{t('Channels')}</Link>
                 </li>

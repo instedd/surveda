@@ -70,7 +70,7 @@ defmodule Ask.Router do
 
       get "/timezones", TimezoneController, :timezones
       resources "/projects", ProjectController, except: [:new, :edit] do
-        resources "/folders", FolderController, only: [:create, :index]
+        resources "/folders", FolderController, only: [:create, :index, :show]
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
         put "/memberships/update", MembershipController, :update, as: :membership_update
         resources "/channels", ChannelController, only: [:index]

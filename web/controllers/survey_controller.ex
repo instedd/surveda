@@ -5,11 +5,17 @@ defmodule Ask.SurveyController do
   alias Ask.Runtime.Session
   alias Ecto.Multi
 
-  def index(conn, %{"project_id" => project_id} = params) do
+  def index(conn, %{"project_id" => project_id, "folder_id" => folder_id} = params) do
     project = conn
     |> load_project(project_id)
 
     dynamic = dynamic([s], s.project_id == ^project.id)
+    dynamic = 
+      if is_nil(folder_id) do
+        dynamic([s], is_nil(s.folder_id))
+      else
+        dynamic([s], s.folder_id == ^folder_id)
+      end
 
     # Hide simulations from the index
     dynamic = dynamic([s], s.simulation == false and ^dynamic)
@@ -38,6 +44,10 @@ defmodule Ask.SurveyController do
       |> Enum.map(&(&1 |> Survey.with_down_channels))
 
     render(conn, "index.json", surveys: surveys)
+  end
+
+  def index(conn, %{"project_id" => project_id} = params) do
+    index(conn, %{ "project_id" => project_id, "folder_id" => nil })
   end
 
   def create(conn, params = %{"project_id" => project_id}) do

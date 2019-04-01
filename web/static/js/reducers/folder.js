@@ -42,6 +42,22 @@ export default (state = [], action) => {
         folders: action.folders,
         loadingFetch: false
       }
+    case actions.FETCHING_FOLDER:
+      return {
+        ...state,
+        loadingFetch: true
+      }
+    case actions.FETCH_FOLDER:
+      return {
+        ...state,
+        folder: null
+      }
+    case actions.FETCHED_FOLDER:
+      return {
+        ...state,
+        folder: action.folder,
+        loadingFetch: false
+      }
     default:
       return state
   }

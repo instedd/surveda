@@ -67,16 +67,19 @@ const receive = (state: ListStore<any>, action: ReceiveFilteredItemsAction, filt
 }
 
 const fetch = (state, action, filterProvider) => {
+  console.log(action)
   const newFilter = filterProvider(action)
 
   let newItems = null
 
-  if (isEqual(state.filter, newFilter)) {
-    newItems = state.items
-  }
+  // TODO: This makes sense? Since having the same filters doesn't mean to have the same results (otherwise we are caching the results even within different pages)
+  // if (isEqual(state.filter, newFilter)) {
+  //   newItems = state.items
+  // }
 
   return {
     ...state,
+    ...action.folderId && { folderId: action.folderId },
     fetching: true,
     filter: newFilter,
     items: newItems,

@@ -14,7 +14,6 @@ defmodule Ask.FolderController do
       {:ok, folder} ->
         conn 
         |> put_status(:created)
-        # |> put_resp_header("location", folder_path(conn, :show, folder))
         |> render("show.json", folder: folder)
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -31,5 +30,14 @@ defmodule Ask.FolderController do
 
     conn
     |> render("index.json", folders: folders)
+  end
+
+  def show(conn, %{"id" => folder_id}) do
+    folder = Folder 
+    |> Repo.get(folder_id)
+
+    IO.inspect(folder)
+    conn
+    |> render("show.json", folder: folder)
   end
 end

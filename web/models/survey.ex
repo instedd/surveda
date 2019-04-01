@@ -14,7 +14,8 @@ defmodule Ask.Survey do
     Questionnaire,
     SurveyQuestionnaire,
     Project,
-    FloipEndpoint
+    FloipEndpoint,
+    Folder
   }
   alias Ask.Runtime.{Broker, ChannelStatusServer}
   alias Ask.Ecto.Type.JSON
@@ -53,6 +54,7 @@ defmodule Ask.Survey do
     has_many :floip_endpoints, FloipEndpoint
 
     belongs_to :project, Project
+    belongs_to :folder, Folder
 
     timestamps()
   end
