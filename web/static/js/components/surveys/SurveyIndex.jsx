@@ -10,6 +10,7 @@ import * as folderActions from '../../actions/folder'
 import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
 import { Button } from 'react-materialize'
 import FolderCard from '../projects/FolderCard'
+import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -80,25 +81,6 @@ class SurveyIndex extends Component<any> {
     })
   }
 
-  deleteSurvey = (survey: Survey) => {
-    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
-    const { t } = this.props
-    deleteConfirmationModal.open({
-      modalText: <span>
-        <p>
-          <Trans>
-            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
-          </Trans>
-        </p>
-        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
-      </span>,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        dispatch(surveyActions.deleteSurvey(survey))
-      }
-    })
-  }
-
   nextPage() {
     const { dispatch } = this.props
     dispatch(actions.nextSurveysPage())
@@ -128,12 +110,12 @@ class SurveyIndex extends Component<any> {
     if (!readOnly) {
       addButton = (
         <FABButton icon={'add'} hoverEnabled={false} text='Add survey'>
-          <Tooltip text="Test" position="left">
+          <Tooltip text="Survey" position="left">
             <Button onClick={() => this.newSurvey()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
               <i className='material-icons black-text'>assignment_turned_in</i>
             </Button>
           </Tooltip>
-          <Tooltip text="Test" position="left">
+          <Tooltip text="Folder" position="left">
             <Button onClick={() => this.newFolder()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
               <i className='material-icons black-text'>folder</i>
             </Button>
@@ -165,7 +147,6 @@ class SurveyIndex extends Component<any> {
         )
         }
         <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
-        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
   }
@@ -207,62 +188,3 @@ const mapStateToProps = (state, ownProps) => {
 }
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyIndex)))
-
-class SurveyCard extends PureComponent<any> {
-  props: {
-    t: Function,
-    respondentsStats: Object,
-    survey: Survey,
-    onDelete: (survey: Survey) => void,
-    readOnly: boolean
-  };
-
-  render() {
-    const { survey, respondentsStats, onDelete, readOnly, t } = this.props
-
-    var deleteButton = null
-    if (survey.state != 'running') {
-      const onDeleteClick = (e) => {
-        e.preventDefault()
-        onDelete(survey)
-      }
-
-      deleteButton = readOnly ? null
-        : <span onClick={onDeleteClick} className='right card-hover grey-text'>
-          <i className='material-icons'>delete</i>
-        </span>
-    }
-
-    let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
-    let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
-
-    let description = <div className='grey-text card-description'>
-      {survey.description}
-    </div>
-
-    return (
-      <div className='col s12 m6 l4'>
-        <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
-          <Card>
-            <div className='card-content'>
-              <div className='grey-text'>
-                {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
-              </div>
-              <div className='card-chart'>
-                <RespondentsChart cumulativePercentages={cumulativePercentages} />
-              </div>
-              <div className='card-status'>
-                <div className='card-title truncate' title={survey.name}>
-                  <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
-                  {deleteButton}
-                </div>
-                {description}
-                <SurveyStatus survey={survey} short />
-              </div>
-            </div>
-          </Card>
-        </Link>
-      </div>
-    )
-  }
-}

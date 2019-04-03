@@ -1,13 +1,20 @@
 import React, { PureComponent } from 'react'
+import { translate, Trans } from 'react-i18next'
 
 import { Link } from 'react-router'
 import * as routes from '../../routes'
+import * as surveyActions from '../../actions/survey'
+import * as surveysActions from '../../actions/surveys'
+import * as respondentActions from '../../actions/respondents'
+import { connect } from 'react-redux'
 
-import { Card, UntitledIfEmpty } from '../ui'
+import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
+import MoveSurveyForm from './MoveSurveyForm'
 
 class SurveyCard extends PureComponent<any> {
+  state = { }
   props: {
     t: Function,
     respondentsStats: Object,
@@ -15,6 +22,44 @@ class SurveyCard extends PureComponent<any> {
     onDelete: (survey: Survey) => void,
     readOnly: boolean
   };
+
+  changeFolder = (folderId) => this.setState({ folderId })
+
+  moveSurvey = () => {
+    const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
+    const { t, survey } = this.props
+    const modalText = <MoveSurveyForm surveyId={1} folderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)}/>
+    moveSurveyConfirmationModal.open({
+      modalText: modalText,
+      onConfirm: () => {
+        const { dispatch } = this.props
+        const { folderId } = this.state
+        dispatch(surveyActions.changeFolder(survey, folderId)).then(() => {
+          dispatch(surveysActions.fetchSurveys(survey.projectId, survey.folderId))
+        })
+      }
+    })
+  }
+
+  deleteSurvey = () => {
+    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+    const { t, survey } = this.props
+    deleteConfirmationModal.open({
+      modalText: <span>
+        <p>
+          <Trans>
+            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
+          </Trans>
+        </p>
+        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
+      </span>,
+      onConfirm: () => {
+        const { dispatch } = this.props
+        dispatch(surveyActions.deleteSurvey(survey))
+      }
+    })
+  }
+
 
   render() {
     const { survey, respondentsStats, onDelete, readOnly, t } = this.props
@@ -41,29 +86,49 @@ class SurveyCard extends PureComponent<any> {
 
     return (
       <div className='col s12 m6 l4'>
-        <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
+        <div className='survey-card'>
           <Card>
             <div className='card-content'>
               <div className='grey-text'>
-                {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
+                <Link className='grey-text' to={routes.showOrEditSurvey(survey)}>
+                  {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
+                </Link>
+                <div className="right">
+                  <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+                    <DropdownItem className='dots'>
+                      <i className='material-icons'>more_vert</i>
+                    </DropdownItem>
+                    <DropdownItem>
+                      <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
+                    </DropdownItem>
+                    <DropdownItem>
+                      <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
+                    </DropdownItem>
+                  </Dropdown>
+                </div>
               </div>
               <div className='card-chart'>
                 <RespondentsChart cumulativePercentages={cumulativePercentages} />
               </div>
               <div className='card-status'>
-                <div className='card-title truncate' title={survey.name}>
+                <Link className='card-title black-text truncate' title={survey.name} to={routes.showOrEditSurvey(survey)}>
                   <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
-                  {deleteButton}
-                </div>
-                {description}
-                <SurveyStatus survey={survey} short />
+                </Link>
+                <Link to={routes.showOrEditSurvey(survey)}>
+                  {description}
+                  <SurveyStatus survey={survey} short />
+                </Link>
               </div>
             </div>
           </Card>
-        </Link>
+        </div>
+        <ConfirmationModal modalId='survey_index_move_survey' ref='moveSurveyConfirmationModal' confirmationText={t('Move')} header={t('Move survey')} showCancel />
+        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
   }
 }
 
-export default SurveyCard
+const mapStateToProps = (state, ownProps) => ownProps
+
+export default translate()(connect(mapStateToProps)(SurveyCard))

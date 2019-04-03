@@ -10,7 +10,7 @@ defmodule Ask.SurveyController do
     |> load_project(project_id)
 
     dynamic = dynamic([s], s.project_id == ^project.id)
-    dynamic = 
+    dynamic =
       if is_nil(folder_id) do
         dynamic([s], is_nil(s.folder_id))
       else
@@ -151,6 +151,35 @@ defmodule Ask.SurveyController do
         |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
     end
   end
+
+  def set_folder_id(conn, %{"project_id" => project_id, "survey_id" => survey_id, "folder_id" => folder_id}) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
+
+    survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+
+    result =
+      Multi.new()
+      |> Multi.update(:set_folder_id, Survey.changeset(survey, %{folder_id: folder_id}))
+      |> Repo.transaction()
+      # TODO: add activity log for folder id
+      # |> Multi.insert(:rename_log, ActivityLog.rename_survey(project, conn, survey, survey.name, name))
+
+    case result do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
 
   def set_name(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => name}) do
     project =

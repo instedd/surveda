@@ -214,7 +214,7 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
 
 // ------- Folder Card index page ----
 .folder-card {
-  .card-content { 
+  .card-content {
     font-weight: 600;
 
     i {
@@ -230,11 +230,16 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
   padding: 0px;
   .card-chart {
     margin: 30px 0 20px;
+
     svg {
       max-width: 100% !important;
       width: 100% !important;
     }
   }
+  .dropdown-content {
+    min-width: 120px;
+  }
+
   .card-title {
     font-weight: 400;
     position: absolute;

@@ -76,6 +76,7 @@ defmodule Ask.Router do
         resources "/channels", ChannelController, only: [:index]
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/set_name", SurveyController, :set_name
+          post "/set_folder_id", SurveyController, :set_folder_id
           post "/set_description", SurveyController, :set_description
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop

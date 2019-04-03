@@ -30,6 +30,5 @@ AddButton.propTypes = {
   text: PropTypes.string.isRequired,
   linkPath: PropTypes.string,
   onClick: PropTypes.func,
-  children: PropTypes.node,
-  fab: PropTypes.boolean
+  children: PropTypes.node
 }

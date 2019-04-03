@@ -47,6 +47,7 @@ class FolderShow extends Component<any> {
       }
     })
     dispatch(channelsActions.fetchChannels())
+    dispatch(folderActions.fetchFolders(projectId))
   }
 
   newSurvey() {

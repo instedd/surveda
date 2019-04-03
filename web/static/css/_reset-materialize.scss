@@ -148,7 +148,9 @@ textarea.materialize-textarea {
 }
 
 .modal {
-  @extend .white
+  @extend .white;
+
+  overflow: visible !important;
 }
 
 .material-tooltip.large-tooltip {
@@ -158,4 +160,11 @@ textarea.materialize-textarea {
   .backdrop {
     @extend .grey, .lighten-3;
   }
+}
+
+
+.material-tooltip {
+  padding: 4px 6px;
+  font-size: 0.75rem;
+  min-height: auto;
 }
