@@ -8,7 +8,7 @@ export const PREVIOUS_PAGE = 'SURVEYS_PREVIOUS_PAGE'
 export const SORT = 'SURVEYS_SORT'
 export const DELETED = 'SURVEY_DELETED'
 
-export const fetchSurveys = (projectId: number, folderId: number) => (dispatch: Function, getState: () => Store): Promise<?SurveyList> => {
+export const fetchSurveys = (projectId: number, folderId: any) => (dispatch: Function, getState: () => Store): Promise<?SurveyList> => {
   const state = getState()
 
   // Don't fetch surveys if they are already being fetched
@@ -24,12 +24,11 @@ export const fetchSurveys = (projectId: number, folderId: number) => (dispatch: 
     .then(() => getState().surveys.items)
 }
 
-export const startFetchingSurveys = (projectId: number, folderId: number) => ({
+export const startFetchingSurveys = (projectId: number, folderId?: number) => ({
   type: FETCH,
   projectId,
   folderId
 })
-
 
 export const receiveSurveys = (projectId: number, items: IndexedList<SurveyPreview>): ReceiveFilteredItemsAction => ({
   type: RECEIVE,

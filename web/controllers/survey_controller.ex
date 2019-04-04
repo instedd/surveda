@@ -46,7 +46,7 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def index(conn, %{"project_id" => project_id} = params) do
+  def index(conn, %{"project_id" => project_id}) do
     index(conn, %{ "project_id" => project_id, "folder_id" => nil })
   end
 

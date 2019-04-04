@@ -39,8 +39,8 @@ export const REFRESH_LINK = 'SURVEY_REFRESH_LINK'
 export const DELETE_LINK = 'SURVEY_DELETE_LINK'
 
 // TODO: Include folder id in the creation of the survey
-export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
-  api.createSurvey(projectId).then(response => {
+export const createSurvey = (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
+  api.createSurvey(projectId, folderId).then(response => {
     const survey = response.result
     dispatch(fetch(projectId, survey.id))
     dispatch(receive(survey))
@@ -149,7 +149,7 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
   })
 }
 
-export const changeFolder = (survey, folderId) => (dispatch: Function, getState: () => Store) => {
+export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.setFolderId(survey.projectId, survey.id, folderId).then(() =>
     dispatch({
       type: CHANGE_FOLDER

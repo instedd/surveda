@@ -1,14 +1,13 @@
-import React, { Component } from 'react'
-import { Button } from 'react-materialize'
+import React, { Component, PropTypes } from 'react'
 import { Link } from 'react-router'
 
 export class FABButton extends Component {
-  render () {
+  render() {
     const { children, icon, hoverEnabled } = this.props
 
-    return ( 
+    return (
       <div ref={'fab'} className={`fixed-action-btn ${hoverEnabled ? '' : 'click-to-toggle'}`}>
-        <Link className="btn-floating btn-large waves-effect waves-light green right mtop direction-bottom">
+        <Link className='btn-floating btn-large waves-effect waves-light green right mtop direction-bottom'>
           <i className='material-icons'>{icon}</i>
         </Link>
         <ul>
@@ -19,3 +18,8 @@ export class FABButton extends Component {
   }
 }
 
+FABButton.propTypes = {
+  children: PropTypes.node,
+  icon: PropTypes.string,
+  hoverEnabled: PropTypes.boolean
+}

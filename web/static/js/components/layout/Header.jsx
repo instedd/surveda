@@ -6,7 +6,7 @@ import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 
 const Header = ({ tabs, logout, user, project, folder, showProjectLink, showQuestionnairesLink, t }) => {
-  let projectLink, questionnairesLink, folderLink;
+  let projectLink, questionnairesLink, folderLink
 
   if (showProjectLink) {
     projectLink = (
@@ -83,6 +83,7 @@ Header.propTypes = {
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
   project: PropTypes.object,
+  folder: PropTypes.object,
   showProjectLink: PropTypes.bool,
   showQuestionnairesLink: PropTypes.bool
 }

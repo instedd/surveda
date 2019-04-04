@@ -9,7 +9,7 @@ describe('surveys reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, filter: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 15}})
+    expect(initialState).toEqual({fetching: false, folderId: null, filter: null, items: null, order: null, sortBy: null, sortAsc: true, page: {index: 0, size: 15}})
   })
 
   it('should start fetching surveys', () => {

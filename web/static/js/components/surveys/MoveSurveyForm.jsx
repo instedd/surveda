@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { translate, Trans } from 'react-i18next'
 import { connect } from 'react-redux'
-import * as survey from '../../actions/survey'
 import { Input } from 'react-materialize'
 
 class MoveSurveyForm extends Component<any> {
@@ -9,7 +8,12 @@ class MoveSurveyForm extends Component<any> {
     t: PropTypes.func,
     onCreate: PropTypes.func,
     onChangeName: PropTypes.func,
-    projectId: PropTypes.number
+    projectId: PropTypes.number,
+    defaultFolderId: PropTypes.number,
+    onChangeFolderId: PropTypes.func,
+    loading: PropTypes.boolean,
+    errors: PropTypes.array,
+    folders: PropTypes.array
   }
 
   constructor(props) {
@@ -20,14 +24,14 @@ class MoveSurveyForm extends Component<any> {
     }
   }
 
-  onChangeFolderId(e){
+  onChangeFolderId(e) {
     this.props.onChangeFolderId(e.target.value)
     this.setState({ folderId: e.target.value })
   }
 
-  render () {
-    const { t, loading, errors, folders } = this.props
-    const { name, folderId } = this.state
+  render() {
+    const { t, folders } = this.props
+    const { folderId } = this.state
 
     return (
       <form>
@@ -37,7 +41,7 @@ class MoveSurveyForm extends Component<any> {
           </Trans>
         </p>
 
-        <Input type="select" value={folderId} onChange={e => this.onChangeFolderId(e)}>
+        <Input type='select' value={folderId} onChange={e => this.onChangeFolderId(e)}>
           {[{name: t('No folder'), id: ''}, ...folders].map(({name, id}) => {
             return (
               <option key={`folder-${id}-${name}`} value={id}>

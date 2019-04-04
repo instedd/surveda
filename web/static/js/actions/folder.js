@@ -19,9 +19,9 @@ export const createFolder = (projectId: number, name: string) => (dispatch: Func
       return res
     })
     .catch(async res => {
-      const errors = await res.json();
+      const errors = await res.json()
       dispatch(notSavedFolder(errors))
-      return errors;
+      return errors
     })
 }
 

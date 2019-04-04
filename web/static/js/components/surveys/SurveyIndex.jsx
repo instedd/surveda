@@ -1,26 +1,27 @@
 // @flow
-import React, { Component, PureComponent, PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { withRouter, Link } from 'react-router'
+import { withRouter } from 'react-router'
 import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
+import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
 import { Button } from 'react-materialize'
 import FolderCard from '../projects/FolderCard'
 import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
-import RespondentsChart from '../respondents/RespondentsChart'
-import SurveyStatus from './SurveyStatus'
 import CreateFolderForm from './CreateFolderForm'
 import * as routes from '../../routes'
-import { translate, Trans } from 'react-i18next'
+import { translate } from 'react-i18next'
 
-class SurveyIndex extends Component<any> {
-  state = {}
+type State = {
+  folderName: string
+}
+
+class SurveyIndex extends Component<any, State> {
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
@@ -28,17 +29,28 @@ class SurveyIndex extends Component<any> {
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
     surveys: PropTypes.array,
+    folders: PropTypes.array,
+    loadingFolder: PropTypes.bool,
+    loadingFolders: PropTypes.bool,
+    loadingSurveys: PropTypes.bool,
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired
   }
 
-  componentWillMount () {
+  constructor(props) {
+    super(props)
+    this.state = {
+      folderName: ''
+    }
+  }
+
+  componentWillMount() {
     this.initialFetch()
   }
 
-  initialFetch () {
+  initialFetch() {
     const { dispatch, projectId } = this.props
 
     // Fetch project for title
@@ -63,20 +75,20 @@ class SurveyIndex extends Component<any> {
     )
   }
 
-  changeFolderName (name) {
+  changeFolderName(name) {
     this.setState({folderName: name})
   }
 
   newFolder() {
     const createFolderConfirmationModal: ConfirmationModal = this.refs.createFolderConfirmationModal
-    const { t, dispatch, projectId } = this.props
-    const modalText = <CreateFolderForm projectId={projectId} onChangeName={name => this.changeFolderName(name)} onCreate={() => { createFolderConfirmationModal.close(); this.initialFetch() }}/>
+    const { dispatch, projectId } = this.props
+    const modalText = <CreateFolderForm projectId={projectId} onChangeName={name => this.changeFolderName(name)} onCreate={() => { createFolderConfirmationModal.close(); this.initialFetch() }} />
     createFolderConfirmationModal.open({
       modalText: modalText,
       onConfirm: async () => {
         const { folderName } = this.state
         const res = await dispatch(folderActions.createFolder(projectId, folderName))
-        if (res.errors) return false;
+        if (res.errors) return false
       }
     })
   }
@@ -110,13 +122,13 @@ class SurveyIndex extends Component<any> {
     if (!readOnly) {
       addButton = (
         <FABButton icon={'add'} hoverEnabled={false} text='Add survey'>
-          <Tooltip text="Survey" position="left">
-            <Button onClick={() => this.newSurvey()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+          <Tooltip text='Survey' position='left'>
+            <Button onClick={() => this.newSurvey()} className='btn-floating btn-small waves-effect waves-light right mbottom white black-text' >
               <i className='material-icons black-text'>assignment_turned_in</i>
             </Button>
           </Tooltip>
-          <Tooltip text="Folder" position="left">
-            <Button onClick={() => this.newFolder()} className="btn-floating btn-small waves-effect waves-light right mbottom white black-text" >
+          <Tooltip text='Folder' position='left'>
+            <Button onClick={() => this.newFolder()} className='btn-floating btn-small waves-effect waves-light right mbottom white black-text' >
               <i className='material-icons black-text'>folder</i>
             </Button>
           </Tooltip>
@@ -133,12 +145,12 @@ class SurveyIndex extends Component<any> {
         : (
           <div>
             <div className='row'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder}/>)}
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} />)}
             </div>
             <div className='row'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
                 )
               }) }
             </div>

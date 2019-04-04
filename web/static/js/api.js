@@ -185,11 +185,11 @@ export const createFolder = (projectId, name) => {
   return apiPostJSON(`projects/${projectId}/folders`, folderSchema, {folder: {name}})
 }
 
-export const createSurvey = (projectId) => {
+export const createSurvey = (projectId, folderId) => {
   const timezone = getTimezone()
   let data
   if (timezone) {
-    data = {survey: {timezone}}
+    data = {survey: {timezone, folderId: folderId}}
   } else {
     data = null
   }

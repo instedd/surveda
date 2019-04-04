@@ -1,23 +1,20 @@
 // @flow
-import React, { Component, PureComponent, PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { withRouter, Link } from 'react-router'
+import { withRouter } from 'react-router'
 import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
-import { Button } from 'react-materialize'
+import { AddButton, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
-import RespondentsChart from '../respondents/RespondentsChart'
-import SurveyStatus from '../surveys/SurveyStatus'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
 
-class FolderShow extends Component<any> {
+class FolderShow extends Component<any, any> {
   state = {}
   static propTypes = {
     t: PropTypes.func,
@@ -29,10 +26,14 @@ class FolderShow extends Component<any> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired
+    respondentsStats: PropTypes.object.isRequired,
+    params: PropTypes.object,
+    folderId: PropTypes.number,
+    loadingFolder: PropTypes.bool,
+    loadingSurveys: PropTypes.bool
   }
 
-  componentWillMount () {
+  componentWillMount() {
     const { dispatch } = this.props
     const { projectId, folderId } = this.props.params
 
@@ -88,7 +89,7 @@ class FolderShow extends Component<any> {
 
   render() {
     const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
-    if ((!surveys && loadingSurveys) ) {
+    if ((!surveys && loadingSurveys)) {
       return (
         <div>{t('Loading surveys...')}</div>
       )
@@ -162,7 +163,7 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
     totalCount,
     loadingSurveys: state.surveys.fetching,
-    loadingFolder: state.folder.loading,
+    loadingFolder: state.folder.loading
   }
 }
 

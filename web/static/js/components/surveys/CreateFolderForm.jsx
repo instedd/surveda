@@ -8,29 +8,32 @@ class CreateFolderForm extends Component<any> {
   state = { name: '' }
   static propTypes = {
     t: PropTypes.func,
+    dispatch: PropTypes.func,
+    loading: PropTypes.boolean,
+    errors: PropTypes.array,
     onCreate: PropTypes.func,
     onChangeName: PropTypes.func,
     projectId: PropTypes.number
   }
 
-  onChangeName(e){
+  onChangeName(e) {
     this.props.onChangeName(e.target.value)
     this.setState({ name: e.target.value })
   }
 
-  onSubmit (e) {
+  onSubmit(e) {
     e.preventDefault()
 
     const { dispatch, projectId, onCreate } = this.props
     const { name } = this.state
     dispatch(actions.createFolder(projectId, name))
       .then(res => {
-        if (res.errors) return;
+        if (res.errors) return
         onCreate()
       })
   }
 
-  render () {
+  render() {
     const { t, loading, errors } = this.props
     const { name } = this.state
 
@@ -43,10 +46,10 @@ class CreateFolderForm extends Component<any> {
           </Trans>
         </p>
 
-        <ul className="red-text">
+        <ul className='red-text'>
           {(errors['name'] || []).map(error => <li>Name: {error}</li>)}
         </ul>
-        <Input disabled={loading} placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)}/>
+        <Input disabled={loading} placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} />
       </form>
     )
   }

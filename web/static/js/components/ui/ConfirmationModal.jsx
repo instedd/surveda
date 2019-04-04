@@ -17,6 +17,7 @@ type Props = {
   children?: any,
   style?: Object,
   initOptions?: any,
+  disabled: boolean
 };
 
 export class ConfirmationModal extends Component<Props, Props> {
@@ -80,7 +81,7 @@ export class ConfirmationModal extends Component<Props, Props> {
 
     const onConfirmClick = async (e) => {
       e.preventDefault()
-      if (!onConfirm) return;
+      if (!onConfirm) return
       const res = await onConfirm()
       res !== false && this.refs.modal.close()
     }

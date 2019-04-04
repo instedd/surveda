@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react'
 import { Link } from 'react-router'
 import { Tooltip } from '.'
-import { Button } from 'react-materialize'
 
 export const AddButton = ({ text, linkPath, onClick, children }) => {
   const icon = <i className='material-icons'>add</i>

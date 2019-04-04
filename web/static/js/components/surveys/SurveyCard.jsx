@@ -5,7 +5,6 @@ import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
 import * as surveysActions from '../../actions/surveys'
-import * as respondentActions from '../../actions/respondents'
 import { connect } from 'react-redux'
 
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
@@ -16,6 +15,7 @@ import MoveSurveyForm from './MoveSurveyForm'
 class SurveyCard extends Component<any> {
   props: {
     t: Function,
+    dispatch: Function,
     respondentsStats: Object,
     survey: Survey,
     onDelete: (survey: Survey) => void,
@@ -34,8 +34,8 @@ class SurveyCard extends Component<any> {
 
   moveSurvey = () => {
     const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
-    const { t, survey } = this.props
-    const modalText = <MoveSurveyForm defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)}/>
+    const { survey } = this.props
+    const modalText = <MoveSurveyForm defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />
     moveSurveyConfirmationModal.open({
       modalText: modalText,
       onConfirm: () => {
@@ -67,22 +67,8 @@ class SurveyCard extends Component<any> {
     })
   }
 
-
   render() {
-    const { survey, respondentsStats, onDelete, readOnly, t } = this.props
-
-    var deleteButton = null
-    if (survey.state != 'running') {
-      const onDeleteClick = (e) => {
-        e.preventDefault()
-        onDelete(survey)
-      }
-
-      deleteButton = readOnly ? null
-        : <span onClick={onDeleteClick} className='right card-hover grey-text'>
-          <i className='material-icons'>delete</i>
-        </span>
-    }
+    const { survey, respondentsStats, readOnly, t } = this.props
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
@@ -100,7 +86,7 @@ class SurveyCard extends Component<any> {
                 <Link className='grey-text' to={routes.showOrEditSurvey(survey)}>
                   {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
                 </Link>
-                <div className="right">
+                { readOnly || (<div className='right'>
                   <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
                     <DropdownItem className='dots'>
                       <i className='material-icons'>more_vert</i>
@@ -112,7 +98,7 @@ class SurveyCard extends Component<any> {
                       <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
                     </DropdownItem>
                   </Dropdown>
-                </div>
+                </div>) }
               </div>
               <div className='card-chart'>
                 <RespondentsChart cumulativePercentages={cumulativePercentages} />
