@@ -67,7 +67,6 @@ const receive = (state: ListStore<any>, action: ReceiveFilteredItemsAction, filt
 }
 
 const fetch = (state, action, filterProvider) => {
-  console.log(action)
   const newFilter = filterProvider(action)
 
   let newItems = null

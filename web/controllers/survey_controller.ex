@@ -12,9 +12,9 @@ defmodule Ask.SurveyController do
     dynamic = dynamic([s], s.project_id == ^project.id)
     dynamic =
       if is_nil(folder_id) do
-        dynamic([s], is_nil(s.folder_id))
+        dynamic([s], is_nil(s.folder_id) and ^dynamic)
       else
-        dynamic([s], s.folder_id == ^folder_id)
+        dynamic([s], s.folder_id == ^folder_id and ^dynamic)
       end
 
     # Hide simulations from the index
