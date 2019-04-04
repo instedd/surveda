@@ -5,12 +5,19 @@ import * as survey from '../../actions/survey'
 import { Input } from 'react-materialize'
 
 class MoveSurveyForm extends Component<any> {
-  state = { folderId: '' }
   static propTypes = {
     t: PropTypes.func,
     onCreate: PropTypes.func,
     onChangeName: PropTypes.func,
     projectId: PropTypes.number
+  }
+
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      folderId: props.defaultFolderId || ''
+    }
   }
 
   onChangeFolderId(e){
@@ -19,8 +26,8 @@ class MoveSurveyForm extends Component<any> {
   }
 
   render () {
-    const { t, loading, errors, folders, folderId } = this.props
-    const { name } = this.state
+    const { t, loading, errors, folders } = this.props
+    const { name, folderId } = this.state
 
     return (
       <form>
@@ -30,7 +37,7 @@ class MoveSurveyForm extends Component<any> {
           </Trans>
         </p>
 
-        <Input type="select" value={folderId || ''} onChange={e => this.onChangeFolderId(e)}>
+        <Input type="select" value={folderId} onChange={e => this.onChangeFolderId(e)}>
           {[{name: t('No folder'), id: ''}, ...folders].map(({name, id}) => {
             return (
               <option key={`folder-${id}-${name}`} value={id}>

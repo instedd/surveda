@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react'
+import React, { Component } from 'react'
 import { translate, Trans } from 'react-i18next'
 
 import { Link } from 'react-router'
@@ -13,8 +13,7 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
 import MoveSurveyForm from './MoveSurveyForm'
 
-class SurveyCard extends PureComponent<any> {
-  state = { }
+class SurveyCard extends Component<any> {
   props: {
     t: Function,
     respondentsStats: Object,
@@ -23,12 +22,20 @@ class SurveyCard extends PureComponent<any> {
     readOnly: boolean
   };
 
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      folderId: props.survey.folderId || ''
+    }
+  }
+
   changeFolder = (folderId) => this.setState({ folderId })
 
   moveSurvey = () => {
     const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
     const { t, survey } = this.props
-    const modalText = <MoveSurveyForm surveyId={1} folderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)}/>
+    const modalText = <MoveSurveyForm defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)}/>
     moveSurveyConfirmationModal.open({
       modalText: modalText,
       onConfirm: () => {
