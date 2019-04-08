@@ -19,6 +19,12 @@ defmodule Ask.Factory do
     }
   end
 
+  def folder_factory do
+    %Ask.Folder{
+      name: sequence(:folder, &"Folder #{&1}")
+    }
+  end
+
   def project_factory do
     %Ask.Project{
       name: sequence(:project, &"Project #{&1}"),

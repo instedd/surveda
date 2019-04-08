@@ -1,7 +1,7 @@
 // @flow
 import * as actions from '../actions/folder'
 
-export default (state: any, action: any) => {
+export default (state: any = {}, action: any) => {
   switch (action.type) {
     case actions.CREATE_FOLDER:
       return {

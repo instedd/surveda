@@ -54,6 +54,20 @@ defmodule Ask.SurveyControllerTest do
       ]
     end
 
+    test "list only completed surveys with folder_id", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project_id: project.id)
+      insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: "terminated", exit_code: 0, folder_id: folder.id)
+      survey = Survey |> Repo.get(survey.id)
+
+      conn = get conn, project_survey_path(conn, :index, project.id, folder_id: folder.id)
+
+      assert json_response(conn, 200)["data"] == [
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => folder.id}
+      ]
+    end
+
     test "list only completed surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       insert(:survey, project: project, state: "running")

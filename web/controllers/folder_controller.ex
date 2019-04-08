@@ -12,7 +12,7 @@ defmodule Ask.FolderController do
     |> Repo.insert()
     |> case do
       {:ok, folder} ->
-        conn 
+        conn
         |> put_status(:created)
         |> render("show.json", folder: folder)
 
@@ -33,10 +33,9 @@ defmodule Ask.FolderController do
   end
 
   def show(conn, %{"id" => folder_id}) do
-    folder = Folder 
-    |> Repo.get(folder_id)
+    folder = Folder
+    |> Repo.get!(folder_id)
 
-    IO.inspect(folder)
     conn
     |> render("show.json", folder: folder)
   end

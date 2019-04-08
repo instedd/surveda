@@ -46,7 +46,7 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def index(conn, %{"project_id" => _project_id} = params) do
+  def index(conn, %{"project_id" => _} = params) do
     index(conn, Map.merge(params, %{ "folder_id" => nil }))
   end
 
