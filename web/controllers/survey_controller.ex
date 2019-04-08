@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
+  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
   alias Ask.Runtime.Session
   alias Ecto.Multi
 
@@ -162,12 +162,15 @@ defmodule Ask.SurveyController do
       |> assoc(:surveys)
       |> Repo.get!(survey_id)
 
+    old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
+
+    new_folder_name = if folder_id, do: Repo.get(Folder, folder_id).name, else: "No Folder"
+
     result =
       Multi.new()
       |> Multi.update(:set_folder_id, Survey.changeset(survey, %{folder_id: folder_id}))
+      |> Multi.insert(:change_folder_log, ActivityLog.change_folder(project, conn, survey, old_folder_name, new_folder_name))
       |> Repo.transaction()
-      # TODO: add activity log for folder id
-      # |> Multi.insert(:rename_log, ActivityLog.rename_survey(project, conn, survey, survey.name, name))
 
     case result do
       {:ok, _} ->

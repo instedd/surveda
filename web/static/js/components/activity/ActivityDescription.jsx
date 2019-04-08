@@ -41,6 +41,13 @@ class ActivityDescription extends Component {
         switch (activity.action) {
           case 'create':
             return t('Created survey')
+          case 'change_folder':
+            const {oldFolderName, newFolderName} = metadata
+            if (oldFolderName) {
+              return t('Moved <i>{{surveyName}}</i> from folder <i>{{oldFolderName}}</i> to <i>{{newFolderName}}</i>', {surveyName: surveyName, oldFolderName: oldFolderName, newFolderName: newFolderName})
+            } else {
+              return t('Moved <i>{{surveyName}}</i> from folder <i>{{noFolder}}</i> to <i>{{newFolderName}}</i>', {surveyName: surveyName, oldFolderName: oldFolderName, newFolderName: newFolderName})
+            }
           case 'rename':
             const {oldSurveyName, newSurveyName} = metadata
             if (oldSurveyName) {
