@@ -38,7 +38,6 @@ export const RECEIVE_LINK = 'SURVEY_RECEIVE_LINK'
 export const REFRESH_LINK = 'SURVEY_REFRESH_LINK'
 export const DELETE_LINK = 'SURVEY_DELETE_LINK'
 
-// TODO: Include folder id in the creation of the survey
 export const createSurvey = (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId, folderId).then(response => {
     const survey = response.result
