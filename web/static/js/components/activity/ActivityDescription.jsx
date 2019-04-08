@@ -46,7 +46,7 @@ class ActivityDescription extends Component {
             if (oldFolderName) {
               return t('Moved <i>{{surveyName}}</i> from folder <i>{{oldFolderName}}</i> to <i>{{newFolderName}}</i>', {surveyName: surveyName, oldFolderName: oldFolderName, newFolderName: newFolderName})
             } else {
-              return t('Moved <i>{{surveyName}}</i> from folder <i>{{noFolder}}</i> to <i>{{newFolderName}}</i>', {surveyName: surveyName, oldFolderName: oldFolderName, newFolderName: newFolderName})
+              return t('Moved <i>{{surveyName}}</i> from folder <i>No folder</i> to <i>{{newFolderName}}</i>', {surveyName: surveyName, newFolderName: newFolderName})
             }
           case 'rename':
             const {oldSurveyName, newSurveyName} = metadata

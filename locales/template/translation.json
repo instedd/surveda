@@ -229,7 +229,7 @@
   "Move": "",
   "Move survey": "",
   "Move to": "",
-  "Moved <i>{{surveyName}}</i> from folder <i>{{noFolder}}</i> to <i>{{newFolderName}}</i>": "",
+  "Moved <i>{{surveyName}}</i> from folder <i>No folder</i> to <i>{{newFolderName}}</i>": "",
   "Moved <i>{{surveyName}}</i> from folder <i>{{oldFolderName}}</i> to <i>{{newFolderName}}</i>": "",
   "Multi-language questionnaires": "",
   "Multiple choice": "",
