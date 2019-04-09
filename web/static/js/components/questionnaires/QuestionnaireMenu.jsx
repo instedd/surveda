@@ -28,19 +28,15 @@ class QuestionnaireMenu extends Component {
     questionnaireActions.changeName(newName)
   }
 
-  downloadCsv(e) {
-    e.preventDefault()
-
+  buildCsvLink() {
     const { questionnaire } = this.props
 
     const data = csvForTranslation(questionnaire)
     let csvContent = 'data:text/csv;charset=utf-8,'
     csvContent += csvString.stringify(data)
     const encodedUri = encodeURI(csvContent)
-    const a = document.createElement('a')
-    a.href = encodedUri
-    a.download = csvTranslationFilename(questionnaire)
-    a.click()
+
+    return encodedUri
   }
 
   openUploadCsvDialog(e) {
@@ -163,7 +159,7 @@ class QuestionnaireMenu extends Component {
           : ''}
         { !readOnly
           ? <DropdownItem>
-            <a href='#' onClick={e => this.downloadCsv(e)} download={`${questionnaire.name}.csv`}>
+            <a href={this.buildCsvLink()} download={csvTranslationFilename(questionnaire)}>
               <i className='material-icons'>file_download</i>
               <span>{t('Download contents as CSV')}</span>
             </a>
