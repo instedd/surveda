@@ -773,11 +773,30 @@ defmodule Ask.RespondentController do
     tz_offset = Survey.timezone_offset(survey)
     offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
-    csv_rows = (from e in SurveyLogEntry,
-      where: e.survey_id == ^survey.id,
-      order_by: [e.respondent_hashed_number, e.id])
-      |> preload(:channel)
-      |> Repo.stream
+    log_entries = Stream.resource(
+      fn -> {"", 0} end,
+      fn {last_hash, last_id} ->
+        results = (
+          from e in SurveyLogEntry,
+          where: e.survey_id == ^survey.id and (
+            (e.respondent_hashed_number == ^last_hash and e.id > ^last_id) or
+            (e.respondent_hashed_number > ^last_hash)
+          ),
+          order_by: [e.respondent_hashed_number, e.id],
+          limit: 1000,
+          preload: :channel
+        ) |> Repo.all
+
+        case List.last(results) do
+          nil -> {:halt, {last_hash, last_id}}
+          last_entry -> {results, {last_entry.respondent_hashed_number, last_entry.id}}
+        end
+      end,
+      fn _ -> [] end
+    )
+
+    csv_rows =
+      log_entries
       |> Stream.map(fn e ->
         channel_name =
           if e.channel do
@@ -798,8 +817,7 @@ defmodule Ask.RespondentController do
 
     filename = csv_filename(survey, "respondents_interactions")
     ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert
-    {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
-    conn
+    conn |> csv_stream(rows, filename)
   end
 
   defp mask_phone_numbers(respondents) do
