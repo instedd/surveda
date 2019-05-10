@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## Ulmus 0.21.2
+
+## Bugfixes
+
+* Fix slow generation of interactions file [#1455](https://github.com/instedd/surveda/issues/1455)
+* Upgrade timezone library to fix issue with autoupdating of the TZ database
+
 ## Ulmus 0.21.1
 
 ### Bugfixes
