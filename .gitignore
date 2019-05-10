@@ -28,3 +28,4 @@ erl_crash.dump
 .vagrant
 
 /test/tmp/
+.elixir_ls/

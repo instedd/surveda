@@ -178,6 +178,10 @@ defmodule Ask.Runtime.Flow do
     %{flow | current_step: next_step}
   end
 
+  def end_flow(%Flow{has_sections: true} = flow) do
+    {length(steps(flow)), 0}
+  end
+
   def end_flow(flow) do
     length(steps(flow))
   end
