@@ -46,11 +46,11 @@ defmodule Ask.Mixfile do
       {:mock, "~> 0.1.1", only: :test},
       {:timex, "~> 3.0", override: true},
       {:timex_ecto, "~> 3.0", override: true},
-      {:sentry, "~> 5.0"},
+      {:sentry, "~> 6.0"},
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},
       {:deep_merge, "~> 0.1.0"},
-      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2"},
+      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3.2", override: true},
       {:gen_smtp, "~> 0.11"},
       {:xml_builder, "~> 0.0.9"},
       {:language_names, "~> 0.1.0"},
@@ -60,7 +60,8 @@ defmodule Ask.Mixfile do
       {:alto_guisso, git: "https://github.com/instedd/alto_guisso_ex.git"},
       {:pp, "~> 0.1.0", only: [:dev, :test]},
       {:bypass, "~> 0.8", only: :test},
-      {:trailing_format_plug, "~> 0.0.7"}
+      {:trailing_format_plug, "~> 0.0.7"},
+      {:plug_cowboy, "~> 1.0"}
    ]
   end
 

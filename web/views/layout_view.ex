@@ -5,7 +5,7 @@ defmodule Ask.LayoutView do
 
   def config(conn) do
     version = Application.get_env(:ask, :version)
-    sentry_dsn = Application.get_env(:sentry, :public_dsn)
+    sentry_dsn = Sentry.Config.dsn
 
     user_email = case current_user(conn) do
       nil -> nil
