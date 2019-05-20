@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Ulmus 0.21.3
+
+## Bugfixes
+
+* Upgrade hackney library to fix issue with HTTP connections timing out (Guisso)
+
 ## Ulmus 0.21.2
 
 ## Bugfixes
