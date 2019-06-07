@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Ulmus 0.21.4
+
+## Bugfixes
+
+* Fix expired calls not being retried if the status callback was missed
+
 ## Ulmus 0.21.3
 
 ## Bugfixes
