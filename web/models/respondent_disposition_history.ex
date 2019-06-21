@@ -6,6 +6,8 @@ defmodule Ask.RespondentDispositionHistory do
     field :disposition, :string
     field :mode, :string
     belongs_to :respondent, Ask.Respondent
+    belongs_to :survey, Ask.Survey
+    field :respondent_hashed_number, :string
 
     timestamps()
   end
@@ -24,7 +26,10 @@ defmodule Ask.RespondentDispositionHistory do
       %RespondentDispositionHistory{
         respondent: respondent,
         disposition: respondent.disposition,
-        mode: mode}
+        mode: mode,
+        survey_id: respondent.survey_id,
+        respondent_hashed_number: respondent.hashed_number
+      }
       |> Repo.insert!
     end
     respondent

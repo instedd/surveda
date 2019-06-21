@@ -1223,11 +1223,11 @@ defmodule Ask.RespondentControllerTest do
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
-      insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-      insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
 
-      insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
-      insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
 
       conn = get conn, project_survey_respondents_disposition_history_path(conn, :disposition_history, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
@@ -1375,11 +1375,11 @@ defmodule Ask.RespondentControllerTest do
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
-      insert(:respondent_disposition_history, respondent: respondent_1, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-      insert(:respondent_disposition_history, respondent: respondent_1, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
 
-      insert(:respondent_disposition_history, respondent: respondent_2, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
-      insert(:respondent_disposition_history, respondent: respondent_2, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
 
       {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_disposition_history_path(conn, :disposition_history, project, survey, %{"_format" => "csv"}))
 
