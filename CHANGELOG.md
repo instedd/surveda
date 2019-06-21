@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## Ulmus 0.21.5
+
+## Bugfixes
+
+* Fix slow generation of disposition history file
+
 ## Ulmus 0.21.4
 
 ## Bugfixes
