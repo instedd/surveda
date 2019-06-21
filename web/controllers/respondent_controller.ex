@@ -711,18 +711,31 @@ defmodule Ask.RespondentController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
 
+    history = Stream.resource(
+      fn -> 0 end,
+      fn last_id ->
+        results = (
+          from h in RespondentDispositionHistory,
+          where: h.survey_id == ^survey.id and h.id > ^last_id,
+          order_by: h.id,
+          limit: 1000
+        ) |> Repo.all
+
+        case List.last(results) do
+          nil -> {:halt, last_id}
+          last_entry -> {results, last_entry.id}
+        end
+      end,
+      fn _ -> [] end
+    )
+
     tz_offset = Survey.timezone_offset(survey)
-    csv_rows = (from h in RespondentDispositionHistory,
-      join: r in Respondent,
-      where: h.respondent_id == r.id and r.survey_id == ^survey.id,
-      order_by: h.id)
-    |> preload(:respondent)
-    |> Repo.stream
+    offset_seconds = Survey.timezone_offset_in_seconds(survey)
+
+    csv_rows = history
     |> Stream.map(fn history ->
-      date = history.inserted_at
-      |> Survey.adjust_timezone(survey)
-      |> Timex.format!("%Y-%m-%d %H:%M:%S #{tz_offset}", :strftime)
-      [history.respondent.hashed_number, history.disposition, mode_label([history.mode]), date]
+      date = Ask.TimeUtil.format(Ecto.DateTime.cast!(history.inserted_at), offset_seconds, tz_offset)
+      [history.respondent_hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
     header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
@@ -730,8 +743,7 @@ defmodule Ask.RespondentController do
 
     filename = csv_filename(survey, "respondents_disposition_history")
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert
-    {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
-    conn
+    conn |> csv_stream(rows, filename)
   end
 
   def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do

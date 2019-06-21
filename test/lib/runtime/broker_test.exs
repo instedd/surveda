@@ -186,6 +186,8 @@ defmodule Ask.BrokerTest do
 
     history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
+    assert history.survey_id == respondent.survey_id
+    assert history.respondent_hashed_number == respondent.hashed_number
     assert history.disposition == "completed"
     assert history.mode == nil
   end
