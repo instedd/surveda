@@ -1,6 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/survey'
+import * as uiActions from '../../actions/ui'
 import QuotasModal from './QuotasModal'
 import { InputWithLabel } from '../ui'
 import find from 'lodash/find'
@@ -25,12 +26,17 @@ class SurveyWizardCutoffStep extends Component {
     this.toggleCountPartialResults = this.toggleCountPartialResults.bind(this)
   }
 
+  componentWillMount(){
+    const {dispatch, survey} = this.props
+    dispatch(uiActions.surveySetInitialCutOffConfig(survey))
+  }
+
   cutoffChange(e) {
     e.preventDefault()
     const { dispatch } = this.props
     var onlyNumbers = e.target.value.replace(/[^0-9]/g, '')
-    if (parseInt(onlyNumbers) == 0) {
-      dispatch(actions.changeCutoff(null))
+    if (!parseInt(onlyNumbers)) {
+      dispatch(actions.changeCutoff(0))
     } else if (onlyNumbers == e.target.value && onlyNumbers < Math.pow(2, 31) - 1) {
       dispatch(actions.changeCutoff(onlyNumbers))
     }
@@ -96,8 +102,58 @@ class SurveyWizardCutoffStep extends Component {
     )
   }
 
+  bucketsHaveQuotas(quotaBuckets){
+    if(quotaBuckets && quotaBuckets.length > 0) {
+      const quotasSum = quotaBuckets.reduce(function (sum, current) {
+        return sum + current.quota
+      }, 0)
+      return quotasSum == 0
+    }
+     return false
+  }
+
+  quotaErrorMessage(quotaBuckets) {
+    const {t, dispatch, quotaBucketsSum} = this.props
+    const quotasSumZero = this.bucketsHaveQuotas(quotaBuckets)
+    if (quotasSumZero) {
+      return (
+        <div className='row'>
+          <div className='col s12'>
+            <p className='text-error'>
+              {t('All quotas are empty. Increase at least one of them to continue')}
+            </p>
+          </div>
+        </div>
+      )
+    }
+  }
+
+  handleConfigChange(config){
+    const {dispatch, questionnaire, survey} = this.props
+    switch(config){
+      default:
+      case 'default': {
+        dispatch(uiActions.surveySetCutOffConfig(config))
+        dispatch(actions.changeCutoff(null))
+        this.turnOffQuotas()
+        break
+      }
+      case 'cutoff' : {
+        dispatch(actions.changeCutoff(0))
+        dispatch(uiActions.surveySetCutOffConfig(config))
+        this.turnOffQuotas()
+        break
+      }
+      case 'quota' : {
+        dispatch(uiActions.surveySetCutOffConfig(config))
+        this.turnOnQuotas();
+        break
+      }
+    }
+  }
+
   renderWithQuotas() {
-    const { questionnaire, survey, readOnly, t } = this.props
+    const { questionnaire, survey, readOnly, cutOffConfig, t } = this.props
     const hasQuotas = questionnaire && survey.quotas.vars.length > 0
 
     let quotasModal = null
@@ -115,9 +171,10 @@ class SurveyWizardCutoffStep extends Component {
       <div>
         <div className='row quotas'>
           <div className='col s12'>
-            <input type='radio' className='filled-in with-gap' id='set-quotas' checked={hasQuotas} onChange={() => this.turnOnQuotas()} disabled={readOnly} />
+            <input type='radio' className='filled-in with-gap' id='set-quotas' checked={cutOffConfig === 'quota'} onChange={() => this.handleConfigChange('quota')} disabled={readOnly} />
             <label htmlFor='set-quotas'>{t('Quotas for completes')}</label>
             <p className='grey-text'>{t('Quotas allow you to define minimum number of completed results for specific categories such as age or gender.')}</p>
+            {this.quotaErrorMessage(survey.quotas.buckets)}
           </div>
         </div>
         {quotasModal}
@@ -155,13 +212,18 @@ class SurveyWizardCutoffStep extends Component {
         </div>
       )
     }
-
     return (
       <div>
         {this.header()}
         <div className='row'>
           <div className='col s12'>
-            <input type='radio' className='with-gap' id='survey_cutoff' checked={!hasQuotas} onChange={() => this.turnOffQuotas()} disabled={readOnly} />
+            <input type='radio' className='with-gap' id='survey_default_cutoff' disabled={readOnly} checked={cutOffConfig === 'default'} onChange={()=> this.handleConfigChange('default')}/>
+            <label htmlFor='survey_default_cutoff'>{t('No cutoff')}</label>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col s12'>
+            <input type='radio' className='with-gap' id='survey_cutoff' checked={cutOffConfig === 'cutoff'} onChange={() => this.handleConfigChange('cutoff')} disabled={readOnly} />
             <label htmlFor='survey_cutoff'>{t('Number of completes')}</label>
             <div className='input-field inline'>
               <InputWithLabel id='completed-results' value={survey.cutoff || ''} label='' >
@@ -245,4 +307,10 @@ class SurveyWizardCutoffStep extends Component {
   }
 }
 
-export default translate()(connect()(SurveyWizardCutoffStep))
+const mapStateToProps = (state) =>{
+  return({
+    cutOffConfig : state.ui.data.surveyWizard.cutOffConfig
+  })
+}
+
+export default translate()(connect(mapStateToProps)(SurveyWizardCutoffStep))

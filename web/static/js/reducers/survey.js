@@ -211,7 +211,8 @@ const buildBuckets = (storeVars, options) => {
             store: storeVars[0].var,
             value: value
           }
-        ]
+        ],
+        quota: 0
       })
     })
   }))

@@ -67,7 +67,7 @@ defmodule Ask.Survey do
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
-    |> validate_number(:cutoff, greater_than: 0, less_than: @max_int)
+    |> validate_number(:cutoff, greater_than: -1, less_than: @max_int)
     |> translate_quotas
   end
 
@@ -99,7 +99,8 @@ defmodule Ask.Survey do
       comparisons_ready?(changeset) &&
       questionnaires_ready?(changeset) &&
       respondent_groups_ready?(changeset) &&
-      mode_and_questionnaires_ready?(changeset)
+      mode_and_questionnaires_ready?(changeset) &&
+      cutoff_ready?(changeset)
 
     state = get_field(changeset, :state)
 
@@ -173,6 +174,37 @@ defmodule Ask.Survey do
     else
       true
     end
+  end
+
+  def cutoff_ready?(changeset) do
+    quota_buckets = get_field(changeset, :quota_buckets)
+    cutoff = get_field(changeset, :cutoff)
+
+    if quota_buckets && length(quota_buckets) > 0 do
+          sum = quota_buckets
+          |> Enum.map(&Map.get(&1, :quota, 0))
+          |> Enum.filter(& &1)
+          |> Enum.sum
+          sum > 0 && !exists_quota_nil?(quota_buckets)
+    else
+      if Map.has_key?(changeset.changes, :cutoff) do
+        !is_cutoff_zero?(cutoff)
+      else
+        true
+      end
+    end
+  end
+
+  def is_cutoff_zero?(cutoff) do
+    cutoff == 0
+  end
+
+  def exists_quota_nil?(quota_buckets) do
+    quota_count = quota_buckets
+                  |> Enum.map(&Map.get(&1, :quota))
+                  |> Enum.count(&is_nil(&1))
+
+    quota_count > 0
   end
 
   defp respondent_groups_ready?(changeset) do

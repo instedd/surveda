@@ -64,8 +64,32 @@ class SurveyForm extends Component {
           questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
   }
 
+  cutOffConfigValid(cutOffConfig, cutOff, quotaBuckets){
+    let hasQuotas = this.bucketsHaveQuotas(quotaBuckets)
+    switch(cutOffConfig){
+      case 'default':
+        return (cutOff == null || cutOff == 0) && quotaBuckets.length == 0
+      case 'cutoff':
+        return cutOff != null && cutOff != '' && quotaBuckets.length == 0
+      case 'quota':
+        return cutOff == null && quotaBuckets != null && hasQuotas
+    }
+  }
+
+  bucketsHaveQuotas(quotaBuckets){
+    if(quotaBuckets){
+      let quotasSum = quotaBuckets.reduce(function(sum, current){
+        return sum + current.quota}, 0)
+      return quotasSum > 0
+    }
+  }
+
+
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup, errors, questionnaire, readOnly, t } = this.props
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, 
+            invalidRespondents, invalidGroup, errors,
+            questionnaire, readOnly, t,
+            cutOffConfig, cutoff, quotaBuckets } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -73,7 +97,7 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
+    const cutoffStepCompleted = this.cutOffConfigValid(cutOffConfig, cutoff, quotaBuckets)
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
       survey.schedule != null &&
@@ -88,17 +112,18 @@ class SurveyForm extends Component {
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
 
-    const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, modeStepCompleted, scheduleStepCompleted]
+    const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, modeStepCompleted, scheduleStepCompleted, cutoffStepCompleted]
     if (survey.comparisons.length > 0) {
       comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
       mandatorySteps.push(comparisonsStepCompleted)
     }
 
     const numberOfCompletedSteps = mandatorySteps.filter(item => item == true).length
+    const allStepsCompleted = mandatorySteps.filter(item => item == true).length == mandatorySteps.length
     const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
     let launchComponent = null
-    if (survey.state == 'ready' && !readOnly) {
+    if (survey.state == 'ready' && !readOnly && allStepsCompleted) {
       launchComponent = (
         <Tooltip text={t('Launch survey')}>
           <a className='btn-floating btn-large waves-effect waves-light green right mtop' style={{top: '90px', left: '-5%'}} onClick={() => this.launchSurvey()}>
@@ -177,9 +202,14 @@ class SurveyForm extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  surveyId: ownProps.params.surveyId,
-  errors: state.survey.errorsByPath
-})
+const mapStateToProps = (state, ownProps) => {
+  return({
+    surveyId: ownProps.params.surveyId,
+    errors: state.survey.errorsByPath,
+    cutOffConfig: state.ui.data.surveyWizard.cutOffConfig,
+    cutoff: state.survey.data.cutoff,
+    quotaBuckets : state.survey.data.quotas.buckets
+  })
+}
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyForm)))
