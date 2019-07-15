@@ -245,9 +245,7 @@ const comparisonRatioChange = (state, action) => {
 }
 
 const quotaChange = (state, action) => {
-  const bucketIndex = findIndex(state.quotas.buckets, (bucket) =>
-    isEqual(bucket.condition, action.condition)
-  )
+  const bucketIndex = getBucketIndexFromCondition(state.quotas.buckets, action.condition)
   return {
     ...state,
     quotas: {
@@ -263,6 +261,29 @@ const quotaChange = (state, action) => {
     }
   }
 }
+
+const getBucketIndexFromCondition = (buckets, condition) => {
+   return findIndex(buckets, (bucket) => 
+     isEqual(bucket.condition, condition)
+   )
+}
+
+export const getQuotasTotal = (quotaBuckets) => {
+  if(quotaBuckets){
+    let quotasSum = quotaBuckets.reduce(function(sum, current){
+      return sum + parseInt(current.quota)}, 0)
+    return quotasSum
+  }
+}
+
+export const sumQuotasIfValid = (quotaBuckets) => {  
+  const cond = quotaBuckets.condition
+  let quotasSum = getQuotasTotal(quotaBuckets.buckets.filter((bucket) => !isEqual(bucket.condition, cond)))
+  quotasSum += parseInt(quotaBuckets.onlyNumbers)
+  return quotasSum
+}
+
+
 
 export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
   const buckets = survey.quotas.buckets.filter((bucket) => bucket.condition.map((condition) => condition.store).includes(store))

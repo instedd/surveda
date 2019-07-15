@@ -64,32 +64,11 @@ class SurveyForm extends Component {
           questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
   }
 
-  cutOffConfigValid(cutOffConfig, cutOff, quotaBuckets){
-    let hasQuotas = this.bucketsHaveQuotas(quotaBuckets)
-    switch(cutOffConfig){
-      case 'default':
-        return (cutOff == null || cutOff == 0) && quotaBuckets.length == 0
-      case 'cutoff':
-        return cutOff != null && cutOff != '' && quotaBuckets.length == 0
-      case 'quota':
-        return cutOff == null && quotaBuckets != null && hasQuotas
-    }
-  }
-
-  bucketsHaveQuotas(quotaBuckets){
-    if(quotaBuckets){
-      let quotasSum = quotaBuckets.reduce(function(sum, current){
-        return sum + current.quota}, 0)
-      return quotasSum > 0
-    }
-  }
-
-
   render() {
     const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, 
             invalidRespondents, invalidGroup, errors,
             questionnaire, readOnly, t,
-            cutOffConfig, cutoff, quotaBuckets } = this.props
+            cutOffConfigValid } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -97,7 +76,7 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const cutoffStepCompleted = this.cutOffConfigValid(cutOffConfig, cutoff, quotaBuckets)
+    const cutoffStepCompleted = cutOffConfigValid
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
       survey.schedule != null &&
@@ -206,9 +185,7 @@ const mapStateToProps = (state, ownProps) => {
   return({
     surveyId: ownProps.params.surveyId,
     errors: state.survey.errorsByPath,
-    cutOffConfig: state.ui.data.surveyWizard.cutOffConfig,
-    cutoff: state.survey.data.cutoff,
-    quotaBuckets : state.survey.data.quotas.buckets
+    cutOffConfigValid: state.ui.data.surveyWizard.cutOffConfigValid
   })
 }
 

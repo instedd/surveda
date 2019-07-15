@@ -1,6 +1,9 @@
 import * as actions from '../../actions/ui'
 import * as surveyActions from '../../actions/survey'
-import { hasErrorsInLanguage } from '../../questionnaireErrors';
+import {sumQuotasIfValid, getQuotasTotal} from '../survey'
+import { hasErrorsInLanguage} from '../../questionnaireErrors';
+import findIndex from 'lodash/findIndex'
+import isEqual from 'lodash/isEqual'
 
 const initialState = {
   primaryModeSelected: null,
@@ -16,35 +19,72 @@ export default (state = initialState, action) => {
     case actions.SURVEY_ADD_COMPARISON_MODE: return resetMode(state, action)
     case actions.SURVEY_TOGGLE_BLOCKED_DAYS: return toggleBlockedDays(state, action)
     case actions.SURVEY_SET_CUTOFF_CONFIG: return surveyCutOffConfig(state, action)
-    case actions.SURVEY_SET_INITIAL_CUTOFF_CONFIG: return surveyInitialCutOffConfig(state, action)
+    case actions.SET_INITIAL_CUTOFF_CONFIG: return setInitialCutOffConfig(state, action)
+    case actions.SURVEY_CUTOFF_CONFIG_VALID: return surveyCutOffConfigValid(state, action)
     case surveyActions.RECEIVE: return setBlockedDays(state, action)
     default: return state
   }
 }
 
 const surveyCutOffConfig = (state, action) => {
+  const cutOffConfigValid = action.config == 'default'  
   return {
     ...state,
-    cutOffConfig: action.config
+    cutOffConfig: action.config, 
+    cutOffConfigValid
   }
 }
 
-const surveyInitialCutOffConfig = (state, action) => {
+const surveyCutOffConfigValid = (state, action) => {
+  let cutOffConfigValid = false
+  let quotasSum;
+  switch(action.config){
+    case 'cutoff':
+      cutOffConfigValid = action.nextValue > 0
+      break
+    case 'quota':
+      quotasSum  = sumQuotasIfValid(action.nextValue)
+      cutOffConfigValid = quotasSum > 0
+      break
+  }
+
+  return {
+    ...state, 
+    cutOffConfigValid,
+    quotasSum
+  }
+}
+
+
+const setInitialCutOffConfig = (state, action) => {
+
   const survey = action.survey
   const hasQuotaBuckets = survey.quotas.buckets.length > 0
-  const hasCutoff = survey.cutoff != null && survey.cutoff != '' && !hasQuotaBuckets
+  const hasCutoff = survey.cutoff != null && survey.cutoff != '' && !hasQuotaBuckets 
+  let cutOffConfigValid = true
+  let quotasSum;
+
   if(hasQuotaBuckets){
     initialState.cutOffConfig = 'quota'
+    quotasSum = getQuotasTotal(survey.quotas.buckets)
+    if(!hasQuotaBuckets || !quotasSum){
+      cutOffConfigValid = false
+    }
   }
   else{
     if(hasCutoff){
       initialState.cutOffConfig = 'cutoff'
+      if(survey.cutoff <= 0){
+        cutOffConfigValid = false
+      }
     }
   }
 
   return {
     ...state,
-    cutOffConfig: initialState.cutOffConfig
+    cutOffConfig: initialState.cutOffConfig,
+    cutOffConfigValid,
+    quotasSum
   }
 }
 
