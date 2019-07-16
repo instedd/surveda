@@ -549,7 +549,7 @@ defmodule Ask.RespondentController do
           where: ^dynamic,
           order_by: r2.id,
           limit: 1000,
-          preload: :responses,
+          preload: [:responses, :respondent_group],
           select: r1
         ) |> Repo.all;
 
@@ -606,6 +606,7 @@ defmodule Ask.RespondentController do
     # Now traverse each respondent and create a row for it
     csv_rows = respondents
     |> Stream.map(fn respondent ->
+
         row = [respondent.hashed_number]
         responses = respondent.responses
 
@@ -628,6 +629,10 @@ defmodule Ask.RespondentController do
         |> Enum.join(", ")
 
         row = row ++ [modes]
+
+        respondent_group = respondent.respondent_group.name
+
+        row = row ++ [respondent_group]
 
         # We traverse all fields and see if there's a response for this respondent
         row = all_fields |> Enum.reduce(row, fn field_name, acc ->
@@ -679,7 +684,7 @@ defmodule Ask.RespondentController do
     end)
 
     # Add header to csv_rows
-    header = ["Respondent ID", "Date", "Modes"]
+    header = ["Respondent ID", "Date", "Modes", "Sample File"]
     header = header ++ all_fields
     header = if has_comparisons do
       header ++ ["Variant"]
