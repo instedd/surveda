@@ -606,7 +606,6 @@ defmodule Ask.RespondentController do
     # Now traverse each respondent and create a row for it
     csv_rows = respondents
     |> Stream.map(fn respondent ->
-
         row = [respondent.hashed_number]
         responses = respondent.responses
 

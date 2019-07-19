@@ -940,11 +940,20 @@ defmodule Ask.RespondentControllerTest do
       group_2 = insert(:respondent_group, name: "respondent_group_2_example.csv")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], respondent_group: group_2, stats: %Stats{total_sent_sms: 1})
       insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+      respondent_3 = insert(:respondent, survey: survey, hashed_number: "1hsd13451ftj", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
+      insert(:response, respondent: respondent_3, field_name: "Smokes", value: "Yes")
+      insert(:response, respondent: respondent_3, field_name: "Exercises", value: "No")
+      respondent_4 = insert(:respondent, survey: survey, hashed_number: "67y5634tjsdfg", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_2, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
+      insert(:response, respondent: respondent_4, field_name: "Smokes", value: "Yes")
+      insert(:response, respondent: respondent_4, field_name: "Exercises", value: "No")
 
       conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
       csv = response(conn, 200)
 
-      [line1, line2, line3, _] = csv |> String.split("\r\n")
+      assert !String.contains?(group_1.name, [" ", ",", "*", ":","?", "\\", "|", "/", "<", ">"])
+      assert !String.contains?(group_2.name, [" ", ",", "*", ":","?", "\\", "|", "/", "<", ">"])
+
+      [line1, line2, line3, line4, line5, _] = csv |> String.split("\r\n")
       assert line1 == "Respondent ID,Date,Modes,Sample File,Smokes,Exercises,Perfect Number,Question,Disposition,Total sent SMS,Total received SMS,Total call time"
 
       [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, _, _, _, _, _, _, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
@@ -957,6 +966,17 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_hashed_number == respondent_2.hashed_number
       assert line_3_modes == "Mobile Web"
       assert line_3_respondent_group == group_2.name
+
+      [line_4_hashed_number, _, line_4_modes, line_4_respondent_group,_, _, _, _, _, _, _, _] = [line4]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      assert line_4_hashed_number == respondent_3.hashed_number
+      assert line_4_modes == "SMS, Phone call"
+      assert line_4_respondent_group == group_1.name
+
+      [line_5_hashed_number, _, line_5_modes, line_5_respondent_group,_, _, _, _, _, _, _, _] = [line5]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      assert line_5_hashed_number == respondent_4.hashed_number
+      assert line_5_modes == "SMS, Phone call"
+      assert line_5_respondent_group == group_2.name
+
     end
 
     test "download results json", %{conn: conn, user: user} do
