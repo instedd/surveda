@@ -4,6 +4,7 @@ import assert from 'assert'
 import reducer from '../../../web/static/js/reducers/ui'
 import { playActionsFromState } from '../spec_helper'
 import * as actions from '../../../web/static/js/actions/ui'
+import { survey } from '../fixtures'
 
 describe('ui reducer', () => {
   const initialState = reducer(undefined, {})
@@ -30,10 +31,31 @@ describe('ui reducer', () => {
         surveyWizard: {
           primaryModeSelected: null,
           fallbackModeSelected: null,
-          allowBlockedDays: false
+          allowBlockedDays: false,
+          cutOffConfig: 'default'
         }
       }
     })
+  })
+
+  it('should set initialCutOffConfig for survey', () => {
+    const playActions = playActionsFromState(initialState, reducer)
+    const result = playActions([actions.setInitialCutOffConfig(survey)])
+    expect(result.data.surveyWizard.cutOffConfig).toEqual('cutoff') 
+    expect(result.data.surveyWizard.cutOffConfigValid).toEqual(true)
+  })
+
+  it('should set cutOffConfigValid for survey', () => {
+    const playActions = playActionsFromState(initialState, reducer)
+    const result = playActions([actions.surveyCutOffConfigValid('cutoff', survey.cutoff)]) 
+    expect(result.data.surveyWizard.cutOffConfigValid).toEqual(true)
+  })
+
+  it('should set cutOffConfig for default option', () => {
+    const playActions = playActionsFromState(initialState, reducer)
+    const result = playActions([actions.surveySetCutOffConfig('default')])
+    expect(result.data.surveyWizard.cutOffConfig).toEqual('default') 
+    expect(result.data.surveyWizard.cutOffConfigValid).toEqual(true)
   })
 
   it('should set uploadingAudio', () => {
