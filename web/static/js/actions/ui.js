@@ -26,7 +26,6 @@ export const surveyCutOffConfigValid = (config: string, nextValue) => ({
   nextValue
 })
 
-
 export const surveySetCutOffConfig = (config: string) => ({
   type: SURVEY_SET_CUTOFF_CONFIG,
   config

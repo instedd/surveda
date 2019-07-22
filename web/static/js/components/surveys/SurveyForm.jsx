@@ -33,7 +33,8 @@ class SurveyForm extends Component {
     invalidGroup: PropTypes.bool,
     channels: PropTypes.object,
     errors: PropTypes.object,
-    readOnly: PropTypes.bool.isRequired
+    readOnly: PropTypes.bool.isRequired,
+    cutOffConfigValid: PropTypes.bool
   }
 
   componentDidMount() {
@@ -65,10 +66,8 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, 
-            invalidRespondents, invalidGroup, errors,
-            questionnaire, readOnly, t,
-            cutOffConfigValid } = this.props
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting,
+            invalidRespondents, invalidGroup, errors, questionnaire, readOnly, t, cutOffConfigValid } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -182,7 +181,7 @@ class SurveyForm extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  return({
+  return ({
     surveyId: ownProps.params.surveyId,
     errors: state.survey.errorsByPath,
     cutOffConfigValid: state.ui.data.surveyWizard.cutOffConfigValid

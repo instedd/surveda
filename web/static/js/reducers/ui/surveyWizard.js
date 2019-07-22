@@ -1,9 +1,6 @@
 import * as actions from '../../actions/ui'
 import * as surveyActions from '../../actions/survey'
-import {sumQuotasIfValid, getQuotasTotal} from '../survey'
-import { hasErrorsInLanguage} from '../../questionnaireErrors';
-import findIndex from 'lodash/findIndex'
-import isEqual from 'lodash/isEqual'
+import { sumQuotasIfValid, getQuotasTotal } from '../survey'
 
 const initialState = {
   primaryModeSelected: null,
@@ -27,54 +24,50 @@ export default (state = initialState, action) => {
 }
 
 const surveyCutOffConfig = (state, action) => {
-  const cutOffConfigValid = action.config == 'default'  
+  const cutOffConfigValid = action.config == 'default'
   return {
     ...state,
-    cutOffConfig: action.config, 
+    cutOffConfig: action.config,
     cutOffConfigValid
   }
 }
 
 const surveyCutOffConfigValid = (state, action) => {
   let cutOffConfigValid = false
-  let quotasSum;
-  switch(action.config){
+  let quotasSum
+  switch (action.config) {
     case 'cutoff':
       cutOffConfigValid = action.nextValue > 0
       break
     case 'quota':
-      quotasSum  = sumQuotasIfValid(action.nextValue)
+      quotasSum = sumQuotasIfValid(action.nextValue.condition, action.nextValue.buckets, action.nextValue.onlyNumbers)
       cutOffConfigValid = quotasSum > 0
       break
   }
 
   return {
-    ...state, 
+    ...state,
     cutOffConfigValid,
     quotasSum
   }
 }
 
-
 const setInitialCutOffConfig = (state, action) => {
-
   const survey = action.survey
   const hasQuotaBuckets = survey.quotas.buckets.length > 0
-  const hasCutoff = survey.cutoff != null && survey.cutoff != '' && !hasQuotaBuckets 
+  const hasCutoff = survey.cutoff != null && survey.cutoff != '' && !hasQuotaBuckets
   let cutOffConfigValid = true
-  let quotasSum;
-
-  if(hasQuotaBuckets){
+  let quotasSum
+  if (hasQuotaBuckets) {
     initialState.cutOffConfig = 'quota'
     quotasSum = getQuotasTotal(survey.quotas.buckets)
-    if(!hasQuotaBuckets || !quotasSum){
+    if (!hasQuotaBuckets || !quotasSum) {
       cutOffConfigValid = false
     }
-  }
-  else{
-    if(hasCutoff){
+  } else {
+    if (hasCutoff) {
       initialState.cutOffConfig = 'cutoff'
-      if(survey.cutoff <= 0){
+      if (survey.cutoff <= 0) {
         cutOffConfigValid = false
       }
     }

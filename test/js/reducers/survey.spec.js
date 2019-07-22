@@ -319,14 +319,14 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Gender', 'Exercises'],
           buckets: [
-            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}], 'quota' : 0},
-            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}], 'quota' : 0}
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Male'}, {store: 'Smokes', value: 'No'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'Yes'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}], 'quota': 0},
+            {'condition': [{store: 'Exercises', value: 'No'}, {store: 'Gender', value: 'Female'}, {store: 'Smokes', value: 'No'}], 'quota': 0}
           ]
         }
       }
@@ -367,8 +367,8 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes'],
           buckets: [
-            {'condition': [{store: 'Smokes', value: 'Yes'}], 'quota' : 0},
-            {'condition': [{store: 'Smokes', value: 'No'}], 'quota' : 0}
+            {'condition': [{store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Smokes', value: 'No'}], 'quota': 0}
           ]
         }
       }

@@ -41,20 +41,20 @@ describe('ui reducer', () => {
   it('should set initialCutOffConfig for survey', () => {
     const playActions = playActionsFromState(initialState, reducer)
     const result = playActions([actions.setInitialCutOffConfig(survey)])
-    expect(result.data.surveyWizard.cutOffConfig).toEqual('cutoff') 
+    expect(result.data.surveyWizard.cutOffConfig).toEqual('cutoff')
     expect(result.data.surveyWizard.cutOffConfigValid).toEqual(true)
   })
 
   it('should set cutOffConfigValid for survey', () => {
     const playActions = playActionsFromState(initialState, reducer)
-    const result = playActions([actions.surveyCutOffConfigValid('cutoff', survey.cutoff)]) 
+    const result = playActions([actions.surveyCutOffConfigValid('cutoff', survey.cutoff)])
     expect(result.data.surveyWizard.cutOffConfigValid).toEqual(true)
   })
 
   it('should set cutOffConfig for default option', () => {
     const playActions = playActionsFromState(initialState, reducer)
     const result = playActions([actions.surveySetCutOffConfig('default')])
-    expect(result.data.surveyWizard.cutOffConfig).toEqual('default') 
+    expect(result.data.surveyWizard.cutOffConfig).toEqual('default')
     expect(result.data.surveyWizard.cutOffConfigValid).toEqual(true)
   })
 
