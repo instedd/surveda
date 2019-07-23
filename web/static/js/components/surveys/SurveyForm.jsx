@@ -33,7 +33,8 @@ class SurveyForm extends Component {
     invalidGroup: PropTypes.bool,
     channels: PropTypes.object,
     errors: PropTypes.object,
-    readOnly: PropTypes.bool.isRequired
+    readOnly: PropTypes.bool.isRequired,
+    cutOffConfigValid: PropTypes.bool
   }
 
   componentDidMount() {
@@ -65,7 +66,8 @@ class SurveyForm extends Component {
   }
 
   render() {
-    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup, errors, questionnaire, readOnly, t } = this.props
+    const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting,
+            invalidRespondents, invalidGroup, errors, questionnaire, readOnly, t, cutOffConfigValid } = this.props
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -73,7 +75,7 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const cutoffStepCompleted = survey.cutoff != null && survey.cutoff != ''
+    const cutoffStepCompleted = cutOffConfigValid
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
       survey.schedule != null &&
@@ -88,17 +90,18 @@ class SurveyForm extends Component {
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
 
-    const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, modeStepCompleted, scheduleStepCompleted]
+    const mandatorySteps = [questionnaireStepCompleted, respondentsStepCompleted, modeStepCompleted, scheduleStepCompleted, cutoffStepCompleted]
     if (survey.comparisons.length > 0) {
       comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
       mandatorySteps.push(comparisonsStepCompleted)
     }
 
     const numberOfCompletedSteps = mandatorySteps.filter(item => item == true).length
+    const allStepsCompleted = mandatorySteps.filter(item => item == true).length == mandatorySteps.length
     const percentage = `${(100 / mandatorySteps.length * numberOfCompletedSteps).toFixed(0)}%`
 
     let launchComponent = null
-    if (survey.state == 'ready' && !readOnly) {
+    if (survey.state == 'ready' && !readOnly && allStepsCompleted) {
       launchComponent = (
         <Tooltip text={t('Launch survey')}>
           <a className='btn-floating btn-large waves-effect waves-light green right mtop' style={{top: '90px', left: '-5%'}} onClick={() => this.launchSurvey()}>
@@ -177,9 +180,12 @@ class SurveyForm extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  surveyId: ownProps.params.surveyId,
-  errors: state.survey.errorsByPath
-})
+const mapStateToProps = (state, ownProps) => {
+  return ({
+    surveyId: ownProps.params.surveyId,
+    errors: state.survey.errorsByPath,
+    cutOffConfigValid: state.ui.data.surveyWizard.cutOffConfigValid
+  })
+}
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyForm)))

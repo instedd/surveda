@@ -16,6 +16,25 @@ export const QUESTIONNAIRE_DESELECT_STEP = 'QUESTIONNAIRE_DESELECT_STEP'
 export const QUESTIONNAIRE_SELECT_STEP = 'QUESTIONNAIRE_SELECT_STEP'
 export const QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_SELECT_QUOTA_COMPLETED_STEP'
 export const QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_DESELECT_QUOTA_COMPLETED_STEP'
+export const SURVEY_SET_CUTOFF_CONFIG = 'SURVEY_SET_CUTOFF_CONFIG'
+export const SET_INITIAL_CUTOFF_CONFIG = 'SET_INITIAL_CUTOFF_CONFIG'
+export const SURVEY_CUTOFF_CONFIG_VALID = 'SURVEY_CUTOFF_CONFIG_VALID'
+
+export const surveyCutOffConfigValid = (config: string, nextValue) => ({
+  type: SURVEY_CUTOFF_CONFIG_VALID,
+  config,
+  nextValue
+})
+
+export const surveySetCutOffConfig = (config: string) => ({
+  type: SURVEY_SET_CUTOFF_CONFIG,
+  config
+})
+
+export const setInitialCutOffConfig = (survey) => ({
+  type: SET_INITIAL_CUTOFF_CONFIG,
+  survey
+})
 
 export const uploadAudio = (stepId) => ({
   type: UPLOAD_AUDIO,
