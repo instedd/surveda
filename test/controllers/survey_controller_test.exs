@@ -669,11 +669,11 @@ defmodule Ask.SurveyControllerTest do
     test "rejects update with correct error when cutoff field is greater than the max value", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
-      max_int = 2147483648
+      max_int = 2147483647
 
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: Map.merge(@valid_attrs, %{cutoff: max_int})
 
-      assert json_response(conn, 422)["errors"] != %{cutoff: "must be less than #{max_int}"}
+      assert json_response(conn, 422)["errors"] == %{"cutoff" => ["must be less than #{max_int}"]}
     end
 
     test "rejects update with correct error when cutoff field is less than -1", %{conn: conn, user: user} do
@@ -682,7 +682,7 @@ defmodule Ask.SurveyControllerTest do
 
       conn = put conn, project_survey_path(conn, :update, survey.project, survey), survey: Map.merge(@valid_attrs, %{cutoff: -1})
 
-      assert json_response(conn, 422)["errors"] != %{cutoff: "must be greater than -1"}
+      assert json_response(conn, 422)["errors"] == %{"cutoff" => ["must be greater than or equal to 0"]}
     end
 
     test "updates project updated_at when survey is updated", %{conn: conn, user: user}  do
