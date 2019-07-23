@@ -67,7 +67,7 @@ defmodule Ask.Survey do
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
-    |> validate_number(:cutoff, greater_than: -1, less_than: @max_int)
+    |> validate_number(:cutoff, greater_than_or_equal_to: 0, less_than: @max_int)
     |> translate_quotas
   end
 
