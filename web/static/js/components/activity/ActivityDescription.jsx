@@ -95,6 +95,7 @@ class ActivityDescription extends Component {
         }
       case 'questionnaire':
         const questionnaireName = metadata['questionnaireName'] || t('Untitled questionnaire')
+        const sectionTitle = metadata['sectionTitle'] || t('Untitled questionnaire section')
         const stepTitle = metadata['stepTitle'] || t('Untitled question')
         switch (activity.action) {
           case 'create':
@@ -128,6 +129,16 @@ class ActivityDescription extends Component {
             return t('Removed step <i>{{stepTitle}}</i> from <i>{{questionnaireName}}</i>', {questionnaireName, stepTitle})
           case 'edit_settings':
             return t('Edited settings on <i>{{questionnaireName}}</i>', {questionnaireName})
+          case 'create_section':
+            return t('Added section <i>{{sectionTitle}}</i> to <i>{{questionnaireName}}</i>', {sectionTitle, questionnaireName})
+          case 'delete_section':
+            return t('Removed section <i>{{sectionTitle}}</i> from <i>{{questionnaireName}}</i>', {sectionTitle, questionnaireName})
+          case 'edit_section':
+            return t('Edited section <i>{{sectionTitle}}</i> of <i>{{questionnaireName}}</i>', {sectionTitle, questionnaireName})
+          case 'rename_section':
+            const oldSectionTitle = metadata['oldSectionTitle'] || t('Untitled section')
+            const newSectionTitle = metadata['newSectionTitle'] || t('Untitled section')
+            return t('Section <i>{{oldSectionTitle}}</i> of <i>{{questionnaireName}}</i> renamed to <i>{{newSectionTitle}}</i>', {oldSectionTitle, questionnaireName, newSectionTitle})
         }
         break
       default:
