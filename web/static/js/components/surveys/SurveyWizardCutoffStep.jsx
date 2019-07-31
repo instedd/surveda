@@ -236,7 +236,6 @@ class SurveyWizardCutoffStep extends Component {
               </InputWithLabel>
             </div>
           </div>
-          {partialsForCutoff}
         </div>
         {quotasForCompletes}
         { survey.quotas.buckets
@@ -255,6 +254,7 @@ class SurveyWizardCutoffStep extends Component {
           )
           : ''
         }
+        {partialsForCutoff}
         {partialsForQuotas}
       </div>
     )
