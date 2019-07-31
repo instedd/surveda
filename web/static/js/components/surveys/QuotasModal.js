@@ -30,6 +30,7 @@ class QuotasModal extends Component {
   }
 
   onSubmit(e) {
+    e.preventDefault()
     const selectedVars = map(filter(Object.keys(this.state.buckets), value =>
       this.state.buckets[value].checked
     ), (quotaVar) => ({
