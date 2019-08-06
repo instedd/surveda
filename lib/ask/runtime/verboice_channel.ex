@@ -340,20 +340,13 @@ defmodule Ask.Runtime.VerboiceChannel do
   def check_status(
     %{
       "status" => %{
-        "ok" => true,
-        "messages" => nil
-      }
-    }
-  ), do: :up
-
-  def check_status(
-    %{
-      "status" => %{
         "ok" => false,
         "messages" => messages
       }
     }
   ), do: {:down, messages}
+
+  def check_status(%{"enabled" => false}), do: {:down, ["Channel is disabled"]}
 
   def check_status(_), do: :up
 
