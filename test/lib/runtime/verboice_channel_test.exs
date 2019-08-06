@@ -546,6 +546,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       }
     }) == {:down, ["NOT FOUND"]}
 
+    assert VerboiceChannel.check_status(%{
+      "enabled" => false
+    }) == {:down, ["Channel is disabled"]}
+
     # :status should be :up when not receiving status information
     assert VerboiceChannel.check_status(%{}) == :up
   end
