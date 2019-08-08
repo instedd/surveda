@@ -430,6 +430,21 @@ defmodule Ask.SurveyControllerTest do
       assert Repo.get_by(Survey, %{project_id: project.id})
     end
 
+    test "creates the survey inside the requested folder", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project_id: project.id)
+
+      conn = post conn, project_folder_survey_path(conn, :create, project.id, folder.id)
+
+      assert json_response(conn, 201)["data"]["id"]
+      survey = Repo.get_by(Survey, %{project_id: project.id})
+      assert survey
+
+      %{folder_id: folder_id, project_id: project_id} = survey
+      assert folder_id == folder.id
+      assert project_id == project.id
+    end
+
     test "forbids creation of survey for a project that belongs to another user", %{conn: conn} do
       project = insert(:project)
 

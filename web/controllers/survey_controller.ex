@@ -50,7 +50,9 @@ defmodule Ask.SurveyController do
     index(conn, Map.merge(params, %{ "folder_id" => nil }))
   end
 
-  def create(conn, params = %{"project_id" => project_id}) do
+  def create(conn, params = %{"folder_id" => folder_id}), do: create(conn, params, folder_id)
+
+  def create(conn, params = %{"project_id" => project_id}, folder_id  \\ nil) do
     project = conn
     |> load_project_for_change(project_id)
     |> validate_project_not_archived(conn)
@@ -59,6 +61,7 @@ defmodule Ask.SurveyController do
     timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())
     schedule = Map.merge(Ask.Schedule.default(), %{timezone: timezone})
     props = %{"project_id" => project_id,
+              "folder_id" => folder_id,
               "name" => "",
               "schedule" => schedule}
 
