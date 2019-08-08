@@ -1,26 +1,43 @@
 # InSTEDD Surveda Changelog
 
+## Viburnum 0.22
+
+### Features
+
+* Stricter selection of Nuntium channel [#1428](https://github.com/instedd/surveda/issues/1428)
+* Alert to project admins when a channel is down [#1449](https://github.com/instedd/surveda/issues/1449)
+* Include sample file name in respondents file [#1394](https://github.com/instedd/surveda/issues/1394)
+* Remove whitespaces from respondents CSV column names [#1401](https://github.com/instedd/surveda/issues/1401)
+
+### Bugfixes
+
+* Activity log doesn't include entries regarding the questionnaire sections [#1419](https://github.com/instedd/surveda/issues/1419)
+* Questionnaire CSV cannot be downloaded with Firefox [#1446](https://github.com/instedd/surveda/issues/1446)
+* Some languages can't be found when uploading the translation CSV [#1423](https://github.com/instedd/surveda/issues/1423)
+* When a quota is set to zero, cases are not rejected [#1470](https://github.com/instedd/surveda/issues/1470)
+* Navigation alert when setting quotas [#1479](https://github.com/instedd/surveda/issues/1479)
+
 ## Ulmus 0.21.5
 
-## Bugfixes
+### Bugfixes
 
 * Fix slow generation of disposition history file
 
 ## Ulmus 0.21.4
 
-## Bugfixes
+### Bugfixes
 
 * Fix expired calls not being retried if the status callback was missed
 
 ## Ulmus 0.21.3
 
-## Bugfixes
+### Bugfixes
 
 * Upgrade hackney library to fix issue with HTTP connections timing out (Guisso)
 
 ## Ulmus 0.21.2
 
-## Bugfixes
+### Bugfixes
 
 * Fix slow generation of interactions file [#1455](https://github.com/instedd/surveda/issues/1455)
 * Upgrade timezone library to fix issue with autoupdating of the TZ database
