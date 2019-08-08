@@ -436,8 +436,9 @@ defmodule Ask.SurveyControllerTest do
 
       conn = post conn, project_folder_survey_path(conn, :create, project.id, folder.id)
 
-      assert json_response(conn, 201)["data"]["id"]
-      survey = Repo.get_by(Survey, %{project_id: project.id})
+      survey_id = json_response(conn, 201)["data"]["id"]
+      assert survey_id
+      survey = Repo.get_by(Survey, %{id: survey_id})
       assert survey
 
       %{folder_id: folder_id, project_id: project_id} = survey
