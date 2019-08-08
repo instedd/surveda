@@ -14,7 +14,7 @@ class ChannelStatus extends Component {
     let info
     switch (statusInfo.status) {
       case 'down':
-        if (statusInfo.messages && statusInfo.messages.trim() !== '') info = ` (${statusInfo.messages}) `
+        if (statusInfo.messages && statusInfo.messages.length > 0) info = ` (${statusInfo.messages.join(', ')}) `
         break
       case 'error':
         info = ` (code ${statusInfo.code}) `
