@@ -495,6 +495,8 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
+  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
+
   def results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = conn
     |> load_project(project_id)
@@ -512,7 +514,7 @@ defmodule Ask.RespondentController do
     # We first need to get all unique field names in all questionnaires
     all_fields = questionnaires
     |> Enum.flat_map(&Questionnaire.variables/1)
-    |> Enum.map(fn s -> s |> String.trim() |> String.replace(" ", "_") end)
+    |> Enum.map(fn s -> s |> sanitize_varible_name end)
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
@@ -636,7 +638,7 @@ defmodule Ask.RespondentController do
         # We traverse all fields and see if there's a response for this respondent
         row = all_fields |> Enum.reduce(row, fn field_name, acc ->
           response = responses
-          |> Enum.filter(fn response -> response.field_name == field_name end)
+          |> Enum.filter(fn response -> response.field_name |> sanitize_varible_name == field_name end)
           case response do
             [resp] ->
               value = resp.value
