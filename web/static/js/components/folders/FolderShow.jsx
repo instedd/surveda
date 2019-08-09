@@ -34,8 +34,7 @@ class FolderShow extends Component<any, any> {
   }
 
   componentWillMount() {
-    const { dispatch } = this.props
-    const { projectId, folderId } = this.props.params
+    const { dispatch, projectId, folderId } = this.props
 
     dispatch(projectActions.fetchProject(projectId, folderId))
 
@@ -52,7 +51,8 @@ class FolderShow extends Component<any, any> {
   }
 
   newSurvey() {
-    const { dispatch, projectId, router, folderId } = this.props
+    const { dispatch, router, projectId, folderId } = this.props
+
     dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
       router.push(routes.surveyEdit(projectId, survey))
     )
@@ -105,7 +105,7 @@ class FolderShow extends Component<any, any> {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text={t('Add Project')} onClick={() => this.newSurvey()} />
+        <AddButton text={t('Add survey')} onClick={() => this.newSurvey()} />
       )
     }
 
@@ -113,7 +113,7 @@ class FolderShow extends Component<any, any> {
       <div>
         {addButton}
         { (surveys && surveys.length == 0)
-        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
+        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys in this folder')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : (
           <div>
             <div className='row'>
@@ -155,6 +155,7 @@ const mapStateToProps = (state, ownProps) => {
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
   return {
     projectId: ownProps.params.projectId,
+    folderId: ownProps.params.folderId,
     project: state.project.data,
     surveys,
     channels: state.channels.items,
