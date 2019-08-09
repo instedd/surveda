@@ -216,9 +216,23 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
 .folder-card {
   .card-content {
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
     i {
       padding-right: 10px;
+    }
+
+    .options {
+      height: 1.8rem;
+      width: 1rem;
+    }
+
+    .folder-card-title {
+      @extend .black-text;
+      display: flex;
+      width: 100%;
     }
   }
 }
@@ -228,6 +242,14 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
 .survey-card .card {
   @extend .black-text;
   padding: 0px;
+
+  .survey-card-status {
+    @extend .grey-text;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   .card-chart {
     margin: 30px 0 20px;
 
@@ -263,7 +285,7 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
     margin-bottom: 20px;
   }
   .card-content {
-    padding: 30px 0 0;
+    padding: $card-padding 0;
     > div {
       padding-left: 30px;
       padding-right: 30px;
@@ -1365,6 +1387,10 @@ body.bdfh {
 
 // ----- Three dots option menu next to Tabs ------
 .options {
+
+  height: 2.2rem;
+  width: 1rem;
+
   i.material-icons {
     @extend .grey-text;
     height: 45px;

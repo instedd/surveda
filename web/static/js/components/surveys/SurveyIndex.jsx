@@ -145,7 +145,7 @@ class SurveyIndex extends Component<any, State> {
         : (
           <div>
             <div className='row'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} />)}
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} />)}
             </div>
             <div className='row'>
               { surveys && surveys.map(survey => {
