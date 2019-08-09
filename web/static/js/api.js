@@ -193,7 +193,8 @@ export const createSurvey = (projectId, folderId) => {
   } else {
     data = null
   }
-  return apiPostJSON(`projects/${projectId}/surveys`, surveySchema, data)
+  let folderPath = folderId ? `/folders/${folderId}` : ''
+  return apiPostJSON(`projects/${projectId}${folderPath}/surveys`, surveySchema, data)
 }
 
 export const deleteSurvey = (projectId, survey) => {
