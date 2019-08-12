@@ -9,7 +9,7 @@ import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
 import { Button } from 'react-materialize'
-import FolderCard from '../projects/FolderCard'
+import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
@@ -93,6 +93,11 @@ class SurveyIndex extends Component<any, State> {
     })
   }
 
+  deleteFolder = (id) => {
+    const { dispatch, projectId } = this.props
+    dispatch(folderActions.deleteFolder(projectId, id))
+  }
+
   nextPage() {
     const { dispatch } = this.props
     dispatch(actions.nextSurveysPage())
@@ -145,7 +150,7 @@ class SurveyIndex extends Component<any, State> {
         : (
           <div>
             <div className='row'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} />)}
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} />)}
             </div>
             <div className='row'>
               { surveys && surveys.map(survey => {

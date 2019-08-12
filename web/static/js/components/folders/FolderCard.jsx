@@ -9,10 +9,12 @@ class FolderCard extends PureComponent {
     projectId: PropTypes.number,
     id: PropTypes.number,
     name: PropTypes.string,
-    t: PropTypes.func
+    t: PropTypes.func,
+    onDelete: Function
   }
   render() {
-    const { name, projectId, id, t } = this.props
+    const { name, projectId, id, t, onDelete } = this.props
+
     return (
       <div className='col s12 m6 l4'>
         <Card>
@@ -27,7 +29,7 @@ class FolderCard extends PureComponent {
                   <i className='material-icons'>more_vert</i>
                 </DropdownItem>
                 <DropdownItem>
-                  <a onClick={e => console.log('Delete me!')}><i className='material-icons'>folder</i>{t('Delete')}</a>
+                  <a onClick={e => onDelete(id)}><i className='material-icons'>folder</i>{t('Delete')}</a>
                 </DropdownItem>
               </Dropdown>
             </div>

@@ -7,9 +7,13 @@ export const FETCH_FOLDER = 'FETCH_FOLDER'
 export const FETCHING_FOLDER = 'FETCHING_FOLDER'
 export const FETCHED_FOLDER = 'FETCHED_FOLDER'
 export const CREATE_FOLDER = 'FOLDER_CREATE'
+export const DELETE_FOLDER = 'FOLDER_DELETE'
 export const SAVING_FOLDER = 'FOLDER_SAVING'
+export const DELETING_FOLDER = 'FOLDER_DELETING'
 export const NOT_SAVED_FOLDER = 'NOT_SAVED_FOLDER'
 export const SAVED_FOLDER = 'FOLDER_SAVED'
+export const DELETED_FOLDER = 'FOLDER_DELETED'
+export const NOT_DELETED_FOLDER = 'NOT_DELETED_FOLDER'
 
 export const createFolder = (projectId: number, name: string) => (dispatch: Function) => {
   dispatch(savingFolder())
@@ -23,6 +27,36 @@ export const createFolder = (projectId: number, name: string) => (dispatch: Func
       dispatch(notSavedFolder(errors))
       return errors
     })
+}
+
+export const deleteFolder = (projectId: number, folderId: number) => (dispatch: Function) => {
+  dispatch(deletingFolder())
+  return api.deleteFolder(projectId, folderId)
+    .then(res => {
+      dispatch(deletedFolder(folderId))
+    })
+    .catch(async res => {
+      dispatch(notDeletedFolder())
+    })
+}
+
+export const deletedFolder = id => {
+  return {
+    type: DELETED_FOLDER,
+    id: id
+  }
+}
+
+export const deletingFolder = () => {
+  return {
+    type: DELETING_FOLDER
+  }
+}
+
+export const notDeletedFolder = () => {
+  return {
+    type: NOT_DELETED_FOLDER
+  }
 }
 
 export const savingFolder = (projectId: number) => {

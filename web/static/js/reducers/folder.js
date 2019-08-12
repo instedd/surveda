@@ -7,6 +7,12 @@ const initialState = {
   loadingFetch: false
 }
 
+const deleteFolder = (state, action) => {
+  const newState = {...state}
+  delete newState.folders[action.id]
+  return newState
+}
+
 export default (state: any = initialState, action: any) => {
   switch (action.type) {
     case actions.CREATE_FOLDER:
@@ -15,6 +21,7 @@ export default (state: any = initialState, action: any) => {
         name: action.name
       }
     case actions.SAVING_FOLDER:
+    case actions.DELETING_FOLDER:
       return {
         ...state,
         loading: true
@@ -25,11 +32,17 @@ export default (state: any = initialState, action: any) => {
         errors: {},
         loading: false
       }
-
+    case actions.DELETED_FOLDER: return deleteFolder(state, action)
     case actions.NOT_SAVED_FOLDER:
       return {
         ...state,
         errors: action.errors,
+        loading: false
+      }
+    case actions.NOT_DELETED_FOLDER:
+      return {
+        ...state,
+        errors: {},
         loading: false
       }
     case actions.FETCHING_FOLDERS:
