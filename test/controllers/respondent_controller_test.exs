@@ -766,6 +766,7 @@ defmodule Ask.RespondentControllerTest do
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
       insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
       insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+      insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "100")
       group_2 = insert(:respondent_group)
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], respondent_group: group_2, stats: %Stats{total_sent_sms: 1})
       insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
@@ -776,7 +777,7 @@ defmodule Ask.RespondentControllerTest do
       [line1, line2, line3, _] = csv |> String.split("\r\n")
       assert line1 == "respondent_id,date,modes,sample_file,Smokes,Exercises,Perfect_Number,Question,disposition,total_sent_sms,total_received_sms,total_call_time"
 
-      [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, _, _, line_2_disp, line_2_total_sent_sms, line_2_total_received_sms, line_2_total_call_time] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      [line_2_hashed_number, _, line_2_modes, line_2_respondent_group, line_2_smoke, line_2_exercises, line_2_perfect_number, _, line_2_disp, line_2_total_sent_sms, line_2_total_received_sms, line_2_total_call_time] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
       assert line_2_hashed_number == respondent_1.hashed_number
       assert line_2_modes == "SMS, Phone call"
@@ -787,6 +788,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_2_total_sent_sms == "3"
       assert line_2_total_received_sms == "4"
       assert line_2_total_call_time == "12"
+      assert line_2_perfect_number == "100"
 
       [line_3_hashed_number, _, line_3_modes, line_3_respondent_group,line_3_smoke, line_3_exercises, _, _, line_3_disp, line_3_total_sent_sms, line_3_total_received_sms, line_3_total_call_time] = [line3]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
       assert line_3_hashed_number == respondent_2.hashed_number
