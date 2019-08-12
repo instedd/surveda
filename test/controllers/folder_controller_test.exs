@@ -51,4 +51,42 @@ defmodule Ask.FolderControllerTest do
 
   end
 
+  describe "delete:" do
+    test "deletes chosen resource", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder1 = insert(:folder, project: project)
+      folder2 = insert(:folder, project: project)
+
+      assert Repo.get(Folder, folder1.id)
+      assert Repo.get(Folder, folder2.id)
+
+      conn = delete conn, project_folder_path(conn, :delete, project, folder1)
+      assert response(conn, 204)
+
+      refute Repo.get(Folder, folder1.id)
+      assert Repo.get(Folder, folder2.id)
+    end
+
+    test "rejects delete if the project doesn't belong to the current user", %{conn: conn} do
+      project = insert(:project)
+      folder = insert(:folder, project: project)
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_folder_path(conn, :delete, project, folder)
+      end
+    end
+
+    test "rejects delete if the folder has surveys", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      insert(:survey, project: project, folder_id: folder.id)
+
+      assert_error_sent :bad_request, fn ->
+        delete conn, project_folder_path(conn, :delete, project, folder)
+      end
+
+      assert Repo.get(Folder, folder.id)
+    end
+
+  end
+
 end

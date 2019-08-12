@@ -3,8 +3,9 @@ defmodule Ask.Folder do
 
   schema "folders" do
     field :name, :string
+    has_many :surveys, Ask.Survey
 
-    belongs_to :project, Project
+    belongs_to :project, Ask.Project
     timestamps()
   end
 
@@ -17,4 +18,8 @@ defmodule Ask.Folder do
     |> validate_required([:name, :project_id])
     |> unique_constraint(:name, name: :folders_name_project_id_index)
   end
+
+  def isEmpty(%{surveys: []}), do: true
+
+  def isEmpty(_), do: false
 end

@@ -39,4 +39,28 @@ defmodule Ask.FolderController do
     conn
     |> render("show.json", folder: folder)
   end
+
+  def delete(conn, %{"project_id" => project_id, "id" => folder_id}) do
+    conn
+    |> load_project_for_change(project_id)
+
+    folder = (from f in Folder,
+      where: f.id == ^folder_id)
+    |> Repo.one
+    |> Repo.preload(:surveys)
+
+    folder
+    |> Ask.Folder.isEmpty
+    |> deleteIfEmpty(conn, folder)
+  end
+
+  def deleteIfEmpty(true, conn, folder) do
+    folder |> Repo.delete!
+    send_resp(conn, :no_content, "")
+  end
+
+  def deleteIfEmpty(false, _, _) do
+    raise Ask.BadRequest
+end
+
 end
