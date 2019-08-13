@@ -80,11 +80,28 @@ defmodule Ask.FolderControllerTest do
       folder = insert(:folder, project: project)
       insert(:survey, project: project, folder_id: folder.id)
 
-      assert_error_sent :bad_request, fn ->
+      conn = delete conn, project_folder_path(conn, :delete, project, folder)
+
+      assert response(conn, 422) == "{\"errors\":{\"surveys\":[\"There are still surveys in this folder\"]}}"
+      assert Repo.get(Folder, folder.id)
+    end
+
+    test "rejects delete for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      folder = insert(:folder, project: project)
+
+      assert_error_sent :forbidden, fn ->
         delete conn, project_folder_path(conn, :delete, project, folder)
       end
+    end
 
-      assert Repo.get(Folder, folder.id)
+    test "rejects delete if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      folder = insert(:folder, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        delete conn, project_folder_path(conn, :delete, project, folder)
+      end
     end
 
   end

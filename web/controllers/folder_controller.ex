@@ -1,7 +1,7 @@
 defmodule Ask.FolderController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Folder}
+  alias Ask.{Folder, Logger}
 
   def create(conn, params = %{"project_id" => project_id}) do
     folder_params = Map.get(params, "folder", %{})
@@ -49,18 +49,16 @@ defmodule Ask.FolderController do
     |> Repo.one
     |> Repo.preload(:surveys)
 
-    folder
-    |> Ask.Folder.isEmpty
-    |> deleteIfEmpty(conn, folder)
+    result = folder |> Folder.delete_changeset |> Repo.delete
+
+    case result do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+      {:error, changeset} ->
+        Logger.warn "Error when deleting folder #{folder.id}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
   end
-
-  def deleteIfEmpty(true, conn, folder) do
-    folder |> Repo.delete!
-    send_resp(conn, :no_content, "")
-  end
-
-  def deleteIfEmpty(false, _, _) do
-    raise Ask.BadRequest
-end
-
 end

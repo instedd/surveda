@@ -19,7 +19,9 @@ defmodule Ask.Folder do
     |> unique_constraint(:name, name: :folders_name_project_id_index)
   end
 
-  def isEmpty(%{surveys: []}), do: true
-
-  def isEmpty(_), do: false
+  def delete_changeset(folder) do
+    folder
+    |> change()
+    |> no_assoc_constraint(:surveys, message: "There are still surveys in this folder")
+  end
 end
