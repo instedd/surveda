@@ -1,4 +1,9 @@
 
+  .error {
+    color: $input-error-color;
+    font-size: 0.8rem
+  }
+
 // --------- NCD classes ---------------
 
 .clearfix {
@@ -234,6 +239,12 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
       display: flex;
       width: 100%;
     }
+
+  }
+
+  .folder-card-error {
+    @extend .error;
+    padding: 0 $card-padding $card-padding;
   }
 }
 

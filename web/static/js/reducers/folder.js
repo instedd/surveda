@@ -10,6 +10,15 @@ const initialState = {
 const deleteFolder = (state, action) => {
   const newState = {...state}
   delete newState.folders[action.id]
+  return {
+    ...newState,
+    errors: {}
+  }
+}
+
+const includeError = (state, action) => {
+  const newState = {...state}
+  newState.folders[action.id].error = action.error
   return newState
 }
 
@@ -21,7 +30,6 @@ export default (state: any = initialState, action: any) => {
         name: action.name
       }
     case actions.SAVING_FOLDER:
-    case actions.DELETING_FOLDER:
       return {
         ...state,
         loading: true
@@ -36,15 +44,9 @@ export default (state: any = initialState, action: any) => {
     case actions.NOT_SAVED_FOLDER:
       return {
         ...state,
-        errors: action.errors,
-        loading: false
+        errors: action.errors
       }
-    case actions.NOT_DELETED_FOLDER:
-      return {
-        ...state,
-        errors: {},
-        loading: false
-      }
+    case actions.NOT_DELETED_FOLDER: return includeError(state, action)
     case actions.FETCHING_FOLDERS:
       return {
         ...state,

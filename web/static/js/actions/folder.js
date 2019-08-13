@@ -9,7 +9,6 @@ export const FETCHED_FOLDER = 'FETCHED_FOLDER'
 export const CREATE_FOLDER = 'FOLDER_CREATE'
 export const DELETE_FOLDER = 'FOLDER_DELETE'
 export const SAVING_FOLDER = 'FOLDER_SAVING'
-export const DELETING_FOLDER = 'FOLDER_DELETING'
 export const NOT_SAVED_FOLDER = 'NOT_SAVED_FOLDER'
 export const SAVED_FOLDER = 'FOLDER_SAVED'
 export const DELETED_FOLDER = 'FOLDER_DELETED'
@@ -30,13 +29,13 @@ export const createFolder = (projectId: number, name: string) => (dispatch: Func
 }
 
 export const deleteFolder = (projectId: number, folderId: number) => (dispatch: Function) => {
-  dispatch(deletingFolder())
   return api.deleteFolder(projectId, folderId)
     .then(res => {
       dispatch(deletedFolder(folderId))
     })
     .catch(async res => {
-      dispatch(notDeletedFolder())
+      const err = await res.json()
+      dispatch(notDeletedFolder(folderId, err.errors.surveys[0]))
     })
 }
 
@@ -47,15 +46,11 @@ export const deletedFolder = id => {
   }
 }
 
-export const deletingFolder = () => {
+export const notDeletedFolder = (id, error) => {
   return {
-    type: DELETING_FOLDER
-  }
-}
-
-export const notDeletedFolder = () => {
-  return {
-    type: NOT_DELETED_FOLDER
+    type: NOT_DELETED_FOLDER,
+    id,
+    error
   }
 }
 
