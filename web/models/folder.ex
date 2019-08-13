@@ -1,11 +1,11 @@
 defmodule Ask.Folder do
   use Ask.Web, :model
+  alias Ask.{Project, Survey}
 
   schema "folders" do
     field :name, :string
-    has_many :surveys, Ask.Survey
-
-    belongs_to :project, Ask.Project
+    has_many :surveys, Survey
+    belongs_to :project, Project
     timestamps()
   end
 
