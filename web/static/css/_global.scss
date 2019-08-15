@@ -232,6 +232,9 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
     .options {
       height: 1.8rem;
       width: 1rem;
+      ul > li > a {
+        width: 8.5rem;
+      }
     }
 
     .folder-card-title {

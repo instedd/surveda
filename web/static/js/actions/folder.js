@@ -13,6 +13,8 @@ export const NOT_SAVED_FOLDER = 'NOT_SAVED_FOLDER'
 export const SAVED_FOLDER = 'FOLDER_SAVED'
 export const DELETED_FOLDER = 'FOLDER_DELETED'
 export const NOT_DELETED_FOLDER = 'NOT_DELETED_FOLDER'
+export const RENAMED_FOLDER = 'FOLDER_RENAMED'
+export const NOT_RENAMED_FOLDER = 'NOT_RENAMED_FOLDER'
 
 export const createFolder = (projectId: number, name: string) => (dispatch: Function) => {
   dispatch(savingFolder())
@@ -37,6 +39,33 @@ export const deleteFolder = (projectId: number, folderId: number) => (dispatch: 
       const err = await res.json()
       dispatch(notDeletedFolder(folderId, err.errors.surveys[0]))
     })
+}
+
+export const renameFolder = (projectId: number, folderId: number, name: string) => (dispatch: Function) => {
+  return api.renameFolder(projectId, folderId, name)
+    .then(res => {
+      dispatch(renamedFolder(folderId, name))
+    })
+    .catch(async res => {
+      const err = await res.json()
+      dispatch(notRenamedFolder(folderId, `Name ${err.errors.name[0]}`))
+    })
+}
+
+export const renamedFolder = (id, name) => {
+  return {
+    type: RENAMED_FOLDER,
+    id: id,
+    name: name
+  }
+}
+
+export const notRenamedFolder = (id, error) => {
+  return {
+    type: NOT_RENAMED_FOLDER,
+    id,
+    error
+  }
 }
 
 export const deletedFolder = id => {

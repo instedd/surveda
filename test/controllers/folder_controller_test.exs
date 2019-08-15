@@ -142,6 +142,17 @@ defmodule Ask.FolderControllerTest do
         post conn, project_folder_folder_path(conn, :set_name, folder.project, folder), name: "new name"
       end
     end
+
+    test "rejects set_name if empty", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+
+      conn = post conn, project_folder_folder_path(conn, :set_name, project, folder), name: ""
+
+      assert response(conn, 422) == "{\"errors\":{\"name\":[\"can't be blank\"]}}"
+      assert Repo.get(Folder, folder.id).name == folder.name
+    end
+
   end
 
 end

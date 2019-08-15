@@ -16,6 +16,15 @@ const deleteFolder = (state, action) => {
   }
 }
 
+const renameFolder = (state, action) => {
+  const newState = {...state}
+  newState.folders[action.id].name = action.name
+  return {
+    ...newState,
+    errors: {}
+  }
+}
+
 const includeError = (state, action) => {
   const newState = {...state}
   newState.folders[action.id].error = action.error
@@ -41,12 +50,14 @@ export default (state: any = initialState, action: any) => {
         loading: false
       }
     case actions.DELETED_FOLDER: return deleteFolder(state, action)
+    case actions.RENAMED_FOLDER: return renameFolder(state, action)
     case actions.NOT_SAVED_FOLDER:
       return {
         ...state,
         errors: action.errors
       }
     case actions.NOT_DELETED_FOLDER: return includeError(state, action)
+    case actions.NOT_RENAMED_FOLDER: return includeError(state, action)
     case actions.FETCHING_FOLDERS:
       return {
         ...state,

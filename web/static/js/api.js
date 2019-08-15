@@ -189,6 +189,10 @@ export const deleteFolder = (projectId, folderId) => {
   return apiDelete(`projects/${projectId}/folders/${folderId}`)
 }
 
+export const renameFolder = (projectId, folderId, name) => {
+  return apiPostJSON(`projects/${projectId}/folders/${folderId}/set_name`, folderSchema, { name })
+}
+
 export const createSurvey = (projectId, folderId) => {
   const timezone = getTimezone()
   let data

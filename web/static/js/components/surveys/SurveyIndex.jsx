@@ -7,7 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
+import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip, EditableTitleLabel } from '../ui'
 import { Button } from 'react-materialize'
 import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
@@ -98,6 +98,21 @@ class SurveyIndex extends Component<any, State> {
     dispatch(folderActions.deleteFolder(projectId, id))
   }
 
+  renameFolder = (id, name) => {
+    const renameFolderConfirmationModal: ConfirmationModal = this.refs.renameFolderConfirmationModal
+    const { dispatch, projectId, t } = this.props
+
+    const onSubmit = value => {
+      dispatch(folderActions.renameFolder(projectId, id, value))
+      renameFolderConfirmationModal.close()
+    }
+
+    const modalText = <EditableTitleLabel title={name} entityName='folder' onSubmit={onSubmit} emptyText={t('Untitled folder')} showCancel={false} />
+    renameFolderConfirmationModal.open({
+      modalText: modalText
+    })
+  }
+
   nextPage() {
     const { dispatch } = this.props
     dispatch(actions.nextSurveysPage())
@@ -150,7 +165,7 @@ class SurveyIndex extends Component<any, State> {
         : (
           <div>
             <div className='row'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} />)}
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} />)}
             </div>
             <div className='row'>
               { surveys && surveys.map(survey => {
@@ -164,6 +179,7 @@ class SurveyIndex extends Component<any, State> {
         )
         }
         <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
+        <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' header={t('Rename Folder')} showCancel={false} />
       </div>
     )
   }
