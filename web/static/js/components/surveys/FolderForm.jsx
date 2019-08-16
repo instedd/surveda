@@ -2,13 +2,12 @@ import React, { Component, PropTypes } from 'react'
 import { translate, Trans } from 'react-i18next'
 import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
-import * as actions from '../../actions/folder'
 
 class FolderForm extends Component<any> {
   state = { name: '' }
   static propTypes = {
     t: PropTypes.func,
-    errors: PropTypes.array,
+    error: PropTypes.string,
     onChangeName: PropTypes.func,
     cta: PropTypes.string
   }
@@ -20,11 +19,10 @@ class FolderForm extends Component<any> {
 
   onSubmit(e) {
     e.preventDefault()
-    const { name } = this.state
   }
 
   render() {
-    const { t, errors, cta } = this.props
+    const { t, error, cta } = this.props
     const { name } = this.state
 
     return (
@@ -36,10 +34,10 @@ class FolderForm extends Component<any> {
           </Trans>
         </p>
 
-        <ul className='red-text'>
-          {(errors['name'] || []).map(error => <li>Name: {error}</li>)}
-        </ul>
-        <Input placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} />
+        <Input className='folder-input' placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} error={error} />
+        <div className='error'>
+          {error}
+        </div>
       </form>
     )
   }
@@ -52,7 +50,7 @@ FolderForm.defaultProps = {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...ownProps,
-    errors: state.folder.errors || {}
+    error: ((ownProps.id && state.folder.folders[ownProps.id].error) || (!ownProps.id && state.folder.error))
   }
 }
 

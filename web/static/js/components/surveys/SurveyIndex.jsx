@@ -7,7 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip, EditableTitleLabel } from '../ui'
+import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
 import { Button } from 'react-materialize'
 import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
@@ -30,7 +30,6 @@ class SurveyIndex extends Component<any, State> {
     project: PropTypes.object,
     surveys: PropTypes.array,
     folders: PropTypes.array,
-    loadingFolder: PropTypes.bool,
     loadingFolders: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
     startIndex: PropTypes.number.isRequired,
@@ -79,17 +78,17 @@ class SurveyIndex extends Component<any, State> {
     this.setState({folderName: name})
   }
 
-  folderModal(onDispatch, cta, ref) {
+  folderModal(onDispatch, cta, ref, folderId) {
     const modal: ConfirmationModal = ref
     const { dispatch } = this.props
 
-    const modalText = <FolderForm onChangeName={name => this.changeFolderName(name)} cta={cta} />
+    const modalText = <FolderForm id={folderId} onChangeName={name => this.changeFolderName(name)} cta={cta} />
     modal.open({
       modalText: modalText,
       onConfirm: async () => {
         const { folderName } = this.state
-        const res = await dispatch(onDispatch(folderName))
-        if (res.errors) return false
+        const { error } = await dispatch(onDispatch(folderName))
+        return !error
       }
     })
   }
@@ -101,24 +100,14 @@ class SurveyIndex extends Component<any, State> {
   }
 
   renameFolder = (id, name) => {
-    const renameFolderConfirmationModal: ConfirmationModal = this.refs.renameFolderConfirmationModal
-    const { dispatch, projectId, t } = this.props
-
-    const onSubmit = value => {
-      dispatch(folderActions.renameFolder(projectId, id, value))
-      renameFolderConfirmationModal.close()
-    }
-
-    const modalText = <EditableTitleLabel title={name} entityName='folder' onSubmit={onSubmit} emptyText={t('Untitled folder')} showCancel={false} />
-    renameFolderConfirmationModal.open({
-      modalText: modalText
-    })
+    const { projectId } = this.props
+    const onDispatch = folderName => folderActions.renameFolder(projectId, id, folderName)
+    this.folderModal(onDispatch, 'Please write the new folder name', this.refs.renameFolderConfirmationModal, id)
   }
 
-
   deleteFolder = (id) => {
-    const { dispatch, projectId } = this.props
-    dispatch(folderActions.deleteFolder(projectId, id))
+    const { dispatch, projectId, t } = this.props
+    dispatch(folderActions.deleteFolder(projectId, id)).then(({ error }) => error ? window.Materialize.toast(t(error), 5000, 'error-toast') : null)
   }
 
   nextPage() {
@@ -132,7 +121,7 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolder, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
     if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
       return (
         <div>{t('Loading surveys...')}</div>
@@ -187,7 +176,7 @@ class SurveyIndex extends Component<any, State> {
         )
         }
         <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
-        <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' header={t('Rename Folder')} showCancel={false} />
+        <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' confirmationText={t('Rename')} header={t('Rename Folder')} showCancel />
       </div>
     )
   }

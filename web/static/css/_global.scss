@@ -1,8 +1,16 @@
 
-  .error {
-    color: $input-error-color;
-    font-size: 0.8rem
-  }
+.error {
+  color: $input-error-color;
+  font-size: 0.8rem
+}
+
+.folder-input {
+  margin: 0 0 0.5rem 0 !important
+}
+
+.error-toast {
+  color: $input-error-color
+}
 
 // --------- NCD classes ---------------
 

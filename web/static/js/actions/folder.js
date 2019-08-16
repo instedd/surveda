@@ -12,7 +12,6 @@ export const SAVING_FOLDER = 'FOLDER_SAVING'
 export const NOT_SAVED_FOLDER = 'NOT_SAVED_FOLDER'
 export const CREATED_FOLDER = 'FOLDER_CREATED'
 export const DELETED_FOLDER = 'FOLDER_DELETED'
-export const NOT_DELETED_FOLDER = 'NOT_DELETED_FOLDER'
 export const RENAMED_FOLDER = 'FOLDER_RENAMED'
 export const NOT_RENAMED_FOLDER = 'NOT_RENAMED_FOLDER'
 
@@ -22,23 +21,12 @@ export const createFolder = (projectId: number, name: string) => (dispatch: Func
     .then(res => {
       const { projectId, id, name } = res.entities.folders[res.result]
       dispatch(createdFolder(projectId, id, name))
-      return res
-    })
-    .catch(async res => {
-      const errors = await res.json()
-      dispatch(notSavedFolder(errors))
-      return errors
-    })
-}
-
-export const deleteFolder = (projectId: number, folderId: number) => (dispatch: Function) => {
-  return api.deleteFolder(projectId, folderId)
-    .then(res => {
-      dispatch(deletedFolder(folderId))
+      return { error: false }
     })
     .catch(async res => {
       const err = await res.json()
-      dispatch(notDeletedFolder(folderId, err.errors.surveys[0]))
+      dispatch(notSavedFolder(`Name ${err.errors.name[0]}`))
+      return { error: true }
     })
 }
 
@@ -46,10 +34,24 @@ export const renameFolder = (projectId: number, folderId: number, name: string) 
   return api.renameFolder(projectId, folderId, name)
     .then(res => {
       dispatch(renamedFolder(folderId, name))
+      return { error: false }
     })
     .catch(async res => {
       const err = await res.json()
       dispatch(notRenamedFolder(folderId, `Name ${err.errors.name[0]}`))
+      return { error: true }
+    })
+}
+
+export const deleteFolder = (projectId: number, folderId: number) => (dispatch: Function) => {
+  return api.deleteFolder(projectId, folderId)
+    .then(res => {
+      dispatch(deletedFolder(folderId))
+      return { error: false }
+    })
+    .catch(async res => {
+      const err = await res.json()
+      return { error: err.errors.surveys[0] }
     })
 }
 
@@ -76,21 +78,13 @@ export const deletedFolder = id => {
   }
 }
 
-export const notDeletedFolder = (id, error) => {
-  return {
-    type: NOT_DELETED_FOLDER,
-    id,
-    error
-  }
-}
-
 export const savingFolder = (projectId: number) => {
   return {
     type: SAVING_FOLDER
   }
 }
 
-export const createdFolder = (projectId: number, id :number, name: string) => {
+export const createdFolder = (projectId: number, id: number, name: string) => {
   return {
     type: CREATED_FOLDER,
     folder: {
@@ -101,10 +95,10 @@ export const createdFolder = (projectId: number, id :number, name: string) => {
   }
 }
 
-export const notSavedFolder = ({errors}) => {
+export const notSavedFolder = error => {
   return {
     type: NOT_SAVED_FOLDER,
-    errors
+    error
   }
 }
 

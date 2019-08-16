@@ -3,7 +3,7 @@ import * as actions from '../actions/folder'
 
 const initialState = {
   loading: false,
-  errors: {},
+  error: null,
   loadingFetch: false
 }
 
@@ -11,17 +11,17 @@ const deleteFolder = (state, action) => {
   const newState = {...state}
   delete newState.folders[action.id]
   return {
-    ...newState,
-    errors: {}
+    ...newState
   }
 }
 
 const renameFolder = (state, action) => {
   const newState = {...state}
   newState.folders[action.id].name = action.name
+  newState.folders[action.id].error = null
   return {
     ...newState,
-    errors: {}
+    error: null
   }
 }
 
@@ -29,9 +29,10 @@ const createFolder = (state, action) => {
   const newState = {...state}
   const { folder } = action
   newState.folders[folder.id] = folder
+  newState.folders[folder.id].error = null
   return {
     ...newState,
-    errors: {}
+    error: null
   }
 }
 
@@ -59,9 +60,8 @@ export default (state: any = initialState, action: any) => {
     case actions.NOT_SAVED_FOLDER:
       return {
         ...state,
-        errors: action.errors
+        error: action.error
       }
-    case actions.NOT_DELETED_FOLDER: return includeError(state, action)
     case actions.NOT_RENAMED_FOLDER: return includeError(state, action)
     case actions.FETCHING_FOLDERS:
       return {

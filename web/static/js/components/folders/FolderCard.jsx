@@ -11,11 +11,10 @@ class FolderCard extends PureComponent {
     name: PropTypes.string,
     t: PropTypes.func,
     onDelete: Function,
-    onRename: Function,
-    error: PropTypes.string
+    onRename: Function
   }
   render() {
-    const { name, projectId, id, t, onDelete, error, onRename } = this.props
+    const { name, projectId, id, t, onDelete, onRename } = this.props
 
     return (
       <div className='col s12 m6 l4'>
@@ -38,7 +37,6 @@ class FolderCard extends PureComponent {
                 </DropdownItem>
               </Dropdown>
             </div>
-            {error ? <div className='folder-card-error'>{error}</div> : null}
           </div>
         </Card>
       </div>
