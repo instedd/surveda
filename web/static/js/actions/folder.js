@@ -10,7 +10,7 @@ export const CREATE_FOLDER = 'FOLDER_CREATE'
 export const DELETE_FOLDER = 'FOLDER_DELETE'
 export const SAVING_FOLDER = 'FOLDER_SAVING'
 export const NOT_SAVED_FOLDER = 'NOT_SAVED_FOLDER'
-export const SAVED_FOLDER = 'FOLDER_SAVED'
+export const CREATED_FOLDER = 'FOLDER_CREATED'
 export const DELETED_FOLDER = 'FOLDER_DELETED'
 export const NOT_DELETED_FOLDER = 'NOT_DELETED_FOLDER'
 export const RENAMED_FOLDER = 'FOLDER_RENAMED'
@@ -20,7 +20,8 @@ export const createFolder = (projectId: number, name: string) => (dispatch: Func
   dispatch(savingFolder())
   return api.createFolder(projectId, name)
     .then(res => {
-      dispatch(savedFolder())
+      const { projectId, id, name } = res.entities.folders[res.result]
+      dispatch(createdFolder(projectId, id, name))
       return res
     })
     .catch(async res => {
@@ -89,9 +90,14 @@ export const savingFolder = (projectId: number) => {
   }
 }
 
-export const savedFolder = (projectId: number) => {
+export const createdFolder = (projectId: number, id :number, name: string) => {
   return {
-    type: SAVED_FOLDER
+    type: CREATED_FOLDER,
+    folder: {
+      projectId,
+      name,
+      id
+    }
   }
 }
 

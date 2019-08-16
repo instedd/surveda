@@ -25,6 +25,16 @@ const renameFolder = (state, action) => {
   }
 }
 
+const createFolder = (state, action) => {
+  const newState = {...state}
+  const { folder } = action
+  newState.folders[folder.id] = folder
+  return {
+    ...newState,
+    errors: {}
+  }
+}
+
 const includeError = (state, action) => {
   const newState = {...state}
   newState.folders[action.id].error = action.error
@@ -43,12 +53,7 @@ export default (state: any = initialState, action: any) => {
         ...state,
         loading: true
       }
-    case actions.SAVED_FOLDER:
-      return {
-        ...state,
-        errors: {},
-        loading: false
-      }
+    case actions.CREATED_FOLDER: return createFolder(state, action)
     case actions.DELETED_FOLDER: return deleteFolder(state, action)
     case actions.RENAMED_FOLDER: return renameFolder(state, action)
     case actions.NOT_SAVED_FOLDER:
