@@ -9,7 +9,6 @@ class CreateFolderForm extends Component<any> {
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
-    loading: PropTypes.boolean,
     errors: PropTypes.array,
     onCreate: PropTypes.func,
     onChangeName: PropTypes.func,
@@ -34,7 +33,7 @@ class CreateFolderForm extends Component<any> {
   }
 
   render() {
-    const { t, loading, errors } = this.props
+    const { t, errors } = this.props
     const { name } = this.state
 
     return (
@@ -49,7 +48,7 @@ class CreateFolderForm extends Component<any> {
         <ul className='red-text'>
           {(errors['name'] || []).map(error => <li>Name: {error}</li>)}
         </ul>
-        <Input disabled={loading} placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} />
+        <Input placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} />
       </form>
     )
   }
@@ -63,7 +62,6 @@ CreateFolderForm.defaultProps = {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...ownProps,
-    loading: state.folder.loading,
     errors: state.folder.errors || {}
   }
 }

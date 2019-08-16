@@ -178,7 +178,7 @@ class SurveyIndex extends Component<any, State> {
           </div>
         )
         }
-        <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
+        <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
         <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' header={t('Rename Folder')} showCancel={false} />
       </div>
     )
@@ -214,7 +214,6 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
     totalCount,
     loadingSurveys: state.surveys.fetching,
-    loadingFolder: state.folder.loading,
     loadingFolders: state.folder.loadingFetch,
     folders: state.folder.folders && Object.values(state.folder.folders)
   }
