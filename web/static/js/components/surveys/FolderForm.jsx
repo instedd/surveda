@@ -4,15 +4,13 @@ import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/folder'
 
-class CreateFolderForm extends Component<any> {
+class FolderForm extends Component<any> {
   state = { name: '' }
   static propTypes = {
     t: PropTypes.func,
-    dispatch: PropTypes.func,
     errors: PropTypes.array,
-    onCreate: PropTypes.func,
     onChangeName: PropTypes.func,
-    projectId: PropTypes.number
+    cta: PropTypes.string
   }
 
   onChangeName(e) {
@@ -22,18 +20,11 @@ class CreateFolderForm extends Component<any> {
 
   onSubmit(e) {
     e.preventDefault()
-
-    const { dispatch, projectId, onCreate } = this.props
     const { name } = this.state
-    dispatch(actions.createFolder(projectId, name))
-      .then(res => {
-        if (res.errors) return
-        onCreate()
-      })
   }
 
   render() {
-    const { t, errors } = this.props
+    const { t, errors, cta } = this.props
     const { name } = this.state
 
     return (
@@ -41,7 +32,7 @@ class CreateFolderForm extends Component<any> {
 
         <p>
           <Trans>
-            Please write the name of the folder you want to create
+            {cta}
           </Trans>
         </p>
 
@@ -54,8 +45,7 @@ class CreateFolderForm extends Component<any> {
   }
 }
 
-CreateFolderForm.defaultProps = {
-  onCreate: () => {},
+FolderForm.defaultProps = {
   onChangeName: () => {}
 }
 
@@ -66,4 +56,4 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default translate()(connect(mapStateToProps)(CreateFolderForm))
+export default translate()(connect(mapStateToProps)(FolderForm))

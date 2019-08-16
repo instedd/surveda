@@ -13,7 +13,7 @@ import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
-import CreateFolderForm from './CreateFolderForm'
+import FolderForm from './FolderForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 
@@ -79,23 +79,25 @@ class SurveyIndex extends Component<any, State> {
     this.setState({folderName: name})
   }
 
-  newFolder() {
-    const createFolderConfirmationModal: ConfirmationModal = this.refs.createFolderConfirmationModal
-    const { dispatch, projectId } = this.props
-    const modalText = <CreateFolderForm projectId={projectId} onChangeName={name => this.changeFolderName(name)} onCreate={() => { createFolderConfirmationModal.close(); this.initialFetch() }} />
-    createFolderConfirmationModal.open({
+  folderModal(onDispatch, cta, ref) {
+    const modal: ConfirmationModal = ref
+    const { dispatch } = this.props
+
+    const modalText = <FolderForm onChangeName={name => this.changeFolderName(name)} cta={cta} />
+    modal.open({
       modalText: modalText,
       onConfirm: async () => {
         const { folderName } = this.state
-        const res = await dispatch(folderActions.createFolder(projectId, folderName))
+        const res = await dispatch(onDispatch(folderName))
         if (res.errors) return false
       }
     })
   }
 
-  deleteFolder = (id) => {
-    const { dispatch, projectId } = this.props
-    dispatch(folderActions.deleteFolder(projectId, id))
+  newFolder() {
+    const { projectId } = this.props
+    const onDispatch = folderName => folderActions.createFolder(projectId, folderName)
+    this.folderModal(onDispatch, 'Please write the name of the folder you want to create', this.refs.createFolderConfirmationModal)
   }
 
   renameFolder = (id, name) => {
@@ -111,6 +113,12 @@ class SurveyIndex extends Component<any, State> {
     renameFolderConfirmationModal.open({
       modalText: modalText
     })
+  }
+
+
+  deleteFolder = (id) => {
+    const { dispatch, projectId } = this.props
+    dispatch(folderActions.deleteFolder(projectId, id))
   }
 
   nextPage() {
