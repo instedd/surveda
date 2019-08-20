@@ -9,11 +9,11 @@ import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
 import { Button } from 'react-materialize'
-import FolderCard from '../projects/FolderCard'
+import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
-import CreateFolderForm from './CreateFolderForm'
+import FolderForm from './FolderForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 
@@ -30,7 +30,6 @@ class SurveyIndex extends Component<any, State> {
     project: PropTypes.object,
     surveys: PropTypes.array,
     folders: PropTypes.array,
-    loadingFolder: PropTypes.bool,
     loadingFolders: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
     startIndex: PropTypes.number.isRequired,
@@ -79,18 +78,36 @@ class SurveyIndex extends Component<any, State> {
     this.setState({folderName: name})
   }
 
-  newFolder() {
-    const createFolderConfirmationModal: ConfirmationModal = this.refs.createFolderConfirmationModal
-    const { dispatch, projectId } = this.props
-    const modalText = <CreateFolderForm projectId={projectId} onChangeName={name => this.changeFolderName(name)} onCreate={() => { createFolderConfirmationModal.close(); this.initialFetch() }} />
-    createFolderConfirmationModal.open({
+  folderModal(onDispatch, cta, ref, folderId) {
+    const modal: ConfirmationModal = ref
+    const { dispatch } = this.props
+
+    const modalText = <FolderForm id={folderId} onChangeName={name => this.changeFolderName(name)} cta={cta} />
+    modal.open({
       modalText: modalText,
       onConfirm: async () => {
         const { folderName } = this.state
-        const res = await dispatch(folderActions.createFolder(projectId, folderName))
-        if (res.errors) return false
+        const { error } = await dispatch(onDispatch(folderName))
+        return !error
       }
     })
+  }
+
+  newFolder() {
+    const { projectId } = this.props
+    const onDispatch = folderName => folderActions.createFolder(projectId, folderName)
+    this.folderModal(onDispatch, 'Please write the name of the folder you want to create', this.refs.createFolderConfirmationModal)
+  }
+
+  renameFolder = (id, name) => {
+    const { projectId } = this.props
+    const onDispatch = folderName => folderActions.renameFolder(projectId, id, folderName)
+    this.folderModal(onDispatch, 'Please write the new folder name', this.refs.renameFolderConfirmationModal, id)
+  }
+
+  deleteFolder = (id) => {
+    const { dispatch, projectId, t } = this.props
+    dispatch(folderActions.deleteFolder(projectId, id)).then(({ error }) => error ? window.Materialize.toast(t(error), 5000, 'error-toast') : null)
   }
 
   nextPage() {
@@ -104,7 +121,7 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolder, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
     if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
       return (
         <div>{t('Loading surveys...')}</div>
@@ -145,7 +162,7 @@ class SurveyIndex extends Component<any, State> {
         : (
           <div>
             <div className='row'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} />)}
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} />)}
             </div>
             <div className='row'>
               { surveys && surveys.map(survey => {
@@ -158,7 +175,8 @@ class SurveyIndex extends Component<any, State> {
           </div>
         )
         }
-        <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
+        <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
+        <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' confirmationText={t('Rename')} header={t('Rename Folder')} showCancel />
       </div>
     )
   }
@@ -193,7 +211,6 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
     totalCount,
     loadingSurveys: state.surveys.fetching,
-    loadingFolder: state.folder.loading,
     loadingFolders: state.folder.loadingFetch,
     folders: state.folder.folders && Object.values(state.folder.folders)
   }

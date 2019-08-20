@@ -82,23 +82,22 @@ class SurveyCard extends Component<any> {
         <div className='survey-card'>
           <Card>
             <div className='card-content'>
-              <div className='grey-text'>
+              <div className='survey-card-status'>
                 <Link className='grey-text' to={routes.showOrEditSurvey(survey)}>
                   {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
                 </Link>
-                { readOnly || (<div className='right'>
-                  <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
-                    <DropdownItem className='dots'>
-                      <i className='material-icons'>more_vert</i>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
-                    </DropdownItem>
-                  </Dropdown>
-                </div>) }
+                { readOnly || (<Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+                  <DropdownItem className='dots'>
+                    <i className='material-icons'>more_vert</i>
+                  </DropdownItem>
+                  <DropdownItem>
+                    <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
+                  </DropdownItem>
+                  <DropdownItem>
+                    <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
+                  </DropdownItem>
+                </Dropdown>
+                ) }
               </div>
               <div className='card-chart'>
                 <RespondentsChart cumulativePercentages={cumulativePercentages} />

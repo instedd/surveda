@@ -1,7 +1,7 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
+import { withRouter, Link } from 'react-router'
 import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
@@ -28,17 +28,18 @@ class FolderShow extends Component<any, any> {
     totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired,
     params: PropTypes.object,
-    folderId: PropTypes.number,
+    id: PropTypes.number,
+    name: PropTypes.string,
     loadingFolder: PropTypes.bool,
     loadingSurveys: PropTypes.bool
   }
 
   componentWillMount() {
-    const { dispatch, projectId, folderId } = this.props
+    const { dispatch, projectId, id } = this.props
 
-    dispatch(projectActions.fetchProject(projectId, folderId))
+    dispatch(projectActions.fetchProject(projectId, id))
 
-    dispatch(actions.fetchSurveys(projectId, folderId))
+    dispatch(actions.fetchSurveys(projectId, id))
     .then(value => {
       for (const surveyId in value) {
         if (value[surveyId].state != 'not_ready') {
@@ -51,9 +52,9 @@ class FolderShow extends Component<any, any> {
   }
 
   newSurvey() {
-    const { dispatch, router, projectId, folderId } = this.props
+    const { dispatch, router, projectId, id } = this.props
 
-    dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
+    dispatch(surveyActions.createSurvey(projectId, id)).then(survey =>
       router.push(routes.surveyEdit(projectId, survey))
     )
   }
@@ -88,10 +89,11 @@ class FolderShow extends Component<any, any> {
   }
 
   render() {
-    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId } = this.props
+    const folder = name ? (<Link to={routes.project(projectId)} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
     if ((!surveys && loadingSurveys)) {
       return (
-        <div>{t('Loading surveys...')}</div>
+        <div className='folder-show'>{folder}{t('Loading surveys...')}</div>
       )
     }
 
@@ -110,8 +112,9 @@ class FolderShow extends Component<any, any> {
     }
 
     return (
-      <div>
+      <div className='folder-show'>
         {addButton}
+        {folder}
         { (surveys && surveys.length == 0)
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys in this folder')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : (
@@ -153,9 +156,13 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  const id = ownProps.params.folderId
+  const name = state.folder.folders && state.folder.folders[id].name
+
   return {
     projectId: ownProps.params.projectId,
-    folderId: ownProps.params.folderId,
+    id: id,
+    name: name,
     project: state.project.data,
     surveys,
     channels: state.channels.items,
