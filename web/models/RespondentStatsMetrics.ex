@@ -6,7 +6,7 @@ defmodule Prometheus.RespondentStatsMetrics do
   def collect_mf(_registry, callback) do
     respondent_stats_query = "select rs.* from respondent_stats rs"
     query_results = Repo.query!(respondent_stats_query)
-    columns = query_results.columns|> Enum.map(fn(x) -> String.to_existing_atom(x) end)
+    columns = query_results.columns|> Enum.map(fn(column_name) -> String.to_charlist(column_name) end)
     rows = query_results.rows |> Enum.map(fn(row) -> formatRow(row) end)
     result_list =  Enum.map(rows, fn row ->
                                       columns
@@ -30,11 +30,11 @@ defmodule Prometheus.RespondentStatsMetrics do
   end
 
   defp formatRow(row) do
-    Enum.map(row, fn (e) ->
-                  if String.valid?(e) do
-                    String.to_atom(e)
+    Enum.map(row, fn (element) ->
+                  if String.valid?(element) do
+                    String.to_charlist(element)
                   else
-                    e
+                    element
                   end
               end)
   end
