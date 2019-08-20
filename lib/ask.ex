@@ -8,6 +8,7 @@ defmodule Ask do
 
     Ask.PhoenixInstrumenter.setup()
     Ask.PrometheusExporter.setup()
+    Ask.SurvedaMetrics.setup()
 
     # Define workers and child supervisors to be supervised
     children = [

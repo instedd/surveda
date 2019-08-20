@@ -4,7 +4,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto.Query
   import Ecto
   require Ask.RespondentStats
-  alias Ask.{Repo, Survey, Respondent, RespondentStats, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule}
+  alias Ask.{Repo, Survey, Respondent, RespondentStats, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer}
   alias Ask.QuotaBucket
 
@@ -156,6 +156,7 @@ defmodule Ask.Runtime.Broker do
           survey_completed = survey.cutoff <= completed || reached_quotas
           batch_size = batch_size(survey, by_state)
           Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, stalled=#{stalled}, batch_size=#{batch_size})"
+          SurvedaMetrics.increment_counter_with_label(:surveda_survey_poll, [survey.id])
 
           cond do
             (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
@@ -262,7 +263,7 @@ defmodule Ask.Runtime.Broker do
     end
 
     fallback_delay = Survey.fallback_delay(survey) || Session.default_fallback_delay
-
+    SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
     handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results))
   end
 

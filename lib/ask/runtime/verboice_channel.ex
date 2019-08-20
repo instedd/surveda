@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
-  alias Ask.{Repo, Respondent, Channel, Stats}
+  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   alias Ask.Runtime.{Broker, Flow, Reply}
   alias Ask.Router.Helpers
   import Plug.Conn
@@ -263,7 +263,7 @@ defmodule Ask.Runtime.VerboiceChannel do
         channel_failed(respondent, status, params)
       _ -> :ok
     end
-
+    SurvedaMetrics.increment_counter_with_label(:surveda_verboice_status_callback, [status])
     conn |> send_resp(200, "")
   end
 
@@ -383,8 +383,9 @@ defmodule Ask.Runtime.VerboiceChannel do
         {:ok, %{"state" => "completed"}} -> false
         {:ok, %{"state" => "failed"}} -> false
         {:ok, %{"state" => "canceled"}} -> false
-        {:ok, %{"state" => "expired"}} -> false
-        {:ok, %{"state" => _}} -> true
+        {:ok, %{"state" => _}} ->
+          SurvedaMetrics.increment_counter_with_label(:surveda_verboice_enqueue, [elem(response, 0)])
+          true
         _ -> false
       end
     end
