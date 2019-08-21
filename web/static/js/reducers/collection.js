@@ -71,10 +71,9 @@ const fetch = (state, action, filterProvider) => {
 
   let newItems = null
 
-  // TODO: This makes sense? Since having the same filters doesn't mean to have the same results (otherwise we are caching the results even within different pages)
-  // if (isEqual(state.filter, newFilter)) {
-  //   newItems = state.items
-  // }
+  if (isEqual(state.filter, newFilter)) {
+    newItems = state.items
+  }
 
   return {
     ...state,
