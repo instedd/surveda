@@ -77,7 +77,6 @@ const fetch = (state, action, filterProvider) => {
 
   return {
     ...state,
-    ...action.folderId && { folderId: action.folderId },
     fetching: true,
     filter: newFilter,
     items: newItems,

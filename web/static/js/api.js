@@ -153,8 +153,8 @@ export const fetchFolder = (projectId, folderId) => {
   return apiFetchJSON(`projects/${projectId}/folders/${folderId}`, folderSchema)
 }
 
-export const fetchSurveys = (projectId, folderId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys${folderId ? `?folder_id=${folderId}` : ''}`, arrayOf(surveySchema))
+export const fetchSurveys = projectId => {
+  return apiFetchJSON(`projects/${projectId}/surveys`, arrayOf(surveySchema))
 }
 
 export const fetchQuestionnaires = (projectId) => {

@@ -186,7 +186,7 @@ const mapStateToProps = (state, ownProps) => {
   // Right now we show all surveys: they are not paginated nor sorted
   let surveys = state.surveys.items
   if (surveys) {
-    surveys = values(surveys)
+    surveys = values(surveys).filter(s => !s.folderId)
   }
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index

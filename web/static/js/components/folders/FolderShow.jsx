@@ -35,11 +35,11 @@ class FolderShow extends Component<any, any> {
   }
 
   componentWillMount() {
-    const { dispatch, projectId, id } = this.props
+    const { dispatch, projectId } = this.props
 
-    dispatch(projectActions.fetchProject(projectId, id))
+    dispatch(projectActions.fetchProject(projectId))
 
-    dispatch(actions.fetchSurveys(projectId, id))
+    dispatch(actions.fetchSurveys(projectId))
     .then(value => {
       for (const surveyId in value) {
         if (value[surveyId].state != 'not_ready') {
@@ -138,11 +138,13 @@ class FolderShow extends Component<any, any> {
 }
 
 const mapStateToProps = (state, ownProps) => {
+  const id = ownProps.params.folderId
+
   // Right now we show all surveys: they are not paginated nor sorted
   let surveys = state.surveys.items
 
   if (surveys) {
-    surveys = values(surveys)
+    surveys = values(surveys).filter(s => s.folderId == id)
   }
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
@@ -156,7 +158,6 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const id = ownProps.params.folderId
   const name = state.folder.folders && state.folder.folders[id].name
 
   return {
