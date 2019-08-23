@@ -436,7 +436,7 @@ defmodule Ask.SurveyControllerTest do
 
       survey_id = json_response(conn, 201)["data"]["id"]
       assert survey_id
-      survey = Repo.get_by(Survey, %{id: survey_id})
+      survey = Survey |> Repo.get(survey_id)
       assert survey
 
       %{folder_id: folder_id, project_id: project_id} = survey
