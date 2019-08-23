@@ -162,7 +162,7 @@ defmodule Ask.ActivityLog do
     create("change_folder", project, conn, survey, %{
       survey_name: survey.name,
       old_folder_name: old_folder_name,
-      new_folder_name: to_string(new_folder_name)
+      new_folder_name: new_folder_name
     })
   end
 

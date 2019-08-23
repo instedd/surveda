@@ -766,6 +766,48 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "set_folder_id" do
+    test "set folder_id of a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      folder = insert(:folder, project: project)
+
+      conn = post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+
+      assert response(conn, 204)
+      assert Repo.get(Survey, survey.id).folder_id == folder.id
+    end
+
+    test "rejects set_folder_id if the survey doesn't belong to the current user", %{conn: conn} do
+      survey = insert(:survey)
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, survey.project, survey), folder_id: folder.id
+      end
+    end
+
+    test "rejects set_folder_id for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+      end
+    end
+
+    test "rejects set_folder_id if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+      end
+    end
+  end
+
   describe "set_description" do
     test "set description of a survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
