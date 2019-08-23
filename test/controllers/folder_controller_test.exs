@@ -65,6 +65,45 @@ defmodule Ask.FolderControllerTest do
 
   end
 
+  describe "index" do
+
+    test "returns code 200 and empty list if there are no entries", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      conn = get conn, project_folder_path(conn, :index, project.id)
+
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    test "lists folders", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      folder |> Folder.changeset(@valid_attrs) |> Repo.update
+      folder = Folder |> Repo.get(folder.id)
+
+      conn = get conn, project_folder_path(conn, :index, project)
+
+      assert json_response(conn, 200)["data"] == [
+        %{"id" => folder.id, "name" => folder.name, "project_id" => project.id}
+      ]
+    end
+
+    test "returns 404 when the project does not exist", %{conn: conn} do
+      assert_error_sent :not_found, fn ->
+        get conn, project_folder_path(conn, :index, -1)
+      end
+    end
+
+    test "forbid index access if the project does not belong to the current user", %{conn: conn} do
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_folder_path(conn, :index, folder.project)
+      end
+    end
+
+  end
+
   describe "delete" do
     test "deletes chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)

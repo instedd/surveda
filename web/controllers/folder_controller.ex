@@ -29,8 +29,11 @@ defmodule Ask.FolderController do
   end
 
   def index(conn, %{"project_id" => project_id}) do
+    project = conn
+    |> load_project(project_id)
+
     folders = (from f in Folder,
-          where: f.project_id == ^project_id)
+          where: f.project_id == ^project.id)
     |> Repo.all
 
     conn
