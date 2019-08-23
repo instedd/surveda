@@ -82,7 +82,7 @@ defmodule Ask.FolderControllerTest do
 
       conn = delete conn, project_folder_path(conn, :delete, project, folder)
 
-      assert response(conn, 422) == "{\"errors\":{\"surveys\":[\"There are still surveys in this folder\"]}}"
+      assert json_response(conn, 422) == %{"errors" => %{"surveys" => ["There are still surveys in this folder"]}}
       assert Repo.get(Folder, folder.id)
     end
 
@@ -149,7 +149,7 @@ defmodule Ask.FolderControllerTest do
 
       conn = post conn, project_folder_folder_path(conn, :set_name, project, folder), name: ""
 
-      assert response(conn, 422) == "{\"errors\":{\"name\":[\"can't be blank\"]}}"
+      assert json_response(conn, 422) == %{"errors" => %{"name" => ["can't be blank"]}}
       assert Repo.get(Folder, folder.id).name == folder.name
     end
 
