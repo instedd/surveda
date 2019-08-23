@@ -33,9 +33,11 @@ defmodule Ask.FolderController do
     |> render("index.json", folders: folders)
   end
 
-  def show(conn, %{"id" => folder_id}) do
-    folder = Folder
-    |> Repo.get!(folder_id)
+  def show(conn, %{"project_id" => project_id, "id" => folder_id}) do
+    project = conn
+    |> load_project(project_id)
+
+    folder = Folder |> Repo.get_by!([project_id: project.id, id: folder_id])
 
     conn
     |> render("show.json", folder: folder)
