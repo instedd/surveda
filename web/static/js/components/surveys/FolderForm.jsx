@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { translate, Trans } from 'react-i18next'
+import { translate } from 'react-i18next'
 import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
 
@@ -29,9 +29,7 @@ class FolderForm extends Component<any> {
       <form onSubmit={e => this.onSubmit(e)}>
 
         <p>
-          <Trans>
-            {cta}
-          </Trans>
+          {cta}
         </p>
 
         <Input className='folder-input' placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} error={error} />

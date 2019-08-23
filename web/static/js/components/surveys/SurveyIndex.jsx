@@ -94,15 +94,15 @@ class SurveyIndex extends Component<any, State> {
   }
 
   newFolder() {
-    const { projectId } = this.props
+    const { projectId, t } = this.props
     const onDispatch = folderName => folderActions.createFolder(projectId, folderName)
-    this.folderModal(onDispatch, 'Please write the name of the folder you want to create', this.refs.createFolderConfirmationModal)
+    this.folderModal(onDispatch, t('Please write the name of the folder you want to create'), this.refs.createFolderConfirmationModal)
   }
 
   renameFolder = (id, name) => {
-    const { projectId } = this.props
+    const { projectId, t } = this.props
     const onDispatch = folderName => folderActions.renameFolder(projectId, id, folderName)
-    this.folderModal(onDispatch, 'Please write the new folder name', this.refs.renameFolderConfirmationModal, id)
+    this.folderModal(onDispatch, t('Please write the new folder name'), this.refs.renameFolderConfirmationModal, id)
   }
 
   deleteFolder = (id) => {
