@@ -25,7 +25,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section"]
 
   def valid_actions("folder"), do:
-  ["rename"]
+    ["rename"]
 
   def valid_actions(_), do: []
 
