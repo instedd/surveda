@@ -803,6 +803,43 @@ defmodule Ask.SurveyControllerTest do
         post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
       end
     end
+
+    test "returns 404 when the project does not exist", %{conn: conn} do
+      survey = insert(:survey)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, -1, survey), folder_id: folder.id
+      end
+    end
+
+    test "returns 404 when the survey does not exist", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, -1), folder_id: folder.id
+      end
+    end
+
+    test "returns 404 when the folder does not exist", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: -1
+      end
+    end
+
+    test "returns 404 if the folder doesn't belong to the project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, -1), folder_id: folder.id
+      end
+    end
+
   end
 
   describe "set_description" do

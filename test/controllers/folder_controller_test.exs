@@ -139,6 +139,31 @@ defmodule Ask.FolderControllerTest do
       assert Repo.get(Folder, folder.id)
     end
 
+    test "returns 404 when the project does not exist", %{conn: conn} do
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        delete conn, project_folder_path(conn, :delete, -1, folder)
+      end
+    end
+
+    test "returns 404 when the folder does not exist", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      assert_error_sent :not_found, fn ->
+        delete conn, project_folder_path(conn, :delete, project, -1)
+      end
+    end
+
+    test "returns 404 if the folder doesn't belong to the project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        delete conn, project_folder_path(conn, :delete, project, folder)
+      end
+    end
+
     test "rejects delete for a project reader", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "reader")
       folder = insert(:folder, project: project)
@@ -204,6 +229,15 @@ defmodule Ask.FolderControllerTest do
 
       assert json_response(conn, 422) == %{"errors" => %{"name" => ["can't be blank"]}}
       assert Repo.get(Folder, folder.id).name == folder.name
+    end
+
+    test "returns 404 if the folder doesn't belong to the project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_folder_folder_path(conn, :set_name, project, folder), name: "new name"
+      end
     end
 
   end

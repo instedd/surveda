@@ -41,13 +41,13 @@ defmodule Ask.FolderController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => folder_id}) do
-    conn
+    project = conn
     |> load_project_for_change(project_id)
 
-    folder = (from f in Folder,
-      where: f.id == ^folder_id)
-    |> Repo.one
-    |> Repo.preload(:surveys)
+    folder =
+      project
+      |> assoc(:folders)
+      |> Repo.get!(folder_id)
 
     result = folder |> Folder.delete_changeset |> Repo.delete
 

@@ -157,7 +157,7 @@ defmodule Ask.SurveyController do
 
     old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
 
-    new_folder_name = if folder_id, do: Repo.get(Folder, folder_id).name, else: "No Folder"
+    new_folder_name = if folder_id, do: (project |> assoc(:folders) |> Repo.get!(folder_id)).name, else: "No Folder"
 
     result =
       Multi.new()
