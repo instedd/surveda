@@ -1,10 +1,13 @@
 defmodule Ask.FolderController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Folder, Logger, ActivityLog}
+  alias Ask.{Folder, Logger, ActivityLog, Project}
   alias Ecto.Multi
 
   def create(conn, params = %{"project_id" => project_id}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
     folder_params = Map.get(params, "folder", %{})
                       |> Map.put("project_id", project_id)
 
@@ -13,6 +16,7 @@ defmodule Ask.FolderController do
     |> Repo.insert()
     |> case do
       {:ok, folder} ->
+        project |> Project.touch!
         conn
         |> put_status(:created)
         |> render("show.json", folder: folder)

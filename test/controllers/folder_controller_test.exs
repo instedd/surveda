@@ -3,7 +3,7 @@ defmodule Ask.FolderControllerTest do
   use Ask.DummySteps
   use Ask.TestHelpers
 
-  alias Ask.{Folder}
+  alias Ask.{Folder, Project}
   @valid_attrs %{name: "some content"}
 
   setup %{conn: conn} do
@@ -25,9 +25,47 @@ defmodule Ask.FolderControllerTest do
       assert Repo.get_by(Folder, @valid_attrs)
     end
 
+    test "forbids creation of folder for a project that belongs to another user", %{conn: conn} do
+      project = insert(:project)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_folder_path(conn, :create, project.id), folder: Map.merge(@valid_attrs, %{project_id: project.id})
+      end
+    end
+
+    test "forbids creation of folder for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_folder_path(conn, :create, project.id), folder: Map.merge(@valid_attrs, %{project_id: project.id})
+      end
+    end
+
+    test "updates project updated_at when folder is created", %{conn: conn, user: user} do
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
+      project = create_project_for_user(user, updated_at: datetime)
+      post conn, project_folder_path(conn, :create, project.id), folder: Map.merge(@valid_attrs, %{project_id: project.id})
+
+      project = Project |> Repo.get(project.id)
+      assert DateTime.compare(project.updated_at, datetime) == :gt
+    end
+
+    test "returns 404 when the project does not exist", %{conn: conn} do
+      assert_error_sent :not_found, fn ->
+        post conn, project_folder_path(conn, :create, -1), folder: Map.merge(@valid_attrs, %{project_id: -1})
+      end
+    end
+
+    test "forbids creation if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      assert_error_sent :forbidden, fn ->
+        post conn, project_folder_path(conn, :create, project.id), folder: Map.merge(@valid_attrs, %{project_id: project.id})
+      end
+    end
+
   end
 
-  describe "delete:" do
+  describe "delete" do
     test "deletes chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       folder1 = insert(:folder, project: project)
