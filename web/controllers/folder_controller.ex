@@ -4,15 +4,12 @@ defmodule Ask.FolderController do
   alias Ask.{Folder, Logger, ActivityLog, Project}
   alias Ecto.Multi
 
-  def create(conn, params = %{"project_id" => project_id}) do
+  def create(conn, %{"project_id" => project_id, "folder" => %{"name" => name}}) do
     project = conn
     |> load_project_for_change(project_id)
 
-    folder_params = Map.get(params, "folder", %{})
-                      |> Map.put("project_id", project_id)
-
     %Folder{}
-    |> Folder.changeset(folder_params)
+    |> Folder.changeset(%{name: name, project_id: project_id})
     |> Repo.insert()
     |> case do
       {:ok, folder} ->
