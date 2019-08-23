@@ -2,6 +2,7 @@ defmodule Ask.SessionTest do
   use Ask.ConnCase
   use Ask.DummySteps
   import Ask.Factory
+  import Ask.StepBuilder
   alias Ask.Runtime.Session
   alias Ask.Runtime.SessionModeProvider
   alias Ask.TestChannel
@@ -42,6 +43,29 @@ defmodule Ask.SessionTest do
 
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+  end
+
+  describe "sections" do
+    @language_selection [language_selection_step(
+        id: Ecto.UUID.generate,
+        title: "Language Selection",
+        prompt: %{
+          "sms" => sms_prompt("Reply 1 for English, mande 2 para Español"),
+          "ivr" => tts_prompt("Press 1 for English, aprete 2 para Español")
+        },
+        store: "language",
+        choices: ["en", "es"]
+      )]
+
+    test "updates section_order on session start", %{respondent: respondent, channel: channel} do
+      quiz = build(:questionnaire, steps: @language_selection ++ @three_sections_all_random)
+
+      {:ok, _, _, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+
+      %Respondent{section_order: section_order} = respondent |> Repo.reload
+      assert section_order
+      assert Enum.sort(section_order, &(&1 <= &2)) == [0,1,2,3]
+    end
   end
 
   test "start with web mode", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
