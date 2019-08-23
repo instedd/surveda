@@ -29,9 +29,8 @@ defmodule Ask.SurveyControllerTest do
 
     test "lists surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
       started_at = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-      survey |> Survey.changeset(%{description: "initial description", started_at: started_at}) |> Repo.update
+      survey = insert(:survey, project: project, started_at: started_at, description: "initial description")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :index, project.id)
@@ -57,9 +56,8 @@ defmodule Ask.SurveyControllerTest do
     test "lists surveys with folder_id", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       folder = insert(:folder, project: project)
-      survey = insert(:survey, project: project, folder_id: folder.id)
       started_at = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-      survey |> Survey.changeset(%{description: "initial description", started_at: started_at}) |> Repo.update
+      survey = insert(:survey, project: project, folder_id: folder.id, started_at: started_at, description: "initial description")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :index, project.id)
@@ -138,8 +136,7 @@ defmodule Ask.SurveyControllerTest do
   describe "show" do
     test "shows chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-      survey |> Survey.changeset(%{description: "initial survey"}) |> Repo.update
+      survey = insert(:survey, project: project, description: "initial survey")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :show, project, survey)
