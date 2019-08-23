@@ -89,12 +89,6 @@ export default (state: any = initialState, action: any) => {
         ...state,
         folder: null
       }
-    case actions.FETCHED_FOLDER:
-      return {
-        ...state,
-        folder: action.folder,
-        loadingFetch: false
-      }
     default:
       return state
   }

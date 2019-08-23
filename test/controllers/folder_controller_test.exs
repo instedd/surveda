@@ -14,45 +14,6 @@ defmodule Ask.FolderControllerTest do
     {:ok, conn: conn, user: user}
   end
 
-  describe "show" do
-
-    test "shows chosen resource", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      folder = insert(:folder, project: project)
-      folder = Folder |> Repo.get(folder.id)
-      conn = get conn, project_folder_path(conn, :show, project, folder)
-      assert json_response(conn, 200)["data"] == %{
-        "id" => folder.id,
-        "name" => folder.name,
-        "project_id" => folder.project_id
-      }
-    end
-
-    test "returns 404 when the project does not exist", %{conn: conn} do
-      folder = insert(:folder)
-      assert_error_sent 404, fn ->
-        get conn, project_folder_path(conn, :show, -1, folder)
-      end
-    end
-
-    test "returns 404 when the folder does not exist", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-
-      assert_error_sent 404, fn ->
-        get conn, project_folder_path(conn, :show, project, -1)
-      end
-    end
-
-    test "forbid index access if the project does not belong to the current user", %{conn: conn} do
-      folder = insert(:folder)
-
-      assert_error_sent :forbidden, fn ->
-        get conn, project_folder_path(conn, :show, folder.project, folder)
-      end
-    end
-
-  end
-
   describe "create" do
 
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
