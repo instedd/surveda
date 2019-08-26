@@ -87,6 +87,10 @@ defmodule Ask.Respondent do
     (disposition || "") |> String.capitalize
   end
 
+  def show_section_order(nil), do: ""
+
+  def show_section_order(section_order), do: Enum.join(section_order, ",")
+
   def token(respondent_id)do
     String.slice(:crypto.hash(:md5, Application.get_env(:ask, Ask.Endpoint)[:secret_key_base] <> "#{respondent_id}") |> Base.encode16(case: :lower), -12, 12)
   end
