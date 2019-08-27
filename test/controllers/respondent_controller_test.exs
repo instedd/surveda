@@ -854,6 +854,33 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_section_order == "Third section, Second section, First section"
     end
 
+    test "download results csv with untitled sections", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @three_sections_untitled)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
+      group_1 = insert(:respondent_group)
+      respondent_1 = insert(:respondent, survey: survey, questionnaire: questionnaire, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, section_order: [0,1,2], stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
+      group_2 = insert(:respondent_group)
+      respondent_2 = insert(:respondent, survey: survey, questionnaire: questionnaire, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], respondent_group: group_2, section_order: [2,1,0], stats: %Stats{total_sent_sms: 1})
+      insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+      conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
+      csv = response(conn, 200)
+
+      [line1, line2, line3, _] = csv |> String.split("\r\n")
+      assert line1 == "respondent_id,date,modes,section_order,sample_file,Smokes,Exercises,Refresh,Probability,Last,Perfect_Number,Question,disposition,total_sent_sms,total_received_sms,total_call_time"
+
+      [line_2_hashed_number, _, _, line_2_section_order, _, _, _, _, _, _, _, _, _, _, _, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+      assert line_2_hashed_number == respondent_1.hashed_number
+      assert line_2_section_order == "Untitled 1, Second section, Untitled 3"
+
+      [line_3_hashed_number, _, _, line_3_section_order, _, _, _, _, _, _, _, _, _, _, _, _] = [line3] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+
+      assert line_3_hashed_number == respondent_2.hashed_number
+      assert line_3_section_order == "Untitled 3, Second section, Untitled 1"
+    end
+
     test "download results csv with filter by disposition", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)

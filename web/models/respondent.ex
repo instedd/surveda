@@ -91,7 +91,19 @@ defmodule Ask.Respondent do
 
   def show_section_order(section_order, %{questionnaire_id: questionnaire_id}, questionnaires) do
     questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
-    Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> fn %{"title" => title} -> title end.() end) |> Enum.join(", ")
+    Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> show_section_title(i) end) |> Enum.join(", ")
+  end
+
+  defp show_section_title(%{"title" => nil}, index) do
+    "Untitled #{index + 1}"
+  end
+
+  defp show_section_title(%{"title" => ""}, index) do
+    "Untitled #{index + 1}"
+  end
+
+  defp show_section_title(%{"title" => title}, _) do
+    title
   end
 
   def token(respondent_id)do
