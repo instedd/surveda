@@ -281,10 +281,9 @@ defmodule Ask.Runtime.NuntiumChannel do
 
       respondent = NuntiumChannel.update_stats(respondent)
 
-      response = Nuntium.Client.new(channel.base_url, channel.oauth_token)
+      Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
 
-      SurvedaMetrics.increment_counter_with_label(:surveda_nuntium_enqueue, [elem(response, 0)])
       respondent
     end
 

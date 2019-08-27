@@ -1,4 +1,5 @@
 defmodule Verboice.Client do
+  alias Ask.SurvedaMetrics
   alias __MODULE__
   defstruct [:base_url, :oauth2_client]
 
@@ -9,10 +10,11 @@ defmodule Verboice.Client do
 
   def call(client, params) do
     url = "#{URI.merge(client.base_url, "api/call")}?#{URI.encode_query(params)}"
-
-    client.oauth2_client
+    response = client.oauth2_client
     |> OAuth2.Client.get(url)
-    |> parse_response
+    {_, response_body} = response
+    SurvedaMetrics.increment_counter_with_label(:surveda_verboice_enqueue, [response_body.status_code])
+    parse_response(response)
   end
 
   def call_state(client, call_id) do

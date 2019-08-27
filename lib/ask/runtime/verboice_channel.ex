@@ -383,9 +383,7 @@ defmodule Ask.Runtime.VerboiceChannel do
         {:ok, %{"state" => "completed"}} -> false
         {:ok, %{"state" => "failed"}} -> false
         {:ok, %{"state" => "canceled"}} -> false
-        {:ok, %{"state" => _}} ->
-          SurvedaMetrics.increment_counter_with_label(:surveda_verboice_enqueue, [elem(response, 0)])
-          true
+        {:ok, %{"state" => _}} -> true
         _ -> false
       end
     end

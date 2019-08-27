@@ -56,5 +56,4 @@ defmodule Ask.SurvedaMetrics do
         name: counter_name
       )
     end
-
 end
