@@ -193,7 +193,7 @@ defmodule Ask.Questionnaire do
   end
 
   defp delta_quota_completed_steps(multi, conn, project, changeset) do
-    new_steps = get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1})
+    new_steps = if get_change(changeset, :quota_completed_steps), do: get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1}), else: %{}
     old_steps = if changeset.data.quota_completed_steps, do: changeset.data.quota_completed_steps |> Map.new(&{&1["id"], &1}), else: %{}
 
     delta(multi, conn, project, changeset.data, new_steps, old_steps)
