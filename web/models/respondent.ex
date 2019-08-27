@@ -87,9 +87,12 @@ defmodule Ask.Respondent do
     (disposition || "") |> String.capitalize
   end
 
-  def show_section_order(nil), do: ""
+  def show_section_order(nil, _, _), do: ""
 
-  def show_section_order(section_order), do: Enum.join(section_order, ",")
+  def show_section_order(section_order, %{questionnaire_id: questionnaire_id}, questionnaires) do
+    questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
+    Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> fn %{"title" => title} -> title end.() end) |> Enum.join(", ")
+  end
 
   def token(respondent_id)do
     String.slice(:crypto.hash(:md5, Application.get_env(:ask, Ask.Endpoint)[:secret_key_base] <> "#{respondent_id}") |> Base.encode16(case: :lower), -12, 12)

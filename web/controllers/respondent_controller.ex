@@ -629,7 +629,7 @@ defmodule Ask.RespondentController do
         |> Enum.map(fn mode -> mode_label([mode]) end)
         |> Enum.join(", ")
 
-        row = row ++ [modes] ++ [Respondent.show_section_order(respondent.section_order)]
+        row = row ++ [modes] ++ [Respondent.show_section_order(respondent.section_order, respondent, questionnaires)]
 
         respondent_group = respondent.respondent_group.name
 

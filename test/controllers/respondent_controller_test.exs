@@ -809,13 +809,13 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @three_sections)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
       group_1 = insert(:respondent_group)
-      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, section_order: [0,1,2], stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
+      respondent_1 = insert(:respondent, survey: survey, questionnaire: questionnaire, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, section_order: [0,1,2], stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time: 12})
       insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
       insert(:response, respondent: respondent_1, field_name: "Refresh", value: "No")
       insert(:response, respondent: respondent_1, field_name: "Perfect_Number", value: "4")
       insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
       group_2 = insert(:respondent_group)
-      respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], respondent_group: group_2, section_order: [0,1,2], stats: %Stats{total_sent_sms: 1})
+      respondent_2 = insert(:respondent, survey: survey, questionnaire: questionnaire, hashed_number: "34y5345tjyet", effective_modes: ["mobileweb"], respondent_group: group_2, section_order: [2,1,0], stats: %Stats{total_sent_sms: 1})
       insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
       conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
@@ -837,7 +837,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_2_total_sent_sms == "3"
       assert line_2_total_received_sms == "4"
       assert line_2_total_call_time == "12"
-      assert line_2_section_order == "0,1,2"
+      assert line_2_section_order == "First section, Second section, Third section"
 
       [line_3_hashed_number, _, line_3_modes, line_3_section_order, line_3_respondent_group, line_3_smoke, line_3_exercises, line_3_refresh, _, _, _, _, line_3_disp, line_3_total_sent_sms, line_3_total_received_sms, line_3_total_call_time] = [line3]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
@@ -851,7 +851,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_total_sent_sms == "1"
       assert line_3_total_received_sms == "0"
       assert line_3_total_call_time == "0"
-      assert line_3_section_order == "0,1,2"
+      assert line_3_section_order == "Third section, Second section, First section"
     end
 
     test "download results csv with filter by disposition", %{conn: conn, user: user} do
