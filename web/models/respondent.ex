@@ -71,7 +71,7 @@ defmodule Ask.Respondent do
   end
 
   def hash_phone_number(phone_number, salt) do
-    String.slice(:crypto.hash(:md5, salt <> phone_number) |> Base.encode16(case: :lower), -12, 12)
+    "r" <> (String.slice(:crypto.hash(:md5, salt <> phone_number) |> Base.encode16(case: :lower), -12, 12))
   end
 
   def mask_phone_number(phone_number) do
