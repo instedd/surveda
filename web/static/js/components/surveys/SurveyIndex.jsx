@@ -1,20 +1,27 @@
 // @flow
-import React, { Component, PureComponent, PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { withRouter, Link } from 'react-router'
+import { withRouter } from 'react-router'
 import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
-import { AddButton, Card, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import * as folderActions from '../../actions/folder'
+import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
+import { Button } from 'react-materialize'
+import FolderCard from '../folders/FolderCard'
+import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
-import RespondentsChart from '../respondents/RespondentsChart'
-import SurveyStatus from './SurveyStatus'
+import FolderForm from './FolderForm'
 import * as routes from '../../routes'
-import { translate, Trans } from 'react-i18next'
+import { translate } from 'react-i18next'
 
-class SurveyIndex extends Component<any> {
+type State = {
+  folderName: string
+}
+
+class SurveyIndex extends Component<any, State> {
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
@@ -22,13 +29,27 @@ class SurveyIndex extends Component<any> {
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
     surveys: PropTypes.array,
+    folders: PropTypes.array,
+    loadingFolders: PropTypes.bool,
+    loadingSurveys: PropTypes.bool,
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired
   }
 
+  constructor(props) {
+    super(props)
+    this.state = {
+      folderName: ''
+    }
+  }
+
   componentWillMount() {
+    this.initialFetch()
+  }
+
+  initialFetch() {
     const { dispatch, projectId } = this.props
 
     // Fetch project for title
@@ -43,6 +64,7 @@ class SurveyIndex extends Component<any> {
       }
     })
     dispatch(channelsActions.fetchChannels())
+    dispatch(folderActions.fetchFolders(projectId))
   }
 
   newSurvey() {
@@ -52,23 +74,40 @@ class SurveyIndex extends Component<any> {
     )
   }
 
-  deleteSurvey = (survey: Survey) => {
-    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
-    const { t } = this.props
-    deleteConfirmationModal.open({
-      modalText: <span>
-        <p>
-          <Trans>
-            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
-          </Trans>
-        </p>
-        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
-      </span>,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        dispatch(surveyActions.deleteSurvey(survey))
+  changeFolderName(name) {
+    this.setState({folderName: name})
+  }
+
+  folderModal(onDispatch, cta, ref, folderId) {
+    const modal: ConfirmationModal = ref
+    const { dispatch } = this.props
+
+    const modalText = <FolderForm id={folderId} onChangeName={name => this.changeFolderName(name)} cta={cta} />
+    modal.open({
+      modalText: modalText,
+      onConfirm: async () => {
+        const { folderName } = this.state
+        const { error } = await dispatch(onDispatch(folderName))
+        return !error
       }
     })
+  }
+
+  newFolder() {
+    const { projectId, t } = this.props
+    const onDispatch = folderName => folderActions.createFolder(projectId, folderName)
+    this.folderModal(onDispatch, t('Please write the name of the folder you want to create'), this.refs.createFolderConfirmationModal)
+  }
+
+  renameFolder = (id, name) => {
+    const { projectId, t } = this.props
+    const onDispatch = folderName => folderActions.renameFolder(projectId, id, folderName)
+    this.folderModal(onDispatch, t('Please write the new folder name'), this.refs.renameFolderConfirmationModal, id)
+  }
+
+  deleteFolder = (id) => {
+    const { dispatch, projectId, t } = this.props
+    dispatch(folderActions.deleteFolder(projectId, id)).then(({ error }) => error ? window.Materialize.toast(t(error), 5000, 'error-toast') : null)
   }
 
   nextPage() {
@@ -82,9 +121,8 @@ class SurveyIndex extends Component<any> {
   }
 
   render() {
-    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
-
-    if (!surveys) {
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
       return (
         <div>{t('Loading surveys...')}</div>
       )
@@ -100,25 +138,45 @@ class SurveyIndex extends Component<any> {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text='Add survey' onClick={() => this.newSurvey()} />
+        <FABButton icon={'add'} hoverEnabled={false} text='Add survey'>
+          <Tooltip text='Survey' position='left'>
+            <Button onClick={() => this.newSurvey()} className='btn-floating btn-small waves-effect waves-light right mbottom white black-text' >
+              <i className='material-icons black-text'>assignment_turned_in</i>
+            </Button>
+          </Tooltip>
+          <Tooltip text='Folder' position='left'>
+            <Button onClick={() => this.newFolder()} className='btn-floating btn-small waves-effect waves-light right mbottom white black-text' >
+              <i className='material-icons black-text'>folder</i>
+            </Button>
+          </Tooltip>
+
+        </FABButton>
       )
     }
 
     return (
       <div>
         {addButton}
-        { surveys.length == 0
+        { (surveys && surveys.length == 0 && folders && folders.length === 0)
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
-        : <div className='row'>
-          { surveys.map(survey => {
-            return (
-              <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
-            )
-          }) }
-          { footer }
-        </div>
+        : (
+          <div>
+            <div className='row'>
+              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} />)}
+            </div>
+            <div className='row'>
+              { surveys && surveys.map(survey => {
+                return (
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+                )
+              }) }
+            </div>
+            { footer }
+          </div>
+        )
         }
-        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
+        <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
+        <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' confirmationText={t('Rename')} header={t('Rename Folder')} showCancel />
       </div>
     )
   }
@@ -128,7 +186,7 @@ const mapStateToProps = (state, ownProps) => {
   // Right now we show all surveys: they are not paginated nor sorted
   let surveys = state.surveys.items
   if (surveys) {
-    surveys = values(surveys)
+    surveys = values(surveys).filter(s => !s.folderId)
   }
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
@@ -151,67 +209,11 @@ const mapStateToProps = (state, ownProps) => {
     respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
-    totalCount
+    totalCount,
+    loadingSurveys: state.surveys.fetching,
+    loadingFolders: state.folder.loadingFetch,
+    folders: state.folder.folders && Object.values(state.folder.folders)
   }
 }
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyIndex)))
-
-class SurveyCard extends PureComponent<any> {
-  props: {
-    t: Function,
-    respondentsStats: Object,
-    survey: Survey,
-    onDelete: (survey: Survey) => void,
-    readOnly: boolean
-  };
-
-  render() {
-    const { survey, respondentsStats, onDelete, readOnly, t } = this.props
-
-    var deleteButton = null
-    if (survey.state != 'running') {
-      const onDeleteClick = (e) => {
-        e.preventDefault()
-        onDelete(survey)
-      }
-
-      deleteButton = readOnly ? null
-        : <span onClick={onDeleteClick} className='right card-hover grey-text'>
-          <i className='material-icons'>delete</i>
-        </span>
-    }
-
-    let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
-    let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
-
-    let description = <div className='grey-text card-description'>
-      {survey.description}
-    </div>
-
-    return (
-      <div className='col s12 m6 l4'>
-        <Link className='survey-card' to={routes.showOrEditSurvey(survey)}>
-          <Card>
-            <div className='card-content'>
-              <div className='grey-text'>
-                {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
-              </div>
-              <div className='card-chart'>
-                <RespondentsChart cumulativePercentages={cumulativePercentages} />
-              </div>
-              <div className='card-status'>
-                <div className='card-title truncate' title={survey.name}>
-                  <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
-                  {deleteButton}
-                </div>
-                {description}
-                <SurveyStatus survey={survey} short />
-              </div>
-            </div>
-          </Card>
-        </Link>
-      </div>
-    )
-  }
-}

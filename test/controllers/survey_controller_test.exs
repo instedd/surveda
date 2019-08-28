@@ -29,15 +29,14 @@ defmodule Ask.SurveyControllerTest do
 
     test "lists surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
       started_at = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-      survey |> Survey.changeset(%{description: "initial description", started_at: started_at}) |> Repo.update
+      survey = insert(:survey, project: project, started_at: started_at, description: "initial description")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :index, project.id)
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -50,7 +49,21 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "running")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
+      ]
+    end
+
+    test "lists surveys with folder_id", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      started_at = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
+      survey = insert(:survey, project: project, folder_id: folder.id, started_at: started_at, description: "initial description")
+      survey = Survey |> Repo.get(survey.id)
+
+      conn = get conn, project_survey_path(conn, :index, project.id)
+
+      assert json_response(conn, 200)["data"] == [
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => folder.id}
       ]
     end
 
@@ -63,7 +76,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "completed")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -76,7 +89,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, %{"since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => []}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -123,8 +136,7 @@ defmodule Ask.SurveyControllerTest do
   describe "show" do
     test "shows chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-      survey |> Survey.changeset(%{description: "initial survey"}) |> Repo.update
+      survey = insert(:survey, project: project, description: "initial survey")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :show, project, survey)
@@ -414,6 +426,22 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(conn, 201)["data"]["id"]
       assert Repo.get_by(Survey, %{project_id: project.id})
+    end
+
+    test "creates the survey inside the requested folder", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+
+      conn = post conn, project_folder_survey_path(conn, :create, project.id, folder.id)
+
+      survey_id = json_response(conn, 201)["data"]["id"]
+      assert survey_id
+      survey = Survey |> Repo.get(survey_id)
+      assert survey
+
+      %{folder_id: folder_id, project_id: project_id} = survey
+      assert folder_id == folder.id
+      assert project_id == project.id
     end
 
     test "forbids creation of survey for a project that belongs to another user", %{conn: conn} do
@@ -733,6 +761,85 @@ defmodule Ask.SurveyControllerTest do
         post conn, project_survey_survey_path(conn, :set_name, survey.project, survey), name: "new name"
       end
     end
+  end
+
+  describe "set_folder_id" do
+    test "set folder_id of a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      folder = insert(:folder, project: project)
+
+      conn = post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+
+      assert response(conn, 204)
+      assert Repo.get(Survey, survey.id).folder_id == folder.id
+    end
+
+    test "rejects set_folder_id if the survey doesn't belong to the current user", %{conn: conn} do
+      survey = insert(:survey)
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, survey.project, survey), folder_id: folder.id
+      end
+    end
+
+    test "rejects set_folder_id for a project reader", %{conn: conn, user: user} do
+      project = create_project_for_user(user, level: "reader")
+      survey = insert(:survey, project: project)
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+      end
+    end
+
+    test "rejects set_folder_id if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+      folder = insert(:folder)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+      end
+    end
+
+    test "returns 404 when the project does not exist", %{conn: conn} do
+      survey = insert(:survey)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, -1, survey), folder_id: folder.id
+      end
+    end
+
+    test "returns 404 when the survey does not exist", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, -1), folder_id: folder.id
+      end
+    end
+
+    test "returns 404 when the folder does not exist", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: -1
+      end
+    end
+
+    test "returns 404 if the folder doesn't belong to the project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder)
+
+      assert_error_sent :not_found, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, -1), folder_id: folder.id
+      end
+    end
+
   end
 
   describe "set_description" do

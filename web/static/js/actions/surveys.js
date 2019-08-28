@@ -16,7 +16,6 @@ export const fetchSurveys = (projectId: number) => (dispatch: Function, getState
   if (state.surveys.fetching && state.surveys.filter && state.surveys.filter.projectId == projectId) {
     return Promise.resolve(getState().surveys.items)
   }
-
   dispatch(startFetchingSurveys(projectId))
 
   return api

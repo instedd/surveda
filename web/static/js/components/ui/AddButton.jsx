@@ -8,7 +8,7 @@ export const AddButton = ({ text, linkPath, onClick, children }) => {
   let link
   if (linkPath) {
     link = (
-      <Link className='btn-floating btn-large waves-effect waves-light green right mtop' to={linkPath}>
+      <Link className='btn-floating btn-large waves-effect waves-light green right mbottom' to={linkPath}>
         { icon }
       </Link>
     )
