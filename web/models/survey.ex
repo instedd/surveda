@@ -2,6 +2,7 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
+  require Ask.RespondentStats
   alias Ask.{
     Schedule,
     ShortLink,
@@ -14,7 +15,8 @@ defmodule Ask.Survey do
     Questionnaire,
     SurveyQuestionnaire,
     Project,
-    FloipEndpoint
+    FloipEndpoint,
+    RespondentStats
   }
   alias Ask.Runtime.{Broker, ChannelStatusServer}
   alias Ask.Ecto.Type.JSON
@@ -399,5 +401,73 @@ defmodule Ask.Survey do
       |> Enum.filter(&(&1 != :up && &1 != :unknown))
 
     %{survey | down_channels: down_channels}
+  end
+
+  def success_rate(_, 0, 0, 0), do: 1
+  def success_rate(successful, completed_respondents, failed_respondents, rejected_respondents) do
+    successful / (completed_respondents + failed_respondents + rejected_respondents)
+  end
+
+  def completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
+  def completion_rate(completed, respondents_target), do: completed / respondents_target
+
+  def initial_success_rate() do
+    %{:valid_respondent_rate => initial_valid_respondent_rate,
+    :eligibility_rate => initial_eligibility_rate,
+    :response_rate => initial_response_rate } = config_rates()
+
+    initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+  end
+
+  def estimated_success_rate(initial_success_rate, current_success_rate, completion_rate), do: (1 - completion_rate) * initial_success_rate + completion_rate * current_success_rate
+
+  def completed_respondents_needed_by(survey) do
+    survey_id = survey.id
+    quota_target = Repo.one(from q in QuotaBucket,
+                      where: q.survey_id == ^survey_id,
+                      select: sum(q.quota))
+    cutoff_target = survey.cutoff
+    targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
+
+    if targets_compacted |> Enum.empty? do
+      :all
+    else
+      res = targets_compacted
+            |> Enum.max()
+            |> Decimal.new()
+            |> Decimal.to_integer()
+      res
+    end
+  end
+
+  def respondents_by_state(survey) do
+    by_state_defaults = %{
+      "active" => 0,
+      "pending" => 0,
+      "completed" => 0,
+      "stalled" => 0,
+      "rejected" => 0,
+      "failed" => 0,
+    }
+
+    RespondentStats.respondent_count(survey_id: ^survey.id, by: :state)
+      |> Enum.into(by_state_defaults)
+  end
+
+  def successful_respondents(survey, nil) do
+    respondents_by_state = survey |> respondents_by_state
+    survey |> successful_respondents(respondents_by_state)
+  end
+
+  def successful_respondents(survey, respondents_by_state) do
+    quota_completed = Repo.one(
+      from q in (survey |> assoc(:quota_buckets)),
+      select: fragment("sum(least(count, quota))")
+    )
+
+    case quota_completed do
+      nil -> respondents_by_state["completed"]
+      value -> value |> Decimal.to_integer
+    end
   end
 end
