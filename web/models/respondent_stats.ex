@@ -1,6 +1,7 @@
 defmodule Ask.RespondentStats do
   use Ask.Web, :model
 
+  @primary_key false
   schema "respondent_stats" do
     belongs_to :survey, Ask.Survey
     field :questionnaire_id, :integer
