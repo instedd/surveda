@@ -406,6 +406,37 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "stats" do
+    test "show survey stats", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200) == %{
+        "success_rate" => 1.0,
+        "completion_rate" => 0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 1.0
+      }
+    end
+
+    test "renders page not found when id is nonexistent", %{conn: conn} do
+      assert_error_sent 404, fn ->
+        get conn, project_survey_path(conn, :show, -1, -1)
+      end
+    end
+
+    test "forbid access to survey if the project does not belong to the current user", %{conn: conn} do
+      survey = insert(:survey)
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_path(conn, :show, survey.project, survey)
+      end
+    end
+  end
+
   describe "create" do
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)

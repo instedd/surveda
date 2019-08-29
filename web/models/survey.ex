@@ -403,12 +403,36 @@ defmodule Ask.Survey do
     %{survey | down_channels: down_channels}
   end
 
-  def success_rate(_, 0, 0, 0), do: 1
-  def success_rate(successful, completed_respondents, failed_respondents, rejected_respondents) do
-    successful / (completed_respondents + failed_respondents + rejected_respondents)
+  def stats(survey) do
+    respondents_by_state = survey |> respondents_by_state
+    respondents_total = Enum.map(respondents_by_state, fn {_, v} -> v end) |> Enum.reduce(fn q, acc -> q + acc end)
+    respondents_target = survey
+      |> completed_respondents_needed_by
+      |> respondents_target(respondents_total)
+    initial_success_rate = initial_success_rate()
+    successful_respondents = survey |> successful_respondents(respondents_by_state)
+    current_success_rate = success_rate(successful_respondents, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
+    completion_rate = completion_rate(successful_respondents, respondents_target)
+    estimated_success_rate = estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
+
+    %{
+      success_rate: current_success_rate,
+      completion_rate: completion_rate,
+      initial_success_rate: initial_success_rate,
+      estimated_success_rate: estimated_success_rate
+    }
   end
 
-  def completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
+  defp respondents_target(:all, respondents_total), do: respondents_total
+  defp respondents_target(completed_respondents_needed, _), do: completed_respondents_needed
+
+  def success_rate(_, 0, 0, 0), do: 1
+  def success_rate(successful_respondents, completed_respondents, failed_respondents, rejected_respondents) do
+    successful_respondents / (completed_respondents + failed_respondents + rejected_respondents)
+  end
+
+  def completion_rate(_, nil), do: 0
+  def completion_rate(_, 0), do: 0
   def completion_rate(completed, respondents_target), do: completed / respondents_target
 
   def initial_success_rate() do

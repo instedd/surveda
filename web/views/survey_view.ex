@@ -14,6 +14,9 @@ defmodule Ask.SurveyView do
   def render("config.json", %{config: config}) do
     config
   end
+  def render("stats.json", %{stats: stats}) do
+    stats
+  end
   def render("survey.json", %{survey: survey}) do
     started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: nil
 
