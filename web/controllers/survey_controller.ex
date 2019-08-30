@@ -100,7 +100,7 @@ defmodule Ask.SurveyController do
 
     stats = survey |> Survey.stats
 
-    render(conn, "stats.json", stats: stats)
+    render(conn, "stats.json", stats)
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do

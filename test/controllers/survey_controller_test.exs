@@ -414,7 +414,7 @@ defmodule Ask.SurveyControllerTest do
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["data"] == %{
         "success_rate" => 1.0,
         "completion_rate" => 0,
         "initial_success_rate" => 1.0,
