@@ -420,6 +420,10 @@ export const fetchSurveySimulationStatus = (projectId, surveyId) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/simulation_status`)
 }
 
+export const fetchSurveyStats = (projectId, surveyId) => {
+  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/stats`)
+}
+
 export const stopSurveySimulation = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop_simulation`, null, {})
 }

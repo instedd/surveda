@@ -39,7 +39,11 @@ class SurveyShow extends Component<any, State> {
     totalRespondents: PropTypes.number,
     target: PropTypes.number,
     completionPercentage: PropTypes.number,
-    cumulativePercentages: PropTypes.object
+    cumulativePercentages: PropTypes.object,
+    completionRate: PropTypes.number,
+    estimatedSuccessRate: PropTypes.number,
+    initialSuccessRate: PropTypes.number,
+    successRate: PropTypes.number
   }
 
   constructor(props) {
@@ -53,6 +57,7 @@ class SurveyShow extends Component<any, State> {
     const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+    dispatch(actions.fetchSurveyStats(projectId, surveyId))
   }
 
   componentDidUpdate() {
@@ -117,7 +122,7 @@ class SurveyShow extends Component<any, State> {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t } = this.props
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t, completionRate, estimatedSuccessRate, initialSuccessRate, successRate } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
@@ -263,6 +268,7 @@ class SurveyShow extends Component<any, State> {
             <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
               <div className='header'>
                 <div className='title'>{t('Percent of completes')}</div>
+                {`${completionRate}, ${estimatedSuccessRate}, ${initialSuccessRate}, ${successRate}`}
                 {survey.countPartialResults
                   ? <div className='description'>{t('Count partials as completed')}</div>
                   : ''
@@ -412,6 +418,7 @@ class SurveyShow extends Component<any, State> {
 
 const mapStateToProps = (state, ownProps) => {
   const respondentsStatsRoot = state.respondentsStats[ownProps.params.surveyId]
+  const surveyStats = state.surveyStats.surveyId == ownProps.params.surveyId ? state.surveyStats.stats : null
 
   let respondentsByDisposition = null
   let cumulativePercentages = {}
@@ -443,7 +450,11 @@ const mapStateToProps = (state, ownProps) => {
     totalRespondents: totalRespondents,
     target: target,
     reference: reference,
-    completionPercentage: completionPercentage
+    completionPercentage: completionPercentage,
+    completionRate: surveyStats ? surveyStats.completion_rate : null,
+    estimatedSuccessRate: surveyStats ? surveyStats.estimated_success_rate : null,
+    initialSuccessRate: surveyStats ? surveyStats.initial_success_rate : null,
+    successRate: surveyStats ? surveyStats.success_rate : null
   })
 }
 

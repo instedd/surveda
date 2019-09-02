@@ -36,6 +36,7 @@ export const TOGGLE_COUNT_PARTIAL_RESULTS = 'SURVEY_TOGGLE_COUNT_PARTIAL_RESULTS
 export const RECEIVE_LINK = 'SURVEY_RECEIVE_LINK'
 export const REFRESH_LINK = 'SURVEY_REFRESH_LINK'
 export const DELETE_LINK = 'SURVEY_DELETE_LINK'
+export const RECEIVE_SURVEY_STATS = 'RECEIVE_SURVEY_STATS'
 
 export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId).then(response => {
@@ -55,6 +56,17 @@ export const fetchSurvey = (projectId: number, id: number) => (dispatch: Functio
       return getState().survey.data
     })
 }
+
+export const fetchSurveyStats = (projectId: number, id: number) => (dispatch: Function) => {
+  api.fetchSurveyStats(projectId, id)
+    .then(stats => dispatch(receiveSurveyStats(id, stats)))
+}
+
+export const receiveSurveyStats = (surveyId: number, response: any) => ({
+  type: RECEIVE_SURVEY_STATS,
+  surveyId,
+  response
+})
 
 export const fetch = (projectId: number, id: number): FilteredAction => ({
   type: FETCH,
