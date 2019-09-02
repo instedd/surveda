@@ -468,6 +468,60 @@ defmodule Ask.SurveyControllerTest do
       }
     end
 
+    test "estimated success rate equals current when completed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, cutoff: 2)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 0.67,
+        "completion_rate" => 1.0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 0.67
+      }
+    end
+
+    test "estimated success rate averages initial and current when completion rate is 50%", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, cutoff: 2)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 0.5,
+        "completion_rate" => 0.5,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 0.75
+      }
+    end
+
+    test "estimated success rate is calculated using linear interpolation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, cutoff: 5)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 0.25,
+        "completion_rate" => 0.2,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 0.85
+      }
+    end
+
     test "renders page not found when id is nonexistent", %{conn: conn} do
       assert_error_sent 404, fn ->
         get conn, project_survey_path(conn, :show, -1, -1)
