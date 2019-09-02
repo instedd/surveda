@@ -1,4 +1,10 @@
 // @flow
+export type Folder = {
+  id: number,
+  name: string,
+  projectId: number
+}
+
 export type Survey = {
   id: number,
   projectId: number,

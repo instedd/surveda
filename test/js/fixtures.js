@@ -311,7 +311,14 @@ const bareSurvey: Survey = {
   nextScheduleTime: null
 }
 
+const bareFolder: Folder = {
+  id: 1,
+  projectId: 1,
+  name: 'Some name'
+}
+
 export const survey: Survey = deepFreeze(bareSurvey)
+export const folder: Folder = deepFreeze(bareFolder)
 
 const bareChannel: Channel = {
   id: 1,

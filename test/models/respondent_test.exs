@@ -26,7 +26,14 @@ defmodule Ask.RespondentTest do
     salt = "32f0599c-6861-48a9-bf40-753844b5920f"
     hash = Respondent.hash_phone_number("+ (549) 11 1234 5627", salt)
 
-    assert hash == "4e57ba03c44d"
+    assert hash == "r4e57ba03c44d"
+  end
+
+  test "phone number hash is prefixed" do
+    salt = "550a8b7d-b050-476f-81c6-11e1de610116"
+    hash = Respondent.hash_phone_number("+1 408-471-5758", salt)
+
+    assert hash |> String.starts_with?("r")
   end
 
   test "hash phone number should be different for different projects" do

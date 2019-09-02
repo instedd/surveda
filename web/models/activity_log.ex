@@ -1,7 +1,7 @@
 defmodule Ask.ActivityLog do
   use Ask.Web, :model
   import User.Helper
-  alias Ask.{ActivityLog, Project, Survey, Questionnaire}
+  alias Ask.{ActivityLog, Project, Survey, Questionnaire, Folder}
 
   schema "activity_log" do
     belongs_to :project, Ask.Project
@@ -19,10 +19,13 @@ defmodule Ask.ActivityLog do
     ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
 
   def valid_actions("survey"), do:
-    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link"]
+    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder"]
 
   def valid_actions("questionnaire"), do:
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section"]
+
+  def valid_actions("folder"), do:
+    ["rename"]
 
   def valid_actions(_), do: []
 
@@ -36,6 +39,7 @@ defmodule Ask.ActivityLog do
   defp typeof(%Project{}), do: "project"
   defp typeof(%Survey{}), do: "survey"
   defp typeof(%Questionnaire{}), do: "questionnaire"
+  defp typeof(%Folder{}), do: "folder"
 
   defp create(action, project, conn, entity, metadata) do
     user_id = case current_user(conn) do
@@ -144,6 +148,21 @@ defmodule Ask.ActivityLog do
     create("rename", project, conn, survey, %{
       old_survey_name: old_survey_name,
       new_survey_name: new_survey_name
+    })
+  end
+
+  def rename_folder(project, conn, folder, old_folder_name, new_folder_name) do
+    create("rename", project, conn, folder, %{
+      old_folder_name: old_folder_name,
+      new_folder_name: new_folder_name
+    })
+  end
+
+  def change_folder(project, conn, survey, old_folder_name, new_folder_name) do
+    create("change_folder", project, conn, survey, %{
+      survey_name: survey.name,
+      old_folder_name: old_folder_name,
+      new_folder_name: new_folder_name
     })
   end
 

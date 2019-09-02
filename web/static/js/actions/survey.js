@@ -8,6 +8,7 @@ export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
 export const CHANGE_COMPARISON_RATIO = 'SURVEY_CHANGE_COMPARISON_RATIO'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
+export const CHANGE_FOLDER = 'SURVEY_CHANGE_FOLDER'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const CHANGE_DESCRIPTION = 'SURVEY_CHANGE_DESCRIPTION'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
@@ -38,8 +39,8 @@ export const REFRESH_LINK = 'SURVEY_REFRESH_LINK'
 export const DELETE_LINK = 'SURVEY_DELETE_LINK'
 export const RECEIVE_SURVEY_STATS = 'RECEIVE_SURVEY_STATS'
 
-export const createSurvey = (projectId: number) => (dispatch: Function, getState: () => Store) =>
-  api.createSurvey(projectId).then(response => {
+export const createSurvey = (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
+  api.createSurvey(projectId, folderId).then(response => {
     const survey = response.result
     dispatch(fetch(projectId, survey.id))
     dispatch(receive(survey))
@@ -157,6 +158,14 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
     type: CHANGE_NAME,
     newName
   })
+}
+
+export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
+  return api.setFolderId(survey.projectId, survey.id, folderId).then(() =>
+    dispatch({
+      type: CHANGE_FOLDER
+    })
+  )
 }
 
 export const changeDescription = (newDescription: string) => (dispatch: Function, getState: () => Store) => {

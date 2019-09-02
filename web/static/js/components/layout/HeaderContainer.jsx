@@ -17,10 +17,10 @@ class HeaderContainer extends Component {
   render() {
     const { tabs, logout, user } = this.props
     let { project } = this.props
-    const { projectId, surveyId, questionnaireId } = this.props.params
+    const { projectId, surveyId, questionnaireId, folderId } = this.props.params
 
     let showProjectLink = true
-    if (!project || (!surveyId && !questionnaireId)) {
+    if (!project || (!surveyId && !questionnaireId && !folderId)) {
       showProjectLink = false
     }
 

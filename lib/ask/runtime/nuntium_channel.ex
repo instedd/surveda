@@ -2,7 +2,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Web, :model
   alias Ask.Runtime.{Broker, NuntiumChannel, Flow, Reply, ReplyStep}
-  alias Ask.{Repo, Respondent, Channel, Stats}
+  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
   defstruct [:oauth_token, :name, :base_url, :settings]
@@ -65,6 +65,7 @@ defmodule Ask.Runtime.NuntiumChannel do
           _ -> :ok
         end
     end
+    SurvedaMetrics.increment_counter_with_label(:surveda_nuntium_status_callback, [state])
 
     conn |> send_resp(200, "")
   end
@@ -93,8 +94,8 @@ defmodule Ask.Runtime.NuntiumChannel do
             nil
         end
     end
-
     json_reply = reply_to_messages(reply, from, respondent)
+    SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
     Phoenix.Controller.json(conn, json_reply)
   end
 

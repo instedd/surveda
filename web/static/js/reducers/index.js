@@ -23,6 +23,7 @@ import ui from './ui/index'
 import userSettings from './userSettings'
 import activities from './activities'
 import integrations from './integrations'
+import folder from './folder'
 import surveyStats from './surveyStats'
 
 export default combineReducers({
@@ -50,5 +51,6 @@ export default combineReducers({
   ui,
   userSettings,
   integrations,
+  folder,
   surveyStats
 })

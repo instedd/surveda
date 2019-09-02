@@ -1,4 +1,5 @@
 defmodule Nuntium.Client do
+  alias Ask.SurvedaMetrics
   alias Nuntium.Client
   defstruct [:base_url, :oauth2_client]
 
@@ -13,9 +14,11 @@ defmodule Nuntium.Client do
   # @spec send_ao(t, String.t) :: any()
   def send_ao(client, account, messages) do
     url = "#{client.base_url}/api/ao_messages.json?#{URI.encode_query([account: account])}"
-    client.oauth2_client
-    |> OAuth2.Client.post(url, messages)
-    |> parse_response
+    response = client.oauth2_client
+               |> OAuth2.Client.post(url, messages)
+    {_, response_body} = response
+    SurvedaMetrics.increment_counter_with_label(:surveda_nuntium_enqueue, [response_body.status_code])
+    parse_response(response)
   end
 
   def application_update(client, account, app = %{}) do

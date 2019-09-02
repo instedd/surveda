@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
+  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
   alias Ask.Runtime.Session
   alias Ecto.Multi
 
@@ -40,7 +40,9 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create(conn, params = %{"project_id" => project_id}) do
+  def create(conn, params = %{"folder_id" => folder_id}), do: create(conn, params, folder_id)
+
+  def create(conn, params = %{"project_id" => project_id}, folder_id  \\ nil) do
     project = conn
     |> load_project_for_change(project_id)
     |> validate_project_not_archived(conn)
@@ -49,6 +51,7 @@ defmodule Ask.SurveyController do
     timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())
     schedule = Map.merge(Ask.Schedule.default(), %{timezone: timezone})
     props = %{"project_id" => project_id,
+              "folder_id" => folder_id,
               "name" => "",
               "schedule" => schedule}
 
@@ -152,6 +155,38 @@ defmodule Ask.SurveyController do
         |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
     end
   end
+
+  def set_folder_id(conn, %{"project_id" => project_id, "survey_id" => survey_id, "folder_id" => folder_id}) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
+
+    survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+
+    old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
+
+    new_folder_name = if folder_id, do: (project |> assoc(:folders) |> Repo.get!(folder_id)).name, else: "No Folder"
+
+    result =
+      Multi.new()
+      |> Multi.update(:set_folder_id, Survey.changeset(survey, %{folder_id: folder_id}))
+      |> Multi.insert(:change_folder_log, ActivityLog.change_folder(project, conn, survey, old_folder_name, new_folder_name))
+      |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
 
   def set_name(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => name}) do
     project =
