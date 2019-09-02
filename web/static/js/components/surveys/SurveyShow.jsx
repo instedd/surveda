@@ -268,7 +268,7 @@ class SurveyShow extends Component<any, State> {
             <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
               <div className='header'>
                 <div className='title'>{t('Percent of completes')}</div>
-                {`${completionRate}, ${estimatedSuccessRate}, ${initialSuccessRate}, ${successRate}`}
+                {`completionRate: ${completionRate}, estimatedSuccessRate: ${estimatedSuccessRate}, initialSuccessRate: ${initialSuccessRate}, successRate: ${successRate}`}
                 {survey.countPartialResults
                   ? <div className='description'>{t('Count partials as completed')}</div>
                   : ''
