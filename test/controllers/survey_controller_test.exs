@@ -419,7 +419,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   describe "stats" do
-    test "show survey stats", %{conn: conn, user: user} do
+    test "show survey stats when there's no respondent", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       survey = Survey |> Repo.get(survey.id)
@@ -429,6 +429,40 @@ defmodule Ask.SurveyControllerTest do
       assert json_response(conn, 200)["data"] == %{
         "success_rate" => 1.0,
         "completion_rate" => 0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 1.0
+      }
+    end
+
+    test "measures the completion rate when it's completed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 1.0,
+        "completion_rate" => 1.0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 1.0
+      }
+    end
+
+    test "measures the completion rate when it isn't completed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, state: "queued")
+      insert(:respondent, survey: survey, state: "started")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 1.0,
+        "completion_rate" => 0.33,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0
       }

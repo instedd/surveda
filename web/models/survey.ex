@@ -418,23 +418,23 @@ defmodule Ask.Survey do
     estimated_success_rate = estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
 
     %{
-      success_rate: current_success_rate,
-      completion_rate: completion_rate,
-      initial_success_rate: initial_success_rate,
-      estimated_success_rate: estimated_success_rate
+      success_rate: current_success_rate |> Float.round(2),
+      completion_rate: completion_rate |> Float.round(2),
+      initial_success_rate: initial_success_rate |> Float.round(2),
+      estimated_success_rate: estimated_success_rate |> Float.round(2)
     }
   end
 
   defp respondents_target(:all, respondents_total), do: respondents_total
   defp respondents_target(completed_respondents_needed, _), do: completed_respondents_needed
 
-  def success_rate(_, 0, 0, 0), do: 1
+  def success_rate(_, 0, 0, 0), do: 1.0
   def success_rate(successful_respondents, completed_respondents, failed_respondents, rejected_respondents) do
     successful_respondents / (completed_respondents + failed_respondents + rejected_respondents)
   end
 
-  def completion_rate(_, nil), do: 0
-  def completion_rate(_, 0), do: 0
+  def completion_rate(_, nil), do: 0.0
+  def completion_rate(_, 0), do: 0.0
   def completion_rate(completed, respondents_target), do: completed / respondents_target
 
   def initial_success_rate() do
