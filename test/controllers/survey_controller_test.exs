@@ -775,6 +775,17 @@ defmodule Ask.SurveyControllerTest do
       assert Repo.get(Survey, survey.id).folder_id == folder.id
     end
 
+    test "moves survey out of folder", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      survey = insert(:survey, project: project, folder: folder)
+
+      conn = post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: nil
+
+      assert response(conn, 204)
+      assert Repo.get(Survey, survey.id).folder_id == nil
+    end
+
     test "rejects set_folder_id if the survey doesn't belong to the current user", %{conn: conn} do
       survey = insert(:survey)
       folder = insert(:folder)
