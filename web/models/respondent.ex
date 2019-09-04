@@ -6,6 +6,7 @@ defmodule Ask.Respondent do
     field :phone_number, :string
     field :sanitized_phone_number, :string
     field :hashed_number, :string
+    field :section_order, JSON
 
     # Valid states are:
     # * pending: the initial state of a respondent, before communication starts
@@ -61,7 +62,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats])
+    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order])
     |> validate_required([:phone_number, :state])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
@@ -84,6 +85,25 @@ defmodule Ask.Respondent do
 
   def show_disposition(disposition) do
     (disposition || "") |> String.capitalize
+  end
+
+  def show_section_order(%{section_order: nil}, _), do: ""
+
+  def show_section_order(%{section_order: section_order, questionnaire_id: questionnaire_id}, questionnaires) do
+    questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
+    Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> show_section_title(i) end) |> Enum.join(", ")
+  end
+
+  defp show_section_title(%{"title" => nil}, index) do
+    "Untitled #{index + 1}"
+  end
+
+  defp show_section_title(%{"title" => ""}, index) do
+    "Untitled #{index + 1}"
+  end
+
+  defp show_section_title(%{"title" => title}, _) do
+    title
   end
 
   def token(respondent_id)do

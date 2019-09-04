@@ -931,6 +931,27 @@ defmodule Ask.DummySteps do
         )
       ]
 
+      @three_sections_untitled [
+        section(
+          id: "section 1",
+          title: nil,
+          randomize: false,
+          steps: @skip_logic
+        ),
+        section(
+          id: "section 2",
+          title: "Second section",
+          randomize: false,
+          steps: @dummy_steps
+        ),
+        section(
+          id: "section 3",
+          title: "",
+          randomize: false,
+          steps: @explanation_steps_minimal
+        )
+      ]
+
       @three_sections_random [
         section(
           id: "section 1",

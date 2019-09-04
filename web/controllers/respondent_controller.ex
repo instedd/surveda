@@ -629,7 +629,7 @@ defmodule Ask.RespondentController do
         |> Enum.map(fn mode -> mode_label([mode]) end)
         |> Enum.join(", ")
 
-        row = row ++ [modes]
+        row = row ++ [modes, Respondent.show_section_order(respondent, questionnaires)]
 
         respondent_group = respondent.respondent_group.name
 
@@ -685,7 +685,7 @@ defmodule Ask.RespondentController do
     end)
 
     # Add header to csv_rows
-    header = ["respondent_id", "date", "modes", "sample_file"]
+    header = ["respondent_id", "date", "modes", "section_order", "sample_file"]
     header = header ++ all_fields
     header = if has_comparisons do
       header ++ ["variant"]
