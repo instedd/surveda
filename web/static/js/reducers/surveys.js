@@ -5,6 +5,7 @@ import collectionReducer, { projectFilterProvider } from './collection'
 const itemsReducer = (state: IndexedList<Survey>, action): IndexedList<Survey> => {
   switch (action.type) {
     case actions.DELETED: return deleteItem(state, action)
+    case actions.FOLDER_CHANGED: return changeFolder(state, action)
     default: return state
   }
 }
@@ -12,6 +13,12 @@ const itemsReducer = (state: IndexedList<Survey>, action): IndexedList<Survey> =
 const deleteItem = (state: IndexedList<Survey>, action: any) => {
   const items = {...state}
   delete items[action.id]
+  return items
+}
+
+const changeFolder = (state: IndexedList<Survey>, action: any) => {
+  const items = {...state}
+  items[action.surveyId].folderId = action.folderId
   return items
 }
 

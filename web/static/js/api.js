@@ -272,7 +272,7 @@ export const setSurveyName = (projectId, surveyId, name) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_name`, null, { name })
 }
 export const setFolderId = (projectId, surveyId, folderId) => {
-  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_folder_id`, null, { folderId })
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_folder_id`, null, { folderId: folderId || null })
 }
 
 export const setSurveyDescription = (projectId, surveyId, description) => {

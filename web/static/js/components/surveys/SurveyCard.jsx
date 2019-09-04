@@ -4,7 +4,6 @@ import { translate, Trans } from 'react-i18next'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
-import * as surveysActions from '../../actions/surveys'
 import { connect } from 'react-redux'
 
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
@@ -41,9 +40,7 @@ class SurveyCard extends Component<any> {
       onConfirm: () => {
         const { dispatch } = this.props
         const { folderId } = this.state
-        dispatch(surveyActions.changeFolder(survey, folderId)).then(() => {
-          dispatch(surveysActions.fetchSurveys(survey.projectId, survey.folderId))
-        })
+        dispatch(surveyActions.changeFolder(survey, folderId))
       }
     })
   }
