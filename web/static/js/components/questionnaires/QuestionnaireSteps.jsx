@@ -104,7 +104,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
     if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
       return (
-        <DraggableStep step={null} sectionId={sectionId} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
+        <DraggableStep step={null} sectionId={sectionId} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} dropOnly>
           <div style={{borderBottom: 'solid transparent'}} />
         </DraggableStep>
       )
@@ -153,7 +153,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
   render() {
     return (
-      <div>
+      <div className='questionnaire-step-group'>
         {this.dummyDropTarget()}
         {this.questionnaireStepsGroup()}
       </div>
