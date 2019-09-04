@@ -87,9 +87,9 @@ defmodule Ask.Respondent do
     (disposition || "") |> String.capitalize
   end
 
-  def show_section_order(nil, _, _), do: ""
+  def show_section_order(%{section_order: nil}, _), do: ""
 
-  def show_section_order(section_order, %{questionnaire_id: questionnaire_id}, questionnaires) do
+  def show_section_order(%{section_order: section_order, questionnaire_id: questionnaire_id}, questionnaires) do
     questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
     Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> show_section_title(i) end) |> Enum.join(", ")
   end
