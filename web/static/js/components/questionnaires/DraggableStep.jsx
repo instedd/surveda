@@ -15,12 +15,14 @@ type Props = {
   children: any,
   questionnaireActions: any,
   quotaCompletedSteps: boolean,
-  readOnly: boolean
+  readOnly: boolean,
+  dropOnly: boolean
 };
 
 class DraggableStep extends Component<Props> {
+  static defaultProps = {dropOnly: false}
   draggableStep() {
-    const { step, isDragging, isOver, connectDragSource, children, readOnly } = this.props
+    const { step, isDragging, isOver, connectDragSource, children, readOnly, dropOnly } = this.props
 
     const draggable = !readOnly && (step == null || step.type != 'language-selection')
 
@@ -38,7 +40,7 @@ class DraggableStep extends Component<Props> {
         {children}
       </div>
 
-    if (draggable) {
+    if (draggable && !dropOnly) {
       return connectDragSource(renderedDraggable)
     } else {
       return renderedDraggable
