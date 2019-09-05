@@ -23,4 +23,4 @@ RUN mix phx.digest
 ENV PORT=80
 EXPOSE 80
 
-CMD mix phx.server
+CMD elixir --sname server -S mix phx.server

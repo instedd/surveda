@@ -16,12 +16,20 @@ defmodule Ask.Runtime.Session do
       current_mode: SessionModeProvider.new(mode, channel, retries),
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
-      respondent: respondent,
+      respondent: update_section_order(respondent, flow.section_order),
       fallback_delay: fallback_delay,
       count_partial_results: count_partial_results,
       schedule: schedule
     }
     run_flow(session)
+  end
+
+  def update_section_order(respondent, nil), do: respondent
+
+  def update_section_order(respondent, section_order) do
+    respondent
+    |> Respondent.changeset(%{section_order: section_order})
+    |> Repo.update!
   end
 
   def default_fallback_delay do

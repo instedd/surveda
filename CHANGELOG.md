@@ -1,5 +1,16 @@
 # InSTEDD Surveda Changelog
 
+## Viburnum 0.22.1
+
+### Features
+
+* Add a column to the respondents CSV with the order of the sections [#1492](https://github.com/instedd/surveda/issues/1492)
+* Enable remote shell for Elixir process [#1511](https://github.com/instedd/surveda/issues/1511)
+
+### Bugfixes
+
+* Dropdown does not open on first click [#1491](https://github.com/instedd/surveda/issues/1491)
+
 ## Viburnum 0.22
 
 ### Features

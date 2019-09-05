@@ -15,6 +15,7 @@ module.exports = {
   entry: {
     app: [
       './web/static/vendor/js/materialize.js',
+      './web/static/vendor/js/materialize-dropdown-fix.js',
       './web/static/js/app.jsx',
       './web/static/css/app.scss'
     ],
