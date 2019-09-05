@@ -6,7 +6,7 @@ import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
 import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
 import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
-import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection, questionnaireWith2Sections } from '../fixtures'
+import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection, questionnaireWith2Sections, questionnaireWith3Sections, questionnaireWith2SectionsAndNoLanguage } from '../fixtures'
 import * as actions from '../../../web/static/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
 import { smsSplitSeparator } from '../../../web/static/js/step'
@@ -713,6 +713,85 @@ describe('questionnaire reducer', () => {
       expect(preState.data.steps[1].steps[0]).toEqual(resultState.data.steps[2].steps[1])
       expect(preState.data.steps[1].steps[1]).toEqual(resultState.data.steps[1].steps[0])
       expect(preState.data.steps[2].steps.length).toEqual(resultState.data.steps[2].steps.length - 1)
+    })
+
+    describe('drag and drop', () => {
+      it('should move a section below its following section', () => {
+        const state = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith3Sections),
+          actions.moveSection(questionnaireWith3Sections.steps[1].id, questionnaireWith3Sections.steps[2].id)
+        ])
+
+        expect(questionnaireWith3Sections.steps.length).toEqual(state.data.steps.length)
+        expect(questionnaireWith3Sections.steps[1]).toEqual(state.data.steps[2])
+        expect(questionnaireWith3Sections.steps[2]).toEqual(state.data.steps[1])
+        expect(questionnaireWith3Sections.steps[3]).toEqual(state.data.steps[3])
+      })
+
+      it('should move a section above its preceding section', () => {
+        const state = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith3Sections),
+          actions.moveSection(questionnaireWith3Sections.steps[3].id, questionnaireWith3Sections.steps[1].id)
+        ])
+
+        expect(questionnaireWith3Sections.steps.length).toEqual(state.data.steps.length)
+        expect(questionnaireWith3Sections.steps[1]).toEqual(state.data.steps[1])
+        expect(questionnaireWith3Sections.steps[2]).toEqual(state.data.steps[3])
+        expect(questionnaireWith3Sections.steps[3]).toEqual(state.data.steps[2])
+      })
+
+      it('should not move a section below itself', () => {
+        const state = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith3Sections),
+          actions.moveSection(questionnaireWith3Sections.steps[2].id, questionnaireWith3Sections.steps[2].id)
+        ])
+
+        expect(questionnaireWith3Sections.steps.length).toEqual(state.data.steps.length)
+        expect(questionnaireWith3Sections.steps[1]).toEqual(state.data.steps[1])
+        expect(questionnaireWith3Sections.steps[2]).toEqual(state.data.steps[2])
+        expect(questionnaireWith3Sections.steps[3]).toEqual(state.data.steps[3])
+      })
+
+      it('should move a section below the last section', () => {
+        const state = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith3Sections),
+          actions.moveSection(questionnaireWith3Sections.steps[1].id, questionnaireWith3Sections.steps[3].id)
+        ])
+
+        expect(questionnaireWith3Sections.steps.length).toEqual(state.data.steps.length)
+        expect(questionnaireWith3Sections.steps[1]).toEqual(state.data.steps[3])
+        expect(questionnaireWith3Sections.steps[2]).toEqual(state.data.steps[1])
+        expect(questionnaireWith3Sections.steps[3]).toEqual(state.data.steps[2])
+      })
+
+      it('should move a section above the first section', () => {
+        const state = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith3Sections),
+          actions.moveSection(questionnaireWith3Sections.steps[2].id)
+        ])
+
+        expect(questionnaireWith3Sections.steps.length).toEqual(state.data.steps.length)
+        expect(questionnaireWith3Sections.steps[1]).toEqual(state.data.steps[2])
+        expect(questionnaireWith3Sections.steps[2]).toEqual(state.data.steps[1])
+        expect(questionnaireWith3Sections.steps[3]).toEqual(state.data.steps[3])
+      })
+
+      it('should not move the last section below its preceding', () => {
+        const state = playActions([
+          actions.fetch(1, 1),
+          actions.receive(questionnaireWith2SectionsAndNoLanguage),
+          actions.moveSection(questionnaireWith2SectionsAndNoLanguage.steps[1].id, questionnaireWith2SectionsAndNoLanguage.steps[0].id)
+        ])
+
+        expect(questionnaireWith2SectionsAndNoLanguage.steps.length).toEqual(state.data.steps.length)
+        expect(questionnaireWith2SectionsAndNoLanguage.steps[0]).toEqual(state.data.steps[0])
+        expect(questionnaireWith2SectionsAndNoLanguage.steps[1]).toEqual(state.data.steps[1])
+      })
     })
   })
 
