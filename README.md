@@ -1,4 +1,4 @@
-# Ask
+# Surveda
 
 ## Dockerized development
 
@@ -8,15 +8,17 @@ To run the app: `docker-compose up`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-To open a shell in a container: `docker exec -it ask_db_1 bash`, where `ask_db_1` is a container name. You can list containers with `docker ps`.
+To open a shell in a container: `docker-compose exec db bash`, where `db` is the service name. You can list the services `docker-compose ps --services`.
 
-To start an Elixir console in your running Phoenix app container: `docker exec -it ask_app_1 iex -S mix`.
+To start an Elixir console in your running Phoenix app container: `docker-compose exec app iex -S mix`.
 
-## Exposing your containers as *.ask.dev
+## Exposing your containers as *.surveda.lvh.me
 
-You can use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.ask.dev` and ngrok at `ngrok.ask.dev`.
+You can use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.
 
 Just follow the instructions at the README of dockerdev.
+
+**WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker-compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
 
 ## Linting and Formatting
 
@@ -54,6 +56,50 @@ To setup a channel you need to create it using the console. For that you need to
 ```
 
 In order for it to work, that Verboice channel must be associated to a dummy flow of a dummy Verboice project. Otherwise it will fail and won't log anything.
+
+## GUISSO
+
+You need GUISSO to access Verboice and/or Nuntium channels.
+
+Get a working GUISSO instance (online, or hosted on your development machine) and create a new Application. If it's a local Guisso instance, use `app.surveda.lvh.me` as the domain, and this two redirect URIs:
+
+```
+http://app.surveda.lvh.me/session/oauth_callback
+http://app.surveda.lvh.me/oauth_client/callback
+```
+
+To work with a cloud GUISSO, make sure your `ngrok` service is running (`docker-compose up ngrok`), and get your ngrok domain visiting `http://ngrok.surveda.lvh.me`. Fill the Application information as for the local case, but using the ngrok domain instead. When you restart your `ngrok` service, you will need to update this information before approving new authorizations in GUISSO.
+
+On your local surveda directory, create a `config/local.exs` file like below, including the client ID & secret from your Application in GUISSO:
+
+```
+use Mix.Config
+
+config :alto_guisso,
+  enabled: true,
+  base_url: "http://web.guisso.lvh.me", # or https://login-stg.instedd.org for a cloud GUISSO
+  client_id: "<your app's client id in guisso>",
+  client_secret: "<your app's client secret in guisso>",
+
+config :ask, Ask.Endpoint,
+  url: [host: "app.surveda.lvh.me"] # or "abcd123.ngrok.io" for a cloud GUISSO
+```
+
+### Verboice Channel
+
+Once you have GUISSO enabled on Surveda, you can connect a Verboice instance that's already registered with GUISSO by adding this fragment to your `config/local.exs`:
+
+```
+config :ask, Verboice,
+  base_url: "http://web.verboice.lvh.me", # or the URL for your Verboice instance
+  channel_ui: true,
+  guisso: [
+    base_url: "http://web.guisso.lvh.me", # or the URL for your GUISSO
+    client_id: "<Surveda's client id>",
+    client_secret: "<Surveda's client secret>",
+    app_id: "web.verboice.lvh.me" # or your Verboice APP ID in GUISSO
+  ]
+```
 
 ## Coherence
 
