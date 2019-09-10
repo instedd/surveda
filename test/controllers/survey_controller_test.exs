@@ -430,7 +430,12 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 1.0,
         "completion_rate" => 0,
         "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 1.0
+        "estimated_success_rate" => 1.0,
+        "completes" => 0,
+        "missing" => 0,
+        "multiplier" => 1,
+        "needed" => 0,
+        "pending" => 0
       }
     end
 
@@ -446,7 +451,12 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 1.0,
         "completion_rate" => 1.0,
         "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 1.0
+        "estimated_success_rate" => 1.0,
+        "completes" => 1,
+        "missing" => 0,
+        "multiplier" => 1,
+        "needed" => 0,
+        "pending" => 0
       }
     end
 
@@ -464,7 +474,12 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 1.0,
         "completion_rate" => 0.33,
         "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 1.0
+        "estimated_success_rate" => 1.0,
+        "completes" => 1,
+        "missing" => 0,
+        "multiplier" => 1,
+        "needed" => 2,
+        "pending" => 2
       }
     end
 
@@ -482,7 +497,12 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 0.67,
         "completion_rate" => 1.0,
         "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 0.67
+        "estimated_success_rate" => 0.67,
+        "completes" => 2,
+        "missing" => 0,
+        "multiplier" => 2,
+        "needed" => 0,
+        "pending" => 0
       }
     end
 
@@ -499,7 +519,12 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 0.5,
         "completion_rate" => 0.5,
         "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 0.75
+        "estimated_success_rate" => 0.75,
+        "completes" => 1,
+        "missing" => 0,
+        "multiplier" => 2,
+        "needed" => 2,
+        "pending" => 1
       }
     end
 
@@ -518,7 +543,12 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 0.25,
         "completion_rate" => 0.2,
         "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 0.85
+        "estimated_success_rate" => 0.85,
+        "completes" => 1,
+        "missing" => 4,
+        "multiplier" => 2,
+        "needed" => 8,
+        "pending" => 4
       }
     end
 

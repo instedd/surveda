@@ -14,14 +14,19 @@ defmodule Ask.SurveyView do
   def render("config.json", %{config: config}) do
     config
   end
-  def render("stats.json", %{success_rate: success_rate, completion_rate: completion_rate, initial_success_rate: initial_success_rate, estimated_success_rate: estimated_success_rate}) do
+  def render("stats.json", %{success_rate_data: success_rate_data, queue_size_data: queue_size_data}) do
     %{
       data:
       %{
-        success_rate: success_rate,
-        completion_rate: completion_rate,
-        initial_success_rate: initial_success_rate,
-        estimated_success_rate: estimated_success_rate
+        success_rate: success_rate_data.success_rate,
+        completion_rate: success_rate_data.completion_rate,
+        initial_success_rate: success_rate_data.initial_success_rate,
+        estimated_success_rate: success_rate_data.estimated_success_rate,
+        completes: queue_size_data.completes,
+        missing: queue_size_data.missing,
+        multiplier: queue_size_data.multiplier,
+        needed: queue_size_data.needed,
+        pending: queue_size_data.pending
       }
     }
   end

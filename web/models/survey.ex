@@ -416,12 +416,25 @@ defmodule Ask.Survey do
     current_success_rate = success_rate(successful_respondents, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
     completion_rate = completion_rate(successful_respondents, respondents_target)
     estimated_success_rate = estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
-
+    completes = respondents_by_state["completed"]
+    pending = respondents_target - completes
+    multiplier = Float.ceil(1/estimated_success_rate, 0) |> round
+    needed = pending*multiplier
+    missing = max(needed - respondents_total, 0)
     %{
-      success_rate: current_success_rate |> Float.round(2),
-      completion_rate: completion_rate |> Float.round(2),
-      initial_success_rate: initial_success_rate |> Float.round(2),
-      estimated_success_rate: estimated_success_rate |> Float.round(2)
+      success_rate_data: %{
+        success_rate: current_success_rate |> Float.round(2),
+        completion_rate: completion_rate |> Float.round(2),
+        initial_success_rate: initial_success_rate |> Float.round(2),
+        estimated_success_rate: estimated_success_rate |> Float.round(2),
+      },
+      queue_size_data: %{
+        completes: completes,
+        pending: pending,
+        multiplier: multiplier,
+        needed: needed,
+        missing: missing
+      }
     }
   end
 
