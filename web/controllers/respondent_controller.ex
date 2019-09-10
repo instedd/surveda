@@ -599,7 +599,6 @@ defmodule Ask.RespondentController do
         case mode do
           "sms" -> [:total_sent_sms, :total_received_sms]
           "mobileweb" -> [:total_sent_sms, :total_received_sms]
-          "ivr" -> [:total_call_time]
           _ -> []
         end
       end)
@@ -697,7 +696,6 @@ defmodule Ask.RespondentController do
       case stat do
         :total_sent_sms -> "total_sent_sms"
         :total_received_sms -> "total_received_sms"
-        :total_call_time -> "total_call_time"
       end
     end)
 

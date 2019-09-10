@@ -68,53 +68,6 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
   end
 
-  test "total call time", %{respondent: respondent, conn: conn} do
-    respondent_id = respondent.id
-
-    answer = Flow.Message.answer
-    GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, ^answer, "ivr"} ->
-        {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}
-    end})
-
-    VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => nil}, BrokerStub)
-
-    now = DateTime.utc_now
-    interval = Interval.new(from: Timex.shift(now, seconds: -2), until: Timex.shift(now, seconds: 2), step: [seconds: 1])
-    first_interaction_time = Repo.get(Respondent, respondent_id).stats.current_call_first_interaction_time
-    assert first_interaction_time in interval
-
-    digits = Flow.Message.reply("9")
-    GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, ^digits, "ivr"} ->
-        {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you smoke?"))}
-    end})
-
-    VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => "9"}, BrokerStub)
-
-    now = DateTime.utc_now
-    interval = Interval.new(from: Timex.shift(now, seconds: -2), until: Timex.shift(now, seconds: 2), step: [seconds: 1])
-    last_interaction_time = Repo.get(Respondent, respondent_id).stats.current_call_last_interaction_time
-    assert last_interaction_time in interval
-
-    # change the first interaction time to pretend the call was longer than the test duration
-    respondent = Repo.get!(Respondent, respondent_id)
-    Respondent.changeset(respondent, %{stats: %{respondent.stats | current_call_first_interaction_time: Timex.now |> Timex.shift(minutes: -10)}}) |> Repo.update
-
-    no_reply = Flow.Message.no_reply
-    GenServer.cast(BrokerStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, ^no_reply, "ivr"} ->
-        {:end, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Bye"))}}
-    end})
-
-    VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => "timeout"}, BrokerStub)
-
-    respondent = Repo.get(Respondent, respondent_id)
-    assert respondent.stats.current_call_first_interaction_time == nil
-    assert respondent.stats.current_call_last_interaction_time == nil
-    assert respondent.stats.total_call_time == 10
-  end
-
   @channel_foo %{"id" => 1, "name" => "foo"}
   @channel_bar %{"id" => 2, "name" => "bar"}
   @channel_baz %{"id" => 3, "name" => "baz", "shared_by" => "other@user.com"}
