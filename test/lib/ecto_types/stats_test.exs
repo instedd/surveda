@@ -4,27 +4,27 @@ defmodule Ask.StatsTest do
 
   describe "dump:" do
     test "should dump empty" do
-      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0}"} == Stats.dump(%Stats{})
+      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time\":0}"} == Stats.dump(%Stats{})
     end
 
     test "should dump full" do
-      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3})
+      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time\":1}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time: 1})
     end
   end
 
   describe "load:" do
     test "should load empty" do
-      assert {:ok, %Stats{total_received_sms: 0, total_sent_sms: 0}} == Stats.load("{\"total_sent_sms\":0,\"total_received_sms\":0}")
+      assert {:ok, %Stats{total_received_sms: 0, total_sent_sms: 0, total_call_time: 0}} == Stats.load("{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time\":0}")
     end
 
     test "should load full" do
-      assert {:ok, %Stats{total_received_sms: 2, total_sent_sms: 3}} == Stats.load("{\"total_sent_sms\":3,\"total_received_sms\":2}")
+      assert {:ok, %Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time: 1}} == Stats.load("{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time\":1}")
     end
   end
 
   describe "cast:" do
     test "shuld cast to itself" do
-      assert {:ok, %Stats{total_received_sms: 2, total_sent_sms: 3}} == Stats.cast(%Stats{total_received_sms: 2, total_sent_sms: 3})
+      assert {:ok, %Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time: 1}} == Stats.cast(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time: 1})
     end
 
     test "shuld cast nil" do
@@ -49,4 +49,13 @@ defmodule Ask.StatsTest do
       assert 4 == stats |> Stats.total_sent_sms()
     end
   end
+
+  describe "call time:" do
+    test "sets total_call_time" do
+      stats = %Stats{} |> Stats.total_call_time(12)
+
+      assert Stats.total_call_time(stats) == 12
+    end
+  end
+
 end

@@ -194,7 +194,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "10", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
 
       :ok = logger |> GenServer.stop
 
@@ -214,6 +214,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.action_data == "Failed"
       assert disposition_changed_to_failed.action_type == "disposition changed"
       assert disposition_changed_to_failed.disposition == "queued"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 10/60
 
       :ok = broker |> GenServer.stop
     end
@@ -239,7 +242,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallStatusCode" => "42"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "11", "CallStatusCode" => "42"})
 
       :ok = logger |> GenServer.stop
 
@@ -259,6 +262,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.action_data == "Failed"
       assert disposition_changed_to_failed.action_type == "disposition changed"
       assert disposition_changed_to_failed.disposition == "queued"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 11/60
 
       :ok = broker |> GenServer.stop
     end
@@ -285,7 +291,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallStatusReason" => "some random reason"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "12", "CallStatusReason" => "some random reason"})
 
       :ok = logger |> GenServer.stop
 
@@ -305,6 +311,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.action_data == "Failed"
       assert disposition_changed_to_failed.action_type == "disposition changed"
       assert disposition_changed_to_failed.disposition == "queued"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 12/60
 
       :ok = broker |> GenServer.stop
     end
@@ -331,7 +340,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "13"})
 
       :ok = logger |> GenServer.stop
 
@@ -351,6 +360,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.action_data == "Failed"
       assert disposition_changed_to_failed.action_type == "disposition changed"
       assert disposition_changed_to_failed.disposition == "queued"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 13/60
 
       :ok = broker |> GenServer.stop
     end
@@ -377,7 +389,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "no-answer", "CallStatusReason" => "another reason", "CallStatusCode" => "foo"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "no-answer", "CallDuration" => "14", "CallStatusReason" => "another reason", "CallStatusCode" => "foo"})
 
       :ok = logger |> GenServer.stop
 
@@ -397,6 +409,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.action_data == "Failed"
       assert disposition_changed_to_failed.action_type == "disposition changed"
       assert disposition_changed_to_failed.disposition == "queued"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 14/60
 
       :ok = broker |> GenServer.stop
     end
@@ -423,7 +438,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "busy", "CallStatusReason" => "yet another reason", "CallStatusCode" => "bar"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "busy", "CallDuration" => "15", "CallStatusReason" => "yet another reason", "CallStatusCode" => "bar"})
 
       :ok = logger |> GenServer.stop
 
@@ -443,6 +458,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.action_data == "Failed"
       assert disposition_changed_to_failed.action_type == "disposition changed"
       assert disposition_changed_to_failed.disposition == "queued"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 15/60
 
       :ok = broker |> GenServer.stop
     end
@@ -468,7 +486,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired"})
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
 
       :ok = logger |> GenServer.stop
 
@@ -481,6 +499,9 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert timeout.survey_id == survey.id
       assert timeout.action_data == "Call expired, will be retried in next schedule window"
       assert timeout.action_type == "contact"
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.stats.total_call_time == 16/60
     end
   end
 
