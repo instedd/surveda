@@ -44,6 +44,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.ADD_STEP_TO_SECTION: return addStepToSection(state, action)
     case actions.ADD_QUOTA_COMPLETED_STEP: return addQuotaCompletedStep(state, action)
     case actions.MOVE_STEP: return moveStep(state, action)
+    case actions.MOVE_SECTION: return moveSection(state, action)
     case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
     case actions.MOVE_STEP_TO_TOP_OF_SECTION: return moveStepToTopOfSection(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
@@ -305,6 +306,29 @@ const changeSectionTitle = (state, action) => {
     }
     return section
   }, 'steps') || state
+}
+
+const moveSection = (state, action) => {
+  const reorderSections = (sections, sourceId, targetId) => {
+    if (sourceId == targetId) return sections
+
+    let reordered = [ ...sections ]
+    const languageIndex = reordered.findIndex(s => s.type == 'language-selection')
+    const language = (languageIndex > -1 && reordered.splice(languageIndex, 1)) || []
+    const sourceIndex = reordered.findIndex(s => s.id == sourceId)
+    const source = reordered.splice(sourceIndex, 1)
+    const insertIndex = targetId == 0 ? 0 : reordered.findIndex(s => s.id == targetId) + 1
+
+    return [...language, ...reordered.slice(0, insertIndex), ...source, ...reordered.slice(insertIndex)]
+  }
+
+  const { steps: sections } = state
+  const { sourceSectionId, targetSectionId } = action
+
+  return {
+    ...state,
+    steps: reorderSections(sections, sourceSectionId, targetSectionId)
+  }
 }
 
 const moveStep = (state, action) => {

@@ -259,6 +259,56 @@ const bareQuestionnaireWith2Sections: Questionnaire = {
   ]
 }
 
+const bareQuestionnaireWith3Sections: Questionnaire = {
+  ...questionnaireCommonFields,
+  languages: ['en', 'es'],
+  steps: [
+    languageSelection,
+    {
+      type: 'section',
+      title: 'Section 1',
+      id: '07B9C1A3-A605-4CBE-B874-400AED68D8FC',
+      steps: steps,
+      randomize: false
+    },
+    {
+      type: 'section',
+      title: 'Section 2',
+      id: '8EEA2740-864B-48D8-9469-A722620C146E',
+      steps: steps,
+      randomize: false
+    },
+    {
+      type: 'section',
+      title: 'Section 3',
+      id: 'E6816ED8-0ADD-459D-9E9E-43EA52E60769',
+      steps: steps,
+      randomize: false
+    }
+  ]
+}
+
+const bareQuestionnaireWith2SectionsAndNoLanguage: Questionnaire = {
+  ...questionnaireCommonFields,
+  languages: ['en', 'es'],
+  steps: [
+    {
+      type: 'section',
+      title: 'Section 1',
+      id: '07B9C1A3-A605-4CBE-B874-400AED68D8FC',
+      steps: steps,
+      randomize: false
+    },
+    {
+      type: 'section',
+      title: 'Section 2',
+      id: '8EEA2740-864B-48D8-9469-A722620C146E',
+      steps: steps,
+      randomize: false
+    }
+  ]
+}
+
 // TODO: investigate why Flow ignores the result of `deepFreeze`
 // It probably is defined as `any` somewhere.
 // As a workaround, we define `bareQuestionnaire` and explicitly annotate it as
@@ -271,6 +321,10 @@ export const questionnaire: Questionnaire = deepFreeze(bareQuestionnaire)
 export const questionnaireWithSection: Questionnaire = deepFreeze(bareQuestionnaireWithSection)
 
 export const questionnaireWith2Sections: Questionnaire = deepFreeze(bareQuestionnaireWith2Sections)
+
+export const questionnaireWith3Sections: Questionnaire = deepFreeze(bareQuestionnaireWith3Sections)
+
+export const questionnaireWith2SectionsAndNoLanguage: Questionnaire = deepFreeze(bareQuestionnaireWith2SectionsAndNoLanguage)
 
 export const questionnaireWithLangSelection: Questionnaire = deepFreeze(quizWithLangSelection)
 
