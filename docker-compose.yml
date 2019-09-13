@@ -30,8 +30,10 @@ services:
       DATABASE_HOST: db
       HTTP_PORT: 80
       TERM: xterm
+      VIRTUAL_PORT: 80
     ports:
       - 80
+      - 9980:9980
 
   webpack:
     build:

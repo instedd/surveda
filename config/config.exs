@@ -85,14 +85,10 @@ config :coherence, Ask.Coherence.Mailer,
 # %% End Coherence Configuration %%
 
 config :prometheus, Ask.PrometheusExporter,
-  auth: {:basic,
-    quote do
-      System.get_env("METRICS_USER") || "metrics"
-    end,
-    quote do
-      System.get_env("METRICS_PASS")
-    end
-  }
+  auth: false
+
+config :ask, Ask.MetricsEndpoint,
+  http: [port: 9980]
 
 config :alto_guisso,
   enabled: System.get_env("GUISSO_ENABLED") == "true",
