@@ -95,6 +95,17 @@ defmodule Ask.SurveyController do
     render(conn, "show.json", survey: survey)
   end
 
+  def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    survey = conn
+    |> load_project(project_id)
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    stats = survey |> Survey.stats
+
+    render(conn, "stats.json", stats)
+  end
+
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
     project = conn
       |> load_project_for_change(project_id)

@@ -418,6 +418,155 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "stats" do
+    test "show survey stats when there's no respondent", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 1.0,
+        "completion_rate" => 0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 1.0,
+        "completes" => 0,
+        "missing" => 0,
+        "multiplier" => 1,
+        "needed" => 0,
+        "pending" => 0
+      }
+    end
+
+    test "measures the completion rate when it's completed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 1.0,
+        "completion_rate" => 1.0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 1.0,
+        "completes" => 1,
+        "missing" => 0,
+        "multiplier" => 1,
+        "needed" => 0,
+        "pending" => 0
+      }
+    end
+
+    test "measures the completion rate when it isn't completed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, state: "queued")
+      insert(:respondent, survey: survey, state: "started")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 1.0,
+        "completion_rate" => 0.33,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 1.0,
+        "completes" => 1,
+        "missing" => 0,
+        "multiplier" => 1,
+        "needed" => 2,
+        "pending" => 2
+      }
+    end
+
+    test "estimated success rate equals current when completed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, cutoff: 2)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 0.67,
+        "completion_rate" => 1.0,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 0.67,
+        "completes" => 2,
+        "missing" => 0,
+        "multiplier" => 2,
+        "needed" => 0,
+        "pending" => 0
+      }
+    end
+
+    test "estimated success rate averages initial and current when completion rate is 50%", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, cutoff: 2)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 0.5,
+        "completion_rate" => 0.5,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 0.75,
+        "completes" => 1,
+        "missing" => 0,
+        "multiplier" => 2,
+        "needed" => 2,
+        "pending" => 1
+      }
+    end
+
+    test "estimated success rate is calculated using linear interpolation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, cutoff: 5)
+      survey = Survey |> Repo.get(survey.id)
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "failed")
+      insert(:respondent, survey: survey, state: "completed")
+
+      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+
+      assert json_response(conn, 200)["data"] == %{
+        "success_rate" => 0.25,
+        "completion_rate" => 0.2,
+        "initial_success_rate" => 1.0,
+        "estimated_success_rate" => 0.85,
+        "completes" => 1,
+        "missing" => 4,
+        "multiplier" => 2,
+        "needed" => 8,
+        "pending" => 4
+      }
+    end
+
+    test "renders page not found when id is nonexistent", %{conn: conn} do
+      assert_error_sent 404, fn ->
+        get conn, project_survey_path(conn, :show, -1, -1)
+      end
+    end
+
+    test "forbid access to survey if the project does not belong to the current user", %{conn: conn} do
+      survey = insert(:survey)
+
+      assert_error_sent :forbidden, fn ->
+        get conn, project_survey_path(conn, :show, survey.project, survey)
+      end
+    end
+  end
+
   describe "create" do
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)

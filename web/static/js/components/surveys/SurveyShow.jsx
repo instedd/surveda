@@ -12,7 +12,7 @@ import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceColorClasses, referenceColors, referenceColorClassForUnassigned, referenceColorForUnassigned } from '../../referenceColors'
 import classNames from 'classnames/bind'
-import { Stats, Forecasts } from '@instedd/surveda-d3-components'
+import { Stats, Forecasts, SuccessRate, QueueSize } from '@instedd/surveda-d3-components'
 import { translate } from 'react-i18next'
 
 type State = {
@@ -39,7 +39,16 @@ class SurveyShow extends Component<any, State> {
     totalRespondents: PropTypes.number,
     target: PropTypes.number,
     completionPercentage: PropTypes.number,
-    cumulativePercentages: PropTypes.object
+    cumulativePercentages: PropTypes.object,
+    completionRate: PropTypes.number,
+    estimatedSuccessRate: PropTypes.number,
+    initialSuccessRate: PropTypes.number,
+    successRate: PropTypes.number,
+    completes: PropTypes.number,
+    missing: PropTypes.number,
+    pending: PropTypes.number,
+    multiplier: PropTypes.number,
+    needed: PropTypes.number
   }
 
   constructor(props) {
@@ -53,6 +62,7 @@ class SurveyShow extends Component<any, State> {
     const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
+    dispatch(actions.fetchSurveyStats(projectId, surveyId))
   }
 
   componentDidUpdate() {
@@ -117,7 +127,8 @@ class SurveyShow extends Component<any, State> {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t } = this.props
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t,
+      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
@@ -167,7 +178,6 @@ class SurveyShow extends Component<any, State> {
       {value: respondentsByDisposition.responsive.detail.partial.count, label: t('Partials')},
       {value: contactedRespondents, label: t('Contacted Respondents')}
     ]
-
     let colors = referenceColors(reference.length)
 
     const hasQuotas = survey.quotas.vars.length > 0
@@ -268,9 +278,24 @@ class SurveyShow extends Component<any, State> {
                   : ''
                 }
               </div>
-
               <Stats data={stats} />
               <Forecasts data={forecasts} ceil={100} forecast={survey.state == 'running'} />
+              <div className='row' style={{ 'display': 'flex', 'alignItems': 'center', 'marginTop': '20px' }}>
+                <div style={{ 'width': '50%' }}>
+                  <div className='header'>
+                    <div className='title'>{t('SUCCESS RATE')}</div>
+                    <div className='description'>{t('Estimated by combining initial and current values')}</div>
+                  </div>
+                  <SuccessRate initial={initialSuccessRate} actual={successRate} estimated={estimatedSuccessRate} progress={completionRate} weight={24} />
+                </div>
+                <div style={{ 'width': '50%' }}>
+                  <div className='header'>
+                    <div className='title'>{t('QUEUE SIZE')}</div>
+                    <div className='description'>{t('Amount of respondents that are estimated we need to contact to reach the target completes. It increases when the success rate decreases and viceversa.')}</div>
+                  </div>
+                  <QueueSize completes={completes} pending={pending} needed={needed} missing={missing} successRate={estimatedSuccessRate} multiplier={multiplier} weight={24} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -412,6 +437,7 @@ class SurveyShow extends Component<any, State> {
 
 const mapStateToProps = (state, ownProps) => {
   const respondentsStatsRoot = state.respondentsStats[ownProps.params.surveyId]
+  const surveyStats = state.surveyStats.surveyId == ownProps.params.surveyId ? state.surveyStats.stats : null
 
   let respondentsByDisposition = null
   let cumulativePercentages = {}
@@ -443,7 +469,16 @@ const mapStateToProps = (state, ownProps) => {
     totalRespondents: totalRespondents,
     target: target,
     reference: reference,
-    completionPercentage: completionPercentage
+    completionPercentage: completionPercentage,
+    completionRate: surveyStats ? surveyStats.completion_rate : null,
+    estimatedSuccessRate: surveyStats ? surveyStats.estimated_success_rate : null,
+    initialSuccessRate: surveyStats ? surveyStats.initial_success_rate : null,
+    successRate: surveyStats ? surveyStats.success_rate : null,
+    completes: surveyStats ? surveyStats.completes : null,
+    multiplier: surveyStats ? surveyStats.multiplier : null,
+    missing: surveyStats ? surveyStats.missing : null,
+    needed: surveyStats ? surveyStats.needed : null,
+    pending: surveyStats ? surveyStats.pending : null
   })
 }
 

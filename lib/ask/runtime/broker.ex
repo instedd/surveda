@@ -3,8 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  require Ask.RespondentStats
-  alias Ask.{Repo, Survey, Respondent, RespondentStats, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer}
   alias Ask.QuotaBucket
 
@@ -121,20 +120,6 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp respondents_by_state(survey) do
-    by_state_defaults = %{
-      "active" => 0,
-      "pending" => 0,
-      "completed" => 0,
-      "stalled" => 0,
-      "rejected" => 0,
-      "failed" => 0,
-    }
-
-    RespondentStats.respondent_count(survey_id: ^survey.id, by: :state)
-      |> Enum.into(by_state_defaults)
-  end
-
   defp poll_survey(survey) do
     channels = survey |> Survey.survey_channels
     channel_is_down = channels |> Enum.any?(fn c ->
@@ -144,7 +129,7 @@ defmodule Ask.Runtime.Broker do
     case channel_is_down do
       false ->
         try do
-          by_state = respondents_by_state(survey)
+          by_state = Survey.respondents_by_state(survey)
           %{
             "active" => active,
             "pending" => pending,
@@ -625,12 +610,12 @@ defmodule Ask.Runtime.Broker do
   # Estimates the amount of respondents the broker will have to initiate contact with
   # to get the completed respondents needed.
   defp batch_size(survey, respondents_by_state) do
-    case completed_respondents_needed_by(survey) do
+    case Survey.completed_respondents_needed_by(survey) do
       :all ->
         default_batch_size()
 
       respondents_target when is_integer(respondents_target) ->
-        successful = successful_respondents(survey, respondents_by_state)
+        successful = Survey.successful_respondents(survey, respondents_by_state)
         estimated_success_rate = estimated_success_rate(successful, respondents_by_state, respondents_target)
         (respondents_target - successful) / estimated_success_rate
         |> trunc
@@ -646,52 +631,9 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp estimated_success_rate(successful, respondents_by_state, respondents_target) do
-    current_success_rate = success_rate(successful, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
-    completion_rate = current_completion_rate(successful, respondents_target)
-    %{:valid_respondent_rate => initial_valid_respondent_rate,
-      :eligibility_rate => initial_eligibility_rate,
-      :response_rate => initial_response_rate } = Survey.config_rates()
-
-    initial_success_rate = initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
-    (1 - completion_rate) * initial_success_rate + completion_rate * current_success_rate
-  end
-
-  defp success_rate(_, 0, 0, 0), do: 1
-  defp success_rate(successful, completed_respondents, failed_respondents, rejected_respondents) do
-    successful / (completed_respondents + failed_respondents + rejected_respondents)
-  end
-
-  defp current_completion_rate(_, respondents_target) when is_nil(respondents_target), do: 0
-  defp current_completion_rate(completed, respondents_target), do: completed / respondents_target
-
-  defp successful_respondents(survey, respondents_by_state) do
-    quota_completed = Repo.one(
-      from q in (survey |> assoc(:quota_buckets)),
-      select: fragment("sum(least(count, quota))")
-    )
-
-    case quota_completed do
-      nil -> respondents_by_state["completed"]
-      value -> value |> Decimal.to_integer
-    end
-  end
-
-  defp completed_respondents_needed_by(survey) do
-    survey_id = survey.id
-    quota_target = Repo.one(from q in QuotaBucket,
-                      where: q.survey_id == ^survey_id,
-                      select: sum(q.quota))
-    cutoff_target = survey.cutoff
-    targets_compacted = [quota_target, cutoff_target] |> Enum.reject(&is_nil/1)
-
-    if targets_compacted |> Enum.empty? do
-      :all
-    else
-      res = targets_compacted
-            |> Enum.max()
-            |> Decimal.new()
-            |> Decimal.to_integer()
-      res
-    end
+    current_success_rate = Survey.success_rate(successful, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
+    completion_rate = Survey.completion_rate(successful, respondents_target)
+    initial_success_rate = Survey.initial_success_rate()
+    Survey.estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
   end
 end
