@@ -42,6 +42,15 @@ defmodule Ask.SurvedaMetrics do
           help: "Surveda nuntium incoming",
         )
 
+        Gauge.declare(
+          name: :surveda_version_info,
+          labels: [:elixir, :surveda],
+          help: "Surveda version info",
+        )
+
+        elixir_version = System.version
+        surveda_version = Application.get_env(:ask, :version)
+        Gauge.set([name: :surveda_version_info, labels: [elixir_version, surveda_version]], 1)
     end
 
     def increment_counter_with_label(counter_name, labels) do
