@@ -7,7 +7,7 @@ defmodule Ask.SessionTest do
   alias Ask.Runtime.SessionModeProvider
   alias Ask.TestChannel
   alias Ask.Runtime.{Flow, Reply, ReplyHelper, SurveyLogger}
-  alias Ask.{Survey, SurveyLogEntry, Respondent, QuotaBucket, Questionnaire, Schedule}
+  alias Ask.{Survey, SurveyLogEntry, Respondent, QuotaBucket, Questionnaire, Schedule, Stats}
   require Ask.Runtime.ReplyHelper
 
   setup do
@@ -36,13 +36,15 @@ defmodule Ask.SessionTest do
   end
 
   test "start", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    {:ok, session, _, timeout, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+    {:ok, session, _, timeout, updated_respondent} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
     assert %Session{token: token} = session
     assert 10 = timeout
     assert token != nil
 
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    assert 1 == updated_respondent.stats |> Stats.attempts(:sms)
   end
 
   describe "sections" do
@@ -69,7 +71,7 @@ defmodule Ask.SessionTest do
   end
 
   test "start with web mode", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    {:ok, session, _, timeout, _} = Session.start(quiz, respondent, channel, "mobileweb", Schedule.always())
+    {:ok, session, _, timeout, updated_respondent} = Session.start(quiz, respondent, channel, "mobileweb", Schedule.always())
     assert %Session{token: token} = session
     assert 10 = timeout
     assert token != nil
@@ -77,6 +79,8 @@ defmodule Ask.SessionTest do
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+
+    assert 1 == updated_respondent.stats |> Stats.attempts(:mobileweb)
   end
 
   test "applies first pattern that matches when starting", %{quiz: quiz} do
@@ -191,7 +195,7 @@ defmodule Ask.SessionTest do
     test_channel = TestChannel.new
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
-    {:ok, session, _, timeout, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always())
+    {:ok, session, _, timeout, updated_respondent} = Session.start(quiz, respondent, channel, "ivr", Schedule.always())
 
     assert %Session{token: token} = session
     assert 10 = timeout
@@ -201,6 +205,7 @@ defmodule Ask.SessionTest do
     refute_receive _
 
     assert session.channel_state == 0
+    assert 1 == updated_respondent.stats |> Stats.attempts(:ivr)
   end
 
   test "retry question", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do

@@ -56,7 +56,7 @@ defmodule Ask.Runtime.Session do
           log_disposition_changed(respondent, channel, flow.mode, respondent.disposition, reply.disposition)
         end
         log_prompts(reply, channel, flow.mode, respondent)
-        respondent = runtime_channel |> Channel.ask(respondent, token, reply)
+        respondent = runtime_channel |> Channel.ask(respondent, token, reply) |> Respondent.add_mode_attempt(:sms)
         {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
     end
   end
@@ -77,6 +77,8 @@ defmodule Ask.Runtime.Session do
     log_contact("Enqueueing call", channel, flow.mode, respondent)
 
     session = %{session| channel_state: channel_state}
+    respondent = respondent |> Respondent.add_mode_attempt(:ivr)
+
     {:ok, session, %Reply{}, current_timeout(session), respondent}
   end
 
@@ -89,7 +91,10 @@ defmodule Ask.Runtime.Session do
     reply = mobile_contact_reply(session)
 
     log_prompts(reply, session.current_mode.channel, flow.mode, session.respondent)
-    respondent = runtime_channel |> Channel.ask(respondent, token, reply)
+    respondent = runtime_channel
+    |> Channel.ask(respondent, token, reply)
+    |> Respondent.add_mode_attempt(:mobileweb)
+
     {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
   end
 
