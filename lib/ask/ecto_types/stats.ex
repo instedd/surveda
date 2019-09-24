@@ -61,7 +61,7 @@ defmodule Ask.Stats do
   def attempts(%Stats{attempts: nil }, :sms) do
     0
   end
-  def attempts(%Stats{attempts: %{ sms: total }}, :sms) do
+  def attempts(%Stats{attempts: %{ "sms" => total }}, :sms) do
     total
   end
   def attempts(%Stats{attempts: _}, :sms) do
@@ -71,7 +71,7 @@ defmodule Ask.Stats do
   def attempts(%Stats{attempts: nil }, :ivr) do
     0
   end
-  def attempts(%Stats{attempts: %{ ivr: total }}, :ivr) do
+  def attempts(%Stats{attempts: %{ "ivr" => total }}, :ivr) do
     total
   end
   def attempts(%Stats{attempts: _}, :ivr) do
@@ -81,7 +81,7 @@ defmodule Ask.Stats do
   def attempts(%Stats{attempts: nil }, :mobileweb) do
     0
   end
-  def attempts(%Stats{attempts: %{ mobileweb: total }}, :mobileweb) do
+  def attempts(%Stats{attempts: %{ "mobileweb" => total }}, :mobileweb) do
     total
   end
   def attempts(%Stats{attempts: _}, :mobileweb) do
@@ -93,32 +93,32 @@ defmodule Ask.Stats do
   end
 
   def add_attempt(%Stats{attempts: nil} = stats, :sms) do
-    %{stats | attempts: %{ sms: 1 }}
+    %{stats | attempts: %{ "sms" => 1 }}
   end
-  def add_attempt(%Stats{attempts: %{ sms: total } = attempts } = stats, :sms) do
-    %{stats | attempts: %{attempts | sms: total + 1}}
+  def add_attempt(%Stats{attempts: %{ "sms" => total } = attempts } = stats, :sms) do
+    %{stats | attempts: %{attempts | "sms" => total + 1}}
   end
   def add_attempt(%Stats{attempts: attempts} = stats, :sms) do
-    %{stats | attempts: Map.put(attempts, :sms, 1)}
+    %{stats | attempts: Map.put(attempts, "sms", 1)}
   end
 
   def add_attempt(%Stats{attempts: nil} = stats, :ivr) do
-    %{stats | attempts: %{ ivr: 1 }}
+    %{stats | attempts: %{ "ivr" => 1 }}
   end
-  def add_attempt(%Stats{attempts: %{ ivr: total } = attempts } = stats, :ivr) do
-    %{stats | attempts: %{attempts | ivr: total + 1}}
+  def add_attempt(%Stats{attempts: %{ "ivr" => total } = attempts } = stats, :ivr) do
+    %{stats | attempts: %{attempts | "ivr" => total + 1}}
   end
   def add_attempt(%Stats{attempts: attempts} = stats, :ivr) do
-    %{stats | attempts: Map.put(attempts, :ivr, 1)}
+    %{stats | attempts: Map.put(attempts, "ivr", 1)}
   end
 
   def add_attempt(%Stats{attempts: nil} = stats, :mobileweb) do
-    %{stats | attempts: %{ mobileweb: 1 }}
+    %{stats | attempts: %{ "mobileweb" => 1 }}
   end
-  def add_attempt(%Stats{attempts: %{ mobileweb: total } = attempts } = stats, :mobileweb) do
-    %{stats | attempts: %{attempts | mobileweb: total + 1}}
+  def add_attempt(%Stats{attempts: %{ "mobileweb" => total } = attempts } = stats, :mobileweb) do
+    %{stats | attempts: %{attempts | "mobileweb" => total + 1}}
   end
   def add_attempt(%Stats{attempts: attempts} = stats, :mobileweb) do
-    %{stats | attempts: Map.put(attempts, :mobileweb, 1)}
+    %{stats | attempts: Map.put(attempts, "mobileweb", 1)}
   end
 end
