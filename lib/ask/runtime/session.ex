@@ -279,7 +279,7 @@ defmodule Ask.Runtime.Session do
     {:stalled, session |> clear_token, respondent}
   end
 
-  def switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
+  defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
     session = session |> clear_token
     run_flow(%Session{
       session |
