@@ -209,13 +209,13 @@ defmodule Ask.SessionTest do
   end
 
   test "retry question", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
-    assert {:ok, session = %Session{token: token}, _, 5, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [5])
+    assert {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 5, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [5])
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     assert {:ok, session = %Session{token: token2}, _, 10, _} = Session.timeout(session)
     assert token2 != token
-    assert_receive [:ask, ^test_channel, ^respondent, ^token2, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert_receive [:ask, ^test_channel, ^updated_respondent, ^token2, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     assert {:stalled, _, _} = Session.timeout(session)
   end
@@ -224,12 +224,12 @@ defmodule Ask.SessionTest do
     test_channel = TestChannel.new
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
-    {:ok, session = %Session{token: token}, _, 5, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [5])
+    {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 5, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [5])
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
     assert {:ok, %Session{token: token2}, _, 10, _} = Session.timeout(session)
     assert token2 != token
-    assert_receive [:setup, ^test_channel, ^respondent, ^token2]
+    assert_receive [:setup, ^test_channel, ^updated_respondent, ^token2]
   end
 
   test "last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
@@ -287,7 +287,7 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 
-    {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
+    {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 10, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -298,7 +298,7 @@ defmodule Ask.SessionTest do
     }
 
     {:ok, result = %Session{token: token}, _, 5, _} = Session.timeout(session)
-    assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
+    assert_receive [:setup, ^fallback_runtime_channel, ^updated_respondent, ^token]
 
     assert result.current_mode == expected_session.current_mode
     assert result.fallback_mode == expected_session.fallback_mode
@@ -313,7 +313,7 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [7]
 
-    {:ok, session = %Session{token: token}, _, 2, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2], fallback_channel, "ivr", fallback_retries)
+    {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 2, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2], fallback_channel, "ivr", fallback_retries)
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -325,7 +325,7 @@ defmodule Ask.SessionTest do
 
     {_, session_after_retry, _, _, _} = Session.timeout(session)
     {:ok, result = %Session{token: token}, _, 7, _} = Session.timeout(session_after_retry)
-    assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
+    assert_receive [:setup, ^fallback_runtime_channel, ^updated_respondent, ^token]
 
     assert result.current_mode == expected_session.current_mode
     assert result.fallback_mode == expected_session.fallback_mode
@@ -340,7 +340,7 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 
-    {:ok, session = %Session{token: token}, _, 2, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2, 3], fallback_channel, "ivr", fallback_retries)
+    {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 2, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2, 3], fallback_channel, "ivr", fallback_retries)
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -352,11 +352,11 @@ defmodule Ask.SessionTest do
 
     {:ok, session = %Session{token: token}, _, 3, _} = Session.timeout(session)
     refute_receive [:setup, _, _, _, _]
-    assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert_receive [:ask, ^test_channel, ^updated_respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     {_, session_after_second_retry, _, _, _} = Session.timeout(session)
     {:ok, result = %Session{token: token}, _, 5, _} = Session.timeout(session_after_second_retry)
-    assert_receive [:setup, ^fallback_runtime_channel, ^respondent, ^token]
+    assert_receive [:setup, ^fallback_runtime_channel, ^updated_respondent, ^token]
 
     assert result.current_mode == expected_session.current_mode
     assert result.fallback_mode == expected_session.fallback_mode
@@ -435,11 +435,11 @@ defmodule Ask.SessionTest do
     test_channel = TestChannel.new(:expired)
     channel = build(:channel, settings: test_channel |> TestChannel.settings)
 
-    assert {:ok, session = %Session{token: token}, _, 5, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [5])
+    assert {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 5, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [5])
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
     assert {:ok, %Session{token: token}, %Reply{}, 5, _} = Session.timeout(session)
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, ^updated_respondent, ^token]
   end
 
   test "doesn't fail if it has an expired message" do
@@ -448,11 +448,11 @@ defmodule Ask.SessionTest do
     test_channel = TestChannel.new(:expired)
     channel = build(:channel, settings: test_channel |> TestChannel.settings, type: "ivr")
 
-    assert {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always())
+    assert {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 10, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always())
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
     assert {:ok, %Session{token: token}, %Reply{}, 10, _} = Session.timeout(session)
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, ^updated_respondent, ^token]
   end
 
   test "doesn't switch to fallback if it has an expired message", %{quiz: quiz, respondent: respondent} do
@@ -463,11 +463,11 @@ defmodule Ask.SessionTest do
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [5]
 
-    {:ok, session = %Session{token: token}, _, 10, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
+    {:ok, session = %Session{token: token, respondent: updated_respondent}, _, 10, _} = Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [], fallback_channel, "ivr", fallback_retries)
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
     assert {:ok, %Session{token: token}, %Reply{}, 10, _} = Session.timeout(session)
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, ^updated_respondent, ^token]
   end
 
   test "uses retry configuration", %{quiz: quiz, respondent: respondent, channel: channel} do

@@ -1,7 +1,7 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
   alias Ask.Ecto.Type.JSON
-  alias Ask.Stats
+  alias Ask.{Stats, Repo}
 
   schema "respondents" do
     field :phone_number, :string
@@ -115,6 +115,6 @@ defmodule Ask.Respondent do
     "mobile_web_code_#{respondent_id}"
   end
 
-  def add_mode_attempt(respondent, mode), do: %{respondent | stats: Stats.add_attempt(respondent.stats, mode)}
+  def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
 
 end
