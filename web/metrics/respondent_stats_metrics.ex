@@ -1,4 +1,4 @@
-defmodule Prometheus.RespondentStatsMetrics do
+defmodule Ask.RespondentStatsMetrics do
   use Prometheus.Collector
 
   alias Ask.Repo

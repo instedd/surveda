@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
-  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
+  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
   alias Ask.Runtime.{Broker, Flow, Reply}
   alias Ask.Router.Helpers
   import Plug.Conn
@@ -232,32 +232,19 @@ defmodule Ask.Runtime.VerboiceChannel do
     Broker.channel_failed(respondent, status)
   end
 
-  def update_interactions(respondent) do
-    respondent = Respondent
-    |> Repo.get(respondent.id)
-
+  def update_call_time(respondent, call_time) do
     stats = respondent.stats
-    |> Stats.set_interaction_time(DateTime.utc_now())
+    |> Stats.total_call_time(call_time)
 
     respondent
     |> Respondent.changeset(%{stats: stats})
     |> Repo.update!
   end
 
-  def update_call_time(respondent) do
-    respondent = Respondent
-    |> Repo.get(respondent.id)
-
-    stats = respondent.stats
-    |> Stats.add_total_call_time()
-
-    respondent
-    |> Respondent.changeset(%{stats: stats})
-    |> Repo.update!
-  end
-
-  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status} = params) do
+  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
+    call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
+    |> update_call_time(call_duration / 60)
     case status do
       s when s in ["failed", "busy", "no-answer", "expired"] ->
         channel_failed(respondent, status, params)
@@ -285,8 +272,6 @@ defmodule Ask.Runtime.VerboiceChannel do
           digits -> Flow.Message.reply(digits)
         end
 
-        update_interactions(respondent)
-
         case broker.sync_step(respondent, response, "ivr") do
           {:reply, reply} ->
             prompts = Reply.prompts(reply)
@@ -294,10 +279,8 @@ defmodule Ask.Runtime.VerboiceChannel do
             gather(respondent, prompts, num_digits)
           {:end, {:reply, reply}} ->
             prompts = Reply.prompts(reply)
-            update_call_time(respondent)
             say_or_play(prompts) ++ [hangup()]
           :end ->
-            update_call_time(respondent)
             hangup()
         end
     end

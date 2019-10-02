@@ -19,6 +19,7 @@ export const DELETE_SECTION = 'QUESTIONNAIRE_DELETE_SECTION'
 export const CHANGE_SECTION_TITLE = 'QUESTIONNAIRE_CHANGE_SECTION_TITLE'
 export const ADD_QUOTA_COMPLETED_STEP = 'QUESTIONNAIRE_ADD_QUOTA_COMPLETED_STEP'
 export const MOVE_STEP = 'QUESTIONNAIRE_MOVE_STEP'
+export const MOVE_SECTION = 'QUESTIONNAIRE_MOVE_SECTION'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
 export const MOVE_STEP_TO_TOP_OF_SECTION = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP_OF_SECTION'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
@@ -271,6 +272,12 @@ export const moveStep = (sourceStepId, targetStepId) => ({
   type: MOVE_STEP,
   sourceStepId,
   targetStepId
+})
+
+export const moveSection = (sourceSectionId, targetSectionId = 0) => ({
+  type: MOVE_SECTION,
+  sourceSectionId,
+  targetSectionId
 })
 
 export const moveStepToTopOfSection = (stepId, sectionId) => ({

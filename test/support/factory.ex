@@ -158,8 +158,9 @@ defmodule Ask.Factory do
   end
 
   def floip_endpoint_factory do
+    port = Process.get(:port, 1234)
     %Ask.FloipEndpoint{
-      uri: sequence(:string, &"http://localhost:1234/#{&1}")
+      uri: sequence(:string, &"http://localhost:#{port}/#{&1}")
     }
   end
 

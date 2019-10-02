@@ -6,7 +6,6 @@ import { DragSource, DropTarget } from 'react-dnd'
 import * as questionnaireActions from '../../actions/questionnaire'
 
 type Props = {
-  step: Step,
   sectionId: string,
   isDragging: boolean,
   isOver: boolean,
@@ -14,17 +13,16 @@ type Props = {
   connectDropTarget: Function,
   children: any,
   questionnaireActions: any,
-  quotaCompletedSteps: boolean,
   readOnly: boolean,
   dropOnly: boolean
 };
 
-class DraggableStep extends Component<Props> {
+class DraggableSection extends Component<Props> {
   static defaultProps = {dropOnly: false}
-  draggableStep() {
-    const { step, isDragging, isOver, connectDragSource, children, readOnly, dropOnly } = this.props
+  draggableSection() {
+    const { isDragging, isOver, connectDragSource, children, readOnly, dropOnly } = this.props
 
-    const draggable = !readOnly && (step == null || step.type != 'language-selection')
+    const draggable = !readOnly
 
     let draggableStyle: any = {
       opacity: isDragging ? 0.0 : 1,
@@ -49,30 +47,23 @@ class DraggableStep extends Component<Props> {
 
   render() {
     const { connectDropTarget } = this.props
-    return connectDropTarget(this.draggableStep())
+    return connectDropTarget(this.draggableSection())
   }
 }
 
-export const stepSource = {
+export const sectionSource = {
   beginDrag(props, monitor, component) {
     return {
-      id: props.step.id
+      id: props.sectionId
     }
   },
 
   endDrag(props, monitor, component) {
-    const { step, questionnaireActions } = props
+    const { sectionId, questionnaireActions } = props
 
     if (monitor.didDrop()) {
-      if (monitor.getDropResult().step == null) {
-        if (monitor.getDropResult().sectionId !== null) {
-          questionnaireActions.moveStepToTopOfSection(step.id, monitor.getDropResult().sectionId)
-        } else {
-          questionnaireActions.moveStepToTop(step.id)
-        }
-      } else if (monitor.getDropResult().step.id !== step.id) {
-        questionnaireActions.moveStep(step.id, monitor.getDropResult().step.id)
-      }
+      const { sectionId: targetSectionId } = monitor.getDropResult()
+      targetSectionId ? questionnaireActions.moveSection(sectionId, targetSectionId) : questionnaireActions.moveSection(sectionId)
     }
   }
 }
@@ -91,9 +82,9 @@ export const collectTarget = (connect, monitor) => {
   }
 }
 
-export const stepTarget = {
+export const sectionTarget = {
   drop(props, monitor) {
-    return { step: props.step, sectionId: props.sectionId }
+    return { sectionId: props.sectionId }
   }
 }
 
@@ -101,15 +92,7 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-const typeFromProps = (props) => {
-  if (props.quotaCompletedSteps) {
-    return 'QUOTA_COMPLETED_STEPS'
-  } else {
-    return 'STEPS'
-  }
-}
-
-const source = DragSource(typeFromProps, stepSource, collectSource)(DraggableStep)
-const target = DropTarget(typeFromProps, stepTarget, collectTarget)(source)
+const source = DragSource('section', sectionSource, collectSource)(DraggableSection)
+const target = DropTarget('section', sectionTarget, collectTarget)(source)
 
 export default connect(null, mapDispatchToProps)(target)

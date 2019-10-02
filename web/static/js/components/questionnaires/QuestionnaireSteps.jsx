@@ -6,6 +6,7 @@ import { hasSections } from '../../reducers/questionnaire'
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import DraggableStep from './DraggableStep'
+import DraggableSection from './DraggableSection'
 import Section from './Section'
 
 type Props = {
@@ -60,24 +61,40 @@ class QuestionnaireSteps extends Component<Props> {
     const groups = stepGroups(steps)
     const increaseErrorIndex = (steps.length > 0) && !hasSections(steps) && steps[0].type == 'language-selection'
 
+    const dummyDropSectionTarget = (index) => {
+      const showDummyDropSectionTarget = (index == 0 && groups[0].section) || (index == 1 && !groups[0].section)
+      const dummyDraggableSection = <div className='dummy-drop-section-target'>
+        <DraggableSection sectionId={null} readOnly={readOnly} dropOnly>
+          <div style={{borderBottom: 'solid transparent'}} />
+        </DraggableSection>
+      </div>
+      if (showDummyDropSectionTarget) return dummyDraggableSection
+    }
+
     return (
       <div>
-        { groups.map((item, index) => (
-          item.section != null
-            ? <Section title={item.section.title} randomize={item.section.randomize} key={item.section.id} id={item.section.id} readOnly={readOnly}>
-              <QuestionnaireStepsGroup
-                steps={item.groupSteps}
-                errorPath={`${errorPath}[${index}].steps`}
-                errorsByPath={errorsByPath}
-                onDeleteStep={onDeleteStep}
-                onSelectStep={onSelectStep}
-                onDeselectStep={onDeselectStep}
-                readOnly={readOnly}
-                selectedSteps={selectedSteps}
-                quotaCompletedSteps={quotaCompletedSteps}
-                sectionId={item.section.id}
-              />
-            </Section>
+        { groups.map((item, index) => {
+          const section = item.section
+          return section
+            ? <div className='section-container'>
+              { dummyDropSectionTarget(index) }
+              <DraggableSection sectionId={section.id} readOnly={readOnly} >
+                <Section title={section.title} randomize={section.randomize} key={section.id} id={section.id} readOnly={readOnly} quotaCompletedSteps>
+                  <QuestionnaireStepsGroup
+                    steps={item.groupSteps}
+                    errorPath={`${errorPath}[${index}].steps`}
+                    errorsByPath={errorsByPath}
+                    onDeleteStep={onDeleteStep}
+                    onSelectStep={onSelectStep}
+                    onDeselectStep={onDeselectStep}
+                    readOnly={readOnly}
+                    selectedSteps={selectedSteps}
+                    quotaCompletedSteps={quotaCompletedSteps}
+                    sectionId={section.id}
+                  />
+                </Section>
+              </DraggableSection>
+            </div>
           : <QuestionnaireStepsGroup
             key={index}
             steps={item.groupSteps}
@@ -91,8 +108,7 @@ class QuestionnaireSteps extends Component<Props> {
             selectedSteps={selectedSteps}
             quotaCompletedSteps={quotaCompletedSteps}
           />
-
-        ))}
+        })}
       </div>
     )
   }
@@ -104,7 +120,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
     if (steps && steps.length > 0 && steps[0].type != 'language-selection') {
       return (
-        <DraggableStep step={null} sectionId={sectionId} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps}>
+        <DraggableStep step={null} sectionId={sectionId} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} dropOnly>
           <div style={{borderBottom: 'solid transparent'}} />
         </DraggableStep>
       )
@@ -153,7 +169,7 @@ class QuestionnaireStepsGroup extends Component<Props> {
 
   render() {
     return (
-      <div>
+      <div className='questionnaire-step-group'>
         {this.dummyDropTarget()}
         {this.questionnaireStepsGroup()}
       </div>

@@ -8,7 +8,7 @@
 
   .section-container-header {
     position: relative;
-    
+
     .switch {
       position: absolute;
       top: 0px;
@@ -34,12 +34,9 @@
       margin-bottom: 0;
     }
   }
-  + .section-container {
-    margin-top: 1.5rem;
-  }
 }
 
-div + .section-container {
+.section-container + .section-container {
   margin-top: 1.5rem;
 }
 .add-step {

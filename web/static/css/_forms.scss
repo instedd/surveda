@@ -229,6 +229,21 @@ label {
   }
 }
 
+.questionnaire-step-group {
+
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+
+  ul {
+    margin-top: 0;
+  }
+}
+
+.dummy-drop-section-target {
+  position: relative;
+  top: -1.2rem;
+}
+
 .languageSelector {
   display: inline-block;
   text-align: left;

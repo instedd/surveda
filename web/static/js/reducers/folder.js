@@ -28,6 +28,7 @@ const renameFolder = (state, action) => {
 const createFolder = (state, action) => {
   const newState = {...state}
   const { folder } = action
+  newState.folders = newState.folders || {}
   newState.folders[folder.id] = folder
   newState.folders[folder.id].error = null
   return {

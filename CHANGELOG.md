@@ -1,5 +1,31 @@
 # InSTEDD Surveda Changelog
 
+## 0.23
+
+### Features
+
+* Survey folders [#1463](https://github.com/instedd/surveda/issues/1463)
+* Prometheus metrics [#1472](https://github.com/instedd/surveda/issues/1472), [#1473](https://github.com/instedd/surveda/issues/1473)
+* Prefix respondent IDs with `r` [#1497](https://github.com/instedd/surveda/issues/1497)
+* Success rate and queue size cockpit [#1488](https://github.com/instedd/surveda/issues/1488)
+
+### Bugfixes
+
+* 'Quota completed steps' section cannot be disabled [#1490](https://github.com/instedd/surveda/issues/1490)
+* Cannot change the sections order [#1496](https://github.com/instedd/surveda/issues/1496)
+* Call duration is not computed on failed calls [#1502](https://github.com/instedd/surveda/issues/1502)
+
+## Viburnum 0.22.1
+
+### Features
+
+* Add a column to the respondents CSV with the order of the sections [#1492](https://github.com/instedd/surveda/issues/1492)
+* Enable remote shell for Elixir process [#1511](https://github.com/instedd/surveda/issues/1511)
+
+### Bugfixes
+
+* Dropdown does not open on first click [#1491](https://github.com/instedd/surveda/issues/1491)
+
 ## Viburnum 0.22
 
 ### Features

@@ -11,10 +11,22 @@ class FolderCard extends PureComponent {
     name: PropTypes.string,
     t: PropTypes.func,
     onDelete: Function,
-    onRename: Function
+    onRename: Function,
+    readOnly: PropTypes.bool
   }
   render() {
-    const { name, projectId, id, t, onDelete, onRename } = this.props
+    const { name, projectId, id, t, onDelete, onRename, readOnly } = this.props
+    const options = <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+      <DropdownItem className='dots'>
+        <i className='material-icons'>more_vert</i>
+      </DropdownItem>
+      <DropdownItem>
+        <a onClick={e => onRename(id, name)}><i className='material-icons'>edit</i>{t('Rename')}</a>
+      </DropdownItem>
+      <DropdownItem>
+        <a onClick={e => onDelete(id)}><i className='material-icons'>delete</i>{t('Delete')}</a>
+      </DropdownItem>
+    </Dropdown>
 
     return (
       <div className='col s12 m6 l4'>
@@ -25,17 +37,7 @@ class FolderCard extends PureComponent {
                 <i className='material-icons'>folder</i>
                 {name}
               </Link>
-              <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
-                <DropdownItem className='dots'>
-                  <i className='material-icons'>more_vert</i>
-                </DropdownItem>
-                <DropdownItem>
-                  <a onClick={e => onRename(id, name)}><i className='material-icons'>edit</i>{t('Rename')}</a>
-                </DropdownItem>
-                <DropdownItem>
-                  <a onClick={e => onDelete(id)}><i className='material-icons'>delete</i>{t('Delete')}</a>
-                </DropdownItem>
-              </Dropdown>
+              {readOnly || options}
             </div>
           </div>
         </Card>

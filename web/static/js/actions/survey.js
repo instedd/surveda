@@ -8,7 +8,6 @@ export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
 export const CHANGE_COMPARISON_RATIO = 'SURVEY_CHANGE_COMPARISON_RATIO'
 export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
-export const CHANGE_FOLDER = 'SURVEY_CHANGE_FOLDER'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const CHANGE_DESCRIPTION = 'SURVEY_CHANGE_DESCRIPTION'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
@@ -161,10 +160,8 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
 }
 
 export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
-  return api.setFolderId(survey.projectId, survey.id, folderId).then(() =>
-    dispatch({
-      type: CHANGE_FOLDER
-    })
+  return api.setFolderId(survey.projectId, survey.id, folderId)
+    .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId))
   )
 }
 

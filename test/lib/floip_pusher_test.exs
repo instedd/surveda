@@ -4,7 +4,8 @@ defmodule FloipPusherTest do
   alias Ask.{Repo, FloipPusher, FloipEndpoint, Response}
 
   setup do
-    server = Bypass.open(port: 1234)
+    server = Bypass.open
+    Process.put(:port, server.port)
     {:ok, server: server}
   end
 
@@ -94,10 +95,10 @@ defmodule FloipPusherTest do
     survey2 = insert(:survey, state: "running")
 
     # 2 endpoints per survey
-    insert_endpoint(survey1, uri: "http://localhost:1234/1.1")
-    insert_endpoint(survey1, uri: "http://localhost:1234/2.1")
-    insert_endpoint(survey2, uri: "http://localhost:1234/1.2")
-    insert_endpoint(survey2, uri: "http://localhost:1234/2.2")
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1")
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/2.1")
+    insert_endpoint(survey2, uri: "http://localhost:#{server.port}/1.2")
+    insert_endpoint(survey2, uri: "http://localhost:#{server.port}/2.2")
 
     # 2 responses per survey
     insert_response(survey1)
@@ -121,10 +122,10 @@ defmodule FloipPusherTest do
     survey2 = insert(:survey, state: "running")
 
     # 2 endpoints per survey
-    endpoint_1_survey_1 = insert_endpoint(survey1, uri: "http://localhost:1234/1.1")
-    endpoint_2_survey_1 = insert_endpoint(survey1, uri: "http://localhost:1234/2.1")
-    endpoint_1_survey_2 = insert_endpoint(survey2, uri: "http://localhost:1234/1.2")
-    endpoint_2_survey_2 = insert_endpoint(survey2, uri: "http://localhost:1234/2.2")
+    endpoint_1_survey_1 = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1")
+    endpoint_2_survey_1 = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/2.1")
+    endpoint_1_survey_2 = insert_endpoint(survey2, uri: "http://localhost:#{server.port}/1.2")
+    endpoint_2_survey_2 = insert_endpoint(survey2, uri: "http://localhost:#{server.port}/2.2")
 
     # 2 responses per survey
     insert_response(survey1)
@@ -161,10 +162,10 @@ defmodule FloipPusherTest do
 
     # 2 endpoints per survey
     # On one of the endpoints, set last_response_id to the latest response in the survey
-    insert_endpoint(survey1, uri: "http://localhost:1234/1.1", last_pushed_response_id: response_2_survey_1.id)
-    insert_endpoint(survey1, uri: "http://localhost:1234/2.1")
-    insert_endpoint(survey2, uri: "http://localhost:1234/1.2")
-    insert_endpoint(survey2, uri: "http://localhost:1234/2.2")
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", last_pushed_response_id: response_2_survey_1.id)
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/2.1")
+    insert_endpoint(survey2, uri: "http://localhost:#{server.port}/1.2")
+    insert_endpoint(survey2, uri: "http://localhost:#{server.port}/2.2")
 
     # Verify that the receiving mock gets one POST for each endpoint, except the one that already had the last response
     server
@@ -181,7 +182,7 @@ defmodule FloipPusherTest do
     survey = insert(:survey, state: "running")
 
     # Add 1 endpoint to the survey
-    endpoint = insert_endpoint(survey, uri: "http://localhost:1234/1.1")
+    endpoint = insert_endpoint(survey, uri: "http://localhost:#{server.port}/1.1")
 
     # Add 2000 responses to the survey (all by the same respondent for convenience)
     respondent = insert(:respondent, survey: survey)
@@ -208,7 +209,7 @@ defmodule FloipPusherTest do
     survey = insert(:survey, state: "running")
 
     # Add 1 endpoint to the survey
-    endpoint = insert_endpoint(survey, uri: "http://localhost:1234/1.1")
+    endpoint = insert_endpoint(survey, uri: "http://localhost:#{server.port}/1.1")
 
     # Add 2 responses to the survey (all by the same respondent for convenience)
     respondent = insert(:respondent, survey: survey)
@@ -229,7 +230,7 @@ defmodule FloipPusherTest do
     survey = insert(:survey, state: "running")
 
     # Add 1 endpoint to the survey, with retry counter == 8
-    endpoint = insert_endpoint(survey, uri: "http://localhost:1234/1.1", retries: 8)
+    endpoint = insert_endpoint(survey, uri: "http://localhost:#{server.port}/1.1", retries: 8)
 
     # Add 2 responses to the survey (all by the same respondent for convenience)
     respondent = insert(:respondent, survey: survey)
@@ -257,10 +258,10 @@ defmodule FloipPusherTest do
     insert_response(survey2)
 
     # Add 2 endpoints to each survey, one with 10 retries and one with 0 retries for each survey
-    insert_endpoint(survey1, uri: "http://localhost:1234/1.1", retries: 10)
-    insert_endpoint(survey1, uri: "http://localhost:1234/2.1", retries: 0)
-    insert_endpoint(survey2, uri: "http://localhost:1234/1.2", retries: 10)
-    insert_endpoint(survey2, uri: "http://localhost:1234/2.2", retries: 0)
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", retries: 10)
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/2.1", retries: 0)
+    insert_endpoint(survey2, uri: "http://localhost:#{server.port}/1.2", retries: 10)
+    insert_endpoint(survey2, uri: "http://localhost:#{server.port}/2.2", retries: 0)
 
     # 2 responses per survey
     insert_response(survey1)
@@ -277,12 +278,12 @@ defmodule FloipPusherTest do
     run_pusher_without_logging()
   end
 
-  test "ignores disabled endpoints" do
+  test "ignores disabled endpoints", %{server: server} do
     # 1 survey
     survey1 = insert(:survey, state: "running")
 
     # 1 endpoint in "disabled" state
-    insert_endpoint(survey1, uri: "http://localhost:1234/1.1", retries: 0, state: "disabled")
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", retries: 0, state: "disabled")
 
     # 1 response
     insert_response(survey1)
@@ -296,10 +297,10 @@ defmodule FloipPusherTest do
     survey1 = insert(:survey, state: "running")
 
     # 1 endpoint with 9 retries
-    endpoint = insert_endpoint(survey1, uri: "http://localhost:1234/1.1", retries: 9, state: "enabled")
+    endpoint = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", retries: 9, state: "enabled")
 
     # 1 endpoint with 8 retries
-    endpoint2 = insert_endpoint(survey1, uri: "http://localhost:1234/2.1", retries: 8, state: "enabled")
+    endpoint2 = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/2.1", retries: 8, state: "enabled")
 
     # 1 response
     insert_response(survey1)
@@ -323,7 +324,7 @@ defmodule FloipPusherTest do
     assert endpoint2.state == "enabled"
   end
 
-  test "marks endpoint as terminated if survey terminated and last message was pushed" do
+  test "marks endpoint as terminated if survey terminated and last message was pushed", %{server: server} do
     # 1 survey terminated
     survey1 = insert(:survey, state: "terminated")
 
@@ -331,7 +332,7 @@ defmodule FloipPusherTest do
     last_response = insert_response(survey1)
 
     # 1 endpoint whose last pushed response is the survey's last response
-    endpoint = insert_endpoint(survey1, uri: "http://localhost:1234/1.1", last_pushed_response_id: last_response.id)
+    endpoint = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", last_pushed_response_id: last_response.id)
 
     # Pusher runs
     run_pusher_without_logging()
@@ -350,7 +351,7 @@ defmodule FloipPusherTest do
     insert_list(2000, :response, respondent: respondent)
 
     # 1 endpoint with no pushed responses
-    endpoint = insert_endpoint(survey1, uri: "http://localhost:1234/1.1", last_pushed_response_id: nil)
+    endpoint = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", last_pushed_response_id: nil)
 
     # Allow endpoint server to receive anything
     server |> expect_success_always
@@ -368,7 +369,7 @@ defmodule FloipPusherTest do
   # the collection of responses is empty.
   # What I want to avoid with this test is unnecesarily loading endpoints
   # for terminated surveys to which we already pushed all responses.
-  test "ignores terminated endpoints" do
+  test "ignores terminated endpoints", %{server: server} do
     # 1 survey terminated
     survey1 = insert(:survey, state: "terminated")
 
@@ -376,7 +377,7 @@ defmodule FloipPusherTest do
     insert_response(survey1)
 
     # 1 terminated endpoint
-    insert_endpoint(survey1, uri: "http://localhost:1234/1.1", state: "terminated")
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", state: "terminated")
 
     # Pusher runs
     run_pusher_without_logging()
@@ -387,7 +388,7 @@ defmodule FloipPusherTest do
   test "sets auth token", %{server: server} do
     survey1 = insert(:survey, state: "running")
     insert_response(survey1)
-    insert_endpoint(survey1, uri: "http://localhost:1234/1.1", auth_token: "IM_A_TOKEN")
+    insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", auth_token: "IM_A_TOKEN")
 
     Bypass.expect_once server, "POST", "/1.1/flow-results/packages/#{survey1.floip_package_id}/responses", fn conn ->
       {"authorization", "IM_A_TOKEN"} = conn.req_headers |> List.keyfind("authorization", 0)
