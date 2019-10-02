@@ -420,7 +420,8 @@ defmodule Ask.Survey do
     pending = respondents_target - completes
     multiplier = Float.ceil(1/estimated_success_rate, 0) |> round
     needed = pending*multiplier
-    missing = max(needed - respondents_total, 0)
+    selected_respondents = respondents_count(respondents_by_state)
+    missing = max(needed - selected_respondents, 0)
     %{
       success_rate_data: %{
         success_rate: current_success_rate |> Float.round(2),
@@ -436,6 +437,11 @@ defmodule Ask.Survey do
         missing: missing
       }
     }
+  end
+
+  defp respondents_count(respondents_by_state) do
+    filter_key_list = ["active", "pending", "stalled"]
+    Map.take(respondents_by_state, filter_key_list)|> Enum.reduce(0, fn({_k, total}, acc) -> total + acc end)
   end
 
   defp respondents_target(:all, respondents_total), do: respondents_total
