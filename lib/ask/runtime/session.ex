@@ -57,7 +57,7 @@ defmodule Ask.Runtime.Session do
         end
         log_prompts(reply, channel, flow.mode, respondent)
         respondent = runtime_channel |> Channel.ask(respondent, token, reply) |> Respondent.add_mode_attempt!(:sms)
-        {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
+        {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
     end
   end
 
@@ -79,7 +79,7 @@ defmodule Ask.Runtime.Session do
     session = %{session| channel_state: channel_state}
     respondent = respondent |> Respondent.add_mode_attempt!(:ivr)
 
-    {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session), respondent}
+    {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %MobileWebMode{channel: channel}} = session) do
@@ -95,7 +95,7 @@ defmodule Ask.Runtime.Session do
     |> Channel.ask(respondent, token, reply)
     |> Respondent.add_mode_attempt!(:mobileweb)
 
-    {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session), respondent}
+    {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
 
   defp mobile_contact_reply(session) do
@@ -229,12 +229,12 @@ defmodule Ask.Runtime.Session do
     %{session | token: nil}
   end
 
-  def timeout(%{channel_state: channel_state, respondent: respondent} = session) do
+  def timeout(%{channel_state: channel_state} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     cond do
       Channel.has_queued_message?(runtime_channel, channel_state) ->
-        {:ok, session, %Reply{}, current_timeout(session), respondent}
+        {:ok, session, %Reply{}, current_timeout(session)}
 
       Channel.message_expired?(runtime_channel, channel_state) ->
         session = retry(session, runtime_channel)
@@ -244,7 +244,7 @@ defmodule Ask.Runtime.Session do
         base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
           |> Interval.duration(:minutes)
 
-        {:ok, session, %Reply{}, base_timeout + current_timeout(session), session.respondent}
+        {:ok, session, %Reply{}, base_timeout + current_timeout(session)}
       true ->
         timeout(session, runtime_channel)
     end
@@ -264,7 +264,7 @@ defmodule Ask.Runtime.Session do
       |> consume_retry()
 
     # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, current_timeout(session), session.respondent}
+    {:ok, session, %Reply{}, current_timeout(session)}
   end
 
   def terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
@@ -417,8 +417,8 @@ defmodule Ask.Runtime.Session do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
           session = %{session | flow: flow}
           case sync_step(session, :answer, session.current_mode, false) do
-            {:ok, session, reply, timeout, respondent} ->
-              {:rejected, %{session | respondent: respondent}, reply, timeout, respondent}
+            {:ok, session, reply, timeout} ->
+              {:rejected, session, reply, timeout}
             {:end, reply, respondent} ->
               {:rejected, reply, respondent}
             _ ->
@@ -429,7 +429,7 @@ defmodule Ask.Runtime.Session do
         end
       false ->
         log_prompts(reply, current_mode.channel, flow.mode, session.respondent)
-        {:ok, %{session | flow: flow}, reply, current_timeout(session), session.respondent}
+        {:ok, %{session | flow: flow}, reply, current_timeout(session)}
     end
   end
 
