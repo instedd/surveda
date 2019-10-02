@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@instedd/surveda-d3-components@1.0.12":
-  version "1.0.12"
-  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.12.tgz#0c684079617a0049acdf785ca39a39e1c39f8a91"
+"@instedd/surveda-d3-components@1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.13.tgz#5f232408cc1f75e92a591ac47b19cce89016cb7c"
   dependencies:
     d3 "^4.0.0"
 
