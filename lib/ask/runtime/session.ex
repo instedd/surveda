@@ -37,6 +37,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %SMSMode{channel: channel}} = session) do
+    respondent = respondent |> Respondent.add_mode_attempt!(:sms)
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
@@ -56,12 +57,13 @@ defmodule Ask.Runtime.Session do
           log_disposition_changed(respondent, channel, flow.mode, respondent.disposition, reply.disposition)
         end
         log_prompts(reply, channel, flow.mode, respondent)
-        respondent = runtime_channel |> Channel.ask(respondent, token, reply) |> Respondent.add_mode_attempt!(:sms)
+        respondent = runtime_channel |> Channel.ask(respondent, token, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
     end
   end
 
   defp mode_start(%Session{flow: flow, current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token, schedule: schedule} = session) do
+    respondent = respondent |> Respondent.add_mode_attempt!(:ivr)
 
     next_available_date_time = schedule
       |> Schedule.next_available_date_time
@@ -77,12 +79,12 @@ defmodule Ask.Runtime.Session do
     log_contact("Enqueueing call", channel, flow.mode, respondent)
 
     session = %{session| channel_state: channel_state}
-    respondent = respondent |> Respondent.add_mode_attempt!(:ivr)
 
     {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %MobileWebMode{channel: channel}} = session) do
+    respondent = respondent |> Respondent.add_mode_attempt!(:mobileweb)
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
@@ -93,7 +95,6 @@ defmodule Ask.Runtime.Session do
     log_prompts(reply, session.current_mode.channel, flow.mode, session.respondent)
     respondent = runtime_channel
     |> Channel.ask(respondent, token, reply)
-    |> Respondent.add_mode_attempt!(:mobileweb)
 
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
