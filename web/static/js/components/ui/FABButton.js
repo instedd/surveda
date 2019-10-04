@@ -21,5 +21,5 @@ export class FABButton extends Component {
 FABButton.propTypes = {
   children: PropTypes.node,
   icon: PropTypes.string,
-  hoverEnabled: PropTypes.boolean
+  hoverEnabled: PropTypes.bool
 }
