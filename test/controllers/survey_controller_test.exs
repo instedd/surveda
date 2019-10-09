@@ -469,8 +469,9 @@ defmodule Ask.SurveyControllerTest do
       insert(:respondent, survey: survey, state: "started")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-
-      assert json_response(conn, 200)["data"] == %{
+      controller_response = json_response(conn, 200)["data"]
+      response_rounded = Map.new(controller_response, fn{k, v} -> {k,Float.round(v/1, 2)} end)
+      assert response_rounded == %{
         "success_rate" => 1.0,
         "completion_rate" => 0.33,
         "initial_success_rate" => 1.0,
@@ -492,8 +493,9 @@ defmodule Ask.SurveyControllerTest do
       insert(:respondent, survey: survey, state: "completed")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-
-      assert json_response(conn, 200)["data"] == %{
+      controller_response = json_response(conn, 200)["data"]
+      response_rounded = Map.new(controller_response, fn{k, v} -> {k,Float.round(v/1, 2)} end)
+      assert response_rounded == %{
         "success_rate" => 0.67,
         "completion_rate" => 1.0,
         "initial_success_rate" => 1.0,
@@ -539,7 +541,10 @@ defmodule Ask.SurveyControllerTest do
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
 
-      assert json_response(conn, 200)["data"] == %{
+      controller_response = json_response(conn, 200)["data"]
+      response_rounded = Map.new(controller_response, fn{k, v} -> {k,Float.round(v/1, 2)} end)
+
+      assert response_rounded== %{
         "success_rate" => 0.25,
         "completion_rate" => 0.2,
         "initial_success_rate" => 1.0,
