@@ -232,9 +232,9 @@ defmodule Ask.Runtime.VerboiceChannel do
     Broker.channel_failed(respondent, status)
   end
 
-  def update_call_time_seconds(respondent, call_time) do
+  def update_call_time(respondent, call_time) do
     stats = respondent.stats
-    |> Stats.total_call_time_seconds(call_time)
+    |> Stats.total_call_time(call_time)
 
     respondent
     |> Respondent.changeset(%{stats: stats})
@@ -244,7 +244,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
-    |> update_call_time_seconds(call_duration)
+    |> update_call_time(call_duration / 60)
     case status do
       s when s in ["failed", "busy", "no-answer", "expired"] ->
         channel_failed(respondent, status, params)
