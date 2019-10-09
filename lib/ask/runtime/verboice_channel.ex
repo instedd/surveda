@@ -265,7 +265,7 @@ defmodule Ask.Runtime.VerboiceChannel do
       nil ->
         hangup()
 
-      _ ->
+      %Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}} ->
         response = case params["Digits"] do
           nil -> Flow.Message.answer()
           "timeout" -> Flow.Message.no_reply()
@@ -283,6 +283,9 @@ defmodule Ask.Runtime.VerboiceChannel do
           :end ->
             hangup()
         end
+
+      _ ->
+        hangup()
     end
 
     reply = response(response_content) |> generate

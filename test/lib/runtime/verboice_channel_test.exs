@@ -17,7 +17,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
     ChannelStatusServer.start_link
-    respondent = insert(:respondent, phone_number: "123", state: "active")
+    respondent = insert(:respondent, phone_number: "123", state: "active", session: %{"current_mode" => %{"mode" => "ivr"}})
     {
       :ok,
       conn: conn,
@@ -65,6 +65,13 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   test "callback without respondent", %{conn: conn} do
     conn = VerboiceChannel.callback(conn, %{})
+    assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
+  end
+
+  test "callback ignored if not respondent's current mode", %{conn: conn, respondent: respondent} do
+    respondent |> Respondent.changeset(%{session: %{"current_mode" => %{"mode" => "sms"}}}) |> Repo.update
+
+    conn = VerboiceChannel.callback(conn, %{"respondent" => respondent.id, "Digits" => nil}, BrokerStub)
     assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
   end
 
