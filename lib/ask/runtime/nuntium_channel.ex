@@ -81,7 +81,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     reply = case respondent do
       nil ->
         nil
-      _ ->
+      %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
         case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
           {:reply, reply} ->
             update_stats(respondent, reply)
@@ -93,6 +93,8 @@ defmodule Ask.Runtime.NuntiumChannel do
             update_stats(respondent)
             nil
         end
+      _ ->
+        nil
     end
     json_reply = reply_to_messages(reply, from, respondent)
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)

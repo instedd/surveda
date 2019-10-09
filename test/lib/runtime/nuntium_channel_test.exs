@@ -9,7 +9,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
-    respondent = insert(:respondent, phone_number: "123 456", sanitized_phone_number: "123456", state: "active")
+    respondent = insert(:respondent, phone_number: "123 456", sanitized_phone_number: "123456", state: "active", session: %{"current_mode" => %{"mode" => "sms"}})
     {:ok, conn: conn, respondent: respondent}
   end
 
@@ -64,7 +64,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   end
 
   test "callback with stalled respondent", %{conn: conn} do
-    respondent = insert(:respondent, phone_number: "123 457", sanitized_phone_number: "123457", state: "stalled")
+    respondent = insert(:respondent, phone_number: "123 457", sanitized_phone_number: "123457", state: "stalled", session: %{"current_mode" => %{"mode" => "sms"}})
     respondent_id = respondent.id
     GenServer.cast(BrokerStub.server_ref, {:expects, fn
       {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
@@ -96,6 +96,13 @@ defmodule Ask.Runtime.NuntiumChannelTest do
       total_received_sms: 1,
       total_sent_sms: 2
     }
+  end
+
+  test "callback ignored if not respondent's current mode", %{conn: conn, respondent: respondent} do
+    respondent |> Respondent.changeset(%{session: %{"current_mode" => %{"mode" => "ivr"}}}) |> Repo.update
+
+    conn = NuntiumChannel.callback(conn, %{"channel" => "foo", "from" => "sms://123456", "body" => "yes"}, BrokerStub)
+    assert [] = json_response(conn, 200)
   end
 
   @channel_foo %{"name" => "foo"}
