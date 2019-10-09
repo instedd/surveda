@@ -37,7 +37,6 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %SMSMode{channel: channel}} = session) do
-    respondent = respondent |> Respondent.add_mode_attempt!(:sms)
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
@@ -63,8 +62,6 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mode_start(%Session{flow: flow, current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token, schedule: schedule} = session) do
-    respondent = respondent |> Respondent.add_mode_attempt!(:ivr)
-
     next_available_date_time = schedule
       |> Schedule.next_available_date_time
 
@@ -84,7 +81,6 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %MobileWebMode{channel: channel}} = session) do
-    respondent = respondent |> Respondent.add_mode_attempt!(:mobileweb)
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
@@ -154,7 +150,9 @@ defmodule Ask.Runtime.Session do
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session) do
     respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent)
-    mode_start(%{session | token: Ecto.UUID.generate, respondent: respondent})
+    session = %{session | token: Ecto.UUID.generate, respondent: respondent}
+    |> add_session_mode_attempt!()
+    mode_start(session)
   end
 
   defp apply_patterns_if_match(patterns, respondent) do
@@ -259,8 +257,9 @@ defmodule Ask.Runtime.Session do
     switch_to_fallback_mode(session)
   end
 
-  def timeout(session, runtime_channel) do
+  def timeout(%Session{} = session, runtime_channel) do
     session = session
+      |> add_session_mode_attempt!()
       |> retry(runtime_channel)
       |> consume_retry()
 
@@ -297,6 +296,12 @@ defmodule Ask.Runtime.Session do
   def consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
     %{session | current_mode: %{session.current_mode | retries: retries}}
   end
+
+  defp add_session_mode_attempt!(%Session{} = session), do: %{session | respondent: add_respondent_mode_attempt!(session)}
+
+  defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %SMSMode{}}), do: respondent |> Respondent.add_mode_attempt!(:sms)
+  defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %IVRMode{}}), do: respondent |> Respondent.add_mode_attempt!(:ivr)
+  defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
   def retry(session, runtime_channel, reason \\ "Timeout. Call failed.")
 
