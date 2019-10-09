@@ -216,7 +216,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 10/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 10
 
       :ok = broker |> GenServer.stop
     end
@@ -264,7 +265,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 11/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 11
 
       :ok = broker |> GenServer.stop
     end
@@ -313,7 +315,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 12/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 12
 
       :ok = broker |> GenServer.stop
     end
@@ -362,7 +365,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 13/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 13
 
       :ok = broker |> GenServer.stop
     end
@@ -411,7 +415,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 14/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 14
 
       :ok = broker |> GenServer.stop
     end
@@ -460,7 +465,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 15/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 15
 
       :ok = broker |> GenServer.stop
     end
@@ -501,7 +507,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert timeout.action_type == "contact"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.stats.total_call_time == 16/60
+      refute respondent.stats.total_call_time
+      assert respondent.stats.total_call_time_seconds == 16
     end
   end
 
