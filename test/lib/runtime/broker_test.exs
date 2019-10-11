@@ -234,6 +234,7 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == ["ivr"]
     assert respondent.questionnaire_id == quiz1.id
+    assert respondent.stats.attempts["ivr"] == 1
   end
 
   test "doesn't break with nil as comparison ratio" do
@@ -407,6 +408,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     respondent = Repo.get!(Respondent, respondent.id)
+    assert respondent.stats.attempts["sms"] == 1
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
@@ -442,6 +444,7 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.stats.attempts["mobileweb"] == 1
     assert respondent.state == "active"
 
     # Set for immediate timeout

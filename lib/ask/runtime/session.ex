@@ -57,12 +57,11 @@ defmodule Ask.Runtime.Session do
         end
         log_prompts(reply, channel, flow.mode, respondent)
         respondent = runtime_channel |> Channel.ask(respondent, token, reply)
-        {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
+        {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
     end
   end
 
   defp mode_start(%Session{flow: flow, current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token, schedule: schedule} = session) do
-
     next_available_date_time = schedule
       |> Schedule.next_available_date_time
 
@@ -77,7 +76,8 @@ defmodule Ask.Runtime.Session do
     log_contact("Enqueueing call", channel, flow.mode, respondent)
 
     session = %{session| channel_state: channel_state}
-    {:ok, session, %Reply{}, current_timeout(session), respondent}
+
+    {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %MobileWebMode{channel: channel}} = session) do
@@ -89,8 +89,10 @@ defmodule Ask.Runtime.Session do
     reply = mobile_contact_reply(session)
 
     log_prompts(reply, session.current_mode.channel, flow.mode, session.respondent)
-    respondent = runtime_channel |> Channel.ask(respondent, token, reply)
-    {:ok, %{session | flow: flow}, reply, current_timeout(session), respondent}
+    respondent = runtime_channel
+    |> Channel.ask(respondent, token, reply)
+
+    {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
 
   defp mobile_contact_reply(session) do
@@ -148,7 +150,9 @@ defmodule Ask.Runtime.Session do
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session) do
     respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent)
-    mode_start(%{session | token: Ecto.UUID.generate, respondent: respondent})
+    session = %{session | token: Ecto.UUID.generate, respondent: respondent}
+    |> add_session_mode_attempt!()
+    mode_start(session)
   end
 
   defp apply_patterns_if_match(patterns, respondent) do
@@ -224,12 +228,12 @@ defmodule Ask.Runtime.Session do
     %{session | token: nil}
   end
 
-  def timeout(%{channel_state: channel_state, respondent: respondent} = session) do
+  def timeout(%{channel_state: channel_state} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     cond do
       Channel.has_queued_message?(runtime_channel, channel_state) ->
-        {:ok, session, %Reply{}, current_timeout(session), respondent}
+        {:ok, session, %Reply{}, current_timeout(session)}
 
       Channel.message_expired?(runtime_channel, channel_state) ->
         session = retry(session, runtime_channel)
@@ -239,7 +243,7 @@ defmodule Ask.Runtime.Session do
         base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
           |> Interval.duration(:minutes)
 
-        {:ok, session, %Reply{}, base_timeout + current_timeout(session), session.respondent}
+        {:ok, session, %Reply{}, base_timeout + current_timeout(session)}
       true ->
         timeout(session, runtime_channel)
     end
@@ -253,13 +257,14 @@ defmodule Ask.Runtime.Session do
     switch_to_fallback_mode(session)
   end
 
-  def timeout(session, runtime_channel) do
+  def timeout(%Session{} = session, runtime_channel) do
     session = session
+      |> add_session_mode_attempt!()
       |> retry(runtime_channel)
       |> consume_retry()
 
     # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, current_timeout(session), session.respondent}
+    {:ok, session, %Reply{}, current_timeout(session)}
   end
 
   def terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
@@ -274,7 +279,7 @@ defmodule Ask.Runtime.Session do
     {:stalled, session |> clear_token, respondent}
   end
 
-  def switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
+  defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
     session = session |> clear_token
     run_flow(%Session{
       session |
@@ -291,6 +296,12 @@ defmodule Ask.Runtime.Session do
   def consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
     %{session | current_mode: %{session.current_mode | retries: retries}}
   end
+
+  defp add_session_mode_attempt!(%Session{} = session), do: %{session | respondent: add_respondent_mode_attempt!(session)}
+
+  defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %SMSMode{}}), do: respondent |> Respondent.add_mode_attempt!(:sms)
+  defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %IVRMode{}}), do: respondent |> Respondent.add_mode_attempt!(:ivr)
+  defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
   def retry(session, runtime_channel, reason \\ "Timeout. Call failed.")
 
@@ -412,8 +423,8 @@ defmodule Ask.Runtime.Session do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
           session = %{session | flow: flow}
           case sync_step(session, :answer, session.current_mode, false) do
-            {:ok, session, reply, timeout, respondent} ->
-              {:rejected, %{session | respondent: respondent}, reply, timeout, respondent}
+            {:ok, session, reply, timeout} ->
+              {:rejected, session, reply, timeout}
             {:end, reply, respondent} ->
               {:rejected, reply, respondent}
             _ ->
@@ -424,7 +435,7 @@ defmodule Ask.Runtime.Session do
         end
       false ->
         log_prompts(reply, current_mode.channel, flow.mode, session.respondent)
-        {:ok, %{session | flow: flow}, reply, current_timeout(session), session.respondent}
+        {:ok, %{session | flow: flow}, reply, current_timeout(session)}
     end
   end
 

@@ -416,7 +416,7 @@ defmodule Ask.Runtime.Broker do
       |> Regex.compile!
   end
 
-  defp handle_session_step({:ok, session, reply, timeout, respondent}) do
+  defp handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}) do
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply))
     {:reply, reply}
   end
@@ -442,7 +442,7 @@ defmodule Ask.Runtime.Broker do
     {:end, {:reply, reply}}
   end
 
-  defp handle_session_step({:rejected, session, reply, timeout, respondent}) do
+  defp handle_session_step({:rejected, %{respondent: respondent} = session, reply, timeout}) do
     update_respondent(respondent, {:rejected, session, timeout})
     {:reply, reply}
   end
