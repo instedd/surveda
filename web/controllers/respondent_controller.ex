@@ -597,9 +597,9 @@ defmodule Ask.RespondentController do
     stats = survey.mode |> Enum.flat_map(fn(modes) ->
       modes |> Enum.flat_map(fn(mode) ->
         case mode do
-          "sms" -> [:total_sent_sms, :total_received_sms]
-          "mobileweb" -> [:total_sent_sms, :total_received_sms]
-          "ivr" -> [:total_call_time]
+          "sms" -> [:total_sent_sms, :total_received_sms, :sms_attempts]
+          "mobileweb" -> [:total_sent_sms, :total_received_sms, :mobileweb_attempts]
+          "ivr" -> [:total_call_time, :ivr_attempts]
           _ -> []
         end
       end)
@@ -678,7 +678,7 @@ defmodule Ask.RespondentController do
         row = row ++ [Respondent.show_disposition(respondent.disposition)]
 
         row = row ++ Enum.map(stats, fn stat ->
-          apply(Stats, stat, [respondent.stats])
+          respondent |> respondent_stat(stat)
         end)
 
         row
@@ -698,6 +698,9 @@ defmodule Ask.RespondentController do
         :total_sent_sms -> "total_sent_sms"
         :total_received_sms -> "total_received_sms"
         :total_call_time -> "total_call_time"
+        :sms_attempts -> "sms_attempts"
+        :ivr_attempts -> "ivr_attempts"
+        :mobileweb_attempts -> "mobileweb_attempts"
       end
     end)
 
@@ -707,6 +710,11 @@ defmodule Ask.RespondentController do
     ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert
     conn |> csv_stream(rows, filename)
   end
+
+  defp respondent_stat(respondent, :sms_attempts), do: respondent.stats |> Stats.attempts(:sms)
+  defp respondent_stat(respondent, :ivr_attempts), do: respondent.stats |> Stats.attempts(:ivr)
+  defp respondent_stat(respondent, :mobileweb_attempts), do: respondent.stats |> Stats.attempts(:mobileweb)
+  defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
 
   def disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
