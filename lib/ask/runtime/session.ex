@@ -121,7 +121,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp url(respondent_id) do
-    shorten("#{mobile_base_url()}/mobile_survey/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
+    shorten("#{mobile_base_url()}/mobile/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
   end
 
   defp mobile_base_url() do

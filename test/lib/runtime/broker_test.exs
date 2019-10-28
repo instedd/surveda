@@ -4,6 +4,7 @@ defmodule Ask.BrokerTest do
   use Timex
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder}
+  alias Ask.Router.Helpers, as: Routes
   require Ask.Runtime.ReplyHelper
 
   setup do
@@ -438,7 +439,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -455,7 +456,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
     refute_received [:setup, _, _, _, _]
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
     # Set for immediate timeout
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2185,7 +2186,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -2671,7 +2672,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, %Ask.Runtime.Reply{steps: [step]}]
-    assert step == Ask.Runtime.ReplyStep.new(["One", "Two #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"], "Contact")
+    assert step == Ask.Runtime.ReplyStep.new(["One", "Two #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"], "Contact")
   end
 
   test "respondent flow with error msg and quota completed msg via sms" do
@@ -3672,7 +3673,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
@@ -3692,7 +3693,7 @@ defmodule Ask.BrokerTest do
     Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
-    assert message == "Please enter #{Ask.Endpoint.url}/mobile_survey/#{respondent.id}?token=#{Respondent.token(respondent.id)}"
+    assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
     respondent = Repo.get(Respondent, respondent.id)
     Broker.delivery_confirm(respondent, "Contact", "sms")
