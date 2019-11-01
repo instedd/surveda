@@ -193,7 +193,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   defp match_channel(_, _), do: false
 
   defp channel_failed(respondent, "expired", _) do
-    Broker.contact_attempt_expired(respondent, "Call expired, will be retried in next schedule window")
+    Broker.contact_attempt_expired(respondent)
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy", "CallStatusCode" => code}) do

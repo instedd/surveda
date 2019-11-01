@@ -92,12 +92,12 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  def contact_attempt_expired(respondent, reason) do
+  def contact_attempt_expired(respondent) do
     session = respondent.session
     if session do
       response = session
         |> Session.load
-        |> Session.contact_attempt_expired(reason)
+        |> Session.contact_attempt_expired
 
       update_respondent(respondent, response, nil)
     end
