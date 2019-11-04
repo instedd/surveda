@@ -30,3 +30,7 @@ erl_crash.dump
 /test/tmp/
 .elixir_ls/
 yarn-error.log
+
+# intellij files
+.idea/
+*.iml
