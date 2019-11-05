@@ -109,6 +109,18 @@ class RespondentIndex extends Component<Props, State> {
     this.props.actions.sortRespondentsBy(projectId, surveyId, name)
   }
 
+  getModeAttempts() {
+    const { survey, sortBy, sortAsc, t } = this.props
+    let surveyModes = survey.mode[0]
+    let attemptsHeader = []
+    surveyModes.forEach(function(mode) {
+      let modeTitle = mode.charAt(0).toUpperCase() + mode.slice(1) + ' ' + 'Attempts'
+      attemptsHeader.push(<SortableHeader key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />)
+    }
+    )
+    return attemptsHeader
+  }
+
   resultsAccessLink() {
     const {survey} = this.props
     return find(survey.links, (link) => link.name == `survey/${survey.id}/results`)
@@ -336,7 +348,6 @@ class RespondentIndex extends Component<Props, State> {
         </li>
       )
     }
-
     return (
       <div className='white'>
         <div dangerouslySetInnerHTML={{
@@ -390,6 +401,7 @@ class RespondentIndex extends Component<Props, State> {
               {variantHeader}
               <th>{t('Disposition')}</th>
               <SortableHeader text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              {this.getModeAttempts()}
             </tr>
           </thead>
           <tbody>
@@ -423,6 +435,7 @@ class RespondentIndex extends Component<Props, State> {
                 respondent={respondent}
                 responses={responses}
                 variantColumn={variantColumn}
+                surveyModes={survey.mode[0]}
                 />
             })}
           </tbody>

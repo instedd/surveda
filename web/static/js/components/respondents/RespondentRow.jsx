@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react'
+import React, {Component} from 'react'
 import dateformat from 'dateformat'
 import languageNames from 'language-names'
 import capitalize from 'lodash/capitalize'
@@ -7,13 +7,27 @@ import capitalize from 'lodash/capitalize'
 type Props = {
   respondent: Respondent,
   responses: Response[],
-  variantColumn: ?React$Element<*>
+  variantColumn: ?React$Element<*>,
+  surveyModes: string[]
 };
 
 class RespondentRow extends Component<Props> {
-  render() {
-    const { respondent, responses, variantColumn } = this.props
 
+  getModeAttemptsValues() {
+    let modeValueRow = []
+    const {respondent, surveyModes} = this.props
+    surveyModes.forEach(function(element, index) {
+      let modeValue = 0
+      if (respondent.stats.attempts) {
+        modeValue = respondent.stats.attempts[element] ? respondent.stats.attempts[element] : 0
+      }
+      modeValueRow.push(<td key={index}>{modeValue}</td>)
+    })
+    return modeValueRow
+  }
+
+  render() {
+    const {respondent, responses, variantColumn} = this.props
     return (
       <tr key={respondent.id}>
         <td> {respondent.phoneNumber}</td>
@@ -33,6 +47,7 @@ class RespondentRow extends Component<Props> {
         <td>
           {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
         </td>
+        {this.getModeAttemptsValues()}
       </tr>
     )
   }

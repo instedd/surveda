@@ -40,7 +40,13 @@ defmodule Ask.RespondentControllerTest do
                                                          "value" => response.value,
                                                          "name" => response.field_name
                                                        }
-                                                     ]
+                                                     ],
+                                                     "stats" => %{
+                                                       "attempts" => nil,
+                                                       "total_call_time" => 0,
+                                                       "total_received_sms" => 0,
+                                                       "total_sent_sms" => 0
+                                                     }
                                                   }]
     end
 
@@ -1054,7 +1060,13 @@ defmodule Ask.RespondentControllerTest do
               "value" => "No",
               "name" => "Exercises"
             }
-          ]
+          ],
+          "stats" => %{
+            "attempts" => nil,
+            "total_call_time" => 0,
+            "total_received_sms" => 0,
+            "total_sent_sms" => 0
+          }
         },
         %{
           "id" => respondent_2.id,
@@ -1071,7 +1083,13 @@ defmodule Ask.RespondentControllerTest do
               "value" => "No",
               "name" => "Smokes"
             }
-          ]
+          ],
+          "stats" => %{
+            "attempts" => nil,
+            "total_call_time" => 0,
+            "total_received_sms" => 0,
+            "total_sent_sms" => 0
+          }
         }
       ]
     end
@@ -1110,7 +1128,13 @@ defmodule Ask.RespondentControllerTest do
                "value" => "No",
                "name" => "Exercises"
              }
-           ]
+           ],
+           "stats" => %{
+             "attempts" => nil,
+             "total_call_time" => 0,
+             "total_received_sms" => 0,
+             "total_sent_sms" => 0
+           }
         }
       ]
     end
@@ -1144,7 +1168,13 @@ defmodule Ask.RespondentControllerTest do
                "value" => "No",
                "name" => "Smokes"
              }
-           ]
+           ],
+           "stats" => %{
+             "attempts" => nil,
+             "total_call_time" => 0,
+             "total_received_sms" => 0,
+             "total_sent_sms" => 0
+           }
         }
       ]
     end
@@ -1178,7 +1208,13 @@ defmodule Ask.RespondentControllerTest do
                "value" => "No",
                "name" => "Smokes"
              }
-           ]
+           ],
+           "stats" => %{
+             "attempts" => nil,
+             "total_call_time" => 0,
+             "total_received_sms" => 0,
+             "total_sent_sms" => 0
+           }
         }
       ]
     end
@@ -1267,7 +1303,13 @@ defmodule Ask.RespondentControllerTest do
                "value" => "No",
                "name" => "Perfect Number"
              }
-           ]
+           ],
+          "stats" => %{
+            "attempts" => nil,
+            "total_call_time" => 0,
+            "total_received_sms" => 0,
+            "total_sent_sms" => 0
+          }
         },
         %{
            "id" => respondent_2.id,
@@ -1285,7 +1327,13 @@ defmodule Ask.RespondentControllerTest do
                "value" => "No",
                "name" => "Smokes"
              }
-           ]
+           ],
+          "stats" => %{
+            "attempts" => nil,
+            "total_call_time" => 0,
+            "total_received_sms" => 0,
+            "total_sent_sms" => 0
+          }
         }
       ]
     end
