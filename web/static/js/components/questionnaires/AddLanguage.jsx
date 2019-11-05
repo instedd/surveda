@@ -31,7 +31,9 @@ class AddLanguage extends Component {
     const idForLanguange = (lang) => lang.iso6391 ? lang.iso6391 : lang.iso6393
     const matchesLanguage = (value, lang) => (lang.text.indexOf(value) !== -1 || lang.text.toLowerCase().indexOf(value) !== -1)
 
-    let languagesOptions = iso6393.map((lang) => ({'id': idForLanguange(lang), 'text': lang.name}))
+    let languagesOptions = iso6393
+        .filter(lang => lang.type == "living" && lang.iso6392T != null)
+        .map((lang) => ({'id': idForLanguange(lang), 'text': lang.name}))
 
     // Don't show languages that are already selected
     languagesOptions = languagesOptions.filter((lang) =>
