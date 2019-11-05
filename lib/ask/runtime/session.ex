@@ -303,9 +303,7 @@ defmodule Ask.Runtime.Session do
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %IVRMode{}}), do: respondent |> Respondent.add_mode_attempt!(:ivr)
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
-  def retry(session, runtime_channel, reason \\ "Timeout. Call failed.")
-
-  def retry(%{current_mode: %SMSMode{}} = session, runtime_channel, _) do
+  def retry(%{current_mode: %SMSMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
@@ -314,10 +312,8 @@ defmodule Ask.Runtime.Session do
     %{session | token: token, respondent: respondent}
   end
 
-  def retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel, reason) do
+  def retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
-
-    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
 
     next_available_date_time = schedule
       |> Schedule.next_available_date_time
@@ -332,7 +328,7 @@ defmodule Ask.Runtime.Session do
     %{session | channel_state: channel_state, token: token}
   end
 
-  def retry(%{current_mode: %MobileWebMode{}} = session, runtime_channel, _) do
+  def retry(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     reply = mobile_contact_reply(session)
@@ -351,10 +347,10 @@ defmodule Ask.Runtime.Session do
     :ok
   end
 
-  def contact_attempt_expired(session, reason) do
+  def contact_attempt_expired(session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
-    session = retry(session, runtime_channel, reason)
+    session = retry(session, runtime_channel)
 
     next_available_date_time = session.schedule |> Schedule.next_available_date_time
 

@@ -503,15 +503,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, timeout] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      assert [enqueueing] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
       assert enqueueing.survey_id == survey.id
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
-
-      assert timeout.survey_id == survey.id
-      assert timeout.action_data == "Call expired, will be retried in next schedule window"
-      assert timeout.action_type == "contact"
 
       respondent = Repo.get(Respondent, respondent.id)
       refute respondent.stats.total_call_time
