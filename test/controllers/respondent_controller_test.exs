@@ -43,7 +43,8 @@ defmodule Ask.RespondentControllerTest do
                                                      ],
                                                      "stats" => %{
                                                        "attempts" => nil,
-                                                       "total_call_time" => 0,
+                                                       "total_call_time" => nil,
+                                                       "total_call_time_seconds" => nil,
                                                        "total_received_sms" => 0,
                                                        "total_sent_sms" => 0
                                                      }
@@ -1063,7 +1064,8 @@ defmodule Ask.RespondentControllerTest do
           ],
           "stats" => %{
             "attempts" => nil,
-            "total_call_time" => 0,
+            "total_call_time" => nil,
+            "total_call_time_seconds" => nil,
             "total_received_sms" => 0,
             "total_sent_sms" => 0
           }
@@ -1086,7 +1088,8 @@ defmodule Ask.RespondentControllerTest do
           ],
           "stats" => %{
             "attempts" => nil,
-            "total_call_time" => 0,
+            "total_call_time" => nil,
+            "total_call_time_seconds" => nil,
             "total_received_sms" => 0,
             "total_sent_sms" => 0
           }
@@ -1131,7 +1134,8 @@ defmodule Ask.RespondentControllerTest do
            ],
            "stats" => %{
              "attempts" => nil,
-             "total_call_time" => 0,
+             "total_call_time" => nil,
+             "total_call_time_seconds" => nil,
              "total_received_sms" => 0,
              "total_sent_sms" => 0
            }
@@ -1171,7 +1175,8 @@ defmodule Ask.RespondentControllerTest do
            ],
            "stats" => %{
              "attempts" => nil,
-             "total_call_time" => 0,
+             "total_call_time" => nil,
+             "total_call_time_seconds" => nil,
              "total_received_sms" => 0,
              "total_sent_sms" => 0
            }
@@ -1211,7 +1216,8 @@ defmodule Ask.RespondentControllerTest do
            ],
            "stats" => %{
              "attempts" => nil,
-             "total_call_time" => 0,
+             "total_call_time" => nil,
+             "total_call_time_seconds" => nil,
              "total_received_sms" => 0,
              "total_sent_sms" => 0
            }
@@ -1306,7 +1312,8 @@ defmodule Ask.RespondentControllerTest do
            ],
           "stats" => %{
             "attempts" => nil,
-            "total_call_time" => 0,
+            "total_call_time" => nil,
+            "total_call_time_seconds" => nil,
             "total_received_sms" => 0,
             "total_sent_sms" => 0
           }
@@ -1330,7 +1337,8 @@ defmodule Ask.RespondentControllerTest do
            ],
           "stats" => %{
             "attempts" => nil,
-            "total_call_time" => 0,
+            "total_call_time" => nil,
+            "total_call_time_seconds" => nil,
             "total_received_sms" => 0,
             "total_sent_sms" => 0
           }
