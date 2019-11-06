@@ -1518,14 +1518,18 @@ defmodule Ask.SurveyControllerTest do
       }
       session = Session.dump(session)
       r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
-
       conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
-
+      canceller_pid = conn.assigns[:process_pid]
+      ref = Process.monitor(canceller_pid)
+      receive do
+        {:DOWN, ^ref, _, _, _} -> :task_is_down
+      end
       assert json_response(conn, 200)
       survey = Repo.get(Survey, survey.id)
       assert Survey.cancelled?(survey)
       assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
+
     end
 
     test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
@@ -1550,9 +1554,12 @@ defmodule Ask.SurveyControllerTest do
       }
       session = Session.dump(session)
       r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!
-
       conn = post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
-
+      canceller_pid = conn.assigns[:process_pid]
+      ref = Process.monitor(canceller_pid)
+      receive do
+        {:DOWN, ^ref, _, _, _} -> :task_is_down
+      end
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == "running"
       assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
@@ -2083,6 +2090,11 @@ defmodule Ask.SurveyControllerTest do
       survey = insert(:survey, project: project, state: "running")
 
       post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
+      pid = conn.assigns[:process_pid]
+      ref = Process.monitor(pid)
+      receive do
+        {:DOWN, ^ref, _, _, _} -> :task_is_down
+      end
       log = ActivityLog|> Repo.one
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "stop", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})

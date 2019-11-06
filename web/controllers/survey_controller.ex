@@ -4,6 +4,8 @@ defmodule Ask.SurveyController do
   alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
   alias Ask.Runtime.Session
   alias Ecto.Multi
+  alias Ask.RespondentsCancellerProducer
+  alias Ask.RespondentsCancellerConsumer
 
   def index(conn, %{"project_id" => project_id} = params) do
     project = conn
@@ -647,10 +649,8 @@ defmodule Ask.SurveyController do
         project = conn
           |> load_project_for_change(survey.project_id)
 
-        cancel_messages(survey)
-        Survey.cancel_respondents(survey)
-
-        changeset = Survey.changeset(survey, %{"state": "terminated", "exit_code": 1, "exit_message": "Cancelled by user"})
+        changeset = Survey.changeset(survey, %{"state": "cancelling", "exit_code": 1, "exit_message": "Cancelled by user"})
+        canceller_pid = cancel_messages_and_respondents(id)
 
         multi = Multi.new
         |> Multi.update(:survey, changeset)
@@ -660,6 +660,7 @@ defmodule Ask.SurveyController do
         case multi do
           {:ok, %{survey: survey}} ->
             project |> Project.touch!
+            conn = conn |> assign(:process_pid, canceller_pid)
             render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
           {:error, _, changeset, _} ->
             Logger.warn "Error when stopping survey #{inspect survey}"
@@ -735,20 +736,11 @@ defmodule Ask.SurveyController do
     end
   end
 
-  defp cancel_messages(survey) do
-    # Need to save sessions in memory because they are set to nil
-    # by the stop function above
-    sessions = (from r in Ask.Respondent,
-      where: r.survey_id == ^survey.id and not is_nil(r.session))
-    |> Repo.all
-    |> Enum.map(&(&1.session))
-
-    spawn(fn ->
-      sessions |> Enum.each(fn session ->
-        session
-        |> Session.load
-        |> Session.cancel
-      end)
-    end)
+  defp cancel_messages_and_respondents(survey_id) do
+    {:ok, producer} = GenStage.start_link(RespondentsCancellerProducer, survey_id, name: RespondentsCancellerProducer)
+    GenStage.start_link(RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_1)
+    GenStage.start_link(RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_2)
+    GenStage.start_link(RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_3)
+    producer
   end
 end
