@@ -109,10 +109,20 @@ class RespondentIndex extends Component<Props, State> {
     this.props.actions.sortRespondentsBy(projectId, surveyId, name)
   }
 
+  getModes(surveyModes) {
+    let modes = new Set()
+    surveyModes.map(function(modeCombination) {
+      modeCombination.map(function(mode) {
+        modes.add(mode)
+      })
+    })
+    return Array.from(modes)
+  }
+
   getModeAttempts() {
     const {survey, sortBy, sortAsc, t} = this.props
-    let surveyModes = survey.mode[0]
-    let attemptsHeader = surveyModes.map(function(mode) {
+    let modes = this.getModes(survey.mode)
+    let attemptsHeader = modes.map(function(mode) {
       const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
       let modeTitle = capitalize(mode) + ' ' + 'Attempts'
       return <SortableHeader key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
@@ -435,7 +445,7 @@ class RespondentIndex extends Component<Props, State> {
                 respondent={respondent}
                 responses={responses}
                 variantColumn={variantColumn}
-                surveyModes={survey.mode[0]}
+                surveyModes={this.getModes(survey.mode)}
                 />
             })}
           </tbody>
