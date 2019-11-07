@@ -14,14 +14,13 @@ type Props = {
 class RespondentRow extends Component<Props> {
 
   getModeAttemptsValues() {
-    let modeValueRow = []
     const {respondent, surveyModes} = this.props
-    surveyModes.forEach(function(element, index) {
+    let modeValueRow = surveyModes.map(function(element, index) {
       let modeValue = 0
       if (respondent.stats.attempts) {
         modeValue = respondent.stats.attempts[element] ? respondent.stats.attempts[element] : 0
       }
-      modeValueRow.push(<td key={index}>{modeValue}</td>)
+      return <td key={index}>{modeValue}</td>
     })
     return modeValueRow
   }

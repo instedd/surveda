@@ -5,6 +5,15 @@ defmodule Ask.RespondentControllerTest do
 
   alias Ask.{QuotaBucket, Survey, SurveyLogEntry, Response, Respondent, ShortLink, Stats, ActivityLog}
 
+
+  @empty_stats %{
+    "attempts" => nil,
+    "total_call_time" => nil,
+    "total_call_time_seconds" => nil,
+    "total_received_sms" => 0,
+    "total_sent_sms" => 0
+  }
+
   describe "normal" do
     setup :user
 
@@ -41,13 +50,7 @@ defmodule Ask.RespondentControllerTest do
                                                          "name" => response.field_name
                                                        }
                                                      ],
-                                                     "stats" => %{
-                                                       "attempts" => nil,
-                                                       "total_call_time" => nil,
-                                                       "total_call_time_seconds" => nil,
-                                                       "total_received_sms" => 0,
-                                                       "total_sent_sms" => 0
-                                                     }
+                                                     "stats" => @empty_stats
                                                   }]
     end
 
@@ -1062,13 +1065,7 @@ defmodule Ask.RespondentControllerTest do
               "name" => "Exercises"
             }
           ],
-          "stats" => %{
-            "attempts" => nil,
-            "total_call_time" => nil,
-            "total_call_time_seconds" => nil,
-            "total_received_sms" => 0,
-            "total_sent_sms" => 0
-          }
+          "stats" => @empty_stats
         },
         %{
           "id" => respondent_2.id,
@@ -1086,13 +1083,7 @@ defmodule Ask.RespondentControllerTest do
               "name" => "Smokes"
             }
           ],
-          "stats" => %{
-            "attempts" => nil,
-            "total_call_time" => nil,
-            "total_call_time_seconds" => nil,
-            "total_received_sms" => 0,
-            "total_sent_sms" => 0
-          }
+          "stats" => @empty_stats
         }
       ]
     end
@@ -1132,13 +1123,7 @@ defmodule Ask.RespondentControllerTest do
                "name" => "Exercises"
              }
            ],
-           "stats" => %{
-             "attempts" => nil,
-             "total_call_time" => nil,
-             "total_call_time_seconds" => nil,
-             "total_received_sms" => 0,
-             "total_sent_sms" => 0
-           }
+           "stats" => @empty_stats
         }
       ]
     end
@@ -1173,13 +1158,7 @@ defmodule Ask.RespondentControllerTest do
                "name" => "Smokes"
              }
            ],
-           "stats" => %{
-             "attempts" => nil,
-             "total_call_time" => nil,
-             "total_call_time_seconds" => nil,
-             "total_received_sms" => 0,
-             "total_sent_sms" => 0
-           }
+           "stats" => @empty_stats
         }
       ]
     end
@@ -1214,13 +1193,7 @@ defmodule Ask.RespondentControllerTest do
                "name" => "Smokes"
              }
            ],
-           "stats" => %{
-             "attempts" => nil,
-             "total_call_time" => nil,
-             "total_call_time_seconds" => nil,
-             "total_received_sms" => 0,
-             "total_sent_sms" => 0
-           }
+           "stats" => @empty_stats
         }
       ]
     end
@@ -1310,13 +1283,7 @@ defmodule Ask.RespondentControllerTest do
                "name" => "Perfect Number"
              }
            ],
-          "stats" => %{
-            "attempts" => nil,
-            "total_call_time" => nil,
-            "total_call_time_seconds" => nil,
-            "total_received_sms" => 0,
-            "total_sent_sms" => 0
-          }
+          "stats" => @empty_stats
         },
         %{
            "id" => respondent_2.id,
@@ -1335,13 +1302,7 @@ defmodule Ask.RespondentControllerTest do
                "name" => "Smokes"
              }
            ],
-          "stats" => %{
-            "attempts" => nil,
-            "total_call_time" => nil,
-            "total_call_time_seconds" => nil,
-            "total_received_sms" => 0,
-            "total_sent_sms" => 0
-          }
+          "stats" => @empty_stats
         }
       ]
     end
