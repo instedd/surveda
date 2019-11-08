@@ -12,6 +12,7 @@ import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../questionnaire.mode'
 import find from 'lodash/find'
+import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
 
 type Props = {
@@ -107,6 +108,22 @@ class RespondentIndex extends Component<Props, State> {
   sortBy(name) {
     const { projectId, surveyId } = this.props
     this.props.actions.sortRespondentsBy(projectId, surveyId, name)
+  }
+
+  getModes(surveyModes) {
+    return [...new Set(flatten(surveyModes))]
+  }
+
+  getModeAttempts() {
+    const {survey, sortBy, sortAsc, t} = this.props
+    let modes = this.getModes(survey.mode)
+    let attemptsHeader = modes.map(function(mode) {
+      const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
+      let modeTitle = capitalize(mode) + ' ' + 'Attempts'
+      return <SortableHeader key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+    }
+    )
+    return attemptsHeader
   }
 
   resultsAccessLink() {
@@ -336,7 +353,6 @@ class RespondentIndex extends Component<Props, State> {
         </li>
       )
     }
-
     return (
       <div className='white'>
         <div dangerouslySetInnerHTML={{
@@ -390,6 +406,7 @@ class RespondentIndex extends Component<Props, State> {
               {variantHeader}
               <th>{t('Disposition')}</th>
               <SortableHeader text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              {this.getModeAttempts()}
             </tr>
           </thead>
           <tbody>
@@ -423,6 +440,7 @@ class RespondentIndex extends Component<Props, State> {
                 respondent={respondent}
                 responses={responses}
                 variantColumn={variantColumn}
+                surveyModes={this.getModes(survey.mode)}
                 />
             })}
           </tbody>
