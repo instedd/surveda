@@ -17,7 +17,8 @@ defmodule Ask.Survey do
     Project,
     FloipEndpoint,
     Folder,
-    RespondentStats
+    RespondentStats,
+    ConfigHelper
   }
   alias Ask.Runtime.{Broker, ChannelStatusServer}
   alias Ask.Ecto.Type.JSON
@@ -299,20 +300,7 @@ defmodule Ask.Survey do
     }
   end
 
-  def environment_variable_named(name) do
-    case Application.get_env(:ask, Broker)[name] do
-      {:system, env_var} ->
-        String.to_integer(System.get_env(env_var))
-      {:system, env_var, default} ->
-        env_value = System.get_env(env_var)
-        if env_value do
-          String.to_integer(env_value)
-        else
-          default
-        end
-      value -> value
-    end
-  end
+  def environment_variable_named(name), do: ConfigHelper.get_config(Broker, name, &String.to_integer/1)
 
   def launched?(survey) do
     survey.state in ["running", "terminated"]

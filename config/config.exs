@@ -47,8 +47,7 @@ config :ask, :sox,
 
 config :ask, Ask.UrlShortener,
   url_shortener_api_key: {:system, "URL_SHORTENER_API_KEY"},
-  url_shortener_host: "https://svy.in"
-
+  url_shortener_service: {:system, "URL_SHORTENER_SERVICE", "https://svy.in"}
 
 # Configures Elixir's Logger
 config :logger, :console,
