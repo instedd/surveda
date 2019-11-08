@@ -12,6 +12,7 @@ import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../questionnaire.mode'
 import find from 'lodash/find'
+import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
 
 type Props = {
@@ -110,13 +111,7 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   getModes(surveyModes) {
-    let modes = new Set()
-    surveyModes.map(function(modeCombination) {
-      modeCombination.map(function(mode) {
-        modes.add(mode)
-      })
-    })
-    return Array.from(modes)
+    return [...new Set(flatten(surveyModes))]
   }
 
   getModeAttempts() {
