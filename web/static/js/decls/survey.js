@@ -93,7 +93,20 @@ export type Respondent = {
   disposition: Disposition,
   date: ?string,
   responses: Response[],
-  questionnaireId: number
+  questionnaireId: number,
+  stats: Stats
+};
+
+export type Attempts = {
+  sms: number,
+  ivr: number
+};
+
+export type Stats = {
+  attempts: Attempts,
+  totalSentSms: number,
+  totalReceivedSms: number,
+  totalCallTime: number
 };
 
 export type Integration = {
