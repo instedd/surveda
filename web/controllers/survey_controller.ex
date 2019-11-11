@@ -650,7 +650,7 @@ defmodule Ask.SurveyController do
           |> load_project_for_change(survey.project_id)
 
         changeset = Survey.changeset(survey, %{"state": "cancelling", "exit_code": 1, "exit_message": "Cancelled by user"})
-        canceller_pid = cancel_messages_and_respondents(id)
+        cancellers_pids = cancel_messages_and_respondents(id)
 
         multi = Multi.new
         |> Multi.update(:survey, changeset)
@@ -660,7 +660,7 @@ defmodule Ask.SurveyController do
         case multi do
           {:ok, %{survey: survey}} ->
             project |> Project.touch!
-            conn = conn |> assign(:process_pid, canceller_pid)
+            conn = conn |> assign(:processors_pids, cancellers_pids)
             render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
           {:error, _, changeset, _} ->
             Logger.warn "Error when stopping survey #{inspect survey}"
@@ -737,10 +737,11 @@ defmodule Ask.SurveyController do
   end
 
   defp cancel_messages_and_respondents(survey_id) do
-    {:ok, producer} = GenStage.start_link(RespondentsCancellerProducer, survey_id, name: RespondentsCancellerProducer)
-    GenStage.start_link(RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_1)
-    GenStage.start_link(RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_2)
-    GenStage.start_link(RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_3)
-    producer
+    GenStage.start_link(RespondentsCancellerProducer, survey_id, name: RespondentsCancellerProducer)
+    consumer_name = fn id -> String.to_atom("RespondentsCancellerConsumer_#{id}") end
+    Enum.map(1..3, consumer_name)
+    |> Enum.map(fn name -> GenStage.start_link(RespondentsCancellerConsumer, 0, name: name) end)
+    |> Enum.map(fn {:ok, pid} -> pid end)
   end
+
 end
