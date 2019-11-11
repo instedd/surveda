@@ -124,3 +124,17 @@ Surveda will forward any conversation with a logged user identifying them throug
 If you don't want to use Intercom, you can simply omit `INTERCOM_APP_ID` or set it to `''`.
 
 To test the feature in development, add the `INTERCOM_APP_ID` variable and its value to the `environment` object inside the `app` service in `docker-compose.yml`.
+
+## InSTEDD's url shortener
+
+Surveda uses InSTEDD's [shorter](https://github.com/instedd/shorter) for sending urls to respondents when web-mobile mode is used.
+
+Is necessary to configure an api-key in surveda to use this service. If no api-key is provided, surveda works fine but
+full-urls are sent to respondents
+
+For editing/creating a new api-key: 
+1. Go to AWS console
+2. Go to API Gateway service
+3. Select Usage-Plans 
+4. Select "Surveda Shorter" plan
+5. Edit or create under "API Keys" tab

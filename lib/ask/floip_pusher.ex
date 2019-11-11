@@ -4,7 +4,7 @@ defmodule Ask.FloipPusher do
 
   import Ecto.Query
 
-  alias Ask.{Repo, FloipEndpoint, FloipPackage, Survey}
+  alias Ask.{Repo, FloipEndpoint, FloipPackage, Survey, ConfigHelper}
 
   @server_ref {:global, __MODULE__}
 
@@ -81,20 +81,7 @@ defmodule Ask.FloipPusher do
     end
   end
 
-  defp poll_interval_in_minutes() do
-    case Application.get_env(:ask, Ask.FloipPusher)[:poll_interval_in_minutes] do
-      {:system, env_var} ->
-        String.to_integer(System.get_env(env_var))
-      {:system, env_var, default} ->
-        env_value = System.get_env(env_var)
-        if env_value do
-          String.to_integer(env_value)
-        else
-          default
-        end
-      value -> value
-    end
-  end
+  defp poll_interval_in_minutes(), do: ConfigHelper.get_config(Ask.FloipPusher, :poll_interval_in_minutes, &String.to_integer/1)
 
   defp show(endpoint) do
     "(survey: #{endpoint.survey.id}, uri: #{endpoint.uri})"

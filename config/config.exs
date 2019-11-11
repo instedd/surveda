@@ -46,7 +46,8 @@ config :ask, :sox,
   bin: System.get_env("SOX_BINARY") || "sox"
 
 config :ask, Ask.UrlShortener,
-  google_api_key: {:system, "GOOGLE_URL_SHORTENER_API_KEY"}
+  url_shortener_api_key: {:system, "URL_SHORTENER_API_KEY"},
+  url_shortener_service: {:system, "URL_SHORTENER_SERVICE", "https://svy.in"}
 
 # Configures Elixir's Logger
 config :logger, :console,
