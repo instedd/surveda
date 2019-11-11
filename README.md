@@ -125,9 +125,9 @@ If you don't want to use Intercom, you can simply omit `INTERCOM_APP_ID` or set 
 
 To test the feature in development, add the `INTERCOM_APP_ID` variable and its value to the `environment` object inside the `app` service in `docker-compose.yml`.
 
-## Instedd's url shortener
+## InSTEDD's url shortener
 
-Surveda uses instedd's [shorter](https://github.com/instedd/shorter) for sending urls to respondents when web-mobile mode is used.
+Surveda uses InSTEDD's [shorter](https://github.com/instedd/shorter) for sending urls to respondents when web-mobile mode is used.
 
 Is necessary to configure an api-key in surveda to use this service. If no api-key is provided, surveda works fine but
 full-urls are sent to respondents
