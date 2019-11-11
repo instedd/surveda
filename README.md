@@ -133,7 +133,7 @@ Is necessary to configure an api-key in surveda to use this service. If no api-k
 full-urls are sent to respondents
 
 For editing/creating a new api-key: 
-1. Go to aws console: [man.as/aws](http://man.as/aws)
+1. Go to AWS console
 2. Go to API Gateway service
 3. Select Usage-Plans 
 4. Select "Surveda Shorter" plan
