@@ -4,8 +4,7 @@ defmodule Ask.SurveyController do
   alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
   alias Ask.Runtime.Session
   alias Ecto.Multi
-  alias Ask.RespondentsCancellerProducer
-  alias Ask.RespondentsCancellerConsumer
+  alias Ask.SurveyCanceller
 
   def index(conn, %{"project_id" => project_id} = params) do
     project = conn
@@ -736,12 +735,6 @@ defmodule Ask.SurveyController do
     end
   end
 
-  defp cancel_messages_and_respondents(survey_id) do
-    GenStage.start_link(RespondentsCancellerProducer, survey_id, name: RespondentsCancellerProducer)
-    consumer_name = fn id -> String.to_atom("RespondentsCancellerConsumer_#{id}") end
-    Enum.map(1..3, consumer_name)
-    |> Enum.map(fn name -> GenStage.start_link(RespondentsCancellerConsumer, 0, name: name) end)
-    |> Enum.map(fn {:ok, pid} -> pid end)
-  end
+  defp cancel_messages_and_respondents(survey_id), do: SurveyCanceller.start_cancelling(survey_id).consumers_pids
 
 end
