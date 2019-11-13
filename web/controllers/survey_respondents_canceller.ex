@@ -120,4 +120,31 @@ defmodule Ask.RespondentsCancellerConsumer do
   end
 end
 
+defmodule Ask.SurveyCanceller do
+  alias Ask.{RespondentsCancellerConsumer, RespondentsCancellerProducer}
+  @default_number_consumers 3
+
+  defstruct [:processes, :consumers_pids]
+
+  defp start_producer(survey_id) do
+    GenStage.start_link(RespondentsCancellerProducer, survey_id, name: RespondentsCancellerProducer)
+  end
+
+  defp start_consumers(number_consumers) do
+    consumer_name = fn id -> String.to_atom("RespondentsCancellerConsumer_#{id}") end
+    Enum.map(1..number_consumers, consumer_name)
+    |> Enum.map(fn name -> GenStage.start_link(RespondentsCancellerConsumer, 0, name: name) end)
+  end
+
+  def start_cancelling(survey_id, number_consumers \\@default_number_consumers) do
+    # returns a SurveyCanceller where
+    # * processes is the list of processes started (two-element tuples)
+    # * consumers_pids are only the pids of the consumers
+    producer = start_producer(survey_id)
+    consumers = start_consumers(number_consumers)
+    consumers_pids = consumers |> Enum.map(fn {_, pid} -> pid end)
+    %Ask.SurveyCanceller{processes: [producer | consumers], consumers_pids: consumers_pids}
+  end
+end
+
 

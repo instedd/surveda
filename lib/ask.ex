@@ -42,12 +42,8 @@ defmodule Ask do
     opts = [strategy: :one_for_one, name: Ask.Supervisor]
     supervisor_result = Supervisor.start_link(children, opts)
     survey_canceller_children = if Mix.env != :test && !IEx.started? do
-      [
-        GenStage.start_link(Ask.RespondentsCancellerProducer, nil, name: RespondentsCancellerProducer),
-        GenStage.start_link(Ask.RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_1),
-        GenStage.start_link(Ask.RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_2),
-        GenStage.start_link(Ask.RespondentsCancellerConsumer, 0, name: RespondentsCancellerConsumer_3)
-      ]
+      # Start cancelling with survey_id = nil to check all surveys that must be cancelled
+      Ask.SurveyCanceller.start_cancelling(nil).processes
     end
 
     if Mix.env != :test && !IEx.started? do
