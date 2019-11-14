@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## 0.23.1
+
+### Features
+
+* Show `total_call_time` as `23m 17s` [#1518](https://github.com/instedd/surveda/issues/1518)
+* Keep the count of the number of retries used for SMS and IVR for each respondent [#1516](https://github.com/instedd/surveda/issues/1516)
+
 ## 0.23
 
 ### Features
