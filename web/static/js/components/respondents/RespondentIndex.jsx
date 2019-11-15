@@ -120,7 +120,7 @@ class RespondentIndex extends Component<Props, State> {
     let attemptsHeader = modes.map(function(mode) {
       const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
       let modeTitle = capitalize(mode) + ' ' + 'Attempts'
-      return <SortableHeader key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+      return <SortableHeader className="thNumber" key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
     }
     )
     return attemptsHeader
@@ -405,7 +405,7 @@ class RespondentIndex extends Component<Props, State> {
               )}
               {variantHeader}
               <th>{t('Disposition')}</th>
-              <SortableHeader text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader className="thDate" text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
               {this.getModeAttempts()}
             </tr>
           </thead>
