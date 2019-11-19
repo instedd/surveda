@@ -1370,17 +1370,21 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+      completed_at = Timex.shift(Timex.now, days: -2)
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
-      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
+      insert(:respondent, survey: survey, phone_number: "4321", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["ivr"])
 
       conn = get conn, project_survey_respondents_incentives_path(conn, :incentives, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
 
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+      completed_at = completed_at |> Survey.csv_completion_date(survey)
       assert lines == [
-        "Telephone number,Questionnaire-Mode",
-        "5678,test - SMS with phone call fallback"
+        "Telephone number,Questionnaire-Mode,Completion date",
+        "5678,test - SMS with phone call fallback,\"#{completed_at}\"",
+        "4321,test - Phone call,"
       ]
     end
 
@@ -1549,8 +1553,9 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+      completed_at = Timex.shift(Timex.now, days: -5)
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
-      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
       {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"}))
@@ -1560,9 +1565,10 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
+      completed_at = completed_at |> Survey.csv_completion_date(survey)
       assert lines == [
-        "Telephone number,Questionnaire-Mode",
-        "5678,test - SMS with phone call fallback"
+        "Telephone number,Questionnaire-Mode,Completion date",
+        "5678,test - SMS with phone call fallback,\"#{completed_at}\""
       ]
     end
 

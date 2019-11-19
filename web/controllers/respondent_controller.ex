@@ -775,10 +775,10 @@ defmodule Ask.RespondentController do
     |> preload(:questionnaire)
     |> Repo.stream
     |> Stream.map(fn r ->
-      [r.phone_number, experiment_name(r.questionnaire, r.mode)]
+      [r.phone_number, experiment_name(r.questionnaire, r.mode), Survey.csv_completion_date(r.completed_at, survey)]
     end)
 
-    header = ["Telephone number", "Questionnaire-Mode"]
+    header = ["Telephone number", "Questionnaire-Mode", "Completion date"]
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_incentives")
