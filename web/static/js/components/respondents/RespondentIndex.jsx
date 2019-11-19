@@ -120,7 +120,7 @@ class RespondentIndex extends Component<Props, State> {
     let attemptsHeader = modes.map(function(mode) {
       const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
       let modeTitle = capitalize(mode) + ' ' + 'Attempts'
-      return <SortableHeader className="thNumber" key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+      return <SortableHeader className='thNumber' key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
     }
     )
     return attemptsHeader
@@ -257,11 +257,11 @@ class RespondentIndex extends Component<Props, State> {
 
   responsesByField(respondents) {
     let responsesByField = {}
-    for (let respondentId in respondents){
-      if(respondents.hasOwnProperty(respondentId)){
+    for (let respondentId in respondents) {
+      if (respondents.hasOwnProperty(respondentId)) {
         const responses = respondents[respondentId].responses
         for (let responseField in responses) {
-          if(responses.hasOwnProperty(responseField)){
+          if (responses.hasOwnProperty(responseField)) {
             if (!responsesByField[responseField]) {
               responsesByField[responseField] = []
             }
@@ -277,7 +277,7 @@ class RespondentIndex extends Component<Props, State> {
     let responsesByField = this.responsesByField(respondents)
     let numericFields = []
     for (let responseField in responsesByField) {
-      if(responsesByField.hasOwnProperty(responseField)){
+      if (responsesByField.hasOwnProperty(responseField)) {
         if (responsesByField[responseField].every(response => !isNaN(response))) {
           numericFields.push(responseField)
         }
@@ -439,12 +439,12 @@ class RespondentIndex extends Component<Props, State> {
             <tr>
               <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
               <th>{t('Disposition')}</th>
-              <SortableHeader className="thDate" text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
               {this.getModeAttempts()}
               {respondentsFieldName.map(field => (
-                this.fieldIsNumeric(numericFields, field) ?
-                    <th className="thNumber" key={field}>{field}</th>
-                    : <th key={field}>{field}</th>
+                this.fieldIsNumeric(numericFields, field)
+                  ? <th className='thNumber' key={field}>{field}</th>
+                  : <th key={field}>{field}</th>
                 )
               )}
               {variantHeader}

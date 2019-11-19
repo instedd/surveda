@@ -20,7 +20,7 @@ class RespondentRow extends Component<Props> {
       if (respondent.stats.attempts) {
         modeValue = respondent.stats.attempts[element] ? respondent.stats.attempts[element] : 0
       }
-      return <td className="tdNumber" key={index}>{modeValue}</td>
+      return <td className='tdNumber' key={index}>{modeValue}</td>
     })
     return modeValueRow
   }
@@ -33,7 +33,7 @@ class RespondentRow extends Component<Props> {
         <td>
           {capitalize(respondent.disposition)}
         </td>
-        <td className="tdDate">
+        <td className='tdDate'>
           {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
         </td>
         {this.getModeAttemptsValues()}
