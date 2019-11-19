@@ -785,9 +785,9 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, line3, _] = csv |> String.split("\r\n")
-      assert line1 == "respondent_id,date,modes,section_order,sample_file,Smokes,Exercises,Perfect_Number,Question,disposition,total_sent_sms,total_received_sms,sms_attempts,total_call_time,ivr_attempts,mobileweb_attempts"
+      assert line1 == "respondent_id,disposition,date,modes,total_sent_sms,total_received_sms,sms_attempts,total_call_time,ivr_attempts,mobileweb_attempts,section_order,sample_file,Smokes,Exercises,Perfect_Number,Question"
 
-      [line_2_hashed_number, _, line_2_modes, line_2_section_order, line_2_respondent_group, line_2_smoke, line_2_exercises, line_2_perfect_number, _, line_2_disp, line_2_total_sent_sms, line_2_total_received_sms, line_2_sms_attempts, line_2_total_call_time, line_2_ivr_attempts, line_2_mobileweb_attempts] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      [line_2_hashed_number, line_2_disp, _, line_2_modes, line_2_total_sent_sms, line_2_total_received_sms, line_2_sms_attempts, line_2_total_call_time, line_2_ivr_attempts, line_2_mobileweb_attempts, line_2_section_order, line_2_respondent_group, line_2_smoke, line_2_exercises, line_2_perfect_number, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
 
       assert line_2_hashed_number == respondent_1.hashed_number
       assert line_2_modes == "SMS, Phone call"
@@ -804,7 +804,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_2_mobileweb_attempts == "2"
       assert line_2_ivr_attempts == "3"
 
-      [line_3_hashed_number, _, line_3_modes, line_3_section_order, line_3_respondent_group,line_3_smoke, line_3_exercises, _, _, line_3_disp, line_3_total_sent_sms, line_3_total_received_sms, line_3_sms_attempts, line_3_total_call_time, line_3_ivr_attempts, line_3_mobileweb_attempts] = [line3]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      [line_3_hashed_number, line_3_disp, _, line_3_modes, line_3_total_sent_sms, line_3_total_received_sms, line_3_sms_attempts, line_3_total_call_time, line_3_ivr_attempts, line_3_mobileweb_attempts, line_3_section_order, line_3_respondent_group,line_3_smoke, line_3_exercises, _, _] = [line3]  |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
       assert line_3_hashed_number == respondent_2.hashed_number
       assert line_3_modes == "Mobile Web"
       assert line_3_respondent_group == group_2.name
