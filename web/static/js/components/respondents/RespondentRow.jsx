@@ -30,6 +30,13 @@ class RespondentRow extends Component<Props> {
     return (
       <tr key={respondent.id}>
         <td> {respondent.phoneNumber}</td>
+        <td>
+          {capitalize(respondent.disposition)}
+        </td>
+        <td className="tdDate">
+          {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
+        </td>
+        {this.getModeAttemptsValues()}
         {responses.map((response) => {
           // For the 'language' variable we convert the code to the native name
           let value = response.value
@@ -40,13 +47,6 @@ class RespondentRow extends Component<Props> {
           return <td className={`tdNowrap${response.isNumeric ? ' tdNumber' : ''}`} key={parseInt(respondent.id) + response.name}>{value}</td>
         })}
         {variantColumn}
-        <td>
-          {capitalize(respondent.disposition)}
-        </td>
-        <td className="tdDate">
-          {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
-        </td>
-        {this.getModeAttemptsValues()}
       </tr>
     )
   }

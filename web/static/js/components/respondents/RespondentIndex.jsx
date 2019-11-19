@@ -438,6 +438,9 @@ class RespondentIndex extends Component<Props, State> {
           <thead>
             <tr>
               <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <th>{t('Disposition')}</th>
+              <SortableHeader className="thDate" text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              {this.getModeAttempts()}
               {respondentsFieldName.map(field => (
                 this.fieldIsNumeric(numericFields, field) ?
                     <th className="thNumber" key={field}>{field}</th>
@@ -445,9 +448,6 @@ class RespondentIndex extends Component<Props, State> {
                 )
               )}
               {variantHeader}
-              <th>{t('Disposition')}</th>
-              <SortableHeader className="thDate" text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
-              {this.getModeAttempts()}
             </tr>
           </thead>
           <tbody>
