@@ -119,7 +119,8 @@ export type Integration = {
 
 export type Response = {
   name: string,
-  value: ?string
+  value: ?string,
+  isNumeric: ?boolean
 };
 
 export type Disposition = null | "completed" | "partial" | "ineligible";
