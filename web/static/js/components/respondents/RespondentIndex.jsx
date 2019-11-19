@@ -255,6 +255,41 @@ class RespondentIndex extends Component<Props, State> {
     </div>
   }
 
+  responsesByField(respondents) {
+    let responsesByField = {}
+    for (let respondentId in respondents){
+      if(respondents.hasOwnProperty(respondentId)){
+        const responses = respondents[respondentId].responses
+        for (let responseField in responses) {
+          if(responses.hasOwnProperty(responseField)){
+            if (!responsesByField[responseField]) {
+              responsesByField[responseField] = []
+            }
+            responsesByField[responseField].push(responses[responseField])
+          }
+        }
+      }
+    }
+    return responsesByField
+  }
+
+  numericFields(respondents) {
+    let responsesByField = this.responsesByField(respondents)
+    let numericFields = []
+    for (let responseField in responsesByField) {
+      if(responsesByField.hasOwnProperty(responseField)){
+        if (responsesByField[responseField].every(response => !isNaN(response))) {
+          numericFields.push(responseField)
+        }
+      }
+    }
+    return numericFields
+  }
+
+  fieldIsNumeric(numericFields, filterField) {
+    return numericFields.some(field => field == filterField)
+  }
+
   render() {
     const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel, t } = this.props
 
@@ -266,7 +301,10 @@ class RespondentIndex extends Component<Props, State> {
 
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
+
     const respondents = generateResponsesDictionaryFor($.extend(true, {}, this.props.respondents))
+    let numericFields = this.numericFields(respondents)
+
     const respondentsList: Respondent[] = values(respondents)
 
     function generateResponsesDictionaryFor(rs) {
@@ -400,8 +438,11 @@ class RespondentIndex extends Component<Props, State> {
           <thead>
             <tr>
               <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
-              {respondentsFieldName.map(field =>
-                <th key={field}>{field}</th>
+              {respondentsFieldName.map(field => (
+                this.fieldIsNumeric(numericFields, field) ?
+                    <th className="thNumber" key={field}>{field}</th>
+                    : <th key={field}>{field}</th>
+                )
               )}
               {variantHeader}
               <th>{t('Disposition')}</th>
@@ -431,6 +472,7 @@ class RespondentIndex extends Component<Props, State> {
               const responses = respondentsFieldName.map((field) => {
                 return {
                   name: field,
+                  isNumeric: this.fieldIsNumeric(numericFields, field),
                   value: responseOf(respondents, respondent.id, field)
                 }
               })

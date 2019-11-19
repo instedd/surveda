@@ -37,7 +37,7 @@ class RespondentRow extends Component<Props> {
             value = languageNames[value] || value
           }
 
-          return <td className='tdNowrap' key={parseInt(respondent.id) + response.name}>{value}</td>
+          return <td className={`tdNowrap${response.isNumeric ? ' tdNumber' : ''}`} key={parseInt(respondent.id) + response.name}>{value}</td>
         })}
         {variantColumn}
         <td>
