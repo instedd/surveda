@@ -1370,17 +1370,20 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+      completed_at = Ecto.DateTime.cast!("2019-11-10 09:00:00")
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
-      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
+      insert(:respondent, survey: survey, phone_number: "4321", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["ivr"])
 
       conn = get conn, project_survey_respondents_incentives_path(conn, :incentives, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
 
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
       assert lines == [
-        "Telephone number,Questionnaire-Mode",
-        "5678,test - SMS with phone call fallback"
+        "Telephone number,Questionnaire-Mode,Completion date",
+        "5678,test - SMS with phone call fallback,2019-11-10 09:00:00 UTC",
+        "4321,test - Phone call,"
       ]
     end
 
@@ -1549,8 +1552,9 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
+      completed_at = Ecto.DateTime.cast!("2019-11-15 19:00:00")
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
-      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"])
+      insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
 
       {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{"_format" => "csv"}))
@@ -1561,8 +1565,8 @@ defmodule Ask.RespondentControllerTest do
 
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
       assert lines == [
-        "Telephone number,Questionnaire-Mode",
-        "5678,test - SMS with phone call fallback"
+        "Telephone number,Questionnaire-Mode,Completion date",
+        "5678,test - SMS with phone call fallback,2019-11-15 19:00:00 UTC"
       ]
     end
 

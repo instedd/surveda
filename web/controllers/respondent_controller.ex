@@ -777,10 +777,10 @@ defmodule Ask.RespondentController do
     |> preload(:questionnaire)
     |> Repo.stream
     |> Stream.map(fn r ->
-      [r.phone_number, experiment_name(r.questionnaire, r.mode)]
+      [r.phone_number, experiment_name(r.questionnaire, r.mode), csv_datetime(r.completed_at, survey)]
     end)
 
-    header = ["Telephone number", "Questionnaire-Mode"]
+    header = ["Telephone number", "Questionnaire-Mode", "Completion date"]
     rows = Stream.concat([[header], csv_rows])
 
     filename = csv_filename(survey, "respondents_incentives")
@@ -797,9 +797,6 @@ defmodule Ask.RespondentController do
     survey = project
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
-
-    tz_offset = Survey.timezone_offset(survey)
-    offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
     log_entries = Stream.resource(
       fn -> {"", 0} end,
@@ -835,7 +832,7 @@ defmodule Ask.RespondentController do
 
         disposition = disposition_label(e.disposition)
         action_type = action_type_label(e.action_type)
-        timestamp = Ask.TimeUtil.format(e.timestamp, offset_seconds, tz_offset)
+        timestamp = csv_datetime(e.timestamp, survey)
 
         [Integer.to_string(e.id), e.respondent_hashed_number, interactions_mode_label(e.mode), channel_name, disposition, action_type, e.action_data, timestamp]
       end)
@@ -905,4 +902,14 @@ defmodule Ask.RespondentController do
     prefix = "#{name}-#{prefix}"
     Timex.format!(Timex.now, "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
+
+  defp csv_datetime(nil, _), do: ""
+
+  defp csv_datetime(dt, %Survey{} = survey) do
+    tz_offset = Survey.timezone_offset(survey)
+    offset_seconds = Survey.timezone_offset_in_seconds(survey)
+
+    Ask.TimeUtil.format(Ecto.DateTime.cast!(dt), offset_seconds, tz_offset)
+  end
+
 end
