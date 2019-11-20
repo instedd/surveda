@@ -90,9 +90,13 @@ class SurveyCard extends Component<any> {
                   <DropdownItem>
                     <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
                   </DropdownItem>
-                  <DropdownItem>
-                    <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
-                  </DropdownItem>
+                  {
+                    survey.state == 'running'
+                      ? null
+                      : <DropdownItem>
+                        <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
+                      </DropdownItem>
+                  }
                 </Dropdown>
                 ) }
               </div>
