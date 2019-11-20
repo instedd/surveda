@@ -611,6 +611,8 @@ defmodule Ask.RespondentController do
         row = [respondent.hashed_number]
         responses = respondent.responses
 
+        row = row ++ [Respondent.show_disposition(respondent.disposition)]
+
         date = case responses do
           [] -> nil
           _ -> responses
@@ -629,7 +631,13 @@ defmodule Ask.RespondentController do
         |> Enum.map(fn mode -> mode_label([mode]) end)
         |> Enum.join(", ")
 
-        row = row ++ [modes, Respondent.show_section_order(respondent, questionnaires)]
+        row = row ++ [modes]
+
+        row = row ++ Enum.map(stats, fn stat ->
+          respondent |> respondent_stat(stat)
+        end)
+
+        row = row ++ [Respondent.show_section_order(respondent, questionnaires)]
 
         respondent_group = respondent.respondent_group.name
 
@@ -675,24 +683,11 @@ defmodule Ask.RespondentController do
           row
         end
 
-        row = row ++ [Respondent.show_disposition(respondent.disposition)]
-
-        row = row ++ Enum.map(stats, fn stat ->
-          respondent |> respondent_stat(stat)
-        end)
-
         row
     end)
 
     # Add header to csv_rows
-    header = ["respondent_id", "date", "modes", "section_order", "sample_file"]
-    header = header ++ all_fields
-    header = if has_comparisons do
-      header ++ ["variant"]
-    else
-      header
-    end
-    header = header ++ ["disposition"]
+    header = ["respondent_id", "disposition", "date", "modes"]
     header = header ++ Enum.map(stats, fn stat ->
       case stat do
         :total_sent_sms -> "total_sent_sms"
@@ -703,6 +698,13 @@ defmodule Ask.RespondentController do
         :mobileweb_attempts -> "mobileweb_attempts"
       end
     end)
+    header = header ++ ["section_order", "sample_file"]
+    header = header ++ all_fields
+    header = if has_comparisons do
+      header ++ ["variant"]
+    else
+      header
+    end
 
     rows = Stream.concat([[header], csv_rows])
 
