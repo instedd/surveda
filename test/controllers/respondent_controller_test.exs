@@ -1370,7 +1370,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
-      completed_at = Timex.shift(Timex.now, days: -2)
+      completed_at = Ecto.DateTime.cast!("2019-11-10 09:00:00")
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
       insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
@@ -1380,10 +1380,9 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
-      completed_at = completed_at |> Survey.csv_completion_date(survey)
       assert lines == [
         "Telephone number,Questionnaire-Mode,Completion date",
-        "5678,test - SMS with phone call fallback,\"#{completed_at}\"",
+        "5678,test - SMS with phone call fallback,\"Nov 10, 2019 UTC\"",
         "4321,test - Phone call,"
       ]
     end
@@ -1553,7 +1552,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
-      completed_at = Timex.shift(Timex.now, days: -5)
+      completed_at = Ecto.DateTime.cast!("2019-11-15 19:00:00")
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
       insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
@@ -1565,10 +1564,9 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
-      completed_at = completed_at |> Survey.csv_completion_date(survey)
       assert lines == [
         "Telephone number,Questionnaire-Mode,Completion date",
-        "5678,test - SMS with phone call fallback,\"#{completed_at}\""
+        "5678,test - SMS with phone call fallback,\"Nov 15, 2019 UTC\""
       ]
     end
 
