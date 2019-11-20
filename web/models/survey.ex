@@ -503,10 +503,4 @@ defmodule Ask.Survey do
       value -> value |> Decimal.to_integer
     end
   end
-
-  def csv_completion_date(nil, _), do: ""
-
-  def csv_completion_date(%DateTime{} = completed_at, %Survey{} = survey), do:
-    completed_at |> adjust_timezone(survey) |> Timex.format!("%b %e, %Y #{Survey.timezone_offset(survey)}", :strftime)
-
 end

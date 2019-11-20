@@ -1382,7 +1382,7 @@ defmodule Ask.RespondentControllerTest do
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
       assert lines == [
         "Telephone number,Questionnaire-Mode,Completion date",
-        "5678,test - SMS with phone call fallback,\"Nov 10, 2019 UTC\"",
+        "5678,test - SMS with phone call fallback,2019-11-10 09:00:00 UTC",
         "4321,test - Phone call,"
       ]
     end
@@ -1566,7 +1566,7 @@ defmodule Ask.RespondentControllerTest do
       lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
       assert lines == [
         "Telephone number,Questionnaire-Mode,Completion date",
-        "5678,test - SMS with phone call fallback,\"Nov 15, 2019 UTC\""
+        "5678,test - SMS with phone call fallback,2019-11-15 19:00:00 UTC"
       ]
     end
 
