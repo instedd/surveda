@@ -91,7 +91,7 @@ export default (
       </Route>
     </Route>
 
-    <Route path='/simulator' title={k('Sms Simulator')} component={SmsSimulator}/>
+    <Route path='/simulator' title={k('Sms Simulator')} component={SmsSimulator} />
   </Route>
 )
 
