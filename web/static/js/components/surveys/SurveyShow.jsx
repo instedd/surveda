@@ -49,7 +49,8 @@ class SurveyShow extends Component<any, State> {
     pending: PropTypes.number,
     multiplier: PropTypes.number,
     needed: PropTypes.number,
-    retriesHistograms: PropTypes.array
+    retriesHistograms: PropTypes.array,
+    overviewType: PropTypes.string
   }
 
   constructor(props) {
@@ -72,6 +73,11 @@ class SurveyShow extends Component<any, State> {
     if (survey && survey.state == 'not_ready') {
       router.replace(routes.surveyEdit(survey.projectId, survey.id))
     }
+  }
+
+  showHistograms() {
+    const { survey, overviewType } = this.props
+    return overviewType == 'full' && survey && survey.state == 'running'
   }
 
   stopSurvey() {
@@ -130,7 +136,7 @@ class SurveyShow extends Component<any, State> {
 
   render() {
     const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t,
-      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed, retriesHistograms } = this.props
+      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed, retriesHistograms, overviewType, router } = this.props
     const { stopUnderstood } = this.state
 
     const getHistogram = h => {
@@ -181,6 +187,13 @@ class SurveyShow extends Component<any, State> {
     }
 
     const readOnly = !project || project.readOnly
+
+    const switchOverviewComponent = <div className='switch right'>
+      <label>
+        <input type='checkbox' checked={overviewType == 'full'} onChange={() => router.push(routes.surveyOverview(survey.projectId, survey.id, overviewType))} />
+        <span className='lever' />
+      </label>
+    </div>
 
     let stopComponent = null
     let switchComponent = null
@@ -262,6 +275,7 @@ class SurveyShow extends Component<any, State> {
     return (
       <div className='cockpit'>
         <div className='row'>
+          {switchOverviewComponent}
           {stopComponent}
           <Modal card ref='stopModal' id='stop_survey_modal'>
             <div className='modal-content'>
@@ -326,8 +340,8 @@ class SurveyShow extends Component<any, State> {
               <Stats data={stats} />
               <Forecasts data={forecasts} ceil={100} forecast={survey.state == 'running'} />
               {
-                survey.state == 'terminated' ? null
-                : (
+                this.showHistograms()
+                ? (
                   <div className='retries-histogram' style={{'marginTop': '20px'}}>
                     <div className='header'>
                       <div className='title'>{t('Retries histograms')}</div>
@@ -336,6 +350,7 @@ class SurveyShow extends Component<any, State> {
                     { getHistograms() }
                   </div>
                 )
+                : null
               }
               <div className='row' style={{ 'display': 'flex', 'alignItems': 'center', 'marginTop': '20px' }}>
                 <div style={{ 'width': '50%' }}>
@@ -537,7 +552,8 @@ const mapStateToProps = (state, ownProps) => {
     missing: surveyStats ? surveyStats.missing : null,
     needed: surveyStats ? surveyStats.needed : null,
     pending: surveyStats ? surveyStats.pending : null,
-    retriesHistograms: surveyRetriesHistograms
+    retriesHistograms: surveyRetriesHistograms,
+    overviewType: ownProps.params.overviewType
   })
 }
 
