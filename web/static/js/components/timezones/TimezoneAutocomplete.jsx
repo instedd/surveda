@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { translate } from 'react-i18next'
 import { Autocomplete } from '../ui'
 import * as actions from '../../actions/survey'
+import { formatTimezone } from './util'
 import 'materialize-autocomplete'
 
 class TimezoneAutocomplete extends Component {
@@ -16,16 +17,35 @@ class TimezoneAutocomplete extends Component {
 
   constructor(props) {
     super(props)
+    this.timeZoneInput = null
     this.state = {
       fetching: false
     }
   }
 
+  setTimezoneInputVal = (timezone) => {
+    if (this.timeZoneInput) this.timeZoneInput.value = timezone
+  }
+
+  focusTimezoneInput = () => {
+    if (this.timeZoneInput) this.timeZoneInput.focus()
+  }
+
+  getTimezoneInputRef = () => {
+    return this.timeZoneInput
+  }
+
+  componentDidUpdate() {
+    const { selectedTz } = this.props
+    this.focusTimezoneInput()
+    this.setTimezoneInputVal(formatTimezone(selectedTz))
+  }
+
   componentDidMount() {
     const { dispatch, selectedTz } = this.props
     dispatch(actions.setTimezone(selectedTz))
-    $(this.refs.timeZoneInput).val(selectedTz)
-    $(this.refs.timeZoneInput).focus()
+    this.focusTimezoneInput()
+    this.setTimezoneInputVal(formatTimezone(selectedTz))
     dispatch(fetchTimezones())
   }
 
@@ -43,10 +63,10 @@ class TimezoneAutocomplete extends Component {
     callback(value, this.buildTimezonesforAutoselect(matchingOptions))
   }
 
-  autocompleteOnSelect(event) {
+  autocompleteOnSelect(timezone) {
     const { dispatch } = this.props
-    dispatch(actions.setTimezone(event.text))
-    $(this.refs.timeZoneInput).val(event.text)
+    dispatch(actions.setTimezone(timezone.text))
+    this.setTimezoneInputVal(formatTimezone(timezone.text))
   }
 
   render() {
@@ -60,9 +80,9 @@ class TimezoneAutocomplete extends Component {
       return (
         <div className='input-field timezone-selection'>
           <label htmlFor='timeZoneInput' className='label'>{ t('Timezone') }</label>
-          <input type='text' ref='timeZoneInput' id='timeZoneInput' autoComplete='off' className='timezone-input autocomplete' />
+          <input type='text' ref={(ref) => { this.timeZoneInput = ref }} id='timeZoneInput' autoComplete='off' className='timezone-input autocomplete' />
           <Autocomplete
-            getInput={() => this.refs.timeZoneInput}
+            getInput={() => { return this.getTimezoneInputRef() }}
             getData={(value, callback) => this.autocompleteGetData(value, callback)}
             onSelect={(item) => this.autocompleteOnSelect(item)}
             className='timezone-dropdown'
