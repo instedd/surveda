@@ -8,7 +8,8 @@ type Props = {
   respondent: Respondent,
   responses: Response[],
   variantColumn: ?React$Element<*>,
-  surveyModes: string[]
+  surveyModes: string[],
+  cellClassNames: Function
 };
 
 class RespondentRow extends Component<Props> {
@@ -26,7 +27,7 @@ class RespondentRow extends Component<Props> {
   }
 
   render() {
-    const {respondent, responses, variantColumn} = this.props
+    const {respondent, responses, variantColumn, cellClassNames} = this.props
     return (
       <tr key={respondent.id}>
         <td> {respondent.phoneNumber}</td>
@@ -44,7 +45,7 @@ class RespondentRow extends Component<Props> {
             value = languageNames[value] || value
           }
 
-          return <td className={`tdNowrap${response.isNumeric ? ' tdNumber' : ''}`} key={parseInt(respondent.id) + response.name}>{value}</td>
+          return <td className={cellClassNames(response.name)} key={parseInt(respondent.id) + response.name}>{value}</td>
         })}
         {variantColumn}
       </tr>

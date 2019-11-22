@@ -14,6 +14,7 @@ import { modeLabel } from '../../questionnaire.mode'
 import find from 'lodash/find'
 import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
+import classNames from 'classnames/bind'
 
 type Props = {
   t: Function,
@@ -441,11 +442,8 @@ class RespondentIndex extends Component<Props, State> {
               <th>{t('Disposition')}</th>
               <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
               {this.getModeAttempts()}
-              {respondentsFieldName.map(field => (
-                this.fieldIsNumeric(numericFields, field)
-                  ? <th className='thNumber' key={field}>{field}</th>
-                  : <th key={field}>{field}</th>
-                )
+              {respondentsFieldName.map(field =>
+                <th className={classNames({'thNumber': this.fieldIsNumeric(numericFields, field)})} key={field}>{field}</th>
               )}
               {variantHeader}
             </tr>
@@ -472,12 +470,13 @@ class RespondentIndex extends Component<Props, State> {
               const responses = respondentsFieldName.map((field) => {
                 return {
                   name: field,
-                  isNumeric: this.fieldIsNumeric(numericFields, field),
                   value: responseOf(respondents, respondent.id, field)
                 }
               })
-
               return <RespondentRow
+                cellClassNames={(fieldName) => classNames({
+                  'tdNowrap': true,
+                  'tdNumber': this.fieldIsNumeric(numericFields, fieldName)})}
                 key={index}
                 respondent={respondent}
                 responses={responses}
