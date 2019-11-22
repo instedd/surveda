@@ -8,7 +8,8 @@ type Props = {
   respondent: Respondent,
   responses: Response[],
   variantColumn: ?React$Element<*>,
-  surveyModes: string[]
+  surveyModes: string[],
+  cellClassNames: Function
 };
 
 class RespondentRow extends Component<Props> {
@@ -20,16 +21,23 @@ class RespondentRow extends Component<Props> {
       if (respondent.stats.attempts) {
         modeValue = respondent.stats.attempts[element] ? respondent.stats.attempts[element] : 0
       }
-      return <td key={index}>{modeValue}</td>
+      return <td className='tdNumber' key={index}>{modeValue}</td>
     })
     return modeValueRow
   }
 
   render() {
-    const {respondent, responses, variantColumn} = this.props
+    const {respondent, responses, variantColumn, cellClassNames} = this.props
     return (
       <tr key={respondent.id}>
         <td> {respondent.phoneNumber}</td>
+        <td>
+          {capitalize(respondent.disposition)}
+        </td>
+        <td className='tdDate'>
+          {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
+        </td>
+        {this.getModeAttemptsValues()}
         {responses.map((response) => {
           // For the 'language' variable we convert the code to the native name
           let value = response.value
@@ -37,16 +45,9 @@ class RespondentRow extends Component<Props> {
             value = languageNames[value] || value
           }
 
-          return <td className='tdNowrap' key={parseInt(respondent.id) + response.name}>{value}</td>
+          return <td className={cellClassNames(response.name)} key={parseInt(respondent.id) + response.name}>{value}</td>
         })}
         {variantColumn}
-        <td>
-          {capitalize(respondent.disposition)}
-        </td>
-        <td>
-          {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
-        </td>
-        {this.getModeAttemptsValues()}
       </tr>
     )
   }

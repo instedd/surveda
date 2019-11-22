@@ -14,6 +14,7 @@ import { modeLabel } from '../../questionnaire.mode'
 import find from 'lodash/find'
 import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
+import classNames from 'classnames/bind'
 
 type Props = {
   t: Function,
@@ -120,7 +121,7 @@ class RespondentIndex extends Component<Props, State> {
     let attemptsHeader = modes.map(function(mode) {
       const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
       let modeTitle = capitalize(mode) + ' ' + 'Attempts'
-      return <SortableHeader key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+      return <SortableHeader className='thNumber' key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
     }
     )
     return attemptsHeader
@@ -255,6 +256,41 @@ class RespondentIndex extends Component<Props, State> {
     </div>
   }
 
+  responsesByField(respondents) {
+    let responsesByField = {}
+    for (let respondentId in respondents) {
+      if (respondents.hasOwnProperty(respondentId)) {
+        const responses = respondents[respondentId].responses
+        for (let responseField in responses) {
+          if (responses.hasOwnProperty(responseField)) {
+            if (!responsesByField[responseField]) {
+              responsesByField[responseField] = []
+            }
+            responsesByField[responseField].push(responses[responseField])
+          }
+        }
+      }
+    }
+    return responsesByField
+  }
+
+  numericFields(respondents) {
+    let responsesByField = this.responsesByField(respondents)
+    let numericFields = []
+    for (let responseField in responsesByField) {
+      if (responsesByField.hasOwnProperty(responseField)) {
+        if (responsesByField[responseField].every(response => !isNaN(response))) {
+          numericFields.push(responseField)
+        }
+      }
+    }
+    return numericFields
+  }
+
+  fieldIsNumeric(numericFields, filterField) {
+    return numericFields.some(field => field == filterField)
+  }
+
   render() {
     const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel, t } = this.props
 
@@ -266,7 +302,10 @@ class RespondentIndex extends Component<Props, State> {
 
     /* jQuery extend clones respondents object, in order to build an easy to manage structure without
     modify state */
+
     const respondents = generateResponsesDictionaryFor($.extend(true, {}, this.props.respondents))
+    let numericFields = this.numericFields(respondents)
+
     const respondentsList: Respondent[] = values(respondents)
 
     function generateResponsesDictionaryFor(rs) {
@@ -400,13 +439,13 @@ class RespondentIndex extends Component<Props, State> {
           <thead>
             <tr>
               <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <th>{t('Disposition')}</th>
+              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              {this.getModeAttempts()}
               {respondentsFieldName.map(field =>
-                <th key={field}>{field}</th>
+                <th className={classNames({'thNumber': this.fieldIsNumeric(numericFields, field)})} key={field}>{field}</th>
               )}
               {variantHeader}
-              <th>{t('Disposition')}</th>
-              <SortableHeader text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
-              {this.getModeAttempts()}
             </tr>
           </thead>
           <tbody>
@@ -434,8 +473,10 @@ class RespondentIndex extends Component<Props, State> {
                   value: responseOf(respondents, respondent.id, field)
                 }
               })
-
               return <RespondentRow
+                cellClassNames={(fieldName) => classNames({
+                  'tdNowrap': true,
+                  'tdNumber': this.fieldIsNumeric(numericFields, fieldName)})}
                 key={index}
                 respondent={respondent}
                 responses={responses}
