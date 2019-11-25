@@ -172,7 +172,7 @@ class SurveyShow extends Component<any, State> {
         actives: histActives,
         flow: flow,
         references: [{label: 'Trying', className: 'trying'}, {label: 'Stand by', className: 'standby'}],
-        quota: 100
+        quota: target
       }
     }
 
