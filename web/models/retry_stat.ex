@@ -22,41 +22,48 @@ defmodule Ask.RetryStat do
     |> unique_constraint(:retry_stats_mode_attempt_retry_time_survey_id_index)
   end
 
-  def add!(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}) do
-    {:ok, updated} =
+  def transition!(substract_filter, increase_filter) do
+    {:ok, _} = Ecto.Multi.new()
+      |> Ecto.Multi.update_all(:update_all,
+      substract_query(substract_filter),
+      [])
+      |> Ecto.Multi.insert(:insert_all,
+        add_struct(increase_filter),
+        on_conflict: [inc: [count: 1]])
+      |> Repo.transaction()
+
+    {:ok}
+  end
+
+  defp add_struct(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}), do: %RetryStat{
+    attempt: attempt,
+    count: 1,
+    mode: mode,
+    retry_time: retry_time,
+    survey_id: survey_id
+  }
+
+  defp substract_query(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}), do:
+    from(s in RetryStat, where: s.attempt == ^attempt and s.mode == ^mode and s.retry_time == ^retry_time and s.survey_id == ^survey_id and s.count > 0, update: [inc: [count: -1]])
+
+  def add!(filter) do
+    {:ok, _} =
       Repo.insert(
-        %RetryStat{
-          attempt: attempt,
-          count: 1,
-          mode: mode,
-          retry_time: retry_time,
-          survey_id: survey_id
-        },
-        returning: [:amount],
+        add_struct(filter),
         on_conflict: [inc: [count: 1]]
       )
 
-    {:ok, updated}
+    {:ok}
   end
 
   def subtract!(filter) do
-    case get(filter) do
-      nil ->
-        {:error, :not_found}
-
-      stat ->
-        subtract_stat(stat)
-    end
-  end
-
-  defp subtract_stat(stat) do
-    case from(s in RetryStat, where: s.id == ^stat.id and s.count > 0, update: [inc: [count: -1]])
+    case substract_query(filter)
          |> Repo.update_all([]) do
       {0, _} ->
-        {:error, :zero_reached}
+        {:error}
 
       {_, _} ->
-        {:ok, stat}
+        {:ok}
     end
   end
 
@@ -84,11 +91,6 @@ defmodule Ask.RetryStat do
 
   defp count_stat(nil), do: 0
   defp count_stat(stat), do: stat.count
-
-  defp get(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}),
-    do:
-      RetryStat
-      |> Repo.get_by(attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id)
 
   def retry_time(timeout_at), do: Timex.format!(timeout_at, "%Y%0m%0d%H", :strftime)
 end

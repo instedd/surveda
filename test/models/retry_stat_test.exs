@@ -20,30 +20,19 @@ defmodule Ask.RetryStatTest do
     survey = insert(:survey)
     filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
 
-    {:ok,
-     %Ask.RetryStat{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}} =
-      RetryStat.add!(filter)
+    {:ok} = RetryStat.add!(filter)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
-
-    assert attempt == f_attempt
-    assert mode == f_mode
-    assert retry_time == f_retry_time
-    assert survey_id == survey.id
-
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
   test "increases stat" do
     survey = insert(:survey)
     filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
 
-    {:ok, _} = RetryStat.add!(filter)
-    {:ok, _} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add!(filter)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
-
-    assert 2 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+    assert 2 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
   test "increases specific stat" do
@@ -82,13 +71,11 @@ defmodule Ask.RetryStatTest do
     survey = insert(:survey)
     filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
 
-    {:ok, _} = RetryStat.add!(filter)
-    {:ok, _} = RetryStat.add!(filter)
-    {:ok, _} = RetryStat.subtract!(filter)
+    {:ok} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add!(filter)
+    {:ok} = RetryStat.subtract!(filter)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
-
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
   test "decreases specific stat" do
@@ -107,17 +94,17 @@ defmodule Ask.RetryStatTest do
     filter6 = %{attempt: 1, mode: mode_2, retry_time: retry_time_2, survey_id: survey_2.id}
 
     increase_stat(filter1, 2)
-    {:ok, _} = RetryStat.subtract!(filter1)
+    {:ok} = RetryStat.subtract!(filter1)
     increase_stat(filter2, 3)
-    {:ok, _} = RetryStat.subtract!(filter2)
+    {:ok} = RetryStat.subtract!(filter2)
     increase_stat(filter3, 4)
-    {:ok, _} = RetryStat.subtract!(filter3)
+    {:ok} = RetryStat.subtract!(filter3)
     increase_stat(filter4, 5)
-    {:ok, _} = RetryStat.subtract!(filter4)
+    {:ok} = RetryStat.subtract!(filter4)
     increase_stat(filter5, 6)
-    {:ok, _} = RetryStat.subtract!(filter5)
+    {:ok} = RetryStat.subtract!(filter5)
     increase_stat(filter6, 7)
-    {:ok, _} = RetryStat.subtract!(filter6)
+    {:ok} = RetryStat.subtract!(filter6)
 
     stats_survey_1 = RetryStat.stats(%{survey_id: survey_1.id})
     stats_survey_2 = RetryStat.stats(%{survey_id: survey_2.id})
@@ -134,25 +121,21 @@ defmodule Ask.RetryStatTest do
     survey = insert(:survey)
     filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
 
-    {:error, :not_found} = RetryStat.subtract!(filter)
+    {:error} = RetryStat.subtract!(filter)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
-
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
   test "doesn't decrease stat when zero" do
     survey = insert(:survey)
     filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
 
-    {:ok, _} = RetryStat.add!(filter)
-    {:ok, _} = RetryStat.subtract!(filter)
+    {:ok} = RetryStat.add!(filter)
+    {:ok} = RetryStat.subtract!(filter)
 
-    {:error, :zero_reached} = RetryStat.subtract!(filter)
+    {:error} = RetryStat.subtract!(filter)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
-
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
   test "increases stat concurrently" do
@@ -172,9 +155,7 @@ defmodule Ask.RetryStatTest do
     Task.await(task1)
     Task.await(task2)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
-
-    assert 200 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+    assert 200 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
   test "decreases stat concurrently" do
@@ -196,26 +177,39 @@ defmodule Ask.RetryStatTest do
     Task.await(task1)
     Task.await(task2)
 
-    %{attempt: f_attempt, mode: f_mode, retry_time: f_retry_time} = filter
+    assert 100 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
+  end
 
-    assert 100 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: f_attempt, retry_time: f_retry_time, mode: f_mode})
+  test "transition" do
+    survey = insert(:survey)
+    filter_from = %{attempt: 1, mode: ["ivr"], retry_time: "", survey_id: survey.id}
+    filter_to = %{attempt: 2, mode: ["ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    {:ok} = RetryStat.add!(filter_from)
+
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter_from)
+
+    {:ok} = RetryStat.transition!(filter_from, filter_to)
+
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter_from)
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter_to)
   end
 
   defp increase_stat(filter, n) when n <= 1 do
-    {:ok, _} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add!(filter)
   end
 
   defp increase_stat(filter, n) do
-    {:ok, _} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add!(filter)
     increase_stat(filter, n - 1)
   end
 
   defp decrease_stat(filter, n) when n <= 1 do
-    {:ok, _} = RetryStat.subtract!(filter)
+    {:ok} = RetryStat.subtract!(filter)
   end
 
   defp decrease_stat(filter, n) do
-    {:ok, _} = RetryStat.subtract!(filter)
+    {:ok} = RetryStat.subtract!(filter)
     decrease_stat(filter, n - 1)
   end
 end
