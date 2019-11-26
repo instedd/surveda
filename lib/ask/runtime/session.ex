@@ -1,23 +1,21 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory}
+  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey}
   alias Ask.Runtime.Flow.TextVisitor
   alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns}
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
 
-  @default_fallback_delay 10
-
-  def start(questionnaire, respondent, channel, mode, schedule, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ @default_fallback_delay, count_partial_results \\ false) do
+  def start(questionnaire, respondent, channel, mode, schedule, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ nil, count_partial_results \\ false) do
     flow = Flow.start(questionnaire, mode)
     session = %Session{
       current_mode: SessionModeProvider.new(mode, channel, retries),
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
       respondent: update_section_order(respondent, flow.section_order),
-      fallback_delay: fallback_delay,
+      fallback_delay: fallback_delay || Survey.default_fallback_delay(),
       count_partial_results: count_partial_results,
       schedule: schedule
     }
@@ -30,10 +28,6 @@ defmodule Ask.Runtime.Session do
     respondent
     |> Respondent.changeset(%{section_order: section_order})
     |> Repo.update!
-  end
-
-  def default_fallback_delay do
-    @default_fallback_delay
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %SMSMode{channel: channel}} = session) do
