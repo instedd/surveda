@@ -184,8 +184,6 @@ class SurveyShow extends Component<any, State> {
         histActives[slot.hour].value = slot.respondents
       })
 
-      console.log('--------flow', flow)
-
       return {
         actives: histActives,
         flow: flow,
@@ -197,7 +195,7 @@ class SurveyShow extends Component<any, State> {
     }
 
     const getHistograms = () => {
-      if (!retriesHistograms) return 'Loading...'
+      if (!retriesHistograms) return t('Loading...')
       return retriesHistograms.map(h => getHistogram(h)).map(h => <RetriesHistogram
         // Used in the y-axis height calculation
         quota={target}
@@ -215,11 +213,11 @@ class SurveyShow extends Component<any, State> {
         // Graph references
         references={[
           {
-            label: 'Trying',
+            label: t('Trying'),
             className: 'trying'
           },
           {
-            label: 'Stand by',
+            label: t('Stand by'),
             className: 'standby'
           }
         ]}
