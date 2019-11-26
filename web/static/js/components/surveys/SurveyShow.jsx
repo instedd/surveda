@@ -134,52 +134,96 @@ class SurveyShow extends Component<any, State> {
     dispatch(actions.toggleLock())
   }
 
+  typeForRetriesHistogram(type) {
+    switch (type) {
+      case 'ivr':
+        return 'voice'
+      case 'end':
+        return 'discard'
+    }
+    return type
+  }
+
+  delayForRetriesHistogram(delay, isFirstAttempt) {
+    // It doesn't feel right hardcoding 1 when the delay is 0
+    // But we need this for when the delay is less than an hour
+    // Otherwise, the hole graph crashes
+    return isFirstAttempt ? delay : delay || 1
+  }
+
+  flowForRetriesHistogram(flow) {
+    const cloned = [...flow]
+    let offset = 0
+    cloned.forEach(step => {
+      offset += step.delay
+      step.offset = offset
+    })
+    return cloned.map(({delay, type, label, offset}, idx) => ({
+      delay: this.delayForRetriesHistogram(delay, idx == 0),
+      type: this.typeForRetriesHistogram(type),
+      label,
+      offset
+    }))
+  }
+
   render() {
     const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t,
       estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed, retriesHistograms, overviewType, router } = this.props
     const { stopUnderstood } = this.state
 
     const getHistogram = h => {
-      const translateType = type => {
-        switch (type) {
-          case 'ivr':
-            return 'voice'
-          case 'end':
-            return 'discard'
-        }
-        return type
-      }
-      const flow = h.flow.map(({delay, type, label}, idx) => ({delay: idx != 0 && delay == 0 ? 1 : delay, type: translateType(type), label}))
-      let offset = 0
-      flow.forEach(step => {
-        offset += step.delay
-        step.offset = offset
-      })
-      const histLength = flow.reduce((total, attempt) => total + (attempt.delay ? attempt.delay : 1), 0)
-
+      const flow = this.flowForRetriesHistogram(h.flow)
+      const histLength = flow.reduce((total, attempt) => total + attempt.delay, 1)
       const histActives = new Array(histLength)
 
       let i
       for (i = 0; i < histLength; i++) {
         histActives[i] = {value: 0}
       }
-
       h.actives.forEach(slot => {
         histActives[slot.hour].value = slot.respondents
       })
 
+      console.log('--------flow', flow)
+
       return {
         actives: histActives,
         flow: flow,
-        references: [{label: 'Trying', className: 'trying'}, {label: 'Stand by', className: 'standby'}],
-        quota: target
+        // It doesn't apply to the current iteration
+        completes: histActives.map(() => false),
+        // It doesn't apply to the current iteration
+        timewindows: histActives.map(() => true)
       }
     }
 
     const getHistograms = () => {
-      if (!retriesHistograms) return null
-
-      return retriesHistograms.map(h => getHistogram(h)).map(h => <RetriesHistogram quota={h.quota} flow={h.flow} actives={h.actives} completes={h.actives.map(() => false)} timewindows={h.actives.map(() => true)} scheduleDescription='' references={h.references} />)
+      if (!retriesHistograms) return 'Loading...'
+      return retriesHistograms.map(h => getHistogram(h)).map(h => <RetriesHistogram
+        // Used in the y-axis height calculation
+        quota={target}
+        // Every attempt in the mode sequence, including the delay between them
+        flow={h.flow}
+        // Every set of active respondents grouped and ordered by hour
+        actives={h.actives}
+        // Every set of completed respondents grouped and ordered by hour
+        completes={h.completes}
+        // Every hour while the survey is active is flagged as true
+        timewindows={h.timewindows}
+        // Text about the current and next state of the survey regarding its schedule
+        // It doesn't apply to the current iteration
+        scheduleDescription=''
+        // Graph references
+        references={[
+          {
+            label: 'Trying',
+            className: 'trying'
+          },
+          {
+            label: 'Stand by',
+            className: 'standby'
+          }
+        ]}
+        />)
     }
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
@@ -275,7 +319,7 @@ class SurveyShow extends Component<any, State> {
     return (
       <div className='cockpit'>
         <div className='row'>
-          {switchOverviewComponent}
+          {survey && survey.state == 'running' && switchOverviewComponent}
           {stopComponent}
           <Modal card ref='stopModal' id='stop_survey_modal'>
             <div className='modal-content'>
