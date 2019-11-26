@@ -234,8 +234,10 @@ class SurveyShow extends Component<any, State> {
 
     const switchOverviewComponent = <div className='switch right'>
       <label>
+        <i className={`material-icons lever-icon`}>fullscreen_exit</i>
         <input type='checkbox' checked={overviewType == 'full'} onChange={() => router.push(routes.surveyOverview(survey.projectId, survey.id, overviewType))} />
         <span className='lever' />
+        <i className={`material-icons lever-icon`}>fullscreen</i>
       </label>
     </div>
 
