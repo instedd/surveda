@@ -3,7 +3,7 @@ defmodule Ask.RetryStatTest do
 
   alias Ask.RetryStat
 
-  @valid_attrs %{attempt: 1, count: 2, survey_id: 3, mode: "sms", retry_time: "2019101612"}
+  @valid_attrs %{attempt: 1, count: 2, survey_id: 3, mode: ["sms"], retry_time: "2019101612"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
