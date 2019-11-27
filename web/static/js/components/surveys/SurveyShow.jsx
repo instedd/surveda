@@ -14,6 +14,7 @@ import { referenceColorClasses, referenceColors, referenceColorClassForUnassigne
 import classNames from 'classnames/bind'
 import { Stats, Forecasts, SuccessRate, QueueSize } from '@instedd/surveda-d3-components'
 import { translate } from 'react-i18next'
+import SurveyRetriesPanel from './SurveyRetriesPanel'
 
 type State = {
   responsive: boolean,

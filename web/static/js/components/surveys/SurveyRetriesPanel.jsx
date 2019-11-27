@@ -6,7 +6,12 @@ import { RetriesHistogram } from '@instedd/surveda-d3-components'
 
 class SurveyRetriesPanel extends Component<any> {
   static propTypes = {
-    retriesHistograms: PropTypes.array
+    retriesHistograms: PropTypes.array,
+    dispatch: PropTypes.func,
+    projectId: PropTypes.string.isRequired,
+    surveyId: PropTypes.string.isRequired,
+    t: PropTypes.func,
+    target: PropTypes.number
   }
 
   componentWillMount() {
@@ -103,12 +108,12 @@ class SurveyRetriesPanel extends Component<any> {
     }
 
     return (<div className='retries-histogram' style={{'marginTop': '20px'}}>
-              <div className='header'>
-                <div className='title'>{t('Retries histograms')}</div>
-                <div className='description'>{t('Number of contacts in each stage of the retry schedule')}</div>
-              </div>
-              { getHistograms() }
-            </div>)
+      <div className='header'>
+        <div className='title'>{t('Retries histograms')}</div>
+        <div className='description'>{t('Number of contacts in each stage of the retry schedule')}</div>
+      </div>
+      { getHistograms() }
+    </div>)
   }
 }
 
