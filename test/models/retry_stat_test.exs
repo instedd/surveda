@@ -180,7 +180,7 @@ defmodule Ask.RetryStatTest do
     assert 100 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
-  test "transition" do
+  test "transitions" do
     survey = insert(:survey)
     filter_from = %{attempt: 1, mode: ["ivr"], retry_time: "", survey_id: survey.id}
     filter_to = %{attempt: 2, mode: ["ivr"], retry_time: "2019101615", survey_id: survey.id}
@@ -193,6 +193,30 @@ defmodule Ask.RetryStatTest do
 
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter_from)
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter_to)
+  end
+
+  test "transitions concurrently" do
+    survey = insert(:survey)
+    substract_filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+    increase_filter = %{attempt: 2, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    increase_stat(substract_filter, 100)
+
+    task1 =
+      Task.async(fn ->
+        transition_stat(substract_filter, increase_filter, 50)
+      end)
+
+    task2 =
+      Task.async(fn ->
+        transition_stat(substract_filter, increase_filter, 50)
+      end)
+
+    Task.await(task1)
+    Task.await(task2)
+
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(substract_filter)
+    assert 100 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(increase_filter)
   end
 
   defp increase_stat(filter, n) when n <= 1 do
@@ -211,5 +235,14 @@ defmodule Ask.RetryStatTest do
   defp decrease_stat(filter, n) do
     {:ok} = RetryStat.subtract!(filter)
     decrease_stat(filter, n - 1)
+  end
+
+  defp transition_stat(substract_filter, increase_filter, n) when n <= 1 do
+    {:ok} = RetryStat.transition!(substract_filter, increase_filter)
+  end
+
+  defp transition_stat(substract_filter, increase_filter, n) do
+    {:ok} = RetryStat.transition!(substract_filter, increase_filter)
+    transition_stat(substract_filter, increase_filter, n - 1)
   end
 end
