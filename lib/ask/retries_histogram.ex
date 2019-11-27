@@ -70,7 +70,7 @@ defmodule Ask.RetriesHistogram do
 
     [%{hour: absolute_delay, respondents: count_current}] ++
       [%{hour: absolute_delay - delay, respondents: count_previous}] ++
-      wating_respondents(%{
+      waiting_respondents(%{
         stats: stats,
         mode: mode,
         attempt: %{
@@ -110,7 +110,7 @@ defmodule Ask.RetriesHistogram do
 
   defp count_actives(_), do: 0
 
-  defp wating_respondents(%{
+  defp waiting_respondents(%{
          stats: stats,
          mode: mode,
          attempt: %{
@@ -126,7 +126,7 @@ defmodule Ask.RetriesHistogram do
     count = count_respondents(stats, now, idx - 1, mode, delay)
 
     [%{hour: absolute_delay - delay, respondents: count}] ++
-      wating_respondents(%{
+      waiting_respondents(%{
         stats: stats,
         mode: mode,
         attempt: %{
@@ -140,7 +140,7 @@ defmodule Ask.RetriesHistogram do
       })
   end
 
-  defp wating_respondents(%{
+  defp waiting_respondents(%{
          stats: stats,
          mode: mode,
          attempt: %{idx: idx, absolute_delay: absolute_delay, delay: delay},
