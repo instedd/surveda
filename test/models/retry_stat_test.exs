@@ -219,6 +219,31 @@ defmodule Ask.RetryStatTest do
     assert 100 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(increase_filter)
   end
 
+  test "doesn't transition stat when zero" do
+    survey = insert(:survey)
+    substract_filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+    increase_filter = %{attempt: 2, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    {:ok} = RetryStat.add!(substract_filter)
+    {:ok} = RetryStat.subtract!(substract_filter)
+
+    {:error} = RetryStat.transition!(substract_filter, increase_filter)
+
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(substract_filter)
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(increase_filter)
+  end
+
+  test "doesn't transition unexistent stat" do
+    survey = insert(:survey)
+    substract_filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+    increase_filter = %{attempt: 2, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    {:error} = RetryStat.transition!(substract_filter, increase_filter)
+
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(substract_filter)
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(increase_filter)
+  end
+
   defp increase_stat(filter, n) when n <= 1 do
     {:ok} = RetryStat.add!(filter)
   end
