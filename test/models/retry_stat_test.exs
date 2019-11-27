@@ -44,27 +44,43 @@ defmodule Ask.RetryStatTest do
     retry_time_2 = "2019101616"
 
     %{attempt: 1, mode: mode_1, retry_time: retry_time_1, survey_id: survey_1.id}
-      |> increase_stat(1)
+    |> increase_stat(1)
+
     %{attempt: 2, mode: mode_1, retry_time: retry_time_1, survey_id: survey_1.id}
-      |> increase_stat(2)
+    |> increase_stat(2)
+
     %{attempt: 3, mode: mode_1, retry_time: retry_time_1, survey_id: survey_1.id}
-      |> increase_stat(3)
+    |> increase_stat(3)
+
     %{attempt: 1, mode: mode_2, retry_time: retry_time_1, survey_id: survey_1.id}
-      |> increase_stat(4)
+    |> increase_stat(4)
+
     %{attempt: 1, mode: mode_2, retry_time: retry_time_2, survey_id: survey_1.id}
-      |> increase_stat(5)
+    |> increase_stat(5)
+
     %{attempt: 1, mode: mode_2, retry_time: retry_time_2, survey_id: survey_2.id}
-      |> increase_stat(6)
+    |> increase_stat(6)
 
     stats_survey_1 = RetryStat.stats(%{survey_id: survey_1.id})
     stats_survey_2 = RetryStat.stats(%{survey_id: survey_2.id})
 
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_1}) == 1
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 2, retry_time: retry_time_1, mode: mode_1}) == 2
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 3, retry_time: retry_time_1, mode: mode_1}) == 3
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_2}) == 4
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 5
-    assert stats_survey_2 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 6
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_1}) == 1
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 2, retry_time: retry_time_1, mode: mode_1}) == 2
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 3, retry_time: retry_time_1, mode: mode_1}) == 3
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_2}) == 4
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 5
+
+    assert stats_survey_2
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 6
   end
 
   test "decreases stat" do
@@ -109,12 +125,23 @@ defmodule Ask.RetryStatTest do
     stats_survey_1 = RetryStat.stats(%{survey_id: survey_1.id})
     stats_survey_2 = RetryStat.stats(%{survey_id: survey_2.id})
 
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_1}) == 1
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 2, retry_time: retry_time_1, mode: mode_1}) == 2
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 3, retry_time: retry_time_1, mode: mode_1}) == 3
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_2}) == 4
-    assert stats_survey_1 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 5
-    assert stats_survey_2 |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 6
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_1}) == 1
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 2, retry_time: retry_time_1, mode: mode_1}) == 2
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 3, retry_time: retry_time_1, mode: mode_1}) == 3
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_1, mode: mode_2}) == 4
+
+    assert stats_survey_1
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 5
+
+    assert stats_survey_2
+           |> RetryStat.count(%{attempt: 1, retry_time: retry_time_2, mode: mode_2}) == 6
   end
 
   test "doesn't decrease unexistent stat" do
@@ -197,8 +224,20 @@ defmodule Ask.RetryStatTest do
 
   test "transitions concurrently" do
     survey = insert(:survey)
-    substract_filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
-    increase_filter = %{attempt: 2, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    substract_filter = %{
+      attempt: 1,
+      mode: ["sms", "ivr"],
+      retry_time: "2019101615",
+      survey_id: survey.id
+    }
+
+    increase_filter = %{
+      attempt: 2,
+      mode: ["sms", "ivr"],
+      retry_time: "2019101615",
+      survey_id: survey.id
+    }
 
     increase_stat(substract_filter, 100)
 
@@ -221,8 +260,20 @@ defmodule Ask.RetryStatTest do
 
   test "doesn't transition stat when zero" do
     survey = insert(:survey)
-    substract_filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
-    increase_filter = %{attempt: 2, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    substract_filter = %{
+      attempt: 1,
+      mode: ["sms", "ivr"],
+      retry_time: "2019101615",
+      survey_id: survey.id
+    }
+
+    increase_filter = %{
+      attempt: 2,
+      mode: ["sms", "ivr"],
+      retry_time: "2019101615",
+      survey_id: survey.id
+    }
 
     {:ok} = RetryStat.add!(substract_filter)
     {:ok} = RetryStat.subtract!(substract_filter)
@@ -235,8 +286,20 @@ defmodule Ask.RetryStatTest do
 
   test "doesn't transition unexistent stat" do
     survey = insert(:survey)
-    substract_filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
-    increase_filter = %{attempt: 2, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
+
+    substract_filter = %{
+      attempt: 1,
+      mode: ["sms", "ivr"],
+      retry_time: "2019101615",
+      survey_id: survey.id
+    }
+
+    increase_filter = %{
+      attempt: 2,
+      mode: ["sms", "ivr"],
+      retry_time: "2019101615",
+      survey_id: survey.id
+    }
 
     {:error} = RetryStat.transition!(substract_filter, increase_filter)
 
