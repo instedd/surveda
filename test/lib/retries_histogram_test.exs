@@ -32,7 +32,7 @@ defmodule Ask.RetriesHistogramTest do
       insert(:survey, Map.put(retry_configuration(mode, "1h 2h 3h"), :fallback_delay, "5h"))
 
     stats = %{survey_id: survey.id} |> RetryStat.stats()
-    %{flow: flow} = survey |> RetriesHistogram.mode_sequence_histogram(stats, mode, Timex.now())
+    %{flow: flow} = survey |> RetriesHistogram.mode_sequence_histogram(stats, [mode], Timex.now())
 
     assert flow == [
              %{type: mode, delay: 0},
@@ -45,6 +45,8 @@ defmodule Ask.RetriesHistogramTest do
 
   test "flow with retries" do
     flow_with_retries("ivr")
+    flow_with_retries("sms")
+    flow_with_retries("mobileweb")
   end
 
   test "flow sms -> ivr" do
