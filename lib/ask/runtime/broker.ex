@@ -210,7 +210,7 @@ defmodule Ask.Runtime.Broker do
 
     Repo.transaction(fn ->
       try do
-        substract_retry_stat(respondent)
+        subtract_retry_stat(respondent)
         handle_session_step(Session.timeout(session), Timex.now)
       rescue
         e in Ecto.StaleEntryError ->
@@ -429,7 +429,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp handle_session_step({:end, reply, respondent}, _) do
-    substract_retry_stat(respondent)
+    subtract_retry_stat(respondent)
     update_respondent(respondent, :end, Reply.disposition(reply), nil)
 
     case Reply.steps(reply) do
@@ -652,9 +652,9 @@ defmodule Ask.Runtime.Broker do
     )
   defp increase_retry_stat(_, _, _), do: nil
 
-  defp substract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}, mode: mode, stats: stats, survey_id: survey_id}), do:
+  defp subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}, mode: mode, stats: stats, survey_id: survey_id}), do:
     RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "", survey_id: survey_id})
-  defp substract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => _}}, mode: mode, stats: stats, survey_id: survey_id, timeout_at: timeout_at}), do:
+  defp subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => _}}, mode: mode, stats: stats, survey_id: survey_id, timeout_at: timeout_at}), do:
     RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: RetryStat.retry_time(timeout_at), survey_id: survey_id})
-  defp substract_retry_stat(_), do: nil
+  defp subtract_retry_stat(_), do: nil
 end

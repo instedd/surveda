@@ -22,14 +22,14 @@ defmodule Ask.RetryStat do
     |> unique_constraint(:retry_stats_mode_attempt_retry_time_survey_id_index)
   end
 
-  def transition!(substract_filter, increase_filter) do
+  def transition!(subtract_filter, increase_filter) do
     case Ecto.Multi.new()
          |> Ecto.Multi.update_all(
            :update_all,
-           substract_query(substract_filter),
+           subtract_query(subtract_filter),
            []
          )
-         |> Ecto.Multi.run(:substracted, fn result -> substracted(result) end)
+         |> Ecto.Multi.run(:subtracted, fn result -> subtracted(result) end)
          |> Ecto.Multi.insert(
            :insert_all,
            add_struct(increase_filter),
@@ -44,8 +44,8 @@ defmodule Ask.RetryStat do
     end
   end
 
-  defp substracted(%{update_all: {0, _}}), do: {:error, nil}
-  defp substracted(_), do: {:ok, nil}
+  defp subtracted(%{update_all: {0, _}}), do: {:error, nil}
+  defp subtracted(_), do: {:ok, nil}
 
   defp add_struct(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}),
     do: %RetryStat{
@@ -56,7 +56,7 @@ defmodule Ask.RetryStat do
       survey_id: survey_id
     }
 
-  defp substract_query(%{
+  defp subtract_query(%{
          attempt: attempt,
          mode: mode,
          retry_time: retry_time,
@@ -82,7 +82,7 @@ defmodule Ask.RetryStat do
   end
 
   def subtract!(filter) do
-    case substract_query(filter)
+    case subtract_query(filter)
          |> Repo.update_all([]) do
       {0, _} ->
         {:error}
