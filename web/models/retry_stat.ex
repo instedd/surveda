@@ -127,5 +127,6 @@ defmodule Ask.RetryStat do
   defp count_stat(nil), do: 0
   defp count_stat(stat), do: stat.count
 
+  def retry_time(nil), do: nil
   def retry_time(timeout_at), do: Timex.format!(timeout_at, "%Y%0m%0d%H", :strftime)
 end
