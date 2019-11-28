@@ -1,7 +1,6 @@
 defmodule Ask.LogHelper do
   defmacro __using__(_) do
     quote do
-      import Mock
       import Ask.LogHelper
     end
   end
