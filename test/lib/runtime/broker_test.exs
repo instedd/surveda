@@ -1376,23 +1376,22 @@ defmodule Ask.BrokerTest do
   test "retry respondent (IVR mode)" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
     survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+    sequence_mode = ["ivr"]
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
+    assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _token]
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: sequence_mode})
 
     # Set for immediate timeout
-    %Respondent{mode: mode} = respondent = Repo.get(Respondent, respondent.id)
+    respondent = Repo.get(Respondent, respondent.id)
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: mode})
 
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
-
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: mode})
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: "", mode: mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: sequence_mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: "", mode: sequence_mode})
 
     # Set for immediate timeout
     respondent = Repo.get(Respondent, respondent.id)
@@ -1400,8 +1399,7 @@ defmodule Ask.BrokerTest do
 
     # Third poll, this time it should fail
     Broker.handle_info(:poll, nil)
-
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: "", mode: mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: "", mode: sequence_mode})
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
