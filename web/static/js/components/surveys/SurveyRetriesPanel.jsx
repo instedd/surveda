@@ -33,7 +33,7 @@ class SurveyRetriesPanel extends Component {
     // It doesn't feel right hardcoding 1 when the delay is 0
     // But we need this for when the delay is less than an hour
     // Otherwise, the hole graph crashes
-    return isFirstAttempt ? delay : delay || 1
+    return isFirstAttempt ? delay : (delay || 1)
   }
 
   flowForRetriesHistogram(flow) {
