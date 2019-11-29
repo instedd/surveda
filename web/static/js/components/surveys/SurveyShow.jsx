@@ -14,6 +14,7 @@ import { referenceColorClasses, referenceColors, referenceColorClassForUnassigne
 import classNames from 'classnames/bind'
 import { Stats, Forecasts, SuccessRate, QueueSize } from '@instedd/surveda-d3-components'
 import { translate } from 'react-i18next'
+import SurveyRetriesPanel from './SurveyRetriesPanel'
 
 type State = {
   responsive: boolean,
@@ -48,7 +49,8 @@ class SurveyShow extends Component<any, State> {
     missing: PropTypes.number,
     pending: PropTypes.number,
     multiplier: PropTypes.number,
-    needed: PropTypes.number
+    needed: PropTypes.number,
+    overviewType: PropTypes.string
   }
 
   constructor(props) {
@@ -70,6 +72,11 @@ class SurveyShow extends Component<any, State> {
     if (survey && survey.state == 'not_ready') {
       router.replace(routes.surveyEdit(survey.projectId, survey.id))
     }
+  }
+
+  showHistograms() {
+    const { survey, overviewType } = this.props
+    return overviewType == 'full' && survey && survey.state == 'running'
   }
 
   stopSurvey() {
@@ -127,7 +134,7 @@ class SurveyShow extends Component<any, State> {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t,
+    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t, projectId, surveyId,
       estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed } = this.props
     const { stopUnderstood } = this.state
 
@@ -280,6 +287,7 @@ class SurveyShow extends Component<any, State> {
               </div>
               <Stats data={stats} />
               <Forecasts data={forecasts} ceil={100} forecast={survey.state == 'running'} />
+              { this.showHistograms() ? <SurveyRetriesPanel projectId={projectId} surveyId={surveyId} target={target} /> : null }
               <div className='row' style={{ 'display': 'flex', 'alignItems': 'center', 'marginTop': '20px' }}>
                 <div style={{ 'width': '50%' }}>
                   <div className='header'>
@@ -478,7 +486,8 @@ const mapStateToProps = (state, ownProps) => {
     multiplier: surveyStats ? surveyStats.multiplier : null,
     missing: surveyStats ? surveyStats.missing : null,
     needed: surveyStats ? surveyStats.needed : null,
-    pending: surveyStats ? surveyStats.pending : null
+    pending: surveyStats ? surveyStats.pending : null,
+    overviewType: ownProps.params.overviewType
   })
 }
 

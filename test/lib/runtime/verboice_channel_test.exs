@@ -3,7 +3,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.DummySteps
   use Timex
 
-  alias Ask.{Respondent, BrokerStub, Survey}
+  alias Ask.{Respondent, BrokerStub, Survey, RetryStat}
   alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer}
 
   require Ask.Runtime.ReplyHelper
@@ -496,10 +496,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
 
-      respondent = Repo.get(Respondent, respondent.id)
+      %Respondent{mode: mode} = respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
+      assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: mode})
+
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
+
+      assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: mode})
 
       :ok = logger |> GenServer.stop
 
@@ -509,9 +513,13 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
 
-      respondent = Repo.get(Respondent, respondent.id)
+      %Respondent{ timeout_at: timeout_at} = respondent = Repo.get(Respondent, respondent.id)
       refute respondent.stats.total_call_time
       assert respondent.stats.total_call_time_seconds == 16
+
+      assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(timeout_at), mode: mode})
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
     end
   end
 

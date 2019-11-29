@@ -47,6 +47,8 @@ export default (
 
           <Route path=':surveyId' title={SurveyTitle}>
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
+            <Route path='overview' components={{ body: SurveyShow, tabs: SurveyTabs }} />
+            <Route path='overview/:overviewType' components={{ body: SurveyShow, tabs: SurveyTabs }} />
             <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
             <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
             <Route path='integrations' components={{ body: IntegrationIndex, tabs: SurveyTabs }} />

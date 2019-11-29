@@ -20,10 +20,14 @@ defmodule Ask.Survey do
     RespondentStats,
     ConfigHelper
   }
-  alias Ask.Runtime.{Broker, ChannelStatusServer}
+  alias Ask.Runtime.{
+    Broker,
+    ChannelStatusServer
+  }
   alias Ask.Ecto.Type.JSON
 
   @max_int 2147483647
+  @default_fallback_delay 10
 
   schema "surveys" do
     field :name, :string
@@ -258,11 +262,15 @@ defmodule Ask.Survey do
     parse_retries(retries)
   end
 
+  def default_fallback_delay do
+    @default_fallback_delay
+  end
+
   def fallback_delay(survey) do
     if survey.fallback_delay do
       parse_retry_item(survey.fallback_delay |> String.trim, nil)
     else
-      nil
+      @default_fallback_delay
     end
   end
 

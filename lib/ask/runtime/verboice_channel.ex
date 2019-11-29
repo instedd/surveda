@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
-  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
+  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats, RetryStat}
   alias Ask.Runtime.{Broker, Flow, Reply}
   alias Ask.Router.Helpers
   import Plug.Conn
@@ -241,12 +241,20 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> Repo.update!
   end
 
+  defp set_retry_stat_timeout(%Respondent{timeout_at: timeout_at, survey_id: survey_id, stats: stats, mode: mode}) do
+    attempts = stats |> Stats.attempts(:all)
+    RetryStat.transition!(%{attempt: attempts, mode: mode, retry_time: "", survey_id: survey_id},
+      %{attempt: attempts, mode: mode, retry_time: RetryStat.retry_time(timeout_at), survey_id: survey_id})
+  end
+
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
     |> update_call_time_seconds(call_duration)
     case status do
       s when s in ["failed", "busy", "no-answer", "expired"] ->
+        set_retry_stat_timeout(respondent)
+
         channel_failed(respondent, status, params)
       _ -> :ok
     end

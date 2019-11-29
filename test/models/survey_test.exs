@@ -37,6 +37,11 @@ defmodule Ask.SurveyTest do
     assert Survey.fallback_delay(survey) == 120
   end
 
+  test "returns default fallback delay" do
+    survey = %Survey{}
+    assert Survey.fallback_delay(survey) == Survey.default_fallback_delay()
+  end
+
   test "returns nil fallback delay on parse failure" do
     survey = %Survey{fallback_delay: "foo"}
     assert Survey.fallback_delay(survey) == nil
@@ -54,18 +59,18 @@ defmodule Ask.SurveyTest do
 
   test "survey has FLOIP package if it is running" do
     survey = %Survey{state: "running"}
-    assert length(survey |> Survey.packages) == 1
+    assert length(survey |> Survey.packages()) == 1
   end
 
   test "survey has FLOIP package if it is terminated" do
     survey = %Survey{state: "terminated"}
-    assert length(survey |> Survey.packages) == 1
+    assert length(survey |> Survey.packages()) == 1
   end
 
   test "survey does not have FLOIP package unless it is running or terminated" do
     # Because its underlying questionnaire may still change
     survey = %Survey{state: "foo"}
-    assert length(survey |> Survey.packages) == 0
+    assert length(survey |> Survey.packages()) == 0
   end
 
   test "changeset with description" do
@@ -90,7 +95,7 @@ defmodule Ask.SurveyTest do
     running_channels =
       Survey.running_channels()
       |> Enum.map(fn c -> c.id end)
-      |> Enum.sort
+      |> Enum.sort()
 
     assert running_channels == [Enum.at(channels, 1).id]
   end
@@ -107,7 +112,7 @@ defmodule Ask.SurveyTest do
     insert(:respondent_group_channel, channel: channel_3, respondent_group: group_2, mode: "sms")
     survey = survey |> Ask.Repo.preload(respondent_groups: [respondent_group_channels: :channel])
 
-    survey_channels_ids = Survey.survey_channels(survey) |> Enum.map(&(&1.id))
+    survey_channels_ids = Survey.survey_channels(survey) |> Enum.map(& &1.id)
 
     assert survey_channels_ids == [channel_1.id, channel_2.id, channel_3.id]
   end

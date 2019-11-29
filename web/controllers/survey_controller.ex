@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog}
+  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram}
   alias Ask.Runtime.Session
   alias Ecto.Multi
   alias Ask.SurveyCanceller
@@ -105,6 +105,17 @@ defmodule Ask.SurveyController do
     stats = survey |> Survey.stats
 
     render(conn, "stats.json", stats)
+  end
+
+  def retries_histograms(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    survey = conn
+    |> load_project(project_id)
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
+
+    retries_histograms = survey |> RetriesHistogram.survey_histograms()
+
+    render(conn, "retries_histograms.json", %{histograms: retries_histograms})
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
