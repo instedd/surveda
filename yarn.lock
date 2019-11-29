@@ -2,11 +2,12 @@
 # yarn lockfile v1
 
 
-"@instedd/surveda-d3-components@1.0.13":
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.13.tgz#5f232408cc1f75e92a591ac47b19cce89016cb7c"
+"@instedd/surveda-d3-components@1.0.14":
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.14.tgz#79c4bb6d12c6497550642c5bd12714f615a9da4f"
   dependencies:
     d3 "^4.0.0"
+    react-tooltip "^3.11.1"
 
 abab@^1.0.3:
   version "1.0.3"
@@ -5002,6 +5003,13 @@ react-tiny-virtual-list@^2.0.0:
   resolved "https://registry.yarnpkg.com/react-tiny-virtual-list/-/react-tiny-virtual-list-2.1.2.tgz#4d21ae11d5a984cde2276a9f5287d5fe47171000"
   dependencies:
     prop-types "^15.5.7"
+
+react-tooltip@^3.11.1:
+  version "3.11.1"
+  resolved "https://registry.yarnpkg.com/react-tooltip/-/react-tooltip-3.11.1.tgz#7b4ce48ed26a46e996662b19a2afebbfd483513b"
+  dependencies:
+    classnames "^2.2.5"
+    prop-types "^15.6.0"
 
 react-transition-group@^1.1.3, react-transition-group@^1.2.0:
   version "1.2.1"
