@@ -135,7 +135,7 @@ class SurveyShow extends Component<any, State> {
 
   render() {
     const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t, projectId, surveyId,
-      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed, overviewType, router } = this.props
+      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
@@ -143,15 +143,6 @@ class SurveyShow extends Component<any, State> {
     }
 
     const readOnly = !project || project.readOnly
-
-    const switchOverviewComponent = <div className='switch right'>
-      <label>
-        <i className={`material-icons lever-icon`}>fullscreen_exit</i>
-        <input type='checkbox' checked={overviewType == 'full'} onChange={() => router.push(routes.surveyOverview(survey.projectId, survey.id, overviewType))} />
-        <span className='lever' />
-        <i className={`material-icons lever-icon`}>fullscreen</i>
-      </label>
-    </div>
 
     let stopComponent = null
     let switchComponent = null
@@ -233,7 +224,6 @@ class SurveyShow extends Component<any, State> {
     return (
       <div className='cockpit'>
         <div className='row'>
-          {survey && survey.state == 'running' && switchOverviewComponent}
           {stopComponent}
           <Modal card ref='stopModal' id='stop_survey_modal'>
             <div className='modal-content'>
