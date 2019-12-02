@@ -23,29 +23,14 @@ defmodule Ask.RetryStat do
   end
 
   def transition!(subtract_filter, increase_filter) do
-    case Ecto.Multi.new()
-         |> Ecto.Multi.update_all(
-           :update_all,
-           subtract_query(subtract_filter),
-           []
-         )
-         |> Ecto.Multi.run(:subtracted, fn result -> subtracted(result) end)
-         |> Ecto.Multi.insert(
-           :insert_all,
-           add_struct(increase_filter),
-           on_conflict: [inc: [count: 1]]
-         )
-         |> Repo.transaction() do
-      {:ok, _} ->
-        {:ok}
-
-      _ ->
-        {:error}
+    case Repo.update_all(subtract_query(subtract_filter), []) do
+      {0, _} -> {:error}
+      _ -> Repo.insert(
+        add_struct(increase_filter),
+        on_conflict: [inc: [count: 1]]
+      ) |> Tuple.delete_at(1)
     end
   end
-
-  defp subtracted(%{update_all: {0, _}}), do: {:error, nil}
-  defp subtracted(_), do: {:ok, nil}
 
   defp add_struct(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}),
     do: %RetryStat{
