@@ -20,21 +20,25 @@ class SurveyWizardRetryAttempts extends Component {
     }
   }
 
-  editingRetryConfiguration(mode, e) {
-    const { t } = this.props
+  retryConfigurationChanged(mode, e) {
+    const { dispatch, t } = this.props
     const value = e.target.value
     switch (mode) {
       case 'sms':
         this.setState({smsRetryConfiguration: value})
+        dispatch(actions.changeSmsRetryConfiguration(value))
         break
       case 'ivr':
         this.setState({ivrRetryConfiguration: value})
+        dispatch(actions.changeIvrRetryConfiguration(value))
         break
       case 'mobileweb':
         this.setState({mobilewebRetryConfiguration: value})
+        dispatch(actions.changeMobileWebRetryConfiguration(value))
         break
       case 'fallbackDelay':
         this.setState({fallbackDelay: value})
+        dispatch(actions.changeFallbackDelay(value))
         break
       default:
         throw new Error(t('Unknown mode: {{mode}}', {mode}))
@@ -89,27 +93,6 @@ class SurveyWizardRetryAttempts extends Component {
           )}
         </ul>
       )
-    }
-  }
-
-  retryConfigurationChanged(mode, e) {
-    const { dispatch, t } = this.props
-    e.preventDefault(e)
-    switch (mode) {
-      case 'sms':
-        dispatch(actions.changeSmsRetryConfiguration(this.state.smsRetryConfiguration))
-        break
-      case 'ivr':
-        dispatch(actions.changeIvrRetryConfiguration(this.state.ivrRetryConfiguration))
-        break
-      case 'mobileweb':
-        dispatch(actions.changeMobileWebRetryConfiguration(this.state.mobilewebRetryConfiguration))
-        break
-      case 'fallbackDelay':
-        dispatch(actions.changeFallbackDelay(this.state.fallbackDelay))
-        break
-      default:
-        throw new Error(t('Unknown mode: {{mode}}', {mode}))
     }
   }
 
@@ -188,8 +171,7 @@ class SurveyWizardRetryAttempts extends Component {
               <InputWithLabel value={defaultValue || ''} label={t('Fallback delay')}>
                 <input
                   type='text'
-                  onChange={e => this.editingRetryConfiguration('fallbackDelay', e)}
-                  onBlur={e => this.retryConfigurationChanged('fallbackDelay', e)}
+                  onChange={e => this.retryConfigurationChanged('fallbackDelay', e)}
                   className={invalid ? 'invalid' : ''}
                   disabled={readOnly}
                 />
@@ -212,8 +194,7 @@ class SurveyWizardRetryAttempts extends Component {
                 <InputWithLabel id={`recontact-attempts${mode}`} value={defaultValue || ''} label={this.label(mode)} >
                   <input
                     type='text'
-                    onChange={e => this.editingRetryConfiguration(mode, e)}
-                    onBlur={e => this.retryConfigurationChanged(mode, e)}
+                    onChange={e => this.retryConfigurationChanged(mode, e)}
                     className={invalid ? 'invalid' : ''}
                     disabled={readOnly}
                     />
