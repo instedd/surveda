@@ -39,6 +39,7 @@ defmodule Ask.Respondent do
 
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
+    field :retry_stat_time, :string
     field :session, JSON
     field :mode, JSON
     field :effective_modes, JSON
@@ -63,7 +64,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order])
+    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_time])
     |> validate_required([:phone_number, :state])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
