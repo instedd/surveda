@@ -1,7 +1,7 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
   alias Ask.Ecto.Type.JSON
-  alias Ask.{Stats, Repo}
+  alias Ask.{Stats, Repo, Respondent, Survey}
 
   schema "respondents" do
     field :phone_number, :string
@@ -116,5 +116,14 @@ defmodule Ask.Respondent do
   end
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
+
+  def next_final_timeout(%Respondent{} = respondent, timeout, now) do
+    timeout_at = next_raw_timeout(timeout, now)
+    (respondent |> Repo.preload(:survey)).survey
+    |> Survey.next_available_date_time(timeout_at)
+  end
+
+  def next_raw_timeout(timeout, now), do:
+    Timex.shift(now, minutes: timeout)
 
 end
