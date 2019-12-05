@@ -18,7 +18,8 @@ defmodule Ask.Survey do
     FloipEndpoint,
     Folder,
     RespondentStats,
-    ConfigHelper
+    ConfigHelper,
+    SystemTime
   }
   alias Ask.Runtime.{
     Broker,
@@ -41,6 +42,7 @@ defmodule Ask.Survey do
     field :count_partial_results, :boolean, default: false
     field :schedule, Schedule, default: Schedule.default()
     field :started_at, Timex.Ecto.DateTime
+    field :ended_at, Timex.Ecto.DateTime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
     field :mobileweb_retry_configuration, :string
@@ -71,13 +73,22 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation])
+    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at])
     |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
     |> validate_from_less_than_to
     |> validate_number(:cutoff, greater_than_or_equal_to: 0, less_than: @max_int)
     |> translate_quotas
+    |> set_ended_at_in_terminated_survey
+  end
+
+  defp set_ended_at_in_terminated_survey(changeset) do
+    if get_field(changeset, :state) == "terminated" do
+      change(changeset, ended_at: SystemTime.time.now)
+    else
+      changeset
+    end
   end
 
   defp translate_quotas(changeset) do

@@ -79,6 +79,16 @@ class SurveyStatus extends PureComponent {
     return `${time} (${formatTimezone(survey.schedule.timezone)})`
   }
 
+  surveyRanDescription(survey) {
+    const formatDate = dateStr => dateformat(dateStr, 'yyyy-mm-dd')
+    let startDate = formatDate(survey.startedAt)
+    let endDate = formatDate(survey.endedAt)
+    if (startDate === endDate) {
+      return `Ran only on ${startDate}`
+    }
+    return `Ran from ${startDate} to ${endDate}`
+  }
+
   render() {
     const { survey, t } = this.props
 
@@ -123,22 +133,24 @@ class SurveyStatus extends PureComponent {
         }
 
       case 'terminated':
+        let description = this.surveyRanDescription(survey)
+        let status = state => t(`${state}. ${description}`, {context: 'survey'})
         switch (survey.exitCode) {
           case 0:
             icon = 'done'
-            text = t('Completed', {context: 'survey'})
+            text = status('Completed')
             break
 
           case 1:
             icon = 'error'
-            text = t('Cancelled', {context: 'survey'})
+            text = status('Cancelled')
             tooltip = survey.exitMessage
             break
 
           default:
             icon = 'error'
             color = 'text-error'
-            text = t('Failed', {context: 'survey'})
+            text = status('Failed')
             tooltip = survey.exitMessage
             break
         }

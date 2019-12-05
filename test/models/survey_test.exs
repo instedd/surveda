@@ -1,6 +1,7 @@
 defmodule Ask.SurveyTest do
   use Ask.ModelCase
   use Ask.TestHelpers
+  use Ask.MockTime
 
   alias Ask.Survey
 
@@ -77,6 +78,20 @@ defmodule Ask.SurveyTest do
     changeset = %Survey{} |> Survey.changeset(%{project_id: 5, description: "initial survey"})
     assert changeset.valid?
     assert changeset.changes.description == "initial survey"
+  end
+
+  test "default changeset does not set ended_at field" do
+    changeset = Survey.changeset(%Survey{})
+    assert is_nil(get_field(changeset, :ended_at))
+  end
+
+  test "changeset with terminated state has ended_at field set" do
+    test_now = Timex.now
+    Ask.TimeMock
+    |> expect(:now, fn () -> test_now end)
+
+    changeset = Survey.changeset(%Survey{state: "terminated"})
+    assert get_field(changeset, :ended_at) == test_now
   end
 
   test "enumerates channels of running surveys" do

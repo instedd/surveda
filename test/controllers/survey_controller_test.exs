@@ -30,13 +30,14 @@ defmodule Ask.SurveyControllerTest do
     test "lists surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       started_at = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-      survey = insert(:survey, project: project, started_at: started_at, description: "initial description")
+      ended_at = Timex.parse!("2016-01-15T10:00:00Z", "{ISO:Extended}")
+      survey = insert(:survey, project: project, started_at: started_at, ended_at: ended_at, description: "initial description")
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :index, project.id)
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "ended_at" => ended_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -49,7 +50,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "running")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -63,7 +64,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id)
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => folder.id}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "ended_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => folder.id}
       ]
     end
 
@@ -76,7 +77,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, state: "completed")
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "terminated", "locked" => false, "exit_code" => 0, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -89,7 +90,7 @@ defmodule Ask.SurveyControllerTest do
       conn = get conn, project_survey_path(conn, :index, project.id, %{"since" => Timex.format!(Timex.shift(Timex.now, hours: 2), "%FT%T%:z", :strftime)})
 
       assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "running", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => DateTime.to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => nil}
       ]
     end
 
@@ -136,7 +137,7 @@ defmodule Ask.SurveyControllerTest do
   describe "show" do
     test "shows chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, description: "initial survey")
+      survey = insert(:survey, project: project, description: "initial survey", state: "terminated", started_at: Timex.now, ended_at: Timex.shift(Timex.now, days: 1))
       survey = Survey |> Repo.get(survey.id)
 
       conn = get conn, project_survey_path(conn, :show, project, survey)
@@ -147,9 +148,10 @@ defmodule Ask.SurveyControllerTest do
         "mode" => survey.mode,
         "project_id" => survey.project_id,
         "questionnaire_ids" => [],
+        "questionnaires" => %{},
         "cutoff" => nil,
         "count_partial_results" => false,
-        "state" => "not_ready",
+        "state" => "terminated",
         "locked" => false,
         "exit_code" => nil,
         "exit_message" => nil,
@@ -162,7 +164,8 @@ defmodule Ask.SurveyControllerTest do
           "timezone" => "Etc/UTC",
           "blocked_days" => []
         },
-        "started_at" => nil,
+        "started_at" => Timex.format!(survey.started_at, "%FT%T%:z", :strftime),
+        "ended_at" => Timex.format!(survey.ended_at, "%FT%T%:z", :strftime),
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
@@ -212,6 +215,7 @@ defmodule Ask.SurveyControllerTest do
           "blocked_days" => []
         },
         "started_at" => nil,
+        "ended_at" => nil,
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
@@ -282,6 +286,7 @@ defmodule Ask.SurveyControllerTest do
           "blocked_days" => []
         },
         "started_at" => nil,
+        "ended_at" => nil,
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
@@ -348,6 +353,7 @@ defmodule Ask.SurveyControllerTest do
           "blocked_days" => []
         },
         "started_at" => nil,
+        "ended_at" => nil,
         "ivr_retry_configuration" => nil,
         "sms_retry_configuration" => nil,
         "mobileweb_retry_configuration" => nil,
@@ -416,6 +422,7 @@ defmodule Ask.SurveyControllerTest do
         get conn, project_survey_path(conn, :show, survey.project, survey)
       end
     end
+
   end
 
   describe "stats" do

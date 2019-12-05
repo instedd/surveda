@@ -36,8 +36,6 @@ defmodule Ask.SurveyView do
     }
   end
   def render("survey.json", %{survey: survey}) do
-    started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: nil
-
     %{id: survey.id,
       name: survey.name,
       description: survey.description,
@@ -49,7 +47,8 @@ defmodule Ask.SurveyView do
       exit_message: survey.exit_message,
       cutoff: survey.cutoff,
       schedule: survey.schedule,
-      started_at: started_at,
+      started_at: format_date(survey.started_at),
+      ended_at: format_date(survey.ended_at),
       next_schedule_time: next_schedule_time(survey),
       updated_at: survey.updated_at,
       down_channels: survey.down_channels,
@@ -57,8 +56,6 @@ defmodule Ask.SurveyView do
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
-    started_at = if (survey.started_at), do: survey.started_at |> Timex.format!("%FT%T%:z", :strftime), else: nil
-
     map = %{id: survey.id,
       name: survey.name,
       description: survey.description,
@@ -72,7 +69,8 @@ defmodule Ask.SurveyView do
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
       schedule: survey.schedule,
-      started_at: started_at,
+      started_at: format_date(survey.started_at),
+      ended_at: format_date(survey.ended_at),
       updated_at: survey.updated_at,
       sms_retry_configuration: survey.sms_retry_configuration,
       ivr_retry_configuration: survey.ivr_retry_configuration,
@@ -117,6 +115,8 @@ defmodule Ask.SurveyView do
       "url" => short_link_url(Endpoint, :access, link.hash)
     }
   end
+
+  defp format_date(date), do: if(date, do: date |> Timex.format!("%FT%T%:z", :strftime), else: nil)
 
   defp questionnaire_ids(survey = %Ask.Survey{}) do
     (survey

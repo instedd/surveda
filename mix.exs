@@ -43,7 +43,7 @@ defmodule Ask.Mixfile do
       {:ex_machina, "~> 1.0", only: :test},
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
-      {:mock, "~> 0.1.1", only: :test},
+      {:mox, "~> 0.5", only: :test},
       {:timex, "~> 3.0", override: true},
       {:timex_ecto, "~> 3.0", override: true},
       {:sentry, "~> 6.0"},
