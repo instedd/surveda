@@ -513,12 +513,12 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert enqueueing.action_data == "Enqueueing call"
       assert enqueueing.action_type == "contact"
 
-      %Respondent{ timeout_at: timeout_at} = respondent = Repo.get(Respondent, respondent.id)
+      respondent = Repo.get(Respondent, respondent.id)
       refute respondent.stats.total_call_time
       assert respondent.stats.total_call_time_seconds == 16
 
       assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-      assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(timeout_at), mode: mode})
+      assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: respondent.retry_stat_time, mode: mode})
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
     end

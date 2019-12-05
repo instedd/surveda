@@ -457,7 +457,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     timeout_at = Timex.now |> Timex.shift(hours: -1)
-    Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
     RetryStat.transition!(natural_stat_filter, forced_stat_filter)
 
@@ -476,7 +476,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     timeout_at = Timex.now |> Timex.shift(hours: -1)
-    Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
     RetryStat.transition!(natural_stat_filter, forced_stat_filter)
 
@@ -1461,7 +1461,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     timeout_at = Timex.now |> Timex.shift(hours: -1)
-    Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
     RetryStat.transition!(natural_stat_filter, forced_stat_filter)
 
@@ -1480,7 +1480,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     timeout_at = Timex.now |> Timex.shift(hours: -1)
-    Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
     RetryStat.transition!(natural_stat_filter, forced_stat_filter)
 
@@ -1498,7 +1498,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     timeout_at = Timex.now |> Timex.shift(hours: -1)
-    Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
+    Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
     RetryStat.transition!(natural_stat_filter, forced_stat_filter)
 
