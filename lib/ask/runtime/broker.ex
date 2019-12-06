@@ -497,8 +497,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:rejected, session, timeout}) do
-    timeout_at = Respondent.next_final_timeout(respondent, timeout, Timex.now)
-    retry_stat_time = Respondent.next_raw_timeout(timeout, Timex.now) |> RetryStat.retry_time()
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, Timex.now)
+    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, Timex.now) |> RetryStat.retry_time()
     respondent
       |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: timeout_at, retry_stat_time: retry_stat_time})
       |> Repo.update!
@@ -533,16 +533,16 @@ defmodule Ask.Runtime.Broker do
         effective_modes
       end
 
-    timeout_at = Respondent.next_final_timeout(respondent, timeout, now)
-    retry_stat_time = Respondent.next_raw_timeout(timeout, now) |> RetryStat.retry_time()
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, now)
+    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time()
     respondent
     |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, retry_stat_time: retry_stat_time, language: session.flow.language, effective_modes: effective_modes})
     |> Repo.update!
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition, _) do
-    timeout_at = Respondent.next_final_timeout(respondent, timeout, Timex.now)
-    retry_stat_time = Respondent.next_raw_timeout(timeout, Timex.now) |> RetryStat.retry_time()
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, Timex.now)
+    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, Timex.now) |> RetryStat.retry_time()
     update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at, disposition, "active", retry_stat_time)
   end
 
@@ -642,12 +642,12 @@ defmodule Ask.Runtime.Broker do
   defp increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}, current_mode: %Ask.Runtime.IVRMode{}}, _, _), do:
     RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "", survey_id: survey_id})
   defp increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}}, timeout, now), do:
-    RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_raw_timeout(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id})
+    RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id})
   defp increase_retry_stat(%Session{respondent: %Respondent{timeout_at: nil}, current_mode: %Ask.Runtime.SMSMode{}}, _, _), do: nil
   defp increase_retry_stat(%Session{respondent: %Respondent{mode: mode, stats: stats, survey_id: survey_id, retry_stat_time: retry_stat_time}, current_mode: %Ask.Runtime.SMSMode{}}, timeout, now), do:
     RetryStat.transition!(
       %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, survey_id: survey_id},
-      %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_raw_timeout(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id}
+      %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id}
     )
   defp increase_retry_stat(_, _, _), do: nil
 

@@ -61,27 +61,27 @@ defmodule Ask.RespondentTest do
     assert respondent.stats |> Stats.add_sent_sms |> Stats.total_sent_sms == 1
   end
 
-  test "next raw time out equals next final timeout when the survey is active" do
+  test "next_timeout_lowerbound equals next_actual_timeout when the survey is active" do
     survey = insert(:survey, %{schedule: Schedule.always()})
     respondent = insert(:respondent, survey: survey)
     {:ok, now, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
     {:ok, expected_timeout, _} = DateTime.from_iso8601("2000-01-01T02:00:00Z")
     timeout = 120
 
-    assert Respondent.next_raw_timeout(timeout, now) == expected_timeout
-    assert Respondent.next_final_timeout(respondent, timeout, now) == expected_timeout
+    assert Respondent.next_timeout_lowerbound(timeout, now) == expected_timeout
+    assert Respondent.next_actual_timeout(respondent, timeout, now) == expected_timeout
   end
 
-  test "next raw time out differs from next final timeout when the survey is inactive" do
+  test "next_timeout_lowerbound differs from next_actual_timeout when the survey is inactive" do
     survey = insert(:survey, %{schedule: Schedule.default()})
     respondent = insert(:respondent, survey: survey)
     {:ok, now, _} = DateTime.from_iso8601("2019-10-02T00:00:00Z")
-    {:ok, expected_raw_timeout, _} = DateTime.from_iso8601("2019-10-02T02:00:00Z")
-    {:ok, expected_final_timeout, _} = DateTime.from_iso8601("2019-10-02T09:00:00Z")
+    {:ok, expected_timeout_lowerbound, _} = DateTime.from_iso8601("2019-10-02T02:00:00Z")
+    {:ok, expected_actual_timeout, _} = DateTime.from_iso8601("2019-10-02T09:00:00Z")
     timeout = 120
 
-    assert Respondent.next_raw_timeout(timeout, now) == expected_raw_timeout
-    assert Respondent.next_final_timeout(respondent, timeout, now) == expected_final_timeout
+    assert Respondent.next_timeout_lowerbound(timeout, now) == expected_timeout_lowerbound
+    assert Respondent.next_actual_timeout(respondent, timeout, now) == expected_actual_timeout
   end
 
 end

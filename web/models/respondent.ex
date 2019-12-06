@@ -118,13 +118,16 @@ defmodule Ask.Respondent do
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
 
-  def next_final_timeout(%Respondent{} = respondent, timeout, now) do
-    timeout_at = next_raw_timeout(timeout, now)
+  @doc """
+  Computes the date-time on which the respondent should be retried or stalled given the timeout and time-window availability
+  """
+  def next_actual_timeout(%Respondent{} = respondent, timeout, now) do
+    timeout_at = next_timeout_lowerbound(timeout, now)
     (respondent |> Repo.preload(:survey)).survey
     |> Survey.next_available_date_time(timeout_at)
   end
 
-  def next_raw_timeout(timeout, now), do:
+  def next_timeout_lowerbound(timeout, now), do:
     Timex.shift(now, minutes: timeout)
 
 end
