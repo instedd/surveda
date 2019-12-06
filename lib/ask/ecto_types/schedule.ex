@@ -100,6 +100,15 @@ defmodule Ask.Schedule do
       && Time.compare(end_time, time) != :lt
   end
 
+  def business_day(), do:
+    %Schedule{
+      day_of_week: %DayOfWeek{sun: false, mon: true, tue: true, wed: true, thu: true, fri: true, sat: false},
+      start_time: ~T[09:00:00],
+      end_time: ~T[18:00:00],
+      blocked_days: [],
+      timezone: default_timezone()
+    }
+
   def default() do
     %Schedule{
       day_of_week: DayOfWeek.never(),

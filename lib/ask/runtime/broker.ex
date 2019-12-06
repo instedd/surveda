@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics, RetryStat, Stats}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics, RetryStat, Stats, SystemTime}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer}
   alias Ask.QuotaBucket
 
@@ -46,7 +46,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   def handle_info(:poll, state) do
-    handle_info(:poll, state, Timex.now)
+    handle_info(:poll, state, SystemTime.time.now)
   end
 
   def handle_info(_, state) do
@@ -67,7 +67,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp mark_stalled_for_eight_hours_respondents_as_failed do
-    eight_hours_ago = Timex.now |> Timex.shift(hours: -8)
+    eight_hours_ago = SystemTime.time.now |> Timex.shift(hours: -8)
 
     (from r in Respondent,
       where: r.state == "stalled",
@@ -99,7 +99,7 @@ defmodule Ask.Runtime.Broker do
         |> Session.load
         |> Session.contact_attempt_expired
 
-      update_respondent(respondent, response, nil, Timex.now)
+      update_respondent(respondent, response, nil, SystemTime.time.now)
     end
     :ok
   end
@@ -211,7 +211,7 @@ defmodule Ask.Runtime.Broker do
     Repo.transaction(fn ->
       try do
         subtract_retry_stat(respondent)
-        handle_session_step(Session.timeout(session), Timex.now)
+        handle_session_step(Session.timeout(session), SystemTime.time.now)
       rescue
         e in Ecto.StaleEntryError ->
           Logger.error(inspect e)
@@ -250,7 +250,7 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = survey |> Survey.fallback_delay()
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
-    handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results), Timex.now)
+    handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results), SystemTime.time.now)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
@@ -296,7 +296,7 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  def sync_step(respondent, reply, mode \\ nil, now \\ Timex.now) do
+  def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now) do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
     sync_step_internal(session, reply, session_mode, now)
@@ -326,7 +326,7 @@ defmodule Ask.Runtime.Broker do
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
   def sync_step_internal(session, reply) do
-    sync_step_internal(session, reply, session.current_mode, Timex.now)
+    sync_step_internal(session, reply, session.current_mode, SystemTime.time.now)
   end
 
   def sync_step_internal(_, _, :invalid_mode, _) do
@@ -424,7 +424,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp handle_session_step({:hangup, session, reply, timeout, respondent}, _) do
-    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply), Timex.now)
+    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply), SystemTime.time.now)
     :end
   end
 
@@ -497,8 +497,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:rejected, session, timeout}) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, Timex.now)
-    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, Timex.now) |> RetryStat.retry_time()
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
+    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, SystemTime.time.now) |> RetryStat.retry_time()
     respondent
       |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: timeout_at, retry_stat_time: retry_stat_time})
       |> Repo.update!
@@ -541,8 +541,8 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition, _) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, Timex.now)
-    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, Timex.now) |> RetryStat.retry_time()
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
+    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, SystemTime.time.now) |> RetryStat.retry_time()
     update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at, disposition, "active", retry_stat_time)
   end
 
@@ -568,7 +568,7 @@ defmodule Ask.Runtime.Broker do
     end
 
     respondent
-    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: Timex.now, timeout_at: nil, retry_stat_time: ""})
+    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil, retry_stat_time: ""})
     |> Repo.update!
     |> RespondentDispositionHistory.create(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
@@ -583,7 +583,7 @@ defmodule Ask.Runtime.Broker do
       |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
       |> update_quota_bucket(old_disposition, session.count_partial_results)
     else
-      update_respondent(respondent, {:ok, session, timeout}, nil, Timex.now)
+      update_respondent(respondent, {:ok, session, timeout}, nil, SystemTime.time.now)
     end
   end
 

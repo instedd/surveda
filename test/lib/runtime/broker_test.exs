@@ -2,6 +2,7 @@ defmodule Ask.BrokerTest do
   use Ask.ModelCase
   use Ask.DummySteps
   use Timex
+  use Ask.MockTime
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
   alias Ask.Router.Helpers, as: Routes
@@ -497,6 +498,78 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
 
     :ok = broker |> GenServer.stop
+  end
+
+  @tag :time_mock
+  test "retry respondent (SMS mode) with inactivity periods" do
+    [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "sms", Schedule.business_day(), "3h")
+    survey |> Survey.changeset(%{sms_retry_configuration: "2h"}) |> Repo.update
+    sequence_mode = ["sms"]
+
+    {:ok, edge_time, _} = DateTime.from_iso8601("2019-12-06T17:00:00Z")
+    mock_time(edge_time)
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
+    assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    # Assert activation
+    expected_retry_stat_time = "2019120619"
+    {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T09:00:00Z")
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    refute RetryStat.retry_time(expected_timeout_at) == expected_retry_stat_time
+    assert respondent.timeout_at == expected_timeout_at
+    assert respondent.retry_stat_time == expected_retry_stat_time
+    assert respondent.stats.attempts["sms"] == 1
+    retry_stat_filter = %{attempt: 1, retry_time: expected_retry_stat_time, mode: sequence_mode, survey_id: survey.id}
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
+
+    # Set for immediate timeout
+    {:ok, timeout_time, _} = DateTime.from_iso8601("2019-12-09T09:00:00Z")
+    mock_time(timeout_time)
+
+    # Second poll, retry the question
+    Broker.handle_info(:poll, nil)
+    refute_received [:setup, _, _, _, _]
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    # Assert first retry
+    expected_retry_stat_time = "2019120912"
+    {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    assert RetryStat.retry_time(expected_timeout_at) == expected_retry_stat_time
+    assert respondent.timeout_at == expected_timeout_at
+    assert respondent.retry_stat_time == expected_retry_stat_time
+
+    assert respondent.stats.attempts["sms"] == 2
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
+    retry_stat_filter = %{attempt: 2, retry_time: expected_retry_stat_time, mode: sequence_mode, survey_id: survey.id}
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
+
+    # Set for immediate timeout
+    {:ok, timeout_time, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
+    mock_time(timeout_time)
+
+    # Third poll, this time it should stall
+    Broker.handle_info(:poll, nil)
+
+    # Assert is stalled
+    respondent = Repo.get(Respondent, respondent.id)
+    assert respondent.state == "stalled"
+    assert respondent.stats.attempts["sms"] == 2
+    refute respondent.timeout_at
+    refute respondent.retry_stat_time
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
+    survey = Repo.get(Survey, survey.id)
+    assert survey.state == "running"
+  end
+
+  defp mock_time(time) do
+    Ask.TimeMock
+    |> stub(:now, fn () -> time end)
   end
 
   test "respondent answers after stalled with active survey" do
@@ -3962,7 +4035,7 @@ defmodule Ask.BrokerTest do
     :ok = channel_status_server |> GenServer.stop
   end
 
-  def create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms") do
+  defp create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms", schedule \\ Schedule.always(), fallback_delay \\ "10m") do
     test_channel = TestChannel.new(false, mode == "sms")
 
     channel_type = case mode do
@@ -3972,7 +4045,7 @@ defmodule Ask.BrokerTest do
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: channel_type)
     quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
-    survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [[mode]]})
+    survey = insert(:survey, %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay})
     group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
     RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Repo.insert
