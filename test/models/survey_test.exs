@@ -85,6 +85,7 @@ defmodule Ask.SurveyTest do
     assert is_nil(get_field(changeset, :ended_at))
   end
 
+  @tag :time_mock
   test "changeset with terminated state has ended_at field set" do
     test_now = Timex.now
     Ask.TimeMock
