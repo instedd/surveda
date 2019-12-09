@@ -127,6 +127,9 @@ defmodule Ask.Respondent do
     |> Survey.next_available_date_time(timeout_at)
   end
 
+  @doc """
+  Computes the date-time on which the respondent would be retried or stalled, ignoring their survey's inactivity windows (ie, if it Schedule was to always run)
+  """
   def next_timeout_lowerbound(timeout, now), do:
     Timex.shift(now, minutes: timeout)
 
