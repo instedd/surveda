@@ -1,4 +1,4 @@
-defmodule Ask.Repo.Migrations.AddSectionOrderToRespondent do
+defmodule Ask.Repo.Migrations.AddRetryStatTimeToRespondent do
   use Ecto.Migration
 
   def change do
