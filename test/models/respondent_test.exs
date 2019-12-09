@@ -68,8 +68,10 @@ defmodule Ask.RespondentTest do
     {:ok, expected_timeout, _} = DateTime.from_iso8601("2000-01-01T02:00:00Z")
     timeout = 120
 
-    assert Respondent.next_timeout_lowerbound(timeout, now) == expected_timeout
-    assert Respondent.next_actual_timeout(respondent, timeout, now) == expected_timeout
+    result = Respondent.next_timeout_lowerbound(timeout, now)
+
+    assert result == assert Respondent.next_actual_timeout(respondent, timeout, now)
+    assert result == expected_timeout
   end
 
   test "next_timeout_lowerbound differs from next_actual_timeout when the survey is inactive" do
@@ -80,6 +82,7 @@ defmodule Ask.RespondentTest do
     {:ok, expected_actual_timeout, _} = DateTime.from_iso8601("2019-10-02T09:00:00Z")
     timeout = 120
 
+    refute Respondent.next_timeout_lowerbound(timeout, now) == Respondent.next_actual_timeout(respondent, timeout, now)
     assert Respondent.next_timeout_lowerbound(timeout, now) == expected_timeout_lowerbound
     assert Respondent.next_actual_timeout(respondent, timeout, now) == expected_actual_timeout
   end
