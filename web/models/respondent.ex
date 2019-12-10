@@ -1,7 +1,7 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
   alias Ask.Ecto.Type.JSON
-  alias Ask.{Stats, Repo}
+  alias Ask.{Stats, Repo, Respondent, Survey}
 
   schema "respondents" do
     field :phone_number, :string
@@ -39,6 +39,7 @@ defmodule Ask.Respondent do
 
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
+    field :retry_stat_time, :string
     field :session, JSON
     field :mode, JSON
     field :effective_modes, JSON
@@ -63,7 +64,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order])
+    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_time])
     |> validate_required([:phone_number, :state])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
@@ -116,5 +117,20 @@ defmodule Ask.Respondent do
   end
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
+
+  @doc """
+  Computes the date-time on which the respondent should be retried or stalled given the timeout and time-window availability
+  """
+  def next_actual_timeout(%Respondent{} = respondent, timeout, now) do
+    timeout_at = next_timeout_lowerbound(timeout, now)
+    (respondent |> Repo.preload(:survey)).survey
+    |> Survey.next_available_date_time(timeout_at)
+  end
+
+  @doc """
+  Computes the date-time on which the respondent would be retried or stalled, ignoring their survey's inactivity windows (ie, if it Schedule was to always run)
+  """
+  def next_timeout_lowerbound(timeout, now), do:
+    Timex.shift(now, minutes: timeout)
 
 end
