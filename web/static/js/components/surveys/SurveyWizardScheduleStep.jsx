@@ -126,7 +126,7 @@ class SurveyWizardScheduleStep extends Component {
         }
         <div className='row'>
           <div className='col s12 m6'>
-            <TimezoneAutocomplete selectedTz={survey.schedule.timezone} />
+            <TimezoneAutocomplete selectedTz={survey.schedule.timezone} readOnly={readOnly} />
           </div>
         </div>
         <SurveyWizardRetryAttempts readOnly={readOnly} />
