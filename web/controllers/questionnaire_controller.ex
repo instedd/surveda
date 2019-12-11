@@ -177,27 +177,18 @@ defmodule Ask.QuestionnaireController do
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
     audio_ids = collect_steps_audio_ids(questionnaire.quota_completed_steps, audio_ids)
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
-
-    audios =
-      if length(audio_ids) == 0 do
-        []
-      else
-        (from a in Audio, where: a.uuid in ^audio_ids) |> Repo.all
-      end
-
-    audio_files = audios |> Enum.map(fn audio ->
-      %{
-        "uuid" => audio.uuid,
-        "filename" => audio.filename,
-        "source" => audio.source,
-        "duration" => audio.duration,
-      }
-    end)
-    files = audios |> Enum.map(fn audio ->
-      {
-        to_charlist("audios/#{audio.uuid}"),
-        audio.data,
-      }
+    audio_files = (from a in Audio, where: a.uuid in ^audio_ids) |> Repo.stream
+    audio_files_data = %{}
+    audio_entries = Stream.map(audio_files, fn audio ->
+      Stream.into(audio, audio_files_data, fn audio ->
+          %{
+            "uuid" => audio.uuid,
+            "filename" => audio.filename,
+            "source" => audio.source,
+            "duration" => audio.duration,
+          }
+        end)
+      Zstream.entry("audios/" <> audio.filename, [audio.data])
     end)
 
     manifest = %{
@@ -208,18 +199,30 @@ defmodule Ask.QuestionnaireController do
       settings: questionnaire.settings,
       languages: questionnaire.languages,
       default_language: questionnaire.default_language,
-      audio_files: audio_files,
+      audio_files: audio_files_data
     }
-
     {:ok, json} = Poison.encode(manifest)
+    json_entry = Stream.map([json], fn json ->
+      Zstream.entry("manifest.json", [json])
+    end)
 
-    files = [{'manifest.json', json}, {'audios/', ""} | files]
-    {:ok, {'mem', data}} = :zip.create('mem', files, [:memory])
+    zip_entries = Stream.concat(audio_entries, json_entry)
+    conn = conn
+           |> put_resp_content_type("application/octet-stream")
+           |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}.zip")
+           |> send_chunked(200)
 
-    conn
-    |> put_resp_content_type("application/octet-stream")
-    |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}.zip")
-    |> send_resp(200, data)
+    Repo.transaction(fn ->
+      zip_file = Zstream.zip(zip_entries)
+      zip_file|> Enum.reduce_while(conn, fn (chunk, conn) ->
+        case Plug.Conn.chunk(conn, chunk) do
+          {:ok, conn} ->
+            {:cont, conn}
+          {:error, :closed} ->
+            {:halt, conn}
+        end
+      end)
+    end)|> (fn {:ok, conn} -> conn end).()
   end
 
   def import_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id, "file" => file}) do

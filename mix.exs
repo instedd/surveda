@@ -62,7 +62,8 @@ defmodule Ask.Mixfile do
       {:bypass, "~> 0.8", only: :test},
       {:trailing_format_plug, "~> 0.0.7"},
       {:plug_cowboy, "~> 1.0"},
-      {:gen_stage, "~> 0.14"}
+      {:gen_stage, "~> 0.14"},
+      {:zstream, "~> 0.2.0"}
    ]
   end
 
