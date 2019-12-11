@@ -2,10 +2,10 @@ import * as actions from '../../actions/survey'
 import * as uiActions from '../../actions/ui'
 import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
-import TimezoneDropdown from '../timezones/TimezoneDropdown'
 import { TimeDropdown, DatePicker, dayLabel } from '../ui'
 import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
 import { translate } from 'react-i18next'
+import TimezoneAutocomplete from '../timezones/TimezoneAutocomplete'
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
@@ -125,7 +125,9 @@ class SurveyWizardScheduleStep extends Component {
           : ''
         }
         <div className='row'>
-          <TimezoneDropdown selectedTz={survey.schedule.timezone} onChange={this.updateTimezone} readOnly={readOnly} />
+          <div className='col s12 m6'>
+            <TimezoneAutocomplete selectedTz={survey.schedule.timezone} readOnly={readOnly} />
+          </div>
         </div>
         <SurveyWizardRetryAttempts readOnly={readOnly} />
       </div>
