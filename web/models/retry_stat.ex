@@ -22,6 +22,9 @@ defmodule Ask.RetryStat do
     |> unique_constraint(:retry_stats_mode_attempt_retry_time_survey_id_index)
   end
 
+  def transition!(%{retry_time: nil}, _), do: {:error}
+  def transition!(_, %{retry_time: nil}), do: {:error}
+
   def transition!(subtract_filter, increase_filter) do
     case Repo.update_all(subtract_query(subtract_filter), []) do
       {0, _} -> {:error}
@@ -56,6 +59,8 @@ defmodule Ask.RetryStat do
            update: [inc: [count: -1]]
          )
 
+  def add!(%{retry_time: nil}), do: {:error}
+
   def add!(filter) do
     {:ok, _} =
       Repo.insert(
@@ -65,6 +70,8 @@ defmodule Ask.RetryStat do
 
     {:ok}
   end
+
+  def subtract!(%{retry_time: nil}), do: {:error}
 
   def subtract!(filter) do
     case subtract_query(filter)
@@ -85,6 +92,8 @@ defmodule Ask.RetryStat do
           where: rs.count > 0 and rs.survey_id == ^survey_id
         )
       )
+
+  def count(_stats, %{retry_time: nil}), do: 0
 
   def count(stats, %{overdue: true} = filter), do: stats |> count_overdue(filter)
 

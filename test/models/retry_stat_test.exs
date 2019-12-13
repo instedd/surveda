@@ -165,6 +165,17 @@ defmodule Ask.RetryStatTest do
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
+  test "errors when retry_time is nil in filter" do
+    survey = insert(:survey)
+    filter = %{attempt: 1, mode: ["sms"], retry_time: nil, survey_id: survey.id}
+
+    assert {:error} == RetryStat.add!(filter)
+    assert 0 == RetryStat.count("Any", filter)
+    assert {:error} = RetryStat.subtract!(filter)
+    assert {:error} = RetryStat.transition!(filter, "Any")
+    assert {:error} = RetryStat.transition!("Any", filter)
+  end
+
   test "increases stat concurrently" do
     survey = insert(:survey)
     filter = %{attempt: 1, mode: ["sms", "ivr"], retry_time: "2019101615", survey_id: survey.id}
