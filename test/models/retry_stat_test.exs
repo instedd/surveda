@@ -165,15 +165,42 @@ defmodule Ask.RetryStatTest do
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
-  test "errors when retry_time is nil in filter" do
+  test "errors when a required field is missing in filter" do
+    %{retry_time: valid_retry_time, survey_id: valid_survey_id, mode: valid_mode, attempt: valid_attempt} = @valid_attrs
     survey = insert(:survey)
-    filter = %{attempt: 1, mode: ["sms"], retry_time: nil, survey_id: survey.id}
+    valid_filter = Map.delete(@valid_attrs, :count) |> Map.put(:survey_id, survey.id)
 
+    assert_valid_filter(valid_filter)
+
+    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: nil, survey_id: valid_survey_id}, valid_filter)
+    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: "", survey_id: valid_survey_id}, valid_filter)
+    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, survey_id: valid_survey_id}, valid_filter)
+
+    # filter by survey doesn't apply in count
+    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: valid_retry_time, survey_id: nil}, valid_filter, expected_count: 1)
+    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: valid_retry_time}, valid_filter, expected_count: 1)
+
+    assert_invalid_filter(%{attempt: valid_attempt, mode: nil, retry_time: valid_retry_time, survey_id: valid_survey_id}, valid_filter)
+    assert_invalid_filter(%{attempt: valid_attempt, retry_time: valid_retry_time, survey_id: valid_survey_id}, valid_filter)
+
+    assert_invalid_filter(%{attempt: nil, mode: valid_mode, retry_time: valid_retry_time, survey_id: valid_survey_id}, valid_filter)
+    assert_invalid_filter(%{mode: valid_mode, retry_time: valid_retry_time, survey_id: valid_survey_id}, valid_filter)
+  end
+
+  defp assert_invalid_filter(filter, valid_filter, options \\ []) do
     assert {:error} == RetryStat.add!(filter)
-    assert 0 == RetryStat.count("Any", filter)
     assert {:error} = RetryStat.subtract!(filter)
-    assert {:error} = RetryStat.transition!(filter, "Any")
-    assert {:error} = RetryStat.transition!("Any", filter)
+    assert {:error} = RetryStat.transition!(filter, valid_filter)
+    assert {:error} = RetryStat.transition!(valid_filter, filter)
+    assert Keyword.get(options, :expected_count, 0) == RetryStat.count(RetryStat.stats(valid_filter), filter)
+  end
+
+  defp assert_valid_filter(filter) do
+    assert {:ok} == RetryStat.add!(filter)
+    assert 1 == RetryStat.count(RetryStat.stats(filter), filter)
+    assert {:ok} = RetryStat.subtract!(filter)
+    assert {:ok} == RetryStat.add!(filter)
+    assert {:ok} = RetryStat.transition!(filter, filter)
   end
 
   test "increases stat concurrently" do

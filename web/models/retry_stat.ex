@@ -114,6 +114,7 @@ defmodule Ask.RetryStat do
       )
 
   def count(stats, filter) do
+    # the stats are already filtered by survey
     case is_valid_filter(Map.put(filter, :survey_id, 1)) do
       true ->
         stats |> count_valid(filter)
