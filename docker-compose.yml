@@ -40,7 +40,6 @@ services:
       context: ./
       dockerfile: Dockerfile.webpack
     command: /bin/sh -c 'yarn install && yarn run watch'
-    restart: always
     working_dir: /app
     stop_signal: SIGKILL
     volumes:
