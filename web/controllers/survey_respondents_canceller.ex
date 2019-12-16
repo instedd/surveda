@@ -27,12 +27,11 @@ defmodule Ask.RespondentsCancellerProducer do
                  |> Repo.all
 
     case survey_ids do
-      [] -> GenStage.stop(self(), :normal)
-      _-> :ok
+      [] -> :ignore
+      _->
+        state = %{survey_ids: survey_ids, last_updated_respondent_id: 0}
+        {:producer, state}
     end
-    state = %{survey_ids: survey_ids, last_updated_respondent_id: 0}
-
-    {:producer, state}
   end
 
   def handle_demand(_demand, state) do
@@ -89,8 +88,8 @@ defmodule Ask.RespondentsCancellerConsumer do
     GenStage.start_link(__MODULE__, :state, name: __MODULE__)
   end
 
-  def init(state) do
-    {:consumer, state, subscribe_to: [{RespondentsCancellerProducer, max_demand: 50, min_demand: 1}]}
+  def init(producer_pid) do
+    {:consumer, :state, subscribe_to: [{producer_pid, max_demand: 50, min_demand: 1}]}
   end
 
   def handle_events(respondents, _from, state) do
@@ -127,13 +126,15 @@ defmodule Ask.SurveyCanceller do
   defstruct [:processes, :consumers_pids]
 
   defp start_producer(survey_id) do
-    GenStage.start_link(RespondentsCancellerProducer, survey_id, name: RespondentsCancellerProducer)
+    producer_name = String.to_atom("RespondentsCancellerProducer_#{Ecto.UUID.generate()}")
+    GenStage.start_link(RespondentsCancellerProducer, survey_id, name: producer_name)
   end
 
-  defp start_consumers(number_consumers) do
-    consumer_name = fn id -> String.to_atom("RespondentsCancellerConsumer_#{id}") end
-    Enum.map(1..number_consumers, consumer_name)
-    |> Enum.map(fn name -> GenStage.start_link(RespondentsCancellerConsumer, 0, name: name) end)
+  defp start_consumers(number_consumers, producer_pid) do
+   names =  Enum.map(1..number_consumers, fn _->
+        String.to_atom("RespondentsCancellerConsumer_#{Ecto.UUID.generate()}")
+      end)
+   names |> Enum.map(fn name -> GenStage.start_link(RespondentsCancellerConsumer, producer_pid, name: name) end)
   end
 
   def start_cancelling(survey_id, number_consumers \\@default_number_consumers) do
@@ -141,9 +142,13 @@ defmodule Ask.SurveyCanceller do
     # * processes is the list of processes started (two-element tuples)
     # * consumers_pids are only the pids of the consumers
     producer = start_producer(survey_id)
-    consumers = start_consumers(number_consumers)
-    consumers_pids = consumers |> Enum.map(fn {_, pid} -> pid end)
-    %Ask.SurveyCanceller{processes: [producer | consumers], consumers_pids: consumers_pids}
+    case producer do
+      {:ok, producer_pid } ->
+        consumers = start_consumers(number_consumers, producer_pid)
+        consumers_pids = consumers |> Enum.map(fn {_, pid} -> pid end)
+        %Ask.SurveyCanceller{processes: [producer | consumers], consumers_pids: consumers_pids}
+      :ignore -> :ignore
+    end
   end
 end
 
