@@ -191,7 +191,7 @@ defmodule Ask.Runtime.Broker do
 
   defp set_stalled_respondents_as_failed(survey) do
     from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, retry_stat_time: ""])
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, retry_stat_time: nil])
   end
 
   defp start_some(survey, count) do
@@ -486,13 +486,13 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:stalled, session}) do
     respondent
-    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil, retry_stat_time: ""})
+    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil, retry_stat_time: nil})
     |> Repo.update!
   end
 
   defp update_respondent(respondent, :rejected) do
     respondent
-    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil, retry_stat_time: ""})
+    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil, retry_stat_time: nil})
     |> Repo.update!
   end
 
@@ -513,7 +513,7 @@ defmodule Ask.Runtime.Broker do
     Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
 
     respondent
-    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition, retry_stat_time: ""})
+    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition, retry_stat_time: nil})
     |> Repo.update!
     |> RespondentDispositionHistory.create(old_disposition, mode)
   end
@@ -568,7 +568,7 @@ defmodule Ask.Runtime.Broker do
     end
 
     respondent
-    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil, retry_stat_time: ""})
+    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil, retry_stat_time: nil})
     |> Repo.update!
     |> RespondentDispositionHistory.create(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
@@ -640,7 +640,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}, current_mode: %Ask.Runtime.IVRMode{}}, _, _), do:
-    RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "", survey_id: survey_id})
+    RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "ivr_active", survey_id: survey_id})
   defp increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}}, timeout, now), do:
     RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id})
   defp increase_retry_stat(%Session{respondent: %Respondent{timeout_at: nil}, current_mode: %Ask.Runtime.SMSMode{}}, _, _), do: nil
@@ -652,7 +652,7 @@ defmodule Ask.Runtime.Broker do
   defp increase_retry_stat(_, _, _), do: nil
 
   defp subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}, mode: mode, stats: stats, survey_id: survey_id}), do:
-    RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "", survey_id: survey_id})
+    RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "ivr_active", survey_id: survey_id})
   defp subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => _}}, mode: mode, stats: stats, survey_id: survey_id, retry_stat_time: retry_stat_time}), do:
     RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, survey_id: survey_id})
   defp subtract_retry_stat(_), do: nil

@@ -22,27 +22,39 @@ defmodule Ask.RetryStat do
     |> unique_constraint(:retry_stats_mode_attempt_retry_time_survey_id_index)
   end
 
-  def transition!(%{retry_time: nil}, _), do: {:error}
-  def transition!(_, %{retry_time: nil}), do: {:error}
-
   def transition!(subtract_filter, increase_filter) do
-    case Repo.update_all(subtract_query(subtract_filter), []) do
-      {0, _} -> {:error}
-      _ -> Repo.insert(
-        add_struct(increase_filter),
-        on_conflict: [inc: [count: 1]]
-      ) |> Tuple.delete_at(1)
+    add_changeset = add_changeset(increase_filter)
+    case is_valid_filter(subtract_filter) and add_changeset.valid? do
+      true ->
+        case Repo.update_all(subtract_query(subtract_filter), []) do
+          {0, _} ->
+            {:error}
+
+          _ ->
+            Repo.insert(
+              add_changeset,
+              on_conflict: [inc: [count: 1]]
+            )
+            |> Tuple.delete_at(1)
+        end
+      _ ->
+        {:error}
     end
   end
 
-  defp add_struct(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}),
-    do: %RetryStat{
+  defp is_valid_filter(filter), do:
+    (filter |> add_changeset).valid?
+
+  defp add_changeset(%{attempt: attempt, mode: mode, retry_time: retry_time, survey_id: survey_id}), do:
+    RetryStat.changeset(%RetryStat{}, %{
       attempt: attempt,
       count: 1,
       mode: mode,
       retry_time: retry_time,
       survey_id: survey_id
-    }
+    })
+
+  defp add_changeset(_), do: RetryStat.changeset(%RetryStat{}, %{})
 
   defp subtract_query(%{
          attempt: attempt,
@@ -59,28 +71,36 @@ defmodule Ask.RetryStat do
            update: [inc: [count: -1]]
          )
 
-  def add!(%{retry_time: nil}), do: {:error}
-
   def add!(filter) do
-    {:ok, _} =
-      Repo.insert(
-        add_struct(filter),
-        on_conflict: [inc: [count: 1]]
-      )
+    changeset = add_changeset(filter)
+    case changeset.valid? do
+      true ->
+        Repo.insert(
+          changeset,
+          on_conflict: [inc: [count: 1]]
+        )
+        |> Tuple.delete_at(1)
 
-    {:ok}
+      _ ->
+        {:error}
+    end
   end
 
   def subtract!(%{retry_time: nil}), do: {:error}
 
   def subtract!(filter) do
-    case subtract_query(filter)
-         |> Repo.update_all([]) do
-      {0, _} ->
-        {:error}
+    case is_valid_filter(filter) do
+      true ->
+        case subtract_query(filter)
+              |> Repo.update_all([]) do
+          {0, _} ->
+            {:error}
 
-      {_, _} ->
-        {:ok}
+          {_, _} ->
+            {:ok}
+        end
+      _ ->
+        {:error}
     end
   end
 
@@ -93,11 +113,18 @@ defmodule Ask.RetryStat do
         )
       )
 
-  def count(_stats, %{retry_time: nil}), do: 0
+  def count(stats, filter) do
+    case is_valid_filter(Map.put(filter, :survey_id, 1)) do
+      true ->
+        stats |> count_valid(filter)
+      _ ->
+        0
+    end
+  end
 
-  def count(stats, %{overdue: true} = filter), do: stats |> count_overdue(filter)
+  defp count_valid(stats, %{overdue: true} = filter), do: stats |> count_overdue(filter)
 
-  def count(stats, %{attempt: filter_attempt, mode: filter_mode, retry_time: filter_retry_time}),
+  defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode, retry_time: filter_retry_time}),
     do:
       Enum.find(stats, fn %RetryStat{attempt: attempt, retry_time: retry_time, mode: mode} ->
         attempt == filter_attempt and retry_time == filter_retry_time and mode == filter_mode

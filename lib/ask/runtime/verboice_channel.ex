@@ -243,7 +243,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   defp set_retry_stat_timeout(%Respondent{retry_stat_time: retry_stat_time, survey_id: survey_id, stats: stats, mode: mode}) do
     attempts = stats |> Stats.attempts(:all)
-    RetryStat.transition!(%{attempt: attempts, mode: mode, retry_time: "", survey_id: survey_id},
+    RetryStat.transition!(%{attempt: attempts, mode: mode, retry_time: "ivr_active", survey_id: survey_id},
       %{attempt: attempts, mode: mode, retry_time: retry_stat_time, survey_id: survey_id})
   end
 

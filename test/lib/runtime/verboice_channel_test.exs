@@ -499,11 +499,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       %Respondent{mode: mode} = respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: mode})
+      assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "ivr_active", mode: mode})
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
 
-      assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "", mode: mode})
+      assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "ivr_active", mode: mode})
 
       :ok = logger |> GenServer.stop
 

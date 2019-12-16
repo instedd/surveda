@@ -220,7 +220,7 @@ defmodule Ask.RetryStatTest do
 
   test "transitions" do
     survey = insert(:survey)
-    filter_from = %{attempt: 1, mode: ["ivr"], retry_time: "", survey_id: survey.id}
+    filter_from = %{attempt: 1, mode: ["ivr"], retry_time: "ivr_active", survey_id: survey.id}
     filter_to = %{attempt: 2, mode: ["ivr"], retry_time: "2019101615", survey_id: survey.id}
 
     {:ok} = RetryStat.add!(filter_from)

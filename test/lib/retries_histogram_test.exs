@@ -137,7 +137,7 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, [mode], now) == []
 
-    filter = %{attempt: 1, mode: [mode], retry_time: "", survey_id: survey.id}
+    filter = %{attempt: 1, mode: [mode], retry_time: "ivr_active", survey_id: survey.id}
 
     filter
     |> increase_stat(1)
@@ -199,7 +199,7 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, [mode], now) == []
 
-    active_filter = %{attempt: 1, mode: [mode], retry_time: "", survey_id: survey.id}
+    active_filter = %{attempt: 1, mode: [mode], retry_time: "ivr_active", survey_id: survey.id}
 
     active_filter
     |> increase_stat(1)
@@ -236,7 +236,7 @@ defmodule Ask.RetriesHistogramTest do
     waiting_filter
     |> decrease_stat(1)
 
-    active_filter = %{attempt: 2, mode: [mode], retry_time: "", survey_id: survey.id}
+    active_filter = %{attempt: 2, mode: [mode], retry_time: "ivr_active", survey_id: survey.id}
 
     active_filter
     |> increase_stat(1)
@@ -316,7 +316,7 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, mode, now) == []
 
-    ivr_active_filter = %{attempt: 1, mode: mode, retry_time: "", survey_id: survey.id}
+    ivr_active_filter = %{attempt: 1, mode: mode, retry_time: "ivr_active", survey_id: survey.id}
 
     ivr_active_filter
     |> increase_stat(1)
@@ -390,7 +390,7 @@ defmodule Ask.RetriesHistogramTest do
     sms_filter
     |> decrease_stat(1)
 
-    ivr_active_filter = %{attempt: 2, mode: mode, retry_time: "", survey_id: survey.id}
+    ivr_active_filter = %{attempt: 2, mode: mode, retry_time: "ivr_active", survey_id: survey.id}
 
     ivr_active_filter
     |> increase_stat(1)
