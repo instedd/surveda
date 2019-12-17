@@ -2,7 +2,8 @@ defmodule Ask.RetryStat do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias Ask.{RetryStat, Repo}
+  alias Ask.{RetryStat, Repo, Respondent, Stats}
+  alias Ask.Runtime.{Session}
   alias Ask.Ecto.Type.JSON
 
   schema "retry_stats" do
@@ -151,4 +152,23 @@ defmodule Ask.RetryStat do
 
   def retry_time(nil), do: nil
   def retry_time(timeout_at), do: Timex.format!(timeout_at, "%Y%0m%0d%H", :strftime)
+
+  def increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}, current_mode: %Ask.Runtime.IVRMode{}}, _, _), do:
+  RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "ivr_active", survey_id: survey_id})
+  def increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}}, timeout, now), do:
+    RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id})
+  def increase_retry_stat(%Session{respondent: %Respondent{timeout_at: nil}, current_mode: %Ask.Runtime.SMSMode{}}, _, _), do: nil
+  def increase_retry_stat(%Session{respondent: %Respondent{mode: mode, stats: stats, survey_id: survey_id, retry_stat_time: retry_stat_time}, current_mode: %Ask.Runtime.SMSMode{}}, timeout, now), do:
+    RetryStat.transition!(
+      %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, survey_id: survey_id},
+      %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id}
+    )
+  def increase_retry_stat(_, _, _), do: nil
+
+  def subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}, mode: mode, stats: stats, survey_id: survey_id}), do:
+    RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: "ivr_active", survey_id: survey_id})
+  def subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => _}}, mode: mode, stats: stats, survey_id: survey_id, retry_stat_time: retry_stat_time}), do:
+    RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, survey_id: survey_id})
+  def subtract_retry_stat(_), do: nil
+
 end
