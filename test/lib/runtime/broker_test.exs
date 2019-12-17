@@ -372,7 +372,7 @@ defmodule Ask.BrokerTest do
     Broker.sync_step(respondent, Flow.Message.reply("Yes"))
 
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: respondent.mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: respondent.mode})
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
@@ -453,7 +453,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
 
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    natural_stat_filter = %{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: sequence_mode, survey_id: survey.id}
+    natural_stat_filter = %{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(natural_stat_filter)
 
     # Set for immediate timeout
@@ -472,7 +472,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    natural_stat_filter = %{attempt: 2, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: sequence_mode, survey_id: survey.id}
+    natural_stat_filter = %{attempt: 2, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(natural_stat_filter)
 
     # Set for immediate timeout
@@ -488,7 +488,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    unexpected_stat_filter = %{attempt: 3, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: sequence_mode, survey_id: survey.id}
+    unexpected_stat_filter = %{attempt: 3, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(unexpected_stat_filter)
 
     assert respondent.state == "stalled"
@@ -523,7 +523,7 @@ defmodule Ask.BrokerTest do
     assert respondent.timeout_at == expected_timeout_at
     assert respondent.retry_stat_time == expected_retry_stat_time
     assert respondent.stats.attempts["sms"] == 1
-    retry_stat_filter = %{attempt: 1, retry_time: expected_retry_stat_time, mode: sequence_mode, survey_id: survey.id}
+    retry_stat_filter = %{attempt: 1, retry_time: expected_retry_stat_time, ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
 
     # Set for immediate timeout
@@ -546,7 +546,7 @@ defmodule Ask.BrokerTest do
 
     assert respondent.stats.attempts["sms"] == 2
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
-    retry_stat_filter = %{attempt: 2, retry_time: expected_retry_stat_time, mode: sequence_mode, survey_id: survey.id}
+    retry_stat_filter = %{attempt: 2, retry_time: expected_retry_stat_time, ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(retry_stat_filter)
 
     # Set for immediate timeout
@@ -825,7 +825,7 @@ defmodule Ask.BrokerTest do
     first_timeout = respondent.timeout_at
 
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), mode: respondent.mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), ivr_active: false, mode: respondent.mode})
 
     Broker.sync_step(respondent, Flow.Message.reply("Yes"))
 
@@ -833,8 +833,8 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "completed"
     assert respondent.disposition == "completed"
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), mode: respondent.mode})
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: respondent.mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), ivr_active: false, mode: respondent.mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: respondent.mode})
 
     histories = RespondentDispositionHistory |> Repo.all
     assert length(histories) == 3
@@ -1460,7 +1460,7 @@ defmodule Ask.BrokerTest do
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _token]
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "ivr_active", mode: sequence_mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: nil, ivr_active: true, mode: sequence_mode})
 
     # Set for immediate timeout
     respondent = Repo.get(Respondent, respondent.id)
@@ -1469,8 +1469,8 @@ defmodule Ask.BrokerTest do
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: "ivr_active", mode: sequence_mode})
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: "ivr_active", mode: sequence_mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: nil, ivr_active: true, mode: sequence_mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: nil, ivr_active: true, mode: sequence_mode})
 
     # Set for immediate timeout
     respondent = Repo.get(Respondent, respondent.id)
@@ -1478,7 +1478,7 @@ defmodule Ask.BrokerTest do
 
     # Third poll, this time it should fail
     Broker.handle_info(:poll, nil)
-    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: "ivr_active", mode: sequence_mode})
+    assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 2, retry_time: nil, ivr_active: true, mode: sequence_mode})
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1529,7 +1529,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    natural_stat_filter = %{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: sequence_mode, survey_id: survey.id}
+    natural_stat_filter = %{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(natural_stat_filter)
 
     # Set for immediate timeout
@@ -1548,7 +1548,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    natural_stat_filter = %{attempt: 2, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: sequence_mode, survey_id: survey.id}
+    natural_stat_filter = %{attempt: 2, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(natural_stat_filter)
 
     # Set for immediate timeout
@@ -1566,7 +1566,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
-    natural_stat_filter = %{attempt: 3, retry_time: RetryStat.retry_time(respondent.timeout_at), mode: sequence_mode, survey_id: survey.id}
+    natural_stat_filter = %{attempt: 3, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: sequence_mode, survey_id: survey.id}
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(natural_stat_filter)
 
     # Set for immediate timeout
@@ -2119,7 +2119,7 @@ defmodule Ask.BrokerTest do
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     %Respondent{ timeout_at: first_timeout} = respondent = Repo.get(Respondent, respondent.id)
-    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), mode: sequence_mode})
+    assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), ivr_active: false, mode: sequence_mode})
 
     Broker.delivery_confirm(respondent, "Do you exercise")
 
@@ -2135,8 +2135,8 @@ defmodule Ask.BrokerTest do
     %Respondent{ timeout_at: hours_after_timeout} = respondent = Repo.get(Respondent, respondent.id)
     assert Timex.diff(hours_after_timeout, first_timeout, :hours) == hours_passed
     stats = %{survey_id: survey.id} |> RetryStat.stats()
-    assert 0 == stats |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), mode: sequence_mode})
-    assert 1 == stats |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(hours_after_timeout), mode: sequence_mode})
+    assert 0 == stats |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), ivr_active: false, mode: sequence_mode})
+    assert 1 == stats |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(hours_after_timeout), ivr_active: false, mode: sequence_mode})
 
     Broker.delivery_confirm(respondent, "Which is the second perfect number?")
 
