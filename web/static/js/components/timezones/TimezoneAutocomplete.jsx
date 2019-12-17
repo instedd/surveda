@@ -56,7 +56,7 @@ class TimezoneAutocomplete extends Component {
   autocompleteGetData(value, callback) {
     const { timezones } = this.props
     const matches = (value, tz) => { return (tz.indexOf(value) !== -1 || tz.toLowerCase().indexOf(value) !== -1) }
-    const matchingOptions = timezones.items.filter((tz) => matches(value.toLowerCase(), tz))
+    const matchingOptions = timezones.items.filter((tz) => matches(formatTimezone(value.toLowerCase()), formatTimezone(tz)))
     callback(value, this.buildTimezonesforAutoselect(matchingOptions))
   }
 
