@@ -434,6 +434,48 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
   end
 
+  test "retry respondent that was 'started' (SMS mode) checking RetryStat" do
+    [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
+    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
+
+    # First poll, activate the respondent
+    Broker.handle_info(:poll, nil)
+    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
+    assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    respondent = Repo.get!(Respondent, respondent.id)
+
+    # Since the respondent was contacted, there must be a RetryStat
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: respondent.retry_stat_time, mode: respondent.mode})
+    assert "queued" == respondent.disposition
+    assert respondent.stats.attempts["sms"] == 1
+
+    # respondent responses the first question
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    # broker sends second question
+    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
+
+    respondent = Repo.get!(Respondent, respondent.id)
+    assert "started" == respondent.disposition
+
+    first_retry_stat_time = respondent.retry_stat_time
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: first_retry_stat_time, mode: respondent.mode})
+
+    # Set for immediate timeout
+    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+
+    # Second poll, it should retry the second question
+    Broker.handle_info(:poll, nil)
+    refute_received [:setup, _, _, _, _]
+    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")]
+
+    # Respondent should have been moved from first attempt to second attempt in RetryStat
+    respondent = Repo.get!(Respondent, respondent.id)
+    assert 0 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: first_retry_stat_time, mode: respondent.mode})
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 2, retry_time: respondent.retry_stat_time, mode: respondent.mode})
+
+  end
+
   test "retry respondent (mobileweb mode)" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
     survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
