@@ -6,175 +6,187 @@ defmodule Ask.RetriesHistogram do
     mode |> Enum.map(fn mode -> survey |> mode_sequence_histogram(stats, mode, Timex.now()) end)
   end
 
-  def mode_sequence_histogram(%Survey{} = survey, stats, mode, now),
-    do: %{
-      flow: survey |> retries_histogram_flow(mode),
-      actives: survey |> retries_histogram_actives(stats, mode, now) |> clean_empty_slots()
+  def mode_sequence_histogram(%Survey{} = survey, stats, mode, now) do
+    flow = survey |> retries_histogram_flow(mode)
+
+    %{
+      flow: flow,
+      actives: retries_histogram_actives(flow, stats, mode, now)
     }
+  end
 
-  defp retries_histogram_actives(%Survey{} = survey, stats, mode, now) do
-    flow =
-      survey
-      |> retries_histogram_flow(mode)
+  defp retries_histogram_actives(flow, stats, mode, now) do
+    enhanced_flow = enhance_flow(flow)
 
-    flow
-    |> absolute_delay_flow()
-    |> Stream.with_index()
-    |> Enum.reduce([], fn {%{absolute_delay: absolute_delay, delay: delay, type: type}, idx},
-                          acc ->
-      acc ++
-        attempt_respondents(%{
-          stats: stats,
-          mode: mode,
-          attempt: %{
-            idx: idx + 1,
-            absolute_delay: absolute_delay,
-            current_mode: type,
-            delay: delay
-          },
-          now: now,
-          attempts: Enum.count(flow),
-          flow: flow
-        })
+    (get_actives(enhanced_flow, stats, mode, now) ++
+       get_inactives(enhanced_flow, stats, mode, now))
+    |> clean_empty_slots()
+  end
+
+  defp get_actives(enhanced_flow, stats, mode, now) do
+    enhanced_flow
+    |> Enum.map(fn %{index: index} = attempt ->
+      get_active(%{
+        current_attempt: attempt,
+        stats: stats,
+        mode: mode,
+        now: now,
+        next_attempt: Enum.at(enhanced_flow, index + 1)
+      })
     end)
   end
 
-  defp attempt_respondents(%{
-         stats: stats,
-         mode: mode,
-         attempt: %{
-           idx: idx,
-           absolute_delay: absolute_delay,
-           delay: delay,
-           current_mode: current_mode
-         },
-         now: now,
-         attempts: attempts,
-         flow: flow
-       }) do
-    count_current =
-      count_actives(%{stats: stats, attempt: idx, mode: mode, current_mode: current_mode})
-
-    %{type: previous_mode} = flow |> Enum.at(idx - 2)
-
-    count_previous =
-      count_previous_actives(%{
-        stats: stats,
-        now: now,
-        attempt: idx - 1,
-        mode: mode,
-        delay: delay,
-        current_mode: current_mode,
-        previous_mode: previous_mode
-      })
-
-    [%{hour: absolute_delay, respondents: count_current}] ++
-      [%{hour: absolute_delay - delay, respondents: count_previous}] ++
-      waiting_respondents(%{
-        stats: stats,
-        mode: mode,
-        attempt: %{
-          idx: idx,
-          absolute_delay: absolute_delay,
-          delay: delay - 1,
-          current_mode: current_mode
-        },
-        now: now,
-        attempts: attempts
-      })
+  defp get_active(%{current_attempt: %{type: "end"}}) do
+    nil
   end
 
-  defp attempt_respondents(%{attempt: %{idx: 1}}), do: []
-
-  defp count_previous_actives(%{previous_mode: "ivr"}), do: 0
-
-  defp count_previous_actives(%{
+  defp get_active(%{
+         current_attempt: %{absolute_delay: absolute_delay, type: current_mode, index: index},
          stats: stats,
-         now: now,
-         attempt: attempt,
          mode: mode,
-         delay: delay
-       }),
-       do: count_respondents(stats, now, attempt, mode, delay)
+         now: now,
+         next_attempt: next_attempt
+       }) do
+    next_attempt_delay = next_attempt |> attempt_delay()
 
-  defp count_previous_actives(_), do: 0
+    retry_time =
+      if next_attempt_delay,
+        do: now |> Timex.shift(hours: next_attempt_delay) |> retry_time(),
+        else: nil
+
+    count =
+      count_actives(%{
+        stats: stats,
+        attempt: index + 1,
+        mode: mode,
+        current_mode: current_mode,
+        retry_time: retry_time
+      })
+
+    %{hour: absolute_delay, respondents: count}
+  end
+
+  defp get_inactives(enhanced_flow, stats, mode, now) do
+    enhanced_flow
+    |> Enum.map(fn %{index: index} = attempt ->
+      get_attempt_inactives(%{
+        current_attempt: attempt,
+        stats: stats,
+        mode: mode,
+        now: now,
+        next_attempt: Enum.at(enhanced_flow, index + 1)
+      })
+    end)
+    |> List.flatten()
+  end
+
+  defp get_attempt_inactives(%{current_attempt: %{type: "end"}}), do: []
+  defp get_attempt_inactives(%{next_attempt: nil}), do: []
+
+  defp get_attempt_inactives(%{
+         current_attempt: %{absolute_delay: absolute_delay, index: index},
+         stats: stats,
+         mode: mode,
+         now: now,
+         next_attempt: %{delay: next_attempt_delay, type: next_attempt_type}
+       }) do
+    fill_inactives(%{
+      absolute_attempt_delay: absolute_delay,
+      stats: stats,
+      attempt: index + 1,
+      mode: mode,
+      now: now,
+      next_attempt_delay: next_attempt_delay,
+      relative_to_now_delay: next_attempt_delay - 1,
+      next_attempt_type: next_attempt_type
+    })
+  end
+
+  defp fill_inactives(%{
+         relative_to_now_delay: relative_to_now_delay,
+         next_attempt_type: next_attempt_type
+       })
+       when relative_to_now_delay < 1 and next_attempt_type != "end",
+       do: []
+
+  defp fill_inactives(%{relative_to_now_delay: relative_to_now_delay, next_attempt_type: "end"})
+       when relative_to_now_delay < 0,
+       do: []
+
+  defp fill_inactives(
+         %{
+           absolute_attempt_delay: absolute_attempt_delay,
+           next_attempt_delay: next_attempt_delay,
+           relative_to_now_delay: relative_to_now_delay,
+           stats: stats,
+           attempt: attempt,
+           mode: mode,
+           now: now,
+           next_attempt_type: next_attempt_type
+         } = params
+       ) do
+    retry_time = now |> Timex.shift(hours: relative_to_now_delay) |> retry_time()
+
+    overdue =
+      if next_attempt_type == "end" do
+        relative_to_now_delay == 0
+      else
+        relative_to_now_delay == 1
+      end
+
+    count =
+      stats
+      |> RetryStat.count(%{
+        attempt: attempt,
+        mode: mode,
+        retry_time: retry_time,
+        ivr_active: false,
+        overdue: overdue
+      })
+
+    relative_to_attempt_delay = next_attempt_delay - relative_to_now_delay
+
+    [%{hour: absolute_attempt_delay + relative_to_attempt_delay, respondents: count}] ++
+      fill_inactives(Map.put(params, :relative_to_now_delay, relative_to_now_delay - 1))
+  end
+
+  defp clean_empty_slots(slots),
+    do:
+      slots
+      |> Enum.filter(&(!is_nil(&1)))
+      |> Enum.filter(fn %{respondents: count} -> count > 0 end)
+
+  defp attempt_delay(nil), do: nil
+  defp attempt_delay(%{delay: delay}), do: delay
 
   defp count_actives(%{stats: stats, attempt: attempt, mode: mode, current_mode: "ivr"}),
     do:
       stats
       |> RetryStat.count(%{attempt: attempt, mode: mode, retry_time: nil, ivr_active: true})
 
-  defp count_actives(%{stats: stats, now: now, attempt: attempt, mode: mode, delay: delay}) do
-    count_respondents(stats, now, attempt, mode, delay)
-  end
-
-  defp count_actives(_), do: 0
-
-  defp waiting_respondents(%{
-         stats: stats,
-         mode: mode,
-         attempt: %{
-           idx: idx,
-           absolute_delay: absolute_delay,
-           delay: delay,
-           current_mode: current_mode
-         },
-         now: now,
-         attempts: attempts
-       })
-       when delay > 1 or (delay == 1 and attempts == idx and current_mode == "end") do
-    count = count_respondents(stats, now, idx - 1, mode, delay)
-
-    [%{hour: absolute_delay - delay, respondents: count}] ++
-      waiting_respondents(%{
-        stats: stats,
+  defp count_actives(%{stats: stats, attempt: attempt, mode: mode, retry_time: retry_time}),
+    do:
+      stats
+      |> RetryStat.count(%{
+        attempt: attempt,
         mode: mode,
-        attempt: %{
-          idx: idx,
-          absolute_delay: absolute_delay,
-          delay: delay - 1,
-          current_mode: current_mode
-        },
-        now: now,
-        attempts: attempts
+        retry_time: retry_time,
+        ivr_active: false
       })
-  end
 
-  defp waiting_respondents(%{
-         stats: stats,
-         mode: mode,
-         attempt: %{idx: idx, absolute_delay: absolute_delay, delay: delay},
-         now: now
-       }) do
-    count = count_respondents(stats, now, idx - 1, mode, delay, true)
-
-    [%{hour: absolute_delay - delay, respondents: count}]
-  end
-
-  defp count_respondents(stats, now, attempt, mode, delay, overdue \\ nil) do
-    retry_time =
-      now
-      |> Timex.shift(hours: delay)
-      |> retry_time()
-
-    stats
-    |> RetryStat.count(%{attempt: attempt, mode: mode, retry_time: retry_time, overdue: overdue})
-  end
-
-  defp absolute_delay_flow(flow) do
+  defp enhance_flow(flow) do
     {flow, _} =
       flow
-      |> Enum.map_reduce(0, fn %{type: type, delay: delay}, acc_delay ->
-        {%{type: type, delay: delay, absolute_delay: delay + acc_delay}, delay + acc_delay}
+      |> Stream.with_index()
+      |> Enum.map_reduce(0, fn {%{type: type, delay: delay}, idx}, acc_delay ->
+        {%{type: type, delay: delay, absolute_delay: delay + acc_delay, index: idx},
+         delay + acc_delay}
       end)
 
     flow
   end
 
-  defp clean_empty_slots(slots),
-    do: slots |> Enum.filter(fn %{respondents: count} -> count > 0 end)
-
-  defp retry_time(time), do: Timex.format!(time, "%Y%0m%0d%H", :strftime)
+  defp retry_time(time), do: Timex.format!(time, RetryStat.retry_time_format(), :strftime)
 
   defp retries_histogram_flow(%Survey{} = survey, mode_sequence) do
     flow =
