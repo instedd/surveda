@@ -460,7 +460,7 @@ defmodule Ask.BrokerTest do
     timeout_at = Timex.now |> Timex.shift(hours: -1)
     Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
-    RetryStat.transition!(natural_stat_filter, forced_stat_filter)
+    RetryStat.transition(natural_stat_filter, forced_stat_filter)
 
     # Second poll, retry the question
     Broker.poll
@@ -479,7 +479,7 @@ defmodule Ask.BrokerTest do
     timeout_at = Timex.now |> Timex.shift(hours: -1)
     Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
-    RetryStat.transition!(natural_stat_filter, forced_stat_filter)
+    RetryStat.transition(natural_stat_filter, forced_stat_filter)
 
     # Third poll, this time it should stall
     Broker.poll
@@ -1536,7 +1536,7 @@ defmodule Ask.BrokerTest do
     timeout_at = Timex.now |> Timex.shift(hours: -1)
     Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
-    RetryStat.transition!(natural_stat_filter, forced_stat_filter)
+    RetryStat.transition(natural_stat_filter, forced_stat_filter)
 
     # Second poll, retry the question
     Broker.handle_info(:poll, nil)
@@ -1555,7 +1555,7 @@ defmodule Ask.BrokerTest do
     timeout_at = Timex.now |> Timex.shift(hours: -1)
     Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
-    RetryStat.transition!(natural_stat_filter, forced_stat_filter)
+    RetryStat.transition(natural_stat_filter, forced_stat_filter)
 
     # Third poll, retry the question
     Broker.handle_info(:poll, nil)
@@ -1573,7 +1573,7 @@ defmodule Ask.BrokerTest do
     timeout_at = Timex.now |> Timex.shift(hours: -1)
     Respondent.changeset(respondent, %{timeout_at: timeout_at, retry_stat_time: RetryStat.retry_time(timeout_at)}) |> Repo.update
     forced_stat_filter = natural_stat_filter |> put_retry_time(timeout_at)
-    RetryStat.transition!(natural_stat_filter, forced_stat_filter)
+    RetryStat.transition(natural_stat_filter, forced_stat_filter)
 
     # Fourth poll, this time fallback to IVR channel
     Broker.handle_info(:poll, nil)

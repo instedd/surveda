@@ -427,20 +427,20 @@ defmodule Ask.RetriesHistogramTest do
   defp retry_time(now, delay), do: now |> Timex.shift(hours: delay) |> RetryStat.retry_time()
 
   defp increase_stat(filter, n) when n <= 1 do
-    {:ok} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add(filter)
   end
 
   defp increase_stat(filter, n) do
-    {:ok} = RetryStat.add!(filter)
+    {:ok} = RetryStat.add(filter)
     increase_stat(filter, n - 1)
   end
 
   defp decrease_stat(filter, n) when n <= 1 do
-    {:ok} = RetryStat.subtract!(filter)
+    {:ok} = RetryStat.subtract(filter)
   end
 
   defp decrease_stat(filter, n) do
-    {:ok} = RetryStat.subtract!(filter)
+    {:ok} = RetryStat.subtract(filter)
     decrease_stat(filter, n - 1)
   end
 end

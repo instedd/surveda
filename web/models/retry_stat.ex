@@ -55,7 +55,7 @@ defmodule Ask.RetryStat do
     end
   end
 
-  def transition!(subtract_filter, increase_filter) do
+  def transition(subtract_filter, increase_filter) do
     add_changeset = add_changeset(increase_filter)
     case is_valid_filter(subtract_filter) and add_changeset.valid? do
       true ->
@@ -122,14 +122,14 @@ defmodule Ask.RetryStat do
            update: [inc: [count: -1]]
          )
 
-  def add!(filter), do:
+  def add(filter), do:
     Repo.insert(
       add_changeset(filter),
       on_conflict: [inc: [count: 1]]
     )
     |> Tuple.delete_at(1)
 
-  def subtract!(filter) do
+  def subtract(filter) do
     case is_valid_filter(filter) do
       true ->
         case subtract_query(filter)
@@ -203,21 +203,21 @@ defmodule Ask.RetryStat do
   def retry_time(timeout_at), do: Timex.format!(timeout_at, @retry_time_format, :strftime)
 
   def increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}, current_mode: %Ask.Runtime.IVRMode{}}, _, _), do:
-  RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: nil, ivr_active: true, survey_id: survey_id})
+  RetryStat.add(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: nil, ivr_active: true, survey_id: survey_id})
   def increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}}, timeout, now), do:
-    RetryStat.add!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), ivr_active: false, survey_id: survey_id})
+    RetryStat.add(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), ivr_active: false, survey_id: survey_id})
   def increase_retry_stat(%Session{respondent: %Respondent{timeout_at: nil}, current_mode: %Ask.Runtime.SMSMode{}}, _, _), do: nil
   def increase_retry_stat(%Session{respondent: %Respondent{mode: mode, stats: stats, survey_id: survey_id, retry_stat_time: retry_stat_time}, current_mode: %Ask.Runtime.SMSMode{}}, timeout, now), do:
-    RetryStat.transition!(
+    RetryStat.transition(
       %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, ivr_active: false, survey_id: survey_id},
       %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), ivr_active: false, survey_id: survey_id}
     )
   def increase_retry_stat(_, _, _), do: nil
 
   def subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}, mode: mode, stats: stats, survey_id: survey_id}), do:
-    RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: nil, ivr_active: true, survey_id: survey_id})
+    RetryStat.subtract(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: nil, ivr_active: true, survey_id: survey_id})
   def subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => _}}, mode: mode, stats: stats, survey_id: survey_id, retry_stat_time: retry_stat_time}), do:
-    RetryStat.subtract!(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, ivr_active: false, survey_id: survey_id})
+    RetryStat.subtract(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_stat_time, ivr_active: false, survey_id: survey_id})
   def subtract_retry_stat(_), do: nil
 
 end
