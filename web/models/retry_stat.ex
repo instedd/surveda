@@ -122,20 +122,12 @@ defmodule Ask.RetryStat do
            update: [inc: [count: -1]]
          )
 
-  def add!(filter) do
-    changeset = add_changeset(filter)
-    case changeset.valid? do
-      true ->
-        Repo.insert(
-          changeset,
-          on_conflict: [inc: [count: 1]]
-        )
-        |> Tuple.delete_at(1)
-
-      _ ->
-        {:error}
-    end
-  end
+  def add!(filter), do:
+    Repo.insert(
+      add_changeset(filter),
+      on_conflict: [inc: [count: 1]]
+    )
+    |> Tuple.delete_at(1)
 
   def subtract!(filter) do
     case is_valid_filter(filter) do
