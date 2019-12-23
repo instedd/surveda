@@ -129,4 +129,38 @@ defmodule Ask.ScheduleTest do
       assert time == DateTime.from_naive!(~N[2017-10-11 12:00:00], "Etc/UTC")
     end
   end
+
+  describe "at_end_time" do
+    test "bug with IVR schedule in Ecuador" do
+      schedule = %Ask.Schedule{
+        start_time: ~T[09:00:00],
+        end_time: ~T[20:00:00],
+        day_of_week: %Ask.DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true},
+        timezone: "America/Bogota", # The Ecuador survey actually used Bogota as timezone
+        blocked_days: []
+      }
+      start_time = DateTime.from_naive!(~N[2019-12-08 00:37:06], "Etc/UTC") # Dates in Verboice are shown in UTC
+
+      end_time = schedule
+      |> Schedule.at_end_time(start_time)
+
+      assert Elixir.Timex.equal?(end_time, DateTime.from_naive!(~N[2019-12-08 01:00:00], "Etc/UTC"))
+    end
+
+    test "bug with IVR schedule in Ecuador wouldn't happen in GMT+5" do
+      schedule = %Ask.Schedule{
+        start_time: ~T[09:00:00],
+        end_time: ~T[20:00:00],
+        day_of_week: %Ask.DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: true, sat: true},
+        timezone: "Etc/GMT+5",
+        blocked_days: []
+      }
+      start_time = DateTime.from_naive!(~N[2019-12-08 00:37:06], "Etc/UTC") # Dates in Verboice are shown in UTC
+
+      end_time = schedule
+      |> Schedule.at_end_time(start_time)
+
+      assert Elixir.Timex.equal?(end_time, DateTime.from_naive!(~N[2019-12-08 01:00:00], "Etc/UTC"))
+    end
+  end
 end

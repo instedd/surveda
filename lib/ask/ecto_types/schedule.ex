@@ -158,7 +158,7 @@ defmodule Ask.Schedule do
   end
 
   def at_end_time(%Schedule{end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
-    {erlang_date, _} = date_time |> Timex.to_erl
+    {erlang_date, _} = date_time |> Timex.Timezone.convert(timezone) |> Timex.to_erl
     erlang_time = end_time |> Time.to_erl
     Timex.Timezone.resolve(timezone, {erlang_date, erlang_time})
   end
