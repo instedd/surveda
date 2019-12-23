@@ -74,6 +74,7 @@ defmodule Ask.Runtime.Broker do
       where: r.updated_at <= ^eight_hours_ago)
     |> Repo.all
     |> Enum.each(fn respondent ->
+      Ask.SurveyHistogram.remove_respondent(respondent)
       update_respondent(respondent, :failed)
     end)
   end
@@ -85,6 +86,8 @@ defmodule Ask.Runtime.Broker do
       case Session.channel_failed(session, reason) do
         :ok -> :ok
         :failed ->
+          # respondent no longer participates in the survey (no attempts left)
+          Ask.SurveyHistogram.remove_respondent(respondent)
           update_respondent(respondent, :failed)
       end
     else
@@ -250,7 +253,9 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = survey |> Survey.fallback_delay()
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
-    handle_session_step(Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results), SystemTime.time.now)
+    session = Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
+    Ask.SurveyHistogram.add_new_respondent(respondent)
+    handle_session_step(session, SystemTime.time.now)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
@@ -299,7 +304,9 @@ defmodule Ask.Runtime.Broker do
   def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now) do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
-    sync_step_internal(session, reply, session_mode, now)
+    next_action = sync_step_internal(session, reply, session_mode, now)
+    Ask.SurveyHistogram.next_step(respondent, next_action)
+    next_action
   end
 
   defp session_mode(_respondent, session, nil) do

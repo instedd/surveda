@@ -182,3 +182,50 @@ defmodule Ask.RetryStat do
   def subtract_retry_stat(_), do: nil
 
 end
+
+defmodule Ask.SurveyHistogram do
+  alias Ask.RetryStat
+  alias Ask.Stats
+
+
+  def add_new_respondent(respondent) do
+    retry_time = respondent.retry_stat_time #Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time()
+#    RetryStat.add!(%{attempt: respondent.stats |> Stats.attempts(:all), mode: respondent.mode, retry_time: retry_time, survey_id: respondent.survey_id})
+  end
+
+  def remove_respondent(respondent) do
+    retry_time = respondent.retry_stat_time
+#    RetryStat.subtract!(%{attempt: respondent.stats |> Stats.attempts(:all), mode: respondent.mode, retry_time: retry_time, survey_id: respondent.survey_id})
+  end
+
+  defp reallocate_respondent(session) do
+#    RetryStat.transition!(
+#      %{attempt: stats |> Stats.attempts(:all), mode: respondent.mode, retry_time: retry_stat_time, survey_id: survey_id},
+#      %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), survey_id: survey_id}
+#    )
+  end
+
+  def next_step(respondent, {:reply, reply}) do
+    # sms -> transition to active RetryStat
+    # ivr -> do nothing, respondent is on call
+    # mobile-web -> do nothing
+  end
+
+  def next_step(respondent, {:end, reply}) do
+    # remove respondent from histogram
+    remove_respondent(respondent)
+  end
+
+  def next_step(respondent, :end) do
+    # remove respondent from histogram
+    remove_respondent(respondent)
+  end
+
+  def respondent_no_longer_active(respondent) do # only makes sense for verboice
+    # transition from ivr active to normal retryStat
+  end
+
+  def retry(session) do
+    reallocate_respondent(session)
+  end
+end
