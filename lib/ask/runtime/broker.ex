@@ -253,8 +253,8 @@ defmodule Ask.Runtime.Broker do
     fallback_delay = survey |> Survey.fallback_delay()
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
     {:ok, session, reply, timeout} = Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
-    updated_session = %Session{session | respondent: Ask.SurveyHistogram.add_new_respondent(respondent, session, timeout)}
-    handle_session_step({:ok, updated_session, reply, timeout}, SystemTime.time.now)
+    session = %Session{session | respondent: Ask.SurveyHistogram.add_new_respondent(session.respondent, session, timeout)}
+    handle_session_step({:ok, session, reply, timeout}, SystemTime.time.now)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
