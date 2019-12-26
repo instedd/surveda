@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics, RetryStat, SystemTime}
+  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics, SystemTime}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer}
   alias Ask.QuotaBucket
 
@@ -74,7 +74,7 @@ defmodule Ask.Runtime.Broker do
       where: r.updated_at <= ^eight_hours_ago)
     |> Repo.all
     |> Enum.each(fn respondent ->
-      Ask.SurveyHistogram.remove_respondent(respondent)
+      respondent = Ask.SurveyHistogram.remove_respondent(respondent)
       update_respondent(respondent, :failed)
     end)
   end
@@ -87,7 +87,7 @@ defmodule Ask.Runtime.Broker do
         :ok -> :ok
         :failed ->
           # respondent no longer participates in the survey (no attempts left)
-          Ask.SurveyHistogram.remove_respondent(respondent)
+          respondent = Ask.SurveyHistogram.remove_respondent(respondent)
           update_respondent(respondent, :failed)
       end
     else
@@ -213,7 +213,6 @@ defmodule Ask.Runtime.Broker do
 
     Repo.transaction(fn ->
       try do
-        RetryStat.subtract_retry_stat(respondent)
         handle_session_step(Session.timeout(session), SystemTime.time.now)
       rescue
         e in Ecto.StaleEntryError ->
@@ -253,9 +252,9 @@ defmodule Ask.Runtime.Broker do
 
     fallback_delay = survey |> Survey.fallback_delay()
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
-    session = Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
-    Ask.SurveyHistogram.add_new_respondent(respondent)
-    handle_session_step(session, SystemTime.time.now)
+    {:ok, session, reply, timeout} = Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
+    updated_session = %Session{session | respondent: Ask.SurveyHistogram.add_new_respondent(respondent, session, timeout)}
+    handle_session_step({:ok, updated_session, reply, timeout}, SystemTime.time.now)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
@@ -305,7 +304,7 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
     next_action = sync_step_internal(session, reply, session_mode, now)
-    Ask.SurveyHistogram.next_step(respondent, next_action)
+    Ask.SurveyHistogram.next_step(session, next_action)
     next_action
   end
 
@@ -425,7 +424,6 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now) do
-    RetryStat.increase_retry_stat(session, timeout, now)
     update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply), now)
     {:reply, reply}
   end
@@ -436,7 +434,6 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp handle_session_step({:end, reply, respondent}, _) do
-    RetryStat.subtract_retry_stat(respondent)
     update_respondent(respondent, :end, Reply.disposition(reply), nil)
 
     case Reply.steps(reply) do
@@ -505,9 +502,8 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, {:rejected, session, timeout}) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
-    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, SystemTime.time.now) |> RetryStat.retry_time()
     respondent
-      |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: timeout_at, retry_stat_time: retry_stat_time})
+      |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
   end
 
@@ -527,7 +523,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(respondent, :stopped, disposition, _) do
     session = respondent.session |> Session.load
-    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed", nil)
+    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed")
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, nil, now) do
@@ -541,16 +537,14 @@ defmodule Ask.Runtime.Broker do
       end
 
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, now)
-    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time()
     respondent
-    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, retry_stat_time: retry_stat_time, language: session.flow.language, effective_modes: effective_modes})
+    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language, effective_modes: effective_modes})
     |> Repo.update!
   end
 
   defp update_respondent(respondent, {:ok, session, timeout}, disposition, _) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
-    retry_stat_time = Respondent.next_timeout_lowerbound(timeout, SystemTime.time.now) |> RetryStat.retry_time()
-    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at, disposition, "active", retry_stat_time)
+    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at, disposition, "active")
   end
 
   defp update_respondent(respondent, :end, reply_disposition, _) do
@@ -581,11 +575,11 @@ defmodule Ask.Runtime.Broker do
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
   end
 
-  defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state, retry_stat_time) do
+  defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
       respondent
-      |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at, retry_stat_time: retry_stat_time})
+      |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at})
       |> Repo.update!
       |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
       |> update_quota_bucket(old_disposition, session.count_partial_results)

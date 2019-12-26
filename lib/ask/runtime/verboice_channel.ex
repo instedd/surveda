@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
-  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats, RetryStat}
+  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
   alias Ask.Runtime.{Broker, Flow, Reply}
   alias Ask.Router.Helpers
   import Plug.Conn
@@ -241,15 +241,6 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> Repo.update!
   end
 
-  defp set_retry_stat_timeout(%Respondent{survey_id: survey_id, stats: stats, mode: mode, id: id} = respondent) do
-    attempts = stats |> Stats.attempts(:all)
-
-    %Respondent{retry_stat: %RetryStat{retry_time: retry_time}} = Repo.get!(Respondent, id) |> Repo.preload(:retry_stat)
-
-    RetryStat.transition(respondent,
-      %{attempt: attempts, mode: mode, retry_time: retry_time, ivr_active: false, survey_id: survey_id})
-  end
-
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
@@ -257,12 +248,10 @@ defmodule Ask.Runtime.VerboiceChannel do
     case status do
       "expired" ->
         # respondent is still being considered as active in Surveda
-        ## channel_failed(respondent, status, params)
         Broker.contact_attempt_expired(respondent)
       s when s in ["failed", "busy", "no-answer"] ->
         # respondent should no longer be considered as active
-        set_retry_stat_timeout(respondent)
-        Ask.SurveyHistogram.respondent_no_longer_active(respondent)
+        respondent = Ask.SurveyHistogram.respondent_no_longer_active(respondent)
         channel_failed(respondent, status, params)
       _ -> :ok
     end

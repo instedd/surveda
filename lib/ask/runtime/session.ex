@@ -134,11 +134,11 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
     fallback_delay
   end
 
-  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
     next_retry
   end
 
@@ -274,8 +274,9 @@ defmodule Ask.Runtime.Session do
   end
 
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
-    session = session |> clear_token
-    Ask.SurveyHistogram.retry(session)
+    session = session
+              |> clear_token
+              |> Ask.SurveyHistogram.retry
     run_flow(%Session{
       session |
       current_mode: fallback_mode,
@@ -299,11 +300,10 @@ defmodule Ask.Runtime.Session do
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
   def retry(session, runtime_channel) do
-    Ask.SurveyHistogram.retry(session)
-    do_retry(session, runtime_channel)
+    do_retry(Ask.SurveyHistogram.retry(session), runtime_channel)
   end
 
-  def do_retry(%{current_mode: %SMSMode{}} = session, runtime_channel) do
+  defp do_retry(%{current_mode: %SMSMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
@@ -312,7 +312,7 @@ defmodule Ask.Runtime.Session do
     %{session | token: token, respondent: respondent}
   end
 
-  def do_retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
+  defp do_retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     next_available_date_time = schedule
@@ -328,7 +328,7 @@ defmodule Ask.Runtime.Session do
     %{session | channel_state: channel_state, token: token}
   end
 
-  def do_retry(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
+  defp do_retry(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     reply = mobile_contact_reply(session)
