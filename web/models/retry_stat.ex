@@ -191,7 +191,7 @@ defmodule Ask.SurveyHistogram do
     do:
       respondent
       |> Respondent.changeset(%{retry_stat_id: retry_stat_id})
-      |> Repo.update
+      |> Repo.update!
 
   def add_new_respondent(%Respondent{} = respondent, session, timeout) do
     try do
