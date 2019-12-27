@@ -484,30 +484,30 @@ defmodule Ask.Runtime.Broker do
     end)
   end
 
-  defp update_respondent(respondent, :end) do
+  defp update_respondent(%Respondent{} = respondent, :end) do
     update_respondent(respondent, :end, nil, nil)
   end
 
-  defp update_respondent(respondent, {:stalled, session}) do
+  defp update_respondent(%Respondent{} = respondent, {:stalled, session}) do
     respondent
     |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil, retry_stat_id: nil})
     |> Repo.update!
   end
 
-  defp update_respondent(respondent, :rejected) do
+  defp update_respondent(%Respondent{} = respondent, :rejected) do
     respondent
     |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil, retry_stat_id: nil})
     |> Repo.update!
   end
 
-  defp update_respondent(respondent, {:rejected, session, timeout}) do
+  defp update_respondent(%Respondent{} = respondent, {:rejected, session, timeout}) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
     respondent
       |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: timeout_at})
       |> Repo.update!
   end
 
-  defp update_respondent(respondent, :failed) do
+  defp update_respondent(%Respondent{} = respondent, :failed) do
     session = respondent.session |> Session.load
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
@@ -521,12 +521,12 @@ defmodule Ask.Runtime.Broker do
     |> RespondentDispositionHistory.create(old_disposition, mode)
   end
 
-  defp update_respondent(respondent, :stopped, disposition, _) do
+  defp update_respondent(%Respondent{} = respondent, :stopped, disposition, _) do
     session = respondent.session |> Session.load
     update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed")
   end
 
-  defp update_respondent(respondent, {:ok, session, timeout}, nil, now) do
+  defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, nil, now) do
     effective_modes = respondent.effective_modes || []
     effective_modes =
       if session do
@@ -542,12 +542,12 @@ defmodule Ask.Runtime.Broker do
     |> Repo.update!
   end
 
-  defp update_respondent(respondent, {:ok, session, timeout}, disposition, _) do
+  defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, disposition, _) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
     update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at, disposition, "active")
   end
 
-  defp update_respondent(respondent, :end, reply_disposition, _) do
+  defp update_respondent(%Respondent{} = respondent, :end, reply_disposition, _) do
     [session, mode] = case respondent.session do
       nil -> [nil, nil]
       session ->
