@@ -8,8 +8,10 @@ defmodule Ask.Runtime.RetriesHistogram do
       |> Respondent.changeset(%{retry_stat_id: retry_stat_id})
       |> Repo.update!
 
-  def add_new_respondent(%Respondent{} = respondent, session, timeout) do
+  def add_new_respondent(respondent, session, timeout) do
     try do
+      %Respondent{} = respondent
+      %Session{} = session
       {:ok, retry_stat} = RetryStat.add(retry_stat_group(respondent, ivr?(session), timeout))
       update_respondent(respondent, retry_stat.id)
     rescue
@@ -26,8 +28,9 @@ defmodule Ask.Runtime.RetriesHistogram do
     %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_time, ivr_active: ivr_active?, survey_id: survey_id}
   end
 
-  def remove_respondent(%Respondent{retry_stat_id: retry_stat_id} = respondent) do
+  def remove_respondent(respondent) do
     try do
+      %Respondent{retry_stat_id: retry_stat_id} = respondent
       RetryStat.subtract(retry_stat_id)
       update_respondent(respondent, nil)
     rescue
@@ -36,8 +39,10 @@ defmodule Ask.Runtime.RetriesHistogram do
     end
   end
 
-  defp reallocate_respondent(%Respondent{retry_stat_id: retry_stat_id} = respondent, %Session{} = session, ivr_active?, timeout) do
+  defp reallocate_respondent(respondent, session, ivr_active?, timeout) do
     try do
+      %Respondent{retry_stat_id: retry_stat_id} = respondent
+      %Session{} = session
       {:ok, retry_stat} = RetryStat.transition(
         retry_stat_id,
         retry_stat_group(respondent, ivr_active?, timeout)
