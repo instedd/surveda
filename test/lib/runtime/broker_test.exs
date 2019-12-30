@@ -371,7 +371,8 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     Broker.sync_step(respondent, Flow.Message.reply("Yes"))
 
-    assert RetryStat.retry_time(respondent.timeout_at) == respondent.retry_stat_time
+    retry_stat = Repo.get!(RetryStat, respondent.retry_stat_id)
+    assert retry_stat.retry_time == RetryStat.retry_time(respondent.timeout_at)
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(respondent.timeout_at), ivr_active: false, mode: respondent.mode})
 
     updated_respondent = Repo.get(Respondent, respondent.id)
@@ -434,9 +435,15 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
   end
 
+  @tag :time_mock
   test "retry respondent that was 'started' (SMS mode) checking RetryStat" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
+    survey |> Survey.changeset(%{sms_retry_configuration: "2h", fallback_delay: "3h"}) |> Repo.update
+
+    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T09:00:00Z")
+    mock_time(now)
+
+    sequence_mode = ["sms"]
 
     # First poll, activate the respondent
     Broker.handle_info(:poll, nil)
@@ -445,34 +452,103 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
 
-    # Since the respondent was contacted, there must be a RetryStat
-    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: respondent.retry_stat_time, mode: respondent.mode})
+    # set expectations
+    {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T11:00:00Z")
+    expected_retry_time = "2019122311"
+    expected_attempts = 1
+
+    # Since the respondent was queued, there must be a RetryStat
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
     assert "queued" == respondent.disposition
-    assert respondent.stats.attempts["sms"] == 1
+    assert expected_attempts == respondent.stats.attempts["sms"]
+    assert expected_timeout == respondent.timeout_at
+
+    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T10:00:00Z")
+    mock_time(now)
 
     # respondent responses the first question
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
     # broker sends second question
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
-    respondent = Repo.get!(Respondent, respondent.id)
-    assert "started" == respondent.disposition
+    # set expectations
+    past_retry_time = expected_retry_time
+    expected_retry_time = "2019122312"
+    {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T12:00:00Z")
 
-    first_retry_stat_time = respondent.retry_stat_time
-    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: first_retry_stat_time, mode: respondent.mode})
+    respondent = Repo.get!(Respondent, respondent.id)
+
+    # Since the respondent was re-contacted, the RetryStat must be updated
+    assert "started" == respondent.disposition
+    assert expected_attempts == respondent.stats.attempts["sms"]
+    assert expected_timeout == respondent.timeout_at
+
+    assert 0 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: expected_attempts, retry_time: past_retry_time, ivr_active: false, mode: sequence_mode})
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
 
     # Set for immediate timeout
-    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
+    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T12:00:00Z")
+    mock_time(now)
 
     # Second poll, it should retry the second question
     Broker.handle_info(:poll, nil)
     refute_received [:setup, _, _, _, _]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
+    # set expectations
+    past_retry_time = expected_retry_time
+    expected_retry_time = "2019122315"
+    {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T15:00:00Z")
+    past_attempts = expected_attempts
+    expected_attempts = 2
+
     # Respondent should have been moved from first attempt to second attempt in RetryStat
     respondent = Repo.get!(Respondent, respondent.id)
-    assert 0 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 1, retry_time: first_retry_stat_time, mode: respondent.mode})
-    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: 2, retry_time: respondent.retry_stat_time, mode: respondent.mode})
+    assert expected_attempts == respondent.stats.attempts["sms"]
+    assert expected_timeout == respondent.timeout_at
+    assert 0 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: past_attempts, retry_time: past_retry_time, ivr_active: false, mode: sequence_mode})
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
+
+    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T13:00:00Z")
+    mock_time(now)
+
+    # respondent responses the first question
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    # broker sends third question
+    assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
+
+    # set expectations
+    past_retry_time = expected_retry_time
+    expected_retry_time = "2019122316"
+    {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T16:00:00Z")
+
+    respondent = Repo.get!(Respondent, respondent.id)
+
+    # Since the respondent was re-contacted, the RetryStat must be updated
+    assert "started" == respondent.disposition
+    assert expected_attempts == respondent.stats.attempts["sms"]
+    assert expected_timeout == respondent.timeout_at
+
+    assert 0 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: expected_attempts, retry_time: past_retry_time, ivr_active: false, mode: sequence_mode})
+    assert 1 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
+
+    # Set for immediate timeout
+    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T16:00:00Z")
+    mock_time(now)
+
+    # Third poll, it should stall the respondent
+    Broker.handle_info(:poll, nil)
+    refute_received [:setup, _, _, _, _]
+    refute_received [:ask, _, _, _]
+
+    # Respondent should have been stalled and  removed from the Histogram
+    respondent = Repo.get!(Respondent, respondent.id)
+
+    assert "stalled" == respondent.state
+    assert expected_attempts == respondent.stats.attempts["sms"]
+    refute respondent.timeout_at
+    assert 0 == RetryStat.stats(%{survey_id: survey.id}) |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
+    assert [] = RetryStat.stats(%{survey_id: survey.id})
 
   end
 

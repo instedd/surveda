@@ -304,7 +304,9 @@ defmodule Ask.Runtime.Broker do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
     next_action = sync_step_internal(session, reply, session_mode, now)
-    Ask.SurveyHistogram.next_step(session, next_action)
+    respondent = Repo.get(Respondent, respondent.id)
+    session = respondent.session |> Session.load
+    Ask.SurveyHistogram.next_step(respondent, session, next_action)
     next_action
   end
 
