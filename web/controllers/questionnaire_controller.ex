@@ -177,17 +177,29 @@ defmodule Ask.QuestionnaireController do
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
     audio_ids = collect_steps_audio_ids(questionnaire.quota_completed_steps, audio_ids)
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
-    audio_files = (from a in Audio, where: a.uuid in ^audio_ids) |> Repo.stream
+    audio_resource = Stream.resource(
+      fn -> audio_ids end,
+      fn audio_ids ->
+        case audio_ids do
+        [id |tail] ->
+          audio = Repo.get_by(Audio, uuid: id)
+          {[audio], tail}
+        [] ->
+          {:halt, audio_ids}
+      end
+      end,
+      fn _ -> [] end
+    )
     audio_files_data = %{}
-    audio_entries = Stream.map(audio_files, fn audio ->
+    audio_entries = Stream.map(audio_resource, fn audio ->
       Stream.into(audio, audio_files_data, fn audio ->
-          %{
-            "uuid" => audio.uuid,
-            "filename" => audio.filename,
-            "source" => audio.source,
-            "duration" => audio.duration,
-          }
-        end)
+        %{
+          "uuid" => audio.uuid,
+          "filename" => audio.filename,
+          "source" => audio.source,
+          "duration" => audio.duration,
+        }
+      end)
       Zstream.entry("audios/" <> audio.filename, [audio.data])
     end)
 
@@ -207,22 +219,32 @@ defmodule Ask.QuestionnaireController do
     end)
 
     zip_entries = Stream.concat(audio_entries, json_entry)
+    zip_file = Zstream.zip(zip_entries)
+               |> Stream.flat_map(
+                    fn element ->
+                      case is_list(element) do
+                        :true -> List.flatten(element)
+                        :false -> element
+                      end
+                    end
+                  )
     conn = conn
            |> put_resp_content_type("application/octet-stream")
            |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}.zip")
            |> send_chunked(200)
 
-    Repo.transaction(fn ->
-      zip_file = Zstream.zip(zip_entries)
-      zip_file|> Enum.reduce_while(conn, fn (chunk, conn) ->
-        case Plug.Conn.chunk(conn, chunk) do
-          {:ok, conn} ->
-            {:cont, conn}
-          {:error, :closed} ->
-            {:halt, conn}
-        end
-      end)
-    end)|> (fn {:ok, conn} -> conn end).()
+    zip_file
+    |> Enum.reduce_while(
+         conn,
+         fn (chunk, conn) ->
+           case Plug.Conn.chunk(conn, chunk) do
+             {:ok, conn} ->
+               {:cont, conn}
+             {:error, :closed} ->
+               {:halt, conn}
+           end
+         end
+       )
   end
 
   def import_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id, "file" => file}) do
