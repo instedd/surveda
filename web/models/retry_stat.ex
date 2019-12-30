@@ -2,8 +2,7 @@ defmodule Ask.RetryStat do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias Ask.{RetryStat, Repo, Respondent, Stats}
-  alias Ask.Runtime.{Session}
+  alias Ask.{RetryStat, Repo}
   alias Ask.Ecto.Type.JSON
 
   schema "retry_stats" do
@@ -162,107 +161,4 @@ defmodule Ask.RetryStat do
 
   def retry_time(nil), do: nil
   def retry_time(timeout_at), do: Timex.format!(timeout_at, @retry_time_format, :strftime)
-
-#  def increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}, current_mode: %Ask.Runtime.IVRMode{}}, _, _), do:
-#  RetryStat.add(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: nil, ivr_active: true, survey_id: survey_id})
-#  def increase_retry_stat(%Session{respondent: %Respondent{disposition: "queued", mode: mode, stats: stats, survey_id: survey_id}}, timeout, now), do:
-#    RetryStat.add(%{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), ivr_active: false, survey_id: survey_id})
-#  def increase_retry_stat(%Session{respondent: %Respondent{timeout_at: nil}, current_mode: %Ask.Runtime.SMSMode{}}, _, _), do: nil
-#  def increase_retry_stat(%Session{respondent: %Respondent{mode: mode, stats: stats, survey_id: survey_id}, current_mode: %Ask.Runtime.SMSMode{}} = respondent, timeout, now), do:
-#    RetryStat.transition(
-#      respondent,
-#      %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: Respondent.next_timeout_lowerbound(timeout, now) |> RetryStat.retry_time(), ivr_active: false, survey_id: survey_id}
-#    )
-#  def increase_retry_stat(_, _, _), do: nil
-#
-#  def subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}} = respondent), do:
-#    RetryStat.subtract(respondent)
-#  def subtract_retry_stat(%Respondent{session: %{"current_mode" => %{"mode" => _}}} = respondent), do:
-#    RetryStat.subtract(respondent)
-#  def subtract_retry_stat(_), do: nil
-
-end
-
-defmodule Ask.SurveyHistogram do
-  alias Ask.{RetryStat, Stats, SystemTime, Logger, Respondent, Repo}
-  alias Ask.Runtime.Session
-
-  defp update_respondent(%Respondent{} = respondent, retry_stat_id),
-    do:
-      respondent
-      |> Respondent.changeset(%{retry_stat_id: retry_stat_id})
-      |> Repo.update!
-
-  def add_new_respondent(%Respondent{} = respondent, session, timeout) do
-    try do
-      {:ok, retry_stat} = RetryStat.add(retry_stat_group(respondent, ivr?(session), timeout))
-      update_respondent(respondent, retry_stat.id)
-    rescue
-      _ -> Logger.error("Error adding new respondent to histogram")
-      respondent
-    end
-  end
-
-  defp ivr?(%Session{current_mode: %Ask.Runtime.IVRMode{}}), do: true
-  defp ivr?(_session), do: false
-
-  defp retry_stat_group(%Respondent{stats: stats, mode: mode, survey_id: survey_id}, ivr_active?, timeout) do
-    retry_time = Respondent.next_timeout_lowerbound(timeout, SystemTime.time.now) |> RetryStat.retry_time
-    %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_time, ivr_active: ivr_active?, survey_id: survey_id}
-  end
-
-  def remove_respondent(%Respondent{retry_stat_id: retry_stat_id} = respondent) do
-    try do
-      RetryStat.subtract(retry_stat_id)
-      update_respondent(respondent, nil)
-    rescue
-      _ -> Logger.error("Error removing respondent from histogram")
-      respondent
-    end
-  end
-
-  defp reallocate_respondent(%Respondent{retry_stat_id: retry_stat_id} = respondent, %Session{} = session, ivr_active?, timeout) do
-    try do
-      {:ok, retry_stat} = RetryStat.transition(
-        retry_stat_id,
-        retry_stat_group(respondent, ivr_active?, timeout)
-      )
-      %Session{ session | respondent: update_respondent(respondent, retry_stat.id)}
-    rescue
-      _ ->
-        Logger.error("Error reallocating respondent")
-        session
-    end
-  end
-
-  def next_step(%Respondent{} = respondent, %Session{current_mode: %Ask.Runtime.SMSMode{}} = session, {:reply, _reply}) do
-    # sms -> transition to active RetryStat
-    reallocate_respondent(respondent, session, false, Session.current_timeout(session))
-  end
-
-  def next_step(_respondent, _session, {:reply, _reply}) do
-    # ivr -> do nothing, respondent is on call
-    # mobile-web -> do nothing
-  end
-
-  def next_step(%Respondent{} = respondent, _session, {:end, _reply}) do
-    # remove respondent from histogram
-    remove_respondent(respondent)
-  end
-
-  def next_step(%Respondent{} = respondent, _session, :end) do
-    # remove respondent from histogram
-    remove_respondent(respondent)
-  end
-
-  def respondent_no_longer_active(%Respondent{session: session} = respondent) do # only makes sense for verboice
-    # transition from ivr active to normal retryStat
-    session = Session.load(session)
-    reallocate_respondent(respondent, session, false, Session.current_timeout(session))
-    respondent
-  end
-
-  def retry(%Session{respondent: %Respondent{} = respondent} = session) do
-    reallocate_respondent(respondent, session, ivr?(session), Session.current_timeout(session))
-  end
 end

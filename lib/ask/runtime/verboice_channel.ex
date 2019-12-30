@@ -2,7 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Broker, Flow, Reply}
+  alias Ask.Runtime.{Broker, Flow, Reply, RetriesHistogram}
   alias Ask.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -251,7 +251,7 @@ defmodule Ask.Runtime.VerboiceChannel do
         Broker.contact_attempt_expired(respondent)
       s when s in ["failed", "busy", "no-answer"] ->
         # respondent should no longer be considered as active
-        respondent = Ask.SurveyHistogram.respondent_no_longer_active(respondent)
+        respondent = RetriesHistogram.respondent_no_longer_active(respondent)
         channel_failed(respondent, status, params)
       _ -> :ok
     end

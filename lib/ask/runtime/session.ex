@@ -1,9 +1,9 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey, SurveyHistogram}
+  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns, RetriesHistogram}
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -244,13 +244,13 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
-    session = %{session | respondent: SurveyHistogram.remove_respondent(session.respondent)}
+    session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
   end
 
   def timeout(%{current_mode: %{retries: []}} = session, _) do
     switch_to_fallback_mode(session)
-    |> SurveyHistogram.retry
+    |> RetriesHistogram.retry
   end
 
   def timeout(%Session{} = session, runtime_channel) do
@@ -258,7 +258,7 @@ defmodule Ask.Runtime.Session do
       |> add_session_mode_attempt!()
       |> retry(runtime_channel)
       |> consume_retry()
-      |> SurveyHistogram.retry
+      |> RetriesHistogram.retry
 
     # The new session will timeout as defined by hd(retries)
     {:ok, session, %Reply{}, current_timeout(session)}

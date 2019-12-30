@@ -4,7 +4,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics, SystemTime}
-  alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer}
+  alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer, RetriesHistogram}
   alias Ask.QuotaBucket
 
   @poll_interval :timer.minutes(1)
@@ -74,7 +74,7 @@ defmodule Ask.Runtime.Broker do
       where: r.updated_at <= ^eight_hours_ago)
     |> Repo.all
     |> Enum.each(fn respondent ->
-      respondent = Ask.SurveyHistogram.remove_respondent(respondent)
+      respondent = RetriesHistogram.remove_respondent(respondent)
       update_respondent(respondent, :failed)
     end)
   end
@@ -87,7 +87,7 @@ defmodule Ask.Runtime.Broker do
         :ok -> :ok
         :failed ->
           # respondent no longer participates in the survey (no attempts left)
-          respondent = Ask.SurveyHistogram.remove_respondent(respondent)
+          respondent = RetriesHistogram.remove_respondent(respondent)
           update_respondent(respondent, :failed)
       end
     else
@@ -253,7 +253,7 @@ defmodule Ask.Runtime.Broker do
     fallback_delay = survey |> Survey.fallback_delay()
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
     {:ok, session, reply, timeout} = Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
-    session = %Session{session | respondent: Ask.SurveyHistogram.add_new_respondent(session.respondent, session, timeout)}
+    session = %Session{session | respondent: RetriesHistogram.add_new_respondent(session.respondent, session, timeout)}
     handle_session_step({:ok, session, reply, timeout}, SystemTime.time.now)
   end
 
@@ -306,7 +306,7 @@ defmodule Ask.Runtime.Broker do
     next_action = sync_step_internal(session, reply, session_mode, now)
     respondent = Repo.get(Respondent, respondent.id)
     session = respondent.session |> Session.load
-    Ask.SurveyHistogram.next_step(respondent, session, next_action)
+    RetriesHistogram.next_step(respondent, session, next_action)
     next_action
   end
 
