@@ -16,6 +16,19 @@ defmodule Ask.SurveyCancellerTest do
   end
 
   describe "stops surveys as if the application were starting" do
+    test "survey canceller does not have pending surveys to cancel" do
+      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
+      assert survey_canceller == :ignore
+      assert length(
+               Repo.all(
+                 from(
+                   r in Ask.Respondent,
+                   where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))
+                 )
+               )
+             ) == 0
+    end
+
     test "stops a survey in cancelling status without its id", %{user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
@@ -46,13 +59,9 @@ defmodule Ask.SurveyCancellerTest do
       |> Repo.update!
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
 
-      pids = case survey_canceller do
-        :ignore -> nil
-        %Ask.SurveyCanceller{processes: _, consumers_pids: _} ->
-          survey_canceller.processes
-      end
+      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
 
-      wait_all_cancellations_from_pids(pids)
+      wait_all_cancellations_from_pids(survey_canceller.processes)
 
       survey = Repo.get(Survey, survey_1.id)
       assert Survey.cancelled?(survey)
@@ -99,13 +108,9 @@ defmodule Ask.SurveyCancellerTest do
       |> Repo.update!
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
 
-      pids_2 = case survey_canceller do
-        :ignore -> nil
-        %Ask.SurveyCanceller{processes: _, consumers_pids: _} ->
-          survey_canceller.processes
-      end
+      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
 
-      wait_all_cancellations_from_pids(pids_2)
+      wait_all_cancellations_from_pids(survey_canceller.processes)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
@@ -157,14 +162,11 @@ defmodule Ask.SurveyCancellerTest do
 
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
       conn = post conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3)
-      pids = case survey_canceller do
-        :ignore -> nil
-        %Ask.SurveyCanceller{processes: _, consumers_pids: _} ->
-          survey_canceller.processes
-      end
+
+      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
 
       wait_all_cancellations_from_conn(conn)
-      wait_all_cancellations_from_pids(pids)
+      wait_all_cancellations_from_pids(survey_canceller.processes)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
