@@ -29,6 +29,12 @@ defmodule Ask.RetryStat do
     |> unique_constraint(:retry_stats_mode_attempt_retry_time_survey_id_index)
   end
 
+  def count_changeset(%RetryStat{} = retry_stat, attrs) do
+    retry_stat
+    |> cast(attrs, [:mode, :attempt, :ivr_active])
+    |> validate_required([:mode, :attempt, :ivr_active])
+  end
+
   defp validate_retry_time(changeset) do
     retry_time = get_field(changeset, :retry_time)
     if not is_valid_retry_time?(retry_time) do
@@ -65,6 +71,13 @@ defmodule Ask.RetryStat do
         {:error, nil}
     end
   end
+
+  defp is_valid_count_filter(%{attempt: attempt, mode: mode, ivr_active: ivr_active}), do:
+    RetryStat.count_changeset(%RetryStat{}, %{
+      attempt: attempt,
+      mode: mode,
+      ivr_active: ivr_active
+    }).valid?
 
   defp is_valid_filter(filter), do:
     (filter |> add_changeset).valid?
@@ -123,7 +136,7 @@ defmodule Ask.RetryStat do
 
   def count(stats, filter) do
     # the stats are already filtered by survey
-    case is_valid_filter(Map.put(filter, :survey_id, 1)) do
+    case is_valid_count_filter(filter) do
       true ->
         stats |> count_valid(filter)
       _ ->
@@ -139,6 +152,13 @@ defmodule Ask.RetryStat do
         attempt == filter_attempt and retry_time == filter_retry_time and ivr_active == filter_ivr_active and mode == filter_mode
       end)
       |> count_stat
+
+  defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode, ivr_active: filter_ivr_active}),
+  do:
+    Enum.find(stats, fn %RetryStat{attempt: attempt, ivr_active: ivr_active, mode: mode} ->
+      attempt == filter_attempt and ivr_active == filter_ivr_active and mode == filter_mode
+    end)
+    |> count_stat
 
   defp count_overdue(_stats, %{ivr_active: true}), do: 0
 

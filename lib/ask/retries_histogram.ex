@@ -162,7 +162,11 @@ defmodule Ask.RetriesHistogram do
   defp count_actives(%{stats: stats, attempt: attempt, mode: mode, current_mode: "ivr"}),
     do:
       stats
-      |> RetryStat.count(%{attempt: attempt, mode: mode, retry_time: nil, ivr_active: true})
+      |> RetryStat.count(%{
+        attempt: attempt,
+        mode: mode,
+        ivr_active: true
+      })
 
   defp count_actives(%{stats: stats, attempt: attempt, mode: mode, retry_time: retry_time}),
     do:
