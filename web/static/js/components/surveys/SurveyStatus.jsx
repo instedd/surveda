@@ -157,11 +157,6 @@ class SurveyStatus extends PureComponent {
         break
       case 'cancelling':
         switch (survey.exitCode) {
-          case 0:
-            icon = 'done'
-            text = t('Completed', {context: 'survey'})
-            break
-
           case 1:
             icon = 'error'
             text = t('Cancelling', {context: 'survey'})
