@@ -244,21 +244,15 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
-    session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
   end
 
   def timeout(%{current_mode: %{retries: []}} = session, _) do
     switch_to_fallback_mode(session)
-    |> RetriesHistogram.retry
   end
 
   def timeout(%Session{} = session, runtime_channel) do
-    session = session
-      |> add_session_mode_attempt!()
-      |> retry(runtime_channel)
-      |> consume_retry()
-      |> RetriesHistogram.retry
+    session = retry(session, runtime_channel)
 
     # The new session will timeout as defined by hd(retries)
     {:ok, session, %Reply{}, current_timeout(session)}
@@ -279,6 +273,7 @@ defmodule Ask.Runtime.Session do
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
     session = session
               |> clear_token
+              |> RetriesHistogram.retry
     run_flow(%Session{
       session |
       current_mode: fallback_mode,
@@ -302,7 +297,11 @@ defmodule Ask.Runtime.Session do
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
   def retry(session, runtime_channel) do
-    do_retry(session, runtime_channel)
+    session
+    |> add_session_mode_attempt!()
+    |> do_retry(runtime_channel)
+    |> consume_retry()
+    |> RetriesHistogram.retry
   end
 
   defp do_retry(%{current_mode: %SMSMode{}} = session, runtime_channel) do
