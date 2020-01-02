@@ -79,9 +79,6 @@ defmodule Ask.RetryStat do
       ivr_active: ivr_active
     }).valid?
 
-  defp is_valid_filter(filter), do:
-    (filter |> add_changeset).valid?
-
   defp add_changeset(%{attempt: attempt, mode: mode, retry_time: retry_time, ivr_active: ivr_active, survey_id: survey_id}), do:
     RetryStat.changeset(%RetryStat{}, %{
       attempt: attempt,

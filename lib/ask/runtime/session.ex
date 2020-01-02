@@ -244,6 +244,7 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
+    session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
   end
 
