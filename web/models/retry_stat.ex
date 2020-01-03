@@ -31,8 +31,8 @@ defmodule Ask.RetryStat do
 
   def count_changeset(%RetryStat{} = retry_stat, attrs) do
     retry_stat
-    |> cast(attrs, [:mode, :attempt, :ivr_active])
-    |> validate_required([:mode, :attempt, :ivr_active])
+    |> cast(attrs, [:mode, :attempt])
+    |> validate_required([:mode, :attempt])
   end
 
   defp validate_retry_time(changeset) do
@@ -72,11 +72,10 @@ defmodule Ask.RetryStat do
     end
   end
 
-  defp is_valid_count_filter(%{attempt: attempt, mode: mode, ivr_active: ivr_active}), do:
+  defp is_valid_count_filter(%{attempt: attempt, mode: mode}), do:
     RetryStat.count_changeset(%RetryStat{}, %{
       attempt: attempt,
-      mode: mode,
-      ivr_active: ivr_active
+      mode: mode
     }).valid?
 
   defp add_changeset(%{attempt: attempt, mode: mode, retry_time: retry_time, ivr_active: ivr_active, survey_id: survey_id}), do:
@@ -154,6 +153,13 @@ defmodule Ask.RetryStat do
   do:
     Enum.find(stats, fn %RetryStat{attempt: attempt, ivr_active: ivr_active, mode: mode} ->
       attempt == filter_attempt and ivr_active == filter_ivr_active and mode == filter_mode
+    end)
+    |> count_stat
+
+  defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode}),
+  do:
+    Enum.find(stats, fn %RetryStat{attempt: attempt, mode: mode} ->
+      attempt == filter_attempt and mode == filter_mode
     end)
     |> count_stat
 

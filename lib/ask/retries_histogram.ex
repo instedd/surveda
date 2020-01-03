@@ -60,7 +60,8 @@ defmodule Ask.RetriesHistogram do
         attempt: index + 1,
         mode: mode,
         current_mode: current_mode,
-        retry_time: retry_time
+        retry_time: retry_time,
+        next_attempt: next_attempt
       })
 
     %{hour: absolute_delay, respondents: count}
@@ -159,13 +160,24 @@ defmodule Ask.RetriesHistogram do
   defp attempt_delay(nil), do: nil
   defp attempt_delay(%{delay: delay}), do: delay
 
-  defp count_actives(%{stats: stats, attempt: attempt, mode: mode, current_mode: "ivr"}),
+  defp count_actives(%{stats: stats, attempt: attempt, mode: mode, current_mode: "ivr", next_attempt: nil}),
     do:
-      stats
-      |> RetryStat.count(%{
+      RetryStat.count(stats, %{
+        attempt: attempt,
+        mode: mode
+      })
+
+  defp count_actives(%{stats: stats, attempt: attempt, mode: mode, retry_time: retry_time, current_mode: "ivr"}),
+    do:
+      RetryStat.count(stats, %{
         attempt: attempt,
         mode: mode,
         ivr_active: true
+      }) + RetryStat.count(stats, %{
+        attempt: attempt,
+        mode: mode,
+        retry_time: retry_time,
+        ivr_active: false
       })
 
   defp count_actives(%{stats: stats, attempt: attempt, mode: mode, retry_time: retry_time}),
