@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## 0.23.2
+
+### Bugfixes
+
+* Calls' `not_after` limit spans for an extra day in western timezones [#1603](https://github.com/instedd/surveda/issues/1603)
+
 ## 0.23.1
 
 ### Features
