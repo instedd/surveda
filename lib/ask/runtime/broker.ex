@@ -303,9 +303,13 @@ defmodule Ask.Runtime.Broker do
   def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now) do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
-    next_action = sync_step_internal(session, reply, session_mode, now)
-    respondent = Repo.get(Respondent, respondent.id)
-    session = respondent.session |> Session.load
+    sync_step_internal(session, reply, session_mode, now)
+     |> handle_next_action(respondent.id)
+  end
+
+  defp handle_next_action(next_action, respondent_id) do
+    respondent = Repo.get(Respondent, respondent_id)
+    session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
     RetriesHistogram.next_step(respondent, session, next_action)
     next_action
   end
