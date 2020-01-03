@@ -194,7 +194,7 @@ defmodule Ask.Runtime.Broker do
 
   defp set_stalled_respondents_as_failed(survey) do
     from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, retry_stat_: nil])
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, retry_stat_id: nil])
   end
 
   defp start_some(survey, count) do
