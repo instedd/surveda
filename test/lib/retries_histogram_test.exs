@@ -137,18 +137,14 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, [mode], now) == []
 
-    filter = %{attempt: 1, mode: [mode], retry_time: nil, ivr_active: true, survey_id: survey.id}
-
-    filter
-    |> increase_stat(1)
+    {:ok, %{id: stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(now, 0), ivr_active: true, survey_id: survey.id})
 
     assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
-    filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(stat_id)
 
     assert histogram_actives(survey, [mode], now) == []
   end
@@ -159,10 +155,7 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, [mode], now) == []
 
-    filter = %{attempt: 1, mode: [mode], retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id}
-
-    filter
-    |> increase_stat(1)
+    {:ok, %{id: stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id})
 
     assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
@@ -175,8 +168,7 @@ defmodule Ask.RetriesHistogramTest do
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 2, respondents: 1}]
 
-    filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(stat_id)
 
     assert histogram_actives(survey, [mode], now) == []
   end
@@ -199,10 +191,7 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, [mode], now) == []
 
-    active_filter = %{attempt: 1, mode: [mode], retry_time: nil, ivr_active: true, survey_id: survey.id}
-
-    active_filter
-    |> increase_stat(1)
+    {:ok, %{id: active_stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(now, 2), ivr_active: true, survey_id: survey.id})
 
     assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
@@ -212,21 +201,17 @@ defmodule Ask.RetriesHistogramTest do
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
-    active_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(active_stat_id)
 
-    waiting_filter = %{
+    {:ok, %{id: waiting_stat_id}} = RetryStat.add(%{
       attempt: 1,
       mode: [mode],
       retry_time: retry_time(now, 2),
       ivr_active: false,
       survey_id: survey.id
-    }
+    })
 
-    waiting_filter
-    |> increase_stat(1)
-
-    assert histogram_actives(survey, [mode], now) == []
+    assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 1, respondents: 1}]
@@ -234,21 +219,16 @@ defmodule Ask.RetriesHistogramTest do
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 1, respondents: 1}]
 
-    waiting_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(waiting_stat_id)
 
-    active_filter = %{attempt: 2, mode: [mode], retry_time: nil, ivr_active: true, survey_id: survey.id}
-
-    active_filter
-    |> increase_stat(1)
+    {:ok, %{id: active_stat_id}} = RetryStat.add(%{attempt: 2, mode: [mode], retry_time: retry_time(now, 0), ivr_active: true, survey_id: survey.id})
 
     assert histogram_actives(survey, [mode], now) == [%{hour: 2, respondents: 1}]
 
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 2, respondents: 1}]
 
-    active_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(active_stat_id)
 
     assert histogram_actives(survey, [mode], now) == []
 
@@ -262,35 +242,28 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, [mode], now) == []
 
-    initial_filter = %{
+    {:ok, %{id: initial_stat_id}} = RetryStat.add(%{
       attempt: 1,
       mode: [mode],
       retry_time: retry_time(now, 2),
       ivr_active: false,
       survey_id: survey.id
-    }
-
-    initial_filter
-    |> increase_stat(1)
+    })
 
     assert histogram_actives(survey, [mode], now) == [%{hour: 0, respondents: 1}]
 
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 1, respondents: 1}]
 
-    initial_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(initial_stat_id)
 
-    last_filter = %{
+    {:ok, %{id: last_stat_id}} = RetryStat.add(%{
       attempt: 2,
       mode: [mode],
       retry_time: retry_time(now, 3),
       ivr_active: false,
       survey_id: survey.id
-    }
-
-    last_filter
-    |> increase_stat(1)
+    })
 
     assert histogram_actives(survey, [mode], now) == [%{hour: 2, respondents: 1}]
 
@@ -306,8 +279,7 @@ defmodule Ask.RetriesHistogramTest do
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, [mode], now) == [%{hour: 5, respondents: 1}]
 
-    last_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(last_stat_id)
 
     assert histogram_actives(survey, [mode], now) == []
   end
@@ -319,39 +291,16 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, mode, now) == []
 
-    ivr_active_filter = %{attempt: 1, mode: mode, retry_time: nil, ivr_active: true, survey_id: survey.id}
-
-    ivr_active_filter
-    |> increase_stat(1)
+    {:ok, %{id: ivr_active_stat_id}} = RetryStat.add(%{attempt: 1, mode: mode, retry_time: retry_time(now, 2), ivr_active: true, survey_id: survey.id})
 
     assert histogram_actives(survey, mode, now) == [%{hour: 0, respondents: 1}]
 
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, mode, now) == [%{hour: 0, respondents: 1}]
 
-    ivr_active_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(ivr_active_stat_id)
 
-    sms_1_filter = %{attempt: 1, mode: mode, retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id}
-
-    sms_1_filter
-    |> increase_stat(1)
-
-    assert histogram_actives(survey, mode, now) == []
-
-    now = now |> Timex.shift(hours: 1)
-    assert histogram_actives(survey, mode, now) == [%{hour: 1, respondents: 1}]
-
-    now = now |> Timex.shift(hours: 1)
-    assert histogram_actives(survey, mode, now) == [%{hour: 1, respondents: 1}]
-
-    sms_1_filter
-    |> decrease_stat(1)
-
-    sms_2_filter = %{attempt: 2, mode: mode, retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id}
-
-    sms_2_filter
-    |> increase_stat(1)
+    {:ok, %{id: sms_stat_id}} = RetryStat.add(%{attempt: 2, mode: mode, retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id})
 
     assert histogram_actives(survey, mode, now) == [%{hour: 2, respondents: 1}]
 
@@ -364,8 +313,7 @@ defmodule Ask.RetriesHistogramTest do
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, mode, now) == [%{hour: 4, respondents: 1}]
 
-    sms_2_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(sms_stat_id)
 
     assert histogram_actives(survey, mode, now) == []
   end
@@ -377,10 +325,7 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey, mode, now) == []
 
-    sms_filter = %{attempt: 1, mode: mode, retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id}
-
-    sms_filter
-    |> increase_stat(1)
+    {:ok, %{id: sms_stat_id}} = RetryStat.add(%{attempt: 1, mode: mode, retry_time: retry_time(now, 2), ivr_active: false, survey_id: survey.id})
 
     assert histogram_actives(survey, mode, now) == [%{hour: 0, respondents: 1}]
 
@@ -390,21 +335,16 @@ defmodule Ask.RetriesHistogramTest do
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, mode, now) == [%{hour: 1, respondents: 1}]
 
-    sms_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(sms_stat_id)
 
-    ivr_active_filter = %{attempt: 2, mode: mode, retry_time: nil, ivr_active: true, survey_id: survey.id}
-
-    ivr_active_filter
-    |> increase_stat(1)
+    {:ok, %{id: ivr_active_stat_id}} = RetryStat.add(%{attempt: 2, mode: mode, retry_time: retry_time(now, 2), ivr_active: true, survey_id: survey.id})
 
     assert histogram_actives(survey, mode, now) == [%{hour: 2, respondents: 1}]
 
     now = now |> Timex.shift(hours: 1)
     assert histogram_actives(survey, mode, now) == [%{hour: 2, respondents: 1}]
 
-    ivr_active_filter
-    |> decrease_stat(1)
+    {:ok} = RetryStat.subtract(ivr_active_stat_id)
 
     assert histogram_actives(survey, mode, now) == []
   end
@@ -426,21 +366,4 @@ defmodule Ask.RetriesHistogramTest do
 
   defp retry_time(now, delay), do: now |> Timex.shift(hours: delay) |> RetryStat.retry_time()
 
-  defp increase_stat(filter, n) when n <= 1 do
-    {:ok} = RetryStat.add(filter)
-  end
-
-  defp increase_stat(filter, n) do
-    {:ok} = RetryStat.add(filter)
-    increase_stat(filter, n - 1)
-  end
-
-  defp decrease_stat(filter, n) when n <= 1 do
-    {:ok} = RetryStat.subtract(filter)
-  end
-
-  defp decrease_stat(filter, n) do
-    {:ok} = RetryStat.subtract(filter)
-    decrease_stat(filter, n - 1)
-  end
 end
