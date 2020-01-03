@@ -240,7 +240,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
-    |> update_call_time_seconds(call_duration)
+                 |> update_call_time_seconds(call_duration)
     case status do
       "expired" ->
         # respondent is still being considered as active in Surveda

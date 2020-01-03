@@ -291,6 +291,10 @@ defmodule Ask.Runtime.Session do
     %{session | current_mode: %{session.current_mode | retries: retries}}
   end
 
+  def consume_retry(%{current_mode: %{retries: []}} = session) do
+    session
+  end
+
   defp add_session_mode_attempt!(%Session{} = session), do: %{session | respondent: add_respondent_mode_attempt!(session)}
 
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %SMSMode{}}), do: respondent |> Respondent.add_mode_attempt!(:sms)
@@ -300,12 +304,12 @@ defmodule Ask.Runtime.Session do
   def retry(session, runtime_channel) do
     session
     |> add_session_mode_attempt!()
-    |> do_retry(runtime_channel)
+    |> contact_respondent(runtime_channel)
     |> consume_retry()
     |> RetriesHistogram.retry
   end
 
-  defp do_retry(%{current_mode: %SMSMode{}} = session, runtime_channel) do
+  def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
@@ -314,7 +318,7 @@ defmodule Ask.Runtime.Session do
     %{session | token: token, respondent: respondent}
   end
 
-  defp do_retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
+  def contact_respondent(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     next_available_date_time = schedule
@@ -330,7 +334,7 @@ defmodule Ask.Runtime.Session do
     %{session | channel_state: channel_state, token: token}
   end
 
-  defp do_retry(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
+  def contact_respondent(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     reply = mobile_contact_reply(session)
@@ -352,7 +356,7 @@ defmodule Ask.Runtime.Session do
   def contact_attempt_expired(session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
-    session = retry(session, runtime_channel)
+    session = contact_respondent(session, runtime_channel)
 
     next_available_date_time = session.schedule |> Schedule.next_available_date_time
 
